@@ -111,9 +111,12 @@ export default function SetupPage() {
         sessionStorage.setItem(STORAGE_KEYS.SETUP_PENDING_PHASE, "awaiting_signin");
         if (!response.initialized) {
           sessionStorage.setItem(STORAGE_KEYS.SETUP_NEEDS_INIT, "true");
+          setNeedsInit(true);
         }
+        // Update phase directly in case app does NOT remount (googleClientId was already set).
+        setPhase("awaiting_signin");
         window.dispatchEvent(new Event(GOOGLE_CLIENT_ID_CHANGED_EVENT));
-        // App remounts here; the new SetupPage instance reads the sessionStorage flags above.
+        // If googleClientId was null, App remounts and the new SetupPage reads sessionStorage flags.
       } else if (response.initialized) {
         navigate(ROUTES.INBOX);
       } else {
@@ -223,26 +226,6 @@ export default function SetupPage() {
               </>
             ) : (
               <>
-                {/* Awaiting sign-in step (shown after connect, before OAuth) */}
-                {phase === "awaiting_signin" && (
-                  <section className="space-y-3">
-                    <div
-                      data-testid="setup-awaiting-signin"
-                      className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 space-y-2"
-                    >
-                      <p className="text-sm font-medium text-blue-900">{t("setup.awaitingSignin")}</p>
-                      <p className="text-sm text-blue-800">{t("auth.signInRequired")}</p>
-                      <button
-                        data-testid="setup-sign-in-btn"
-                        onClick={signIn}
-                        className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors"
-                      >
-                        {t("auth.signInButton")}
-                      </button>
-                    </div>
-                  </section>
-                )}
-
                 {/* Google Apps Script collapsible section */}
                 <section className="space-y-3">
                   <button
@@ -256,6 +239,23 @@ export default function SetupPage() {
 
                   {isGasSectionOpen && (
                     <div className="space-y-4 rounded-lg border border-gray-100 bg-gray-50 px-4 py-4">
+                      {/* Awaiting sign-in step (shown after connect, before OAuth) */}
+                      {phase === "awaiting_signin" && (
+                        <div
+                          data-testid="setup-awaiting-signin"
+                          className="space-y-3"
+                        >
+                          <p className="text-sm font-medium text-blue-900">{t("setup.awaitingSignin")}</p>
+                          <button
+                            data-testid="setup-sign-in-btn"
+                            onClick={signIn}
+                            className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors"
+                          >
+                            {t("auth.signInButton")}
+                          </button>
+                        </div>
+                      )}
+
                       {/* URL input */}
                       {phase !== "awaiting_signin" && (
                         <div className="space-y-2">
@@ -378,7 +378,7 @@ export default function SetupPage() {
                 </section>
 
                 {/* Skip button — outside collapsible */}
-                {phase !== "not_initialized" && phase !== "awaiting_signin" && (
+                {phase !== "not_initialized" && (
                   <button
                     data-testid="setup-skip-button"
                     onClick={() => navigate(ROUTES.INBOX)}
