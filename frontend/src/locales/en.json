@@ -174,11 +174,12 @@
     "menuOrderToggle": "Show/hide: {{label}}"
   },
   "setup": {
-    "title": "Backend connection",
+    "title": "Cloud Connection",
+    "gasSection": "Google Apps Script",
     "description": "Enter your Google Apps Script URL or Deployment ID",
     "urlLabel": "Google Apps Script URL or Deployment ID",
     "urlPlaceholder": "AKfycbx... or https://script.google.com/...",
-    "connect": "Connect",
+    "connect": "Check Google Apps Script",
     "connecting": "Checking...",
     "disconnect": "Disconnect",
     "skip": "Work without sync",
@@ -189,7 +190,7 @@
     "errorConnection": "Could not connect. Please check the URL.",
     "errorInit": "Initialization failed. Please try again.",
     "connectedUrl": "Current URL:",
-    "clientIdLabel": "Google Client ID",
+    "clientIdLabel": "Google OAuth 2.0 Client ID",
     "clientIdPlaceholder": "1234567890-xxx.apps.googleusercontent.com",
     "clientIdDescription": "Create an OAuth 2.0 Client ID in Google Cloud Console for your project",
     "awaitingSignin": "Connection established. Sign in with Google to start syncing."

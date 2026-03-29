@@ -52,6 +52,7 @@ export default function SetupPage() {
   });
   const [needsInit, setNeedsInit] = useState<boolean>(() => readNeedsInit());
   const [errorMessage, setErrorMessage] = useState("");
+  const [isGasSectionOpen, setIsGasSectionOpen] = useState(true);
   const prevAccessTokenRef = useRef<string | null>(accessToken);
 
   // After sign-in succeeds: initialize backend if needed (awaiting_signin), or go to app (connected).
@@ -242,120 +243,149 @@ export default function SetupPage() {
                   </section>
                 )}
 
-                {/* URL input section */}
-                {phase !== "awaiting_signin" && (
-                  <section className="space-y-3">
-                    <h2 className="text-sm font-medium uppercase tracking-wide text-gray-500">
-                      {t("setup.urlLabel")}
-                    </h2>
-                    <input
-                      data-testid="setup-url-input"
-                      type="text"
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      placeholder={t("setup.urlPlaceholder")}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
-                    />
-                    <p className="text-xs text-gray-400">{t("setup.description")}</p>
-                  </section>
-                )}
-
-                {/* Google Client ID input section */}
-                {phase !== "awaiting_signin" && (
-                  <section className="space-y-3">
-                    <h2 className="text-sm font-medium uppercase tracking-wide text-gray-500">
-                      {t("setup.clientIdLabel")}
-                    </h2>
-                    <input
-                      data-testid="setup-client-id-input"
-                      type="text"
-                      value={clientIdInput}
-                      onChange={(e) => setClientIdInput(e.target.value)}
-                      placeholder={t("setup.clientIdPlaceholder")}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
-                    />
-                    <p className="text-xs text-gray-400">{t("setup.clientIdDescription")}</p>
-                  </section>
-                )}
-
-                {/* Status feedback */}
-                {isLoading && (
-                  <div data-testid="setup-loading" className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="inline-block animate-spin">⟳</span>
-                    {phase === "connecting" ? t("setup.connecting") : t("setup.initializing")}
-                  </div>
-                )}
-
-                {phase === "error" && (
-                  <div
-                    data-testid="setup-error"
-                    className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                {/* Google Apps Script collapsible section */}
+                <section className="space-y-3">
+                  <button
+                    data-testid="setup-gas-section-toggle"
+                    onClick={() => setIsGasSectionOpen((prev) => !prev)}
+                    className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
                   >
-                    {errorMessage}
-                  </div>
-                )}
+                    <span>{t("setup.gasSection")}</span>
+                    <span className="text-gray-400">{isGasSectionOpen ? "▲" : "▼"}</span>
+                  </button>
 
-                {/* Not initialized flow (no clientId case) */}
-                {phase === "not_initialized" && (
-                  <section className="space-y-3">
-                    <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
-                      {t("setup.notInitializedHint")}
-                    </div>
-                    {!accessToken && (
-                      <div
-                        data-testid="setup-sign-in-required"
-                        className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 space-y-2"
-                      >
-                        <p className="text-sm text-blue-800">{t("auth.signInRequired")}</p>
-                        <button
-                          data-testid="setup-sign-in-btn"
-                          onClick={signIn}
-                          className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors"
+                  {isGasSectionOpen && (
+                    <div className="space-y-4 rounded-lg border border-gray-100 bg-gray-50 px-4 py-4">
+                      {/* URL input */}
+                      {phase !== "awaiting_signin" && (
+                        <div className="space-y-2">
+                          <h2 className="text-sm font-medium uppercase tracking-wide text-gray-500">
+                            {t("setup.urlLabel")}
+                          </h2>
+                          <input
+                            data-testid="setup-url-input"
+                            type="text"
+                            value={urlInput}
+                            onChange={(e) => setUrlInput(e.target.value)}
+                            placeholder={t("setup.urlPlaceholder")}
+                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
+                          />
+                          <p className="text-xs text-gray-400">{t("setup.description")}</p>
+                        </div>
+                      )}
+
+                      {/* Google OAuth 2.0 Client ID input */}
+                      {phase !== "awaiting_signin" && (
+                        <div className="space-y-2">
+                          <h2 className="text-sm font-medium uppercase tracking-wide text-gray-500">
+                            {t("setup.clientIdLabel")}
+                          </h2>
+                          <input
+                            data-testid="setup-client-id-input"
+                            type="text"
+                            value={clientIdInput}
+                            onChange={(e) => setClientIdInput(e.target.value)}
+                            placeholder={t("setup.clientIdPlaceholder")}
+                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
+                          />
+                          <p className="text-xs text-gray-400">{t("setup.clientIdDescription")}</p>
+                        </div>
+                      )}
+
+                      {/* Status feedback */}
+                      {isLoading && (
+                        <div data-testid="setup-loading" className="flex items-center gap-2 text-sm text-gray-500">
+                          <span className="inline-block animate-spin">⟳</span>
+                          {phase === "connecting" ? t("setup.connecting") : t("setup.initializing")}
+                        </div>
+                      )}
+
+                      {phase === "error" && (
+                        <div
+                          data-testid="setup-error"
+                          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
                         >
-                          {t("auth.signInButton")}
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      data-testid="setup-initialize-button"
-                      onClick={handleInit}
-                      disabled={!accessToken}
-                      className={cn(
-                        "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                        accessToken
-                          ? "bg-accent text-white"
-                          : "cursor-not-allowed bg-gray-100 text-gray-400",
+                          {errorMessage}
+                        </div>
                       )}
-                    >
-                      {t("setup.initialize")}
-                    </button>
-                  </section>
-                )}
 
-                {/* Connect button */}
-                {phase !== "not_initialized" && phase !== "awaiting_signin" && (
-                  <section className="space-y-3">
-                    <button
-                      data-testid="setup-connect-button"
-                      onClick={handleConnect}
-                      disabled={!urlInput.trim() || isLoading}
-                      className={cn(
-                        "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                        urlInput.trim() && !isLoading
-                          ? "bg-accent text-white"
-                          : "cursor-not-allowed bg-gray-100 text-gray-400",
+                      {/* Not initialized flow (no clientId case) */}
+                      {phase === "not_initialized" && (
+                        <div className="space-y-3">
+                          <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                            {t("setup.notInitializedHint")}
+                          </div>
+                          {!accessToken && (
+                            <div
+                              data-testid="setup-sign-in-required"
+                              className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 space-y-2"
+                            >
+                              <p className="text-sm text-blue-800">{t("auth.signInRequired")}</p>
+                              <button
+                                data-testid="setup-sign-in-btn"
+                                onClick={signIn}
+                                className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors"
+                              >
+                                {t("auth.signInButton")}
+                              </button>
+                            </div>
+                          )}
+                          <button
+                            data-testid="setup-initialize-button"
+                            onClick={handleInit}
+                            disabled={!accessToken}
+                            className={cn(
+                              "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                              accessToken
+                                ? "bg-accent text-white"
+                                : "cursor-not-allowed bg-gray-100 text-gray-400",
+                            )}
+                          >
+                            {t("setup.initialize")}
+                          </button>
+                        </div>
                       )}
-                    >
-                      {t("setup.connect")}
-                    </button>
-                    <button
-                      data-testid="setup-skip-button"
-                      onClick={() => navigate(ROUTES.INBOX)}
-                      className="w-full text-center text-sm text-gray-500 transition-colors hover:text-gray-700"
-                    >
-                      {t("setup.skip")}
-                    </button>
-                  </section>
+
+                      {/* Connect button + sign-in button */}
+                      {phase !== "not_initialized" && phase !== "awaiting_signin" && (
+                        <div className="space-y-3">
+                          <button
+                            data-testid="setup-connect-button"
+                            onClick={handleConnect}
+                            disabled={!urlInput.trim() || isLoading}
+                            className={cn(
+                              "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                              urlInput.trim() && !isLoading
+                                ? "bg-accent text-white"
+                                : "cursor-not-allowed bg-gray-100 text-gray-400",
+                            )}
+                          >
+                            {t("setup.connect")}
+                          </button>
+                          {!accessToken && (
+                            <button
+                              data-testid="setup-gas-sign-in-btn"
+                              onClick={signIn}
+                              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
+                            >
+                              {t("auth.signInButton")}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
+
+                {/* Skip button — outside collapsible */}
+                {phase !== "not_initialized" && phase !== "awaiting_signin" && (
+                  <button
+                    data-testid="setup-skip-button"
+                    onClick={() => navigate(ROUTES.INBOX)}
+                    className="w-full text-center text-sm text-gray-500 transition-colors hover:text-gray-700"
+                  >
+                    {t("setup.skip")}
+                  </button>
                 )}
               </>
             )}

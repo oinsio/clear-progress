@@ -55,7 +55,7 @@ describe("SetupPage", () => {
     localStorageMock.clear();
     mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
     mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
-    mockUseAuth.mockReturnValue({ accessToken: "mock-token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() });
+    mockUseAuth.mockReturnValue({ accessToken: "mock-token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
   });
 
   describe("when no URL is configured", () => {
@@ -192,32 +192,32 @@ describe("SetupPage", () => {
       }
 
       it("should enable initialize button when authenticated", async () => {
-        mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() });
+        mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
         await reachNotInitializedPhase();
         expect(screen.getByTestId("setup-initialize-button")).not.toBeDisabled();
       });
 
       it("should disable initialize button when not authenticated", async () => {
-        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() });
+        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
         await reachNotInitializedPhase();
         expect(screen.getByTestId("setup-initialize-button")).toBeDisabled();
       });
 
       it("should show sign-in required message when not authenticated", async () => {
-        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() });
+        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
         await reachNotInitializedPhase();
         expect(screen.getByTestId("setup-sign-in-required")).toBeInTheDocument();
       });
 
       it("should not show sign-in required when authenticated", async () => {
-        mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() });
+        mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
         await reachNotInitializedPhase();
         expect(screen.queryByTestId("setup-sign-in-required")).not.toBeInTheDocument();
       });
 
       it("should call signIn when sign-in button in not_initialized is clicked", async () => {
         const signIn = vi.fn();
-        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn, signOut: vi.fn(), silentRefresh: vi.fn() });
+        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn, signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
         await reachNotInitializedPhase();
         fireEvent.click(screen.getByTestId("setup-sign-in-btn"));
         expect(signIn).toHaveBeenCalled();
@@ -284,6 +284,48 @@ describe("SetupPage", () => {
     });
   });
 
+  describe("GAS collapsible section", () => {
+    it("should render GAS section open by default", () => {
+      renderPage();
+      expect(screen.getByTestId("setup-url-input")).toBeInTheDocument();
+    });
+
+    it("should hide inputs when GAS section is collapsed", () => {
+      renderPage();
+      fireEvent.click(screen.getByTestId("setup-gas-section-toggle"));
+      expect(screen.queryByTestId("setup-url-input")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("setup-client-id-input")).not.toBeInTheDocument();
+    });
+
+    it("should show inputs again when GAS section is reopened", () => {
+      renderPage();
+      fireEvent.click(screen.getByTestId("setup-gas-section-toggle"));
+      fireEvent.click(screen.getByTestId("setup-gas-section-toggle"));
+      expect(screen.getByTestId("setup-url-input")).toBeInTheDocument();
+    });
+  });
+
+  describe("sign-in button in GAS collapsible", () => {
+    it("should show gas sign-in button when not authenticated in input phase", () => {
+      mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+      renderPage();
+      expect(screen.getByTestId("setup-gas-sign-in-btn")).toBeInTheDocument();
+    });
+
+    it("should not show gas sign-in button when authenticated in input phase", () => {
+      renderPage();
+      expect(screen.queryByTestId("setup-gas-sign-in-btn")).not.toBeInTheDocument();
+    });
+
+    it("should call signIn when gas sign-in button is clicked", () => {
+      const signIn = vi.fn();
+      mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn, signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+      renderPage();
+      fireEvent.click(screen.getByTestId("setup-gas-sign-in-btn"));
+      expect(signIn).toHaveBeenCalled();
+    });
+  });
+
   describe("when URL is already configured", () => {
     const EXISTING_URL = "https://script.google.com/macros/s/existing/exec";
     const EXISTING_CLIENT_ID = "test-client-id.apps.googleusercontent.com";
@@ -323,12 +365,12 @@ describe("SetupPage", () => {
 
     it("should navigate to inbox when sign-in completes in connected phase", async () => {
       localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, EXISTING_CLIENT_ID);
-      mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() });
+      mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
       const { rerender } = renderPage();
 
       expect(screen.getByTestId("setup-sign-in-required")).toBeInTheDocument();
 
-      mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() });
+      mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
       rerender(<MemoryRouter><SetupPage /></MemoryRouter>);
 
       await waitFor(() => {
