@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import * as React from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { setAccessToken } from "@/services/ApiClient";
@@ -36,7 +36,6 @@ interface GoogleUserInfo {
   email?: string;
 }
 
-/** Used when VITE_GOOGLE_CLIENT_ID is configured — enables real Google OAuth flow. */
 function GoogleAuthInner({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -52,58 +51,84 @@ function GoogleAuthInner({ children }: { children: React.ReactNode }) {
     if (typeof record.email === "string") {
       setUserEmail(record.email);
     }
+
+    const hasCachedPicture = !!localStorage.getItem(STORAGE_KEYS.USER_PICTURE);
+    if (hasCachedPicture) return;
     try {
       const userInfoResponse = await fetch(GOOGLE_USERINFO_URL, {
         headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
       });
       const userInfo = (await userInfoResponse.json()) as GoogleUserInfo;
       const pictureUrl = userInfo.picture ?? null;
-      setUserPicture(pictureUrl);
       if (pictureUrl) {
+        setUserPicture(pictureUrl);
         localStorage.setItem(STORAGE_KEYS.USER_PICTURE, pictureUrl);
-      } else {
-        localStorage.removeItem(STORAGE_KEYS.USER_PICTURE);
       }
     } catch {
       // non-critical — avatar is a nice-to-have
     }
   }, []);
 
+  const handleSilentLoginSuccess = useCallback((tokenResponse: unknown) => {
+    if (!isGoogleTokenResponse(tokenResponse)) return;
+    setAccessTokenState(tokenResponse.access_token);
+    setAccessToken(tokenResponse.access_token, tokenResponse.expires_in);
+  }, []);
+
+  const handleLoginError = useCallback(() => {
+    setAccessTokenState(null);
+    setUserEmail(null);
+    setUserPicture(null);
+    localStorage.removeItem(STORAGE_KEYS.USER_PICTURE);
+    setAccessToken(null);
+  }, []);
+
+  const handleSilentLoginError = useCallback(() => {
+    setAccessTokenState(null);
+    setUserEmail(null);
+    setAccessToken(null);
+  }, []);
+
+  const isSilentRef = useRef(false);
+
+  const handleLoginSuccessWrapper = useCallback(
+    (tokenResponse: unknown) => {
+      if (isSilentRef.current) {
+        handleSilentLoginSuccess(tokenResponse);
+      } else {
+        void handleLoginSuccess(tokenResponse);
+      }
+    },
+    [handleLoginSuccess, handleSilentLoginSuccess],
+  );
+
+  const handleLoginErrorWrapper = useCallback(() => {
+    if (isSilentRef.current) {
+      handleSilentLoginError();
+    } else {
+      handleLoginError();
+    }
+  }, [handleLoginError, handleSilentLoginError]);
+
   const googleLogin = useGoogleLogin({
     flow: "implicit",
     scope: GOOGLE_OAUTH_SCOPES,
-    onSuccess: (tokenResponse) => { void handleLoginSuccess(tokenResponse); },
-    onError: () => {
-      setAccessTokenState(null);
-      setUserEmail(null);
-      setUserPicture(null);
-      localStorage.removeItem(STORAGE_KEYS.USER_PICTURE);
-      setAccessToken(null);
-    },
+    onSuccess: handleLoginSuccessWrapper,
+    onError: handleLoginErrorWrapper,
   });
 
-  const silentGoogleLogin = useGoogleLogin({
-    flow: "implicit",
-    scope: GOOGLE_OAUTH_SCOPES,
-    prompt: "none",
-    onSuccess: (tokenResponse) => { void handleLoginSuccess(tokenResponse); },
-    onError: () => {
-      setAccessTokenState(null);
-      setUserEmail(null);
-      setAccessToken(null);
-      // userPicture не сбрасываем — кешированный аватар остаётся при неудаче silent refresh
-    },
-  });
+  const googleLoginRef = useRef(googleLogin);
+  googleLoginRef.current = googleLogin;
 
-  // Автоматический silent refresh при монтировании — восстанавливает токен после перезагрузки страницы
   useEffect(() => {
-    silentGoogleLogin();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    isSilentRef.current = true;
+    googleLoginRef.current({ prompt: "none" });
   }, []);
 
   const signIn = useCallback(() => {
-    googleLogin();
-  }, [googleLogin]);
+    isSilentRef.current = false;
+    googleLoginRef.current();
+  }, []);
 
   const signOut = useCallback(() => {
     setAccessTokenState(null);
@@ -114,8 +139,9 @@ function GoogleAuthInner({ children }: { children: React.ReactNode }) {
   }, []);
 
   const silentRefresh = useCallback(() => {
-    silentGoogleLogin();
-  }, [silentGoogleLogin]);
+    isSilentRef.current = true;
+    googleLoginRef.current({ prompt: "none" });
+  }, []);
 
   return (
     <AuthContext.Provider value={{ accessToken, userEmail, userPicture, signIn, signOut, silentRefresh }}>
@@ -124,7 +150,6 @@ function GoogleAuthInner({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Used when Google Client ID is not configured — app works offline without auth. */
 function NoAuthInner({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(() => {}, []);
   const signOut = useCallback(() => {}, []);
