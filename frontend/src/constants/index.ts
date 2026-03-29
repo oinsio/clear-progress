@@ -112,6 +112,7 @@ export const STORAGE_KEYS = {
   SETUP_PENDING_PHASE: "setup_pending_phase",
   SETUP_NEEDS_INIT: "setup_needs_init",
   USER_PICTURE: "user_picture",
+  BACKEND_CONNECTED: "backend_connected",
 } as const;
 
 export const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";

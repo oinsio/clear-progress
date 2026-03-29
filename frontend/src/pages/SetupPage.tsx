@@ -101,6 +101,7 @@ export default function SetupPage() {
         return;
       }
       localStorage.setItem(STORAGE_KEYS.GAS_URL, resolvedUrl);
+      localStorage.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
       window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
 
       const trimmedClientId = clientIdInput.trim();

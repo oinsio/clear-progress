@@ -3,7 +3,7 @@ import { STORAGE_KEYS, BACKEND_CONNECTION_EVENT } from "@/constants";
 
 function readIsConnected(): boolean {
   try {
-    return !!localStorage.getItem(STORAGE_KEYS.GAS_URL);
+    return !!localStorage.getItem(STORAGE_KEYS.BACKEND_CONNECTED);
   } catch {
     return false;
   }

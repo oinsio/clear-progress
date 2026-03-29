@@ -204,6 +204,7 @@ describe("SettingsPage", () => {
 
     it("should show connected status when URL is configured", () => {
       localStorageMock.setItem(STORAGE_KEYS.GAS_URL, "https://script.google.com/macros/s/abc/exec");
+      localStorageMock.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
       renderPage();
       expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("settings.syncConnected");
     });
@@ -220,12 +221,14 @@ describe("SettingsPage", () => {
 
     it("should render full sync button when backend is connected", () => {
       localStorageMock.setItem(STORAGE_KEYS.GAS_URL, "https://script.google.com/macros/s/abc/exec");
+      localStorageMock.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
       renderPage();
       expect(screen.getByTestId("settings-full-sync-btn")).toBeInTheDocument();
     });
 
     it("should open ConfirmFullSyncDialog when full sync button is clicked", () => {
       localStorageMock.setItem(STORAGE_KEYS.GAS_URL, "https://script.google.com/macros/s/abc/exec");
+      localStorageMock.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
       renderPage();
       fireEvent.click(screen.getByTestId("settings-full-sync-btn"));
       expect(mockConfirmFullSyncDialog).toHaveBeenCalledWith(
@@ -236,6 +239,7 @@ describe("SettingsPage", () => {
 
     it("should pass triggerFullSync as onSync to ConfirmFullSyncDialog", () => {
       localStorageMock.setItem(STORAGE_KEYS.GAS_URL, "https://script.google.com/macros/s/abc/exec");
+      localStorageMock.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
       const triggerFullSync = vi.fn().mockResolvedValue(undefined);
       mockUseSync.mockReturnValue({
         syncStatus: "idle",

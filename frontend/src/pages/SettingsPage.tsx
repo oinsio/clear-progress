@@ -65,7 +65,7 @@ export default function SettingsPage() {
   };
 
   const [isBackendConnected, setIsBackendConnected] = useState(
-    !!localStorage.getItem(STORAGE_KEYS.GAS_URL),
+    !!localStorage.getItem(STORAGE_KEYS.BACKEND_CONNECTED),
   );
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
 
@@ -78,7 +78,7 @@ export default function SettingsPage() {
   }, []);
 
   const handleDisconnectConfirm = useCallback((): void => {
-    localStorage.removeItem(STORAGE_KEYS.GAS_URL);
+    localStorage.removeItem(STORAGE_KEYS.BACKEND_CONNECTED);
     window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
     setIsBackendConnected(false);
     setIsDisconnectDialogOpen(false);
