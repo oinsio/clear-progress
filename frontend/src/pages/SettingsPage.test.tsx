@@ -11,6 +11,7 @@ vi.mock("@/app/providers/ThemeProvider");
 vi.mock("@/hooks/useLanguage");
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
+vi.mock("@/hooks/usePanelAlwaysOpen");
 vi.mock("@/components/tasks/RightFilterPanel");
 vi.mock("@/components/settings/MenuOrderSection");
 vi.mock("@/components/settings/ConfirmFullSyncDialog");
@@ -27,6 +28,7 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
+import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { useSync } from "@/app/providers/SyncProvider";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 
@@ -35,6 +37,7 @@ const mockUseTheme = vi.mocked(useTheme);
 const mockUseLanguage = vi.mocked(useLanguage);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUsePanelSide = vi.mocked(usePanelSide);
+const mockUsePanelAlwaysOpen = vi.mocked(usePanelAlwaysOpen);
 const mockUseSync = vi.mocked(useSync);
 const mockConfirmFullSyncDialog = vi.mocked(ConfirmFullSyncDialog);
 
@@ -83,6 +86,7 @@ describe("SettingsPage", () => {
     mockUseLanguage.mockReturnValue(buildLanguageHook());
     mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
     mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
+    mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: false, setPanelAlwaysOpen: vi.fn() });
     mockUseSync.mockReturnValue({
       syncStatus: "idle",
       syncVersion: 0,

@@ -5,6 +5,7 @@ import { ThemeProvider } from "./providers/ThemeProvider";
 import { SyncProvider } from "./providers/SyncProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
 import { AuthProvider } from "./providers/AuthProvider";
+import { PanelSettingsProvider } from "./providers/PanelSettingsProvider";
 import { router } from "./router";
 import { STORAGE_KEYS, GOOGLE_CLIENT_ID_CHANGED_EVENT } from "@/constants";
 
@@ -14,7 +15,9 @@ function AppProviders() {
       <LanguageProvider>
         <SyncProvider>
           <ThemeProvider>
-            <RouterProvider router={router} />
+            <PanelSettingsProvider>
+              <RouterProvider router={router} />
+            </PanelSettingsProvider>
           </ThemeProvider>
         </SyncProvider>
       </LanguageProvider>
