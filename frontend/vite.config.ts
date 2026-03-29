@@ -4,6 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import { resolve } from "path";
 
 export default defineConfig({
+  base: '/clear-progress-gtd/',
   plugins: [
     react(),
     VitePWA({
