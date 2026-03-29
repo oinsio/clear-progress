@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import * as React from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { setAccessToken } from "@/services/ApiClient";
@@ -90,11 +90,16 @@ function GoogleAuthInner({ children }: { children: React.ReactNode }) {
     onError: () => {
       setAccessTokenState(null);
       setUserEmail(null);
-      setUserPicture(null);
-      localStorage.removeItem(STORAGE_KEYS.USER_PICTURE);
       setAccessToken(null);
+      // userPicture не сбрасываем — кешированный аватар остаётся при неудаче silent refresh
     },
   });
+
+  // Автоматический silent refresh при монтировании — восстанавливает токен после перезагрузки страницы
+  useEffect(() => {
+    silentGoogleLogin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const signIn = useCallback(() => {
     googleLogin();

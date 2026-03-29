@@ -144,6 +144,17 @@ describe("AuthProvider", () => {
     expect(screen.getByRole("button", { name: "silent-refresh" })).toBeInTheDocument();
   });
 
+  it("should call silentGoogleLogin on mount to restore session", () => {
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    expect(mockSilentLogin).toHaveBeenCalledTimes(1);
+    expect(mockLogin).not.toHaveBeenCalled();
+  });
+
   it("should call the silent Google login function when silentRefresh is invoked", async () => {
     const user = userEvent.setup();
     render(
@@ -151,6 +162,9 @@ describe("AuthProvider", () => {
         <TestConsumer />
       </AuthProvider>,
     );
+
+    // Сбрасываем вызов при монтировании, чтобы проверить только явный вызов silentRefresh
+    mockSilentLogin.mockClear();
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "silent-refresh" }));
