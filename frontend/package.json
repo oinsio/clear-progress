@@ -2,6 +2,7 @@
   "name": "clear-progress-gtd",
   "private": true,
   "version": "0.1.0",
+  "homepage": "https://oinsio.github.io",
   "type": "module",
   "scripts": {
     "dev": "vite",
