@@ -141,6 +141,7 @@
     "language": "Language",
     "panelLeft": "Left",
     "panelRight": "Right",
+    "panelAlwaysOpen": "Always expanded",
     "login": "Sign in",
     "loginAriaLabel": "Sign in to account",
     "settingsAriaLabel": "Settings",

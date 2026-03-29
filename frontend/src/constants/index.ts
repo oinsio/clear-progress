@@ -105,6 +105,7 @@ export const STORAGE_KEYS = {
   PANEL_OPEN: "panel_open",
   LANGUAGE: "language",
   PANEL_SPLIT: "panel_split",
+  PANEL_ALWAYS_OPEN: "panel_always_open",
   MENU_ORDER: "menu_order",
   SECTION_COLLAPSE: "section_collapse",
   COLOR_SCHEME: "color_scheme",

@@ -6,6 +6,7 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { useSync } from "@/app/providers/SyncProvider";
 import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
@@ -28,6 +29,7 @@ export default function SettingsPage() {
   const { accentColor, setAccentColor, colorScheme, setColorScheme } = useTheme();
   const { panelSide, setPanelSide } = usePanelSide();
   const { language, setLanguage } = useLanguage();
+  const { isPanelAlwaysOpen, setPanelAlwaysOpen } = usePanelAlwaysOpen();
 
   const handlePanelToggle = togglePanelOpen;
 
@@ -173,6 +175,31 @@ export default function SettingsPage() {
               </div>
             </section>
 
+            {/* Language section */}
+            <section data-testid="settings-language" className="space-y-3">
+              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                {t("settings.language")}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang}
+                    data-testid={`settings-language-option-${lang}`}
+                    aria-pressed={language === lang}
+                    onClick={() => handleLanguageSelect(lang)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
+                      language === lang
+                        ? "bg-accent border-accent text-white"
+                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
+                    )}
+                  >
+                    {t(`lang.${lang}`)}
+                  </button>
+                ))}
+              </div>
+            </section>
+
             {/* Panel side section */}
             <section data-testid="settings-panel-side" className="space-y-3">
               <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
@@ -198,29 +225,33 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            {/* Language section */}
-            <section data-testid="settings-language" className="space-y-3">
-              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                {t("settings.language")}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <button
-                    key={lang}
-                    data-testid={`settings-language-option-${lang}`}
-                    aria-pressed={language === lang}
-                    onClick={() => handleLanguageSelect(lang)}
+            {/* Panel always open section */}
+            <section data-testid="settings-panel-always-open">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isPanelAlwaysOpen}
+                data-testid="settings-panel-always-open-toggle"
+                onClick={() => setPanelAlwaysOpen(!isPanelAlwaysOpen)}
+                className="flex items-center gap-3"
+              >
+                <span
+                  className={cn(
+                    "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
+                    isPanelAlwaysOpen ? "bg-accent" : "bg-gray-200",
+                  )}
+                >
+                  <span
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
-                      language === lang
-                        ? "bg-accent border-accent text-white"
-                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
+                      "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200",
+                      isPanelAlwaysOpen ? "translate-x-5" : "translate-x-0",
                     )}
-                  >
-                    {t(`lang.${lang}`)}
-                  </button>
-                ))}
-              </div>
+                  />
+                </span>
+                <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                  {t("settings.panelAlwaysOpen")}
+                </span>
+              </button>
             </section>
 
             {/* Menu order section */}

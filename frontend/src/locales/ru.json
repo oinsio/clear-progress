@@ -141,6 +141,7 @@
     "language": "Язык",
     "panelLeft": "Слева",
     "panelRight": "Справа",
+    "panelAlwaysOpen": "Всегда раскрыта",
     "login": "Войдите",
     "loginAriaLabel": "Войти в аккаунт",
     "settingsAriaLabel": "Настройки",

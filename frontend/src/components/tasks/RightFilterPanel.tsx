@@ -19,6 +19,7 @@ import { useSync } from "@/app/providers/SyncProvider";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useBackendConnected } from "@/hooks/useBackendConnected";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
+import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import * as React from "react";
 
 export type RightPanelMode =
@@ -74,6 +75,7 @@ export function RightFilterPanel({
   const { userPicture } = useAuth();
   const isBackendConnected = useBackendConnected();
   const { menuOrder } = useMenuOrder();
+  const { isPanelAlwaysOpen } = usePanelAlwaysOpen();
 
   const visibleFilterItems = menuOrder
     .filter((config) => config.visible)
@@ -97,7 +99,64 @@ export function RightFilterPanel({
   };
 
   const isLeft = side === "left";
+  const effectiveIsOpen = isPanelAlwaysOpen ? true : isOpen;
   const panelBorder = isLeft ? "border-r border-accent/70" : "border-l border-accent/70";
+
+  const accountButton = (
+    <button
+      type="button"
+      aria-label={t("settings.settingsAriaLabel")}
+      data-testid="right-panel-account"
+      onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SETTINGS); }}
+      className="flex-shrink-0 flex items-center justify-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
+    >
+      {userPicture ? (
+        <img
+          src={userPicture}
+          alt={t("settings.avatarAlt")}
+          className="w-8 h-8 rounded-full object-cover"
+        />
+      ) : (
+        <CircleUser className="w-8 h-8" aria-hidden="true" />
+      )}
+    </button>
+  );
+
+  const syncLoginButton = isBackendConnected ? (
+    <button
+      type="button"
+      aria-label={t("sync.ariaLabel")}
+      data-testid="right-panel-sync"
+      onClick={handleSyncClick}
+      className={cn(
+        "flex-1 min-w-0 flex items-center gap-2 px-4 py-4 text-white hover:bg-black/15 transition-colors",
+        isLeft && "flex-row-reverse",
+      )}
+    >
+      <div className="relative flex-shrink-0">
+        <RefreshCw
+          className={cn("w-5 h-5", isSyncing && "animate-spin")}
+          aria-hidden="true"
+        />
+        {hasSyncError && (
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-red-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-[14px] font-bold leading-none">!</span>
+          </span>
+        )}
+      </div>
+      <span className="text-sm font-medium break-words">{syncLabel}</span>
+    </button>
+  ) : (
+    <button
+      type="button"
+      aria-label={t("settings.loginAriaLabel")}
+      data-testid="right-panel-login"
+      onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SETUP); }}
+      className="flex-1 flex items-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
+    >
+      <span className="text-base font-medium">{t("settings.login")}</span>
+    </button>
+  );
 
   return (
     <div
@@ -107,75 +166,32 @@ export function RightFilterPanel({
       )}
     >
       {/* Main panel */}
-      {isOpen ? (
+      {effectiveIsOpen ? (
         <>
           {/* Mobile placeholder: keeps flex layout stable while panel is an overlay */}
           <div className={cn("md:hidden w-14 flex-shrink-0 bg-accent", panelBorder)} />
           <div
             className={cn(
-              "w-52 flex flex-col bg-accent overflow-hidden cursor-pointer",
+              "w-52 flex flex-col bg-accent overflow-hidden",
+              !isPanelAlwaysOpen && "cursor-pointer",
               "absolute top-0 bottom-0 z-20 md:relative md:z-auto",
               isLeft ? "left-0" : "right-0",
               panelBorder,
             )}
-            onClick={onToggle}
+            onClick={isPanelAlwaysOpen ? undefined : onToggle}
             data-testid="right-panel-toggle"
-            aria-label={t("filter.close")}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && onToggle()}
+            aria-label={isPanelAlwaysOpen ? undefined : t("filter.close")}
+            role={isPanelAlwaysOpen ? undefined : "button"}
+            tabIndex={isPanelAlwaysOpen ? undefined : 0}
+            onKeyDown={isPanelAlwaysOpen ? undefined : (e) => e.key === "Enter" && onToggle()}
           >
           {/* Account / sync row */}
           <div className="flex items-center justify-between border-b border-white/20">
-            {isBackendConnected ? (
-              <button
-                type="button"
-                aria-label={t("sync.ariaLabel")}
-                data-testid="right-panel-sync"
-                onClick={handleSyncClick}
-                className="flex-1 min-w-0 flex items-center gap-2 px-4 py-4 text-white hover:bg-black/15 transition-colors"
-              >
-                <div className="relative flex-shrink-0">
-                  <RefreshCw
-                    className={cn("w-5 h-5", isSyncing && "animate-spin")}
-                    aria-hidden="true"
-                  />
-                  {hasSyncError && (
-                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-red-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-[14px] font-bold leading-none">!</span>
-                    </span>
-                  )}
-                </div>
-                <span className="text-sm font-medium break-words">{syncLabel}</span>
-              </button>
+            {isLeft ? (
+              <>{accountButton}{syncLoginButton}</>
             ) : (
-              <button
-                type="button"
-                aria-label={t("settings.loginAriaLabel")}
-                data-testid="right-panel-login"
-                onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SETUP); }}
-                className="flex-1 flex items-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
-              >
-                <span className="text-base font-medium">{t("settings.login")}</span>
-              </button>
+              <>{syncLoginButton}{accountButton}</>
             )}
-            <button
-              type="button"
-              aria-label={t("settings.settingsAriaLabel")}
-              data-testid="right-panel-account"
-              onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SETTINGS); }}
-              className="flex-shrink-0 flex items-center justify-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
-            >
-              {userPicture ? (
-                <img
-                  src={userPicture}
-                  alt={t("settings.avatarAlt")}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              ) : (
-                <CircleUser className="w-8 h-8" aria-hidden="true" />
-              )}
-            </button>
           </div>
 
           {/* Filter items */}
