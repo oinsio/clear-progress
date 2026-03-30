@@ -192,8 +192,8 @@
     "errorInit": "Initialization failed. Please try again.",
     "connectedUrl": "Current URL:",
     "clientIdLabel": "Google OAuth 2.0 Client ID",
-    "clientIdPlaceholder": "1234567890-xxx.apps.googleusercontent.com",
-    "clientIdDescription": "Create an OAuth 2.0 Client ID in Google Cloud Console for your project",
+    "clientIdPlaceholder": "1234567890-xxx",
+    "clientIdDescription": "Create an OAuth 2.0 Client ID in Google Cloud Console. Short form (without .apps.googleusercontent.com) is also accepted.",
     "awaitingSignin": "Connection established. Sign in with Google to start syncing."
   },
   "selector": {

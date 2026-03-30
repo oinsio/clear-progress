@@ -378,4 +378,55 @@ describe("SetupPage", () => {
       });
     });
   });
+
+  describe("Google Client ID normalization", () => {
+    const SHORT_CLIENT_ID = "306298988178-abc123def456";
+    const FULL_CLIENT_ID = "306298988178-abc123def456.apps.googleusercontent.com";
+
+    beforeEach(() => {
+      sessionStorage.clear();
+    });
+
+    it("should save full client ID to localStorage when short form is entered", async () => {
+      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      renderPage();
+      fireEvent.change(screen.getByTestId("setup-url-input"), {
+        target: { value: TEST_URL },
+      });
+      fireEvent.change(screen.getByTestId("setup-client-id-input"), {
+        target: { value: SHORT_CLIENT_ID },
+      });
+      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await waitFor(() => {
+        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(FULL_CLIENT_ID);
+      });
+    });
+
+    it("should save full client ID as-is when full form is already entered", async () => {
+      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      renderPage();
+      fireEvent.change(screen.getByTestId("setup-url-input"), {
+        target: { value: TEST_URL },
+      });
+      fireEvent.change(screen.getByTestId("setup-client-id-input"), {
+        target: { value: FULL_CLIENT_ID },
+      });
+      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await waitFor(() => {
+        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(FULL_CLIENT_ID);
+      });
+    });
+
+    it("should not save client ID to localStorage when client ID input is empty", async () => {
+      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      renderPage();
+      fireEvent.change(screen.getByTestId("setup-url-input"), {
+        target: { value: TEST_URL },
+      });
+      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await waitFor(() => {
+        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBeNull();
+      });
+    });
+  });
 });

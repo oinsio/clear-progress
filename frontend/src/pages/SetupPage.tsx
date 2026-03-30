@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ROUTES, STORAGE_KEYS, BACKEND_CONNECTION_EVENT, GOOGLE_CLIENT_ID_CHANGED_EVENT } from "@/constants";
 import { parseGasInput } from "@/utils/gasUrl";
+import { parseClientId } from "@/utils/clientId";
 import { defaultApiClient } from "@/services/defaultServices";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { usePanelSide } from "@/hooks/usePanelSide";
@@ -106,7 +107,8 @@ export default function SetupPage() {
 
       const trimmedClientId = clientIdInput.trim();
       if (trimmedClientId) {
-        localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, trimmedClientId);
+        const normalizedClientId = parseClientId(trimmedClientId);
+        localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, normalizedClientId);
         // Persist the desired phase so SetupPage can restore it after the app remounts
         // (GOOGLE_CLIENT_ID_CHANGED_EVENT causes App to rewrap with GoogleOAuthProvider).
         sessionStorage.setItem(STORAGE_KEYS.SETUP_PENDING_PHASE, "awaiting_signin");

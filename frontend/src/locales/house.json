@@ -192,8 +192,8 @@
     "connectedUrl": "Текущий адрес:",
     "awaitingSignin": "Подключение есть. Войдите в Google для начала мучений.",
     "clientIdLabel": "Google OAuth 2.0 Client ID",
-    "clientIdPlaceholder": "1234567890-xxx.apps.googleusercontent.com",
-    "clientIdDescription": "Создайте OAuth 2.0 Client ID в Google Cloud Console. Должно быть несложно."
+    "clientIdPlaceholder": "1234567890-xxx",
+    "clientIdDescription": "Создайте OAuth 2.0 Client ID в Google Cloud Console. Короткая форма тоже принимается. Должно быть несложно."
   },
   "selector": {
     "goal": "Иллюзия",
