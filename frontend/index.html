@@ -8,6 +8,29 @@
     <link rel="manifest" href="/manifest.json" />
     <title>Clear Progress</title>
     <script>
+      // Restore SPA route encoded by 404.html (GitHub Pages SPA trick)
+      // https://github.com/rafgraph/spa-github-pages
+      (function (location) {
+        if (location.search[1] === "/") {
+          var decoded = location.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            });
+          window.history.replaceState(
+            null,
+            null,
+            decoded[0] +
+              (decoded.slice(1).join("&")
+                ? "&" + decoded.slice(1).join("&")
+                : "") +
+              location.hash,
+          );
+        }
+      })(window.location);
+    </script>
+    <script>
       try {
         let accentColor = localStorage.getItem("accent_color");
         let validAccentColors = ["green","orange","purple","yellow","coral","teal","blue","indigo"];

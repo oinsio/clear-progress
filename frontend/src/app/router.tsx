@@ -35,33 +35,36 @@ function PageLayout() {
   );
 }
 
-export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Navigate to={ROUTES.INBOX} replace />,
-  },
-  {
-    element: <AppLayout />,
-    children: [
-      { path: ROUTES.SETUP, element: <SetupPage /> },
-      { path: ROUTES.INBOX, element: <InboxPage /> },
-      { path: ROUTES.CATEGORIES, element: <CategoriesPage /> },
-      { path: ROUTES.CATEGORY, element: <CategoryDetailPage /> },
-      { path: ROUTES.CONTEXTS, element: <ContextsPage /> },
-      { path: ROUTES.CONTEXT, element: <ContextDetailPage /> },
-      { path: ROUTES.SETTINGS, element: <SettingsPage /> },
-      { path: ROUTES.GOALS, element: <GoalsPage /> },
-      { path: ROUTES.GOAL, element: <GoalDetailPage /> },
-      { path: ROUTES.SEARCH, element: <SearchPage /> },
-      { path: ROUTES.DELETED, element: <DeletedPage /> },
-      {
-        element: <PageLayout />,
-        children: [
-          { path: ROUTES.TODAY, element: <TodayPage /> },
-          { path: ROUTES.WEEK, element: <WeekPage /> },
-          { path: ROUTES.LATER, element: <LaterPage /> },
-        ],
-      },
-    ],
-  },
-]);
+export const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <Navigate to={ROUTES.INBOX} replace />,
+    },
+    {
+      element: <AppLayout />,
+      children: [
+        { path: ROUTES.SETUP, element: <SetupPage /> },
+        { path: ROUTES.INBOX, element: <InboxPage /> },
+        { path: ROUTES.CATEGORIES, element: <CategoriesPage /> },
+        { path: ROUTES.CATEGORY, element: <CategoryDetailPage /> },
+        { path: ROUTES.CONTEXTS, element: <ContextsPage /> },
+        { path: ROUTES.CONTEXT, element: <ContextDetailPage /> },
+        { path: ROUTES.SETTINGS, element: <SettingsPage /> },
+        { path: ROUTES.GOALS, element: <GoalsPage /> },
+        { path: ROUTES.GOAL, element: <GoalDetailPage /> },
+        { path: ROUTES.SEARCH, element: <SearchPage /> },
+        { path: ROUTES.DELETED, element: <DeletedPage /> },
+        {
+          element: <PageLayout />,
+          children: [
+            { path: ROUTES.TODAY, element: <TodayPage /> },
+            { path: ROUTES.WEEK, element: <WeekPage /> },
+            { path: ROUTES.LATER, element: <LaterPage /> },
+          ],
+        },
+      ],
+    },
+  ],
+  { basename: import.meta.env.BASE_URL },
+);

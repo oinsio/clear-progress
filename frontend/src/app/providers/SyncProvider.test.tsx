@@ -173,6 +173,7 @@ beforeEach(() => {
   vi.mocked(useAuth).mockReturnValue({
     accessToken: "mock-token",
     userEmail: "test@example.com",
+    userPicture: null,
     signIn: vi.fn(),
     signOut: mockSignOut,
     silentRefresh: mockSilentRefresh,
@@ -581,6 +582,7 @@ describe("SyncProvider — auth gate", () => {
     vi.mocked(useAuth).mockReturnValue({
       accessToken: null,
       userEmail: null,
+      userPicture: null,
       signIn: vi.fn(),
       signOut: mockSignOut,
       silentRefresh: mockSilentRefresh,
@@ -597,6 +599,7 @@ describe("SyncProvider — auth gate", () => {
     vi.mocked(useAuth).mockReturnValue({
       accessToken: null,
       userEmail: null,
+      userPicture: null,
       signIn: vi.fn(),
       signOut: mockSignOut,
       silentRefresh: mockSilentRefresh,
