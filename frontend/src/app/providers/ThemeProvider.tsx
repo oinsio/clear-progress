@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { AccentColor, ColorScheme } from "@/types/common";
-import { ACCENT_COLORS, COLOR_SCHEMES, DEFAULT_ACCENT_COLOR, DEFAULT_COLOR_SCHEME, SETTING_KEYS, STORAGE_KEYS } from "@/constants";
+import { ACCENT_COLOR_VALUES, ACCENT_COLORS, COLOR_SCHEMES, DEFAULT_ACCENT_COLOR, DEFAULT_COLOR_SCHEME, SETTING_KEYS, STORAGE_KEYS } from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { useSync } from "@/app/providers/SyncProvider";
 import * as React from "react";
@@ -110,6 +110,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 function applyAccentColor(color: AccentColor): void {
   document.documentElement.setAttribute("data-accent", color);
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute("content", ACCENT_COLOR_VALUES[color]);
+  }
 }
 
 export function useTheme(): ThemeContextValue {

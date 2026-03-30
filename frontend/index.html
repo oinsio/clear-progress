@@ -32,10 +32,23 @@
     </script>
     <script>
       try {
-        let accentColor = localStorage.getItem("accent_color");
-        let validAccentColors = ["green","orange","purple","yellow","coral","teal","blue","indigo"];
-        if (accentColor && validAccentColors.indexOf(accentColor) !== -1) {
+          let accentColorValues = {
+              green: "#69b23e",
+              coral: "#fb7185",
+              orange: "#f57c00",
+              yellow: "#f4c943",
+              teal: "#0d9488",
+              blue: "#2563eb",
+              indigo: "#4f46e5",
+              purple: "#a855f7",
+          };
+          let accentColor = localStorage.getItem("accent_color");
+          if (accentColor && accentColorValues[accentColor]) {
           document.documentElement.setAttribute("data-accent", accentColor);
+          var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+          if (metaThemeColor) {
+            metaThemeColor.setAttribute("content", accentColorValues[accentColor]);
+          }
         }
       } catch (e) {}
     </script>
