@@ -61,20 +61,11 @@ function GoogleAuthInner({ children }: { children: React.ReactNode }) {
       const userInfo = (await userInfoResponse.json()) as GoogleUserInfo;
       const pictureUrl = userInfo.picture ?? null;
       if (pictureUrl) {
-        // Fetch the image once and store as base64 data URL to avoid repeated CDN requests (429)
-        const imageResponse = await fetch(pictureUrl);
-        const imageBlob = await imageResponse.blob();
-        const base64DataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(imageBlob);
-        });
-        setUserPicture(base64DataUrl);
-        localStorage.setItem(STORAGE_KEYS.USER_PICTURE, base64DataUrl);
+        setUserPicture(pictureUrl);
+        localStorage.setItem(STORAGE_KEYS.USER_PICTURE, pictureUrl);
       }
     } catch (avatarError) {
-      console.error("[AuthProvider] Failed to fetch/store avatar:", avatarError);
+        console.error("[AuthProvider] Failed to load avatar from Google user info:", avatarError);
     }
   }, []);
 
