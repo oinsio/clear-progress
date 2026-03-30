@@ -12,6 +12,7 @@ vi.mock("@/hooks/useLanguage");
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/usePanelAlwaysOpen");
+vi.mock("@/hooks/useConnectionStatus");
 vi.mock("@/components/tasks/RightFilterPanel");
 vi.mock("@/components/settings/MenuOrderSection");
 vi.mock("@/components/settings/ConfirmFullSyncDialog");
@@ -21,7 +22,6 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-import { STORAGE_KEYS } from "@/constants";
 import { useSettings } from "@/hooks/useSettings";
 import { localStorageMock } from "@/test/mocks/localStorageMock";
 import { useTheme } from "@/app/providers/ThemeProvider";
@@ -30,6 +30,7 @@ import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { useSync } from "@/app/providers/SyncProvider";
+import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 
 const mockUseSettings = vi.mocked(useSettings);
@@ -39,6 +40,7 @@ const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelAlwaysOpen = vi.mocked(usePanelAlwaysOpen);
 const mockUseSync = vi.mocked(useSync);
+const mockUseConnectionStatus = vi.mocked(useConnectionStatus);
 const mockConfirmFullSyncDialog = vi.mocked(ConfirmFullSyncDialog);
 
 function buildSettingsHook(overrides: Partial<UseSettingsReturn> = {}): UseSettingsReturn {
@@ -87,6 +89,7 @@ describe("SettingsPage", () => {
     mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
     mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
     mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: false, setPanelAlwaysOpen: vi.fn() });
+    mockUseConnectionStatus.mockReturnValue("not_configured");
     mockUseSync.mockReturnValue({
       syncStatus: "idle",
       syncVersion: 0,
@@ -202,11 +205,22 @@ describe("SettingsPage", () => {
       expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("settings.syncNotConnected");
     });
 
-    it("should show connected status when URL is configured", () => {
-      localStorageMock.setItem(STORAGE_KEYS.GAS_URL, "https://script.google.com/macros/s/abc/exec");
-      localStorageMock.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
+    it("should show connected status when backend is synced", () => {
+      mockUseConnectionStatus.mockReturnValue("synced");
       renderPage();
       expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("settings.syncConnected");
+    });
+
+    it("should show error status when sync is failing", () => {
+      mockUseConnectionStatus.mockReturnValue("error");
+      renderPage();
+      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("sync.noConnection");
+    });
+
+    it("should show unauthorized status when token is expired", () => {
+      mockUseConnectionStatus.mockReturnValue("unauthorized");
+      renderPage();
+      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("sync.unauthorized");
     });
 
     it("should render configure button", () => {
@@ -214,21 +228,19 @@ describe("SettingsPage", () => {
       expect(screen.getByTestId("settings-sync-connect")).toBeInTheDocument();
     });
 
-    it("should not render full sync button when backend is not connected", () => {
+    it("should not render full sync button when backend is not configured", () => {
       renderPage();
       expect(screen.queryByTestId("settings-full-sync-btn")).not.toBeInTheDocument();
     });
 
-    it("should render full sync button when backend is connected", () => {
-      localStorageMock.setItem(STORAGE_KEYS.GAS_URL, "https://script.google.com/macros/s/abc/exec");
-      localStorageMock.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
+    it("should render full sync button when backend is configured", () => {
+      mockUseConnectionStatus.mockReturnValue("synced");
       renderPage();
       expect(screen.getByTestId("settings-full-sync-btn")).toBeInTheDocument();
     });
 
     it("should open ConfirmFullSyncDialog when full sync button is clicked", () => {
-      localStorageMock.setItem(STORAGE_KEYS.GAS_URL, "https://script.google.com/macros/s/abc/exec");
-      localStorageMock.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
+      mockUseConnectionStatus.mockReturnValue("synced");
       renderPage();
       fireEvent.click(screen.getByTestId("settings-full-sync-btn"));
       expect(mockConfirmFullSyncDialog).toHaveBeenCalledWith(
@@ -238,8 +250,7 @@ describe("SettingsPage", () => {
     });
 
     it("should pass triggerFullSync as onSync to ConfirmFullSyncDialog", () => {
-      localStorageMock.setItem(STORAGE_KEYS.GAS_URL, "https://script.google.com/macros/s/abc/exec");
-      localStorageMock.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
+      mockUseConnectionStatus.mockReturnValue("synced");
       const triggerFullSync = vi.fn().mockResolvedValue(undefined);
       mockUseSync.mockReturnValue({
         syncStatus: "idle",

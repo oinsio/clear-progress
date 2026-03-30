@@ -86,10 +86,12 @@ export const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 export const SYNC_DEBOUNCE_MS = 15 * 1000;
 export const PING_INTERVAL_MS = 30 * 1000;
 export const MAX_SILENT_REFRESH_ATTEMPTS = 3;
+export const MAX_PING_ATTEMPTS = 20; // 10 minutes (20 × 30s)
 
 export const BACKEND_CONNECTION_EVENT = "backend_connection_changed";
 export const GOOGLE_CLIENT_ID_CHANGED_EVENT = "google_client_id_changed";
 export const MENU_ORDER_CHANGED_EVENT = "menu_order_changed";
+export const AUTH_REQUIRED_EVENT = "auth_required";
 
 export const DB_NAME = "clear-progress";
 export const DB_VERSION = 3;
@@ -109,8 +111,6 @@ export const STORAGE_KEYS = {
   MENU_ORDER: "menu_order",
   SECTION_COLLAPSE: "section_collapse",
   COLOR_SCHEME: "color_scheme",
-  SETUP_PENDING_PHASE: "setup_pending_phase",
-  SETUP_NEEDS_INIT: "setup_needs_init",
   USER_PICTURE: "user_picture",
   BACKEND_CONNECTED: "backend_connected",
 } as const;

@@ -20,18 +20,6 @@ type SetupPhase =
   | "connected"
   | "error";
 
-function readPendingPhase(): SetupPhase | null {
-  const saved = sessionStorage.getItem(STORAGE_KEYS.SETUP_PENDING_PHASE) as SetupPhase | null;
-  if (saved) sessionStorage.removeItem(STORAGE_KEYS.SETUP_PENDING_PHASE);
-  return saved;
-}
-
-function readNeedsInit(): boolean {
-  const flag = sessionStorage.getItem(STORAGE_KEYS.SETUP_NEEDS_INIT) === "true";
-  if (flag) sessionStorage.removeItem(STORAGE_KEYS.SETUP_NEEDS_INIT);
-  return flag;
-}
-
 export default function SetupPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -45,18 +33,17 @@ export default function SetupPage() {
 
   const [urlInput, setUrlInput] = useState(existingUrl);
   const [clientIdInput, setClientIdInput] = useState(existingClientId);
-  const [phase, setPhase] = useState<SetupPhase>(() => {
-    // After GOOGLE_CLIENT_ID_CHANGED_EVENT the app remounts; read persisted phase from sessionStorage.
-    const pendingPhase = readPendingPhase();
-    if (pendingPhase) return pendingPhase;
-    return existingUrl ? "connected" : "input";
-  });
-  const [needsInit, setNeedsInit] = useState<boolean>(() => readNeedsInit());
+  const [phase, setPhase] = useState<SetupPhase>(() =>
+    existingUrl ? "connected" : "input",
+  );
+  const [needsInit, setNeedsInit] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isGasSectionOpen, setIsGasSectionOpen] = useState(true);
   const prevAccessTokenRef = useRef<string | null>(accessToken);
 
-  // After sign-in succeeds: initialize backend if needed (awaiting_signin), or go to app (connected).
+  // After sign-in succeeds: initialize backend if needed, or navigate to app.
+  // Using prevAccessTokenRef to detect the null → token transition on this mount
+  // (avoids spurious navigation if accessToken was already set when page loaded).
   useEffect(() => {
     const previousToken = prevAccessTokenRef.current;
     prevAccessTokenRef.current = accessToken;
@@ -109,17 +96,11 @@ export default function SetupPage() {
       if (trimmedClientId) {
         const normalizedClientId = parseClientId(trimmedClientId);
         localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, normalizedClientId);
-        // Persist the desired phase so SetupPage can restore it after the app remounts
-        // (GOOGLE_CLIENT_ID_CHANGED_EVENT causes App to rewrap with GoogleOAuthProvider).
-        sessionStorage.setItem(STORAGE_KEYS.SETUP_PENDING_PHASE, "awaiting_signin");
-        if (!response.initialized) {
-          sessionStorage.setItem(STORAGE_KEYS.SETUP_NEEDS_INIT, "true");
-          setNeedsInit(true);
-        }
-        // Update phase directly in case app does NOT remount (googleClientId was already set).
+        setNeedsInit(!response.initialized);
         setPhase("awaiting_signin");
+        // Notify AuthProvider to mount GoogleAuthSync with the new clientId.
+        // The app no longer remounts — SetupPage keeps its state.
         window.dispatchEvent(new Event(GOOGLE_CLIENT_ID_CHANGED_EVENT));
-        // If googleClientId was null, App remounts and the new SetupPage reads sessionStorage flags.
       } else if (response.initialized) {
         navigate(ROUTES.INBOX);
       } else {

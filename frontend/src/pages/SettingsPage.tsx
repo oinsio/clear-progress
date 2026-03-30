@@ -8,6 +8,7 @@ import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { useSync } from "@/app/providers/SyncProvider";
+import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
@@ -64,9 +65,8 @@ export default function SettingsPage() {
     setLanguage(lang);
   };
 
-  const [isBackendConnected, setIsBackendConnected] = useState(
-    !!localStorage.getItem(STORAGE_KEYS.BACKEND_CONNECTED),
-  );
+  const connectionStatus = useConnectionStatus();
+  const isBackendConfigured = connectionStatus !== "not_configured";
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
 
   const handleDisconnectRequest = useCallback((): void => {
@@ -80,7 +80,6 @@ export default function SettingsPage() {
   const handleDisconnectConfirm = useCallback((): void => {
     localStorage.removeItem(STORAGE_KEYS.BACKEND_CONNECTED);
     window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
-    setIsBackendConnected(false);
     setIsDisconnectDialogOpen(false);
   }, []);
 
@@ -267,20 +266,32 @@ export default function SettingsPage() {
                   <span
                     className={cn(
                       "size-2 rounded-full",
-                      isBackendConnected ? "bg-green-500" : "bg-gray-300",
+                      connectionStatus === "synced" && "bg-green-500",
+                      connectionStatus === "syncing" && "bg-yellow-400 animate-pulse",
+                      (connectionStatus === "error" || connectionStatus === "offline" || connectionStatus === "unauthorized") && "bg-red-500",
+                      (connectionStatus === "not_configured" || connectionStatus === "no_auth") && "bg-gray-300",
                     )}
                   />
                   <span
                     data-testid="settings-sync-status"
                     className={cn(
                       "text-sm font-medium",
-                      isBackendConnected ? "text-green-600" : "text-gray-400",
+                      connectionStatus === "synced" && "text-green-600",
+                      connectionStatus === "syncing" && "text-yellow-600",
+                      (connectionStatus === "error" || connectionStatus === "offline" || connectionStatus === "unauthorized") && "text-red-500",
+                      (connectionStatus === "not_configured" || connectionStatus === "no_auth") && "text-gray-400",
                     )}
                   >
-                    {isBackendConnected ? t("settings.syncConnected") : t("settings.syncNotConnected")}
+                    {connectionStatus === "synced" && t("settings.syncConnected")}
+                    {connectionStatus === "syncing" && t("sync.syncing")}
+                    {connectionStatus === "error" && t("sync.noConnection")}
+                    {connectionStatus === "offline" && t("sync.noConnection")}
+                    {connectionStatus === "unauthorized" && t("sync.unauthorized")}
+                    {connectionStatus === "no_auth" && t("settings.syncConnected")}
+                    {connectionStatus === "not_configured" && t("settings.syncNotConnected")}
                   </span>
                 </div>
-                {isBackendConnected ? (
+                {isBackendConfigured ? (
                   <>
                     <button
                       data-testid="settings-full-sync-btn"
@@ -306,6 +317,7 @@ export default function SettingsPage() {
                     {t("settings.syncConnect")}
                   </button>
                 )}
+
               </div>
             </section>
           </div>

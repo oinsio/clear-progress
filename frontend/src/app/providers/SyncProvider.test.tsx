@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, act, screen, fireEvent } from "@testing-library/react";
-import { PING_INTERVAL_MS, SYNC_INTERVAL_MS, SYNC_DEBOUNCE_MS, MAX_SILENT_REFRESH_ATTEMPTS } from "@/constants";
+import { PING_INTERVAL_MS, SYNC_INTERVAL_MS, SYNC_DEBOUNCE_MS, MAX_SILENT_REFRESH_ATTEMPTS, MAX_PING_ATTEMPTS, AUTH_REQUIRED_EVENT } from "@/constants";
 import type { FullSyncStep } from "@/types/common";
 
 const {
@@ -741,5 +741,193 @@ describe("SyncProvider — triggerFullSync", () => {
     await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn")); });
     const versionAfterFullSync = parseInt(screen.getByTestId("version").textContent ?? "0");
     expect(versionAfterFullSync).toBeGreaterThan(versionAfterMount);
+  });
+});
+
+describe("SyncProvider — sync mutex", () => {
+  it("should not start a second sync while one is already in progress", async () => {
+    let resolvePush!: () => void;
+    mockPush.mockImplementation(
+      () => new Promise<void>((resolve) => { resolvePush = resolve; }),
+    );
+
+    renderProvider();
+    await act(async () => {}); // starts initial sync (push is pending, mutex held)
+
+    vi.clearAllMocks();
+
+    // Advance timer to trigger the periodic interval — mutex should block it
+    await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); });
+    expect(mockPush).not.toHaveBeenCalled();
+
+    // Resolve the initial sync
+    await act(async () => { resolvePush(); });
+    await act(async () => {}); // let pull complete and mutex release
+
+    // Next interval should succeed now
+    mockPush.mockResolvedValue(undefined);
+    await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); });
+    expect(mockPush).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not start fullSync if a regular sync is already in progress", async () => {
+    function FullSyncTrigger2({ onProgress }: { onProgress: (step: FullSyncStep) => void }) {
+      const { triggerFullSync } = useSync();
+      return (
+        <button data-testid="full-sync-btn2" onClick={() => void triggerFullSync(onProgress)}>
+          full sync
+        </button>
+      );
+    }
+
+    let resolvePush!: () => void;
+    mockPush.mockImplementation(
+      () => new Promise<void>((resolve) => { resolvePush = resolve; }),
+    );
+
+    const onProgress = vi.fn();
+    render(
+      <SyncProvider>
+        <SyncStatusDisplay />
+        <FullSyncTrigger2 onProgress={onProgress} />
+      </SyncProvider>,
+    );
+    await act(async () => {}); // initial sync in progress (mutex held)
+
+    vi.clearAllMocks();
+
+    // Attempt full sync while regular sync holds the mutex
+    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn2")); });
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(onProgress).not.toHaveBeenCalled();
+
+    resolvePush(); // release mutex
+  });
+});
+
+describe("SyncProvider — cover sync error handling", () => {
+  it("should complete sync and set status to idle even if cover sync throws", async () => {
+    mockCoverSync.mockRejectedValue(new Error("Cover sync failed"));
+
+    renderProvider();
+    await act(async () => {});
+
+    expect(screen.getByTestId("status").textContent).toBe("idle");
+    expect(mockPush).toHaveBeenCalled();
+    expect(mockPull).toHaveBeenCalled();
+  });
+
+  it("should not propagate cover sync error to the main sync error handler", async () => {
+    mockCoverSync.mockRejectedValue(new Error("Cover sync failed"));
+
+    renderProvider();
+    await act(async () => {});
+
+    expect(screen.getByTestId("status").textContent).not.toBe("error");
+  });
+});
+
+describe("SyncProvider — localStorage resilience", () => {
+  it("should not throw when localStorage.setItem fails during sync", async () => {
+    const originalSetItem = localStorage.setItem.bind(localStorage);
+    vi.spyOn(localStorage, "setItem").mockImplementation((key: string, value: string) => {
+      if (key === "last_sync") throw new Error("QuotaExceededError");
+      originalSetItem(key, value);
+    });
+
+    renderProvider();
+    await act(async () => {});
+    expect(screen.getByTestId("status").textContent).toBe("idle");
+
+    vi.restoreAllMocks();
+  });
+});
+
+describe("SyncProvider — max ping attempts", () => {
+  it("should stop pinging after MAX_PING_ATTEMPTS failures", async () => {
+    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    mockPing.mockRejectedValue(new Error("Ping failed"));
+
+    renderProvider();
+    await act(async () => {}); // goes offline, starts ping interval
+
+    // Advance enough to exceed MAX_PING_ATTEMPTS
+    for (let i = 0; i <= MAX_PING_ATTEMPTS; i++) {
+      await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS); });
+    }
+
+    const pingCallsAtMax = mockPing.mock.calls.length;
+
+    // Extra intervals should not trigger more pings (interval was stopped)
+    await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS * 5); });
+    expect(mockPing.mock.calls.length).toBe(pingCallsAtMax);
+  });
+
+  it("should reset ping attempt counter on successful reconnect", async () => {
+    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    mockPing.mockRejectedValue(new Error("Ping failed"));
+
+    renderProvider();
+    await act(async () => {}); // offline, ping interval starts
+
+    // A few failed pings
+    await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS * 3); });
+
+    // Now ping succeeds — counter should reset and ping interval should stop
+    mockPing.mockResolvedValue(VALID_PING_INITIALIZED);
+    Object.defineProperty(navigator, "onLine", { value: true, writable: true, configurable: true });
+    await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS); });
+
+    const pingCallsAfterSuccess = mockPing.mock.calls.length;
+
+    // No more pings (interval stopped after successful reconnect)
+    await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS * 5); });
+    expect(mockPing.mock.calls.length).toBe(pingCallsAfterSuccess);
+  });
+
+  it("should set offline status when window fires offline event", async () => {
+    renderProvider();
+    await act(async () => {}); // initial sync succeeds → idle
+
+    expect(screen.getByTestId("status").textContent).toBe("idle");
+
+    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    await act(async () => { window.dispatchEvent(new Event("offline")); });
+
+    expect(screen.getByTestId("status").textContent).toBe("offline");
+  });
+});
+
+describe("SyncProvider — AUTH_REQUIRED_EVENT", () => {
+  it("should dispatch AUTH_REQUIRED_EVENT after max silent refresh attempts exhausted", async () => {
+    mockPull.mockRejectedValue(new MockApiAuthError());
+
+    const authRequiredEvents: string[] = [];
+    const handler = () => { authRequiredEvents.push(AUTH_REQUIRED_EVENT); };
+    window.addEventListener(AUTH_REQUIRED_EVENT, handler);
+
+    renderProvider();
+    await act(async () => {}); // attempt 1
+
+    for (let i = 1; i < MAX_SILENT_REFRESH_ATTEMPTS; i++) {
+      await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); });
+    }
+
+    expect(authRequiredEvents).toContain(AUTH_REQUIRED_EVENT);
+    window.removeEventListener(AUTH_REQUIRED_EVENT, handler);
+  });
+
+  it("should NOT dispatch AUTH_REQUIRED_EVENT on the first auth error", async () => {
+    mockPull.mockRejectedValue(new MockApiAuthError());
+
+    const authRequiredEvents: string[] = [];
+    const handler = () => { authRequiredEvents.push(AUTH_REQUIRED_EVENT); };
+    window.addEventListener(AUTH_REQUIRED_EVENT, handler);
+
+    renderProvider();
+    await act(async () => {}); // attempt 1 — should silentRefresh, not signOut
+
+    expect(authRequiredEvents).toHaveLength(0);
+    window.removeEventListener(AUTH_REQUIRED_EVENT, handler);
   });
 });

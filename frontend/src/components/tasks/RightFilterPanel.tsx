@@ -17,7 +17,7 @@ import type { PanelSide, MenuMode } from "@/types/common";
 import { ROUTES } from "@/constants";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { useBackendConnected } from "@/hooks/useBackendConnected";
+import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import * as React from "react";
@@ -71,9 +71,9 @@ export function RightFilterPanel({
 }: RightFilterPanelProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { syncStatus, pull } = useSync();
-  const { userPicture } = useAuth();
-  const isBackendConnected = useBackendConnected();
+  const { pull } = useSync();
+  const { userPicture, signIn } = useAuth();
+  const connectionStatus = useConnectionStatus();
   const { menuOrder } = useMenuOrder();
   const { isPanelAlwaysOpen } = usePanelAlwaysOpen();
 
@@ -81,17 +81,16 @@ export function RightFilterPanel({
     .filter((config) => config.visible)
     .map((config) => FILTER_ITEMS_MAP[config.mode]);
 
-  const isSyncing = syncStatus === "syncing";
-  const isUnauthorized = syncStatus === "unauthorized";
-  const hasSyncError = syncStatus === "error" || syncStatus === "offline" || syncStatus === "unauthorized";
+  const isSyncing = connectionStatus === "syncing";
+  const hasSyncError = connectionStatus === "error" || connectionStatus === "offline";
+  const needsSignIn = connectionStatus === "unauthorized" || connectionStatus === "no_auth";
+  const isConfigured = connectionStatus !== "not_configured";
 
   const syncLabel = isSyncing
     ? t("sync.syncing")
-    : isUnauthorized
-      ? t("sync.unauthorized")
-      : hasSyncError
-        ? t("sync.noConnection")
-        : t("sync.synced");
+    : hasSyncError
+      ? t("sync.noConnection")
+      : t("sync.synced");
 
   const handleSyncClick = (e: React.MouseEvent): void => {
     e.stopPropagation();
@@ -122,7 +121,17 @@ export function RightFilterPanel({
     </button>
   );
 
-  const syncLoginButton = isBackendConnected ? (
+  const syncLoginButton = needsSignIn ? (
+    <button
+      type="button"
+      aria-label={t("auth.signInButton")}
+      data-testid="right-panel-sign-in"
+      onClick={(e) => { e.stopPropagation(); signIn(); }}
+      className="flex-1 flex items-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
+    >
+      <span className="text-base font-medium">{t("auth.signInButton")}</span>
+    </button>
+  ) : isConfigured ? (
     <button
       type="button"
       aria-label={t("sync.ariaLabel")}
@@ -251,7 +260,17 @@ export function RightFilterPanel({
           onKeyDown={(e) => e.key === "Enter" && onToggle()}
         >
           {/* Sync / login icon */}
-          {isBackendConnected ? (
+          {needsSignIn ? (
+            <button
+              type="button"
+              aria-label={t("auth.signInButton")}
+              data-testid="right-panel-sign-in"
+              onClick={(e) => { e.stopPropagation(); signIn(); }}
+              className="w-10 h-10 flex items-center justify-center mt-3 mb-1 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <CircleUser className="w-6 h-6" aria-hidden="true" />
+            </button>
+          ) : isConfigured ? (
             <button
               type="button"
               aria-label={t("sync.ariaLabel")}

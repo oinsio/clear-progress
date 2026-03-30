@@ -8,11 +8,19 @@ import React, {
 } from "react";
 import type { SyncStatus, FullSyncStep } from "@/types/common";
 import type { VersionMap } from "@/types/api";
-import { SYNC_INTERVAL_MS, PING_INTERVAL_MS, SYNC_DEBOUNCE_MS, STORAGE_KEYS, MAX_SILENT_REFRESH_ATTEMPTS } from "@/constants";
+import {
+  SYNC_INTERVAL_MS,
+  PING_INTERVAL_MS,
+  SYNC_DEBOUNCE_MS,
+  STORAGE_KEYS,
+  MAX_SILENT_REFRESH_ATTEMPTS,
+  MAX_PING_ATTEMPTS,
+  AUTH_REQUIRED_EVENT,
+  API_AUTH_ERROR_NAME,
+} from "@/constants";
 import { SyncService } from "@/services/SyncService";
 import { ApiClient } from "@/services/ApiClient";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { API_AUTH_ERROR_NAME } from "@/constants";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -53,6 +61,14 @@ const syncService = new SyncService(
   new SettingsRepository(),
 );
 
+function persistLastSync(timestamp: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LAST_SYNC, timestamp);
+  } catch (storageError) {
+    console.error("[SyncProvider] Failed to persist last sync timestamp:", storageError);
+  }
+}
+
 export function SyncProvider({ children }: { children: React.ReactNode }) {
   const { accessToken, signOut, silentRefresh } = useAuth();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
@@ -65,6 +81,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSyncedAtRef = useRef<string | null>(lastSyncedAt);
   const silentRefreshAttemptsRef = useRef(0);
+  // Mutex: prevents concurrent sync calls (debounce + periodic + fullSync)
+  const isSyncingRef = useRef(false);
+  // Counts failed ping attempts to stop infinite pinging
+  const pingAttemptsRef = useRef(0);
 
   useEffect(() => {
     lastSyncedAtRef.current = lastSyncedAt;
@@ -81,19 +101,29 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const syncTimestamp = new Date().toISOString();
     await syncService.push(lastSyncedAtRef.current);
     await syncService.pull();
-    void defaultCoverSyncService.sync();
+    // Cover sync runs after entities — errors are caught separately so they don't
+    // roll back the already-completed entity sync.
+    try {
+      await defaultCoverSyncService.sync();
+    } catch (coverError) {
+      console.error("[SyncProvider] Cover sync failed:", coverError);
+    }
     setSyncStatus("idle");
     setSyncVersion((version) => version + 1);
-    localStorage.setItem(STORAGE_KEYS.LAST_SYNC, syncTimestamp);
+    persistLastSync(syncTimestamp);
     setLastSyncedAt(syncTimestamp);
+    pingAttemptsRef.current = 0;
   }, []);
 
   const sync = useCallback(async (): Promise<void> => {
+    // Mutex: skip if a sync is already running
+    if (isSyncingRef.current) return;
     if (!accessToken) return;
     if (!navigator.onLine) {
       setSyncStatus("offline");
       return;
     }
+    isSyncingRef.current = true;
     setSyncStatus("syncing");
     try {
       await applySyncResult();
@@ -106,6 +136,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           silentRefreshAttemptsRef.current = 0;
           setSyncStatus("unauthorized");
           signOut();
+          window.dispatchEvent(new Event(AUTH_REQUIRED_EVENT));
           return;
         }
         setSyncStatus("unauthorized");
@@ -113,6 +144,8 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       setSyncStatus("error");
+    } finally {
+      isSyncingRef.current = false;
     }
   }, [accessToken, applySyncResult, stopPingInterval, signOut, silentRefresh]);
 
@@ -121,47 +154,63 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     debounceTimerRef.current = setTimeout(() => void sync(), SYNC_DEBOUNCE_MS);
   }, [sync]);
 
-  const triggerFullSync = useCallback(async (onProgress: (step: FullSyncStep) => void): Promise<void> => {
-    if (!navigator.onLine) {
-      setSyncStatus("offline");
-      onProgress("error");
-      return;
-    }
-    setSyncStatus("syncing");
-    try {
-      onProgress("upload_covers");
-      await defaultCoverSyncService.sync();
-      await defaultCoverSyncService.reuploadLocalCovers();
-      onProgress("push");
-      await syncService.push(null);
-      onProgress("pull");
-      await syncService.pull(FULL_SYNC_ZERO_VERSIONS);
-      onProgress("download_covers");
-      await defaultCoverSyncService.ensureServerCoversAreCached();
-      const syncTimestamp = new Date().toISOString();
-      localStorage.setItem(STORAGE_KEYS.LAST_SYNC, syncTimestamp);
-      setLastSyncedAt(syncTimestamp);
-      setSyncVersion((version) => version + 1);
-      setSyncStatus("idle");
-      stopPingInterval();
-      onProgress("done");
-    } catch {
-      setSyncStatus("error");
-      onProgress("error");
-    }
-  }, [stopPingInterval]);
+  const triggerFullSync = useCallback(
+    async (onProgress: (step: FullSyncStep) => void): Promise<void> => {
+      // Mutex: don't start full sync if a regular sync is running
+      if (isSyncingRef.current) return;
+      if (!navigator.onLine) {
+        setSyncStatus("offline");
+        onProgress("error");
+        return;
+      }
+      isSyncingRef.current = true;
+      setSyncStatus("syncing");
+      try {
+        onProgress("upload_covers");
+        await defaultCoverSyncService.sync();
+        await defaultCoverSyncService.reuploadLocalCovers();
+        onProgress("push");
+        await syncService.push(null);
+        onProgress("pull");
+        await syncService.pull(FULL_SYNC_ZERO_VERSIONS);
+        onProgress("download_covers");
+        await defaultCoverSyncService.ensureServerCoversAreCached();
+        const syncTimestamp = new Date().toISOString();
+        persistLastSync(syncTimestamp);
+        setLastSyncedAt(syncTimestamp);
+        setSyncVersion((version) => version + 1);
+        setSyncStatus("idle");
+        stopPingInterval();
+        onProgress("done");
+      } catch {
+        setSyncStatus("error");
+        onProgress("error");
+      } finally {
+        isSyncingRef.current = false;
+      }
+    },
+    [stopPingInterval],
+  );
 
   const performPing = useCallback(async (): Promise<void> => {
     if (!accessToken) return;
+    pingAttemptsRef.current += 1;
+    if (pingAttemptsRef.current > MAX_PING_ATTEMPTS) {
+      // Give up pinging — user or network must recover manually
+      stopPingInterval();
+      pingAttemptsRef.current = 0;
+      return;
+    }
     try {
       const pingResult = await apiClient.ping();
       stopPingInterval();
+      pingAttemptsRef.current = 0;
       if (!pingResult.initialized) {
         await apiClient.init();
       }
       await applySyncResult();
     } catch {
-      // Still unreachable — keep pinging
+      // Still unreachable — keep pinging until MAX_PING_ATTEMPTS
     }
   }, [accessToken, applySyncResult, stopPingInterval]);
 
@@ -178,20 +227,18 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     void sync();
     intervalRef.current = setInterval(() => void sync(), SYNC_INTERVAL_MS);
 
-    const handleOnline = () => {
-      void performPing();
-    };
+    const handleOnline = () => { void performPing(); };
+    const handleOffline = () => { setSyncStatus("offline"); };
+
     window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       stopPingInterval();
       window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, [accessToken, sync, performPing, stopPingInterval]);
 
@@ -202,7 +249,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }, [syncStatus, startPingInterval]);
 
   return (
-    <SyncContext.Provider value={{ syncStatus, syncVersion, lastSyncedAt, pull: sync, push: sync, schedulePush, triggerFullSync }}>
+    <SyncContext.Provider
+      value={{ syncStatus, syncVersion, lastSyncedAt, pull: sync, push: sync, schedulePush, triggerFullSync }}
+    >
       {children}
     </SyncContext.Provider>
   );

@@ -5,9 +5,11 @@ import { AuthProvider, useAuth } from "./AuthProvider";
 
 const mockLogin = vi.fn();
 
+// Mock GoogleOAuthProvider (just passes children through)
+// Mock useGoogleLogin to capture callbacks — called inside GoogleAuthSync
 vi.mock("@react-oauth/google", () => ({
+  GoogleOAuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useGoogleLogin: vi.fn((options: { onSuccess: (response: unknown) => void; onError: () => void }) => {
-    // Capture callbacks — the same function is returned for both silent and regular logins
     (globalThis as Record<string, unknown>).__googleLoginOptions = options;
     return mockLogin;
   }),
@@ -15,10 +17,10 @@ vi.mock("@react-oauth/google", () => ({
 
 vi.mock("@/services/ApiClient", () => ({
   setAccessToken: vi.fn(),
-  ApiAuthError: class ApiAuthError extends Error {},
 }));
 
 import { setAccessToken } from "@/services/ApiClient";
+import React from "react";
 
 function TestConsumer() {
   const { accessToken, userEmail, signIn, signOut, silentRefresh } = useAuth();
@@ -79,7 +81,7 @@ describe("AuthProvider", () => {
     expect(mockLogin).toHaveBeenCalledTimes(1);
   });
 
-  it("should update accessToken and userEmail after successful Google login", async () => {
+  it("should update accessToken after successful Google login", async () => {
     render(
       <AuthProvider>
         <TestConsumer />
@@ -177,7 +179,7 @@ describe("AuthProvider", () => {
       </AuthProvider>,
     );
 
-    // On mount, isSilentRef.current = true, so onSuccess routes through handleSilentLoginSuccess
+    // On mount, isSilentRef.current = true inside GoogleAuthSync
     await act(async () => {
       const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
         onSuccess: (response: unknown) => void;
@@ -196,7 +198,7 @@ describe("AuthProvider", () => {
       </AuthProvider>,
     );
 
-    // Trigger a successful login while isSilentRef.current = true (mount state)
+    // First set a token
     await act(async () => {
       const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
         onSuccess: (response: unknown) => void;
@@ -206,7 +208,7 @@ describe("AuthProvider", () => {
 
     expect(screen.getByTestId("token").textContent).toBe("my-token");
 
-    // Silent refresh fails — isSilentRef.current is still true, so onError routes through handleSilentLoginError
+    // Now trigger silent login error
     await act(async () => {
       const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
         onError: () => void;
@@ -243,5 +245,43 @@ describe("AuthProvider", () => {
 
     expect(screen.getByTestId("token").textContent).toBe("null");
     expect(screen.getByTestId("email").textContent).toBe("null");
+  });
+
+  it("should not remount children when googleClientId changes", async () => {
+    let mountCount = 0;
+    function CountingChild() {
+      mountCount++;
+      const { accessToken } = useAuth();
+      return <span data-testid="child-token">{accessToken ?? "null"}</span>;
+    }
+
+    render(
+      <AuthProvider>
+        <CountingChild />
+      </AuthProvider>,
+    );
+
+    const initialMountCount = mountCount;
+
+    // Simulate clientId change (e.g., user sets a new client ID)
+    await act(async () => {
+      localStorage.setItem("google_client_id", "new-client-id");
+      window.dispatchEvent(new Event("google_client_id_changed"));
+    });
+
+    // Children should NOT have remounted
+    expect(mountCount).toBe(initialMountCount);
+  });
+
+  it("should provide null accessToken when no googleClientId is configured", () => {
+    localStorage.removeItem("google_client_id");
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+    expect(screen.getByTestId("token").textContent).toBe("null");
+    // No Google login should be attempted
+    expect(mockLogin).not.toHaveBeenCalled();
   });
 });
