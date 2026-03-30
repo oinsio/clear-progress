@@ -8,6 +8,9 @@ import type { UseGoalTasksReturn } from "@/hooks/useGoalTasks";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
 
+vi.mock("@/app/providers/AuthProvider", () => ({
+  useAuth: () => ({ accessToken: null, userEmail: null, userPicture: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() }),
+}));
 vi.mock("@/hooks/useGoal");
 vi.mock("@/hooks/useGoalTasks");
 vi.mock("@/hooks/useGoals");

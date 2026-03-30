@@ -5,6 +5,9 @@ import { MapPin } from "lucide-react";
 import { EntityDetailLayout, type EntityDetailLayoutProps } from "./EntityDetailLayout";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
 
+vi.mock("@/app/providers/AuthProvider", () => ({
+  useAuth: () => ({ accessToken: null, userEmail: null, userPicture: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() }),
+}));
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/useIsUnsynced");

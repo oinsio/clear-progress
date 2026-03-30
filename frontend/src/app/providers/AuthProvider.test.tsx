@@ -4,16 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { AuthProvider, useAuth } from "./AuthProvider";
 
 const mockLogin = vi.fn();
-const mockSilentLogin = vi.fn();
 
 vi.mock("@react-oauth/google", () => ({
-  useGoogleLogin: vi.fn((options: { onSuccess: (response: unknown) => void; onError: () => void; prompt?: string }) => {
-    if (options.prompt === "none") {
-      // Expose the silent login callbacks so tests can trigger them
-      (globalThis as Record<string, unknown>).__silentLoginOptions = options;
-      return mockSilentLogin;
-    }
-    // Expose the regular login callbacks so tests can trigger them
+  useGoogleLogin: vi.fn((options: { onSuccess: (response: unknown) => void; onError: () => void }) => {
+    // Capture callbacks — the same function is returned for both silent and regular logins
     (globalThis as Record<string, unknown>).__googleLoginOptions = options;
     return mockLogin;
   }),
@@ -49,7 +43,6 @@ describe("AuthProvider", () => {
     vi.clearAllMocks();
     localStorage.setItem("google_client_id", "test-client-id");
     delete (globalThis as Record<string, unknown>).__googleLoginOptions;
-    delete (globalThis as Record<string, unknown>).__silentLoginOptions;
   });
 
   it("should throw when useAuth is used outside AuthProvider", () => {
@@ -75,6 +68,9 @@ describe("AuthProvider", () => {
         <TestConsumer />
       </AuthProvider>,
     );
+
+    // Clear the silent login call that happens on mount
+    mockLogin.mockClear();
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "sign-in" }));
@@ -151,8 +147,8 @@ describe("AuthProvider", () => {
       </AuthProvider>,
     );
 
-    expect(mockSilentLogin).toHaveBeenCalledTimes(1);
-    expect(mockLogin).not.toHaveBeenCalled();
+    expect(mockLogin).toHaveBeenCalledTimes(1);
+    expect(mockLogin).toHaveBeenCalledWith({ prompt: "none" });
   });
 
   it("should call the silent Google login function when silentRefresh is invoked", async () => {
@@ -163,15 +159,15 @@ describe("AuthProvider", () => {
       </AuthProvider>,
     );
 
-    // Сбрасываем вызов при монтировании, чтобы проверить только явный вызов silentRefresh
-    mockSilentLogin.mockClear();
+    // Clear the mount-time silent login call
+    mockLogin.mockClear();
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "silent-refresh" }));
     });
 
-    expect(mockSilentLogin).toHaveBeenCalledTimes(1);
-    expect(mockLogin).not.toHaveBeenCalled();
+    expect(mockLogin).toHaveBeenCalledTimes(1);
+    expect(mockLogin).toHaveBeenCalledWith({ prompt: "none" });
   });
 
   it("should update accessToken when silent login succeeds", async () => {
@@ -181,8 +177,9 @@ describe("AuthProvider", () => {
       </AuthProvider>,
     );
 
+    // On mount, isSilentRef.current = true, so onSuccess routes through handleSilentLoginSuccess
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__silentLoginOptions as {
+      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
         onSuccess: (response: unknown) => void;
       };
       options.onSuccess({ access_token: "refreshed-token", expires_in: 3600 });
@@ -199,7 +196,7 @@ describe("AuthProvider", () => {
       </AuthProvider>,
     );
 
-    // Sign in first
+    // Trigger a successful login while isSilentRef.current = true (mount state)
     await act(async () => {
       const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
         onSuccess: (response: unknown) => void;
@@ -209,9 +206,9 @@ describe("AuthProvider", () => {
 
     expect(screen.getByTestId("token").textContent).toBe("my-token");
 
-    // Silent refresh fails
+    // Silent refresh fails — isSilentRef.current is still true, so onError routes through handleSilentLoginError
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__silentLoginOptions as {
+      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
         onError: () => void;
       };
       options.onError();

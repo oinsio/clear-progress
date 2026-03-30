@@ -11,6 +11,9 @@ import type { UseContextsReturn } from "@/hooks/useContexts";
 import type { UseCategoriesReturn } from "@/hooks/useCategories";
 import type { UseCompletedTasksReturn } from "@/hooks/useCompletedTasks";
 
+vi.mock("@/app/providers/AuthProvider", () => ({
+  useAuth: () => ({ accessToken: null, userEmail: null, userPicture: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() }),
+}));
 vi.mock("@/hooks/useTasks");
 vi.mock("@/hooks/useGoals");
 vi.mock("@/hooks/useSearch");

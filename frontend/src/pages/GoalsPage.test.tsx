@@ -5,6 +5,9 @@ import GoalsPage from "./GoalsPage";
 import { buildGoal } from "@/test/factories/goalFactory";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
 
+vi.mock("@/app/providers/AuthProvider", () => ({
+  useAuth: () => ({ accessToken: null, userEmail: null, userPicture: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() }),
+}));
 vi.mock("@/hooks/useGoals");
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
