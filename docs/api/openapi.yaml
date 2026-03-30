@@ -10,6 +10,13 @@ info:
     - GET `/exec?action=ping` — health check
     - POST `/exec` — all other operations
 
+    **Authentication:**
+    All POST requests require an `access_token` field in the request body.
+    The token is verified via Google's tokeninfo endpoint (`/oauth2/v3/tokeninfo`).
+    On the first successful call, the token owner's email is saved as the data owner.
+    Subsequent calls must use a token belonging to the same Google account.
+    Failed authentication returns `{ ok: false, error: "UNAUTHORIZED", message: "..." }`.
+
     **Conventions:**
     - All responses return HTTP 200; operation status is determined by the `ok` field
     - All IDs are UUID v4
@@ -97,6 +104,7 @@ paths:
               $ref: '#/components/schemas/InitRequest'
             example:
               action: init
+              access_token: ya29.a0AfH6SMBx...
       responses:
         '200':
           description: Initialization result
@@ -119,6 +127,12 @@ paths:
                     created: false
                     spreadsheet_id: 1BxOa7m2kQ3r5TvZ9pLnYjW8dCfEgHiKlMnOpQrStUv
                     folder_id: 0B7x_K2mN3pQ4rS5tU6vW7xY8zA
+                unauthorized:
+                  summary: Error — token missing or invalid
+                  value:
+                    ok: false
+                    error: UNAUTHORIZED
+                    message: access_token is required
 
   /exec#pull:
     post:
@@ -143,6 +157,7 @@ paths:
                 summary: Initial pull — all versions = 0
                 value:
                   action: pull
+                  access_token: ya29.a0AfH6SMBx...
                   versions:
                     tasks: 0
                     goals: 0
@@ -153,6 +168,7 @@ paths:
                 summary: Incremental pull
                 value:
                   action: pull
+                  access_token: ya29.a0AfH6SMBx...
                   versions:
                     tasks: 38
                     goals: 5
@@ -191,6 +207,12 @@ paths:
                     ok: false
                     error: NOT_INITIALIZED
                     message: "Call init before using the API"
+                unauthorized:
+                  summary: Error — token missing or invalid
+                  value:
+                    ok: false
+                    error: UNAUTHORIZED
+                    message: access_token is required
 
   /exec#push:
     post:
@@ -238,6 +260,7 @@ paths:
                 summary: Create a new task
                 value:
                   action: push
+                  access_token: ya29.a0AfH6SMBx...
                   changes:
                     tasks:
                       - id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
@@ -264,6 +287,7 @@ paths:
                 summary: Soft-delete a task
                 value:
                   action: push
+                  access_token: ya29.a0AfH6SMBx...
                   changes:
                     tasks:
                       - id: d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a
@@ -492,6 +516,12 @@ paths:
                       checklist_items: []
                       settings: []
                     server_time: "2026-03-04T13:00:02.000Z"
+                unauthorized:
+                  summary: Error — token missing or invalid
+                  value:
+                    ok: false
+                    error: UNAUTHORIZED
+                    message: access_token is required
 
   /exec#upload_cover:
     post:
@@ -517,6 +547,7 @@ paths:
               $ref: '#/components/schemas/UploadCoverRequest'
             example:
               action: upload_cover
+              access_token: ya29.a0AfH6SMBx...
               goal_id: aabbccdd-eeff-4112-2334-556677889900
               filename: cover.jpg
               mime_type: image/jpeg
@@ -555,6 +586,12 @@ paths:
                     ok: false
                     error: INVALID_PAYLOAD
                     message: data field is required
+                unauthorized:
+                  summary: Error — token missing or invalid
+                  value:
+                    ok: false
+                    error: UNAUTHORIZED
+                    message: access_token is required
 
   /exec#delete_cover:
     post:
@@ -575,6 +612,7 @@ paths:
               $ref: '#/components/schemas/DeleteCoverRequest'
             example:
               action: delete_cover
+              access_token: ya29.a0AfH6SMBx...
               file_id: 1MnOpQrStUvWxYzAbCdEfGhIjKlMnOp
       responses:
         '200':
@@ -602,6 +640,12 @@ paths:
                     ok: false
                     error: FILE_NOT_FOUND
                     message: "File not found: 1NONEXISTENT"
+                unauthorized:
+                  summary: Error — token missing or invalid
+                  value:
+                    ok: false
+                    error: UNAUTHORIZED
+                    message: access_token is required
 
   /exec#get_cover:
     post:
@@ -630,11 +674,13 @@ paths:
                 summary: Fetch one cover
                 value:
                   action: get_cover
+                  access_token: ya29.a0AfH6SMBx...
                   file_ids: ["1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ"]
               batch:
                 summary: Fetch multiple covers
                 value:
                   action: get_cover
+                  access_token: ya29.a0AfH6SMBx...
                   file_ids:
                     - "1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ"
                     - "1MnOpQrStUvWxYzAbCdEfGhIjKlMnOp"
@@ -677,6 +723,12 @@ paths:
                     ok: false
                     error: INVALID_PAYLOAD
                     message: file_ids must contain at most 10 items
+                unauthorized:
+                  summary: Error — token missing or invalid
+                  value:
+                    ok: false
+                    error: UNAUTHORIZED
+                    message: access_token is required
 
   /exec#purge:
     post:
@@ -697,6 +749,7 @@ paths:
               $ref: '#/components/schemas/PurgeRequest'
             example:
               action: purge
+              access_token: ya29.a0AfH6SMBx...
               confirm: true
       responses:
         '200':
@@ -723,6 +776,12 @@ paths:
                     ok: false
                     error: CONFIRMATION_REQUIRED
                     message: "Field confirm must be true to execute purge"
+                unauthorized:
+                  summary: Error — token missing or invalid
+                  value:
+                    ok: false
+                    error: UNAUTHORIZED
+                    message: access_token is required
 
 components:
   schemas:
@@ -743,6 +802,7 @@ components:
             - INVALID_ACTION
             - NOT_INITIALIZED
             - INVALID_PAYLOAD
+            - UNAUTHORIZED
             - CONFIRMATION_REQUIRED
             - FILE_TOO_LARGE
             - FILE_NOT_FOUND
@@ -1181,39 +1241,55 @@ components:
 
     InitRequest:
       type: object
-      required: [action]
+      required: [action, access_token]
       properties:
         action:
           type: string
           enum: [init]
+        access_token:
+          type: string
+          description: OAuth 2.0 access token from Google
+          example: ya29.a0AfH6SMBx...
 
     PullRequest:
       type: object
-      required: [action, versions]
+      required: [action, access_token, versions]
       properties:
         action:
           type: string
           enum: [pull]
+        access_token:
+          type: string
+          description: OAuth 2.0 access token from Google
+          example: ya29.a0AfH6SMBx...
         versions:
           $ref: '#/components/schemas/VersionMap'
 
     PushRequest:
       type: object
-      required: [action, changes]
+      required: [action, access_token, changes]
       properties:
         action:
           type: string
           enum: [push]
+        access_token:
+          type: string
+          description: OAuth 2.0 access token from Google
+          example: ya29.a0AfH6SMBx...
         changes:
           $ref: '#/components/schemas/PushChanges'
 
     UploadCoverRequest:
       type: object
-      required: [action, goal_id, filename, mime_type, data]
+      required: [action, access_token, goal_id, filename, mime_type, data]
       properties:
         action:
           type: string
           enum: [upload_cover]
+        access_token:
+          type: string
+          description: OAuth 2.0 access token from Google
+          example: ya29.a0AfH6SMBx...
         goal_id:
           type: string
           format: uuid
@@ -1235,11 +1311,15 @@ components:
 
     DeleteCoverRequest:
       type: object
-      required: [action, file_id]
+      required: [action, access_token, file_id]
       properties:
         action:
           type: string
           enum: [delete_cover]
+        access_token:
+          type: string
+          description: OAuth 2.0 access token from Google
+          example: ya29.a0AfH6SMBx...
         file_id:
           type: string
           description: File ID on Google Drive
@@ -1247,11 +1327,15 @@ components:
 
     GetCoverRequest:
       type: object
-      required: [action, file_ids]
+      required: [action, access_token, file_ids]
       properties:
         action:
           type: string
           enum: [get_cover]
+        access_token:
+          type: string
+          description: OAuth 2.0 access token from Google
+          example: ya29.a0AfH6SMBx...
         file_ids:
           type: array
           items:
@@ -1263,11 +1347,15 @@ components:
 
     PurgeRequest:
       type: object
-      required: [action, confirm]
+      required: [action, access_token, confirm]
       properties:
         action:
           type: string
           enum: [purge]
+        access_token:
+          type: string
+          description: OAuth 2.0 access token from Google
+          example: ya29.a0AfH6SMBx...
         confirm:
           type: boolean
           enum: [true]
