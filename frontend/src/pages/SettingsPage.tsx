@@ -7,14 +7,15 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
-import { BOX_ORDER, ACCENT_COLORS, ACCENT_COLOR_VALUES, COLOR_SCHEMES, PANEL_SIDES, ROUTES, STORAGE_KEYS, SUPPORTED_LANGUAGES, BACKEND_CONNECTION_EVENT } from "@/constants";
-import type { Box, AccentColor, ColorScheme, PanelSide } from "@/types/common";
+import { BOX_ORDER, ACCENT_COLORS, ACCENT_COLOR_VALUES, COLOR_SCHEMES, PANEL_SIDES, FILTER_BAR_POSITIONS, ROUTES, STORAGE_KEYS, SUPPORTED_LANGUAGES, BACKEND_CONNECTION_EVENT } from "@/constants";
+import type { Box, AccentColor, ColorScheme, PanelSide, FilterBarPosition } from "@/types/common";
 import type { Language } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 
@@ -31,6 +32,7 @@ export default function SettingsPage() {
   const { panelSide, setPanelSide } = usePanelSide();
   const { language, setLanguage } = useLanguage();
   const { isPanelAlwaysOpen, setPanelAlwaysOpen } = usePanelAlwaysOpen();
+  const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
 
   const handlePanelToggle = togglePanelOpen;
 
@@ -59,6 +61,10 @@ export default function SettingsPage() {
 
   const handlePanelSideSelect = (side: PanelSide): void => {
     setPanelSide(side);
+  };
+
+  const handleFilterBarPositionSelect = (position: FilterBarPosition): void => {
+    setFilterBarPosition(position);
   };
 
   const handleLanguageSelect = (lang: Language): void => {
@@ -251,6 +257,31 @@ export default function SettingsPage() {
                   {t("settings.panelAlwaysOpen")}
                 </span>
               </button>
+            </section>
+
+            {/* Filter bar position section */}
+            <section data-testid="settings-filter-bar-position" className="space-y-3">
+              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                {t("settings.filterBarPosition")}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {FILTER_BAR_POSITIONS.map((position) => (
+                  <button
+                    key={position}
+                    data-testid={`settings-filter-bar-position-option-${position}`}
+                    aria-pressed={filterBarPosition === position}
+                    onClick={() => handleFilterBarPositionSelect(position)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
+                      filterBarPosition === position
+                        ? "bg-accent border-accent text-white"
+                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
+                    )}
+                  >
+                    {position === "bottom" ? t("settings.filterBarBottom") : t("settings.filterBarTop")}
+                  </button>
+                ))}
+              </div>
             </section>
 
             {/* Menu order section */}

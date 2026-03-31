@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, Pencil, Check, Trash2 } from "lucide-react";
 import type { ComponentType } from "react";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
@@ -75,6 +76,7 @@ export function EntityDetailLayout({
 
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const { filterBarPosition } = useFilterBarPosition();
   const isDesktop = useIsDesktop();
   const { ratio, containerRef: splitContainerRef, handleResizeMouseDown } = usePanelSplit();
   const isUnsynced = useIsUnsynced(entity ?? { updated_at: "" });
@@ -144,6 +146,21 @@ export function EntityDetailLayout({
         className={cn("flex flex-col overflow-hidden", !isDesktop && selectedTask && "hidden")}
         style={isDesktop && selectedTask ? { width: `${ratio * 100}%`, flexShrink: 0 } : { flex: "1 1 0" }}
       >
+        {/* Action bar — top position (above header) */}
+        {filterBarPosition === "top" && (
+          <div className="flex items-center justify-end border-b border-gray-200 bg-white px-3 py-2">
+            <button
+              type="button"
+              aria-label={t("task.add")}
+              data-testid="add-task-button"
+              onClick={() => setIsAddingTask(true)}
+              className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+            >
+              <Plus className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <header className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
           <button
@@ -255,18 +272,20 @@ export function EntityDetailLayout({
           />
         </main>
 
-        {/* Bottom action bar */}
-        <div className="flex items-center justify-end border-t border-gray-200 bg-white px-3 py-2">
-          <button
-            type="button"
-            aria-label={t("task.add")}
-            data-testid="add-task-button"
-            onClick={() => setIsAddingTask(true)}
-            className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-          >
-            <Plus className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+        {/* Action bar — bottom position (default) */}
+        {filterBarPosition === "bottom" && (
+          <div className="flex items-center justify-end border-t border-gray-200 bg-white px-3 py-2">
+            <button
+              type="button"
+              aria-label={t("task.add")}
+              data-testid="add-task-button"
+              onClick={() => setIsAddingTask(true)}
+              className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+            >
+              <Plus className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         {/* Delete confirmation dialog */}
         {isDeleteConfirmOpen && entity && (

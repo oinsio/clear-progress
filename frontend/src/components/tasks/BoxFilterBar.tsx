@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { ChevronDown, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/cn";
-import type { BoxFilter } from "@/types/common";
+import type { BoxFilter, FilterBarPosition } from "@/types/common";
 import { TASK_BOX_FILTER_ORDER } from "@/constants";
 import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon, AllBoxesIcon } from "./BoxIcons";
 import * as React from "react";
@@ -27,9 +27,10 @@ interface BoxFilterBarProps {
   activeBox: BoxFilter;
   onBoxChange: (box: BoxFilter) => void;
   onAddTask: () => void;
+  position?: FilterBarPosition;
 }
 
-export function BoxFilterBar({ activeBox, onBoxChange, onAddTask }: BoxFilterBarProps) {
+export function BoxFilterBar({ activeBox, onBoxChange, onAddTask, position = "bottom" }: BoxFilterBarProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -64,7 +65,12 @@ export function BoxFilterBar({ activeBox, onBoxChange, onAddTask }: BoxFilterBar
   }, [isExpanded]);
 
   return (
-    <div className="flex items-center border-t border-gray-200 bg-white px-3 py-2 safe-area-bottom">
+    <div
+      className={cn(
+        "flex items-center bg-white px-3 py-2",
+        position === "bottom" ? "border-t border-gray-200 safe-area-bottom" : "border-b border-gray-200",
+      )}
+    >
       <div ref={containerRef} className="flex items-center gap-1">
         {isExpanded ? (
           TASK_BOX_FILTER_ORDER.map((box) => {

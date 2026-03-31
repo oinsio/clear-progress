@@ -15,6 +15,7 @@ import { useCompletedTasks } from "@/hooks/useCompletedTasks";
 import { useSearch } from "@/hooks/useSearch";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
@@ -104,6 +105,7 @@ export default function InboxPage() {
   const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
   const [filterMode, setFilterMode] = useState<RightPanelMode>(initialFilterMode);
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const { filterBarPosition } = useFilterBarPosition();
   const [selectedContextId, setSelectedContextId] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isAddingTask, setIsAddingTask] = useState(false);
@@ -628,6 +630,30 @@ export default function InboxPage() {
           </header>
         )}
 
+        {/* Box filter bar — hidden in completed mode, position controlled by setting */}
+        {filterMode !== "completed" && filterBarPosition === "top" && (
+          filterMode === "inbox" ? (
+            <div className="flex items-center justify-end border-b border-gray-200 bg-white px-3 py-2">
+              <button
+                type="button"
+                aria-label={t("task.add")}
+                data-testid="add-task-button"
+                onClick={handleAddTask}
+                className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+              >
+                <Plus className="w-5 h-5" aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            <BoxFilterBar
+              activeBox={activeBox}
+              onBoxChange={handleBoxChange}
+              onAddTask={handleAddTask}
+              position="top"
+            />
+          )
+        )}
+
           {/* Scrollable task list */}
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
@@ -635,25 +661,28 @@ export default function InboxPage() {
           </div>
         </main>
 
-        {/* Bottom box filter bar — hidden in inbox and completed modes */}
-        {filterMode === "completed" ? null : filterMode === "inbox" ? (
-          <div className="flex items-center justify-end border-t border-gray-200 bg-white px-3 py-2 safe-area-bottom">
-            <button
-              type="button"
-              aria-label={t("task.add")}
-              data-testid="add-task-button"
-              onClick={handleAddTask}
-              className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-            >
-              <Plus className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        ) : (
-          <BoxFilterBar
-            activeBox={activeBox}
-            onBoxChange={handleBoxChange}
-            onAddTask={handleAddTask}
-          />
+        {/* Box filter bar — bottom position (default) */}
+        {filterMode !== "completed" && filterBarPosition === "bottom" && (
+          filterMode === "inbox" ? (
+            <div className="flex items-center justify-end border-t border-gray-200 bg-white px-3 py-2 safe-area-bottom">
+              <button
+                type="button"
+                aria-label={t("task.add")}
+                data-testid="add-task-button"
+                onClick={handleAddTask}
+                className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+              >
+                <Plus className="w-5 h-5" aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            <BoxFilterBar
+              activeBox={activeBox}
+              onBoxChange={handleBoxChange}
+              onAddTask={handleAddTask}
+              position="bottom"
+            />
+          )
         )}
       </div>
 

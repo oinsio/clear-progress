@@ -1,4 +1,4 @@
-import type { Box, BoxFilter, AccentColor, PanelSide, RepeatRuleType, ColorScheme } from "@/types/common";
+import type { Box, BoxFilter, AccentColor, PanelSide, RepeatRuleType, ColorScheme, FilterBarPosition } from "@/types/common";
 
 export const ROUTES = {
   INBOX: "/tasks",
@@ -42,6 +42,10 @@ export const TASK_BOX_FILTER_ORDER: BoxFilter[] = ["today", "week", "later", "al
 export const DEFAULT_PANEL_SIDE: PanelSide = "right";
 
 export const PANEL_SIDES: PanelSide[] = ["left", "right"];
+
+export const DEFAULT_FILTER_BAR_POSITION: FilterBarPosition = "bottom";
+
+export const FILTER_BAR_POSITIONS: FilterBarPosition[] = ["bottom", "top"];
 
 export const DEFAULT_ACCENT_COLOR: AccentColor = "green";
 
@@ -108,6 +112,7 @@ export const STORAGE_KEYS = {
   LANGUAGE: "language",
   PANEL_SPLIT: "panel_split",
   PANEL_ALWAYS_OPEN: "panel_always_open",
+  FILTER_BAR_POSITION: "filter_bar_position",
   MENU_ORDER: "menu_order",
   SECTION_COLLAPSE: "section_collapse",
   COLOR_SCHEME: "color_scheme",

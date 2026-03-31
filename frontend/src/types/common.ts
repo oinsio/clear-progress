@@ -36,6 +36,8 @@ export type PanelSide = "left" | "right";
 
 export type ColorScheme = "system" | "light" | "dark";
 
+export type FilterBarPosition = "top" | "bottom";
+
 export type MenuMode = "inbox" | "contexts" | "categories" | "goals" | "tasks" | "completed" | "deleted";
 
 export interface MenuItemConfig {

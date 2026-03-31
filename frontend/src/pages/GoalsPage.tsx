@@ -22,6 +22,7 @@ import { useGoals } from "@/hooks/useGoals";
 import { useTasks } from "@/hooks/useTasks";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
@@ -91,6 +92,7 @@ export default function GoalsPage() {
   const { createTask } = useTasks(BOX.INBOX);
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const { filterBarPosition } = useFilterBarPosition();
   const navigate = useNavigate();
   const sensors = useDndSensors();
 
@@ -144,6 +146,39 @@ export default function GoalsPage() {
     <div data-testid="goals-page" className="relative flex flex-1 overflow-hidden bg-white">
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Action bar — top position (above header) */}
+        {filterBarPosition === "top" && (
+          <div
+            className={cn(
+              "flex items-center border-b border-gray-200 bg-white px-3 py-2",
+              panelSide === "left" && "flex-row-reverse",
+            )}
+          >
+            <button
+              type="button"
+              aria-label={t("goal.add")}
+              data-testid="add-goal-button"
+              onClick={() => setIsGoalSheetOpen(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
+            >
+              <Target className="w-5 h-5" aria-hidden="true" />
+              <Plus
+                className="w-3 h-3 absolute bottom-1 right-1"
+                aria-hidden="true"
+              />
+            </button>
+            <button
+              type="button"
+              aria-label={t("goal.addTask")}
+              data-testid="add-task-button"
+              onClick={() => setIsAddingTask(true)}
+              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+            >
+              <Plus className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
           <h1 className="text-lg font-semibold text-accent">{t("goal.pageTitle")}</h1>
@@ -199,39 +234,41 @@ export default function GoalsPage() {
           </div>
         </main>
 
-        {/* Bottom action bar */}
-        <div
-          className={cn(
-            "flex items-center border-t border-gray-200 bg-white px-3 py-2",
-            panelSide === "left" && "flex-row-reverse",
-          )}
-        >
-          {/* Add goal button */}
-          <button
-            type="button"
-            aria-label={t("goal.add")}
-            data-testid="add-goal-button"
-            onClick={() => setIsGoalSheetOpen(true)}
-            className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
+        {/* Action bar — bottom position (default) */}
+        {filterBarPosition === "bottom" && (
+          <div
+            className={cn(
+              "flex items-center border-t border-gray-200 bg-white px-3 py-2",
+              panelSide === "left" && "flex-row-reverse",
+            )}
           >
-            <Target className="w-5 h-5" aria-hidden="true" />
-            <Plus
-              className="w-3 h-3 absolute bottom-1 right-1"
-              aria-hidden="true"
-            />
-          </button>
+            {/* Add goal button */}
+            <button
+              type="button"
+              aria-label={t("goal.add")}
+              data-testid="add-goal-button"
+              onClick={() => setIsGoalSheetOpen(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
+            >
+              <Target className="w-5 h-5" aria-hidden="true" />
+              <Plus
+                className="w-3 h-3 absolute bottom-1 right-1"
+                aria-hidden="true"
+              />
+            </button>
 
-          {/* Add task button */}
-          <button
-            type="button"
-            aria-label={t("goal.addTask")}
-            data-testid="add-task-button"
-            onClick={() => setIsAddingTask(true)}
-            className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-          >
-            <Plus className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+            {/* Add task button */}
+            <button
+              type="button"
+              aria-label={t("goal.addTask")}
+              data-testid="add-task-button"
+              onClick={() => setIsAddingTask(true)}
+              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+            >
+              <Plus className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Goal create sheet */}

@@ -19,6 +19,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useTasks } from "@/hooks/useTasks";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
 import { BOX, ROUTES } from "@/constants";
@@ -98,6 +99,7 @@ export default function CategoriesPage() {
   const { categories, isLoading, createCategory, reorderCategories } = useCategories();
   const { createTask } = useTasks(BOX.INBOX);
   const { panelSide } = usePanelSide();
+  const { filterBarPosition } = useFilterBarPosition();
   const navigate = useNavigate();
 
   const sensors = useDndSensors();
@@ -154,6 +156,39 @@ export default function CategoriesPage() {
     <div data-testid="categories-page" className="relative flex flex-1 overflow-hidden bg-white">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Action bar — top position (above header) */}
+        {filterBarPosition === "top" && (
+          <div
+            className={cn(
+              "flex items-center border-b border-gray-200 bg-white px-3 py-2",
+              panelSide === "left" && "flex-row-reverse",
+            )}
+          >
+            <button
+              type="button"
+              aria-label={t("category.add")}
+              data-testid="add-category-button"
+              onClick={() => setIsAddingCategory(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
+            >
+              <Tag className="w-5 h-5" aria-hidden="true" />
+              <Plus
+                className="w-3 h-3 absolute bottom-1 right-1"
+                aria-hidden="true"
+              />
+            </button>
+            <button
+              type="button"
+              aria-label={t("category.addTask")}
+              data-testid="add-task-button"
+              onClick={() => setIsAddingTask(true)}
+              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+            >
+              <Plus className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
           <h1 className="text-lg font-semibold text-accent">{t("filter.categories")}</h1>
@@ -224,39 +259,41 @@ export default function CategoriesPage() {
           )}
         </main>
 
-        {/* Bottom action bar */}
-        <div
-          className={cn(
-            "flex items-center border-t border-gray-200 bg-white px-3 py-2",
-            panelSide === "left" && "flex-row-reverse",
-          )}
-        >
-          {/* Add category button */}
-          <button
-            type="button"
-            aria-label={t("category.add")}
-            data-testid="add-category-button"
-            onClick={() => setIsAddingCategory(true)}
-            className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
+        {/* Action bar — bottom position (default) */}
+        {filterBarPosition === "bottom" && (
+          <div
+            className={cn(
+              "flex items-center border-t border-gray-200 bg-white px-3 py-2",
+              panelSide === "left" && "flex-row-reverse",
+            )}
           >
-            <Tag className="w-5 h-5" aria-hidden="true" />
-            <Plus
-              className="w-3 h-3 absolute bottom-1 right-1"
-              aria-hidden="true"
-            />
-          </button>
+            {/* Add category button */}
+            <button
+              type="button"
+              aria-label={t("category.add")}
+              data-testid="add-category-button"
+              onClick={() => setIsAddingCategory(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
+            >
+              <Tag className="w-5 h-5" aria-hidden="true" />
+              <Plus
+                className="w-3 h-3 absolute bottom-1 right-1"
+                aria-hidden="true"
+              />
+            </button>
 
-          {/* Add task button */}
-          <button
-            type="button"
-            aria-label={t("category.addTask")}
-            data-testid="add-task-button"
-            onClick={() => setIsAddingTask(true)}
-            className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-          >
-            <Plus className="w-5 h-5" aria-hidden="true" />
-          </button>
-        </div>
+            {/* Add task button */}
+            <button
+              type="button"
+              aria-label={t("category.addTask")}
+              data-testid="add-task-button"
+              onClick={() => setIsAddingTask(true)}
+              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+            >
+              <Plus className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Right filter panel — full height */}
