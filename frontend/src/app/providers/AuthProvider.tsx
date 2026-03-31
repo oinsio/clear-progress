@@ -30,7 +30,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [googleClientId, setGoogleClientId] = useState<string | null>(() =>
     localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID),
   );
-  const [accessToken, setAccessTokenState] = useState<string | null>(null);
+  const [accessToken, setAccessTokenState] = useState<string | null>(() => {
+    const storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    const storedExpiresAt = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
+    if (storedToken && storedExpiresAt && Date.now() < Number(storedExpiresAt)) {
+      return storedToken;
+    }
+    return null;
+  });
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPicture, setUserPicture] = useState<string | null>(
     () => localStorage.getItem(STORAGE_KEYS.USER_PICTURE),
@@ -97,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {googleClientId && (
         <GoogleOAuthProvider clientId={googleClientId}>
           {/*
-           * GoogleAuthSync is a renderless component (returns null).
+           * GoogleAuthSync is a render-less component (returns null).
            * It lives inside GoogleOAuthProvider (needs the context for useGoogleLogin),
            * but is NOT wrapping children — so children never remount when clientId changes.
            */}

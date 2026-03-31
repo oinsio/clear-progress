@@ -265,3 +265,84 @@ describe("ApiClient.uploadCovers", () => {
     expect((requestBody.covers as unknown[]).length).toBe(2);
   });
 });
+
+describe("setAccessToken — localStorage persistence", () => {
+  afterEach(() => {
+    localStorage.clear();
+    setAccessToken(null);
+    vi.restoreAllMocks();
+  });
+
+  it("should persist token to localStorage when token is set with expiresIn", () => {
+    setAccessToken("my-token", 3600);
+    expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)).toBe("my-token");
+  });
+
+  it("should persist expiry timestamp to localStorage when token is set", () => {
+    const before = Date.now();
+    setAccessToken("my-token", 3600);
+    const storedExpiresAt = Number(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT));
+    expect(storedExpiresAt).toBeGreaterThan(before);
+  });
+
+  it("should remove token from localStorage when token is cleared with null", () => {
+    setAccessToken("my-token", 3600);
+    setAccessToken(null);
+    expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)).toBeNull();
+  });
+});
+
+describe("ApiClient module initialization — token restoration from localStorage", () => {
+  afterEach(() => {
+    localStorage.clear();
+    vi.resetModules();
+    vi.restoreAllMocks();
+  });
+
+  async function loadFreshClientAndCaptureInitRequestBody(): Promise<Record<string, unknown>> {
+    localStorage.setItem(STORAGE_KEYS.GAS_URL, TEST_URL);
+
+    vi.resetModules();
+    const { ApiClient: FreshApiClient } = await import("./ApiClient");
+    const freshClient = new FreshApiClient();
+
+    server.use(http.post(TEST_URL, () => HttpResponse.json({ ok: true })));
+    const fetchSpy = vi.spyOn(global, "fetch");
+    await freshClient.init();
+
+    return getLastRequestBody(fetchSpy);
+  }
+
+  it("should restore valid token from localStorage on module load", async () => {
+    const expiresAt = Date.now() + 60 * 60 * 1000;
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "restored-token");
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiresAt));
+
+    const requestBody = await loadFreshClientAndCaptureInitRequestBody();
+
+    expect(requestBody.access_token).toBe("restored-token");
+  });
+
+  it("should not restore expired token from localStorage on module load", async () => {
+    const expiredAt = Date.now() - 1000;
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "expired-token");
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiredAt));
+
+    const requestBody = await loadFreshClientAndCaptureInitRequestBody();
+
+    expect(requestBody).not.toHaveProperty("access_token");
+  });
+
+  it("should clean up expired token from localStorage on module load", async () => {
+    const expiredAt = Date.now() - 1000;
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "expired-token");
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiredAt));
+
+    vi.resetModules();
+    await import("./ApiClient");
+
+    expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)).toBeNull();
+  });
+});

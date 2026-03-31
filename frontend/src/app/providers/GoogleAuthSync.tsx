@@ -76,6 +76,8 @@ export function GoogleAuthSync({
   );
 
   const handleError = useCallback(() => {
+    // Silent refresh failure — keep the existing token (can be restored from localStorage)
+    if (isSilentRef.current) return;
     setAccessToken(null);
     onClear();
   }, [onClear]);

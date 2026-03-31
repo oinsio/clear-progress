@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
 import { AuthProvider, useAuth } from "./AuthProvider";
 
 const mockLogin = vi.fn();
@@ -20,7 +21,6 @@ vi.mock("@/services/ApiClient", () => ({
 }));
 
 import { setAccessToken } from "@/services/ApiClient";
-import React from "react";
 
 function TestConsumer() {
   const { accessToken, userEmail, signIn, signOut, silentRefresh } = useAuth();
@@ -40,10 +40,14 @@ function ThrowingConsumer() {
   return <div />;
 }
 
+import { STORAGE_KEYS } from "@/constants";
+
 describe("AuthProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.setItem("google_client_id", "test-client-id");
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
     delete (globalThis as Record<string, unknown>).__googleLoginOptions;
   });
 
@@ -191,24 +195,27 @@ describe("AuthProvider", () => {
     expect(setAccessToken).toHaveBeenCalledWith("refreshed-token", 3600);
   });
 
-  it("should call setAccessToken(null) and clear state when silent login fails", async () => {
+  it("should call setAccessToken(null) and clear state when explicit login fails", async () => {
+    const user = userEvent.setup();
     render(
       <AuthProvider>
         <TestConsumer />
       </AuthProvider>,
     );
 
-    // First set a token
+    // First set a token via silent refresh
     await act(async () => {
       const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
         onSuccess: (response: unknown) => void;
       };
       options.onSuccess({ access_token: "my-token", expires_in: 3600 });
     });
-
     expect(screen.getByTestId("token").textContent).toBe("my-token");
 
-    // Now trigger silent login error
+    // Switch to explicit login mode, then trigger error
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "sign-in" }));
+    });
     await act(async () => {
       const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
         onError: () => void;
@@ -218,6 +225,69 @@ describe("AuthProvider", () => {
 
     expect(screen.getByTestId("token").textContent).toBe("null");
     expect(setAccessToken).toHaveBeenLastCalledWith(null);
+  });
+
+  it("should NOT clear state when silent refresh error occurs", async () => {
+    const user = userEvent.setup();
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    // Sign in explicitly to get a token (isSilentRef.current = false)
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "sign-in" }));
+    });
+    await act(async () => {
+      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
+        onSuccess: (response: unknown) => void;
+      };
+      options.onSuccess({ access_token: "my-token", expires_in: 3600 });
+    });
+    expect(screen.getByTestId("token").textContent).toBe("my-token");
+
+    // Trigger silent refresh (sets isSilentRef.current = true), then error
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "silent-refresh" }));
+    });
+    await act(async () => {
+      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
+        onError: () => void;
+      };
+      options.onError();
+    });
+
+    // Token should remain — silent refresh error must not wipe state
+    expect(screen.getByTestId("token").textContent).toBe("my-token");
+  });
+
+  it("should initialize accessToken from localStorage when stored token is valid", () => {
+    const expiresAt = Date.now() + 60 * 60 * 1000;
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "cached-token");
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiresAt));
+
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    expect(screen.getByTestId("token").textContent).toBe("cached-token");
+  });
+
+  it("should initialize accessToken as null when stored token is expired", () => {
+    const expiredAt = Date.now() - 1000;
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "expired-token");
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiredAt));
+
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    expect(screen.getByTestId("token").textContent).toBe("null");
   });
 
   it("should clear accessToken and userEmail when signOut is invoked", async () => {

@@ -17,12 +17,34 @@ import { STORAGE_KEYS, API_ACTIONS, GAS_AUTH_ERROR_CODE, TOKEN_EXPIRY_BUFFER_S, 
 let sharedAccessToken: string | null = null;
 let sharedTokenExpiresAt: number | null = null;
 
+// Restore persisted token from localStorage on module load (survives app restart)
+const _storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+const _storedExpiresAt = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
+if (_storedToken && _storedExpiresAt) {
+  const expiresAt = Number(_storedExpiresAt);
+  if (Date.now() < expiresAt) {
+    sharedAccessToken = _storedToken;
+    sharedTokenExpiresAt = expiresAt;
+  } else {
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
+  }
+}
+
 export function setAccessToken(token: string | null, expiresIn?: number): void {
   sharedAccessToken = token;
   sharedTokenExpiresAt =
     token && expiresIn !== undefined
       ? Date.now() + (expiresIn - TOKEN_EXPIRY_BUFFER_S) * 1000
       : null;
+
+  if (token && sharedTokenExpiresAt !== null) {
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(sharedTokenExpiresAt));
+  } else {
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
+  }
 }
 
 export class ApiAuthError extends Error {

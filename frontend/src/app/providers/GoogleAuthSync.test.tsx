@@ -88,8 +88,22 @@ describe("GoogleAuthSync", () => {
     expect(setAccessToken).toHaveBeenCalledWith("test-token", 3600);
   });
 
-  it("should call onClear and setAccessToken(null) on login error", async () => {
+  it("should NOT call onClear or setAccessToken(null) when silent refresh fails", async () => {
     renderSync();
+    // On mount isSilentRef.current = true — silent mode
+    await act(async () => {
+      getLoginOptions().onError();
+    });
+    expect(onClear).not.toHaveBeenCalled();
+    expect(setAccessToken).not.toHaveBeenCalledWith(null);
+  });
+
+  it("should call onClear and setAccessToken(null) when explicit login fails", async () => {
+    renderSync();
+    // Switch to explicit login mode
+    act(() => {
+      refs.signInRef.current();
+    });
     await act(async () => {
       getLoginOptions().onError();
     });

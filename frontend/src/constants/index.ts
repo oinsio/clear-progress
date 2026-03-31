@@ -118,6 +118,8 @@ export const STORAGE_KEYS = {
   COLOR_SCHEME: "color_scheme",
   USER_PICTURE: "user_picture",
   BACKEND_CONNECTED: "backend_connected",
+  ACCESS_TOKEN: "access_token",
+  ACCESS_TOKEN_EXPIRES_AT: "access_token_expires_at",
 } as const;
 
 export const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
