@@ -3,8 +3,8 @@ import { cn } from "@/shared/lib/cn";
 import type { GoalStatus } from "@/types/common";
 
 const GOAL_STATUS_CLASSES: Record<GoalStatus, string> = {
-  planning: "text-blue-500",
-  in_progress: "text-gray-400",
+  planning: "text-gray-400",
+  in_progress: "text-blue-500",
   paused: "text-orange-500",
   completed: "text-green-600",
   cancelled: "text-red-500",
