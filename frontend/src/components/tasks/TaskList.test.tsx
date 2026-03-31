@@ -15,7 +15,7 @@ describe("TaskList", () => {
     render(
       <TaskList tasks={[]} goals={[]} contexts={[]} categories={[]} onComplete={vi.fn()} onUpdate={vi.fn()} onMove={vi.fn()} onDelete={vi.fn()} />,
     );
-    expect(screen.getByText("Inbox is empty")).toBeInTheDocument();
+    expect(screen.getByText("Нет задач")).toBeInTheDocument();
   });
 
   it("should render a TaskItem for each task in the list", () => {

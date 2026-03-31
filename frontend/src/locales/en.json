@@ -3,7 +3,8 @@
     "inbox": "Inbox",
     "today": "Today",
     "goals": "Goals",
-    "search": "Search"
+    "search": "Search",
+    "ariaLabel": "Navigation"
   },
   "box": {
     "inbox": "Inbox",
@@ -15,8 +16,17 @@
   "task": {
     "addPlaceholder": "Task in «{{box}}»",
     "searchPlaceholder": "Search tasks...",
+    "empty": "No tasks",
+    "emptyCompleted": "No completed tasks",
     "emptyInbox": "No tasks",
     "emptyToday": "No tasks for today",
+    "noTasksPrompt": "No tasks. Click here to add.",
+    "editNotes": "Edit notes",
+    "selectGoal": "Select goal",
+    "moveToBox": "Move to box",
+    "selectContext": "Select context",
+    "selectCategory": "Select category",
+    "fullEdit": "Full edit",
     "complete": "Complete task",
     "noncomplete": "Noncomplete task",
     "restore": "Restore",
@@ -237,6 +247,7 @@
     "fieldBox": "Box",
     "fieldRepeat": "Repeat",
     "notesPlaceholder": "Add a note...",
+    "dragChecklist": "Drag item",
     "newChecklistItemPlaceholder": "Enter new item...",
     "activeSection": "Active ({{count}})",
     "doneSection": "Done ({{count}})",

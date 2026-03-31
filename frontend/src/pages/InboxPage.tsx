@@ -476,6 +476,7 @@ export default function InboxPage() {
               onUpdate={handleUpdateTask}
               onMove={handleMoveTask}
               onDelete={deleteToday}
+              emptyMessage={t("task.emptyCompleted")}
               {...sharedSelectProps}
             />
           )}

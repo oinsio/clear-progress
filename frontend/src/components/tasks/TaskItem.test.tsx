@@ -181,7 +181,7 @@ describe("TaskItem", () => {
     const goal = buildGoal({ title: "My Goal" });
     renderTaskItem({ goals: [goal] });
     await userEvent.click(screen.getByTestId("task-item-body"));
-    await userEvent.click(screen.getByRole("button", { name: /select goal/i }));
+    await userEvent.click(screen.getByRole("button", { name: /выбрать цель/i }));
     expect(screen.getByText("My Goal")).toBeInTheDocument();
   });
 

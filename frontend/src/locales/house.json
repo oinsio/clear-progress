@@ -3,7 +3,8 @@
     "inbox": "Симптомы",
     "today": "Острое",
     "goals": "Иллюзии",
-    "search": "Дифдиагноз"
+    "search": "Дифдиагноз",
+    "ariaLabel": "Навигация по больнице"
   },
   "box": {
     "inbox": "Входящие жалобы",
@@ -15,8 +16,17 @@
   "task": {
     "addPlaceholder": "Симптом в «{{box}}»",
     "searchPlaceholder": "Ищем диагноз...",
+    "empty": "Все выжили. Подозрительно.",
+    "emptyCompleted": "Никто не выжил.",
     "emptyInbox": "Все пациенты выжили. Подозрительно.",
     "emptyToday": "Либо все здоровы, либо все мертвы.",
+    "noTasksPrompt": "Пациентов нет. Нажмите, чтобы добавить страдание.",
+    "editNotes": "Добавить жалобу",
+    "selectGoal": "Выбрать иллюзию",
+    "moveToBox": "Перевести в палату",
+    "selectContext": "Выбрать контекст",
+    "selectCategory": "Выбрать категорию",
+    "fullEdit": "Полная диагностика",
     "complete": "Пациент выжил",
     "noncomplete": "Рецидив",
     "restore": "Реанимировать",
@@ -240,6 +250,7 @@
     "fieldBox": "Палата",
     "fieldRepeat": "Повтор",
     "notesPlaceholder": "Добавить заметку...",
+    "dragChecklist": "Перетащить пункт",
     "newChecklistItemPlaceholder": "Введите новый пункт...",
     "activeSection": "Активно ({{count}})",
     "doneSection": "Готово ({{count}})",

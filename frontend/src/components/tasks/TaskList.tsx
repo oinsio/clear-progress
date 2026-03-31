@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   DndContext,
   closestCenter,
@@ -19,7 +20,6 @@ import type { Task, Goal, Context, Category } from "@/types/entities";
 import type { Box } from "@/types/common";
 import { TaskItem } from "./TaskItem";
 
-const INBOX_EMPTY_MESSAGE = "Inbox is empty";
 const DRAG_ACTIVATION_DISTANCE_PX = 8;
 const TOUCH_ACTIVATION_DELAY_MS = 250;
 const TOUCH_ACTIVATION_TOLERANCE_PX = 5;
@@ -98,6 +98,7 @@ interface TaskListProps {
 }
 
 export function TaskList({ tasks, goals, contexts, categories, onComplete, onUpdate, onMove, onDelete, onReorder, emptyMessage, onEmptyClick, onSelect, selectedTaskId }: TaskListProps) {
+  const { t } = useTranslation();
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   const pointerSensor = useSensor(PointerSensor, {
@@ -120,7 +121,7 @@ export function TaskList({ tasks, goals, contexts, categories, onComplete, onUpd
           onClick={onEmptyClick}
           className={`w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors ${emptyMessage ? "py-3" : "py-16"}`}
         >
-          <p className="text-sm">{emptyMessage ?? INBOX_EMPTY_MESSAGE}</p>
+          <p className="text-sm">{emptyMessage ?? t("task.empty")}</p>
         </button>
       );
     }
@@ -129,7 +130,7 @@ export function TaskList({ tasks, goals, contexts, categories, onComplete, onUpd
         data-testid="task-list-empty"
         className={`flex flex-col items-center justify-center text-gray-400 ${emptyMessage ? "py-3" : "py-16"}`}
       >
-        <p className="text-sm">{emptyMessage ?? INBOX_EMPTY_MESSAGE}</p>
+        <p className="text-sm">{emptyMessage ?? t("task.empty")}</p>
       </div>
     );
   }

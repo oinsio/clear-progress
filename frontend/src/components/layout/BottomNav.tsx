@@ -19,7 +19,7 @@ export function BottomNav() {
 
   return (
     <nav
-      aria-label="Bottom navigation"
+      aria-label={t("nav.ariaLabel")}
       className="flex items-center justify-around border-t border-gray-200 bg-white px-2 py-2"
     >
       {BOTTOM_NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {

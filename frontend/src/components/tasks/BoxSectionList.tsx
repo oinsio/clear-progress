@@ -1,11 +1,10 @@
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { TaskList } from "@/components/tasks/TaskList";
 import { BOX, BOX_FILTER_LABELS } from "@/constants";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
 import type { Task, Goal, Context, Category } from "@/types/entities";
 import type { Box } from "@/types/common";
-
-const NO_TASKS_MESSAGE = "Задач нет. Нажмите сюда, чтобы добавить.";
 
 const BOX_SECTION_ORDER: Box[] = [BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER];
 
@@ -110,6 +109,7 @@ export function BoxSectionList({
   onSelect,
   selectedTaskId,
 }: BoxSectionListProps) {
+  const { t } = useTranslation();
   const hasAnyTasks = BOX_SECTION_ORDER.some((box) => tasksByBox[box].length > 0);
 
   if (!isLoading && !hasAnyTasks) {
@@ -120,7 +120,7 @@ export function BoxSectionList({
         onClick={onAddPromptClick}
         className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:text-accent hover:bg-gray-50 transition-colors"
       >
-        {NO_TASKS_MESSAGE}
+        {t("task.noTasksPrompt")}
       </button>
     );
   }

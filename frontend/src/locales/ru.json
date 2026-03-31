@@ -3,7 +3,8 @@
     "inbox": "Входящие",
     "today": "Сегодня",
     "goals": "Цели",
-    "search": "Поиск"
+    "search": "Поиск",
+    "ariaLabel": "Навигация"
   },
   "box": {
     "inbox": "Входящие",
@@ -15,8 +16,17 @@
   "task": {
     "addPlaceholder": "Задача в «{{box}}»",
     "searchPlaceholder": "Поиск задач...",
+    "empty": "Нет задач",
+    "emptyCompleted": "Завершённых задач нет",
     "emptyInbox": "Задач нет",
     "emptyToday": "Задач на сегодня нет",
+    "noTasksPrompt": "Задач нет. Нажмите сюда, чтобы добавить.",
+    "editNotes": "Редактировать заметку",
+    "selectGoal": "Выбрать цель",
+    "moveToBox": "Переместить",
+    "selectContext": "Выбрать контекст",
+    "selectCategory": "Выбрать категорию",
+    "fullEdit": "Открыть редактирование",
     "complete": "Завершить задачу",
     "noncomplete": "Снять завершение",
     "restore": "Вернуть",
@@ -239,6 +249,7 @@
     "fieldBox": "Коробочка",
     "fieldRepeat": "Повтор",
     "notesPlaceholder": "Добавить заметку...",
+    "dragChecklist": "Перетащить пункт",
     "newChecklistItemPlaceholder": "Введите новый пункт...",
     "activeSection": "Активно ({{count}})",
     "doneSection": "Готово ({{count}})",

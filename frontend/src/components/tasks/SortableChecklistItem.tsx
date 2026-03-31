@@ -1,4 +1,5 @@
 import { GripVertical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/shared/lib/cn";
@@ -37,6 +38,7 @@ export function SortableChecklistItem({
   onEditKeyDown,
   onDelete,
 }: SortableChecklistItemProps) {
+  const { t } = useTranslation();
   const isCompleted = variant === CHECKLIST_ITEM_VARIANT.COMPLETED;
   const {
     attributes,
@@ -64,7 +66,7 @@ export function SortableChecklistItem({
             {...attributes}
             {...listeners}
             className="text-gray-300 hover:text-gray-500 transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
-            aria-label="drag"
+            aria-label={t("taskEdit.dragChecklist")}
           >
             <GripVertical size={14} />
           </button>

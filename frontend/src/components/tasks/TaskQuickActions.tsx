@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { FileText, Target, Pencil, Inbox, MapPin, Tag } from "lucide-react";
 import type { Task, Goal, Context, Category } from "@/types/entities";
 import type { Box } from "@/types/common";
@@ -38,6 +39,7 @@ export function TaskQuickActions({
   onMove,
   onOpenEdit,
 }: TaskQuickActionsProps) {
+  const { t } = useTranslation();
   const [activeMode, setActiveMode] = useState<QuickActionMode>("none");
   const [notesValue, setNotesValue] = useState(task.notes);
 
@@ -145,7 +147,7 @@ export function TaskQuickActions({
       <div className="flex items-center gap-1 px-3 py-1.5">
         <button
           type="button"
-          aria-label="Edit notes"
+          aria-label={t("task.editNotes")}
           aria-pressed={activeMode === "notes"}
           onClick={handleNotesToggle}
           className={notesButtonClass}
@@ -154,7 +156,7 @@ export function TaskQuickActions({
         </button>
         <button
           type="button"
-          aria-label="Select goal"
+          aria-label={t("task.selectGoal")}
           aria-pressed={activeMode === "goal"}
           onClick={() => handleModeToggle("goal")}
           className={goalButtonClass}
@@ -163,7 +165,7 @@ export function TaskQuickActions({
         </button>
         <button
           type="button"
-          aria-label="Move to box"
+          aria-label={t("task.moveToBox")}
           aria-pressed={activeMode === "box"}
           onClick={() => handleModeToggle("box")}
           className={cn(
@@ -177,7 +179,7 @@ export function TaskQuickActions({
         </button>
         <button
           type="button"
-          aria-label="Select context"
+          aria-label={t("task.selectContext")}
           aria-pressed={activeMode === "context"}
           onClick={() => handleModeToggle("context")}
           className={contextButtonClass}
@@ -186,7 +188,7 @@ export function TaskQuickActions({
         </button>
         <button
           type="button"
-          aria-label="Select category"
+          aria-label={t("task.selectCategory")}
           aria-pressed={activeMode === "category"}
           onClick={() => handleModeToggle("category")}
           className={categoryButtonClass}
@@ -195,7 +197,7 @@ export function TaskQuickActions({
         </button>
         <button
           type="button"
-          aria-label="Full edit"
+          aria-label={t("task.fullEdit")}
           onClick={onOpenEdit}
           className={cn(
             "flex items-center justify-center w-9 h-9 rounded-lg transition-colors",
@@ -214,7 +216,7 @@ export function TaskQuickActions({
             value={notesValue}
             onChange={(event) => setNotesValue(event.target.value)}
             onKeyDown={handleNotesKeyDown}
-            placeholder="Добавить заметку..."
+            placeholder={t("taskEdit.notesPlaceholder")}
             rows={3}
             autoFocus
             className="w-full text-sm text-gray-700 placeholder:text-gray-400 bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none"
@@ -227,7 +229,7 @@ export function TaskQuickActions({
         <div className="px-3 pb-2 flex flex-col gap-0.5 max-h-40 overflow-y-auto">
           <button
             type="button"
-            aria-label="Без цели"
+            aria-label={t("selector.noGoal")}
             onClick={() => handleGoalSelect("")}
             className={cn(
               "text-left text-sm px-3 py-1.5 rounded-lg transition-colors",
@@ -236,7 +238,7 @@ export function TaskQuickActions({
                 : "text-gray-500 hover:bg-gray-100",
             )}
           >
-            Без цели
+            {t("selector.noGoal")}
           </button>
           {goals.map((goal) => (
             <button
@@ -261,7 +263,7 @@ export function TaskQuickActions({
         <div className="px-3 pb-2 flex flex-col gap-0.5 max-h-40 overflow-y-auto">
           <button
             type="button"
-            aria-label="Без контекста"
+            aria-label={t("selector.noContext")}
             onClick={() => handleContextSelect("")}
             className={cn(
               "text-left text-sm px-3 py-1.5 rounded-lg transition-colors",
@@ -270,7 +272,7 @@ export function TaskQuickActions({
                 : "text-gray-500 hover:bg-gray-100",
             )}
           >
-            Без контекста
+            {t("selector.noContext")}
           </button>
           {contexts.map((context) => (
             <button
@@ -295,7 +297,7 @@ export function TaskQuickActions({
         <div className="px-3 pb-2 flex flex-col gap-0.5 max-h-40 overflow-y-auto">
           <button
             type="button"
-            aria-label="Без категории"
+            aria-label={t("selector.noCategory")}
             onClick={() => handleCategorySelect("")}
             className={cn(
               "text-left text-sm px-3 py-1.5 rounded-lg transition-colors",
@@ -304,7 +306,7 @@ export function TaskQuickActions({
                 : "text-gray-500 hover:bg-gray-100",
             )}
           >
-            Без категории
+            {t("selector.noCategory")}
           </button>
           {categories.map((category) => (
             <button

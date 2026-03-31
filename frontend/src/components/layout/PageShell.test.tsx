@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PageShell } from "./PageShell";
+import React from "react";
 
 function renderWithRouter(children: React.ReactNode) {
   return render(
@@ -18,6 +19,6 @@ describe("PageShell", () => {
 
   it("should render BottomNav for mobile navigation", () => {
     renderWithRouter(<div>Content</div>);
-    expect(screen.getByRole("navigation", { name: /bottom navigation/i })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: /навигация/i })).toBeInTheDocument();
   });
 });
