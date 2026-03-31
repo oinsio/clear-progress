@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import GoalsPage from "./GoalsPage";
@@ -127,5 +127,47 @@ describe("GoalsPage", () => {
     mockUseGoals.mockReturnValue(buildGoalsHook());
     renderGoalsPage();
     expect(screen.getByTestId("add-task-button")).toBeInTheDocument();
+  });
+
+  it("should show inline goal input when add goal button is clicked", () => {
+    mockUseGoals.mockReturnValue(buildGoalsHook());
+    renderGoalsPage();
+    fireEvent.click(screen.getByTestId("add-goal-button"));
+    expect(screen.getByTestId("add-goal-input")).toBeInTheDocument();
+  });
+
+  it("should call createGoal with title when Enter is pressed in inline goal input", async () => {
+    const createGoal = vi.fn().mockResolvedValue(undefined);
+    mockUseGoals.mockReturnValue(buildGoalsHook({ createGoal }));
+    renderGoalsPage();
+    fireEvent.click(screen.getByTestId("add-goal-button"));
+    const input = screen.getByTestId("add-goal-input");
+    fireEvent.change(input, { target: { value: "New Goal" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(createGoal).toHaveBeenCalledWith({ title: "New Goal" });
+  });
+
+  it("should hide inline goal input when Escape is pressed", () => {
+    mockUseGoals.mockReturnValue(buildGoalsHook());
+    renderGoalsPage();
+    fireEvent.click(screen.getByTestId("add-goal-button"));
+    const input = screen.getByTestId("add-goal-input");
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(screen.queryByTestId("add-goal-input")).not.toBeInTheDocument();
+  });
+
+  it("should hide inline goal input on blur when value is empty", () => {
+    mockUseGoals.mockReturnValue(buildGoalsHook());
+    renderGoalsPage();
+    fireEvent.click(screen.getByTestId("add-goal-button"));
+    const input = screen.getByTestId("add-goal-input");
+    fireEvent.blur(input);
+    expect(screen.queryByTestId("add-goal-input")).not.toBeInTheDocument();
+  });
+
+  it("should not render GoalCreateSheet", () => {
+    mockUseGoals.mockReturnValue(buildGoalsHook());
+    renderGoalsPage();
+    expect(screen.queryByTestId("goal-create-sheet")).not.toBeInTheDocument();
   });
 });

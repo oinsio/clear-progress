@@ -16,8 +16,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
 import { GoalItem } from "@/components/goals/GoalItem";
-import { GoalCreateSheet } from "@/components/goals/GoalCreateSheet";
-import type { GoalCreateData } from "@/components/goals/GoalCreateSheet";
 import { useGoals } from "@/hooks/useGoals";
 import { useTasks } from "@/hooks/useTasks";
 import { usePanelSide } from "@/hooks/usePanelSide";
@@ -97,14 +95,6 @@ export default function GoalsPage() {
   const sensors = useDndSensors();
 
   const [goalTaskCounts, setGoalTaskCounts] = useState<Record<string, number>>({});
-  const [isGoalSheetOpen, setIsGoalSheetOpen] = useState(false);
-
-  const handleGoalCreate = useCallback(
-    async (data: GoalCreateData) => {
-      await createGoal(data);
-    },
-    [createGoal],
-  );
 
   const {
     isAdding: isAddingTask,
@@ -114,6 +104,15 @@ export default function GoalsPage() {
     handleKeyDown: handleAddTaskKeyDown,
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
+
+  const {
+    isAdding: isAddingGoal,
+    setIsAdding: setIsAddingGoal,
+    value: newGoalTitle,
+    setValue: setNewGoalTitle,
+    handleKeyDown: handleAddGoalKeyDown,
+    handleBlur: handleAddGoalBlur,
+  } = useInlineAdd((title) => createGoal({ title }));
 
   const activeGoals = goals.filter((goal) => !goal.is_deleted);
 
@@ -158,7 +157,7 @@ export default function GoalsPage() {
               type="button"
               aria-label={t("goal.add")}
               data-testid="add-goal-button"
-              onClick={() => setIsGoalSheetOpen(true)}
+              onClick={() => setIsAddingGoal(true)}
               className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
             >
               <Target className="w-5 h-5" aria-hidden="true" />
@@ -215,6 +214,23 @@ export default function GoalsPage() {
             </DndContext>
           )}
 
+          {/* Inline add goal input */}
+          {isAddingGoal && (
+            <div className="px-4 py-3 border-b border-gray-100">
+              <input
+                type="text"
+                autoFocus
+                value={newGoalTitle}
+                onChange={(event) => setNewGoalTitle(event.target.value)}
+                onKeyDown={handleAddGoalKeyDown}
+                onBlur={handleAddGoalBlur}
+                placeholder={t("goal.titlePlaceholder")}
+                className="w-full text-sm outline-none placeholder:text-gray-400"
+                data-testid="add-goal-input"
+              />
+            </div>
+          )}
+
           {/* Inline add task input */}
           {isAddingTask && (
             <div className="px-4 py-3 border-b border-gray-100">
@@ -247,7 +263,7 @@ export default function GoalsPage() {
               type="button"
               aria-label={t("goal.add")}
               data-testid="add-goal-button"
-              onClick={() => setIsGoalSheetOpen(true)}
+              onClick={() => setIsAddingGoal(true)}
               className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
             >
               <Target className="w-5 h-5" aria-hidden="true" />
@@ -270,14 +286,6 @@ export default function GoalsPage() {
           </div>
         )}
       </div>
-
-      {/* Goal create sheet */}
-      {isGoalSheetOpen && (
-        <GoalCreateSheet
-          onSave={handleGoalCreate}
-          onClose={() => setIsGoalSheetOpen(false)}
-        />
-      )}
 
       {/* Right filter panel */}
       <RightFilterPanel
