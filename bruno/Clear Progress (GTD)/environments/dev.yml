@@ -2,3 +2,5 @@ name: dev
 variables:
   - name: ENVIRONMENT_PREFIX
     value: DEV_
+  - secret: true
+    name: access_token

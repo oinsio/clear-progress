@@ -15,7 +15,8 @@ http:
     type: json
     data: |-
       {
-        "action": "unknown_action"
+        "action": "unknown_action",
+        "access_token": "{{access_token}}"
       }
   auth: inherit
 

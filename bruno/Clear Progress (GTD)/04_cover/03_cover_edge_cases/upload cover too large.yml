@@ -16,6 +16,7 @@ http:
     data: |-
       {
         "action": "upload_cover",
+        "access_token": "{{access_token}}",
         "goal_id": "{{$randomUUID}}",
         "filename": "too-large.jpg",
         "mime_type": "image/jpeg",

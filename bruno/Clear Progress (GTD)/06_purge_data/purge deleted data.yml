@@ -16,6 +16,7 @@ http:
     data: |-
       {
         "action": "purge",
+        "access_token": "{{access_token}}",
         "confirm": {{confirm}}
       }
   auth: inherit

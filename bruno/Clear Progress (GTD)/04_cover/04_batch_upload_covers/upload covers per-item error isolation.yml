@@ -16,6 +16,7 @@ http:
     data: |-
       {
         "action": "upload_covers",
+        "access_token": "{{access_token}}",
         "covers": [
           {
             "local_id": "{{$randomUUID}}",

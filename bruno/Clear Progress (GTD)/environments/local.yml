@@ -2,3 +2,5 @@ name: local
 variables:
   - name: ENVIRONMENT_PREFIX
     value: LOCAL_
+  - secret: true
+    name: access_token

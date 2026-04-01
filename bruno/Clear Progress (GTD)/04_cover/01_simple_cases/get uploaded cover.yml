@@ -11,6 +11,7 @@ http:
     data: |-
       {
         "action": "get_cover",
+        "access_token": "{{access_token}}",
         "file_ids": [
           "{{fileId}}"
         ]

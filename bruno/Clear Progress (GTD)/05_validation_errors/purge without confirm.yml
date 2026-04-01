@@ -15,7 +15,8 @@ http:
     type: json
     data: |-
       {
-        "action": "purge"
+        "action": "purge",
+        "access_token": "{{access_token}}"
       }
   auth: inherit
 

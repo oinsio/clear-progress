@@ -16,6 +16,7 @@ http:
     data: |-
       {
         "action": "push",
+        "access_token": "{{access_token}}",
         "changes": {
           "tasks": [],
           "goals": [

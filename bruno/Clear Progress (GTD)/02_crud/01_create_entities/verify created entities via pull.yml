@@ -16,6 +16,7 @@ http:
     data: |-
       {
         "action": "pull",
+        "access_token": "{{access_token}}",
         "versions": {
           "tasks": 0,
           "goals": 0,
