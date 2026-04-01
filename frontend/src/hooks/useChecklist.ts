@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { liveQuery } from "dexie";
 import type { ChecklistItem } from "@/types/entities";
 import { ChecklistService, type ChecklistProgress } from "@/services/ChecklistService";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
@@ -31,68 +32,71 @@ export function useChecklist(
   const [isLoading, setIsLoading] = useState(true);
   const { schedulePush, lastSyncedAt } = useSync();
 
-  const loadItems = useCallback(async () => {
-    const [taskItems, taskProgress] = await Promise.all([
-      checklistService.getByTaskId(taskId),
-      checklistService.getProgress(taskId),
-    ]);
-    setItems(taskItems);
-    setProgress(taskProgress);
-    setIsLoading(false);
-  }, [checklistService, taskId]);
-
   useEffect(() => {
-    void loadItems();
-  }, [loadItems]);
+    setIsLoading(true);
+    const subscription = liveQuery(async () => {
+      const [taskItems, taskProgress] = await Promise.all([
+        checklistService.getByTaskId(taskId),
+        checklistService.getProgress(taskId),
+      ]);
+      return { taskItems, taskProgress };
+    }).subscribe({
+      next: ({ taskItems, taskProgress }) => {
+        setItems(taskItems);
+        setProgress(taskProgress);
+        setIsLoading(false);
+      },
+    });
+    return () => subscription.unsubscribe();
+  }, [checklistService, taskId]);
 
   const createItem = useCallback(
     async (title: string) => {
       await checklistService.create(taskId, title);
-      await loadItems();
       schedulePush();
     },
-    [checklistService, taskId, loadItems, schedulePush],
+    [checklistService, taskId, schedulePush],
   );
 
   const toggleItem = useCallback(
     async (id: string) => {
       await checklistService.toggle(id);
-      await loadItems();
       schedulePush();
     },
-    [checklistService, loadItems, schedulePush],
+    [checklistService, schedulePush],
   );
 
   const deleteItem = useCallback(
     async (id: string) => {
       await checklistService.softDelete(id);
-      await loadItems();
       schedulePush();
     },
-    [checklistService, loadItems, schedulePush],
+    [checklistService, schedulePush],
   );
 
   const updateItem = useCallback(
     async (id: string, title: string) => {
       await checklistService.update(id, { title });
-      await loadItems();
       schedulePush();
     },
-    [checklistService, loadItems, schedulePush],
+    [checklistService, schedulePush],
   );
 
   const reorderItems = useCallback(
     async (reorderedItems: ChecklistItem[]) => {
       await checklistService.reorderItems(reorderedItems);
-      await loadItems();
       schedulePush();
     },
-    [checklistService, loadItems, schedulePush],
+    [checklistService, schedulePush],
   );
 
   const hasUnsyncedItems = items.some(
     (item) => lastSyncedAt === null || item.updated_at > lastSyncedAt,
   );
 
-  return { items, progress, hasUnsyncedItems, isLoading, reload: loadItems, createItem, toggleItem, deleteItem, updateItem, reorderItems };
+  const reload = useCallback(async () => {
+    // liveQuery handles reactive updates automatically
+  }, []);
+
+  return { items, progress, hasUnsyncedItems, isLoading, reload, createItem, toggleItem, deleteItem, updateItem, reorderItems };
 }
