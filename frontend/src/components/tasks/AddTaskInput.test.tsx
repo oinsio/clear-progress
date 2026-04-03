@@ -59,12 +59,34 @@ describe("AddTaskInput", () => {
     expect(onCancel).toHaveBeenCalled();
   });
 
-  it("should call onCancel when input loses focus", () => {
+  it("should call onCancel when input loses focus with empty value", () => {
     const onCancel = vi.fn();
     renderInput({ onCancel });
     const input = screen.getByTestId("add-task-input");
     fireEvent.blur(input);
     expect(onCancel).toHaveBeenCalled();
+  });
+
+  it("should call onAdd with trimmed value when input loses focus with non-empty value", async () => {
+    const onAdd = vi.fn().mockResolvedValue(undefined);
+    renderInput({ onAdd });
+    const input = screen.getByTestId("add-task-input");
+    fireEvent.change(input, { target: { value: "  Задача на iOS  " } });
+    fireEvent.blur(input);
+    await waitFor(() => {
+      expect(onAdd).toHaveBeenCalledWith("Задача на iOS");
+    });
+  });
+
+  it("should not call onCancel when input loses focus with non-empty value", async () => {
+    const onCancel = vi.fn();
+    renderInput({ onCancel });
+    const input = screen.getByTestId("add-task-input");
+    fireEvent.change(input, { target: { value: "Задача" } });
+    fireEvent.blur(input);
+    await waitFor(() => {
+      expect(onCancel).not.toHaveBeenCalled();
+    });
   });
 
   it("should clear the input value after successful add", async () => {

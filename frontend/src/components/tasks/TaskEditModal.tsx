@@ -174,6 +174,13 @@ export function TaskEditModal({
     [newItemTitle, createItem],
   );
 
+  const handleNewItemBlur = useCallback(async () => {
+    if (newItemTitle.trim()) {
+      await createItem(newItemTitle.trim());
+      setNewItemTitle("");
+    }
+  }, [newItemTitle, createItem]);
+
 
   const dndSensors = useDndSensors();
 
@@ -430,6 +437,7 @@ export function TaskEditModal({
                         value={newItemTitle}
                         onChange={(event) => setNewItemTitle(event.target.value)}
                         onKeyDown={(event) => void handleNewItemKeyDown(event)}
+                        onBlur={() => void handleNewItemBlur()}
                         placeholder={t("taskEdit.newChecklistItemPlaceholder")}
                         className="flex-1 text-sm text-gray-400 outline-none placeholder:text-gray-300"
                       />

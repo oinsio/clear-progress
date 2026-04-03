@@ -216,6 +216,7 @@ export function TaskQuickActions({
             value={notesValue}
             onChange={(event) => setNotesValue(event.target.value)}
             onKeyDown={handleNotesKeyDown}
+            onBlur={() => void handleNotesSave()}
             placeholder={t("taskEdit.notesPlaceholder")}
             rows={3}
             autoFocus

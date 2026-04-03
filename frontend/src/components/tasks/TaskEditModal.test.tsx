@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { TaskEditModal } from "./TaskEditModal";
@@ -336,6 +336,20 @@ describe("TaskEditModal — checklist tab", () => {
     const input = await screen.findByTestId("task-edit-checklist-new-item-input");
     await userEvent.type(input, "Новый пункт{Enter}");
     expect(mockService.create).toHaveBeenCalledWith(taskId, "Новый пункт");
+  });
+
+  it("should create new checklist item when new-item input loses focus with non-empty value", async () => {
+    const taskId = crypto.randomUUID();
+    const task = buildTask({ id: taskId });
+    const mockService = buildMockChecklistService([]);
+    renderModal({ task, checklistService: mockService });
+    await userEvent.click(screen.getByTestId("task-edit-tab-checklist"));
+    const input = await screen.findByTestId("task-edit-checklist-new-item-input");
+    await userEvent.type(input, "Пункт через iOS Done");
+    fireEvent.blur(input);
+    await waitFor(() => {
+      expect(mockService.create).toHaveBeenCalledWith(taskId, "Пункт через iOS Done");
+    });
   });
 
   async function setupChecklistItemEditing(title = "Пункт") {

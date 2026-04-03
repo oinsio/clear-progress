@@ -28,6 +28,15 @@ export function AddTaskInput({ targetBox, onAdd, onCancel }: AddTaskInputProps) 
     [inputValue, onAdd, onCancel],
   );
 
+  const handleBlur = useCallback(async () => {
+    if (inputValue.trim()) {
+      await onAdd(inputValue.trim());
+      setInputValue("");
+    } else {
+      onCancel();
+    }
+  }, [inputValue, onAdd, onCancel]);
+
   return (
     <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
       <div className="w-5 h-5 rounded-full border-2 border-accent flex-shrink-0" />
@@ -37,7 +46,7 @@ export function AddTaskInput({ targetBox, onAdd, onCancel }: AddTaskInputProps) 
         value={inputValue}
         onChange={(event) => setInputValue(event.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={onCancel}
+        onBlur={handleBlur}
         placeholder={t("task.addPlaceholder", { box: targetBox })}
         className="flex-1 text-sm outline-none placeholder:text-gray-400"
         data-testid="add-task-input"

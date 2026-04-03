@@ -82,21 +82,21 @@ function renderLayout(overrides: Partial<EntityDetailLayoutProps> = {}) {
   return props;
 }
 
-describe("EntityDetailLayout — inline task creation", () => {
-  beforeEach(() => {
-    mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
-    mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
-    mockUseIsUnsynced.mockReturnValue(false);
-    mockUseIsDesktop.mockReturnValue(false);
-    mockUsePanelSplit.mockReturnValue({
-      ratio: 0.5,
-      setRatio: vi.fn(),
-      containerRef: { current: null },
-      handleResizeMouseDown: vi.fn(),
-    });
-    mockUseSettings.mockReturnValue(buildSettingsHook());
+beforeEach(() => {
+  mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
+  mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
+  mockUseIsUnsynced.mockReturnValue(false);
+  mockUseIsDesktop.mockReturnValue(false);
+  mockUsePanelSplit.mockReturnValue({
+    ratio: 0.5,
+    setRatio: vi.fn(),
+    containerRef: { current: null },
+    handleResizeMouseDown: vi.fn(),
   });
+  mockUseSettings.mockReturnValue(buildSettingsHook());
+});
 
+describe("EntityDetailLayout — inline task creation", () => {
   it("should render the FAB add-task button", () => {
     renderLayout();
     expect(screen.getByTestId("add-task-button")).toBeInTheDocument();
@@ -138,5 +138,29 @@ describe("EntityDetailLayout — inline task creation", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
     });
+  });
+});
+
+describe("EntityDetailLayout — entity name editing", () => {
+  it("should save entity name when input loses focus with non-empty value", async () => {
+    const onSaveEntity = vi.fn().mockResolvedValue(undefined);
+    renderLayout({ onSaveEntity });
+    fireEvent.click(screen.getByTestId("context-edit-btn"));
+    const input = screen.getByTestId("context-name-input");
+    fireEvent.change(input, { target: { value: "Новое имя" } });
+    fireEvent.blur(input);
+    await waitFor(() => {
+      expect(onSaveEntity).toHaveBeenCalledWith("Новое имя");
+    });
+  });
+
+  it("should not save entity name when input loses focus with empty value", async () => {
+    const onSaveEntity = vi.fn().mockResolvedValue(undefined);
+    renderLayout({ onSaveEntity });
+    fireEvent.click(screen.getByTestId("context-edit-btn"));
+    const input = screen.getByTestId("context-name-input");
+    fireEvent.change(input, { target: { value: "" } });
+    fireEvent.blur(input);
+    expect(onSaveEntity).not.toHaveBeenCalled();
   });
 });

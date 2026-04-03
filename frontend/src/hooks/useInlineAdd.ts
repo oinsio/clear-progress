@@ -25,10 +25,12 @@ export function useInlineAdd(onCreate: (name: string) => Promise<unknown>) {
   );
 
   const handleBlur = useCallback(() => {
-    if (!value.trim()) {
+    if (value.trim()) {
+      void handleSubmit();
+    } else {
       setIsAdding(false);
     }
-  }, [value]);
+  }, [value, handleSubmit]);
 
   return { isAdding, setIsAdding, value, setValue, handleKeyDown, handleBlur };
 }

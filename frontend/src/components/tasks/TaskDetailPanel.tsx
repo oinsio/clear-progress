@@ -301,6 +301,12 @@ export function TaskDetailPanel({
     [newItemTitle, rawCreateItem],
   );
 
+  const handleNewItemBlur = useCallback(async () => {
+    if (newItemTitle.trim()) {
+      await rawCreateItem(newItemTitle.trim());
+      setNewItemTitle("");
+    }
+  }, [newItemTitle, rawCreateItem]);
 
   const activeItems = items.filter((item) => !item.is_completed);
   const completedItems = items.filter((item) => item.is_completed);
@@ -569,6 +575,7 @@ export function TaskDetailPanel({
                 value={newItemTitle}
                 onChange={(event) => setNewItemTitle(event.target.value)}
                 onKeyDown={(event) => void handleNewItemKeyDown(event)}
+                onBlur={() => void handleNewItemBlur()}
                 placeholder={t("taskEdit.newChecklistItemPlaceholder")}
                 className="flex-1 text-sm text-gray-400 outline-none placeholder:text-gray-300"
               />

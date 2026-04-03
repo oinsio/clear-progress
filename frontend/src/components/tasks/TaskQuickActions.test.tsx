@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { TaskQuickActions } from "./TaskQuickActions";
@@ -75,6 +75,19 @@ describe("TaskQuickActions", () => {
     await userEvent.type(textarea, "new notes");
     await userEvent.keyboard("{Enter}");
     expect(onUpdate).toHaveBeenCalledWith(task.id, { notes: "new notes" });
+  });
+
+  it("should save notes when notes textarea loses focus", async () => {
+    const task = buildTask({ notes: "" });
+    const onUpdate = vi.fn().mockResolvedValue(undefined);
+    renderQuickActions({ task, onUpdate });
+    await userEvent.click(screen.getByRole("button", { name: /редактировать заметку/i }));
+    const textarea = screen.getByTestId("quick-notes-input");
+    await userEvent.type(textarea, "заметка iOS Done");
+    fireEvent.blur(textarea);
+    await waitFor(() => {
+      expect(onUpdate).toHaveBeenCalledWith(task.id, { notes: "заметка iOS Done" });
+    });
   });
 
   it("should show goal list when goal button is clicked", async () => {

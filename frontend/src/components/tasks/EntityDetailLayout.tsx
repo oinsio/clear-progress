@@ -211,6 +211,7 @@ export function EntityDetailLayout({
                     if (e.key === "Enter") void handleConfirmEdit();
                     if (e.key === "Escape") handleCancelEdit();
                   }}
+                  onBlur={() => void handleConfirmEdit()}
                   className="flex-1 text-gray-800 font-medium text-sm border-b border-accent outline-none bg-transparent"
                   data-testid={`${testIdPrefix}-name-input`}
                 />
