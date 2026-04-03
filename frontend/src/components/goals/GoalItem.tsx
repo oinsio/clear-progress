@@ -30,7 +30,7 @@ export function GoalItem({ goal, taskCount, onNavigate, nodeRef, style, dragHand
       style={style}
       data-testid="goal-item"
       className={cn(
-        "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50",
+        "flex items-center border-b border-gray-100 bg-white border-l-4 transition-colors hover:bg-gray-50",
         isUnsynced ? "border-l-amber-400" : "border-l-transparent",
       )}
     >
