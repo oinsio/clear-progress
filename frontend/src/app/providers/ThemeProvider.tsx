@@ -58,6 +58,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { syncVersion } = useSync();
 
   useEffect(() => {
+    // Apply initial color to DOM on mount (ensures data-accent is set even on first launch)
+    applyAccentColor(getInitialAccentColor());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     settingsRepository
       .getValue(SETTING_KEYS.ACCENT_COLOR)
       .then((storedColor) => {
