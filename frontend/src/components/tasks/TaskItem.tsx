@@ -10,6 +10,7 @@ import { TaskQuickActions } from "./TaskQuickActions";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { usePanelSide } from "@/hooks/usePanelSide";
 import * as React from "react";
 
 export interface DragHandleProps {
@@ -40,6 +41,7 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
   const isTaskUnsynced = useIsUnsynced(task);
   const isUnsynced = isTaskUnsynced || hasUnsyncedItems;
   const isDesktop = useIsDesktop();
+  const { panelSide } = usePanelSide();
   const [isConfirmingRestore, setIsConfirmingRestore] = useState(false);
 
   useEffect(() => {
@@ -96,7 +98,7 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
         ref={containerRef}
         data-testid="task-item"
         className={cn(
-          "border-b border-gray-100 border-l-[6px] md:border-l-2 transition-colors hover:bg-gray-50",
+          panelSide === "left" ? "border-b border-gray-100 border-l-2 transition-colors hover:bg-gray-50" : "border-b border-gray-100 border-l-[6px] md:border-l-2 transition-colors hover:bg-gray-50",
           isUnsynced ? "border-l-amber-400" : isSelected ? "border-l-accent" : "border-l-transparent",
           isSelected && "bg-accent/5",
         )}

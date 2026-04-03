@@ -52,6 +52,7 @@ function SortableCategoryItem({
     isDragging,
   } = useSortable({ id: category.id });
   const isUnsynced = useIsUnsynced(category);
+  const { panelSide } = usePanelSide();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -64,7 +65,7 @@ function SortableCategoryItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center border-b border-gray-100 bg-white border-l-[6px] md:border-l-2 transition-colors hover:bg-gray-50",
+        panelSide === "left" ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50" : "flex items-center border-b border-gray-100 bg-white border-l-[6px] md:border-l-2 transition-colors hover:bg-gray-50",
         isUnsynced ? "border-l-amber-400" : "border-l-transparent",
       )}
     >

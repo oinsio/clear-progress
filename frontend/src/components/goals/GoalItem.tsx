@@ -6,6 +6,7 @@ import { formatShortDateTime } from "@/shared/lib/utils";
 import { useCoverUrl } from "@/hooks/useCoverUrl";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
+import { usePanelSide } from "@/hooks/usePanelSide";
 import { cn } from "@/shared/lib/cn";
 import React from "react";
 const FINISHED_GOAL_STATUSES = new Set<GoalStatus>(["completed", "cancelled"]);
@@ -23,6 +24,7 @@ export function GoalItem({ goal, taskCount, onNavigate, nodeRef, style, dragHand
   const { t } = useTranslation();
   const isFinished = FINISHED_GOAL_STATUSES.has(goal.status);
   const isUnsynced = useIsUnsynced(goal);
+  const { panelSide } = usePanelSide();
   const { url: coverUrl } = useCoverUrl(goal.cover_file_id);
   return (
     <li
@@ -30,7 +32,7 @@ export function GoalItem({ goal, taskCount, onNavigate, nodeRef, style, dragHand
       style={style}
       data-testid="goal-item"
       className={cn(
-        "flex items-center border-b border-gray-100 bg-white border-l-[6px] md:border-l-2 transition-colors hover:bg-gray-50",
+        panelSide === "left" ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50" : "flex items-center border-b border-gray-100 bg-white border-l-[6px] md:border-l-2 transition-colors hover:bg-gray-50",
         isUnsynced ? "border-l-amber-400" : "border-l-transparent",
       )}
     >
