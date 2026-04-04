@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { FileText, GripVertical, ListChecks, RotateCcw } from "lucide-react";
+import { Check, FileText, GripVertical, ListChecks, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import type { Task, Goal, Context, Category } from "@/types/entities";
@@ -11,6 +11,8 @@ import { useChecklist } from "@/hooks/useChecklist";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSide } from "@/hooks/usePanelSide";
+import { useSwipeToComplete } from "@/hooks/useSwipeToComplete";
+import { SWIPE_SNAP_BACK_DURATION_MS } from "@/constants";
 import * as React from "react";
 
 export interface DragHandleProps {
@@ -92,131 +94,162 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
     }
   }, [isExpanded, isConfirmingRestore]);
 
+  const isSwipeEnabled = !isDesktop && !task.is_completed;
+  const { translateX, isThresholdReached } = useSwipeToComplete(
+    containerRef,
+    () => onComplete(task.id),
+    isSwipeEnabled,
+  );
+
   return (
     <>
       <div
         ref={containerRef}
         data-testid="task-item"
         className={cn(
+          "relative overflow-hidden",
           panelSide === "left" ? "border-b border-gray-100 border-l-2 transition-colors hover:bg-gray-50" : "border-b border-gray-100 border-l-[6px] md:border-l-2 transition-colors hover:bg-gray-50",
           isUnsynced ? "border-l-amber-400" : isSelected ? "border-l-accent" : "border-l-transparent",
           isSelected && "bg-accent/5",
         )}
       >
-        {/* Main task row */}
-        <div className="flex items-center gap-3 px-4 py-3">
-          <button
-            type="button"
-            aria-label={task.is_completed ? t("task.noncomplete") : t("task.complete")}
-            onClick={handleCompleteClick}
-            className={cn(
-              "w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors self-start mt-0.5",
-              task.is_completed
-                ? "bg-accent border-accent"
-                : "border-gray-300 hover:border-accent",
-            )}
-          />
-          <button
-            type="button"
-            data-testid="task-item-body"
-            onClick={handleBodyClick}
-            className="flex flex-col flex-1 min-w-0 text-left"
-          >
-            <span
-              data-testid="task-item-title"
-              className={cn(
-                "text-sm",
-                task.is_completed && "line-through text-gray-400",
-              )}
-            >
-              {task.title}
-            </span>
-            {task.is_completed && task.completed_at && (
-              <span
-                data-testid="task-item-completed-at"
-                className="text-xs text-accent mt-0.5"
-              >
-                {formatCompletedAt(task.completed_at)}
-              </span>
-            )}
-            {(task.notes && !task.is_completed || checklistProgress.total > 0 || task.repeat_rule) && (
-              <span className="flex items-center gap-2 mt-0.5">
-                {task.notes && !task.is_completed && (
-                  <FileText size={12} className="text-gray-400 flex-shrink-0" />
-                )}
-                {checklistProgress.total > 0 && (
-                  <span
-                    data-testid="checklist-badge"
-                    className="flex items-center gap-0.5 text-gray-400"
-                  >
-                    <ListChecks size={10} />
-                    <span className="text-[10px]">{checklistProgress.completed}/{checklistProgress.total}</span>
-                  </span>
-                )}
-                {task.repeat_rule && (
-                  <RotateCcw
-                    data-testid="repeat-rule-indicator"
-                    size={10}
-                    className="text-gray-400 flex-shrink-0"
-                  />
-                )}
-              </span>
-            )}
-          </button>
-          {dragHandleProps && (
-            <button
-              type="button"
-              ref={dragHandleProps.ref}
-              aria-label={t("task.drag")}
-              className="flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing touch-none"
-              {...dragHandleProps.attributes}
-              {...dragHandleProps.listeners}
-            >
-              <GripVertical size={16} />
-            </button>
-          )}
-        </div>
-
-        {/* Restore confirmation panel */}
-        {isConfirmingRestore && (
+        {/* Swipe-to-complete background */}
+        {isSwipeEnabled && (
           <div
-            data-testid="restore-confirmation"
-            className="flex items-center justify-between px-4 py-2 bg-gray-50 border-t border-gray-100"
+            aria-hidden="true"
+            data-testid="swipe-background"
+            className={cn(
+              "absolute inset-0 bg-green-500 flex items-center pl-4 transition-opacity",
+              translateX === 0 ? "opacity-0" : isThresholdReached ? "opacity-100" : "opacity-70",
+            )}
           >
-            <span className="text-sm text-gray-600">{t("task.restoreConfirm")}</span>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                aria-label={t("task.cancel")}
-                onClick={handleRestoreCancel}
-                className="text-sm text-gray-500"
-              >
-                {t("task.cancel")}
-              </button>
-              <button
-                type="button"
-                aria-label={t("task.restore")}
-                onClick={handleRestoreConfirm}
-                className="text-sm text-accent font-medium"
-              >
-                {t("task.restore")}
-              </button>
-            </div>
+            <Check size={20} className="text-white" />
           </div>
         )}
 
-        {/* Quick actions panel */}
-        {isExpanded && (
-          <TaskQuickActions
-            task={task}
-            goals={goals}
-            contexts={contexts}
-            categories={categories}
-            onUpdate={onUpdate}
-            onMove={onMove}
-            onOpenEdit={handleOpenEdit}
-          />
-        )}
+        {/* Swipe content wrapper */}
+        <div
+          style={{
+            transform: `translateX(${translateX}px)`,
+            transition: translateX === 0 ? `transform ${SWIPE_SNAP_BACK_DURATION_MS}ms ease-out` : "none",
+          }}
+        >
+          {/* Main task row */}
+          <div className="flex items-center gap-3 px-4 py-3">
+            <button
+              type="button"
+              aria-label={task.is_completed ? t("task.noncomplete") : t("task.complete")}
+              onClick={handleCompleteClick}
+              className={cn(
+                "w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors self-start mt-0.5",
+                task.is_completed
+                  ? "bg-accent border-accent"
+                  : "border-gray-300 hover:border-accent",
+              )}
+            />
+            <button
+              type="button"
+              data-testid="task-item-body"
+              onClick={handleBodyClick}
+              className="flex flex-col flex-1 min-w-0 text-left"
+            >
+              <span
+                data-testid="task-item-title"
+                className={cn(
+                  "text-sm",
+                  task.is_completed && "line-through text-gray-400",
+                )}
+              >
+                {task.title}
+              </span>
+              {task.is_completed && task.completed_at && (
+                <span
+                  data-testid="task-item-completed-at"
+                  className="text-xs text-accent mt-0.5"
+                >
+                  {formatCompletedAt(task.completed_at)}
+                </span>
+              )}
+              {(task.notes && !task.is_completed || checklistProgress.total > 0 || task.repeat_rule) && (
+                <span className="flex items-center gap-2 mt-0.5">
+                  {task.notes && !task.is_completed && (
+                    <FileText size={12} className="text-gray-400 flex-shrink-0" />
+                  )}
+                  {checklistProgress.total > 0 && (
+                    <span
+                      data-testid="checklist-badge"
+                      className="flex items-center gap-0.5 text-gray-400"
+                    >
+                      <ListChecks size={10} />
+                      <span className="text-[10px]">{checklistProgress.completed}/{checklistProgress.total}</span>
+                    </span>
+                  )}
+                  {task.repeat_rule && (
+                    <RotateCcw
+                      data-testid="repeat-rule-indicator"
+                      size={10}
+                      className="text-gray-400 flex-shrink-0"
+                    />
+                  )}
+                </span>
+              )}
+            </button>
+            {dragHandleProps && (
+              <button
+                data-no-swipe="true"
+                type="button"
+                ref={dragHandleProps.ref}
+                aria-label={t("task.drag")}
+                className="flex-shrink-0 text-gray-300 cursor-grab active:cursor-grabbing touch-none"
+                {...dragHandleProps.attributes}
+                {...dragHandleProps.listeners}
+              >
+                <GripVertical size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Restore confirmation panel */}
+          {isConfirmingRestore && (
+            <div
+              data-testid="restore-confirmation"
+              className="flex items-center justify-between px-4 py-2 bg-gray-50 border-t border-gray-100"
+            >
+              <span className="text-sm text-gray-600">{t("task.restoreConfirm")}</span>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  aria-label={t("task.cancel")}
+                  onClick={handleRestoreCancel}
+                  className="text-sm text-gray-500"
+                >
+                  {t("task.cancel")}
+                </button>
+                <button
+                  type="button"
+                  aria-label={t("task.restore")}
+                  onClick={handleRestoreConfirm}
+                  className="text-sm text-accent font-medium"
+                >
+                  {t("task.restore")}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Quick actions panel */}
+          {isExpanded && (
+            <TaskQuickActions
+              task={task}
+              goals={goals}
+              contexts={contexts}
+              categories={categories}
+              onUpdate={onUpdate}
+              onMove={onMove}
+              onOpenEdit={handleOpenEdit}
+            />
+          )}
+        </div>
       </div>
 
     </>
