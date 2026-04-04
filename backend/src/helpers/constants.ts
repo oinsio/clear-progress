@@ -10,7 +10,15 @@ export const SHEET_NAMES = {
   CATEGORIES: 'Categories',
   CHECKLIST_ITEMS: 'Checklist_Items',
   SETTINGS: 'Settings',
+  META: 'Meta',
 } as const;
+
+export const META_KEYS = {
+  NEXT_REVISION: 'next_revision',
+} as const;
+
+export const LOCK_TIMEOUT_MS = 30000;
+export const META_INITIAL_REVISION = 1;
 
 export const DRIVE_FOLDER_NAMES = {
   ROOT: 'Clear_Progress',
@@ -33,11 +41,11 @@ export const PROPERTY_KEYS = {
 export const GOOGLE_TOKENINFO_URL = 'https://www.googleapis.com/oauth2/v3/tokeninfo';
 
 export const SHEET_HEADERS: Record<string, string[]> = {
-  [SHEET_NAMES.TASKS]: ['id', 'title', 'notes', 'box', 'goal_id', 'context_id', 'category_id', 'is_completed', 'completed_at', 'repeat_rule', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version'],
-  [SHEET_NAMES.GOALS]: ['id', 'title', 'description', 'cover_file_id', 'status', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version'],
-  [SHEET_NAMES.CONTEXTS]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version'],
-  [SHEET_NAMES.CATEGORIES]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version'],
-  [SHEET_NAMES.CHECKLIST_ITEMS]: ['id', 'task_id', 'title', 'is_completed', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version'],
+  [SHEET_NAMES.TASKS]: ['id', 'title', 'notes', 'box', 'goal_id', 'context_id', 'category_id', 'is_completed', 'completed_at', 'repeat_rule', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.GOALS]: ['id', 'title', 'description', 'cover_file_id', 'status', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.CONTEXTS]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.CATEGORIES]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.CHECKLIST_ITEMS]: ['id', 'task_id', 'title', 'is_completed', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.SETTINGS]: ['key', 'value', 'updated_at'],
 };
 

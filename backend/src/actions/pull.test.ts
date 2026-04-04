@@ -2,19 +2,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { pull } from './pull';
 import { ERROR_CODES } from '../helpers/response';
 
-vi.mock('../sheets/tasks.sheet', () => ({ getTasksByVersion: vi.fn() }));
-vi.mock('../sheets/goals.sheet', () => ({ getGoalsByVersion: vi.fn() }));
-vi.mock('../sheets/contexts.sheet', () => ({ getContextsByVersion: vi.fn() }));
-vi.mock('../sheets/categories.sheet', () => ({ getCategoriesByVersion: vi.fn() }));
-vi.mock('../sheets/checklists.sheet', () => ({ getChecklistItemsByVersion: vi.fn() }));
+vi.mock('../sheets/tasks.sheet', () => ({ getTasksByRevision: vi.fn() }));
+vi.mock('../sheets/goals.sheet', () => ({ getGoalsByRevision: vi.fn() }));
+vi.mock('../sheets/contexts.sheet', () => ({ getContextsByRevision: vi.fn() }));
+vi.mock('../sheets/categories.sheet', () => ({ getCategoriesByRevision: vi.fn() }));
+vi.mock('../sheets/checklists.sheet', () => ({ getChecklistItemsByRevision: vi.fn() }));
 vi.mock('../sheets/settings.sheet', () => ({ getAllSettings: vi.fn() }));
+vi.mock('../sheets/meta.sheet', () => ({ readNextRevision: vi.fn() }));
 
-import { getTasksByVersion } from '../sheets/tasks.sheet';
-import { getGoalsByVersion } from '../sheets/goals.sheet';
-import { getContextsByVersion } from '../sheets/contexts.sheet';
-import { getCategoriesByVersion } from '../sheets/categories.sheet';
-import { getChecklistItemsByVersion } from '../sheets/checklists.sheet';
+import { getTasksByRevision } from '../sheets/tasks.sheet';
+import { getGoalsByRevision } from '../sheets/goals.sheet';
+import { getContextsByRevision } from '../sheets/contexts.sheet';
+import { getCategoriesByRevision } from '../sheets/categories.sheet';
+import { getChecklistItemsByRevision } from '../sheets/checklists.sheet';
 import { getAllSettings } from '../sheets/settings.sheet';
+import { readNextRevision } from '../sheets/meta.sheet';
 
 function parseResponse(): Record<string, unknown> {
   const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>).mock.calls;
@@ -22,26 +24,25 @@ function parseResponse(): Record<string, unknown> {
   return JSON.parse(lastCall[0]);
 }
 
-const defaultVersions = { tasks: 0, goals: 0, contexts: 0, categories: 0, checklist_items: 0 };
-
 describe('pull', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getTasksByVersion).mockReturnValue([]);
-    vi.mocked(getGoalsByVersion).mockReturnValue([]);
-    vi.mocked(getContextsByVersion).mockReturnValue([]);
-    vi.mocked(getCategoriesByVersion).mockReturnValue([]);
-    vi.mocked(getChecklistItemsByVersion).mockReturnValue([]);
+    vi.mocked(getTasksByRevision).mockReturnValue([]);
+    vi.mocked(getGoalsByRevision).mockReturnValue([]);
+    vi.mocked(getContextsByRevision).mockReturnValue([]);
+    vi.mocked(getCategoriesByRevision).mockReturnValue([]);
+    vi.mocked(getChecklistItemsByRevision).mockReturnValue([]);
     vi.mocked(getAllSettings).mockReturnValue([]);
+    vi.mocked(readNextRevision).mockReturnValue(1);
   });
 
   it('should return ok: true on success', () => {
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
     expect(parseResponse().ok).toBe(true);
   });
 
   it('should return data with all five entity arrays', () => {
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
     const response = parseResponse();
     const data = response.data as Record<string, unknown>;
     expect(data).toHaveProperty('tasks');
@@ -52,52 +53,64 @@ describe('pull', () => {
   });
 
   it('should return settings array in response', () => {
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
     expect(parseResponse()).toHaveProperty('settings');
   });
 
   it('should return server_time as ISO string', () => {
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
     const serverTime = parseResponse().server_time as string;
     expect(() => new Date(serverTime).toISOString()).not.toThrow();
     expect(serverTime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
-  it('should pass tasks version to getTasksByVersion', () => {
-    pull({ ...defaultVersions, tasks: 42 });
-    expect(getTasksByVersion).toHaveBeenCalledWith(42);
+  it('should pass since_revision to getTasksByRevision', () => {
+    pull({ since_revision: 42 });
+    expect(getTasksByRevision).toHaveBeenCalledWith(42);
   });
 
-  it('should pass goals version to getGoalsByVersion', () => {
-    pull({ ...defaultVersions, goals: 10 });
-    expect(getGoalsByVersion).toHaveBeenCalledWith(10);
+  it('should pass since_revision to getGoalsByRevision', () => {
+    pull({ since_revision: 10 });
+    expect(getGoalsByRevision).toHaveBeenCalledWith(10);
   });
 
-  it('should pass contexts version to getContextsByVersion', () => {
-    pull({ ...defaultVersions, contexts: 5 });
-    expect(getContextsByVersion).toHaveBeenCalledWith(5);
+  it('should pass since_revision to getContextsByRevision', () => {
+    pull({ since_revision: 5 });
+    expect(getContextsByRevision).toHaveBeenCalledWith(5);
   });
 
-  it('should pass categories version to getCategoriesByVersion', () => {
-    pull({ ...defaultVersions, categories: 3 });
-    expect(getCategoriesByVersion).toHaveBeenCalledWith(3);
+  it('should pass since_revision to getCategoriesByRevision', () => {
+    pull({ since_revision: 3 });
+    expect(getCategoriesByRevision).toHaveBeenCalledWith(3);
   });
 
-  it('should pass checklist_items version to getChecklistItemsByVersion', () => {
-    pull({ ...defaultVersions, checklist_items: 20 });
-    expect(getChecklistItemsByVersion).toHaveBeenCalledWith(20);
+  it('should pass since_revision to getChecklistItemsByRevision', () => {
+    pull({ since_revision: 20 });
+    expect(getChecklistItemsByRevision).toHaveBeenCalledWith(20);
   });
 
-  it('should use 0 as default version when tasks key is undefined', () => {
-    pull({ goals: 0, contexts: 0, categories: 0, checklist_items: 0 } as never);
-    expect(getTasksByVersion).toHaveBeenCalledWith(0);
+  it('should use 0 as default when since_revision is undefined', () => {
+    pull({} as never);
+    expect(getTasksByRevision).toHaveBeenCalledWith(0);
+  });
+
+  it('should return current_revision as next_revision minus 1', () => {
+    vi.mocked(readNextRevision).mockReturnValue(8);
+    pull({ since_revision: 0 });
+    expect(parseResponse().current_revision).toBe(7);
+  });
+
+  it('should return current_revision = 0 when next_revision is 1 (nothing pushed yet)', () => {
+    vi.mocked(readNextRevision).mockReturnValue(1);
+    pull({ since_revision: 0 });
+    expect(parseResponse().current_revision).toBe(0);
   });
 
   it('should return entity records returned by sheet functions', () => {
-    const mockTask = { id: 'task-1', version: 5 } as never;
-    vi.mocked(getTasksByVersion).mockReturnValue([mockTask]);
+    const mockTask = { id: 'task-1', revision: 5 } as never;
+    vi.mocked(getTasksByRevision).mockReturnValue([mockTask]);
 
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
 
     const data = parseResponse().data as Record<string, unknown>;
     expect(data.tasks).toEqual([mockTask]);
@@ -107,17 +120,17 @@ describe('pull', () => {
     const mockSettings = [{ key: 'default_box', value: 'inbox', updated_at: '2025-01-01T00:00:00.000Z' }];
     vi.mocked(getAllSettings).mockReturnValue(mockSettings);
 
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
 
     expect(parseResponse().settings).toEqual(mockSettings);
   });
 
   it('should return NOT_INITIALIZED error when sheet throws with NOT_INITIALIZED message', () => {
-    vi.mocked(getTasksByVersion).mockImplementation(() => {
+    vi.mocked(getTasksByRevision).mockImplementation(() => {
       throw new Error(ERROR_CODES.NOT_INITIALIZED);
     });
 
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
 
     const response = parseResponse();
     expect(response.ok).toBe(false);
@@ -125,11 +138,11 @@ describe('pull', () => {
   });
 
   it('should return INTERNAL_ERROR when sheet throws an unexpected error', () => {
-    vi.mocked(getGoalsByVersion).mockImplementation(() => {
+    vi.mocked(getGoalsByRevision).mockImplementation(() => {
       throw new Error('Something went wrong');
     });
 
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
 
     const response = parseResponse();
     expect(response.ok).toBe(false);
@@ -138,11 +151,11 @@ describe('pull', () => {
 
   it('should include the original error message in INTERNAL_ERROR response', () => {
     const originalMessage = 'Unexpected sheet error';
-    vi.mocked(getContextsByVersion).mockImplementation(() => {
+    vi.mocked(getContextsByRevision).mockImplementation(() => {
       throw new Error(originalMessage);
     });
 
-    pull(defaultVersions);
+    pull({ since_revision: 0 });
 
     expect(parseResponse().message).toBe(originalMessage);
   });

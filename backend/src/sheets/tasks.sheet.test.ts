@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {deleteTasksByIds, getAllTasks, getTasksByVersion, upsertTasks} from './tasks.sheet';
+import {deleteTasksByIds, getAllTasks, getTasksByRevision, upsertTasks} from './tasks.sheet';
 import type { Task } from '../types';
 import {SHEET_HEADERS, SHEET_NAMES} from '../helpers/constants';
 import {getSheet} from './client';
@@ -209,7 +209,7 @@ describe('getAllTasks', () => {
   });
 });
 
-describe('getTasksByVersion', () => {
+describe('getTasksByRevision', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -217,45 +217,45 @@ describe('getTasksByVersion', () => {
   it('should return tasks with version strictly greater than minVersion', () => {
     const sheetMock = makeSheetMock([
       TASK_HEADERS,
-      makeTaskRow({ id: 'task-1', version: 3 }),
-      makeTaskRow({ id: 'task-2', version: 5 }),
+      makeTaskRow({ id: 'task-1', revision: 3 }),
+      makeTaskRow({ id: 'task-2', revision: 5 }),
     ]);
     vi.mocked(getSheet).mockReturnValue(sheetMock as never);
 
-    const tasks = getTasksByVersion(2);
+    const tasks = getTasksByRevision(2);
     expect(tasks.map(t => t.id)).toEqual(['task-1', 'task-2']);
   });
 
   it('should not return tasks with version equal to minVersion', () => {
-    const sheetMock = makeSheetMock([TASK_HEADERS, makeTaskRow({ id: 'task-1', version: 5 })]);
+    const sheetMock = makeSheetMock([TASK_HEADERS, makeTaskRow({ id: 'task-1', revision: 5 })]);
     vi.mocked(getSheet).mockReturnValue(sheetMock as never);
 
-    expect(getTasksByVersion(5)).toHaveLength(0);
+    expect(getTasksByRevision(5)).toHaveLength(0);
   });
 
   it('should not return tasks with version less than minVersion', () => {
-    const sheetMock = makeSheetMock([TASK_HEADERS, makeTaskRow({ id: 'task-1', version: 3 })]);
+    const sheetMock = makeSheetMock([TASK_HEADERS, makeTaskRow({ id: 'task-1', revision: 3 })]);
     vi.mocked(getSheet).mockReturnValue(sheetMock as never);
 
-    expect(getTasksByVersion(5)).toHaveLength(0);
+    expect(getTasksByRevision(5)).toHaveLength(0);
   });
 
   it('should return all tasks when minVersion is 0', () => {
     const sheetMock = makeSheetMock([
       TASK_HEADERS,
-      makeTaskRow({ id: 'task-1', version: 1 }),
-      makeTaskRow({ id: 'task-2', version: 2 }),
+      makeTaskRow({ id: 'task-1', revision: 1 }),
+      makeTaskRow({ id: 'task-2', revision: 2 }),
     ]);
     vi.mocked(getSheet).mockReturnValue(sheetMock as never);
 
-    expect(getTasksByVersion(0)).toHaveLength(2);
+    expect(getTasksByRevision(0)).toHaveLength(2);
   });
 
   it('should return empty array when no tasks match', () => {
-    const sheetMock = makeSheetMock([TASK_HEADERS, makeTaskRow({ version: 1 })]);
+    const sheetMock = makeSheetMock([TASK_HEADERS, makeTaskRow({ revision: 1 })]);
     vi.mocked(getSheet).mockReturnValue(sheetMock as never);
 
-    expect(getTasksByVersion(10)).toEqual([]);
+    expect(getTasksByRevision(10)).toEqual([]);
   });
 });
 
@@ -367,6 +367,7 @@ describe('upsertTasks', () => {
       created_at: '2025-01-01T00:00:00.000Z',
       updated_at: '2025-01-01T00:00:00.000Z',
       version: 1,
+      revision: 0,
     };
     upsertTasks([newTask]);
 

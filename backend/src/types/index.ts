@@ -19,6 +19,7 @@ export interface Task {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
 }
 
 export interface Goal {
@@ -32,6 +33,7 @@ export interface Goal {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
 }
 
 export interface Context {
@@ -42,6 +44,7 @@ export interface Context {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
 }
 
 export interface Category {
@@ -52,6 +55,7 @@ export interface Category {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
 }
 
 export interface ChecklistItem {
@@ -64,6 +68,7 @@ export interface ChecklistItem {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
 }
 
 export interface Setting {
@@ -72,18 +77,11 @@ export interface Setting {
   updated_at: string;
 }
 
-export interface VersionMap {
-  tasks: number;
-  goals: number;
-  contexts: number;
-  categories: number;
-  checklist_items: number;
-}
-
 export interface PushItemResult {
   id: string;
   status: 'created' | 'accepted' | 'conflict' | 'rejected';
   version?: number;
+  revision?: number;
   server_record?: Task | Goal | Context | Category | ChecklistItem;
   reason?: string;
 }

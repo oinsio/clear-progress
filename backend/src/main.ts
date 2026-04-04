@@ -52,7 +52,7 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
     case ACTIONS.INIT:
       return init();
     case ACTIONS.PULL:
-      return pull(payload.versions as Parameters<typeof pull>[0]);
+      return pull(payload as Parameters<typeof pull>[0]);
     case ACTIONS.PUSH:
       return push(payload.changes as Parameters<typeof push>[0]);
     case ACTIONS.UPLOAD_COVER:

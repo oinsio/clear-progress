@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getAllCategories, getCategoriesByVersion, deleteCategoriesByIds, upsertCategories } from './categories.sheet';
+import { getAllCategories, getCategoriesByRevision, deleteCategoriesByIds, upsertCategories } from './categories.sheet';
 import type { Category } from '../types';
 import { SHEET_HEADERS, SHEET_NAMES } from '../helpers/constants';
 import { getSheet } from './client';
@@ -151,7 +151,7 @@ describe('getAllCategories', () => {
   });
 });
 
-describe('getCategoriesByVersion', () => {
+describe('getCategoriesByRevision', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -159,49 +159,49 @@ describe('getCategoriesByVersion', () => {
   it('should return categories with version strictly greater than minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CAT_HEADERS,
-      makeCategoryRow({ id: 'cat-1', version: 3 }),
-      makeCategoryRow({ id: 'cat-2', version: 5 }),
+      makeCategoryRow({ id: 'cat-1', revision: 3 }),
+      makeCategoryRow({ id: 'cat-2', revision: 5 }),
     ]) as never);
 
-    const categories = getCategoriesByVersion(2);
+    const categories = getCategoriesByRevision(2);
     expect(categories.map(c => c.id)).toEqual(['cat-1', 'cat-2']);
   });
 
   it('should not return categories with version equal to minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CAT_HEADERS,
-      makeCategoryRow({ version: 5 }),
+      makeCategoryRow({ revision: 5 }),
     ]) as never);
 
-    expect(getCategoriesByVersion(5)).toHaveLength(0);
+    expect(getCategoriesByRevision(5)).toHaveLength(0);
   });
 
   it('should not return categories with version less than minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CAT_HEADERS,
-      makeCategoryRow({ version: 3 }),
+      makeCategoryRow({ revision: 3 }),
     ]) as never);
 
-    expect(getCategoriesByVersion(5)).toHaveLength(0);
+    expect(getCategoriesByRevision(5)).toHaveLength(0);
   });
 
   it('should return all categories when minVersion is 0', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CAT_HEADERS,
-      makeCategoryRow({ id: 'cat-1', version: 1 }),
-      makeCategoryRow({ id: 'cat-2', version: 2 }),
+      makeCategoryRow({ id: 'cat-1', revision: 1 }),
+      makeCategoryRow({ id: 'cat-2', revision: 2 }),
     ]) as never);
 
-    expect(getCategoriesByVersion(0)).toHaveLength(2);
+    expect(getCategoriesByRevision(0)).toHaveLength(2);
   });
 
   it('should return empty array when no categories match', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CAT_HEADERS,
-      makeCategoryRow({ version: 1 }),
+      makeCategoryRow({ revision: 1 }),
     ]) as never);
 
-    expect(getCategoriesByVersion(10)).toEqual([]);
+    expect(getCategoriesByRevision(10)).toEqual([]);
   });
 });
 
@@ -304,6 +304,7 @@ describe('upsertCategories', () => {
       created_at: '2025-01-01T00:00:00.000Z',
       updated_at: '2025-01-01T00:00:00.000Z',
       version: 1,
+      revision: 0,
     };
     upsertCategories([newCategory]);
 

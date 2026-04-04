@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getAllChecklistItems, getChecklistItemsByVersion, deleteChecklistItemsByIds, upsertChecklistItems } from './checklists.sheet';
+import { getAllChecklistItems, getChecklistItemsByRevision, deleteChecklistItemsByIds, upsertChecklistItems } from './checklists.sheet';
 import type { ChecklistItem } from '../types';
 import { SHEET_HEADERS, SHEET_NAMES } from '../helpers/constants';
 import { getSheet } from './client';
@@ -174,7 +174,7 @@ describe('getAllChecklistItems', () => {
   });
 });
 
-describe('getChecklistItemsByVersion', () => {
+describe('getChecklistItemsByRevision', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -182,49 +182,49 @@ describe('getChecklistItemsByVersion', () => {
   it('should return items with version strictly greater than minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       ITEM_HEADERS,
-      makeItemRow({ id: 'item-1', version: 3 }),
-      makeItemRow({ id: 'item-2', version: 5 }),
+      makeItemRow({ id: 'item-1', revision: 3 }),
+      makeItemRow({ id: 'item-2', revision: 5 }),
     ]) as never);
 
-    const items = getChecklistItemsByVersion(2);
+    const items = getChecklistItemsByRevision(2);
     expect(items.map(i => i.id)).toEqual(['item-1', 'item-2']);
   });
 
   it('should not return items with version equal to minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       ITEM_HEADERS,
-      makeItemRow({ version: 5 }),
+      makeItemRow({ revision: 5 }),
     ]) as never);
 
-    expect(getChecklistItemsByVersion(5)).toHaveLength(0);
+    expect(getChecklistItemsByRevision(5)).toHaveLength(0);
   });
 
   it('should not return items with version less than minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       ITEM_HEADERS,
-      makeItemRow({ version: 3 }),
+      makeItemRow({ revision: 3 }),
     ]) as never);
 
-    expect(getChecklistItemsByVersion(5)).toHaveLength(0);
+    expect(getChecklistItemsByRevision(5)).toHaveLength(0);
   });
 
   it('should return all items when minVersion is 0', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       ITEM_HEADERS,
-      makeItemRow({ id: 'item-1', version: 1 }),
-      makeItemRow({ id: 'item-2', version: 2 }),
+      makeItemRow({ id: 'item-1', revision: 1 }),
+      makeItemRow({ id: 'item-2', revision: 2 }),
     ]) as never);
 
-    expect(getChecklistItemsByVersion(0)).toHaveLength(2);
+    expect(getChecklistItemsByRevision(0)).toHaveLength(2);
   });
 
   it('should return empty array when no items match', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       ITEM_HEADERS,
-      makeItemRow({ version: 1 }),
+      makeItemRow({ revision: 1 }),
     ]) as never);
 
-    expect(getChecklistItemsByVersion(10)).toEqual([]);
+    expect(getChecklistItemsByRevision(10)).toEqual([]);
   });
 });
 
@@ -329,6 +329,7 @@ describe('upsertChecklistItems', () => {
       created_at: '2025-01-01T00:00:00.000Z',
       updated_at: '2025-01-01T00:00:00.000Z',
       version: 1,
+      revision: 0,
     };
     upsertChecklistItems([newItem]);
 

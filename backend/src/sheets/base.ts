@@ -9,6 +9,7 @@ export type NamedEntity = {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
 };
 
 export function rowToNamedEntity(row: unknown[], cols: Record<string, number>): NamedEntity {
@@ -20,6 +21,7 @@ export function rowToNamedEntity(row: unknown[], cols: Record<string, number>): 
     created_at: String(row[cols.created_at] ?? ''),
     updated_at: String(row[cols.updated_at] ?? ''),
     version: Number(row[cols.version] ?? 1),
+    revision: Number(row[cols.revision] ?? 0),
   };
 }
 

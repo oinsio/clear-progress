@@ -16,11 +16,12 @@ function rowToGoal(row: unknown[]): Goal {
     created_at: String(row[COLS.created_at] ?? ''),
     updated_at: String(row[COLS.updated_at] ?? ''),
     version: Number(row[COLS.version] ?? 1),
+    revision: Number(row[COLS.revision] ?? 0),
   };
 }
 
 export const getAllGoals = (): Goal[] => getAllRecords(SHEET_NAMES.GOALS, rowToGoal);
-export const getGoalsByVersion = (minVersion: number): Goal[] => getAllGoals().filter(goal => goal.version > minVersion);
+export const getGoalsByRevision = (sinceRevision: number): Goal[] => getAllGoals().filter(goal => goal.revision > sinceRevision);
 export const upsertGoals = (goals: Goal[]): void => upsertRecords(SHEET_NAMES.GOALS, goals);
 export const deleteGoalsByIds = (ids: string[]): number => deleteRecordsByIds(SHEET_NAMES.GOALS, ids);
 export const getCoverFileIds = (): string[] => getAllGoals().map(goal => goal.cover_file_id).filter(Boolean);

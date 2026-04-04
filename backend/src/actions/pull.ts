@@ -1,23 +1,26 @@
 import { jsonOk, jsonError, jsonNotInitialized, ERROR_CODES } from '../helpers/response';
-import { getTasksByVersion } from '../sheets/tasks.sheet';
-import { getGoalsByVersion } from '../sheets/goals.sheet';
-import { getContextsByVersion } from '../sheets/contexts.sheet';
-import { getCategoriesByVersion } from '../sheets/categories.sheet';
-import { getChecklistItemsByVersion } from '../sheets/checklists.sheet';
+import { getTasksByRevision } from '../sheets/tasks.sheet';
+import { getGoalsByRevision } from '../sheets/goals.sheet';
+import { getContextsByRevision } from '../sheets/contexts.sheet';
+import { getCategoriesByRevision } from '../sheets/categories.sheet';
+import { getChecklistItemsByRevision } from '../sheets/checklists.sheet';
 import { getAllSettings } from '../sheets/settings.sheet';
-import type { VersionMap } from '../types';
+import { readNextRevision } from '../sheets/meta.sheet';
 
-export function pull(versions: VersionMap): GoogleAppsScript.Content.TextOutput {
+export function pull({ since_revision }: { since_revision?: number }): GoogleAppsScript.Content.TextOutput {
+  const sinceRevision = since_revision ?? 0;
   try {
+    const currentRevision = readNextRevision() - 1;
     return jsonOk({
       data: {
-        tasks: getTasksByVersion(versions.tasks ?? 0),
-        goals: getGoalsByVersion(versions.goals ?? 0),
-        contexts: getContextsByVersion(versions.contexts ?? 0),
-        categories: getCategoriesByVersion(versions.categories ?? 0),
-        checklist_items: getChecklistItemsByVersion(versions.checklist_items ?? 0),
+        tasks: getTasksByRevision(sinceRevision),
+        goals: getGoalsByRevision(sinceRevision),
+        contexts: getContextsByRevision(sinceRevision),
+        categories: getCategoriesByRevision(sinceRevision),
+        checklist_items: getChecklistItemsByRevision(sinceRevision),
       },
       settings: getAllSettings(),
+      current_revision: currentRevision,
       server_time: new Date().toISOString(),
     });
   } catch (e) {

@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { init } from './init';
-import { PROPERTY_KEYS, DRIVE_FOLDER_NAMES, DRIVE_MIME_TYPES, SHEET_HEADERS } from '../helpers/constants';
+import { PROPERTY_KEYS, DRIVE_FOLDER_NAMES, DRIVE_MIME_TYPES, SHEET_HEADERS, SHEET_NAMES } from '../helpers/constants';
 import { resetScriptProperties, setScriptProperty, getScriptPropertiesStore } from '../../tests/setup/gas-mocks';
 
 vi.mock('../helpers/drive', () => ({ driveFileExists: vi.fn() }));
 vi.mock('../sheets/settings.sheet', () => ({ initDefaults: vi.fn() }));
+vi.mock('../sheets/meta.sheet', () => ({ initMetaSheet: vi.fn() }));
 
 import { driveFileExists } from '../helpers/drive';
 import { initDefaults } from '../sheets/settings.sheet';
+import { initMetaSheet } from '../sheets/meta.sheet';
 
 function parseResponse(): Record<string, unknown> {
   const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>).mock.calls;
@@ -199,6 +201,19 @@ describe('init — first time setup', () => {
   it('should call initDefaults once', () => {
     init();
     expect(initDefaults).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call initMetaSheet once', () => {
+    init();
+    expect(initMetaSheet).toHaveBeenCalledTimes(1);
+  });
+
+  it('should include "revision" column in Tasks sheet headers', () => {
+    expect(SHEET_HEADERS[SHEET_NAMES.TASKS]).toContain('revision');
+  });
+
+  it('should include "revision" column in Goals sheet headers', () => {
+    expect(SHEET_HEADERS[SHEET_NAMES.GOALS]).toContain('revision');
   });
 
   it('should return created: true with spreadsheet_id and folder_id', () => {

@@ -21,10 +21,11 @@ function rowToTask(row: unknown[]): Task {
     created_at: String(row[COLS.created_at] ?? ''),
     updated_at: String(row[COLS.updated_at] ?? ''),
     version: Number(row[COLS.version] ?? 1),
+    revision: Number(row[COLS.revision] ?? 0),
   };
 }
 
 export const getAllTasks = (): Task[] => getAllRecords(SHEET_NAMES.TASKS, rowToTask);
-export const getTasksByVersion = (minVersion: number): Task[] => getAllTasks().filter(task => task.version > minVersion);
+export const getTasksByRevision = (sinceRevision: number): Task[] => getAllTasks().filter(task => task.revision > sinceRevision);
 export const upsertTasks = (tasks: Task[]): void => upsertRecords(SHEET_NAMES.TASKS, tasks);
 export const deleteTasksByIds = (ids: string[]): number => deleteRecordsByIds(SHEET_NAMES.TASKS, ids);

@@ -2,6 +2,7 @@ import { PROPERTY_KEYS, DRIVE_FOLDER_NAMES, DRIVE_MIME_TYPES, SHEET_HEADERS } fr
 import { jsonOk } from '../helpers/response';
 import { driveFileExists } from '../helpers/drive';
 import { initDefaults } from '../sheets/settings.sheet';
+import { initMetaSheet } from '../sheets/meta.sheet';
 
 export function init(): GoogleAppsScript.Content.TextOutput {
   const props = PropertiesService.getScriptProperties();
@@ -57,6 +58,9 @@ export function init(): GoogleAppsScript.Content.TextOutput {
 
   // Write default settings
   initDefaults();
+
+  // Initialize Meta sheet with revision counter
+  initMetaSheet();
 
   return jsonOk({ created: true, spreadsheet_id: spreadsheet.getId(), folder_id: rootFolderId });
 }

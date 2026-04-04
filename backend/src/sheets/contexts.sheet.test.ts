@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getAllContexts, getContextsByVersion, deleteContextsByIds, upsertContexts } from './contexts.sheet';
+import { getAllContexts, getContextsByRevision, deleteContextsByIds, upsertContexts } from './contexts.sheet';
 import type { Context } from '../types';
 import { SHEET_HEADERS, SHEET_NAMES } from '../helpers/constants';
 import { getSheet } from './client';
@@ -151,7 +151,7 @@ describe('getAllContexts', () => {
   });
 });
 
-describe('getContextsByVersion', () => {
+describe('getContextsByRevision', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -159,49 +159,49 @@ describe('getContextsByVersion', () => {
   it('should return contexts with version strictly greater than minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CTX_HEADERS,
-      makeContextRow({ id: 'ctx-1', version: 3 }),
-      makeContextRow({ id: 'ctx-2', version: 5 }),
+      makeContextRow({ id: 'ctx-1', revision: 3 }),
+      makeContextRow({ id: 'ctx-2', revision: 5 }),
     ]) as never);
 
-    const contexts = getContextsByVersion(2);
+    const contexts = getContextsByRevision(2);
     expect(contexts.map(c => c.id)).toEqual(['ctx-1', 'ctx-2']);
   });
 
   it('should not return contexts with version equal to minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CTX_HEADERS,
-      makeContextRow({ version: 5 }),
+      makeContextRow({ revision: 5 }),
     ]) as never);
 
-    expect(getContextsByVersion(5)).toHaveLength(0);
+    expect(getContextsByRevision(5)).toHaveLength(0);
   });
 
   it('should not return contexts with version less than minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CTX_HEADERS,
-      makeContextRow({ version: 3 }),
+      makeContextRow({ revision: 3 }),
     ]) as never);
 
-    expect(getContextsByVersion(5)).toHaveLength(0);
+    expect(getContextsByRevision(5)).toHaveLength(0);
   });
 
   it('should return all contexts when minVersion is 0', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CTX_HEADERS,
-      makeContextRow({ id: 'ctx-1', version: 1 }),
-      makeContextRow({ id: 'ctx-2', version: 2 }),
+      makeContextRow({ id: 'ctx-1', revision: 1 }),
+      makeContextRow({ id: 'ctx-2', revision: 2 }),
     ]) as never);
 
-    expect(getContextsByVersion(0)).toHaveLength(2);
+    expect(getContextsByRevision(0)).toHaveLength(2);
   });
 
   it('should return empty array when no contexts match', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CTX_HEADERS,
-      makeContextRow({ version: 1 }),
+      makeContextRow({ revision: 1 }),
     ]) as never);
 
-    expect(getContextsByVersion(10)).toEqual([]);
+    expect(getContextsByRevision(10)).toEqual([]);
   });
 });
 
@@ -304,6 +304,7 @@ describe('upsertContexts', () => {
       created_at: '2025-01-01T00:00:00.000Z',
       updated_at: '2025-01-01T00:00:00.000Z',
       version: 1,
+      revision: 0,
     };
     upsertContexts([newContext]);
 

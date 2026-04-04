@@ -214,12 +214,12 @@ describe('doPost', () => {
     expect(init).toHaveBeenCalledTimes(1);
   });
 
-  it('should call pull() with versions from the request body', () => {
-    const versions = { tasks: 5, goals: 2, contexts: 0, categories: 0, checklist_items: 10 };
+  it('should call pull() with since_revision from the request body', () => {
+    const sinceRevision = { since_revision: 42 };
 
-    globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.PULL, versions }));
+    globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.PULL, ...sinceRevision }));
 
-    expect(pull).toHaveBeenCalledWith(versions);
+    expect(pull).toHaveBeenCalledWith(sinceRevision);
   });
 
   it('should call push() with changes from the request body', () => {

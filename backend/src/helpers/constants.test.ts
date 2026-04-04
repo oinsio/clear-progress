@@ -7,6 +7,9 @@ import {
   DEFAULT_COVER_EXTENSION,
   colMap,
   SHEET_NAMES,
+  SHEET_HEADERS,
+  META_KEYS,
+  LOCK_TIMEOUT_MS,
   coerceSheetGoalStatus,
   isValidUuid,
 } from './constants';
@@ -67,6 +70,46 @@ describe('colMap', () => {
 describe('coerceSheetGoalStatus', () => {
   it('should return "planning" for input "planning"', () => {
     expect(coerceSheetGoalStatus('planning')).toBe('planning');
+  });
+});
+
+describe('SHEET_NAMES.META', () => {
+  it('should equal "Meta"', () => {
+    expect(SHEET_NAMES.META).toBe('Meta');
+  });
+});
+
+describe('META_KEYS', () => {
+  it('should have NEXT_REVISION key equal to "next_revision"', () => {
+    expect(META_KEYS.NEXT_REVISION).toBe('next_revision');
+  });
+});
+
+describe('LOCK_TIMEOUT_MS', () => {
+  it('should be a positive number', () => {
+    expect(LOCK_TIMEOUT_MS).toBeGreaterThan(0);
+  });
+
+  it('should be 30000 (30 seconds)', () => {
+    expect(LOCK_TIMEOUT_MS).toBe(30000);
+  });
+});
+
+describe('SHEET_HEADERS revision column', () => {
+  const entitySheets = [
+    SHEET_NAMES.TASKS,
+    SHEET_NAMES.GOALS,
+    SHEET_NAMES.CONTEXTS,
+    SHEET_NAMES.CATEGORIES,
+    SHEET_NAMES.CHECKLIST_ITEMS,
+  ];
+
+  it.each(entitySheets)('should include "revision" column in %s headers', (sheetName) => {
+    expect(SHEET_HEADERS[sheetName]).toContain('revision');
+  });
+
+  it('should NOT include "revision" column in Settings headers', () => {
+    expect(SHEET_HEADERS[SHEET_NAMES.SETTINGS]).not.toContain('revision');
   });
 });
 

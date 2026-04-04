@@ -1,4 +1,4 @@
-import { PUSH_STATUSES, CONFLICT_RESOLUTION, ERROR_MESSAGES, VALID_BOXES, isBlankString, isValidUuid } from '../helpers/constants';
+import { PUSH_STATUSES, CONFLICT_RESOLUTION, ERROR_MESSAGES, VALID_BOXES, isBlankString, isValidUuid, LOCK_TIMEOUT_MS } from '../helpers/constants';
 import { jsonOk, jsonError, jsonNotInitialized, ERROR_CODES } from '../helpers/response';
 import { resolveConflict } from '../helpers/conflict';
 import { getAllTasks, upsertTasks } from '../sheets/tasks.sheet';
@@ -7,6 +7,7 @@ import { getAllContexts, upsertContexts } from '../sheets/contexts.sheet';
 import { getAllCategories, upsertCategories } from '../sheets/categories.sheet';
 import { getAllChecklistItems, upsertChecklistItems } from '../sheets/checklists.sheet';
 import { getAllSettings, upsertSettings } from '../sheets/settings.sheet';
+import { readNextRevision, saveNextRevision } from '../sheets/meta.sheet';
 import type { Task, Goal, Context, Category, ChecklistItem, Setting, PushItemResult } from '../types';
 
 type AnyEntity = Task | Goal | Context | Category | ChecklistItem;
@@ -38,7 +39,8 @@ function getInvalidForeignKeyReason(record: AnyEntity): string | null {
 function processRecords<T extends AnyEntity>(
   incoming: T[],
   existing: T[],
-  batchUpsertFn: (records: T[]) => void
+  batchUpsertFn: (records: T[]) => void,
+  nextRevisionRef: { value: number },
 ): PushItemResult[] {
   const recordsToUpsert: T[] = [];
 
@@ -61,19 +63,21 @@ function processRecords<T extends AnyEntity>(
     }
 
     const serverRecord = existing.find(e => e.id === record.id);
+    const assignedRevision = nextRevisionRef.value++;
 
     if (!serverRecord) {
-      recordsToUpsert.push({ ...record });
-      return { id: record.id, status: PUSH_STATUSES.CREATED, version: record.version };
+      recordsToUpsert.push({ ...record, revision: assignedRevision });
+      return { id: record.id, status: PUSH_STATUSES.CREATED, version: record.version, revision: assignedRevision };
     }
 
     const resolution = resolveConflict(record.updated_at, serverRecord.updated_at);
     if (resolution === CONFLICT_RESOLUTION.ACCEPT) {
-      const updated = { ...record, version: serverRecord.version + 1 };
-      recordsToUpsert.push(updated);
-      return { id: record.id, status: PUSH_STATUSES.ACCEPTED, version: updated.version };
+      const updatedVersion = serverRecord.version + 1;
+      recordsToUpsert.push({ ...record, version: updatedVersion, revision: assignedRevision });
+      return { id: record.id, status: PUSH_STATUSES.ACCEPTED, version: updatedVersion, revision: assignedRevision };
     }
 
+    nextRevisionRef.value--;
     return { id: record.id, status: PUSH_STATUSES.CONFLICT, server_record: serverRecord };
   });
 
@@ -89,23 +93,46 @@ export function push(changes: {
   checklist_items?: ChecklistItem[];
   settings?: Setting[];
 }): GoogleAppsScript.Content.TextOutput {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(LOCK_TIMEOUT_MS)) {
+    return jsonError('SYNC_LOCK_TIMEOUT', 'Could not acquire sync lock');
+  }
+
   try {
     const results: Record<string, PushItemResult[]> = {};
+    const nextRevisionRef = { value: 0 };
+    let hasAcceptedOrCreated = false;
+
+    const hasPushableChanges =
+      (changes.tasks?.length ?? 0) > 0 ||
+      (changes.goals?.length ?? 0) > 0 ||
+      (changes.contexts?.length ?? 0) > 0 ||
+      (changes.categories?.length ?? 0) > 0 ||
+      (changes.checklist_items?.length ?? 0) > 0;
+
+    if (hasPushableChanges) {
+      nextRevisionRef.value = readNextRevision();
+    }
 
     if (changes.tasks?.length) {
-      results.tasks = processRecords(changes.tasks, getAllTasks(), upsertTasks);
+      results.tasks = processRecords(changes.tasks, getAllTasks(), upsertTasks, nextRevisionRef);
+      hasAcceptedOrCreated = hasAcceptedOrCreated || results.tasks.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
     }
     if (changes.goals?.length) {
-      results.goals = processRecords(changes.goals, getAllGoals(), upsertGoals);
+      results.goals = processRecords(changes.goals, getAllGoals(), upsertGoals, nextRevisionRef);
+      hasAcceptedOrCreated = hasAcceptedOrCreated || results.goals.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
     }
     if (changes.contexts?.length) {
-      results.contexts = processRecords(changes.contexts, getAllContexts(), upsertContexts);
+      results.contexts = processRecords(changes.contexts, getAllContexts(), upsertContexts, nextRevisionRef);
+      hasAcceptedOrCreated = hasAcceptedOrCreated || results.contexts.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
     }
     if (changes.categories?.length) {
-      results.categories = processRecords(changes.categories, getAllCategories(), upsertCategories);
+      results.categories = processRecords(changes.categories, getAllCategories(), upsertCategories, nextRevisionRef);
+      hasAcceptedOrCreated = hasAcceptedOrCreated || results.categories.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
     }
     if (changes.checklist_items?.length) {
-      results.checklist_items = processRecords(changes.checklist_items, getAllChecklistItems(), upsertChecklistItems);
+      results.checklist_items = processRecords(changes.checklist_items, getAllChecklistItems(), upsertChecklistItems, nextRevisionRef);
+      hasAcceptedOrCreated = hasAcceptedOrCreated || results.checklist_items.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
     }
     if (changes.settings?.length) {
       const serverSettings = getAllSettings();
@@ -126,6 +153,10 @@ export function push(changes: {
       upsertSettings(settingsToUpsert);
     }
 
+    if (hasAcceptedOrCreated) {
+      saveNextRevision(nextRevisionRef.value);
+    }
+
     return jsonOk({ results, server_time: new Date().toISOString() });
   } catch (e) {
     const err = e as Error;
@@ -133,5 +164,7 @@ export function push(changes: {
       return jsonNotInitialized();
     }
     return jsonError(ERROR_CODES.INTERNAL_ERROR, err.message);
+  } finally {
+    lock.releaseLock();
   }
 }

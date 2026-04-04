@@ -10,6 +10,7 @@ vi.mock('../sheets/contexts.sheet', () => ({ getAllContexts: vi.fn(), upsertCont
 vi.mock('../sheets/categories.sheet', () => ({ getAllCategories: vi.fn(), upsertCategories: vi.fn() }));
 vi.mock('../sheets/checklists.sheet', () => ({ getAllChecklistItems: vi.fn(), upsertChecklistItems: vi.fn() }));
 vi.mock('../sheets/settings.sheet', () => ({ upsertSettings: vi.fn(), getAllSettings: vi.fn() }));
+vi.mock('../sheets/meta.sheet', () => ({ readNextRevision: vi.fn(), saveNextRevision: vi.fn() }));
 
 import { getAllTasks, upsertTasks } from '../sheets/tasks.sheet';
 import { getAllGoals, upsertGoals } from '../sheets/goals.sheet';
@@ -17,6 +18,8 @@ import { getAllContexts, upsertContexts } from '../sheets/contexts.sheet';
 import { getAllCategories, upsertCategories } from '../sheets/categories.sheet';
 import { getAllChecklistItems, upsertChecklistItems } from '../sheets/checklists.sheet';
 import { upsertSettings, getAllSettings } from '../sheets/settings.sheet';
+import { readNextRevision, saveNextRevision } from '../sheets/meta.sheet';
+import { getMockLock } from '../../tests/setup/gas-mocks';
 
 function parseResponse(): Record<string, unknown> {
   const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>).mock.calls;
@@ -41,6 +44,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     created_at: '2025-01-01T00:00:00.000Z',
     updated_at: '2025-01-01T00:00:00.000Z',
     version: 1,
+    revision: 0,
     ...overrides,
   };
 }
@@ -57,6 +61,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: '2025-01-01T00:00:00.000Z',
     updated_at: '2025-01-01T00:00:00.000Z',
     version: 1,
+    revision: 0,
     ...overrides,
   };
 }
@@ -70,6 +75,7 @@ function makeContext(overrides: Partial<Context> = {}): Context {
     created_at: '2025-01-01T00:00:00.000Z',
     updated_at: '2025-01-01T00:00:00.000Z',
     version: 1,
+    revision: 0,
     ...overrides,
   };
 }
@@ -83,6 +89,7 @@ function makeCategory(overrides: Partial<Category> = {}): Category {
     created_at: '2025-01-01T00:00:00.000Z',
     updated_at: '2025-01-01T00:00:00.000Z',
     version: 1,
+    revision: 0,
     ...overrides,
   };
 }
@@ -98,6 +105,7 @@ function makeChecklistItem(overrides: Partial<ChecklistItem> = {}): ChecklistIte
     created_at: '2025-01-01T00:00:00.000Z',
     updated_at: '2025-01-01T00:00:00.000Z',
     version: 1,
+    revision: 0,
     ...overrides,
   };
 }
@@ -111,6 +119,9 @@ describe('push', () => {
     vi.mocked(getAllCategories).mockReturnValue([]);
     vi.mocked(getAllChecklistItems).mockReturnValue([]);
     vi.mocked(getAllSettings).mockReturnValue([]);
+    vi.mocked(readNextRevision).mockReturnValue(1);
+    getMockLock().tryLock.mockReturnValue(true);
+    getMockLock().releaseLock.mockReset();
   });
 
   describe('general response', () => {
@@ -986,6 +997,251 @@ describe('push', () => {
       push({ contexts: [makeContext()] });
 
       expect(parseResponse().message).toBe(originalMessage);
+    });
+  });
+
+  describe('LockService', () => {
+    it('should acquire a script lock before processing', () => {
+      push({ tasks: [makeTask()] });
+      expect(LockService.getScriptLock).toHaveBeenCalled();
+      expect(getMockLock().tryLock).toHaveBeenCalled();
+    });
+
+    it('should release the lock after processing', () => {
+      push({ tasks: [makeTask()] });
+      expect(getMockLock().releaseLock).toHaveBeenCalled();
+    });
+
+    it('should release the lock even when processing throws', () => {
+      vi.mocked(getAllTasks).mockImplementation(() => {
+        throw new Error('Unexpected error');
+      });
+
+      push({ tasks: [makeTask()] });
+
+      expect(getMockLock().releaseLock).toHaveBeenCalled();
+    });
+
+    it('should return SYNC_LOCK_TIMEOUT error when lock cannot be acquired', () => {
+      getMockLock().tryLock.mockReturnValue(false);
+
+      push({ tasks: [makeTask()] });
+
+      const response = parseResponse();
+      expect(response.ok).toBe(false);
+      expect(response.error).toBe('SYNC_LOCK_TIMEOUT');
+    });
+
+    it('should NOT process any records when lock cannot be acquired', () => {
+      getMockLock().tryLock.mockReturnValue(false);
+
+      push({ tasks: [makeTask()] });
+
+      expect(getAllTasks).not.toHaveBeenCalled();
+      expect(upsertTasks).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('readNextRevision gating', () => {
+    it('should call readNextRevision when tasks are pushed', () => {
+      push({ tasks: [makeTask()] });
+      expect(readNextRevision).toHaveBeenCalled();
+    });
+
+    it('should NOT call readNextRevision when only settings are pushed', () => {
+      push({ settings: [{ key: 'default_box', value: 'today', updated_at: '2025-01-01T00:00:00.000Z' }] });
+      expect(readNextRevision).not.toHaveBeenCalled();
+    });
+
+    it('should NOT call readNextRevision when push is empty', () => {
+      push({});
+      expect(readNextRevision).not.toHaveBeenCalled();
+    });
+
+    it('should call readNextRevision when goals are pushed', () => {
+      push({ goals: [makeGoal()] });
+      expect(readNextRevision).toHaveBeenCalled();
+    });
+
+    it('should call readNextRevision when contexts are pushed', () => {
+      push({ contexts: [makeContext()] });
+      expect(readNextRevision).toHaveBeenCalled();
+    });
+
+    it('should call readNextRevision when categories are pushed', () => {
+      push({ categories: [makeCategory()] });
+      expect(readNextRevision).toHaveBeenCalled();
+    });
+
+    it('should call readNextRevision when checklist_items are pushed', () => {
+      push({ checklist_items: [makeChecklistItem()] });
+      expect(readNextRevision).toHaveBeenCalled();
+    });
+  });
+
+  describe('conflict does not consume a revision', () => {
+    it('should save next_revision incremented only by created/accepted count, not conflict', () => {
+      vi.mocked(readNextRevision).mockReturnValue(1);
+
+      const serverTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-02T00:00:00.000Z', version: 3 });
+      const conflictTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-01T00:00:00.000Z', version: 1 });
+      const newTask = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
+      vi.mocked(getAllTasks).mockReturnValue([serverTask]);
+
+      push({ tasks: [conflictTask, newTask] });
+
+      // conflict doesn't consume revision, so only 1 increment (for newTask)
+      expect(saveNextRevision).toHaveBeenCalledWith(2);
+    });
+
+    it('should NOT call saveNextRevision when all records are conflicts', () => {
+      const serverTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-02T00:00:00.000Z', version: 3 });
+      const conflictTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-01T00:00:00.000Z', version: 1 });
+      vi.mocked(getAllTasks).mockReturnValue([serverTask]);
+
+      push({ tasks: [conflictTask] });
+
+      expect(saveNextRevision).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('saveNextRevision triggered by any entity type', () => {
+    it('should call saveNextRevision when only goals have accepted records', () => {
+      vi.mocked(readNextRevision).mockReturnValue(5);
+      const newGoal = makeGoal({ id: 'eeeeeeee-eeee-4eee-aeee-eeeeeeeeeeee' });
+      vi.mocked(getAllGoals).mockReturnValue([]);
+
+      push({ goals: [newGoal] });
+
+      expect(saveNextRevision).toHaveBeenCalledWith(6);
+    });
+
+    it('should call saveNextRevision when only contexts have accepted records', () => {
+      vi.mocked(readNextRevision).mockReturnValue(3);
+      const newContext = makeContext({ id: 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1' });
+      vi.mocked(getAllContexts).mockReturnValue([]);
+
+      push({ contexts: [newContext] });
+
+      expect(saveNextRevision).toHaveBeenCalledWith(4);
+    });
+
+    it('should call saveNextRevision when only categories have accepted records', () => {
+      vi.mocked(readNextRevision).mockReturnValue(2);
+      const newCategory = makeCategory({ id: 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3' });
+      vi.mocked(getAllCategories).mockReturnValue([]);
+
+      push({ categories: [newCategory] });
+
+      expect(saveNextRevision).toHaveBeenCalledWith(3);
+    });
+
+    it('should call saveNextRevision when only checklist_items have accepted records', () => {
+      vi.mocked(readNextRevision).mockReturnValue(10);
+      const newItem = makeChecklistItem({ id: 'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5' });
+      vi.mocked(getAllChecklistItems).mockReturnValue([]);
+
+      push({ checklist_items: [newItem] });
+
+      expect(saveNextRevision).toHaveBeenCalledWith(11);
+    });
+
+    it('should NOT call saveNextRevision when tasks are all rejected', () => {
+      const rejectedTask = makeTask({ id: '', title: 'Valid' });
+      vi.mocked(getAllTasks).mockReturnValue([]);
+
+      push({ tasks: [rejectedTask] });
+
+      expect(saveNextRevision).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('revision assignment', () => {
+    it('should return revision in result for a created record', () => {
+      vi.mocked(readNextRevision).mockReturnValue(5);
+      const newTask = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
+      vi.mocked(getAllTasks).mockReturnValue([]);
+
+      push({ tasks: [newTask] });
+
+      const results = parseResponse().results as Record<string, unknown[]>;
+      expect(results.tasks[0]).toHaveProperty('revision');
+    });
+
+    it('should assign next_revision to a created record', () => {
+      vi.mocked(readNextRevision).mockReturnValue(5);
+      const newTask = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
+      vi.mocked(getAllTasks).mockReturnValue([]);
+
+      push({ tasks: [newTask] });
+
+      const results = parseResponse().results as Record<string, unknown[]>;
+      expect(results.tasks[0]).toMatchObject({ revision: 5 });
+    });
+
+    it('should return revision in result for an accepted record', () => {
+      vi.mocked(readNextRevision).mockReturnValue(3);
+      const serverTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-01T00:00:00.000Z', version: 2 });
+      const clientTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-02T00:00:00.000Z', version: 1 });
+      vi.mocked(getAllTasks).mockReturnValue([serverTask]);
+
+      push({ tasks: [clientTask] });
+
+      const results = parseResponse().results as Record<string, unknown[]>;
+      expect(results.tasks[0]).toMatchObject({ status: 'accepted', revision: 3 });
+    });
+
+    it('should NOT return revision for a conflict result', () => {
+      const serverTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-02T00:00:00.000Z', version: 3 });
+      const clientTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-01T00:00:00.000Z', version: 1 });
+      vi.mocked(getAllTasks).mockReturnValue([serverTask]);
+
+      push({ tasks: [clientTask] });
+
+      const results = parseResponse().results as Record<string, unknown[]>;
+      expect(results.tasks[0]).not.toHaveProperty('revision');
+    });
+
+    it('should increment revision for each accepted/created record', () => {
+      vi.mocked(readNextRevision).mockReturnValue(10);
+      const task1 = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
+      const task2 = makeTask({ id: 'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb' });
+      vi.mocked(getAllTasks).mockReturnValue([]);
+
+      push({ tasks: [task1, task2] });
+
+      const results = parseResponse().results as Record<string, unknown[]>;
+      const revisions = results.tasks.map((r) => (r as Record<string, unknown>).revision as number);
+      expect(revisions[0]).not.toBe(revisions[1]);
+      expect(Math.abs(revisions[0] - revisions[1])).toBe(1);
+    });
+
+    it('should save updated next_revision to Meta after processing', () => {
+      vi.mocked(readNextRevision).mockReturnValue(1);
+      const task1 = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
+      const task2 = makeTask({ id: 'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb' });
+      vi.mocked(getAllTasks).mockReturnValue([]);
+
+      push({ tasks: [task1, task2] });
+
+      expect(saveNextRevision).toHaveBeenCalledWith(3);
+    });
+
+    it('should NOT save next_revision when no records were created or accepted', () => {
+      push({});
+      expect(saveNextRevision).not.toHaveBeenCalled();
+    });
+
+    it('should save revision field on the record written to the sheet', () => {
+      vi.mocked(readNextRevision).mockReturnValue(7);
+      const newTask = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
+      vi.mocked(getAllTasks).mockReturnValue([]);
+
+      push({ tasks: [newTask] });
+
+      expect(upsertTasks).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', revision: 7 })]),
+      );
     });
   });
 });

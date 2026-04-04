@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getAllGoals, getGoalsByVersion, getCoverFileIds, deleteGoalsByIds, upsertGoals } from './goals.sheet';
+import { getAllGoals, getGoalsByRevision, getCoverFileIds, deleteGoalsByIds, upsertGoals } from './goals.sheet';
 import type { Goal } from '../types';
 import { SHEET_HEADERS, SHEET_NAMES } from '../helpers/constants';
 import { getSheet } from './client';
@@ -181,7 +181,7 @@ describe('getAllGoals', () => {
   });
 });
 
-describe('getGoalsByVersion', () => {
+describe('getGoalsByRevision', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -189,49 +189,49 @@ describe('getGoalsByVersion', () => {
   it('should return goals with version strictly greater than minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       GOAL_HEADERS,
-      makeGoalRow({ id: 'goal-1', version: 3 }),
-      makeGoalRow({ id: 'goal-2', version: 5 }),
+      makeGoalRow({ id: 'goal-1', revision: 3 }),
+      makeGoalRow({ id: 'goal-2', revision: 5 }),
     ]) as never);
 
-    const goals = getGoalsByVersion(2);
+    const goals = getGoalsByRevision(2);
     expect(goals.map(g => g.id)).toEqual(['goal-1', 'goal-2']);
   });
 
   it('should not return goals with version equal to minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       GOAL_HEADERS,
-      makeGoalRow({ version: 5 }),
+      makeGoalRow({ revision: 5 }),
     ]) as never);
 
-    expect(getGoalsByVersion(5)).toHaveLength(0);
+    expect(getGoalsByRevision(5)).toHaveLength(0);
   });
 
   it('should not return goals with version less than minVersion', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       GOAL_HEADERS,
-      makeGoalRow({ version: 3 }),
+      makeGoalRow({ revision: 3 }),
     ]) as never);
 
-    expect(getGoalsByVersion(5)).toHaveLength(0);
+    expect(getGoalsByRevision(5)).toHaveLength(0);
   });
 
   it('should return all goals when minVersion is 0', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       GOAL_HEADERS,
-      makeGoalRow({ id: 'goal-1', version: 1 }),
-      makeGoalRow({ id: 'goal-2', version: 2 }),
+      makeGoalRow({ id: 'goal-1', revision: 1 }),
+      makeGoalRow({ id: 'goal-2', revision: 2 }),
     ]) as never);
 
-    expect(getGoalsByVersion(0)).toHaveLength(2);
+    expect(getGoalsByRevision(0)).toHaveLength(2);
   });
 
   it('should return empty array when no goals match', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       GOAL_HEADERS,
-      makeGoalRow({ version: 1 }),
+      makeGoalRow({ revision: 1 }),
     ]) as never);
 
-    expect(getGoalsByVersion(10)).toEqual([]);
+    expect(getGoalsByRevision(10)).toEqual([]);
   });
 });
 
@@ -408,6 +408,7 @@ describe('upsertGoals', () => {
       created_at: '2025-01-01T00:00:00.000Z',
       updated_at: '2025-01-01T00:00:00.000Z',
       version: 1,
+      revision: 0,
     };
     upsertGoals([newGoal]);
 

@@ -81,6 +81,21 @@ vi.stubGlobal('UrlFetchApp', {
   fetch: vi.fn(),
 });
 
+// --- LockService mock ---
+
+const mockLock = {
+  tryLock: vi.fn().mockReturnValue(true),
+  releaseLock: vi.fn(),
+};
+
+vi.stubGlobal('LockService', {
+  getScriptLock: vi.fn().mockReturnValue(mockLock),
+});
+
+export function getMockLock() {
+  return mockLock;
+}
+
 // Helpers to reset mocks and state between tests
 export function resetScriptProperties(): void {
   Object.keys(scriptPropertiesStore).forEach(key => delete scriptPropertiesStore[key]);
