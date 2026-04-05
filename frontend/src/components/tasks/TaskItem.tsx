@@ -108,7 +108,7 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
         data-testid="task-item"
         className={cn(
           "relative overflow-hidden",
-          panelSide === "left" ? "border-b border-gray-100 border-l-2 transition-colors hover:bg-gray-50" : "border-b border-gray-100 border-l-[6px] md:border-l-2 transition-colors hover:bg-gray-50",
+          panelSide === "left" ? "border-b border-gray-100 border-l-2 transition-colors hover:bg-gray-50" : "border-b border-gray-100 border-l-[5px] md:border-l-2 transition-colors hover:bg-gray-50",
           isUnsynced ? "border-l-amber-400" : isSelected ? "border-l-accent" : "border-l-transparent",
           isSelected && "bg-accent/5",
         )}
