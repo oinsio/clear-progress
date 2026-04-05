@@ -97,7 +97,21 @@
     "titlePlaceholder": "Idea name",
     "descriptionPlaceholder": "Idea description",
     "empty": "No ideas",
-    "drag": "Drag idea"
+    "drag": "Drag idea",
+    "editTitle": "Edit idea",
+    "edit": "Edit",
+    "nameLabel": "Name",
+    "descriptionLabel": "Description",
+    "save": "Save",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "close": "Close",
+    "deleteLabel": "Delete idea",
+    "saveLabel": "Save changes",
+    "cancelLabel": "Cancel changes",
+    "deleteConfirmTitle": "Delete idea?",
+    "deleteConfirmCancel": "Cancel",
+    "deleteConfirmOk": "Delete"
   },
   "context": {
     "empty": "No contexts yet",

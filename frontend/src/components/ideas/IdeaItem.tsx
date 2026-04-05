@@ -2,6 +2,8 @@ import type { Idea } from "@/types/entities";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { cn } from "@/shared/lib/cn";
+import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import React from "react";
 
 interface IdeaItemProps {
@@ -9,11 +11,13 @@ interface IdeaItemProps {
   nodeRef?: React.Ref<HTMLLIElement>;
   style?: React.CSSProperties;
   dragHandle?: React.ReactNode;
+  onEdit?: () => void;
 }
 
-export function IdeaItem({ idea, nodeRef, style, dragHandle }: IdeaItemProps) {
+export function IdeaItem({ idea, nodeRef, style, dragHandle, onEdit }: IdeaItemProps) {
   const isUnsynced = useIsUnsynced(idea);
   const { panelSide } = usePanelSide();
+  const { t } = useTranslation();
 
   return (
     <li
@@ -43,6 +47,19 @@ export function IdeaItem({ idea, nodeRef, style, dragHandle }: IdeaItemProps) {
           )}
         </div>
       </div>
+
+      {/* Edit button */}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={t("idea.edit")}
+          className="px-3 py-3 text-gray-400 hover:text-gray-600 transition-colors"
+          data-testid="idea-edit-button"
+        >
+          <Pencil className="w-4 h-4" aria-hidden="true" />
+        </button>
+      )}
     </li>
   );
 }

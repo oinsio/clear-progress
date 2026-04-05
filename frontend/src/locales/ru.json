@@ -97,7 +97,21 @@
     "titlePlaceholder": "Название идеи",
     "descriptionPlaceholder": "Описание идеи",
     "empty": "Нет идей",
-    "drag": "Перетащить идею"
+    "drag": "Перетащить идею",
+    "editTitle": "Редактировать идею",
+    "edit": "Редактировать",
+    "nameLabel": "Название",
+    "descriptionLabel": "Описание",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "deleteLabel": "Удалить идею",
+    "saveLabel": "Сохранить изменения",
+    "cancelLabel": "Отменить изменения",
+    "deleteConfirmTitle": "Удалить идею?",
+    "deleteConfirmCancel": "Отмена",
+    "deleteConfirmOk": "Удалить"
   },
   "context": {
     "empty": "Нет ни одного контекста",

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Lightbulb, Plus, GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
@@ -11,6 +11,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
+import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { useIdeas } from "@/hooks/useIdeas";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
@@ -18,10 +19,12 @@ import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
 
-function SortableIdeaItem({ idea }: { idea: Idea }) {
+function SortableIdeaItem({ idea, onEdit }: { idea: Idea; onEdit: () => void }) {
   const { t } = useTranslation();
   const {
     attributes,
@@ -58,17 +61,27 @@ function SortableIdeaItem({ idea }: { idea: Idea }) {
       nodeRef={setNodeRef}
       style={style}
       dragHandle={dragHandle}
+      onEdit={onEdit}
     />
   );
 }
 
 export default function IdeasPage() {
   const { t } = useTranslation();
-  const { ideas, isLoading, createIdea, reorderIdeas } = useIdeas();
+  const { ideas, isLoading, createIdea, updateIdea, deleteIdea, reorderIdeas } =
+    useIdeas();
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { filterBarPosition } = useFilterBarPosition();
   const sensors = useDndSensors();
+  const isDesktop = useIsDesktop();
+  const {
+    ratio,
+    containerRef: splitContainerRef,
+    handleResizeMouseDown,
+  } = usePanelSplit();
+
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
 
   const {
     isAdding: isAddingIdea,
@@ -95,13 +108,51 @@ export default function IdeasPage() {
     [activeIdeas, reorderIdeas],
   );
 
+  const handleEditIdea = useCallback((ideaId: string) => {
+    setSelectedIdeaId(ideaId);
+  }, []);
+
+  const handleCloseEditModal = useCallback(() => {
+    setSelectedIdeaId(null);
+  }, []);
+
+  const handleUpdateIdea = useCallback(
+    async (id: string, changes: Partial<Idea>) => {
+      await updateIdea(id, changes);
+    },
+    [updateIdea],
+  );
+
+  const handleDeleteIdea = useCallback(
+    (id: string) => {
+      void deleteIdea(id);
+    },
+    [deleteIdea],
+  );
+
+  const selectedIdea = selectedIdeaId
+    ? activeIdeas.find((idea) => idea.id === selectedIdeaId)
+    : null;
+
   return (
     <div
       data-testid="ideas-page"
       className="relative flex flex-1 overflow-hidden bg-white"
     >
-      {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Split container: idea list + optional idea detail panel */}
+      <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
+        {/* Main content */}
+        <div
+          className={cn(
+            "flex flex-1 flex-col overflow-hidden",
+            !isDesktop && selectedIdea && "hidden",
+          )}
+          style={
+            isDesktop && selectedIdea
+              ? { width: `${ratio * 100}%`, flexShrink: 0 }
+              : undefined
+          }
+        >
         {/* Action bar — top position (above header) */}
         {filterBarPosition === "top" && (
           <div
@@ -155,7 +206,11 @@ export default function IdeasPage() {
                 >
                   <ul>
                     {activeIdeas.map((idea) => (
-                      <SortableIdeaItem key={idea.id} idea={idea} />
+                      <SortableIdeaItem
+                        key={idea.id}
+                        idea={idea}
+                        onEdit={() => handleEditIdea(idea.id)}
+                      />
                     ))}
                   </ul>
                 </SortableContext>
@@ -206,6 +261,34 @@ export default function IdeasPage() {
           </div>
         )}
       </div>
+
+      {/* Resize handle between idea list and detail panel */}
+      {isDesktop && selectedIdea && (
+        <div
+          className="w-1 flex-shrink-0 cursor-col-resize bg-gray-100 hover:bg-accent/30 active:bg-accent/50 transition-colors"
+          onMouseDown={handleResizeMouseDown}
+        />
+      )}
+
+      {/* Idea detail panel — shown when an idea is selected (desktop: side panel, mobile: full screen) */}
+      {selectedIdea && (
+        <IdeaDetailPanel
+          idea={selectedIdea}
+          onUpdate={handleUpdateIdea}
+          onDelete={(ideaId) => {
+            setSelectedIdeaId(null);
+            handleDeleteIdea(ideaId);
+          }}
+          onClose={handleCloseEditModal}
+          style={
+            isDesktop
+              ? { width: `${(1 - ratio) * 100}%`, flexShrink: 0 }
+              : { flex: "1 1 0" }
+          }
+        />
+      )}
+    </div>
+    {/* end splitContainerRef */}
 
       {/* Right filter panel */}
       <RightFilterPanel

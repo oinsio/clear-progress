@@ -1,0 +1,162 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { X, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { Idea } from "@/types/entities";
+import { cn } from "@/shared/lib/cn";
+
+interface IdeaDetailPanelProps {
+  idea: Idea;
+  onUpdate: (id: string, changes: Partial<Idea>) => Promise<void>;
+  onDelete: (id: string) => void;
+  onClose: () => void;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export function IdeaDetailPanel({
+  idea,
+  onUpdate,
+  onDelete,
+  onClose,
+  className,
+  style,
+}: IdeaDetailPanelProps) {
+  const { t } = useTranslation();
+  const [name, setName] = useState(idea.name);
+  const [description, setDescription] = useState(idea.description);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  useEffect(() => {
+    setName(idea.name);
+    setDescription(idea.description);
+    setIsConfirmingDelete(false);
+  }, [idea.id, idea.name, idea.description]);
+
+  const handleNameBlur = useCallback(async () => {
+    const trimmedName = name.trim();
+    if (trimmedName && trimmedName !== idea.name) {
+      await onUpdate(idea.id, { name: trimmedName });
+    }
+  }, [name, idea.name, idea.id, onUpdate]);
+
+  const handleDescriptionBlur = useCallback(async () => {
+    if (description !== idea.description) {
+      await onUpdate(idea.id, { description });
+    }
+  }, [description, idea.description, idea.id, onUpdate]);
+
+  const handleDeleteClick = useCallback(() => {
+    setIsConfirmingDelete(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    onDelete(idea.id);
+    onClose();
+  }, [idea.id, onDelete, onClose]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setIsConfirmingDelete(false);
+  }, []);
+
+
+  return (
+    <div
+      data-testid="idea-detail-panel"
+      className={cn(
+        "border-l border-gray-100 flex flex-col h-full bg-white overflow-hidden relative",
+        className,
+      )}
+      style={style}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100 flex-shrink-0">
+        <button
+          type="button"
+          onClick={handleDeleteClick}
+          aria-label={t("idea.deleteLabel")}
+          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+        >
+          <Trash2 size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("idea.close")}
+          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-4 py-4 flex flex-col gap-4">
+          {/* Name */}
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              {t("idea.nameLabel")}
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              onBlur={() => void handleNameBlur()}
+              placeholder={t("idea.titlePlaceholder")}
+              className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
+              data-testid="idea-detail-name"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              {t("idea.descriptionLabel")}
+            </label>
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              onBlur={() => void handleDescriptionBlur()}
+              placeholder={t("idea.descriptionPlaceholder")}
+              rows={3}
+              className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none"
+              data-testid="idea-detail-description"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Delete confirmation overlay */}
+      {isConfirmingDelete && (
+        <div
+          data-testid="idea-detail-delete-confirm"
+          className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center gap-4 px-6"
+        >
+          <p className="text-base font-medium text-gray-800 text-center">
+            {t("idea.deleteConfirmTitle")}
+          </p>
+          <p className="text-sm text-gray-500 text-center">{idea.name}</p>
+          <div className="flex gap-3 w-full">
+            <button
+              type="button"
+              data-testid="idea-detail-delete-cancel"
+              onClick={handleDeleteCancel}
+              aria-label={t("idea.deleteConfirmCancel")}
+              className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              {t("idea.deleteConfirmCancel")}
+            </button>
+            <button
+              type="button"
+              data-testid="idea-detail-delete-confirm-btn"
+              onClick={handleDeleteConfirm}
+              aria-label={t("idea.deleteConfirmOk")}
+              className="flex-1 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
+            >
+              {t("idea.deleteConfirmOk")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
