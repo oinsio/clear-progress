@@ -117,7 +117,7 @@ Fields: `id` (UUID v4), `title`, `notes`, `box` (inbox | today | week | later), 
 Fields: `id`, `title`, `description?`, `cover_file_id?` (Google Drive), `status` (not_started | in_progress | paused | completed | cancelled), `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
 
 **Ideas** — user ideas
-Fields: `id`, `name`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
+Fields: `id`, `name`, `description`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
 
 **Contexts** — GTD contexts (@Home, @Office...)
 Fields: `id`, `name`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
