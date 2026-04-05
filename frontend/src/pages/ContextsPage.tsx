@@ -65,7 +65,7 @@ function SortableContextItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        panelSide === "left" ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50" : "flex items-center border-b border-gray-100 bg-white border-l-[5px] md:border-l-2 transition-colors hover:bg-gray-50",
+        panelSide === "left" ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50" : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
         isUnsynced ? "border-l-amber-400" : "border-l-transparent",
       )}
     >
