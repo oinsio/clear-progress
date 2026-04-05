@@ -27,7 +27,7 @@ clasp deploy       # Create new GAS deployment
 - **Offline DB**: Dexie.js 3+ (IndexedDB wrapper)
 - **PWA**: vite-plugin-pwa (Workbox)
 - **Backend**: Google Apps Script (TypeScript via clasp), deployed as Web App
-- **Storage**: Google Sheets (6 sheets) + IndexedDB (offline cache)
+- **Storage**: Google Sheets (7 sheets) + IndexedDB (offline cache)
 - **Hosting**: Cloudflare Pages
 - **Testing**: Vitest + React Testing Library + MSW + fake-indexeddb / Playwright (E2E)
 
@@ -39,6 +39,7 @@ src/
 │   ├── ui/           # shadcn/ui primitives
 │   ├── tasks/        # Task-related components
 │   ├── goals/        # Goal-related components
+│   ├── ideas/        # Idea-related components
 │   └── layout/       # Shell, sidebar, navigation
 ├── pages/            # Route-level page components
 ├── hooks/            # Custom React hooks (useXxx.ts)
@@ -112,10 +113,13 @@ tests/
 **Tasks** — core entity  
 Fields: `id` (UUID v4), `title`, `notes`, `box` (inbox | today | week | later), `goal_id?`, `context_id?`, `category_id?`, `is_completed`, `completed_at?`, `repeat_rule?` (v1.1), `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
 
-**Goals** — objectives  
+**Goals** — objectives
 Fields: `id`, `title`, `description?`, `cover_file_id?` (Google Drive), `status` (not_started | in_progress | paused | completed | cancelled), `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
 
-**Contexts** — GTD contexts (@Home, @Office...)  
+**Ideas** — user ideas
+Fields: `id`, `name`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
+
+**Contexts** — GTD contexts (@Home, @Office...)
 Fields: `id`, `name`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
 
 **Categories** — life areas (Work, Family...)  
@@ -171,6 +175,7 @@ Client sends max known `version` per entity type:
   "versions": {
     "tasks": 42,
     "goals": 10,
+    "ideas": 5,
     "contexts": 5,
     "categories": 3,
     "checklist_items": 20,
@@ -190,7 +195,8 @@ Client sends arrays of changed records:
   "action": "push",
   "changes": {
     "tasks": [{ ...task }],
-    "goals": [{ ...goal }]
+    "goals": [{ ...goal }],
+    "ideas": [{ ...idea }]
   }
 }
 ```
@@ -209,7 +215,7 @@ Each record in push response has a status:
 ```
 My Drive/
 └── Clear Progress/
-    ├── Clear Progress Data.gsheet   (6 sheets: Tasks, Goals, Contexts, Categories, Checklist_Items, Settings)
+    ├── Clear Progress Data.gsheet   (7 sheets: Tasks, Goals, Ideas, Contexts, Categories, Checklist_Items, Settings)
     └── Covers/                      (goal cover images)
 ```
 
