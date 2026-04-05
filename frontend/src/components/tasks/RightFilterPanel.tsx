@@ -9,6 +9,7 @@ import {
   CircleUser,
   RefreshCw,
   Trash2,
+  Lightbulb,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -46,6 +47,7 @@ export const FILTER_ITEMS: FilterItem[] = [
   { mode: "contexts", labelKey: "filter.contexts", Icon: MapPin, route: ROUTES.CONTEXTS },
   { mode: "categories", labelKey: "filter.categories", Icon: Tag, route: ROUTES.CATEGORIES },
   { mode: "goals", labelKey: "filter.goals", Icon: Target, route: ROUTES.GOALS },
+  { mode: "ideas", labelKey: "filter.ideas", Icon: Lightbulb, route: ROUTES.IDEAS },
   { mode: "tasks", labelKey: "filter.tasks", Icon: CheckSquare },
   { mode: "completed", labelKey: "filter.completed", Icon: CheckCheck },
   { mode: "deleted", labelKey: "filter.deleted", Icon: Trash2, route: ROUTES.DELETED },
