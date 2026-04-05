@@ -4,11 +4,11 @@ import { db } from "../database";
 import type { Setting } from "@/types/entities";
 
 function buildSetting(overrides: Partial<Setting> = {}): Setting {
-  return {
-    key: "default_box",
-    value: "inbox",
-    updated_at: "2026-01-01T00:00:00.000Z",
-    ...overrides,
+  return <Setting>{
+      key: "default_box",
+      value: "inbox",
+      updated_at: "2026-01-01T00:00:00.000Z",
+      ...overrides,
   };
 }
 
