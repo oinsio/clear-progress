@@ -4,6 +4,7 @@ import type {
   Context,
   Category,
   ChecklistItem,
+  Idea,
   Setting,
 } from "@/types/entities";
 import type { PushResponseData } from "@/types/api";
@@ -13,6 +14,7 @@ import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import {
@@ -33,6 +35,7 @@ export class SyncService {
     private readonly contextRepository: ContextRepository,
     private readonly categoryRepository: CategoryRepository,
     private readonly checklistRepository: ChecklistRepository,
+    private readonly ideaRepository: IdeaRepository,
     private readonly settingsRepository: SettingsRepository,
   ) {}
 
@@ -79,6 +82,7 @@ export class SyncService {
       this.checklistRepository.applyServerRecords(
         pullResponse.data.checklist_items,
       ),
+      this.ideaRepository.applyServerRecords(pullResponse.data.ideas),
       this.settingsRepository.bulkUpsert(pullResponse.settings),
     ]);
 
@@ -89,13 +93,14 @@ export class SyncService {
   }
 
   private async _push(): Promise<void> {
-    const [tasks, goals, contexts, categories, checklist_items, settings] =
+    const [tasks, goals, contexts, categories, checklist_items, ideas, settings] =
       await Promise.all([
         this.taskRepository.getDirty(),
         this.goalRepository.getDirty(),
         this.contextRepository.getDirty(),
         this.categoryRepository.getDirty(),
         this.checklistRepository.getDirty(),
+        this.ideaRepository.getDirty(),
         this.settingsRepository.getDirty(),
       ]);
 
@@ -105,6 +110,7 @@ export class SyncService {
       contexts.length > 0 ||
       categories.length > 0 ||
       checklist_items.length > 0 ||
+      ideas.length > 0 ||
       settings.length > 0;
 
     if (!hasChanges) return;
@@ -121,9 +127,11 @@ export class SyncService {
       ...checklist_items.map(
         (item) => [item.id, item.version] as [string, number],
       ),
+      ...ideas.map((idea) => [idea.id, idea.version] as [string, number]),
     ]);
 
     const stripDirty = <T extends { _dirty?: boolean }>(records: T[]): Omit<T, "_dirty">[] =>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       records.map(({ _dirty: _, ...rest }) => rest as Omit<T, "_dirty">);
 
     const goalsForPush = goals.map((goal) =>
@@ -139,6 +147,7 @@ export class SyncService {
         contexts: stripDirty(contexts) as Context[],
         categories: stripDirty(categories) as Category[],
         checklist_items: stripDirty(checklist_items) as ChecklistItem[],
+        ideas: stripDirty(ideas) as Idea[],
         settings: stripDirty(settings) as Setting[],
       },
     });
@@ -195,6 +204,12 @@ export class SyncService {
         results.checklist_items ?? [],
         sentVersions,
         this.checklistRepository,
+        pushRevision,
+      ),
+      this._applyEntityPushResults(
+        results.ideas ?? [],
+        sentVersions,
+        this.ideaRepository,
         pushRevision,
       ),
       this._applySettingsPushResults(results.settings ?? []),
@@ -279,6 +294,7 @@ export class SyncService {
     await db.contexts.toCollection().modify({ _dirty: true });
     await db.categories.toCollection().modify({ _dirty: true });
     await db.checklist_items.toCollection().modify({ _dirty: true });
+    await db.ideas.toCollection().modify({ _dirty: true });
     await db.settings.toCollection().modify({ _dirty: true });
 
     await this.pull();

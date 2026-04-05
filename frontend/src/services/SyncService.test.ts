@@ -6,6 +6,7 @@ import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import type { Task, Goal } from "@/types/entities";
@@ -110,6 +111,7 @@ describe("SyncService", () => {
   let contextRepository: ContextRepository;
   let categoryRepository: CategoryRepository;
   let checklistRepository: ChecklistRepository;
+  let ideaRepository: IdeaRepository;
   let settingsRepository: SettingsRepository;
   let syncMetaRepository: SyncMetaRepository;
 
@@ -151,6 +153,13 @@ describe("SyncService", () => {
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as ChecklistRepository;
 
+    ideaRepository = {
+      getDirty: vi.fn().mockResolvedValue([]),
+      getById: vi.fn().mockResolvedValue(undefined),
+      update: vi.fn().mockResolvedValue(undefined),
+      applyServerRecords: vi.fn().mockResolvedValue(undefined),
+    } as unknown as IdeaRepository;
+
     settingsRepository = {
       getDirty: vi.fn().mockResolvedValue([]),
       getById: vi.fn().mockResolvedValue(undefined),
@@ -174,6 +183,7 @@ describe("SyncService", () => {
       contextRepository,
       categoryRepository,
       checklistRepository,
+      ideaRepository,
       settingsRepository,
     );
   }
@@ -231,6 +241,7 @@ describe("SyncService", () => {
       expect(contextRepository.applyServerRecords).toHaveBeenCalledWith([]);
       expect(categoryRepository.applyServerRecords).toHaveBeenCalledWith([]);
       expect(checklistRepository.applyServerRecords).toHaveBeenCalledWith([]);
+      expect(ideaRepository.applyServerRecords).toHaveBeenCalledWith([]);
     });
 
     it("should call settingsRepository.bulkUpsert with server settings", async () => {

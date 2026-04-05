@@ -25,6 +25,7 @@ import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { defaultCoverSyncService } from "@/services/defaultServices";
@@ -51,6 +52,7 @@ const syncService = new SyncService(
   new ContextRepository(),
   new CategoryRepository(),
   new ChecklistRepository(),
+  new IdeaRepository(),
   new SettingsRepository(),
 );
 
