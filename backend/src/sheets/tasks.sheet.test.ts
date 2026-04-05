@@ -251,6 +251,29 @@ describe('getTasksByRevision', () => {
     expect(getTasksByRevision(0)).toHaveLength(2);
   });
 
+  it('should return legacy tasks with revision=0 when sinceRevision is 0', () => {
+    const sheetMock = makeSheetMock([
+      TASK_HEADERS,
+      makeTaskRow({ id: 'task-legacy', revision: 0 }),
+      makeTaskRow({ id: 'task-revised', revision: 3 }),
+    ]);
+    vi.mocked(getSheet).mockReturnValue(sheetMock as never);
+
+    expect(getTasksByRevision(0)).toHaveLength(2);
+  });
+
+  it('should return legacy tasks with revision=0 even when sinceRevision is greater than 0', () => {
+    const sheetMock = makeSheetMock([
+      TASK_HEADERS,
+      makeTaskRow({ id: 'task-legacy', revision: 0 }),
+      makeTaskRow({ id: 'task-old', revision: 2 }),
+    ]);
+    vi.mocked(getSheet).mockReturnValue(sheetMock as never);
+
+    const tasks = getTasksByRevision(5);
+    expect(tasks.map(t => t.id)).toEqual(['task-legacy']);
+  });
+
   it('should return empty array when no tasks match', () => {
     const sheetMock = makeSheetMock([TASK_HEADERS, makeTaskRow({ revision: 1 })]);
     vi.mocked(getSheet).mockReturnValue(sheetMock as never);

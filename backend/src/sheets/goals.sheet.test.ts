@@ -225,6 +225,27 @@ describe('getGoalsByRevision', () => {
     expect(getGoalsByRevision(0)).toHaveLength(2);
   });
 
+  it('should return legacy goals with revision=0 when sinceRevision is 0', () => {
+    vi.mocked(getSheet).mockReturnValue(makeSheetMock([
+      GOAL_HEADERS,
+      makeGoalRow({ id: 'goal-legacy', revision: 0 }),
+      makeGoalRow({ id: 'goal-revised', revision: 3 }),
+    ]) as never);
+
+    expect(getGoalsByRevision(0)).toHaveLength(2);
+  });
+
+  it('should return legacy goals with revision=0 even when sinceRevision is greater than 0', () => {
+    vi.mocked(getSheet).mockReturnValue(makeSheetMock([
+      GOAL_HEADERS,
+      makeGoalRow({ id: 'goal-legacy', revision: 0 }),
+      makeGoalRow({ id: 'goal-old', revision: 2 }),
+    ]) as never);
+
+    const goals = getGoalsByRevision(5);
+    expect(goals.map(g => g.id)).toEqual(['goal-legacy']);
+  });
+
   it('should return empty array when no goals match', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       GOAL_HEADERS,

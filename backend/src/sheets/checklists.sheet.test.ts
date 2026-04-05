@@ -218,6 +218,27 @@ describe('getChecklistItemsByRevision', () => {
     expect(getChecklistItemsByRevision(0)).toHaveLength(2);
   });
 
+  it('should return legacy items with revision=0 when sinceRevision is 0', () => {
+    vi.mocked(getSheet).mockReturnValue(makeSheetMock([
+      ITEM_HEADERS,
+      makeItemRow({ id: 'item-legacy', revision: 0 }),
+      makeItemRow({ id: 'item-revised', revision: 3 }),
+    ]) as never);
+
+    expect(getChecklistItemsByRevision(0)).toHaveLength(2);
+  });
+
+  it('should return legacy items with revision=0 even when sinceRevision is greater than 0', () => {
+    vi.mocked(getSheet).mockReturnValue(makeSheetMock([
+      ITEM_HEADERS,
+      makeItemRow({ id: 'item-legacy', revision: 0 }),
+      makeItemRow({ id: 'item-old', revision: 2 }),
+    ]) as never);
+
+    const items = getChecklistItemsByRevision(5);
+    expect(items.map(i => i.id)).toEqual(['item-legacy']);
+  });
+
   it('should return empty array when no items match', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       ITEM_HEADERS,

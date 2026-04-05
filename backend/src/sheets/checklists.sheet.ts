@@ -20,6 +20,7 @@ function rowToItem(row: unknown[]): ChecklistItem {
 }
 
 export const getAllChecklistItems = (): ChecklistItem[] => getAllRecords(SHEET_NAMES.CHECKLIST_ITEMS, rowToItem);
-export const getChecklistItemsByRevision = (sinceRevision: number): ChecklistItem[] => getAllChecklistItems().filter(item => item.revision > sinceRevision);
+export const getChecklistItemsByRevision = (sinceRevision: number): ChecklistItem[] =>
+  getAllChecklistItems().filter(item => item.revision === 0 || item.revision > sinceRevision);
 export const upsertChecklistItems = (items: ChecklistItem[]): void => upsertRecords(SHEET_NAMES.CHECKLIST_ITEMS, items);
 export const deleteChecklistItemsByIds = (ids: string[]): number => deleteRecordsByIds(SHEET_NAMES.CHECKLIST_ITEMS, ids);

@@ -195,6 +195,27 @@ describe('getContextsByRevision', () => {
     expect(getContextsByRevision(0)).toHaveLength(2);
   });
 
+  it('should return legacy contexts with revision=0 when sinceRevision is 0', () => {
+    vi.mocked(getSheet).mockReturnValue(makeSheetMock([
+      CTX_HEADERS,
+      makeContextRow({ id: 'ctx-legacy', revision: 0 }),
+      makeContextRow({ id: 'ctx-revised', revision: 3 }),
+    ]) as never);
+
+    expect(getContextsByRevision(0)).toHaveLength(2);
+  });
+
+  it('should return legacy contexts with revision=0 even when sinceRevision is greater than 0', () => {
+    vi.mocked(getSheet).mockReturnValue(makeSheetMock([
+      CTX_HEADERS,
+      makeContextRow({ id: 'ctx-legacy', revision: 0 }),
+      makeContextRow({ id: 'ctx-old', revision: 2 }),
+    ]) as never);
+
+    const contexts = getContextsByRevision(5);
+    expect(contexts.map(c => c.id)).toEqual(['ctx-legacy']);
+  });
+
   it('should return empty array when no contexts match', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       CTX_HEADERS,

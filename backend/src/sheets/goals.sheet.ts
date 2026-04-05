@@ -21,7 +21,8 @@ function rowToGoal(row: unknown[]): Goal {
 }
 
 export const getAllGoals = (): Goal[] => getAllRecords(SHEET_NAMES.GOALS, rowToGoal);
-export const getGoalsByRevision = (sinceRevision: number): Goal[] => getAllGoals().filter(goal => goal.revision > sinceRevision);
+export const getGoalsByRevision = (sinceRevision: number): Goal[] =>
+  getAllGoals().filter(goal => goal.revision === 0 || goal.revision > sinceRevision);
 export const upsertGoals = (goals: Goal[]): void => upsertRecords(SHEET_NAMES.GOALS, goals);
 export const deleteGoalsByIds = (ids: string[]): number => deleteRecordsByIds(SHEET_NAMES.GOALS, ids);
 export const getCoverFileIds = (): string[] => getAllGoals().map(goal => goal.cover_file_id).filter(Boolean);

@@ -26,6 +26,7 @@ function rowToTask(row: unknown[]): Task {
 }
 
 export const getAllTasks = (): Task[] => getAllRecords(SHEET_NAMES.TASKS, rowToTask);
-export const getTasksByRevision = (sinceRevision: number): Task[] => getAllTasks().filter(task => task.revision > sinceRevision);
+export const getTasksByRevision = (sinceRevision: number): Task[] =>
+  getAllTasks().filter(task => task.revision === 0 || task.revision > sinceRevision);
 export const upsertTasks = (tasks: Task[]): void => upsertRecords(SHEET_NAMES.TASKS, tasks);
 export const deleteTasksByIds = (ids: string[]): number => deleteRecordsByIds(SHEET_NAMES.TASKS, ids);
