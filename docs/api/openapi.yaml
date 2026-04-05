@@ -22,7 +22,8 @@ info:
     - All IDs are UUID v4
     - All dates are ISO 8601 UTC (`2026-03-04T12:00:00.000Z`)
     - Optional string fields use `""` instead of `null`
-    - `version` is an integer starting at 1, incremented by 1 on every change
+    - `version` is an integer starting at 1, incremented by 1 on every client change
+    - `revision` is a server-side monotonic counter assigned during push
     - Conflicts are resolved using **last-write-wins** strategy (`updated_at`)
 
 servers:
@@ -140,10 +141,10 @@ paths:
       tags: [Sync]
       summary: Fetch changes from server
       description: |
-        The client sends the maximum known `version` per entity type.
-        The server returns all records with `version > client_version`.
+        The client sends `since_revision` — a single number representing the last known revision.
+        The server returns all records with `revision > since_revision`.
 
-        When all versions are 0, all data is returned (initial pull).
+        When `since_revision = 0`, all data is returned (initial pull).
         Settings (`settings`) are always returned in full.
         Deleted records (`is_deleted: true`) are also included in the response.
       requestBody:
@@ -154,27 +155,17 @@ paths:
               $ref: '#/components/schemas/PullRequest'
             examples:
               initial_pull:
-                summary: Initial pull — all versions = 0
+                summary: Initial pull — since_revision = 0
                 value:
                   action: pull
                   access_token: ya29.a0AfH6SMBx...
-                  versions:
-                    tasks: 0
-                    goals: 0
-                    contexts: 0
-                    categories: 0
-                    checklist_items: 0
+                  since_revision: 0
               incremental_pull:
                 summary: Incremental pull
                 value:
                   action: pull
                   access_token: ya29.a0AfH6SMBx...
-                  versions:
-                    tasks: 38
-                    goals: 5
-                    contexts: 1
-                    categories: 1
-                    checklist_items: 2
+                  since_revision: 42
       responses:
         '200':
           description: Changes from server
@@ -200,6 +191,7 @@ paths:
                       - key: accent_color
                         value: green
                         updated_at: "2026-03-04T10:00:00.000Z"
+                    current_revision: 42
                     server_time: "2026-03-04T11:10:00.000Z"
                 not_initialized:
                   summary: Error — init was not called
@@ -225,12 +217,15 @@ paths:
 
         The server applies last-write-wins by `updated_at` and returns
         a status per record:
-        - `created` — new record was inserted
-        - `accepted` — change was applied, `version` was incremented
+        - `created` — new record was inserted, assigned `revision`
+        - `accepted` — change was applied, `version` was incremented, assigned `revision`
         - `conflict` — server record is newer; response includes `server_record`
         - `rejected` — record was not saved; response includes `reason`
 
         On conflict, the client must overwrite its local copy with `server_record`.
+
+        **Server assigns a single `revision` to all accepted/created records in one push.**
+        This `revision` is returned at the response level, not per-record.
 
         **Validation rules (applied in order; first failure determines `reason`):**
 
@@ -322,6 +317,7 @@ paths:
                   summary: All records created
                   value:
                     ok: true
+                    revision: 43
                     results:
                       tasks:
                         - id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
@@ -337,6 +333,7 @@ paths:
                   summary: Conflict — server record is newer
                   value:
                     ok: true
+                    revision: 44
                     results:
                       tasks:
                         - id: f47ac10b-58cc-4372-a567-0e02b2c3d479
@@ -357,6 +354,7 @@ paths:
                             created_at: "2026-03-04T08:30:00.000Z"
                             updated_at: "2026-03-04T14:30:00.000Z"
                             version: 3
+                            revision: 40
                       goals: []
                       contexts: []
                       categories: []
@@ -502,6 +500,7 @@ paths:
                   summary: Mixed batch — valid task created, invalid goal rejected
                   value:
                     ok: true
+                    revision: 45
                     results:
                       tasks:
                         - id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
@@ -565,14 +564,12 @@ paths:
                   value:
                     ok: true
                     file_id: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
-                    thumbnail_url: https://drive.google.com/thumbnail?id=1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ&sz=w400
                     reused: false
                 reused:
                   summary: Duplicate file — existing file reused
                   value:
                     ok: true
                     file_id: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
-                    thumbnail_url: https://drive.google.com/thumbnail?id=1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ&sz=w400
                     reused: true
                 too_large:
                   summary: Error — file exceeds 2 MB
@@ -904,6 +901,11 @@ components:
           minimum: 1
           description: Version counter for sync. Incremented by 1 on every change
           example: 1
+        revision:
+          type: integer
+          minimum: 0
+          description: Server-side revision. Assigned by server during push. 0 = not yet on server
+          example: 42
 
     Goal:
       type: object
@@ -918,6 +920,7 @@ components:
         - created_at
         - updated_at
         - version
+        - revision
       properties:
         id:
           type: string
@@ -956,10 +959,15 @@ components:
           type: integer
           minimum: 1
           example: 5
+        revision:
+          type: integer
+          minimum: 0
+          description: Server-side revision
+          example: 42
 
     Context:
       type: object
-      required: [id, name, sort_order, is_deleted, created_at, updated_at, version]
+      required: [id, name, sort_order, is_deleted, created_at, updated_at, version, revision]
       properties:
         id:
           type: string
@@ -987,10 +995,15 @@ components:
           type: integer
           minimum: 1
           example: 1
+        revision:
+          type: integer
+          minimum: 0
+          description: Server-side revision
+          example: 42
 
     Category:
       type: object
-      required: [id, name, sort_order, is_deleted, created_at, updated_at, version]
+      required: [id, name, sort_order, is_deleted, created_at, updated_at, version, revision]
       properties:
         id:
           type: string
@@ -1018,10 +1031,15 @@ components:
           type: integer
           minimum: 1
           example: 1
+        revision:
+          type: integer
+          minimum: 0
+          description: Server-side revision
+          example: 42
 
     ChecklistItem:
       type: object
-      required: [id, task_id, title, is_completed, sort_order, is_deleted, created_at, updated_at, version]
+      required: [id, task_id, title, is_completed, sort_order, is_deleted, created_at, updated_at, version, revision]
       properties:
         id:
           type: string
@@ -1056,6 +1074,11 @@ components:
           type: integer
           minimum: 1
           example: 1
+        revision:
+          type: integer
+          minimum: 0
+          description: Server-side revision
+          example: 42
 
     Setting:
       type: object
@@ -1083,32 +1106,6 @@ components:
           format: date-time
           example: "2026-03-04T10:00:00.000Z"
 
-    VersionMap:
-      type: object
-      required: [tasks, goals, contexts, categories, checklist_items]
-      description: Maximum known version per entity type. 0 = initial pull
-      properties:
-        tasks:
-          type: integer
-          minimum: 0
-          example: 42
-        goals:
-          type: integer
-          minimum: 0
-          example: 10
-        contexts:
-          type: integer
-          minimum: 0
-          example: 5
-        categories:
-          type: integer
-          minimum: 0
-          example: 3
-        checklist_items:
-          type: integer
-          minimum: 0
-          example: 20
-
     PushItemResult:
       type: object
       required: [id, status]
@@ -1121,8 +1118,8 @@ components:
           type: string
           enum: [created, accepted, conflict, rejected]
           description: |
-            - `created` — new record was inserted on the server
-            - `accepted` — change was applied, `version` was incremented
+            - `created` — new record was inserted on the server, assigned `revision`
+            - `accepted` — change was applied, `version` was incremented, assigned `revision`
             - `conflict` — server record is newer; see `server_record`
             - `rejected` — record failed validation; see `reason`. Record was NOT saved
           example: accepted
@@ -1131,7 +1128,7 @@ components:
           description: Present for `created` and `accepted` statuses
           example: 3
         server_record:
-          description: Present for `conflict` status. Client must overwrite its local copy
+          description: Present for `conflict` status. Client must overwrite its local copy. Includes `revision` field.
           oneOf:
             - $ref: '#/components/schemas/Task'
             - $ref: '#/components/schemas/Goal'
@@ -1253,7 +1250,7 @@ components:
 
     PullRequest:
       type: object
-      required: [action, access_token, versions]
+      required: [action, access_token, since_revision]
       properties:
         action:
           type: string
@@ -1262,8 +1259,11 @@ components:
           type: string
           description: OAuth 2.0 access token from Google
           example: ya29.a0AfH6SMBx...
-        versions:
-          $ref: '#/components/schemas/VersionMap'
+        since_revision:
+          type: integer
+          minimum: 0
+          description: Last known revision from server. 0 = initial pull (fetch all data)
+          example: 42
 
     PushRequest:
       type: object
@@ -1403,7 +1403,7 @@ components:
 
     PullResponse:
       type: object
-      required: [ok, data, settings, server_time]
+      required: [ok, data, settings, current_revision, server_time]
       properties:
         ok:
           type: boolean
@@ -1415,6 +1415,11 @@ components:
           description: All settings returned in full (no delta)
           items:
             $ref: '#/components/schemas/Setting'
+        current_revision:
+          type: integer
+          minimum: 0
+          description: Current server revision (next_revision - 1). Client should save this value.
+          example: 42
         server_time:
           type: string
           format: date-time
@@ -1428,6 +1433,13 @@ components:
         ok:
           type: boolean
           example: true
+        revision:
+          type: integer
+          minimum: 1
+          description: |
+            Single revision assigned to all accepted/created records in this push.
+            Omitted if all records were rejected or conflicted (no writes occurred).
+          example: 43
         results:
           $ref: '#/components/schemas/PushResults'
         server_time:
@@ -1437,7 +1449,7 @@ components:
 
     UploadCoverResponse:
       type: object
-      required: [ok, file_id, thumbnail_url, reused]
+      required: [ok, file_id, reused]
       properties:
         ok:
           type: boolean
@@ -1446,15 +1458,6 @@ components:
           type: string
           description: File ID on Google Drive
           example: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
-        thumbnail_url:
-          type: string
-          format: uri
-          deprecated: true
-          description: |
-            **Deprecated.** Google Drive thumbnail URL (400px wide).
-            No longer used by the client — covers are now fetched via `get_cover`
-            and served exclusively from IndexedDB blob cache.
-          example: https://drive.google.com/thumbnail?id=1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ&sz=w400
         reused:
           type: boolean
           description: true if a file with the same SHA-256 already existed — no duplicate created
