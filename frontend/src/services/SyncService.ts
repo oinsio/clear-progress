@@ -147,7 +147,26 @@ export class SyncService {
       this._applyEntityPushResults(results.contexts ?? [], sentVersions, this.contextRepository, pushRevision),
       this._applyEntityPushResults(results.categories ?? [], sentVersions, this.categoryRepository, pushRevision),
       this._applyEntityPushResults(results.checklist_items ?? [], sentVersions, this.checklistRepository, pushRevision),
+      this._applySettingsPushResults(results.settings ?? []),
     ]);
+  }
+
+  private async _applySettingsPushResults(
+    results: PushResponseData["settings"],
+  ): Promise<void> {
+    if (!results || results.length === 0) return;
+
+    const acceptedKeys = results
+      .filter(
+        (result) =>
+          result.status === PUSH_RESULT_STATUS.ACCEPTED ||
+          result.status === PUSH_RESULT_STATUS.CREATED,
+      )
+      .map((result) => result.id);
+
+    if (acceptedKeys.length > 0) {
+      await this.settingsRepository.clearDirtyByKey(acceptedKeys);
+    }
   }
 
   private async _applyEntityPushResults<T extends { id: string; _dirty: boolean; version: number; revision: number }>(

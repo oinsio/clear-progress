@@ -152,6 +152,7 @@ describe("SyncService", () => {
       getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       bulkUpsert: vi.fn().mockResolvedValue(undefined),
+      clearDirtyByKey: vi.fn().mockResolvedValue(undefined),
     } as unknown as SettingsRepository;
 
     syncMetaRepository = {
@@ -331,6 +332,57 @@ describe("SyncService", () => {
       await service.push();
 
       expect(mockApiClient.push).toHaveBeenCalled();
+    });
+
+    describe("applyPushResults — settings", () => {
+      it("should clear _dirty on settings after accepted push response", async () => {
+        const setting = { key: "accent_color", value: "green", updated_at: "", _dirty: true };
+        (settingsRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([setting]);
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ settings: [{ id: "accent_color", status: "accepted" }] }, 5)),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(settingsRepository.clearDirtyByKey).toHaveBeenCalledWith(["accent_color"]);
+      });
+
+      it("should clear _dirty on settings after created push response", async () => {
+        const setting = { key: "default_box", value: "inbox", updated_at: "", _dirty: true };
+        (settingsRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([setting]);
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ settings: [{ id: "default_box", status: "created" }] }, 6)),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(settingsRepository.clearDirtyByKey).toHaveBeenCalledWith(["default_box"]);
+      });
+
+      it("should NOT clear _dirty on settings with conflict status", async () => {
+        const setting = { key: "accent_color", value: "green", updated_at: "", _dirty: true };
+        (settingsRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([setting]);
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ settings: [{ id: "accent_color", status: "conflict" }] })),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(settingsRepository.clearDirtyByKey).not.toHaveBeenCalled();
+      });
+
+      it("should not call apiClient.push when settings were cleared after previous sync", async () => {
+        // Simulates the next push after settings were already synced (_dirty: false)
+        (settingsRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        const service = createService();
+
+        await service.push();
+
+        expect(mockApiClient.push).not.toHaveBeenCalled();
+      });
     });
 
     it("should clear _dirty for accepted context using pushRevision from response", async () => {

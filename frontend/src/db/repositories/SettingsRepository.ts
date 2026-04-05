@@ -28,6 +28,10 @@ export class SettingsRepository {
     return db.settings.filter((setting) => setting._dirty).toArray();
   }
 
+  async clearDirtyByKey(keys: string[]): Promise<void> {
+    await db.settings.where("key").anyOf(keys).modify({ _dirty: false });
+  }
+
   async bulkUpsert(settings: Setting[]): Promise<void> {
     if (settings.length === 0) return;
 
