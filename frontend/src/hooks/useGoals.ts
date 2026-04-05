@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { liveQuery } from "dexie";
 import type { Goal } from "@/types/entities";
 import type { GoalStatus } from "@/types/common";
 import { GoalService } from "@/services/GoalService";
@@ -23,62 +24,62 @@ export function useGoals(
 ): UseGoalsReturn {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { syncVersion, schedulePush } = useSync();
-
-  const loadGoals = useCallback(async () => {
-    const allGoals = await goalService.getAll();
-    setGoals(allGoals);
-    setIsLoading(false);
-  }, [goalService]);
+  const { schedulePush } = useSync();
 
   useEffect(() => {
-    void loadGoals();
-  }, [loadGoals, syncVersion]);
+    setIsLoading(true);
+    const subscription = liveQuery(() => goalService.getAll()).subscribe({
+      next: (allGoals) => {
+        setGoals(allGoals);
+        setIsLoading(false);
+      },
+    });
+    return () => subscription.unsubscribe();
+  }, [goalService]);
 
   const createGoal = useCallback(
     async (data: Pick<Goal, "title"> & Partial<Goal>) => {
       await goalService.create(data);
-      await loadGoals();
       schedulePush();
     },
-    [goalService, loadGoals, schedulePush],
+    [goalService, schedulePush],
   );
 
   const updateGoal = useCallback(
     async (id: string, changes: Partial<Goal>) => {
       await goalService.update(id, changes);
-      await loadGoals();
       schedulePush();
     },
-    [goalService, loadGoals, schedulePush],
+    [goalService, schedulePush],
   );
 
   const updateGoalStatus = useCallback(
     async (id: string, status: GoalStatus) => {
       await goalService.updateStatus(id, status);
-      await loadGoals();
       schedulePush();
     },
-    [goalService, loadGoals, schedulePush],
+    [goalService, schedulePush],
   );
 
   const deleteGoal = useCallback(
     async (id: string) => {
       await goalService.softDelete(id);
-      await loadGoals();
       schedulePush();
     },
-    [goalService, loadGoals, schedulePush],
+    [goalService, schedulePush],
   );
 
   const reorderGoals = useCallback(
     async (orderedGoals: Goal[]) => {
       await goalService.reorderGoals(orderedGoals);
-      await loadGoals();
       schedulePush();
     },
-    [goalService, loadGoals, schedulePush],
+    [goalService, schedulePush],
   );
 
-  return { goals, isLoading, reloadGoals: loadGoals, createGoal, updateGoal, updateGoalStatus, deleteGoal, reorderGoals };
+  const reloadGoals = useCallback(async () => {
+    // liveQuery handles reactive updates automatically
+  }, []);
+
+  return { goals, isLoading, reloadGoals, createGoal, updateGoal, updateGoalStatus, deleteGoal, reorderGoals };
 }

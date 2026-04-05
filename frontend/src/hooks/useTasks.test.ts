@@ -1,260 +1,266 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useTasks } from "./useTasks";
-import type { TaskService } from "@/services/TaskService";
+import { db } from "@/db/database";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
 import { BOX } from "@/constants";
-import type { Box } from "@/types/common";
-import { createMockTaskService } from "@/test/mocks/taskServiceMock";
 
-const syncState = { version: 0 };
+const mockSchedulePush = vi.fn();
 
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
-    syncVersion: syncState.version,
+    syncVersion: 0,
     syncStatus: "idle",
     pull: vi.fn(),
     push: vi.fn(),
-    schedulePush: vi.fn(),
+    schedulePush: mockSchedulePush,
+    lastSyncedAt: null,
   }),
 }));
 
-async function setup(
-  taskOverrides: Parameters<typeof buildTask>[0] = {},
-  serviceOverrides: Parameters<typeof createMockTaskService>[0] = {},
-) {
-  const task = buildTask({ box: "today", ...taskOverrides });
-  const mockGetByBox = vi.fn().mockResolvedValue([task]);
-  const service = createMockTaskService({ getByBox: mockGetByBox, ...serviceOverrides });
-  const { result } = renderHook(() => useTasks(BOX.TODAY, service));
-  await waitFor(() => expect(result.current.isLoading).toBe(false));
-  return { task, mockGetByBox, service, result };
+const taskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+
+async function setupHookWithOneTask(overrides: Parameters<typeof buildTask>[0] = {}) {
+  const task = buildTask({ box: "today", ...overrides });
+  await db.tasks.add(task);
+  const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
+  await waitFor(() => expect(result.current.tasks).toHaveLength(1));
+  return { result, task };
+}
+
+async function setupHookWithTwoTasks() {
+  const task1 = buildTask({ box: "today", sort_order: 0 });
+  const task2 = buildTask({ box: "today", sort_order: 1 });
+  await db.tasks.bulkAdd([task1, task2]);
+  const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
+  await waitFor(() => expect(result.current.tasks).toHaveLength(2));
+  return { result, task1, task2 };
 }
 
 describe("useTasks", () => {
-  let mockTaskService: TaskService;
-
-  beforeEach(() => {
-    mockTaskService = createMockTaskService();
-    syncState.version = 0;
+  beforeEach(async () => {
+    await db.tasks.clear();
+    await db.checklist_items.clear();
+    mockSchedulePush.mockClear();
   });
 
   it("should set isLoading to true on initial render", () => {
-    const { result } = renderHook(() => useTasks(BOX.TODAY, mockTaskService));
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
     expect(result.current.isLoading).toBe(true);
   });
 
-  it("should set isLoading to false after tasks are fetched", async () => {
-    const { result } = renderHook(() => useTasks(BOX.TODAY, mockTaskService));
+  it("should set isLoading to false after tasks are loaded", async () => {
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it("should return empty array when box has no tasks", async () => {
-    const { result } = renderHook(() => useTasks(BOX.TODAY, mockTaskService));
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.tasks).toEqual([]);
   });
 
-  it("should call getByBox with the given box", async () => {
-    const { result } = renderHook(() => useTasks(BOX.WEEK, mockTaskService));
+  it("should return tasks from the correct box", async () => {
+    const { result, task } = await setupHookWithOneTask();
+    expect(result.current.tasks[0].id).toBe(task.id);
+  });
+
+  it("should not return tasks from other boxes", async () => {
+    await db.tasks.add(buildTask({ box: "inbox" }));
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(mockTaskService.getByBox).toHaveBeenCalledWith(BOX.WEEK);
+    expect(result.current.tasks).toHaveLength(0);
   });
 
-  it("should return tasks after loading", async () => {
-    const tasks = [buildTask({ box: "today" }), buildTask({ box: "today" })];
-    mockTaskService = createMockTaskService({
-      getByBox: vi.fn().mockResolvedValue(tasks),
-    });
-    const { result } = renderHook(() => useTasks(BOX.TODAY, mockTaskService));
+  it("should not return deleted tasks", async () => {
+    await db.tasks.add(buildTask({ box: "today", is_deleted: true }));
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.tasks).toEqual(tasks);
+    expect(result.current.tasks).toHaveLength(0);
   });
 
-  it("should call complete and refresh when completeTask is called on an incomplete task", async () => {
-    const { task, mockGetByBox, service, result } = await setup({ is_completed: false }, {
-      getById: vi.fn().mockImplementation(async () => task),
-    });
+  it("should reactively update when a task is written to DB externally", async () => {
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.tasks).toHaveLength(0);
 
     await act(async () => {
-      await result.current.completeTask(task.id);
+      const task = buildTask({ box: "today" });
+      await db.tasks.add(task);
     });
 
-    expect(service.complete).toHaveBeenCalledWith(task.id);
-    expect(mockGetByBox).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(result.current.tasks).toHaveLength(1));
   });
 
-  it("should call noncomplete and refresh when completeTask is called on a completed task", async () => {
-    const { task, mockGetByBox, service, result } = await setup({ is_completed: true }, {
-      getById: vi.fn().mockImplementation(async () => task),
-    });
-
-    await act(async () => {
-      await result.current.completeTask(task.id);
-    });
-
-    expect(service.noncomplete).toHaveBeenCalledWith(task.id);
-    expect(mockGetByBox).toHaveBeenCalledTimes(2);
-  });
-
-  it("should call softDelete and refresh when deleteTask is called", async () => {
-    const { task, mockGetByBox, service, result } = await setup();
-
-    await act(async () => {
-      await result.current.deleteTask(task.id);
-    });
-
-    expect(service.softDelete).toHaveBeenCalledWith(task.id);
-    expect(mockGetByBox).toHaveBeenCalledTimes(2);
-  });
-
-  it("should call moveToBox and refresh when moveTask is called", async () => {
-    const { task, mockGetByBox, service, result } = await setup();
-
-    await act(async () => {
-      await result.current.moveTask(task.id, BOX.WEEK);
-    });
-
-    expect(service.moveToBox).toHaveBeenCalledWith(task.id, BOX.WEEK);
-    expect(mockGetByBox).toHaveBeenCalledTimes(2);
-  });
-
-  it("should call update and refresh when updateTask is called", async () => {
-    const { task, mockGetByBox, service, result } = await setup();
-
-    await act(async () => {
-      await result.current.updateTask(task.id, { notes: "updated notes" });
-    });
-
-    expect(service.update).toHaveBeenCalledWith(task.id, { notes: "updated notes" });
-    expect(mockGetByBox).toHaveBeenCalledTimes(2);
-  });
-
-  it("should return empty array for tasks in loading state before fetch completes", () => {
-    mockTaskService = createMockTaskService({
-      getByBox: vi.fn().mockReturnValue(new Promise(() => {})),
-    });
-    const { result } = renderHook(() => useTasks(BOX.TODAY, mockTaskService));
-    expect(result.current.tasks).toEqual([]);
-  });
-
-  it("should call create and refresh when createTask is called", async () => {
-    const { mockGetByBox, service, result } = await setup();
+  it("should add task and show it in list when createTask is called", async () => {
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
       await result.current.createTask("New task");
     });
 
-    expect(service.create).toHaveBeenCalledWith({ title: "New task", box: BOX.TODAY });
-    expect(mockGetByBox).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(result.current.tasks).toHaveLength(1));
+    expect(result.current.tasks[0].title).toBe("New task");
   });
 
-  it("should do nothing if task is not found when completeTask is called", async () => {
-    mockTaskService = createMockTaskService({
-      getById: vi.fn().mockResolvedValue(undefined),
-    });
-    const { result } = renderHook(() => useTasks(BOX.TODAY, mockTaskService));
+  it("should schedule push when createTask is called", async () => {
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.completeTask("nonexistent-id");
+      await result.current.createTask("New task");
     });
 
-    expect(mockTaskService.complete).not.toHaveBeenCalled();
-    expect(mockTaskService.noncomplete).not.toHaveBeenCalled();
+    expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+  });
+
+  it("should mark task as completed when completeTask is called on incomplete task", async () => {
+    const { result, task } = await setupHookWithOneTask({ is_completed: false });
+
+    await act(async () => {
+      await result.current.completeTask(task.id);
+    });
+
+    await waitFor(() => expect(result.current.tasks[0].is_completed).toBe(true));
+  });
+
+  it("should mark task as incomplete when completeTask is called on completed task", async () => {
+    const { result, task } = await setupHookWithOneTask({ is_completed: true });
+
+    await act(async () => {
+      await result.current.completeTask(task.id);
+    });
+
+    await waitFor(() => expect(result.current.tasks[0].is_completed).toBe(false));
   });
 
   it("should return null from completeTask when task has no repeat_rule", async () => {
-    const taskData = buildTask({ box: "today", is_completed: false, repeat_rule: "" });
-    const service = createMockTaskService({
-      getByBox: vi.fn().mockResolvedValue([taskData]),
-      getById: vi.fn().mockResolvedValue(taskData),
-      complete: vi.fn().mockResolvedValue({ completed: taskData, recurring: null }),
+    const { result, task } = await setupHookWithOneTask({ is_completed: false, repeat_rule: "" });
+
+    let recurringId: string | null = "placeholder";
+    await act(async () => {
+      recurringId = await result.current.completeTask(task.id);
     });
-    const { result } = renderHook(() => useTasks(BOX.TODAY, service));
+
+    expect(recurringId).toBeNull();
+  });
+
+  it("should return recurring task id when task has repeat_rule", async () => {
+    const { result, task } = await setupHookWithOneTask({ is_completed: false, repeat_rule: "daily" });
+
+    let recurringId: string | null = null;
+    await act(async () => {
+      recurringId = await result.current.completeTask(task.id);
+    });
+
+    expect(recurringId).not.toBeNull();
+  });
+
+  it("should return null when completeTask called for nonexistent task", async () => {
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     let recurringId: string | null = "placeholder";
     await act(async () => {
-      recurringId = await result.current.completeTask(taskData.id);
+      recurringId = await result.current.completeTask("nonexistent-id");
     });
 
     expect(recurringId).toBeNull();
-    expect(service.complete).toHaveBeenCalledWith(taskData.id);
   });
 
-  it("should return recurring task id from completeTask when task has repeat_rule", async () => {
-    const taskData = buildTask({ box: "today", is_completed: false, repeat_rule: JSON.stringify({ type: "daily" }) });
-    const recurringTask = buildTask({ id: "recurring-task-id" });
-    const service = createMockTaskService({
-      getByBox: vi.fn().mockResolvedValue([taskData]),
-      getById: vi.fn().mockResolvedValue(taskData),
-      complete: vi.fn().mockResolvedValue({ completed: taskData, recurring: recurringTask }),
-    });
-    const { result } = renderHook(() => useTasks(BOX.TODAY, service));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+  it("should schedule push when completeTask is called", async () => {
+    const { result, task } = await setupHookWithOneTask({ is_completed: false });
 
-    let recurringId: string | null = null;
     await act(async () => {
-      recurringId = await result.current.completeTask(taskData.id);
+      await result.current.completeTask(task.id);
     });
 
-    expect(recurringId).toBe("recurring-task-id");
+    expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+  });
+
+  it("should remove task from list when deleteTask is called", async () => {
+    const { result, task } = await setupHookWithOneTask();
+
+    await act(async () => {
+      await result.current.deleteTask(task.id);
+    });
+
+    await waitFor(() => expect(result.current.tasks).toHaveLength(0));
+  });
+
+  it("should schedule push when deleteTask is called", async () => {
+    const { result, task } = await setupHookWithOneTask();
+
+    await act(async () => {
+      await result.current.deleteTask(task.id);
+    });
+
+    expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+  });
+
+  it("should move task to different box when moveTask is called", async () => {
+    const { result, task } = await setupHookWithOneTask();
+
+    await act(async () => {
+      await result.current.moveTask(task.id, BOX.WEEK);
+    });
+
+    await waitFor(() => expect(result.current.tasks).toHaveLength(0));
+  });
+
+  it("should schedule push when moveTask is called", async () => {
+    const { result, task } = await setupHookWithOneTask();
+
+    await act(async () => {
+      await result.current.moveTask(task.id, BOX.WEEK);
+    });
+
+    expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+  });
+
+  it("should update task title when updateTask is called", async () => {
+    const { result, task } = await setupHookWithOneTask({ title: "Old title" });
+
+    await act(async () => {
+      await result.current.updateTask(task.id, { title: "New title" });
+    });
+
+    await waitFor(() => expect(result.current.tasks[0].title).toBe("New title"));
+  });
+
+  it("should schedule push when updateTask is called", async () => {
+    const { result, task } = await setupHookWithOneTask();
+
+    await act(async () => {
+      await result.current.updateTask(task.id, { notes: "updated notes" });
+    });
+
+    expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });
 
   describe("reorderTasks", () => {
-    let reorderResult: Awaited<ReturnType<typeof renderHook<ReturnType<typeof useTasks>, unknown>>>;
-    let reorderedTasks: ReturnType<typeof buildTask>[];
+    it("should update task order after reordering", async () => {
+      const { result, task1, task2 } = await setupHookWithTwoTasks();
 
-    beforeEach(async () => {
-      const taskA = buildTask({ box: "today", sort_order: 2 });
-      const taskB = buildTask({ box: "today", sort_order: 1 });
-      reorderedTasks = [taskB, taskA];
-      mockTaskService = createMockTaskService({
-        getByBox: vi.fn().mockResolvedValue([taskA, taskB]),
-        reorderTasks: vi.fn().mockResolvedValue(undefined),
-      });
-      reorderResult = renderHook(() => useTasks(BOX.TODAY, mockTaskService));
-      await waitFor(() => expect(reorderResult.result.current.isLoading).toBe(false));
       await act(async () => {
-        await reorderResult.result.current.reorderTasks(reorderedTasks);
+        await result.current.reorderTasks([task2, task1]);
       });
+
+      await waitFor(() => expect(result.current.tasks[0].id).toBe(task2.id));
     });
 
-    it("should optimistically update tasks", () => {
-      expect(reorderResult.result.current.tasks).toEqual(reorderedTasks);
+    it("should schedule push when reorderTasks is called", async () => {
+      const { result, task1, task2 } = await setupHookWithTwoTasks();
+
+      await act(async () => {
+        await result.current.reorderTasks([task2, task1]);
+      });
+
+      expect(mockSchedulePush).toHaveBeenCalledTimes(1);
     });
-
-    it("should call reorderTasks service", () => {
-      expect(mockTaskService.reorderTasks).toHaveBeenCalledWith(reorderedTasks);
-    });
-  });
-
-  it("should reload when syncVersion changes", async () => {
-    const mockGetByBox = vi.fn().mockResolvedValue([]);
-    const service = createMockTaskService({ getByBox: mockGetByBox });
-
-    const { rerender } = renderHook(() => useTasks(BOX.TODAY, service));
-    await waitFor(() => expect(mockGetByBox).toHaveBeenCalledTimes(1));
-
-    syncState.version = 1;
-    rerender();
-
-    await waitFor(() => expect(mockGetByBox).toHaveBeenCalledTimes(2));
-  });
-
-  it("should refetch when box changes", async () => {
-    const { rerender } = renderHook(
-      ({ box }: { box: Box }) => useTasks(box, mockTaskService),
-      { initialProps: { box: BOX.TODAY as Box } },
-    );
-    await waitFor(() =>
-      expect(mockTaskService.getByBox).toHaveBeenCalledWith(BOX.TODAY),
-    );
-
-    rerender({ box: BOX.WEEK });
-    await waitFor(() =>
-      expect(mockTaskService.getByBox).toHaveBeenCalledWith(BOX.WEEK),
-    );
   });
 });

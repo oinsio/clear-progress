@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { liveQuery } from "dexie";
 import type { Task } from "@/types/entities";
 import type { Box } from "@/types/common";
 import { TaskService } from "@/services/TaskService";
@@ -23,26 +24,25 @@ export function useTasks(
 ): UseTasksReturn {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { syncVersion, schedulePush } = useSync();
-
-  const loadTasks = useCallback(async () => {
-    const boxTasks = await taskService.getByBox(box);
-    setTasks(boxTasks);
-    setIsLoading(false);
-  }, [taskService, box]);
+  const { schedulePush } = useSync();
 
   useEffect(() => {
     setIsLoading(true);
-    void loadTasks();
-  }, [loadTasks, syncVersion]);
+    const subscription = liveQuery(() => taskService.getByBox(box)).subscribe({
+      next: (boxTasks) => {
+        setTasks(boxTasks);
+        setIsLoading(false);
+      },
+    });
+    return () => subscription.unsubscribe();
+  }, [box, taskService]);
 
   const createTask = useCallback(
     async (title: string) => {
       await taskService.create({ title, box });
-      await loadTasks();
       schedulePush();
     },
-    [taskService, loadTasks, box, schedulePush],
+    [taskService, box, schedulePush],
   );
 
   const completeTask = useCallback(
@@ -56,38 +56,34 @@ export function useTasks(
         const { recurring } = await taskService.complete(id);
         recurringId = recurring?.id ?? null;
       }
-      await loadTasks();
       schedulePush();
       return recurringId;
     },
-    [taskService, loadTasks, schedulePush],
+    [taskService, schedulePush],
   );
 
   const deleteTask = useCallback(
     async (id: string) => {
       await taskService.softDelete(id);
-      await loadTasks();
       schedulePush();
     },
-    [taskService, loadTasks, schedulePush],
+    [taskService, schedulePush],
   );
 
   const moveTask = useCallback(
     async (id: string, targetBox: Box) => {
       await taskService.moveToBox(id, targetBox);
-      await loadTasks();
       schedulePush();
     },
-    [taskService, loadTasks, schedulePush],
+    [taskService, schedulePush],
   );
 
   const updateTask = useCallback(
     async (id: string, changes: Partial<Task>) => {
       await taskService.update(id, changes);
-      await loadTasks();
       schedulePush();
     },
-    [taskService, loadTasks, schedulePush],
+    [taskService, schedulePush],
   );
 
   const reorderTasks = useCallback(
@@ -99,5 +95,9 @@ export function useTasks(
     [taskService, schedulePush],
   );
 
-  return { tasks, isLoading, createTask, completeTask, deleteTask, moveTask, updateTask, reorderTasks, reload: loadTasks };
+  const reload = useCallback(async () => {
+    // liveQuery handles reactive updates automatically
+  }, []);
+
+  return { tasks, isLoading, createTask, completeTask, deleteTask, moveTask, updateTask, reorderTasks, reload };
 }

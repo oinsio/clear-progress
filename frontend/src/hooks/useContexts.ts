@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { liveQuery } from "dexie";
 import type { Context } from "@/types/entities";
 import { ContextService } from "@/services/ContextService";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -20,52 +21,49 @@ export function useContexts(
 ): UseContextsReturn {
   const [contexts, setContexts] = useState<Context[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { syncVersion, schedulePush } = useSync();
-
-  const loadContexts = useCallback(async () => {
-    const allContexts = await contextService.getAll();
-    setContexts(allContexts);
-    setIsLoading(false);
-  }, [contextService]);
+  const { schedulePush } = useSync();
 
   useEffect(() => {
-    void loadContexts();
-  }, [loadContexts, syncVersion]);
+    setIsLoading(true);
+    const subscription = liveQuery(() => contextService.getAll()).subscribe({
+      next: (allContexts) => {
+        setContexts(allContexts);
+        setIsLoading(false);
+      },
+    });
+    return () => subscription.unsubscribe();
+  }, [contextService]);
 
   const createContext = useCallback(
     async (name: string) => {
       await contextService.create(name);
-      await loadContexts();
       schedulePush();
     },
-    [contextService, loadContexts, schedulePush],
+    [contextService, schedulePush],
   );
 
   const updateContext = useCallback(
     async (id: string, name: string) => {
       await contextService.update(id, name);
-      await loadContexts();
       schedulePush();
     },
-    [contextService, loadContexts, schedulePush],
+    [contextService, schedulePush],
   );
 
   const deleteContext = useCallback(
     async (id: string) => {
       await contextService.softDelete(id);
-      await loadContexts();
       schedulePush();
     },
-    [contextService, loadContexts, schedulePush],
+    [contextService, schedulePush],
   );
 
   const reorderContexts = useCallback(
     async (orderedContexts: Context[]) => {
       await contextService.reorderContexts(orderedContexts);
-      await loadContexts();
       schedulePush();
     },
-    [contextService, loadContexts, schedulePush],
+    [contextService, schedulePush],
   );
 
   return { contexts, isLoading, createContext, updateContext, deleteContext, reorderContexts };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { liveQuery } from "dexie";
 import type { Category } from "@/types/entities";
 import { CategoryService } from "@/services/CategoryService";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
@@ -20,52 +21,49 @@ export function useCategories(
 ): UseCategoriesReturn {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { syncVersion, schedulePush } = useSync();
-
-  const loadCategories = useCallback(async () => {
-    const allCategories = await categoryService.getAll();
-    setCategories(allCategories);
-    setIsLoading(false);
-  }, [categoryService]);
+  const { schedulePush } = useSync();
 
   useEffect(() => {
-    void loadCategories();
-  }, [loadCategories, syncVersion]);
+    setIsLoading(true);
+    const subscription = liveQuery(() => categoryService.getAll()).subscribe({
+      next: (allCategories) => {
+        setCategories(allCategories);
+        setIsLoading(false);
+      },
+    });
+    return () => subscription.unsubscribe();
+  }, [categoryService]);
 
   const createCategory = useCallback(
     async (name: string) => {
       await categoryService.create(name);
-      await loadCategories();
       schedulePush();
     },
-    [categoryService, loadCategories, schedulePush],
+    [categoryService, schedulePush],
   );
 
   const updateCategory = useCallback(
     async (id: string, name: string) => {
       await categoryService.update(id, name);
-      await loadCategories();
       schedulePush();
     },
-    [categoryService, loadCategories, schedulePush],
+    [categoryService, schedulePush],
   );
 
   const deleteCategory = useCallback(
     async (id: string) => {
       await categoryService.softDelete(id);
-      await loadCategories();
       schedulePush();
     },
-    [categoryService, loadCategories, schedulePush],
+    [categoryService, schedulePush],
   );
 
   const reorderCategories = useCallback(
     async (orderedCategories: Category[]) => {
       await categoryService.reorderCategories(orderedCategories);
-      await loadCategories();
       schedulePush();
     },
-    [categoryService, loadCategories, schedulePush],
+    [categoryService, schedulePush],
   );
 
   return { categories, isLoading, createCategory, updateCategory, deleteCategory, reorderCategories };

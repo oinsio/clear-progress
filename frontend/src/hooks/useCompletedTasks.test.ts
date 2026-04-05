@@ -1,118 +1,81 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useCompletedTasks } from "./useCompletedTasks";
-import type { TaskService } from "@/services/TaskService";
+import { db } from "@/db/database";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
-import { createMockTaskService } from "@/test/mocks/taskServiceMock";
-
-const syncState = { version: 0 };
 
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
-    syncVersion: syncState.version,
+    syncVersion: 0,
     syncStatus: "idle",
     pull: vi.fn(),
     push: vi.fn(),
     schedulePush: vi.fn(),
+    lastSyncedAt: null,
   }),
 }));
 
-describe("useCompletedTasks", () => {
-  let mockTaskService: TaskService;
+const taskService = new TaskService(new TaskRepository(), new ChecklistRepository());
 
-  beforeEach(() => {
-    mockTaskService = createMockTaskService();
-    syncState.version = 0;
+describe("useCompletedTasks", () => {
+  beforeEach(async () => {
+    await db.tasks.clear();
   });
 
   it("should set isLoading to true on initial render", () => {
-    const { result } = renderHook(() => useCompletedTasks(mockTaskService));
+    const { result } = renderHook(() => useCompletedTasks(taskService));
     expect(result.current.isLoading).toBe(true);
   });
 
-  it("should set isLoading to false after tasks are fetched", async () => {
-    const { result } = renderHook(() => useCompletedTasks(mockTaskService));
+  it("should set isLoading to false after tasks are loaded", async () => {
+    const { result } = renderHook(() => useCompletedTasks(taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it("should return empty array when no completed tasks exist", async () => {
-    const { result } = renderHook(() => useCompletedTasks(mockTaskService));
+    const { result } = renderHook(() => useCompletedTasks(taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.completedTasks).toEqual([]);
-  });
-
-  it("should call getCompleted to fetch tasks", async () => {
-    const { result } = renderHook(() => useCompletedTasks(mockTaskService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(mockTaskService.getCompleted).toHaveBeenCalledOnce();
   });
 
   it("should return completed tasks after loading", async () => {
-    const completedTasks = [
-      buildTask({ is_completed: true, completed_at: "2025-01-01T10:00:00.000Z" }),
-      buildTask({ is_completed: true, completed_at: "2025-01-02T10:00:00.000Z" }),
-    ];
-    mockTaskService = createMockTaskService({
-      getCompleted: vi.fn().mockResolvedValue(completedTasks),
-    });
-    const { result } = renderHook(() => useCompletedTasks(mockTaskService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.completedTasks).toEqual(completedTasks);
+    const completedTask = buildTask({ is_completed: true, completed_at: "2025-01-01T10:00:00.000Z" });
+    const activeTask = buildTask({ is_completed: false });
+    await db.tasks.bulkAdd([completedTask, activeTask]);
+
+    const { result } = renderHook(() => useCompletedTasks(taskService));
+    await waitFor(() => expect(result.current.completedTasks).toHaveLength(1));
+    expect(result.current.completedTasks[0].id).toBe(completedTask.id);
   });
 
-  it("should refetch tasks when reload is called", async () => {
-    const mockGetCompleted = vi.fn().mockResolvedValue([]);
-    mockTaskService = createMockTaskService({ getCompleted: mockGetCompleted });
-    const { result } = renderHook(() => useCompletedTasks(mockTaskService));
+  it("should not return active tasks", async () => {
+    await db.tasks.add(buildTask({ is_completed: false }));
+
+    const { result } = renderHook(() => useCompletedTasks(taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.completedTasks).toHaveLength(0);
+  });
+
+  it("should not return deleted completed tasks", async () => {
+    await db.tasks.add(buildTask({ is_completed: true, is_deleted: true }));
+
+    const { result } = renderHook(() => useCompletedTasks(taskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.completedTasks).toHaveLength(0);
+  });
+
+  it("should reactively update when a completed task is written to DB externally", async () => {
+    const { result } = renderHook(() => useCompletedTasks(taskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.completedTasks).toHaveLength(0);
 
     await act(async () => {
-      await result.current.reload();
+      await db.tasks.add(buildTask({ is_completed: true, completed_at: "2025-01-01T10:00:00.000Z" }));
     });
 
-    expect(mockGetCompleted).toHaveBeenCalledTimes(2);
-  });
-
-  it("should return empty array for completedTasks before fetch completes", () => {
-    mockTaskService = createMockTaskService({
-      getCompleted: vi.fn().mockReturnValue(new Promise(() => {})),
-    });
-    const { result } = renderHook(() => useCompletedTasks(mockTaskService));
-    expect(result.current.completedTasks).toEqual([]);
-  });
-
-  it("should reload when syncVersion changes", async () => {
-    const mockGetCompleted = vi.fn().mockResolvedValue([]);
-    mockTaskService = createMockTaskService({ getCompleted: mockGetCompleted });
-
-    const { rerender } = renderHook(() => useCompletedTasks(mockTaskService));
-    await waitFor(() => expect(mockGetCompleted).toHaveBeenCalledTimes(1));
-
-    syncState.version = 1;
-    rerender();
-
-    await waitFor(() => expect(mockGetCompleted).toHaveBeenCalledTimes(2));
-  });
-
-  it("should refetch tasks when service changes", async () => {
-    const firstService = createMockTaskService({
-      getCompleted: vi.fn().mockResolvedValue([]),
-    });
-    const newTask = buildTask({ is_completed: true });
-    const secondService = createMockTaskService({
-      getCompleted: vi.fn().mockResolvedValue([newTask]),
-    });
-
-    const { result, rerender } = renderHook(
-      ({ service }: { service: TaskService }) => useCompletedTasks(service),
-      { initialProps: { service: firstService } },
-    );
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    rerender({ service: secondService });
-    await waitFor(() =>
-      expect(secondService.getCompleted).toHaveBeenCalled(),
-    );
-    expect(result.current.completedTasks).toEqual([newTask]);
+    await waitFor(() => expect(result.current.completedTasks).toHaveLength(1));
   });
 });

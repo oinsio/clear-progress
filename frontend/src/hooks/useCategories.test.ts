@@ -1,125 +1,141 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useCategories } from "./useCategories";
-import type { CategoryService } from "@/services/CategoryService";
+import { db } from "@/db/database";
+import { CategoryRepository } from "@/db/repositories/CategoryRepository";
+import { CategoryService } from "@/services/CategoryService";
 import { buildCategory } from "@/test/factories/categoryFactory";
 
-const syncState = { version: 0 };
+const mockSchedulePush = vi.fn();
 
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
-    syncVersion: syncState.version,
+    syncVersion: 0,
     syncStatus: "idle",
     pull: vi.fn(),
     push: vi.fn(),
-    schedulePush: vi.fn(),
+    schedulePush: mockSchedulePush,
+    lastSyncedAt: null,
   }),
 }));
 
-function createMockCategoryService(
-  overrides: Partial<Record<keyof CategoryService, unknown>> = {},
-): CategoryService {
-  return {
-    getAll: vi.fn().mockResolvedValue([]),
-    getById: vi.fn().mockResolvedValue(undefined),
-    create: vi.fn().mockResolvedValue(undefined),
-    update: vi.fn().mockResolvedValue(undefined),
-    softDelete: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  } as unknown as CategoryService;
-}
+const categoryService = new CategoryService(new CategoryRepository());
 
 describe("useCategories", () => {
-  let mockCategoryService: CategoryService;
-
-  beforeEach(() => {
-    mockCategoryService = createMockCategoryService();
-    syncState.version = 0;
+  beforeEach(async () => {
+    await db.categories.clear();
+    mockSchedulePush.mockClear();
   });
 
   it("should set isLoading to true on initial render", () => {
-    const { result } = renderHook(() => useCategories(mockCategoryService));
+    const { result } = renderHook(() => useCategories(categoryService));
     expect(result.current.isLoading).toBe(true);
   });
 
-  it("should set isLoading to false after categories are fetched", async () => {
-    const { result } = renderHook(() => useCategories(mockCategoryService));
+  it("should set isLoading to false after categories are loaded", async () => {
+    const { result } = renderHook(() => useCategories(categoryService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it("should return empty array when no categories exist", async () => {
-    const { result } = renderHook(() => useCategories(mockCategoryService));
+    const { result } = renderHook(() => useCategories(categoryService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.categories).toEqual([]);
   });
 
   it("should return categories after loading", async () => {
-    const categories = [buildCategory(), buildCategory()];
-    mockCategoryService = createMockCategoryService({
-      getAll: vi.fn().mockResolvedValue(categories),
-    });
-    const { result } = renderHook(() => useCategories(mockCategoryService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.categories).toEqual(categories);
-  });
-
-  it("should call create and refresh when createCategory is called", async () => {
-    const mockGetAll = vi.fn().mockResolvedValue([]);
-    mockCategoryService = createMockCategoryService({ getAll: mockGetAll });
-    const { result } = renderHook(() => useCategories(mockCategoryService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    await act(async () => {
-      await result.current.createCategory("Work");
-    });
-
-    expect(mockCategoryService.create).toHaveBeenCalledWith("Work");
-    expect(mockGetAll).toHaveBeenCalledTimes(2);
-  });
-
-  it("should call update and refresh when updateCategory is called", async () => {
     const category = buildCategory();
-    const mockGetAll = vi.fn().mockResolvedValue([category]);
-    mockCategoryService = createMockCategoryService({ getAll: mockGetAll });
-    const { result } = renderHook(() => useCategories(mockCategoryService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    await act(async () => {
-      await result.current.updateCategory(category.id, "Family");
-    });
-
-    expect(mockCategoryService.update).toHaveBeenCalledWith(
-      category.id,
-      "Family",
-    );
-    expect(mockGetAll).toHaveBeenCalledTimes(2);
+    await db.categories.add(category);
+    const { result } = renderHook(() => useCategories(categoryService));
+    await waitFor(() => expect(result.current.categories).toHaveLength(1));
+    expect(result.current.categories[0].id).toBe(category.id);
   });
 
-  it("should reload when syncVersion changes", async () => {
-    const mockGetAll = vi.fn().mockResolvedValue([]);
-    mockCategoryService = createMockCategoryService({ getAll: mockGetAll });
-
-    const { rerender } = renderHook(() => useCategories(mockCategoryService));
-    await waitFor(() => expect(mockGetAll).toHaveBeenCalledTimes(1));
-
-    syncState.version = 1;
-    rerender();
-
-    await waitFor(() => expect(mockGetAll).toHaveBeenCalledTimes(2));
+  it("should not return deleted categories", async () => {
+    await db.categories.add(buildCategory({ is_deleted: true }));
+    const { result } = renderHook(() => useCategories(categoryService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.categories).toHaveLength(0);
   });
 
-  it("should call softDelete and refresh when deleteCategory is called", async () => {
-    const category = buildCategory();
-    const mockGetAll = vi.fn().mockResolvedValue([]);
-    mockCategoryService = createMockCategoryService({ getAll: mockGetAll });
-    const { result } = renderHook(() => useCategories(mockCategoryService));
+  it("should reactively update when a category is written to DB externally", async () => {
+    const { result } = renderHook(() => useCategories(categoryService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.categories).toHaveLength(0);
 
     await act(async () => {
-      await result.current.deleteCategory(category.id);
+      await db.categories.add(buildCategory());
     });
 
-    expect(mockCategoryService.softDelete).toHaveBeenCalledWith(category.id);
-    expect(mockGetAll).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(result.current.categories).toHaveLength(1));
+  });
+
+  describe("createCategory", () => {
+    let result: { current: ReturnType<typeof useCategories> };
+
+    beforeEach(async () => {
+      ({ result } = renderHook(() => useCategories(categoryService)));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      await act(async () => {
+        await result.current.createCategory("Work");
+      });
+    });
+
+    it("should add category and show it in list", async () => {
+      await waitFor(() => expect(result.current.categories).toHaveLength(1));
+      expect(result.current.categories[0].name).toBe("Work");
+    });
+
+    it("should schedule push", () => {
+      expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("updateCategory", () => {
+    let category: ReturnType<typeof buildCategory>;
+    let result: { current: ReturnType<typeof useCategories> };
+
+    beforeEach(async () => {
+      category = buildCategory({ name: "Old" });
+      await db.categories.add(category);
+      ({ result } = renderHook(() => useCategories(categoryService)));
+      await waitFor(() => expect(result.current.categories).toHaveLength(1));
+      await act(async () => {
+        await result.current.updateCategory(category.id, "New");
+      });
+    });
+
+    it("should update category name", async () => {
+      await waitFor(() =>
+        expect(result.current.categories[0].name).toBe("New"),
+      );
+    });
+
+    it("should schedule push", () => {
+      expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("deleteCategory", () => {
+    let category: ReturnType<typeof buildCategory>;
+    let result: { current: ReturnType<typeof useCategories> };
+
+    beforeEach(async () => {
+      category = buildCategory();
+      await db.categories.add(category);
+      ({ result } = renderHook(() => useCategories(categoryService)));
+      await waitFor(() => expect(result.current.categories).toHaveLength(1));
+      await act(async () => {
+        await result.current.deleteCategory(category.id);
+      });
+    });
+
+    it("should remove category from list", async () => {
+      await waitFor(() => expect(result.current.categories).toHaveLength(0));
+    });
+
+    it("should schedule push", () => {
+      expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+    });
   });
 });

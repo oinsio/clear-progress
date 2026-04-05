@@ -1,6 +1,16 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useGoal } from "./useGoal";
+import { db } from "@/db/database";
+import { GoalRepository } from "@/db/repositories/GoalRepository";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { GoalService } from "@/services/GoalService";
+import { TaskService } from "@/services/TaskService";
+import { buildGoal } from "@/test/factories/goalFactory";
+import { buildTask } from "@/test/factories/taskFactory";
+
+const mockSchedulePush = vi.fn();
 
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
@@ -8,148 +18,166 @@ vi.mock("@/app/providers/SyncProvider", () => ({
     syncStatus: "idle",
     pull: vi.fn(),
     push: vi.fn(),
-    schedulePush: vi.fn(),
+    schedulePush: mockSchedulePush,
+    lastSyncedAt: null,
   }),
 }));
-import type { GoalService } from "@/services/GoalService";
-import type { TaskService } from "@/services/TaskService";
-import { buildGoal } from "@/test/factories/goalFactory";
-import { buildTask } from "@/test/factories/taskFactory";
-import { createMockTaskService } from "@/test/mocks/taskServiceMock";
 
-function createMockGoalService(
-  overrides: Partial<Record<keyof GoalService, unknown>> = {},
-): GoalService {
-  return {
-    getById: vi.fn().mockResolvedValue(undefined),
-    update: vi.fn().mockResolvedValue(undefined),
-    updateStatus: vi.fn().mockResolvedValue(undefined),
-    softDelete: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  } as unknown as GoalService;
+const goalService = new GoalService(new GoalRepository());
+const taskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+
+async function renderGoalHook(goal: ReturnType<typeof buildGoal>) {
+  await db.goals.add(goal);
+  const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+  await waitFor(() => expect(result.current.goal).toBeDefined());
+  return result;
 }
 
 describe("useGoal", () => {
-  let mockGoalService: GoalService;
-  let mockTaskService: TaskService;
-
-  beforeEach(() => {
-    mockGoalService = createMockGoalService();
-    mockTaskService = createMockTaskService();
+  beforeEach(async () => {
+    await db.goals.clear();
+    await db.tasks.clear();
+    await db.checklist_items.clear();
+    mockSchedulePush.mockClear();
   });
 
-  async function setupHookWithGoal() {
-    const goal = buildGoal();
-    const mockGetById = vi.fn().mockResolvedValue(goal);
-    mockGoalService = createMockGoalService({ getById: mockGetById });
-    const { result } = renderHook(() =>
-      useGoal(goal.id, mockGoalService, mockTaskService),
-    );
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    return { goal, mockGetById, result };
-  }
-
   it("should set isLoading to true on initial render", () => {
-    const { result } = renderHook(() =>
-      useGoal("goal-1", mockGoalService, mockTaskService),
-    );
+    const { result } = renderHook(() => useGoal("goal-1", goalService, taskService));
     expect(result.current.isLoading).toBe(true);
   });
 
-  it("should set isLoading to false after data is fetched", async () => {
-    const { result } = renderHook(() =>
-      useGoal("goal-1", mockGoalService, mockTaskService),
-    );
+  it("should set isLoading to false after data is loaded", async () => {
+    const { result } = renderHook(() => useGoal("goal-1", goalService, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it("should return undefined goal when not found", async () => {
-    const { result } = renderHook(() =>
-      useGoal("nonexistent", mockGoalService, mockTaskService),
-    );
+    const { result } = renderHook(() => useGoal("nonexistent", goalService, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.goal).toBeUndefined();
   });
 
   it("should return goal after loading", async () => {
     const goal = buildGoal();
-    mockGoalService = createMockGoalService({
-      getById: vi.fn().mockResolvedValue(goal),
-    });
-    const { result } = renderHook(() =>
-      useGoal(goal.id, mockGoalService, mockTaskService),
-    );
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.goal).toEqual(goal);
+    await db.goals.add(goal);
+
+    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+    await waitFor(() => expect(result.current.goal).toBeDefined());
+    expect(result.current.goal?.id).toBe(goal.id);
   });
 
   it("should return tasks linked to the goal", async () => {
     const goal = buildGoal();
-    const tasks = [
-      buildTask({ goal_id: goal.id }),
-      buildTask({ goal_id: goal.id }),
-    ];
-    mockGoalService = createMockGoalService({
-      getById: vi.fn().mockResolvedValue(goal),
-    });
-    mockTaskService = createMockTaskService({
-      getByGoalId: vi.fn().mockResolvedValue(tasks),
-    });
-    const { result } = renderHook(() =>
-      useGoal(goal.id, mockGoalService, mockTaskService),
-    );
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.tasks).toEqual(tasks);
+    await db.goals.add(goal);
+    const task1 = buildTask({ goal_id: goal.id });
+    const task2 = buildTask({ goal_id: goal.id });
+    await db.tasks.bulkAdd([task1, task2]);
+
+    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+    await waitFor(() => expect(result.current.tasks).toHaveLength(2));
   });
 
-  it("should call getByGoalId with goal id", async () => {
-    const { result } = renderHook(() =>
-      useGoal("goal-abc", mockGoalService, mockTaskService),
-    );
+  it("should not return tasks from other goals", async () => {
+    const goal = buildGoal();
+    await db.goals.add(goal);
+    await db.tasks.add(buildTask({ goal_id: "other-goal-id" }));
+
+    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(mockTaskService.getByGoalId).toHaveBeenCalledWith("goal-abc");
+    expect(result.current.tasks).toHaveLength(0);
   });
 
-  it("should call update and refresh when updateGoal is called", async () => {
-    const { goal, mockGetById, result } = await setupHookWithGoal();
+  it("should reactively update when goal is written to DB externally", async () => {
+    const goal = buildGoal({ title: "Initial title" });
+    await db.goals.add(goal);
+
+    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+    await waitFor(() => expect(result.current.goal?.title).toBe("Initial title"));
+
+    await act(async () => {
+      await db.goals.put({ ...goal, title: "Updated title" });
+    });
+
+    await waitFor(() => expect(result.current.goal?.title).toBe("Updated title"));
+  });
+
+  it("should reactively update when task linked to goal is added externally", async () => {
+    const goal = buildGoal();
+    await db.goals.add(goal);
+
+    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.tasks).toHaveLength(0);
+
+    await act(async () => {
+      await db.tasks.add(buildTask({ goal_id: goal.id }));
+    });
+
+    await waitFor(() => expect(result.current.tasks).toHaveLength(1));
+  });
+
+  it("should update goal title when updateGoal is called", async () => {
+    const goal = buildGoal({ title: "Old title" });
+    const result = await renderGoalHook(goal);
 
     await act(async () => {
       await result.current.updateGoal({ title: "New title" });
     });
 
-    expect(mockGoalService.update).toHaveBeenCalledWith(goal.id, {
-      title: "New title",
-    });
-    expect(mockGetById).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(result.current.goal?.title).toBe("New title"));
   });
 
-  it("should call updateStatus and refresh when updateGoalStatus is called", async () => {
-    const { goal, result } = await setupHookWithGoal();
+  it("should schedule push when updateGoal is called", async () => {
+    const result = await renderGoalHook(buildGoal());
+
+    await act(async () => {
+      await result.current.updateGoal({ title: "Updated" });
+    });
+
+    expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+  });
+
+  it("should update goal status when updateGoalStatus is called", async () => {
+    const goal = buildGoal({ status: "planning" });
+    const result = await renderGoalHook(goal);
 
     await act(async () => {
       await result.current.updateGoalStatus("completed");
     });
 
-    expect(mockGoalService.updateStatus).toHaveBeenCalledWith(
-      goal.id,
-      "completed",
-    );
+    await waitFor(() => expect(result.current.goal?.status).toBe("completed"));
+  });
+
+  it("should schedule push when updateGoalStatus is called", async () => {
+    const result = await renderGoalHook(buildGoal());
+
+    await act(async () => {
+      await result.current.updateGoalStatus("completed");
+    });
+
+    expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });
 
   it("should call softDelete when deleteGoal is called", async () => {
     const goal = buildGoal();
-    mockGoalService = createMockGoalService({
-      getById: vi.fn().mockResolvedValue(goal),
-    });
-    const { result } = renderHook(() =>
-      useGoal(goal.id, mockGoalService, mockTaskService),
-    );
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const result = await renderGoalHook(goal);
 
     await act(async () => {
       await result.current.deleteGoal();
     });
 
-    expect(mockGoalService.softDelete).toHaveBeenCalledWith(goal.id);
+    const deletedGoal = await db.goals.get(goal.id);
+    expect(deletedGoal?.is_deleted).toBe(true);
+  });
+
+  it("should do nothing for updateGoal when goal is not loaded", async () => {
+    const { result } = renderHook(() => useGoal("nonexistent", goalService, taskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.updateGoal({ title: "New title" });
+    });
+
+    expect(mockSchedulePush).not.toHaveBeenCalled();
   });
 });
