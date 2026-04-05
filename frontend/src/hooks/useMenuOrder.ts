@@ -7,6 +7,7 @@ const DEFAULT_MENU_MODE_ORDER: MenuMode[] = [
   "contexts",
   "categories",
   "goals",
+  "ideas",
   "tasks",
   "completed",
   "deleted",
