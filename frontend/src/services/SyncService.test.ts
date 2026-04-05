@@ -19,6 +19,7 @@ function makePullResponse(overrides: Partial<PullResponse> = {}): PullResponse {
     data: {
       tasks: [],
       goals: [],
+      ideas: [],
       contexts: [],
       categories: [],
       checklist_items: [],
@@ -196,7 +197,7 @@ describe("SyncService", () => {
     it("should call applyServerRecords on all entity repositories", async () => {
       const serverTasks = [makeTask({ _dirty: false })];
       mockApiClient = createMockApiClient({
-        pull: vi.fn().mockResolvedValue(makePullResponse({ data: { tasks: serverTasks, goals: [], contexts: [], categories: [], checklist_items: [] }, current_revision: 5 })),
+        pull: vi.fn().mockResolvedValue(makePullResponse({ data: { tasks: serverTasks, goals: [], ideas: [], contexts: [], categories: [], checklist_items: [] }, current_revision: 5 })),
       });
       const service = createService();
 
