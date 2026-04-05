@@ -81,5 +81,14 @@ export function useGoals(
     // liveQuery handles reactive updates automatically
   }, []);
 
-  return { goals, isLoading, reloadGoals, createGoal, updateGoal, updateGoalStatus, deleteGoal, reorderGoals };
+  return {
+    goals,
+    isLoading,
+    reloadGoals,
+    createGoal,
+    updateGoal,
+    updateGoalStatus,
+    deleteGoal,
+    reorderGoals,
+  };
 }

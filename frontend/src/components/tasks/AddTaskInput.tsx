@@ -7,7 +7,11 @@ export interface AddTaskInputProps {
   onCancel: () => void;
 }
 
-export function AddTaskInput({ targetBox, onAdd, onCancel }: AddTaskInputProps) {
+export function AddTaskInput({
+  targetBox,
+  onAdd,
+  onCancel,
+}: AddTaskInputProps) {
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);

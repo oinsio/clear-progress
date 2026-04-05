@@ -12,7 +12,14 @@ import type { UseCategoriesReturn } from "@/hooks/useCategories";
 import type { UseCompletedTasksReturn } from "@/hooks/useCompletedTasks";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({ accessToken: null, userEmail: null, userPicture: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() }),
+  useAuth: () => ({
+    accessToken: null,
+    userEmail: null,
+    userPicture: null,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    silentRefresh: vi.fn(),
+  }),
 }));
 vi.mock("@/hooks/useTasks");
 vi.mock("@/hooks/useGoals");
@@ -35,7 +42,9 @@ const mockUseContexts = vi.mocked(useContexts);
 const mockUseCategories = vi.mocked(useCategories);
 const mockUseCompletedTasks = vi.mocked(useCompletedTasks);
 
-function buildTasksHook(overrides: Partial<UseTasksReturn> = {}): UseTasksReturn {
+function buildTasksHook(
+  overrides: Partial<UseTasksReturn> = {},
+): UseTasksReturn {
   return {
     tasks: [],
     isLoading: false,
@@ -50,7 +59,9 @@ function buildTasksHook(overrides: Partial<UseTasksReturn> = {}): UseTasksReturn
   };
 }
 
-function buildGoalsHook(overrides: Partial<UseGoalsReturn> = {}): UseGoalsReturn {
+function buildGoalsHook(
+  overrides: Partial<UseGoalsReturn> = {},
+): UseGoalsReturn {
   return {
     goals: [],
     isLoading: false,
@@ -64,7 +75,9 @@ function buildGoalsHook(overrides: Partial<UseGoalsReturn> = {}): UseGoalsReturn
   };
 }
 
-function buildSearchHook(overrides: Partial<UseSearchReturn> = {}): UseSearchReturn {
+function buildSearchHook(
+  overrides: Partial<UseSearchReturn> = {},
+): UseSearchReturn {
   return {
     tasks: [],
     goals: [],
@@ -75,7 +88,9 @@ function buildSearchHook(overrides: Partial<UseSearchReturn> = {}): UseSearchRet
   };
 }
 
-function buildContextsHook(overrides: Partial<UseContextsReturn> = {}): UseContextsReturn {
+function buildContextsHook(
+  overrides: Partial<UseContextsReturn> = {},
+): UseContextsReturn {
   return {
     contexts: [],
     isLoading: false,
@@ -87,7 +102,9 @@ function buildContextsHook(overrides: Partial<UseContextsReturn> = {}): UseConte
   };
 }
 
-function buildCategoriesHook(overrides: Partial<UseCategoriesReturn> = {}): UseCategoriesReturn {
+function buildCategoriesHook(
+  overrides: Partial<UseCategoriesReturn> = {},
+): UseCategoriesReturn {
   return {
     categories: [],
     isLoading: false,
@@ -178,7 +195,10 @@ describe("InboxPage", () => {
   });
 
   it("should show today tasks in today section in all-box view", () => {
-    const todayTasks = [buildTask({ box: "today" }), buildTask({ box: "today" })];
+    const todayTasks = [
+      buildTask({ box: "today" }),
+      buildTask({ box: "today" }),
+    ];
     mockUseTasks.mockImplementation((box) =>
       buildTasksHook({ tasks: box === "today" ? todayTasks : [] }),
     );
@@ -218,7 +238,9 @@ describe("InboxPage", () => {
   });
 
   it("should show completed tasks when completed filter is selected", () => {
-    const finishedTasks = [buildTask({ title: "Done task", is_completed: true })];
+    const finishedTasks = [
+      buildTask({ title: "Done task", is_completed: true }),
+    ];
     mockUseCompletedTasks.mockReturnValue(
       buildCompletedTasksHook({ completedTasks: finishedTasks }),
     );

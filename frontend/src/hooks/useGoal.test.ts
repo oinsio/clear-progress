@@ -24,11 +24,16 @@ vi.mock("@/app/providers/SyncProvider", () => ({
 }));
 
 const goalService = new GoalService(new GoalRepository());
-const taskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const taskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 
 async function renderGoalHook(goal: ReturnType<typeof buildGoal>) {
   await db.goals.add(goal);
-  const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+  const { result } = renderHook(() =>
+    useGoal(goal.id, goalService, taskService),
+  );
   await waitFor(() => expect(result.current.goal).toBeDefined());
   return result;
 }
@@ -42,17 +47,23 @@ describe("useGoal", () => {
   });
 
   it("should set isLoading to true on initial render", () => {
-    const { result } = renderHook(() => useGoal("goal-1", goalService, taskService));
+    const { result } = renderHook(() =>
+      useGoal("goal-1", goalService, taskService),
+    );
     expect(result.current.isLoading).toBe(true);
   });
 
   it("should set isLoading to false after data is loaded", async () => {
-    const { result } = renderHook(() => useGoal("goal-1", goalService, taskService));
+    const { result } = renderHook(() =>
+      useGoal("goal-1", goalService, taskService),
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it("should return undefined goal when not found", async () => {
-    const { result } = renderHook(() => useGoal("nonexistent", goalService, taskService));
+    const { result } = renderHook(() =>
+      useGoal("nonexistent", goalService, taskService),
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.goal).toBeUndefined();
   });
@@ -61,7 +72,9 @@ describe("useGoal", () => {
     const goal = buildGoal();
     await db.goals.add(goal);
 
-    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+    const { result } = renderHook(() =>
+      useGoal(goal.id, goalService, taskService),
+    );
     await waitFor(() => expect(result.current.goal).toBeDefined());
     expect(result.current.goal?.id).toBe(goal.id);
   });
@@ -73,7 +86,9 @@ describe("useGoal", () => {
     const task2 = buildTask({ goal_id: goal.id });
     await db.tasks.bulkAdd([task1, task2]);
 
-    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+    const { result } = renderHook(() =>
+      useGoal(goal.id, goalService, taskService),
+    );
     await waitFor(() => expect(result.current.tasks).toHaveLength(2));
   });
 
@@ -82,7 +97,9 @@ describe("useGoal", () => {
     await db.goals.add(goal);
     await db.tasks.add(buildTask({ goal_id: "other-goal-id" }));
 
-    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+    const { result } = renderHook(() =>
+      useGoal(goal.id, goalService, taskService),
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.tasks).toHaveLength(0);
   });
@@ -91,21 +108,29 @@ describe("useGoal", () => {
     const goal = buildGoal({ title: "Initial title" });
     await db.goals.add(goal);
 
-    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
-    await waitFor(() => expect(result.current.goal?.title).toBe("Initial title"));
+    const { result } = renderHook(() =>
+      useGoal(goal.id, goalService, taskService),
+    );
+    await waitFor(() =>
+      expect(result.current.goal?.title).toBe("Initial title"),
+    );
 
     await act(async () => {
       await db.goals.put({ ...goal, title: "Updated title" });
     });
 
-    await waitFor(() => expect(result.current.goal?.title).toBe("Updated title"));
+    await waitFor(() =>
+      expect(result.current.goal?.title).toBe("Updated title"),
+    );
   });
 
   it("should reactively update when task linked to goal is added externally", async () => {
     const goal = buildGoal();
     await db.goals.add(goal);
 
-    const { result } = renderHook(() => useGoal(goal.id, goalService, taskService));
+    const { result } = renderHook(() =>
+      useGoal(goal.id, goalService, taskService),
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.tasks).toHaveLength(0);
 
@@ -171,7 +196,9 @@ describe("useGoal", () => {
   });
 
   it("should do nothing for updateGoal when goal is not loaded", async () => {
-    const { result } = renderHook(() => useGoal("nonexistent", goalService, taskService));
+    const { result } = renderHook(() =>
+      useGoal("nonexistent", goalService, taskService),
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {

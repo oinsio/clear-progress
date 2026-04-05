@@ -52,7 +52,10 @@ export class ClearProgressDatabase extends Dexie {
           "checklist_items",
         ];
         for (const tableName of entityTables) {
-          await tx.table(tableName).toCollection().modify({ _dirty: true, revision: 0 });
+          await tx
+            .table(tableName)
+            .toCollection()
+            .modify({ _dirty: true, revision: 0 });
         }
         await tx.table("settings").toCollection().modify({ _dirty: true });
         await tx
@@ -62,7 +65,10 @@ export class ClearProgressDatabase extends Dexie {
     this.version(5)
       .stores(DB_SCHEMA_V4)
       .upgrade(async (tx) => {
-        await tx.table("ideas").toCollection().modify({ _dirty: true, revision: 0 });
+        await tx
+          .table("ideas")
+          .toCollection()
+          .modify({ _dirty: true, revision: 0 });
       });
   }
 }

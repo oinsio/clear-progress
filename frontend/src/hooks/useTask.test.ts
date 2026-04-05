@@ -14,16 +14,12 @@ describe("useTask", () => {
   });
 
   it("should set isLoading to true on initial render", () => {
-    const { result } = renderHook(() =>
-      useTask("task-1", mockTaskService),
-    );
+    const { result } = renderHook(() => useTask("task-1", mockTaskService));
     expect(result.current.isLoading).toBe(true);
   });
 
   it("should set isLoading to false after task is fetched", async () => {
-    const { result } = renderHook(() =>
-      useTask("task-1", mockTaskService),
-    );
+    const { result } = renderHook(() => useTask("task-1", mockTaskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
@@ -40,17 +36,13 @@ describe("useTask", () => {
     mockTaskService = createMockTaskService({
       getById: vi.fn().mockResolvedValue(task),
     });
-    const { result } = renderHook(() =>
-      useTask(task.id, mockTaskService),
-    );
+    const { result } = renderHook(() => useTask(task.id, mockTaskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.task).toEqual(task);
   });
 
   it("should call getById with the given id", async () => {
-    const { result } = renderHook(() =>
-      useTask("task-abc", mockTaskService),
-    );
+    const { result } = renderHook(() => useTask("task-abc", mockTaskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(mockTaskService.getById).toHaveBeenCalledWith("task-abc");
   });
@@ -63,9 +55,7 @@ describe("useTask", () => {
       .mockResolvedValueOnce(task)
       .mockResolvedValueOnce(updatedTask);
     mockTaskService = createMockTaskService({ getById: mockGetById });
-    const { result } = renderHook(() =>
-      useTask(task.id, mockTaskService),
-    );
+    const { result } = renderHook(() => useTask(task.id, mockTaskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
@@ -82,9 +72,7 @@ describe("useTask", () => {
     const task = buildTask();
     const mockGetById = vi.fn().mockResolvedValue(task);
     mockTaskService = createMockTaskService({ getById: mockGetById });
-    const { result } = renderHook(() =>
-      useTask(task.id, mockTaskService),
-    );
+    const { result } = renderHook(() => useTask(task.id, mockTaskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
@@ -100,9 +88,7 @@ describe("useTask", () => {
     mockTaskService = createMockTaskService({
       getById: vi.fn().mockResolvedValue(task),
     });
-    const { result } = renderHook(() =>
-      useTask(task.id, mockTaskService),
-    );
+    const { result } = renderHook(() => useTask(task.id, mockTaskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
@@ -116,9 +102,7 @@ describe("useTask", () => {
     const task = buildTask({ box: "inbox" });
     const mockGetById = vi.fn().mockResolvedValue(task);
     mockTaskService = createMockTaskService({ getById: mockGetById });
-    const { result } = renderHook(() =>
-      useTask(task.id, mockTaskService),
-    );
+    const { result } = renderHook(() => useTask(task.id, mockTaskService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {

@@ -29,14 +29,20 @@ const REPEAT_OPTIONS: Array<{ type: RepeatRuleType | "none" }> = [
   { type: REPEAT_RULE_TYPE.INTERVAL },
 ];
 
-export function RepeatRuleSelector({ value, onChange, onBack }: RepeatRuleSelectorProps) {
+export function RepeatRuleSelector({
+  value,
+  onChange,
+  onBack,
+}: RepeatRuleSelectorProps) {
   const { t } = useTranslation();
   const [view, setView] = useState<SelectorView>("main");
   const [selectedDays, setSelectedDays] = useState<number[]>(
     value?.type === "weekly" ? (value.days ?? []) : [],
   );
   const [intervalValue, setIntervalValue] = useState<number>(
-    value?.type === "interval" ? (value.interval ?? DEFAULT_REPEAT_INTERVAL) : DEFAULT_REPEAT_INTERVAL,
+    value?.type === "interval"
+      ? (value.interval ?? DEFAULT_REPEAT_INTERVAL)
+      : DEFAULT_REPEAT_INTERVAL,
   );
 
   const handleOptionClick = useCallback(
@@ -58,7 +64,9 @@ export function RepeatRuleSelector({ value, onChange, onBack }: RepeatRuleSelect
 
   const handleDayToggle = useCallback((day: number) => {
     setSelectedDays((previous) =>
-      previous.includes(day) ? previous.filter((d) => d !== day) : [...previous, day],
+      previous.includes(day)
+        ? previous.filter((d) => d !== day)
+        : [...previous, day],
     );
   }, []);
 
@@ -76,7 +84,9 @@ export function RepeatRuleSelector({ value, onChange, onBack }: RepeatRuleSelect
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const parsed = parseInt(event.target.value, 10);
       if (!isNaN(parsed)) {
-        setIntervalValue(Math.min(MAX_REPEAT_INTERVAL, Math.max(MIN_REPEAT_INTERVAL, parsed)));
+        setIntervalValue(
+          Math.min(MAX_REPEAT_INTERVAL, Math.max(MIN_REPEAT_INTERVAL, parsed)),
+        );
       }
     },
     [],
@@ -104,7 +114,9 @@ export function RepeatRuleSelector({ value, onChange, onBack }: RepeatRuleSelect
           >
             <ArrowLeft size={18} />
           </button>
-          <h2 className="text-base font-semibold text-gray-800">{t("repeat.weekly")}</h2>
+          <h2 className="text-base font-semibold text-gray-800">
+            {t("repeat.weekly")}
+          </h2>
         </div>
         <div className="px-4 py-4 flex flex-col gap-4">
           <div className="flex gap-2 justify-center flex-wrap">
@@ -155,7 +167,9 @@ export function RepeatRuleSelector({ value, onChange, onBack }: RepeatRuleSelect
           >
             <ArrowLeft size={18} />
           </button>
-          <h2 className="text-base font-semibold text-gray-800">{t("taskEdit.fieldRepeat")}</h2>
+          <h2 className="text-base font-semibold text-gray-800">
+            {t("taskEdit.fieldRepeat")}
+          </h2>
         </div>
         <div className="px-4 py-4 flex flex-col gap-4">
           <input
@@ -198,7 +212,8 @@ export function RepeatRuleSelector({ value, onChange, onBack }: RepeatRuleSelect
         >
           {type === "none"
             ? t("repeat.none")
-            : type === REPEAT_RULE_TYPE.INTERVAL && value?.type === REPEAT_RULE_TYPE.INTERVAL
+            : type === REPEAT_RULE_TYPE.INTERVAL &&
+                value?.type === REPEAT_RULE_TYPE.INTERVAL
               ? formatRepeatRuleLabel(value, t)
               : type === REPEAT_RULE_TYPE.INTERVAL
                 ? t("repeat.intervalLabel")

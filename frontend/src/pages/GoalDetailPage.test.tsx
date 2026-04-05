@@ -9,7 +9,14 @@ import type { UseGoalsReturn } from "@/hooks/useGoals";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({ accessToken: null, userEmail: null, userPicture: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() }),
+  useAuth: () => ({
+    accessToken: null,
+    userEmail: null,
+    userPicture: null,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    silentRefresh: vi.fn(),
+  }),
 }));
 vi.mock("@/hooks/useGoal");
 vi.mock("@/hooks/useGoalTasks");
@@ -66,7 +73,9 @@ function buildGoalHook(overrides: Partial<UseGoalReturn> = {}): UseGoalReturn {
   };
 }
 
-function buildGoalTasksHook(overrides: Partial<UseGoalTasksReturn> = {}): UseGoalTasksReturn {
+function buildGoalTasksHook(
+  overrides: Partial<UseGoalTasksReturn> = {},
+): UseGoalTasksReturn {
   return {
     tasks: [],
     completedTasks: [],
@@ -80,7 +89,9 @@ function buildGoalTasksHook(overrides: Partial<UseGoalTasksReturn> = {}): UseGoa
   };
 }
 
-function buildGoalsHook(overrides: Partial<UseGoalsReturn> = {}): UseGoalsReturn {
+function buildGoalsHook(
+  overrides: Partial<UseGoalsReturn> = {},
+): UseGoalsReturn {
   return {
     goals: [],
     isLoading: false,
@@ -94,7 +105,9 @@ function buildGoalsHook(overrides: Partial<UseGoalsReturn> = {}): UseGoalsReturn
   };
 }
 
-function buildSettingsHook(overrides: Partial<UseSettingsReturn> = {}): UseSettingsReturn {
+function buildSettingsHook(
+  overrides: Partial<UseSettingsReturn> = {},
+): UseSettingsReturn {
   return {
     defaultBox: "inbox",
     accentColor: "green",
@@ -120,10 +133,30 @@ describe("GoalDetailPage — inline task creation", () => {
     mockUseGoal.mockReturnValue(buildGoalHook());
     mockUseGoalTasks.mockReturnValue(buildGoalTasksHook());
     mockUseGoals.mockReturnValue(buildGoalsHook());
-    mockUseContexts.mockReturnValue({ contexts: [], isLoading: false, createContext: vi.fn(), updateContext: vi.fn(), deleteContext: vi.fn(), reorderContexts: vi.fn() });
-    mockUseCategories.mockReturnValue({ categories: [], isLoading: false, createCategory: vi.fn(), updateCategory: vi.fn(), deleteCategory: vi.fn(), reorderCategories: vi.fn() });
-    mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
-    mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
+    mockUseContexts.mockReturnValue({
+      contexts: [],
+      isLoading: false,
+      createContext: vi.fn(),
+      updateContext: vi.fn(),
+      deleteContext: vi.fn(),
+      reorderContexts: vi.fn(),
+    });
+    mockUseCategories.mockReturnValue({
+      categories: [],
+      isLoading: false,
+      createCategory: vi.fn(),
+      updateCategory: vi.fn(),
+      deleteCategory: vi.fn(),
+      reorderCategories: vi.fn(),
+    });
+    mockUsePanelSide.mockReturnValue({
+      panelSide: "right",
+      setPanelSide: vi.fn(),
+    });
+    mockUsePanelOpen.mockReturnValue({
+      isPanelOpen: false,
+      togglePanelOpen: vi.fn(),
+    });
     mockUseRightPanelNavigation.mockReturnValue(vi.fn());
     mockUseIsDesktop.mockReturnValue(false);
     mockUsePanelSplit.mockReturnValue({

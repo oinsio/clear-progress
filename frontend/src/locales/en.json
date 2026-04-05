@@ -95,6 +95,7 @@
     "pageTitle": "Ideas",
     "add": "Add idea",
     "titlePlaceholder": "Idea name",
+    "descriptionPlaceholder": "Idea description",
     "empty": "No ideas",
     "drag": "Drag idea"
   },

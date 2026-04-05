@@ -71,5 +71,13 @@ export function useIdeas(
     // liveQuery handles reactive updates automatically
   }, []);
 
-  return { ideas, isLoading, reloadIdeas, createIdea, updateIdea, deleteIdea, reorderIdeas };
+  return {
+    ideas,
+    isLoading,
+    reloadIdeas,
+    createIdea,
+    updateIdea,
+    deleteIdea,
+    reorderIdeas,
+  };
 }

@@ -6,7 +6,14 @@ import { buildGoal } from "@/test/factories/goalFactory";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({ accessToken: null, userEmail: null, userPicture: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() }),
+  useAuth: () => ({
+    accessToken: null,
+    userEmail: null,
+    userPicture: null,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    silentRefresh: vi.fn(),
+  }),
 }));
 vi.mock("@/hooks/useGoals");
 vi.mock("@/hooks/usePanelSide");
@@ -32,13 +39,17 @@ const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUseTasks = vi.mocked(useTasks);
 
-function buildGoalsHook(overrides: Partial<UseGoalsReturn> = {}): UseGoalsReturn {
+function buildGoalsHook(
+  overrides: Partial<UseGoalsReturn> = {},
+): UseGoalsReturn {
   return {
     goals: [],
     isLoading: false,
     reloadGoals: vi.fn().mockResolvedValue(undefined),
     reorderGoals: vi.fn().mockResolvedValue(undefined),
-    createGoal: vi.fn<UseGoalsReturn["createGoal"]>().mockResolvedValue(undefined),
+    createGoal: vi
+      .fn<UseGoalsReturn["createGoal"]>()
+      .mockResolvedValue(undefined),
     updateGoal: vi.fn().mockResolvedValue(undefined),
     updateGoalStatus: vi.fn().mockResolvedValue(undefined),
     deleteGoal: vi.fn().mockResolvedValue(undefined),
@@ -46,7 +57,9 @@ function buildGoalsHook(overrides: Partial<UseGoalsReturn> = {}): UseGoalsReturn
   };
 }
 
-function buildTasksHook(overrides: Partial<UseTasksReturn> = {}): UseTasksReturn {
+function buildTasksHook(
+  overrides: Partial<UseTasksReturn> = {},
+): UseTasksReturn {
   return {
     tasks: [],
     isLoading: false,
@@ -62,8 +75,14 @@ function buildTasksHook(overrides: Partial<UseTasksReturn> = {}): UseTasksReturn
 }
 
 function renderGoalsPage() {
-  mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
-  mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
+  mockUsePanelSide.mockReturnValue({
+    panelSide: "right",
+    setPanelSide: vi.fn(),
+  });
+  mockUsePanelOpen.mockReturnValue({
+    isPanelOpen: false,
+    togglePanelOpen: vi.fn(),
+  });
   mockUseTasks.mockReturnValue(buildTasksHook());
 
   render(
@@ -87,7 +106,10 @@ describe("GoalsPage", () => {
   });
 
   it("should render goal items for each active goal", () => {
-    const goals = [buildGoal({ title: "Goal A" }), buildGoal({ title: "Goal B" })];
+    const goals = [
+      buildGoal({ title: "Goal A" }),
+      buildGoal({ title: "Goal B" }),
+    ];
     mockUseGoals.mockReturnValue(buildGoalsHook({ goals }));
     renderGoalsPage();
     expect(screen.getByText("Goal A")).toBeInTheDocument();

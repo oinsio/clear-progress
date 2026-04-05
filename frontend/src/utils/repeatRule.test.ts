@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import i18n from "i18next";
-import { parseRepeatRule, serializeRepeatRule, formatRepeatRuleLabel } from "./repeatRule";
+import {
+  parseRepeatRule,
+  serializeRepeatRule,
+  formatRepeatRuleLabel,
+} from "./repeatRule";
 
 describe("parseRepeatRule", () => {
   it("should return null for empty string", () => {
@@ -60,7 +64,9 @@ describe("formatRepeatRuleLabel", () => {
   });
 
   it("should format weekly rule with specific days", () => {
-    expect(formatRepeatRuleLabel({ type: "weekly", days: [1, 3, 5] }, t)).toBe("По Пн, Ср, Пт");
+    expect(formatRepeatRuleLabel({ type: "weekly", days: [1, 3, 5] }, t)).toBe(
+      "По Пн, Ср, Пт",
+    );
   });
 
   it("should format weekly rule with no days using generic label", () => {
@@ -72,10 +78,14 @@ describe("formatRepeatRuleLabel", () => {
   });
 
   it("should format interval rule with count", () => {
-    expect(formatRepeatRuleLabel({ type: "interval", interval: 3 }, t)).toBe("Каждые 3 дня");
+    expect(formatRepeatRuleLabel({ type: "interval", interval: 3 }, t)).toBe(
+      "Каждые 3 дня",
+    );
   });
 
   it("should format interval rule defaults to 1 when interval is missing", () => {
-    expect(formatRepeatRuleLabel({ type: "interval" }, t)).toBe("Каждый 1 день");
+    expect(formatRepeatRuleLabel({ type: "interval" }, t)).toBe(
+      "Каждый 1 день",
+    );
   });
 });

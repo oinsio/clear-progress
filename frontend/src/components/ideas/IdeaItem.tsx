@@ -36,6 +36,11 @@ export function IdeaItem({ idea, nodeRef, style, dragHandle }: IdeaItemProps) {
           <p className="text-sm text-gray-800 font-medium leading-snug break-words">
             {idea.name}
           </p>
+          {idea.description && (
+            <p className="text-xs text-gray-500 mt-1 leading-snug break-words">
+              {idea.description}
+            </p>
+          )}
         </div>
       </div>
     </li>

@@ -2,11 +2,17 @@ import { useMemo } from "react";
 import { TaskService } from "@/services/TaskService";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { useFilteredTasks, type UseFilteredTasksReturn } from "./useFilteredTasks";
+import {
+  useFilteredTasks,
+  type UseFilteredTasksReturn,
+} from "./useFilteredTasks";
 
-const defaultTaskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const defaultTaskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 
-export interface UseContextTasksReturn extends UseFilteredTasksReturn {}
+export type UseContextTasksReturn = UseFilteredTasksReturn;
 
 export function useContextTasks(
   contextId: string,

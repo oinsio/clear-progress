@@ -2,11 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Target, Plus, GripVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
@@ -82,7 +78,10 @@ function SortableGoalItem({
   );
 }
 
-const defaultTaskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const defaultTaskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 
 export default function GoalsPage() {
   const { t } = useTranslation();
@@ -94,7 +93,9 @@ export default function GoalsPage() {
   const navigate = useNavigate();
   const sensors = useDndSensors();
 
-  const [goalTaskCounts, setGoalTaskCounts] = useState<Record<string, number>>({});
+  const [goalTaskCounts, setGoalTaskCounts] = useState<Record<string, number>>(
+    {},
+  );
 
   const {
     isAdding: isAddingTask,
@@ -142,7 +143,10 @@ export default function GoalsPage() {
   );
 
   return (
-    <div data-testid="goals-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="goals-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Action bar — top position (above header) */}
@@ -180,73 +184,78 @@ export default function GoalsPage() {
 
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
-          <h1 className="text-lg font-semibold text-accent">{t("goal.pageTitle")}</h1>
+          <h1 className="text-lg font-semibold text-accent">
+            {t("goal.pageTitle")}
+          </h1>
         </header>
 
         {/* Scrollable goal list */}
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
-          {!isLoading && activeGoals.length === 0 ? (
-            <div className="flex flex-col items-center py-3" data-testid="empty-goals-message">
-              <p className="text-gray-400 text-sm">{t("goal.empty")}</p>
-            </div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={activeGoals.map((goal) => goal.id)}
-                strategy={verticalListSortingStrategy}
+            {!isLoading && activeGoals.length === 0 ? (
+              <div
+                className="flex flex-col items-center py-3"
+                data-testid="empty-goals-message"
               >
-                <ul>
-                  {activeGoals.map((goal) => (
-                    <SortableGoalItem
-                      key={goal.id}
-                      goal={goal}
-                      taskCount={goalTaskCounts[goal.id] ?? 0}
-                      onNavigate={handleGoalNavigate}
-                    />
-                  ))}
-                </ul>
-              </SortableContext>
-            </DndContext>
-          )}
+                <p className="text-gray-400 text-sm">{t("goal.empty")}</p>
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={activeGoals.map((goal) => goal.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul>
+                    {activeGoals.map((goal) => (
+                      <SortableGoalItem
+                        key={goal.id}
+                        goal={goal}
+                        taskCount={goalTaskCounts[goal.id] ?? 0}
+                        onNavigate={handleGoalNavigate}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
 
-          {/* Inline add goal input */}
-          {isAddingGoal && (
-            <div className="px-4 py-3 border-b border-gray-100">
-              <input
-                type="text"
-                autoFocus
-                value={newGoalTitle}
-                onChange={(event) => setNewGoalTitle(event.target.value)}
-                onKeyDown={handleAddGoalKeyDown}
-                onBlur={handleAddGoalBlur}
-                placeholder={t("goal.titlePlaceholder")}
-                className="w-full text-sm outline-none placeholder:text-gray-400"
-                data-testid="add-goal-input"
-              />
-            </div>
-          )}
+            {/* Inline add goal input */}
+            {isAddingGoal && (
+              <div className="px-4 py-3 border-b border-gray-100">
+                <input
+                  type="text"
+                  autoFocus
+                  value={newGoalTitle}
+                  onChange={(event) => setNewGoalTitle(event.target.value)}
+                  onKeyDown={handleAddGoalKeyDown}
+                  onBlur={handleAddGoalBlur}
+                  placeholder={t("goal.titlePlaceholder")}
+                  className="w-full text-sm outline-none placeholder:text-gray-400"
+                  data-testid="add-goal-input"
+                />
+              </div>
+            )}
 
-          {/* Inline add task input */}
-          {isAddingTask && (
-            <div className="px-4 py-3 border-b border-gray-100">
-              <input
-                type="text"
-                autoFocus
-                value={newTaskTitle}
-                onChange={(event) => setNewTaskTitle(event.target.value)}
-                onKeyDown={handleAddTaskKeyDown}
-                onBlur={handleAddTaskBlur}
-                placeholder={t("goal.taskPlaceholder")}
-                className="w-full text-sm outline-none placeholder:text-gray-400"
-                data-testid="add-task-input"
-              />
-            </div>
-          )}
+            {/* Inline add task input */}
+            {isAddingTask && (
+              <div className="px-4 py-3 border-b border-gray-100">
+                <input
+                  type="text"
+                  autoFocus
+                  value={newTaskTitle}
+                  onChange={(event) => setNewTaskTitle(event.target.value)}
+                  onKeyDown={handleAddTaskKeyDown}
+                  onBlur={handleAddTaskBlur}
+                  placeholder={t("goal.taskPlaceholder")}
+                  className="w-full text-sm outline-none placeholder:text-gray-400"
+                  data-testid="add-task-input"
+                />
+              </div>
+            )}
           </div>
         </main>
 

@@ -18,7 +18,10 @@ vi.mock("@/app/providers/SyncProvider", () => ({
   }),
 }));
 
-const taskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const taskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 
 describe("useCompletedTasks", () => {
   beforeEach(async () => {
@@ -42,7 +45,10 @@ describe("useCompletedTasks", () => {
   });
 
   it("should return completed tasks after loading", async () => {
-    const completedTask = buildTask({ is_completed: true, completed_at: "2025-01-01T10:00:00.000Z" });
+    const completedTask = buildTask({
+      is_completed: true,
+      completed_at: "2025-01-01T10:00:00.000Z",
+    });
     const activeTask = buildTask({ is_completed: false });
     await db.tasks.bulkAdd([completedTask, activeTask]);
 
@@ -73,7 +79,12 @@ describe("useCompletedTasks", () => {
     expect(result.current.completedTasks).toHaveLength(0);
 
     await act(async () => {
-      await db.tasks.add(buildTask({ is_completed: true, completed_at: "2025-01-01T10:00:00.000Z" }));
+      await db.tasks.add(
+        buildTask({
+          is_completed: true,
+          completed_at: "2025-01-01T10:00:00.000Z",
+        }),
+      );
     });
 
     await waitFor(() => expect(result.current.completedTasks).toHaveLength(1));

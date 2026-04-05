@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
 import type { ChecklistItem } from "@/types/entities";
-import { ChecklistService, type ChecklistProgress } from "@/services/ChecklistService";
+import {
+  ChecklistService,
+  type ChecklistProgress,
+} from "@/services/ChecklistService";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { useSync } from "@/app/providers/SyncProvider";
 
@@ -98,5 +101,16 @@ export function useChecklist(
     // liveQuery handles reactive updates automatically
   }, []);
 
-  return { items, progress, hasUnsyncedItems, isLoading, reload, createItem, toggleItem, deleteItem, updateItem, reorderItems };
+  return {
+    items,
+    progress,
+    hasUnsyncedItems,
+    isLoading,
+    reload,
+    createItem,
+    toggleItem,
+    deleteItem,
+    updateItem,
+    reorderItems,
+  };
 }

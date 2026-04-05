@@ -15,7 +15,10 @@ interface GoogleTokenResponse {
 function isGoogleTokenResponse(data: unknown): data is GoogleTokenResponse {
   if (typeof data !== "object" || data === null) return false;
   const record = data as Record<string, unknown>;
-  return typeof record.access_token === "string" && typeof record.expires_in === "number";
+  return (
+    typeof record.access_token === "string" &&
+    typeof record.expires_in === "number"
+  );
 }
 
 export interface GoogleAuthSyncProps {
@@ -55,14 +58,18 @@ export function GoogleAuthSync({
         onUserEmailUpdate(record.email);
       }
 
-      const hasCachedPicture = !!localStorage.getItem(STORAGE_KEYS.USER_PICTURE);
+      const hasCachedPicture = !!localStorage.getItem(
+        STORAGE_KEYS.USER_PICTURE,
+      );
       if (hasCachedPicture) return;
 
       try {
         const userInfoResponse = await fetch(GOOGLE_USERINFO_URL, {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
-        const userInfo = (await userInfoResponse.json()) as { picture?: string };
+        const userInfo = (await userInfoResponse.json()) as {
+          picture?: string;
+        };
         const pictureUrl = userInfo.picture ?? null;
         if (pictureUrl) {
           onUserPictureUpdate(pictureUrl);

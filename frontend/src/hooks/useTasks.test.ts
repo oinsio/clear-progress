@@ -21,9 +21,14 @@ vi.mock("@/app/providers/SyncProvider", () => ({
   }),
 }));
 
-const taskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const taskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 
-async function setupHookWithOneTask(overrides: Parameters<typeof buildTask>[0] = {}) {
+async function setupHookWithOneTask(
+  overrides: Parameters<typeof buildTask>[0] = {},
+) {
   const task = buildTask({ box: "today", ...overrides });
   await db.tasks.add(task);
   const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
@@ -119,13 +124,17 @@ describe("useTasks", () => {
   });
 
   it("should mark task as completed when completeTask is called on incomplete task", async () => {
-    const { result, task } = await setupHookWithOneTask({ is_completed: false });
+    const { result, task } = await setupHookWithOneTask({
+      is_completed: false,
+    });
 
     await act(async () => {
       await result.current.completeTask(task.id);
     });
 
-    await waitFor(() => expect(result.current.tasks[0].is_completed).toBe(true));
+    await waitFor(() =>
+      expect(result.current.tasks[0].is_completed).toBe(true),
+    );
   });
 
   it("should mark task as incomplete when completeTask is called on completed task", async () => {
@@ -135,11 +144,16 @@ describe("useTasks", () => {
       await result.current.completeTask(task.id);
     });
 
-    await waitFor(() => expect(result.current.tasks[0].is_completed).toBe(false));
+    await waitFor(() =>
+      expect(result.current.tasks[0].is_completed).toBe(false),
+    );
   });
 
   it("should return null from completeTask when task has no repeat_rule", async () => {
-    const { result, task } = await setupHookWithOneTask({ is_completed: false, repeat_rule: "" });
+    const { result, task } = await setupHookWithOneTask({
+      is_completed: false,
+      repeat_rule: "",
+    });
 
     let recurringId: string | null = "placeholder";
     await act(async () => {
@@ -150,7 +164,10 @@ describe("useTasks", () => {
   });
 
   it("should return recurring task id when task has repeat_rule", async () => {
-    const { result, task } = await setupHookWithOneTask({ is_completed: false, repeat_rule: "daily" });
+    const { result, task } = await setupHookWithOneTask({
+      is_completed: false,
+      repeat_rule: "daily",
+    });
 
     let recurringId: string | null = null;
     await act(async () => {
@@ -173,7 +190,9 @@ describe("useTasks", () => {
   });
 
   it("should schedule push when completeTask is called", async () => {
-    const { result, task } = await setupHookWithOneTask({ is_completed: false });
+    const { result, task } = await setupHookWithOneTask({
+      is_completed: false,
+    });
 
     await act(async () => {
       await result.current.completeTask(task.id);
@@ -229,7 +248,9 @@ describe("useTasks", () => {
       await result.current.updateTask(task.id, { title: "New title" });
     });
 
-    await waitFor(() => expect(result.current.tasks[0].title).toBe("New title"));
+    await waitFor(() =>
+      expect(result.current.tasks[0].title).toBe("New title"),
+    );
   });
 
   it("should schedule push when updateTask is called", async () => {

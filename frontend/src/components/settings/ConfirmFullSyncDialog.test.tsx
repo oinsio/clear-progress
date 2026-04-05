@@ -24,11 +24,15 @@ function renderDialog(
   );
 }
 
-function createResolvingOnSync(steps: FullSyncStep[]): (onProgress: (step: FullSyncStep) => void) => Promise<void> {
-  return vi.fn().mockImplementation((onProgress: (step: FullSyncStep) => void) => {
-    for (const step of steps) onProgress(step);
-    return Promise.resolve();
-  });
+function createResolvingOnSync(
+  steps: FullSyncStep[],
+): (onProgress: (step: FullSyncStep) => void) => Promise<void> {
+  return vi
+    .fn()
+    .mockImplementation((onProgress: (step: FullSyncStep) => void) => {
+      for (const step of steps) onProgress(step);
+      return Promise.resolve();
+    });
 }
 
 function createHangingOnSync(): {
@@ -36,13 +40,17 @@ function createHangingOnSync(): {
   sendProgress: (step: FullSyncStep) => void;
 } {
   let capturedOnProgress: ((step: FullSyncStep) => void) | null = null;
-  const onSync = vi.fn().mockImplementation(
-    (onProgress: (step: FullSyncStep) => void) => {
+  const onSync = vi
+    .fn()
+    .mockImplementation((onProgress: (step: FullSyncStep) => void) => {
       capturedOnProgress = onProgress;
-      return new Promise<void>(() => {/* never resolves */});
-    },
-  );
-  const sendProgress = (step: FullSyncStep) => { capturedOnProgress?.(step); };
+      return new Promise<void>(() => {
+        /* never resolves */
+      });
+    });
+  const sendProgress = (step: FullSyncStep) => {
+    capturedOnProgress?.(step);
+  };
   return { onSync, sendProgress };
 }
 
@@ -70,7 +78,9 @@ describe("ConfirmFullSyncDialog", () => {
 
   it("should show description text initially", () => {
     renderDialog();
-    expect(screen.getByTestId("full-sync-dialog-description")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("full-sync-dialog-description"),
+    ).toBeInTheDocument();
   });
 
   it("should render cancel button initially", () => {
@@ -103,44 +113,63 @@ describe("ConfirmFullSyncDialog", () => {
     const { onSync, sendProgress } = createHangingOnSync();
     renderDialog({ onSync });
 
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-start-btn")); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-start-btn"));
+    });
     act(() => {
       sendProgress("upload_covers");
       sendProgress("push");
     });
 
-    expect(screen.getByTestId("full-sync-step-push")).toHaveAttribute("data-active", "true");
+    expect(screen.getByTestId("full-sync-step-push")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
   });
 
   it("should show pull step as active during pull progress", async () => {
     const { onSync, sendProgress } = createHangingOnSync();
     renderDialog({ onSync });
 
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-start-btn")); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-start-btn"));
+    });
     act(() => {
       sendProgress("upload_covers");
       sendProgress("push");
       sendProgress("pull");
     });
 
-    expect(screen.getByTestId("full-sync-step-pull")).toHaveAttribute("data-active", "true");
+    expect(screen.getByTestId("full-sync-step-pull")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
   });
 
   it("should show upload_covers step as active during upload_covers progress", async () => {
     const { onSync, sendProgress } = createHangingOnSync();
     renderDialog({ onSync });
 
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-start-btn")); });
-    act(() => { sendProgress("upload_covers"); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-start-btn"));
+    });
+    act(() => {
+      sendProgress("upload_covers");
+    });
 
-    expect(screen.getByTestId("full-sync-step-upload-covers")).toHaveAttribute("data-active", "true");
+    expect(screen.getByTestId("full-sync-step-upload-covers")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
   });
 
   it("should show download_covers step as active during download_covers progress", async () => {
     const { onSync, sendProgress } = createHangingOnSync();
     renderDialog({ onSync });
 
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-start-btn")); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-start-btn"));
+    });
     act(() => {
       sendProgress("upload_covers");
       sendProgress("push");
@@ -148,11 +177,19 @@ describe("ConfirmFullSyncDialog", () => {
       sendProgress("download_covers");
     });
 
-    expect(screen.getByTestId("full-sync-step-download-covers")).toHaveAttribute("data-active", "true");
+    expect(
+      screen.getByTestId("full-sync-step-download-covers"),
+    ).toHaveAttribute("data-active", "true");
   });
 
   it("should show success message when done", async () => {
-    const onSync = createResolvingOnSync(["upload_covers", "push", "pull", "download_covers", "done"]);
+    const onSync = createResolvingOnSync([
+      "upload_covers",
+      "push",
+      "pull",
+      "download_covers",
+      "done",
+    ]);
     renderDialog({ onSync });
 
     await act(async () => {
@@ -201,8 +238,12 @@ describe("ConfirmFullSyncDialog", () => {
     const { onSync, sendProgress } = createHangingOnSync();
     renderDialog({ onSync });
 
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-start-btn")); });
-    act(() => { sendProgress("upload_covers"); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-start-btn"));
+    });
+    act(() => {
+      sendProgress("upload_covers");
+    });
 
     expect(screen.getByTestId("full-sync-start-btn")).toBeDisabled();
   });

@@ -2,11 +2,21 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { MapPin } from "lucide-react";
-import { EntityDetailLayout, type EntityDetailLayoutProps } from "./EntityDetailLayout";
+import {
+  EntityDetailLayout,
+  type EntityDetailLayoutProps,
+} from "./EntityDetailLayout";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({ accessToken: null, userEmail: null, userPicture: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn() }),
+  useAuth: () => ({
+    accessToken: null,
+    userEmail: null,
+    userPicture: null,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    silentRefresh: vi.fn(),
+  }),
 }));
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
@@ -29,7 +39,9 @@ const mockUseIsDesktop = vi.mocked(useIsDesktop);
 const mockUsePanelSplit = vi.mocked(usePanelSplit);
 const mockUseSettings = vi.mocked(useSettings);
 
-function buildSettingsHook(overrides: Partial<UseSettingsReturn> = {}): UseSettingsReturn {
+function buildSettingsHook(
+  overrides: Partial<UseSettingsReturn> = {},
+): UseSettingsReturn {
   return {
     defaultBox: "inbox",
     accentColor: "green",
@@ -40,7 +52,9 @@ function buildSettingsHook(overrides: Partial<UseSettingsReturn> = {}): UseSetti
   };
 }
 
-function buildProps(overrides: Partial<EntityDetailLayoutProps> = {}): EntityDetailLayoutProps {
+function buildProps(
+  overrides: Partial<EntityDetailLayoutProps> = {},
+): EntityDetailLayoutProps {
   return {
     entity: { name: "Работа", updated_at: "2025-01-01T00:00:00.000Z" },
     isLoading: false,
@@ -83,8 +97,14 @@ function renderLayout(overrides: Partial<EntityDetailLayoutProps> = {}) {
 }
 
 beforeEach(() => {
-  mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
-  mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
+  mockUsePanelSide.mockReturnValue({
+    panelSide: "right",
+    setPanelSide: vi.fn(),
+  });
+  mockUsePanelOpen.mockReturnValue({
+    isPanelOpen: false,
+    togglePanelOpen: vi.fn(),
+  });
   mockUseIsUnsynced.mockReturnValue(false);
   mockUseIsDesktop.mockReturnValue(false);
   mockUsePanelSplit.mockReturnValue({

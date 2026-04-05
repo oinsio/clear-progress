@@ -9,7 +9,9 @@ export interface UseCoverUrlResult {
 }
 
 export function useCoverUrl(fileId: string): UseCoverUrlResult {
-  const [url, setUrl] = useState<string | null>(() => getCoverDisplayUrl(fileId));
+  const [url, setUrl] = useState<string | null>(() =>
+    getCoverDisplayUrl(fileId),
+  );
 
   useEffect(() => {
     if (!fileId || fileId.startsWith(LOCAL_COVER_ID_PREFIX)) return;

@@ -34,28 +34,44 @@ describe("ThemeProvider", () => {
   it("should apply accent color from IndexedDB on mount", async () => {
     mockGetValue.mockResolvedValue("orange");
 
-    render(<ThemeProvider><div /></ThemeProvider>);
+    render(
+      <ThemeProvider>
+        <div />
+      </ThemeProvider>,
+    );
 
     await waitFor(() => {
-      expect(document.documentElement.getAttribute("data-accent")).toBe("orange");
+      expect(document.documentElement.getAttribute("data-accent")).toBe(
+        "orange",
+      );
     });
   });
 
   it("should re-read and apply accent color when syncVersion changes", async () => {
-    mockGetValue
-      .mockResolvedValueOnce("green")
-      .mockResolvedValueOnce("purple");
+    mockGetValue.mockResolvedValueOnce("green").mockResolvedValueOnce("purple");
 
-    const { rerender } = render(<ThemeProvider><div /></ThemeProvider>);
+    const { rerender } = render(
+      <ThemeProvider>
+        <div />
+      </ThemeProvider>,
+    );
     await waitFor(() =>
-      expect(document.documentElement.getAttribute("data-accent")).toBe("green"),
+      expect(document.documentElement.getAttribute("data-accent")).toBe(
+        "green",
+      ),
     );
 
     syncVersionStore.version = 1;
-    rerender(<ThemeProvider><div /></ThemeProvider>);
+    rerender(
+      <ThemeProvider>
+        <div />
+      </ThemeProvider>,
+    );
 
     await waitFor(() =>
-      expect(document.documentElement.getAttribute("data-accent")).toBe("purple"),
+      expect(document.documentElement.getAttribute("data-accent")).toBe(
+        "purple",
+      ),
     );
   });
 });

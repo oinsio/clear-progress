@@ -32,15 +32,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
   const [accessToken, setAccessTokenState] = useState<string | null>(() => {
     const storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-    const storedExpiresAt = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
-    if (storedToken && storedExpiresAt && Date.now() < Number(storedExpiresAt)) {
+    const storedExpiresAt = localStorage.getItem(
+      STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+    );
+    if (
+      storedToken &&
+      storedExpiresAt &&
+      Date.now() < Number(storedExpiresAt)
+    ) {
       return storedToken;
     }
     return null;
   });
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [userPicture, setUserPicture] = useState<string | null>(
-    () => localStorage.getItem(STORAGE_KEYS.USER_PICTURE),
+  const [userPicture, setUserPicture] = useState<string | null>(() =>
+    localStorage.getItem(STORAGE_KEYS.USER_PICTURE),
   );
 
   // Stable action refs — populated by GoogleAuthSync, called by stable context functions
@@ -53,7 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setGoogleClientId(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID));
     };
     window.addEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
-    return () => window.removeEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
+    return () =>
+      window.removeEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
   }, []);
 
   // When Google Client ID is removed, reset auth refs to no-ops
@@ -95,7 +102,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const silentRefresh = useCallback(() => silentRefreshRef.current(), []);
 
   const contextValue = useMemo<AuthContextValue>(
-    () => ({ accessToken, userEmail, userPicture, signIn, signOut, silentRefresh }),
+    () => ({
+      accessToken,
+      userEmail,
+      userPicture,
+      signIn,
+      signOut,
+      silentRefresh,
+    }),
     [accessToken, userEmail, userPicture, signIn, signOut, silentRefresh],
   );
 

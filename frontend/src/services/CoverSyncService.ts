@@ -5,8 +5,16 @@ import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import type { ApiClient } from "./ApiClient";
 import type { UploadCoverBatchItem } from "@/types/api";
 import { localCoverCache } from "./LocalCoverCache";
-import { LOCAL_COVER_ID_PREFIX, FALLBACK_COVER_MIME_TYPE, MAX_COVER_BATCH_SIZE } from "@/constants";
-import { arrayBufferToBase64, buildCoverFilename, computeSha256Hex } from "./CoverService";
+import {
+  LOCAL_COVER_ID_PREFIX,
+  FALLBACK_COVER_MIME_TYPE,
+  MAX_COVER_BATCH_SIZE,
+} from "@/constants";
+import {
+  arrayBufferToBase64,
+  buildCoverFilename,
+  computeSha256Hex,
+} from "./CoverService";
 
 export class CoverSyncService {
   constructor(
@@ -40,12 +48,18 @@ export class CoverSyncService {
   async sync(): Promise<void> {
     const pendingCovers = await this.pendingCoverRepository.getAll();
 
-    for (let offset = 0; offset < pendingCovers.length; offset += MAX_COVER_BATCH_SIZE) {
+    for (
+      let offset = 0;
+      offset < pendingCovers.length;
+      offset += MAX_COVER_BATCH_SIZE
+    ) {
       const chunk = pendingCovers.slice(offset, offset + MAX_COVER_BATCH_SIZE);
 
       let batchItems: UploadCoverBatchItem[];
       try {
-        batchItems = await Promise.all(chunk.map(cover => this.buildBatchItem(cover)));
+        batchItems = await Promise.all(
+          chunk.map((cover) => this.buildBatchItem(cover)),
+        );
       } catch {
         break;
       }
@@ -57,7 +71,9 @@ export class CoverSyncService {
         break;
       }
 
-      const pendingByLocalId = new Map(chunk.map(cover => [cover.local_id, cover]));
+      const pendingByLocalId = new Map(
+        chunk.map((cover) => [cover.local_id, cover]),
+      );
 
       for (const result of response.results) {
         if (result.error || !result.file_id) continue;
@@ -85,12 +101,20 @@ export class CoverSyncService {
     const batchEntries: BatchEntry[] = [];
 
     for (const goal of activeGoals) {
-      if (!goal.cover_file_id || goal.cover_file_id.startsWith(LOCAL_COVER_ID_PREFIX)) continue;
+      if (
+        !goal.cover_file_id ||
+        goal.cover_file_id.startsWith(LOCAL_COVER_ID_PREFIX)
+      )
+        continue;
 
-      let existingCover = await this.coverRepository.getByFileId(goal.cover_file_id);
+      let existingCover = await this.coverRepository.getByFileId(
+        goal.cover_file_id,
+      );
       if (!existingCover?.data) {
         await this.cacheFromServer(goal.cover_file_id);
-        existingCover = await this.coverRepository.getByFileId(goal.cover_file_id);
+        existingCover = await this.coverRepository.getByFileId(
+          goal.cover_file_id,
+        );
       }
       if (!existingCover?.data) continue;
 
@@ -111,17 +135,25 @@ export class CoverSyncService {
       });
     }
 
-    for (let offset = 0; offset < batchEntries.length; offset += MAX_COVER_BATCH_SIZE) {
+    for (
+      let offset = 0;
+      offset < batchEntries.length;
+      offset += MAX_COVER_BATCH_SIZE
+    ) {
       const chunk = batchEntries.slice(offset, offset + MAX_COVER_BATCH_SIZE);
 
       let response;
       try {
-        response = await this.apiClient.uploadCovers(chunk.map(entry => entry.item));
+        response = await this.apiClient.uploadCovers(
+          chunk.map((entry) => entry.item),
+        );
       } catch {
         continue; // best-effort: skip this chunk
       }
 
-      const entryByGoalId = new Map(chunk.map(entry => [entry.goal.id, entry]));
+      const entryByGoalId = new Map(
+        chunk.map((entry) => [entry.goal.id, entry]),
+      );
 
       for (const result of response.results) {
         if (result.error || !result.file_id) continue;
@@ -175,8 +207,13 @@ export class CoverSyncService {
   async ensureServerCoversAreCached(): Promise<void> {
     const activeGoals = await this.goalRepository.getActive();
     const uncachedFileIds = activeGoals
-      .map(goal => goal.cover_file_id)
-      .filter(fileId => fileId && !fileId.startsWith(LOCAL_COVER_ID_PREFIX) && !localCoverCache.get(fileId));
+      .map((goal) => goal.cover_file_id)
+      .filter(
+        (fileId) =>
+          fileId &&
+          !fileId.startsWith(LOCAL_COVER_ID_PREFIX) &&
+          !localCoverCache.get(fileId),
+      );
 
     const missingFromDb: string[] = [];
     for (const fileId of uncachedFileIds) {
@@ -203,7 +240,11 @@ export class CoverSyncService {
   }
 
   async batchCacheFromServer(fileIds: string[]): Promise<void> {
-    for (let offset = 0; offset < fileIds.length; offset += MAX_COVER_BATCH_SIZE) {
+    for (
+      let offset = 0;
+      offset < fileIds.length;
+      offset += MAX_COVER_BATCH_SIZE
+    ) {
       const chunk = fileIds.slice(offset, offset + MAX_COVER_BATCH_SIZE);
       try {
         const response = await this.apiClient.getCovers(chunk);
@@ -232,7 +273,9 @@ export class CoverSyncService {
     }
   }
 
-  private async fetchFromServerAndStore(fileId: string): Promise<CoverRecord | null> {
+  private async fetchFromServerAndStore(
+    fileId: string,
+  ): Promise<CoverRecord | null> {
     try {
       const response = await this.apiClient.getCovers([fileId]);
       const coverResult = response.covers[0];
@@ -254,7 +297,9 @@ export class CoverSyncService {
     }
   }
 
-  private async buildBatchItem(pending: PendingCoverRecord): Promise<UploadCoverBatchItem> {
+  private async buildBatchItem(
+    pending: PendingCoverRecord,
+  ): Promise<UploadCoverBatchItem> {
     const buffer = await pending.data.arrayBuffer();
     const base64Data = arrayBufferToBase64(buffer);
     return {
@@ -266,10 +311,15 @@ export class CoverSyncService {
     };
   }
 
-  private async handleSuccessfulUpload(pendingCover: PendingCoverRecord, fileId: string): Promise<void> {
+  private async handleSuccessfulUpload(
+    pendingCover: PendingCoverRecord,
+    fileId: string,
+  ): Promise<void> {
     const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
     const allGoals = await this.goalRepository.getActive();
-    const matchingGoals = allGoals.filter(goal => goal.cover_file_id === localFileId);
+    const matchingGoals = allGoals.filter(
+      (goal) => goal.cover_file_id === localFileId,
+    );
     const now = new Date().toISOString();
     for (const goal of matchingGoals) {
       await this.goalRepository.update({

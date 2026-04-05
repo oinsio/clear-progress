@@ -8,11 +8,12 @@ export function useTaskFormState(task: Task) {
   const [notes, setNotes] = useState(task.notes);
   const [selectedGoalId, setSelectedGoalId] = useState(task.goal_id);
   const [selectedContextId, setSelectedContextId] = useState(task.context_id);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(task.category_id);
-  const [selectedBox, setSelectedBox] = useState<Box>(task.box);
-  const [selectedRepeatRule, setSelectedRepeatRule] = useState<RepeatRule | null>(() =>
-    parseRepeatRule(task.repeat_rule),
+  const [selectedCategoryId, setSelectedCategoryId] = useState(
+    task.category_id,
   );
+  const [selectedBox, setSelectedBox] = useState<Box>(task.box);
+  const [selectedRepeatRule, setSelectedRepeatRule] =
+    useState<RepeatRule | null>(() => parseRepeatRule(task.repeat_rule));
 
   return {
     title,

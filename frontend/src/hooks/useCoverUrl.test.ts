@@ -12,7 +12,8 @@ vi.mock("@/services/defaultServices", () => ({
 
 import { defaultCoverSyncService } from "@/services/defaultServices";
 
-const mockEnsureCoverCached = defaultCoverSyncService.ensureCoverCached as ReturnType<typeof vi.fn>;
+const mockEnsureCoverCached =
+  defaultCoverSyncService.ensureCoverCached as ReturnType<typeof vi.fn>;
 
 describe("useCoverUrl", () => {
   afterEach(() => {
@@ -85,7 +86,9 @@ describe("useCoverUrl", () => {
       });
     });
 
-    const { result } = renderHook(() => useCoverUrl("remote-id-uncached-reactive"));
+    const { result } = renderHook(() =>
+      useCoverUrl("remote-id-uncached-reactive"),
+    );
 
     expect(result.current.url).toBeNull();
 
@@ -97,7 +100,9 @@ describe("useCoverUrl", () => {
   });
 
   it("should return null for local: fileId not in cache", () => {
-    const { result } = renderHook(() => useCoverUrl(`${LOCAL_COVER_ID_PREFIX}nonexistent`));
+    const { result } = renderHook(() =>
+      useCoverUrl(`${LOCAL_COVER_ID_PREFIX}nonexistent`),
+    );
 
     expect(result.current.url).toBeNull();
   });
@@ -105,7 +110,9 @@ describe("useCoverUrl", () => {
   it("should return cached blob URL for local: fileId in cache", () => {
     localCoverCache.set("some-uuid", "blob:http://localhost/local");
 
-    const { result } = renderHook(() => useCoverUrl(`${LOCAL_COVER_ID_PREFIX}some-uuid`));
+    const { result } = renderHook(() =>
+      useCoverUrl(`${LOCAL_COVER_ID_PREFIX}some-uuid`),
+    );
 
     expect(result.current.url).toBe("blob:http://localhost/local");
   });

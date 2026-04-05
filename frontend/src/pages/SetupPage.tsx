@@ -1,14 +1,22 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ROUTES, STORAGE_KEYS, BACKEND_CONNECTION_EVENT, GOOGLE_CLIENT_ID_CHANGED_EVENT } from "@/constants";
+import {
+  ROUTES,
+  STORAGE_KEYS,
+  BACKEND_CONNECTION_EVENT,
+  GOOGLE_CLIENT_ID_CHANGED_EVENT,
+} from "@/constants";
 import { parseGasInput } from "@/utils/gasUrl";
 import { parseClientId } from "@/utils/clientId";
 import { defaultApiClient } from "@/services/defaultServices";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import {
+  RightFilterPanel,
+  type RightPanelMode,
+} from "@/components/tasks/RightFilterPanel";
 import { cn } from "@/shared/lib/cn";
 
 type SetupPhase =
@@ -29,7 +37,8 @@ export default function SetupPage() {
 
   const { accessToken, signIn } = useAuth();
   const existingUrl = localStorage.getItem(STORAGE_KEYS.GAS_URL) ?? "";
-  const existingClientId = localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID) ?? "";
+  const existingClientId =
+    localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID) ?? "";
 
   const [urlInput, setUrlInput] = useState(existingUrl);
   const [clientIdInput, setClientIdInput] = useState(existingClientId);
@@ -58,8 +67,6 @@ export default function SetupPage() {
         navigate(ROUTES.INBOX);
       }
     }
-  // handleInit is defined below and is stable within a render cycle; safe to omit from deps.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, phase, needsInit, navigate]);
 
   const handleModeChange = useCallback(
@@ -139,11 +146,16 @@ export default function SetupPage() {
   const isLoading = phase === "connecting" || phase === "initializing";
 
   return (
-    <div data-testid="setup-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="setup-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-lg space-y-8 px-4 py-6">
-            <h1 className="text-xl font-semibold text-gray-900">{t("setup.title")}</h1>
+            <h1 className="text-xl font-semibold text-gray-900">
+              {t("setup.title")}
+            </h1>
 
             {isConnected ? (
               <>
@@ -156,7 +168,9 @@ export default function SetupPage() {
                     data-testid="setup-current-url"
                     className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3"
                   >
-                    <p className="break-all font-mono text-sm text-gray-800">{existingUrl}</p>
+                    <p className="break-all font-mono text-sm text-gray-800">
+                      {existingUrl}
+                    </p>
                   </div>
                 </section>
 
@@ -167,7 +181,9 @@ export default function SetupPage() {
                       {t("setup.clientIdLabel")}
                     </h2>
                     <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                      <p className="break-all font-mono text-sm text-gray-800">{existingClientId}</p>
+                      <p className="break-all font-mono text-sm text-gray-800">
+                        {existingClientId}
+                      </p>
                     </div>
                   </section>
                 )}
@@ -179,7 +195,9 @@ export default function SetupPage() {
                       data-testid="setup-sign-in-required"
                       className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 space-y-2"
                     >
-                      <p className="text-sm text-blue-800">{t("auth.signInRequired")}</p>
+                      <p className="text-sm text-blue-800">
+                        {t("auth.signInRequired")}
+                      </p>
                       <button
                         data-testid="setup-sign-in-btn"
                         onClick={signIn}
@@ -218,7 +236,9 @@ export default function SetupPage() {
                     className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
                   >
                     <span>{t("setup.gasSection")}</span>
-                    <span className="text-gray-400">{isGasSectionOpen ? "▲" : "▼"}</span>
+                    <span className="text-gray-400">
+                      {isGasSectionOpen ? "▲" : "▼"}
+                    </span>
                   </button>
 
                   {isGasSectionOpen && (
@@ -229,7 +249,9 @@ export default function SetupPage() {
                           data-testid="setup-awaiting-signin"
                           className="space-y-3"
                         >
-                          <p className="text-sm font-medium text-blue-900">{t("setup.awaitingSignin")}</p>
+                          <p className="text-sm font-medium text-blue-900">
+                            {t("setup.awaitingSignin")}
+                          </p>
                           <button
                             data-testid="setup-sign-in-btn"
                             onClick={signIn}
@@ -254,7 +276,9 @@ export default function SetupPage() {
                             placeholder={t("setup.urlPlaceholder")}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
                           />
-                          <p className="text-xs text-gray-400">{t("setup.description")}</p>
+                          <p className="text-xs text-gray-400">
+                            {t("setup.description")}
+                          </p>
                         </div>
                       )}
 
@@ -272,15 +296,22 @@ export default function SetupPage() {
                             placeholder={t("setup.clientIdPlaceholder")}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
                           />
-                          <p className="text-xs text-gray-400">{t("setup.clientIdDescription")}</p>
+                          <p className="text-xs text-gray-400">
+                            {t("setup.clientIdDescription")}
+                          </p>
                         </div>
                       )}
 
                       {/* Status feedback */}
                       {isLoading && (
-                        <div data-testid="setup-loading" className="flex items-center gap-2 text-sm text-gray-500">
+                        <div
+                          data-testid="setup-loading"
+                          className="flex items-center gap-2 text-sm text-gray-500"
+                        >
                           <span className="inline-block animate-spin">⟳</span>
-                          {phase === "connecting" ? t("setup.connecting") : t("setup.initializing")}
+                          {phase === "connecting"
+                            ? t("setup.connecting")
+                            : t("setup.initializing")}
                         </div>
                       )}
 
@@ -304,7 +335,9 @@ export default function SetupPage() {
                               data-testid="setup-sign-in-required"
                               className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 space-y-2"
                             >
-                              <p className="text-sm text-blue-800">{t("auth.signInRequired")}</p>
+                              <p className="text-sm text-blue-800">
+                                {t("auth.signInRequired")}
+                              </p>
                               <button
                                 data-testid="setup-sign-in-btn"
                                 onClick={signIn}
@@ -331,32 +364,33 @@ export default function SetupPage() {
                       )}
 
                       {/* Connect button + sign-in button */}
-                      {phase !== "not_initialized" && phase !== "awaiting_signin" && (
-                        <div className="space-y-3">
-                          <button
-                            data-testid="setup-connect-button"
-                            onClick={handleConnect}
-                            disabled={!urlInput.trim() || isLoading}
-                            className={cn(
-                              "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                              urlInput.trim() && !isLoading
-                                ? "bg-accent text-white"
-                                : "cursor-not-allowed bg-gray-100 text-gray-400",
-                            )}
-                          >
-                            {t("setup.connect")}
-                          </button>
-                          {!accessToken && (
+                      {phase !== "not_initialized" &&
+                        phase !== "awaiting_signin" && (
+                          <div className="space-y-3">
                             <button
-                              data-testid="setup-gas-sign-in-btn"
-                              onClick={signIn}
-                              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
+                              data-testid="setup-connect-button"
+                              onClick={handleConnect}
+                              disabled={!urlInput.trim() || isLoading}
+                              className={cn(
+                                "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                                urlInput.trim() && !isLoading
+                                  ? "bg-accent text-white"
+                                  : "cursor-not-allowed bg-gray-100 text-gray-400",
+                              )}
                             >
-                              {t("auth.signInButton")}
+                              {t("setup.connect")}
                             </button>
-                          )}
-                        </div>
-                      )}
+                            {!accessToken && (
+                              <button
+                                data-testid="setup-gas-sign-in-btn"
+                                onClick={signIn}
+                                className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
+                              >
+                                {t("auth.signInButton")}
+                              </button>
+                            )}
+                          </div>
+                        )}
                     </div>
                   )}
                 </section>

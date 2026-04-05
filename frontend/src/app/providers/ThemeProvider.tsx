@@ -1,6 +1,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { AccentColor, ColorScheme } from "@/types/common";
-import { ACCENT_COLOR_VALUES, ACCENT_COLORS, COLOR_SCHEMES, DEFAULT_ACCENT_COLOR, DEFAULT_COLOR_SCHEME, SETTING_KEYS, STORAGE_KEYS } from "@/constants";
+import {
+  ACCENT_COLOR_VALUES,
+  ACCENT_COLORS,
+  COLOR_SCHEMES,
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_COLOR_SCHEME,
+  SETTING_KEYS,
+  STORAGE_KEYS,
+} from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { useSync } from "@/app/providers/SyncProvider";
 import * as React from "react";
@@ -43,7 +51,8 @@ function getInitialColorScheme(): ColorScheme {
 function applyColorScheme(scheme: ColorScheme): void {
   const isDark =
     scheme === "dark" ||
-    (scheme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    (scheme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   if (isDark) {
     document.documentElement.classList.add("dark");
@@ -53,14 +62,18 @@ function applyColorScheme(scheme: ColorScheme): void {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [accentColor, setAccentColorState] = useState<AccentColor>(getInitialAccentColor);
-  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(getInitialColorScheme);
+  const [accentColor, setAccentColorState] = useState<AccentColor>(
+    getInitialAccentColor,
+  );
+  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(
+    getInitialColorScheme,
+  );
   const { syncVersion } = useSync();
 
   useEffect(() => {
     // Apply initial color to DOM on mount (ensures data-accent is set even on first launch)
     applyAccentColor(getInitialAccentColor());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     settingsRepository
@@ -107,7 +120,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ accentColor, setAccentColor, colorScheme, setColorScheme }}>
+    <ThemeContext.Provider
+      value={{ accentColor, setAccentColor, colorScheme, setColorScheme }}
+    >
       {children}
     </ThemeContext.Provider>
   );

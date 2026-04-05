@@ -7,15 +7,11 @@ export interface ChecklistProgress {
 }
 
 export class ChecklistService {
-  constructor(
-    private readonly checklistRepository: ChecklistRepository,
-  ) {}
+  constructor(private readonly checklistRepository: ChecklistRepository) {}
 
   async getByTaskId(taskId: string): Promise<ChecklistItem[]> {
     const items = await this.checklistRepository.getByTaskId(taskId);
-    return items.sort(
-      (itemA, itemB) => itemA.sort_order - itemB.sort_order,
-    );
+    return items.sort((itemA, itemB) => itemA.sort_order - itemB.sort_order);
   }
 
   async getById(id: string): Promise<ChecklistItem | undefined> {

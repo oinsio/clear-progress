@@ -2,7 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import type { Box, AccentColor } from "@/types/common";
 import { SettingsService } from "@/services/SettingsService";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
-import { ACCENT_COLORS, BOX, DEFAULT_ACCENT_COLOR, SETTING_KEYS, STORAGE_KEYS } from "@/constants";
+import {
+  ACCENT_COLORS,
+  BOX,
+  DEFAULT_ACCENT_COLOR,
+  SETTING_KEYS,
+  STORAGE_KEYS,
+} from "@/constants";
 import { useSync } from "@/app/providers/SyncProvider";
 
 const defaultSettingsService = new SettingsService(new SettingsRepository());

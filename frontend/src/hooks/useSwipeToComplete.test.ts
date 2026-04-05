@@ -16,29 +16,45 @@ function createElementRef() {
 }
 
 function makeTouchList(x: number, y: number, target: HTMLElement) {
-  return [{ identifier: 1, target, clientX: x, clientY: y, pageX: x, pageY: y }];
+  return [
+    { identifier: 1, target, clientX: x, clientY: y, pageX: x, pageY: y },
+  ];
 }
 
-function fireTouchStart(el: HTMLElement, x: number, y: number, target?: HTMLElement) {
+function fireTouchStart(
+  el: HTMLElement,
+  x: number,
+  y: number,
+  target?: HTMLElement,
+) {
   const touchTarget = target ?? el;
-  const event = Object.assign(new Event("touchstart", { bubbles: true, cancelable: true }), {
-    touches: makeTouchList(x, y, touchTarget),
-  });
+  const event = Object.assign(
+    new Event("touchstart", { bubbles: true, cancelable: true }),
+    {
+      touches: makeTouchList(x, y, touchTarget),
+    },
+  );
   // Dispatch on the actual target so it bubbles up to el with the correct e.target
   touchTarget.dispatchEvent(event);
 }
 
 function fireTouchMove(el: HTMLElement, x: number, y: number) {
-  const event = Object.assign(new Event("touchmove", { bubbles: true, cancelable: true }), {
-    touches: makeTouchList(x, y, el),
-  });
+  const event = Object.assign(
+    new Event("touchmove", { bubbles: true, cancelable: true }),
+    {
+      touches: makeTouchList(x, y, el),
+    },
+  );
   el.dispatchEvent(event);
 }
 
 function fireTouchEnd(el: HTMLElement) {
-  const event = Object.assign(new Event("touchend", { bubbles: true, cancelable: true }), {
-    touches: [],
-  });
+  const event = Object.assign(
+    new Event("touchend", { bubbles: true, cancelable: true }),
+    {
+      touches: [],
+    },
+  );
   el.dispatchEvent(event);
 }
 
@@ -65,7 +81,9 @@ describe("useSwipeToComplete", () => {
 
   // When disabled
   it("should not change translateX when isEnabled is false", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), false));
+    const { result } = renderHook(() =>
+      useSwipeToComplete(ref, vi.fn(), false),
+    );
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, 50, 0);
@@ -155,7 +173,7 @@ describe("useSwipeToComplete", () => {
     const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
-  fireTouchMove(element, 10, 0);
+      fireTouchMove(element, 10, 0);
       fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX + 10, 0);
       fireTouchEnd(element);
     });
@@ -200,7 +218,11 @@ describe("useSwipeToComplete", () => {
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, 4, SWIPE_MAX_VERTICAL_DRIFT_PX + 1);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX + 10, SWIPE_MAX_VERTICAL_DRIFT_PX + 1);
+      fireTouchMove(
+        element,
+        SWIPE_COMPLETE_THRESHOLD_PX + 10,
+        SWIPE_MAX_VERTICAL_DRIFT_PX + 1,
+      );
       fireTouchEnd(element);
     });
     expect(onComplete).not.toHaveBeenCalled();
@@ -220,11 +242,22 @@ describe("useSwipeToComplete", () => {
   // Cleanup
   it("should remove event listeners on unmount", () => {
     const removeEventListenerSpy = vi.spyOn(element, "removeEventListener");
-    const { unmount } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { unmount } = renderHook(() =>
+      useSwipeToComplete(ref, vi.fn(), true),
+    );
     unmount();
-    expect(removeEventListenerSpy).toHaveBeenCalledWith("touchstart", expect.any(Function));
-    expect(removeEventListenerSpy).toHaveBeenCalledWith("touchmove", expect.any(Function));
-    expect(removeEventListenerSpy).toHaveBeenCalledWith("touchend", expect.any(Function));
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      "touchstart",
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      "touchmove",
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      "touchend",
+      expect.any(Function),
+    );
   });
 
   // data-no-swipe guard

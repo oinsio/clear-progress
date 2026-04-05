@@ -6,7 +6,10 @@ import { AddTaskInput } from "@/components/tasks/AddTaskInput";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { BoxFilterBar } from "@/components/tasks/BoxFilterBar";
-import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import {
+  RightFilterPanel,
+  type RightPanelMode,
+} from "@/components/tasks/RightFilterPanel";
 import { useTasks } from "@/hooks/useTasks";
 import { useGoals } from "@/hooks/useGoals";
 import { useContexts } from "@/hooks/useContexts";
@@ -71,7 +74,9 @@ function TaskSection({
         onClick={toggleCollapse}
         className="w-full flex items-center justify-between px-4 py-2 text-sm font-semibold text-accent bg-gray-50 sticky top-0"
       >
-        <span>{label} ({tasks.length})</span>
+        <span>
+          {label} ({tasks.length})
+        </span>
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
         />
@@ -97,47 +102,111 @@ function TaskSection({
   );
 }
 
-
 export default function InboxPage() {
   const { t } = useTranslation();
   const location = useLocation();
-  const initialFilterMode = (location.state as { filterMode?: RightPanelMode } | null)?.filterMode ?? "tasks";
+  const initialFilterMode =
+    (location.state as { filterMode?: RightPanelMode } | null)?.filterMode ??
+    "tasks";
   const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
-  const [filterMode, setFilterMode] = useState<RightPanelMode>(initialFilterMode);
+  const [filterMode, setFilterMode] =
+    useState<RightPanelMode>(initialFilterMode);
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { filterBarPosition } = useFilterBarPosition();
-  const [selectedContextId, setSelectedContextId] = useState<string | null>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedContextId, setSelectedContextId] = useState<string | null>(
+    null,
+  );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const isDesktop = useIsDesktop();
-  const { ratio, containerRef: splitContainerRef, handleResizeMouseDown } = usePanelSplit();
+  const {
+    ratio,
+    containerRef: splitContainerRef,
+    handleResizeMouseDown,
+  } = usePanelSplit();
 
-  const { tasks: inboxTasks, completeTask: completeInbox, deleteTask: deleteInbox, createTask: createInboxTask, updateTask: updateInbox, moveTask: moveInbox, reorderTasks: reorderInbox, reload: reloadInbox } = useTasks(BOX.INBOX);
-  const { tasks: todayTasks, completeTask: completeToday, deleteTask: deleteToday, createTask: createTodayTask, updateTask: updateToday, moveTask: moveToday, reorderTasks: reorderToday, reload: reloadToday } = useTasks(BOX.TODAY);
-  const { tasks: weekTasks, completeTask: completeWeek, deleteTask: deleteWeek, createTask: createWeekTask, updateTask: updateWeek, moveTask: moveWeek, reorderTasks: reorderWeek, reload: reloadWeek } = useTasks(BOX.WEEK);
-  const { tasks: laterTasks, completeTask: completeLater, deleteTask: deleteLater, createTask: createLaterTask, updateTask: updateLater, moveTask: moveLater, reorderTasks: reorderLater, reload: reloadLater } = useTasks(BOX.LATER);
+  const {
+    tasks: inboxTasks,
+    completeTask: completeInbox,
+    deleteTask: deleteInbox,
+    createTask: createInboxTask,
+    updateTask: updateInbox,
+    moveTask: moveInbox,
+    reorderTasks: reorderInbox,
+    reload: reloadInbox,
+  } = useTasks(BOX.INBOX);
+  const {
+    tasks: todayTasks,
+    completeTask: completeToday,
+    deleteTask: deleteToday,
+    createTask: createTodayTask,
+    updateTask: updateToday,
+    moveTask: moveToday,
+    reorderTasks: reorderToday,
+    reload: reloadToday,
+  } = useTasks(BOX.TODAY);
+  const {
+    tasks: weekTasks,
+    completeTask: completeWeek,
+    deleteTask: deleteWeek,
+    createTask: createWeekTask,
+    updateTask: updateWeek,
+    moveTask: moveWeek,
+    reorderTasks: reorderWeek,
+    reload: reloadWeek,
+  } = useTasks(BOX.WEEK);
+  const {
+    tasks: laterTasks,
+    completeTask: completeLater,
+    deleteTask: deleteLater,
+    createTask: createLaterTask,
+    updateTask: updateLater,
+    moveTask: moveLater,
+    reorderTasks: reorderLater,
+    reload: reloadLater,
+  } = useTasks(BOX.LATER);
   const { goals } = useGoals();
   const { contexts } = useContexts();
   const { categories } = useCategories();
   const { completedTasks, reload: reloadCompleted } = useCompletedTasks();
-  const { tasks: searchResults, isSearching, search, clear: clearSearch } = useSearch();
+  const {
+    tasks: searchResults,
+    isSearching,
+    search,
+    clear: clearSearch,
+  } = useSearch();
   const { panelSide } = usePanelSide();
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reloadAllBoxes = useCallback(async () => {
-    await Promise.all([reloadInbox(), reloadToday(), reloadWeek(), reloadLater()]);
+    await Promise.all([
+      reloadInbox(),
+      reloadToday(),
+      reloadWeek(),
+      reloadLater(),
+    ]);
   }, [reloadInbox, reloadToday, reloadWeek, reloadLater]);
 
   const handleMoveTask = useCallback(
     async (id: string, targetBox: Box) => {
-      const allTasks = [...inboxTasks, ...todayTasks, ...weekTasks, ...laterTasks];
+      const allTasks = [
+        ...inboxTasks,
+        ...todayTasks,
+        ...weekTasks,
+        ...laterTasks,
+      ];
       const task = allTasks.find((t) => t.id === id);
       if (!task) return;
 
-      const moveByBox: Record<Box, (taskId: string, box: Box) => Promise<void>> = {
+      const moveByBox: Record<
+        Box,
+        (taskId: string, box: Box) => Promise<void>
+      > = {
         [BOX.INBOX]: moveInbox,
         [BOX.TODAY]: moveToday,
         [BOX.WEEK]: moveWeek,
@@ -146,16 +215,34 @@ export default function InboxPage() {
       await moveByBox[task.box](id, targetBox);
       await reloadAllBoxes();
     },
-    [inboxTasks, todayTasks, weekTasks, laterTasks, moveInbox, moveToday, moveWeek, moveLater, reloadAllBoxes],
+    [
+      inboxTasks,
+      todayTasks,
+      weekTasks,
+      laterTasks,
+      moveInbox,
+      moveToday,
+      moveWeek,
+      moveLater,
+      reloadAllBoxes,
+    ],
   );
 
   const handleUpdateTask = useCallback(
     async (id: string, changes: Partial<Task>) => {
-      const allTasks = [...inboxTasks, ...todayTasks, ...weekTasks, ...laterTasks];
+      const allTasks = [
+        ...inboxTasks,
+        ...todayTasks,
+        ...weekTasks,
+        ...laterTasks,
+      ];
       const task = allTasks.find((t) => t.id === id);
       if (!task) return;
 
-      const updateByBox: Record<Box, (taskId: string, taskChanges: Partial<Task>) => Promise<void>> = {
+      const updateByBox: Record<
+        Box,
+        (taskId: string, taskChanges: Partial<Task>) => Promise<void>
+      > = {
         [BOX.INBOX]: updateInbox,
         [BOX.TODAY]: updateToday,
         [BOX.WEEK]: updateWeek,
@@ -172,7 +259,18 @@ export default function InboxPage() {
         }
       }
     },
-    [inboxTasks, todayTasks, weekTasks, laterTasks, updateInbox, updateToday, updateWeek, updateLater, handleMoveTask, reloadAllBoxes],
+    [
+      inboxTasks,
+      todayTasks,
+      weekTasks,
+      laterTasks,
+      updateInbox,
+      updateToday,
+      updateWeek,
+      updateLater,
+      handleMoveTask,
+      reloadAllBoxes,
+    ],
   );
 
   const handleTaskSelect = useCallback((id: string) => {
@@ -223,7 +321,12 @@ export default function InboxPage() {
 
   const handleAddTaskSubmit = useCallback(
     async (title: string) => {
-      const targetBox = filterMode === "inbox" ? BOX.INBOX : activeBox === BOX_FILTER_ALL ? BOX.TODAY : activeBox;
+      const targetBox =
+        filterMode === "inbox"
+          ? BOX.INBOX
+          : activeBox === BOX_FILTER_ALL
+            ? BOX.TODAY
+            : activeBox;
       const createFunctions = {
         [BOX.INBOX]: createInboxTask,
         [BOX.TODAY]: createTodayTask,
@@ -233,7 +336,14 @@ export default function InboxPage() {
       await createFunctions[targetBox](title);
       setIsAddingTask(false);
     },
-    [filterMode, activeBox, createInboxTask, createTodayTask, createWeekTask, createLaterTask],
+    [
+      filterMode,
+      activeBox,
+      createInboxTask,
+      createTodayTask,
+      createWeekTask,
+      createLaterTask,
+    ],
   );
 
   const handleAddTaskCancel = useCallback(() => {
@@ -244,10 +354,14 @@ export default function InboxPage() {
     (tasks: Task[]): Task[] => {
       let filtered = tasks.filter((task) => !task.is_completed);
       if (selectedContextId) {
-        filtered = filtered.filter((task) => task.context_id === selectedContextId);
+        filtered = filtered.filter(
+          (task) => task.context_id === selectedContextId,
+        );
       }
       if (selectedCategoryId) {
-        filtered = filtered.filter((task) => task.category_id === selectedCategoryId);
+        filtered = filtered.filter(
+          (task) => task.category_id === selectedCategoryId,
+        );
       }
       return filtered;
     },
@@ -319,16 +433,32 @@ export default function InboxPage() {
     [completeLater],
   );
 
-  const { todayTasks: todayCompletedTasks, yesterdayTasks: yesterdayCompletedTasks, weekTasks: weekCompletedTasks, monthTasks: monthCompletedTasks, earlierTasks: earlierCompletedTasks } = useMemo(
-    () => groupCompletedTasks(completedTasks),
-    [completedTasks],
-  );
+  const {
+    todayTasks: todayCompletedTasks,
+    yesterdayTasks: yesterdayCompletedTasks,
+    weekTasks: weekCompletedTasks,
+    monthTasks: monthCompletedTasks,
+    earlierTasks: earlierCompletedTasks,
+  } = useMemo(() => groupCompletedTasks(completedTasks), [completedTasks]);
 
   const selectedTask = useMemo(() => {
     if (!selectedTaskId) return null;
-    const allTasks = [...inboxTasks, ...todayTasks, ...weekTasks, ...laterTasks, ...completedTasks];
+    const allTasks = [
+      ...inboxTasks,
+      ...todayTasks,
+      ...weekTasks,
+      ...laterTasks,
+      ...completedTasks,
+    ];
     return allTasks.find((task) => task.id === selectedTaskId) ?? null;
-  }, [selectedTaskId, inboxTasks, todayTasks, weekTasks, laterTasks, completedTasks]);
+  }, [
+    selectedTaskId,
+    inboxTasks,
+    todayTasks,
+    weekTasks,
+    laterTasks,
+    completedTasks,
+  ]);
 
   const sharedSelectProps = {
     onSelect: handleTaskSelect,
@@ -566,10 +696,30 @@ export default function InboxPage() {
     }
 
     const boxConfig = {
-      [BOX.INBOX]: { tasks: inboxTasks, onComplete: handleCompleteInbox, onDelete: deleteInbox, onReorder: reorderInbox },
-      [BOX.TODAY]: { tasks: todayTasks, onComplete: handleCompleteToday, onDelete: deleteToday, onReorder: reorderToday },
-      [BOX.WEEK]: { tasks: weekTasks, onComplete: handleCompleteWeek, onDelete: deleteWeek, onReorder: reorderWeek },
-      [BOX.LATER]: { tasks: laterTasks, onComplete: handleCompleteLater, onDelete: deleteLater, onReorder: reorderLater },
+      [BOX.INBOX]: {
+        tasks: inboxTasks,
+        onComplete: handleCompleteInbox,
+        onDelete: deleteInbox,
+        onReorder: reorderInbox,
+      },
+      [BOX.TODAY]: {
+        tasks: todayTasks,
+        onComplete: handleCompleteToday,
+        onDelete: deleteToday,
+        onReorder: reorderToday,
+      },
+      [BOX.WEEK]: {
+        tasks: weekTasks,
+        onComplete: handleCompleteWeek,
+        onDelete: deleteWeek,
+        onReorder: reorderWeek,
+      },
+      [BOX.LATER]: {
+        tasks: laterTasks,
+        onComplete: handleCompleteLater,
+        onDelete: deleteLater,
+        onReorder: reorderLater,
+      },
     };
 
     const { tasks, onComplete, onDelete, onReorder } = boxConfig[activeBox];
@@ -607,119 +757,130 @@ export default function InboxPage() {
     >
       {/* Split container: task list + optional task detail panel */}
       <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
+        {/* Main content column */}
+        <div
+          className={cn(
+            "flex flex-col overflow-hidden",
+            !isDesktop && selectedTask && "hidden",
+          )}
+          style={
+            isDesktop && selectedTask
+              ? { width: `${ratio * 100}%`, flexShrink: 0 }
+              : { flex: "1 1 0" }
+          }
+        >
+          {/* Search header */}
+          {filterMode === "search" && (
+            <header className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder={t("task.searchPlaceholder")}
+                autoFocus
+                className={cn(
+                  "flex-1 text-sm outline-none placeholder:text-gray-400",
+                  isSearching && "opacity-60",
+                )}
+                data-testid="search-input"
+              />
+            </header>
+          )}
 
-      {/* Main content column */}
-      <div
-        className={cn("flex flex-col overflow-hidden", !isDesktop && selectedTask && "hidden")}
-        style={isDesktop && selectedTask ? { width: `${ratio * 100}%`, flexShrink: 0 } : { flex: "1 1 0" }}
-      >
-        {/* Search header */}
-        {filterMode === "search" && (
-          <header className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder={t("task.searchPlaceholder")}
-              autoFocus
-              className={cn(
-                "flex-1 text-sm outline-none placeholder:text-gray-400",
-                isSearching && "opacity-60",
-              )}
-              data-testid="search-input"
-            />
-          </header>
-        )}
-
-        {/* Box filter bar — hidden in completed mode, position controlled by setting */}
-        {filterMode !== "completed" && filterBarPosition === "top" && (
-          filterMode === "inbox" ? (
-            <div className="flex items-center justify-end border-b border-gray-200 bg-white px-3 py-2">
-              <button
-                type="button"
-                aria-label={t("task.add")}
-                data-testid="add-task-button"
-                onClick={handleAddTask}
-                className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-              >
-                <Plus className="w-5 h-5" aria-hidden="true" />
-              </button>
-            </div>
-          ) : (
-            <BoxFilterBar
-              activeBox={activeBox}
-              onBoxChange={handleBoxChange}
-              onAddTask={handleAddTask}
-              position="top"
-            />
-          )
-        )}
+          {/* Box filter bar — hidden in completed mode, position controlled by setting */}
+          {filterMode !== "completed" &&
+            filterBarPosition === "top" &&
+            (filterMode === "inbox" ? (
+              <div className="flex items-center justify-end border-b border-gray-200 bg-white px-3 py-2">
+                <button
+                  type="button"
+                  aria-label={t("task.add")}
+                  data-testid="add-task-button"
+                  onClick={handleAddTask}
+                  className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+                >
+                  <Plus className="w-5 h-5" aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <BoxFilterBar
+                activeBox={activeBox}
+                onBoxChange={handleBoxChange}
+                onAddTask={handleAddTask}
+                position="top"
+              />
+            ))}
 
           {/* Scrollable task list */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="xl:max-w-3xl xl:mx-auto">
-            {renderContent()}
-          </div>
-        </main>
+          <main className="flex-1 overflow-y-auto">
+            <div className="xl:max-w-3xl xl:mx-auto">{renderContent()}</div>
+          </main>
 
-        {/* Box filter bar — bottom position (default) */}
-        {filterMode !== "completed" && filterBarPosition === "bottom" && (
-          filterMode === "inbox" ? (
-            <div className="flex items-center justify-end border-t border-gray-200 bg-white px-3 py-2 safe-area-bottom">
-              <button
-                type="button"
-                aria-label={t("task.add")}
-                data-testid="add-task-button"
-                onClick={handleAddTask}
-                className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-              >
-                <Plus className="w-5 h-5" aria-hidden="true" />
-              </button>
-            </div>
-          ) : (
-            <BoxFilterBar
-              activeBox={activeBox}
-              onBoxChange={handleBoxChange}
-              onAddTask={handleAddTask}
-              position="bottom"
-            />
-          )
+          {/* Box filter bar — bottom position (default) */}
+          {filterMode !== "completed" &&
+            filterBarPosition === "bottom" &&
+            (filterMode === "inbox" ? (
+              <div className="flex items-center justify-end border-t border-gray-200 bg-white px-3 py-2 safe-area-bottom">
+                <button
+                  type="button"
+                  aria-label={t("task.add")}
+                  data-testid="add-task-button"
+                  onClick={handleAddTask}
+                  className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+                >
+                  <Plus className="w-5 h-5" aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <BoxFilterBar
+                activeBox={activeBox}
+                onBoxChange={handleBoxChange}
+                onAddTask={handleAddTask}
+                position="bottom"
+              />
+            ))}
+        </div>
+
+        {/* Resize handle between task list and detail panel */}
+        {isDesktop && selectedTask && (
+          <div
+            className="w-1 flex-shrink-0 cursor-col-resize bg-gray-100 hover:bg-accent/30 active:bg-accent/50 transition-colors"
+            onMouseDown={handleResizeMouseDown}
+          />
+        )}
+
+        {/* Task detail panel — shown when a task is selected (desktop: side panel, mobile: full screen) */}
+        {selectedTask && (
+          <TaskDetailPanel
+            task={selectedTask}
+            goals={goals}
+            contexts={contexts}
+            categories={categories}
+            onUpdate={handleUpdateTask}
+            onDelete={(id) => {
+              setSelectedTaskId(null);
+              const allBoxDelete: Record<
+                string,
+                (id: string) => Promise<void>
+              > = {
+                [BOX.INBOX]: deleteInbox,
+                [BOX.TODAY]: deleteToday,
+                [BOX.WEEK]: deleteWeek,
+                [BOX.LATER]: deleteLater,
+              };
+              const deleteFn = allBoxDelete[selectedTask.box] ?? deleteToday;
+              void deleteFn(id);
+            }}
+            onClose={handleDetailPanelClose}
+            style={
+              isDesktop
+                ? { width: `${(1 - ratio) * 100}%`, flexShrink: 0 }
+                : { flex: "1 1 0" }
+            }
+          />
         )}
       </div>
-
-      {/* Resize handle between task list and detail panel */}
-      {isDesktop && selectedTask && (
-        <div
-          className="w-1 flex-shrink-0 cursor-col-resize bg-gray-100 hover:bg-accent/30 active:bg-accent/50 transition-colors"
-          onMouseDown={handleResizeMouseDown}
-        />
-      )}
-
-      {/* Task detail panel — shown when a task is selected (desktop: side panel, mobile: full screen) */}
-      {selectedTask && (
-        <TaskDetailPanel
-          task={selectedTask}
-          goals={goals}
-          contexts={contexts}
-          categories={categories}
-          onUpdate={handleUpdateTask}
-          onDelete={(id) => {
-            setSelectedTaskId(null);
-            const allBoxDelete: Record<string, (id: string) => Promise<void>> = {
-              [BOX.INBOX]: deleteInbox,
-              [BOX.TODAY]: deleteToday,
-              [BOX.WEEK]: deleteWeek,
-              [BOX.LATER]: deleteLater,
-            };
-            const deleteFn = allBoxDelete[selectedTask.box] ?? deleteToday;
-            void deleteFn(id);
-          }}
-          onClose={handleDetailPanelClose}
-          style={isDesktop ? { width: `${(1 - ratio) * 100}%`, flexShrink: 0 } : { flex: "1 1 0" }}
-        />
-      )}
-
-      </div>{/* end splitContainerRef */}
+      {/* end splitContainerRef */}
 
       {/* Right quick filter panel — always visible */}
       <RightFilterPanel

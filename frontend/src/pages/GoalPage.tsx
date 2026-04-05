@@ -36,7 +36,8 @@ export default function GoalPage({
   coverService = defaultCoverService,
 }: GoalPageProps) {
   const { t } = useTranslation();
-  const { goal, isLoading, updateGoal, updateGoalStatus, deleteGoal } = useGoal(goalId);
+  const { goal, isLoading, updateGoal, updateGoalStatus, deleteGoal } =
+    useGoal(goalId);
   const { url: existingCoverUrl } = useCoverUrl(goal?.cover_file_id ?? "");
 
   const [title, setTitle] = useState<string | undefined>(undefined);
@@ -47,7 +48,11 @@ export default function GoalPage({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  const coverPreviewSrc = useCoverPreview({ pendingCoverFile, isCoverRemoved, existingCoverUrl });
+  const coverPreviewSrc = useCoverPreview({
+    pendingCoverFile,
+    isCoverRemoved,
+    existingCoverUrl,
+  });
 
   const currentTitle = title ?? goal?.title ?? "";
   const currentDescription = description ?? goal?.description ?? "";
@@ -130,7 +135,10 @@ export default function GoalPage({
 
   if (!isLoading && !goal) {
     return (
-      <div data-testid="goal-page" className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        data-testid="goal-page"
+        className="fixed inset-0 z-50 flex items-center justify-center"
+      >
         <p data-testid="goal-not-found" className="text-gray-400 text-sm">
           {t("goal.notFound")}
         </p>
@@ -141,7 +149,10 @@ export default function GoalPage({
   const activeStatus = goal?.status ?? "planning";
 
   return (
-    <div data-testid="goal-page" className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div
+      data-testid="goal-page"
+      className="fixed inset-0 z-50 flex flex-col justify-end"
+    >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
@@ -149,7 +160,9 @@ export default function GoalPage({
       <div className="relative bg-white rounded-t-2xl shadow-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800">{t("goal.editTitle")}</h2>
+          <h2 className="text-base font-semibold text-gray-800">
+            {t("goal.editTitle")}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -220,7 +233,9 @@ export default function GoalPage({
                     onClick={() => void handleStatusChange(optionStatus)}
                     className={cn(
                       "flex-1 flex items-center justify-center py-3 transition-colors",
-                      isSelected ? "bg-accent text-white" : "text-accent bg-white hover:bg-accent/10",
+                      isSelected
+                        ? "bg-accent text-white"
+                        : "text-accent bg-white hover:bg-accent/10",
                     )}
                   >
                     <Icon size={18} />

@@ -7,7 +7,8 @@ interface PanelSettingsContextValue {
   setPanelAlwaysOpen: (value: boolean) => void;
 }
 
-export const PanelSettingsContext = createContext<PanelSettingsContextValue | null>(null);
+export const PanelSettingsContext =
+  createContext<PanelSettingsContextValue | null>(null);
 
 function getCachedPanelAlwaysOpen(): boolean {
   try {
@@ -18,8 +19,14 @@ function getCachedPanelAlwaysOpen(): boolean {
   return false;
 }
 
-export function PanelSettingsProvider({ children }: { children: React.ReactNode }) {
-  const [isPanelAlwaysOpen, setIsPanelAlwaysOpenState] = useState<boolean>(getCachedPanelAlwaysOpen);
+export function PanelSettingsProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isPanelAlwaysOpen, setIsPanelAlwaysOpenState] = useState<boolean>(
+    getCachedPanelAlwaysOpen,
+  );
 
   const setPanelAlwaysOpen = useCallback((value: boolean) => {
     try {
@@ -31,7 +38,9 @@ export function PanelSettingsProvider({ children }: { children: React.ReactNode 
   }, []);
 
   return (
-    <PanelSettingsContext.Provider value={{ isPanelAlwaysOpen, setPanelAlwaysOpen }}>
+    <PanelSettingsContext.Provider
+      value={{ isPanelAlwaysOpen, setPanelAlwaysOpen }}
+    >
       {children}
     </PanelSettingsContext.Provider>
   );

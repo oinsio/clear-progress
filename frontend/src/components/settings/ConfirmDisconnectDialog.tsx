@@ -6,13 +6,20 @@ interface ConfirmDisconnectDialogProps {
   onConfirm: () => void;
 }
 
-export function ConfirmDisconnectDialog({ isOpen, onClose, onConfirm }: ConfirmDisconnectDialogProps) {
+export function ConfirmDisconnectDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+}: ConfirmDisconnectDialogProps) {
   const { t } = useTranslation();
 
   if (!isOpen) return null;
 
   return (
-    <div data-testid="disconnect-dialog" className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      data-testid="disconnect-dialog"
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >
       <div
         data-testid="disconnect-dialog-backdrop"
         className="absolute inset-0 bg-black/40"

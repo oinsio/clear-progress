@@ -23,7 +23,12 @@ interface CollapsibleSectionProps {
   children: React.ReactNode;
 }
 
-function CollapsibleSection({ sectionKey, title, count, children }: CollapsibleSectionProps) {
+function CollapsibleSection({
+  sectionKey,
+  title,
+  count,
+  children,
+}: CollapsibleSectionProps) {
   const { isCollapsed, toggleCollapse } = useSectionCollapse(sectionKey);
 
   return (
@@ -36,9 +41,7 @@ function CollapsibleSection({ sectionKey, title, count, children }: CollapsibleS
       >
         <h2 className="text-sm font-semibold text-accent">
           {title}
-          {count > 0 && (
-            <span className="ml-2 text-accent/50">({count})</span>
-          )}
+          {count > 0 && <span className="ml-2 text-accent/50">({count})</span>}
         </h2>
         <ChevronDown
           className={cn(
@@ -69,13 +72,22 @@ function DeletedSection<T extends { id: string }>({
   const { t } = useTranslation();
 
   return (
-    <CollapsibleSection sectionKey={sectionKey} title={title} count={items.length}>
+    <CollapsibleSection
+      sectionKey={sectionKey}
+      title={title}
+      count={items.length}
+    >
       {items.length === 0 ? (
-        <p className="px-4 py-3 text-sm text-gray-300">{t("deleted.sectionEmpty")}</p>
+        <p className="px-4 py-3 text-sm text-gray-300">
+          {t("deleted.sectionEmpty")}
+        </p>
       ) : (
         <ul>
           {items.map((item) => (
-            <li key={item.id} className="px-4 py-3 border-b border-gray-50 last:border-0">
+            <li
+              key={item.id}
+              className="px-4 py-3 border-b border-gray-50 last:border-0"
+            >
               {renderItem(item)}
             </li>
           ))}
@@ -115,21 +127,34 @@ export default function DeletedPage() {
     checklistItems.length === 0;
 
   return (
-    <div data-testid="deleted-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="deleted-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 bg-white">
-          <Trash2 size={16} className="text-accent flex-shrink-0" aria-hidden="true" />
-          <h1 className="text-lg font-semibold text-accent">{t("deleted.pageTitle")}</h1>
+          <Trash2
+            size={16}
+            className="text-accent flex-shrink-0"
+            aria-hidden="true"
+          />
+          <h1 className="text-lg font-semibold text-accent">
+            {t("deleted.pageTitle")}
+          </h1>
         </header>
 
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
             {isLoading && (
-              <p className="text-sm text-gray-400 text-center py-16">{t("deleted.loading")}</p>
+              <p className="text-sm text-gray-400 text-center py-16">
+                {t("deleted.loading")}
+              </p>
             )}
 
             {!isLoading && isEmpty && (
-              <p className="text-sm text-gray-400 text-center py-16">{t("deleted.empty")}</p>
+              <p className="text-sm text-gray-400 text-center py-16">
+                {t("deleted.empty")}
+              </p>
             )}
 
             {!isLoading && !isEmpty && (
@@ -140,11 +165,15 @@ export default function DeletedPage() {
                   items={tasks}
                   renderItem={(task) => (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-400 line-through">{task.title}</span>
+                      <span className="text-sm text-gray-400 line-through">
+                        {task.title}
+                      </span>
                       <button
                         type="button"
                         onClick={() => void restoreTask(task.id)}
-                        aria-label={t("deleted.restoreAriaLabel", { title: task.title })}
+                        aria-label={t("deleted.restoreAriaLabel", {
+                          title: task.title,
+                        })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
                         <ArchiveRestore size={16} aria-hidden="true" />
@@ -162,17 +191,23 @@ export default function DeletedPage() {
                     return (
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="text-sm text-gray-400 line-through">{item.title}</span>
+                          <span className="text-sm text-gray-400 line-through">
+                            {item.title}
+                          </span>
                           {parentTaskTitle !== undefined && (
                             <p className="text-xs text-gray-300 mt-0.5">
-                              {t("deleted.checklistParent", { task: parentTaskTitle })}
+                              {t("deleted.checklistParent", {
+                                task: parentTaskTitle,
+                              })}
                             </p>
                           )}
                         </div>
                         <button
                           type="button"
                           onClick={() => void restoreChecklistItem(item.id)}
-                          aria-label={t("deleted.restoreAriaLabel", { title: item.title })}
+                          aria-label={t("deleted.restoreAriaLabel", {
+                            title: item.title,
+                          })}
                           className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                         >
                           <ArchiveRestore size={16} aria-hidden="true" />
@@ -188,11 +223,15 @@ export default function DeletedPage() {
                   items={goals}
                   renderItem={(goal) => (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-400 line-through">{goal.title}</span>
+                      <span className="text-sm text-gray-400 line-through">
+                        {goal.title}
+                      </span>
                       <button
                         type="button"
                         onClick={() => void restoreGoal(goal.id)}
-                        aria-label={t("deleted.restoreAriaLabel", { title: goal.title })}
+                        aria-label={t("deleted.restoreAriaLabel", {
+                          title: goal.title,
+                        })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
                         <ArchiveRestore size={16} aria-hidden="true" />
@@ -207,11 +246,15 @@ export default function DeletedPage() {
                   items={contexts}
                   renderItem={(context) => (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-400 line-through">{context.name}</span>
+                      <span className="text-sm text-gray-400 line-through">
+                        {context.name}
+                      </span>
                       <button
                         type="button"
                         onClick={() => void restoreContext(context.id)}
-                        aria-label={t("deleted.restoreAriaLabel", { title: context.name })}
+                        aria-label={t("deleted.restoreAriaLabel", {
+                          title: context.name,
+                        })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
                         <ArchiveRestore size={16} aria-hidden="true" />
@@ -226,11 +269,15 @@ export default function DeletedPage() {
                   items={categories}
                   renderItem={(category) => (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-400 line-through">{category.name}</span>
+                      <span className="text-sm text-gray-400 line-through">
+                        {category.name}
+                      </span>
                       <button
                         type="button"
                         onClick={() => void restoreCategory(category.id)}
-                        aria-label={t("deleted.restoreAriaLabel", { title: category.name })}
+                        aria-label={t("deleted.restoreAriaLabel", {
+                          title: category.name,
+                        })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
                         <ArchiveRestore size={16} aria-hidden="true" />

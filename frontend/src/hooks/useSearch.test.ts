@@ -18,17 +18,23 @@ describe("useSearch", () => {
   });
 
   it("should return empty tasks on initial render", () => {
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
     expect(result.current.tasks).toEqual([]);
   });
 
   it("should return empty goals on initial render", () => {
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
     expect(result.current.goals).toEqual([]);
   });
 
   it("should not be searching on initial render", () => {
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
     expect(result.current.isSearching).toBe(false);
   });
 
@@ -37,7 +43,9 @@ describe("useSearch", () => {
     mockTaskService = createMockTaskService({
       searchByTitle: vi.fn().mockResolvedValue(tasks),
     });
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("buy");
@@ -51,7 +59,9 @@ describe("useSearch", () => {
     mockGoalService = createMockGoalService({
       searchByTitle: vi.fn().mockResolvedValue(goals),
     });
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("piano");
@@ -69,7 +79,9 @@ describe("useSearch", () => {
     mockGoalService = createMockGoalService({
       searchByTitle: vi.fn().mockResolvedValue(goals),
     });
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("buy");
@@ -80,7 +92,9 @@ describe("useSearch", () => {
   });
 
   it("should call taskService.searchByTitle with the query", async () => {
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("meeting");
@@ -90,7 +104,9 @@ describe("useSearch", () => {
   });
 
   it("should call goalService.searchByTitle with the query", async () => {
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("meeting");
@@ -100,7 +116,9 @@ describe("useSearch", () => {
   });
 
   it("should return empty tasks and goals when query is empty string", async () => {
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("");
@@ -113,7 +131,9 @@ describe("useSearch", () => {
   });
 
   it("should set isSearching to false after search completes", async () => {
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("query");
@@ -131,7 +151,9 @@ describe("useSearch", () => {
     mockGoalService = createMockGoalService({
       searchByTitle: vi.fn().mockResolvedValue(goals),
     });
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("task");
@@ -151,7 +173,9 @@ describe("useSearch", () => {
     mockGoalService = createMockGoalService({
       searchByTitle: vi.fn().mockRejectedValue(new Error("Search failed")),
     });
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("query");
@@ -164,7 +188,10 @@ describe("useSearch", () => {
 
   it("should update results on subsequent searches", async () => {
     const firstTasks = [buildTask({ title: "First task" })];
-    const secondTasks = [buildTask({ title: "Second task A" }), buildTask({ title: "Second task B" })];
+    const secondTasks = [
+      buildTask({ title: "Second task A" }),
+      buildTask({ title: "Second task B" }),
+    ];
     const mockSearchByTitle = vi
       .fn()
       .mockResolvedValueOnce(firstTasks)
@@ -172,7 +199,9 @@ describe("useSearch", () => {
     mockTaskService = createMockTaskService({
       searchByTitle: mockSearchByTitle,
     });
-    const { result } = renderHook(() => useSearch(mockTaskService, mockGoalService));
+    const { result } = renderHook(() =>
+      useSearch(mockTaskService, mockGoalService),
+    );
 
     await act(async () => {
       await result.current.search("first");

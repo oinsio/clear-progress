@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
 import { db } from "@/db/database";
-import type { Task, Goal, Context, Category, ChecklistItem } from "@/types/entities";
+import type {
+  Task,
+  Goal,
+  Context,
+  Category,
+  ChecklistItem,
+} from "@/types/entities";
 
 export interface DeletedEntities {
   tasks: Task[];
@@ -20,7 +26,9 @@ export function useDeletedEntities(): DeletedEntities {
   const [contexts, setContexts] = useState<Context[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
-  const [taskTitleMap, setTaskTitleMap] = useState<Map<string, string>>(new Map());
+  const [taskTitleMap, setTaskTitleMap] = useState<Map<string, string>>(
+    new Map(),
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

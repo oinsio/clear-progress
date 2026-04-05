@@ -180,9 +180,9 @@ describe("ContextService", () => {
 
     it("should throw when context not found", async () => {
       const contextService = new ContextService(mockContextRepository);
-      await expect(
-        contextService.softDelete("nonexistent-id"),
-      ).rejects.toThrow("Context not found: nonexistent-id");
+      await expect(contextService.softDelete("nonexistent-id")).rejects.toThrow(
+        "Context not found: nonexistent-id",
+      );
     });
   });
 
@@ -209,9 +209,9 @@ describe("ContextService", () => {
 
     it("should throw when context not found", async () => {
       const contextService = new ContextService(mockContextRepository);
-      await expect(
-        contextService.restore("nonexistent-id"),
-      ).rejects.toThrow("Context not found: nonexistent-id");
+      await expect(contextService.restore("nonexistent-id")).rejects.toThrow(
+        "Context not found: nonexistent-id",
+      );
     });
   });
 });

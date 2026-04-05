@@ -24,7 +24,9 @@ function buildGoalHook(overrides: Partial<UseGoalReturn> = {}): UseGoalReturn {
   };
 }
 
-function buildMockCoverService(overrides: Partial<CoverService> = {}): CoverService {
+function buildMockCoverService(
+  overrides: Partial<CoverService> = {},
+): CoverService {
   return {
     uploadCover: vi.fn().mockResolvedValue({ file_id: "file-123" }),
     deleteCover: vi.fn().mockResolvedValue(undefined),
@@ -37,7 +39,9 @@ function renderGoalPage(
   onClose = vi.fn(),
   coverService?: CoverService,
 ) {
-  render(<GoalPage goalId={id} onClose={onClose} coverService={coverService} />);
+  render(
+    <GoalPage goalId={id} onClose={onClose} coverService={coverService} />,
+  );
 }
 
 describe("GoalPage", () => {
@@ -72,7 +76,9 @@ describe("GoalPage", () => {
     const goal = buildGoal({ description: "My Goal Description" });
     mockUseGoal.mockReturnValue(buildGoalHook({ goal }));
     renderGoalPage();
-    expect(screen.getByTestId("goal-description-input")).toHaveValue("My Goal Description");
+    expect(screen.getByTestId("goal-description-input")).toHaveValue(
+      "My Goal Description",
+    );
   });
 
   it("should call updateGoal with new title on save", async () => {
@@ -132,13 +138,18 @@ describe("GoalPage", () => {
   });
 
   it("should show not-found message when goal is not found", () => {
-    mockUseGoal.mockReturnValue(buildGoalHook({ goal: undefined, isLoading: false }));
+    mockUseGoal.mockReturnValue(
+      buildGoalHook({ goal: undefined, isLoading: false }),
+    );
     renderGoalPage();
     expect(screen.getByTestId("goal-not-found")).toBeInTheDocument();
   });
 
   describe("cover upload error handling", () => {
-    function renderWithCoverAndSave(coverService: CoverService, onClose = vi.fn()) {
+    function renderWithCoverAndSave(
+      coverService: CoverService,
+      onClose = vi.fn(),
+    ) {
       const goal = buildGoal({ title: "My Goal" });
       mockUseGoal.mockReturnValue(buildGoalHook({ goal }));
       renderGoalPage("test-id", onClose, coverService);

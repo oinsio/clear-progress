@@ -4,7 +4,10 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/shared/lib/cn";
 import type { ChecklistItem } from "@/types/entities";
-import { CHECKLIST_ITEM_VARIANT, type ChecklistItemVariant } from "./taskEditShared";
+import {
+  CHECKLIST_ITEM_VARIANT,
+  type ChecklistItemVariant,
+} from "./taskEditShared";
 import * as React from "react";
 
 export interface SortableChecklistItemProps {
@@ -57,7 +60,11 @@ export function SortableChecklistItem({
   };
 
   return (
-    <div ref={setNodeRef} style={dragStyle} className="flex items-center gap-3 py-1.5">
+    <div
+      ref={setNodeRef}
+      style={dragStyle}
+      className="flex items-center gap-3 py-1.5"
+    >
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {!isEditing ? (
           <button

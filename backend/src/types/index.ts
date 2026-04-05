@@ -44,7 +44,9 @@ export interface Context extends NamedEntity {}
 
 export interface Category extends NamedEntity {}
 
-export interface Idea extends NamedEntity {}
+export interface Idea extends NamedEntity {
+  description: string;
+}
 
 export interface ChecklistItem extends SortableEntity {
   task_id: string;

@@ -34,7 +34,9 @@ describe("useTaskMutations", () => {
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(task),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.completeTask(task.id);
@@ -49,7 +51,9 @@ describe("useTaskMutations", () => {
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(task),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.completeTask(task.id);
@@ -63,7 +67,9 @@ describe("useTaskMutations", () => {
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(undefined),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.completeTask("nonexistent-id");
@@ -77,7 +83,9 @@ describe("useTaskMutations", () => {
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(undefined),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.completeTask("nonexistent-id");
@@ -91,7 +99,9 @@ describe("useTaskMutations", () => {
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(task),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.completeTask(task.id);
@@ -105,7 +115,9 @@ describe("useTaskMutations", () => {
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(task),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.completeTask(task.id);
@@ -118,7 +130,9 @@ describe("useTaskMutations", () => {
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(undefined),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.completeTask("nonexistent-id");
@@ -131,9 +145,13 @@ describe("useTaskMutations", () => {
       const task = buildTask({ is_completed: false, repeat_rule: "" });
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(task),
-        complete: vi.fn().mockResolvedValue({ completed: task, recurring: null }),
+        complete: vi
+          .fn()
+          .mockResolvedValue({ completed: task, recurring: null }),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       let recurringId: string | null = "placeholder";
       await act(async () => {
@@ -144,13 +162,20 @@ describe("useTaskMutations", () => {
     });
 
     it("should return the recurring task id when task has repeat_rule", async () => {
-      const task = buildTask({ is_completed: false, repeat_rule: JSON.stringify({ type: "daily" }) });
+      const task = buildTask({
+        is_completed: false,
+        repeat_rule: JSON.stringify({ type: "daily" }),
+      });
       const recurringTask = buildTask({ id: "new-recurring-id" });
       mockTaskService = createMockTaskService({
         getById: vi.fn().mockResolvedValue(task),
-        complete: vi.fn().mockResolvedValue({ completed: task, recurring: recurringTask }),
+        complete: vi
+          .fn()
+          .mockResolvedValue({ completed: task, recurring: recurringTask }),
       });
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       let recurringId: string | null = null;
       await act(async () => {
@@ -163,17 +188,23 @@ describe("useTaskMutations", () => {
 
   describe("updateTask", () => {
     it("should call update with the id and changes", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.updateTask("task-1", { title: "New title" });
       });
 
-      expect(mockTaskService.update).toHaveBeenCalledWith("task-1", { title: "New title" });
+      expect(mockTaskService.update).toHaveBeenCalledWith("task-1", {
+        title: "New title",
+      });
     });
 
     it("should call reload after update", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.updateTask("task-1", { notes: "new notes" });
@@ -183,7 +214,9 @@ describe("useTaskMutations", () => {
     });
 
     it("should call schedulePush after updating a task", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.updateTask("task-1", { title: "New title" });
@@ -195,17 +228,24 @@ describe("useTaskMutations", () => {
 
   describe("moveTask", () => {
     it("should call moveToBox with the id and target box", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.moveTask("task-1", BOX.TODAY);
       });
 
-      expect(mockTaskService.moveToBox).toHaveBeenCalledWith("task-1", BOX.TODAY);
+      expect(mockTaskService.moveToBox).toHaveBeenCalledWith(
+        "task-1",
+        BOX.TODAY,
+      );
     });
 
     it("should call reload after moveTask", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.moveTask("task-1", BOX.WEEK);
@@ -214,18 +254,25 @@ describe("useTaskMutations", () => {
       expect(onReload).toHaveBeenCalledOnce();
     });
 
-    it.each([BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER])("should move to %s box correctly", async (box) => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+    it.each([BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER])(
+      "should move to %s box correctly",
+      async (box) => {
+        const { result } = renderHook(() =>
+          useTaskMutations(mockTaskService, onReload),
+        );
 
-      await act(async () => {
-        await result.current.moveTask("task-1", box);
-      });
+        await act(async () => {
+          await result.current.moveTask("task-1", box);
+        });
 
-      expect(mockTaskService.moveToBox).toHaveBeenCalledWith("task-1", box);
-    });
+        expect(mockTaskService.moveToBox).toHaveBeenCalledWith("task-1", box);
+      },
+    );
 
     it("should call schedulePush after moving a task", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.moveTask("task-1", BOX.TODAY);
@@ -237,7 +284,9 @@ describe("useTaskMutations", () => {
 
   describe("deleteTask", () => {
     it("should call softDelete with the task id", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.deleteTask("task-1");
@@ -247,7 +296,9 @@ describe("useTaskMutations", () => {
     });
 
     it("should call reload after deleteTask", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.deleteTask("task-1");
@@ -257,7 +308,9 @@ describe("useTaskMutations", () => {
     });
 
     it("should call schedulePush after deleting a task", async () => {
-      const { result } = renderHook(() => useTaskMutations(mockTaskService, onReload));
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
       await act(async () => {
         await result.current.deleteTask("task-1");
@@ -277,7 +330,8 @@ describe("useTaskMutations", () => {
       const secondOnReload = vi.fn().mockResolvedValue(undefined);
 
       const { result, rerender } = renderHook(
-        ({ reload }: { reload: () => Promise<void> }) => useTaskMutations(mockTaskService, reload),
+        ({ reload }: { reload: () => Promise<void> }) =>
+          useTaskMutations(mockTaskService, reload),
         { initialProps: { reload: firstOnReload } },
       );
 
@@ -296,7 +350,8 @@ describe("useTaskMutations", () => {
       const secondOnReload = vi.fn().mockResolvedValue(undefined);
 
       const { result, rerender } = renderHook(
-        ({ reload }: { reload: () => Promise<void> }) => useTaskMutations(mockTaskService, reload),
+        ({ reload }: { reload: () => Promise<void> }) =>
+          useTaskMutations(mockTaskService, reload),
         { initialProps: { reload: firstOnReload } },
       );
 
@@ -315,7 +370,8 @@ describe("useTaskMutations", () => {
       const secondOnReload = vi.fn().mockResolvedValue(undefined);
 
       const { result, rerender } = renderHook(
-        ({ reload }: { reload: () => Promise<void> }) => useTaskMutations(mockTaskService, reload),
+        ({ reload }: { reload: () => Promise<void> }) =>
+          useTaskMutations(mockTaskService, reload),
         { initialProps: { reload: firstOnReload } },
       );
 
@@ -334,7 +390,8 @@ describe("useTaskMutations", () => {
       const secondOnReload = vi.fn().mockResolvedValue(undefined);
 
       const { result, rerender } = renderHook(
-        ({ reload }: { reload: () => Promise<void> }) => useTaskMutations(mockTaskService, reload),
+        ({ reload }: { reload: () => Promise<void> }) =>
+          useTaskMutations(mockTaskService, reload),
         { initialProps: { reload: firstOnReload } },
       );
 

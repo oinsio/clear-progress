@@ -51,7 +51,9 @@ export type Context = NamedEntity;
 
 export type Category = NamedEntity;
 
-export type Idea = NamedEntity;
+export interface Idea extends NamedEntity {
+  description: string;
+}
 
 export interface ChecklistItem {
   id: string;

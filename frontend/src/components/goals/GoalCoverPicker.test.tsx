@@ -11,7 +11,11 @@ beforeEach(() => {
 describe("GoalCoverPicker", () => {
   it("should show default cover image when previewSrc is null", () => {
     render(
-      <GoalCoverPicker previewSrc={null} onFileSelect={vi.fn()} onRemove={vi.fn()} />,
+      <GoalCoverPicker
+        previewSrc={null}
+        onFileSelect={vi.fn()}
+        onRemove={vi.fn()}
+      />,
     );
     expect(screen.getByTestId("cover-default-img")).toBeInTheDocument();
   });
@@ -30,7 +34,11 @@ describe("GoalCoverPicker", () => {
 
   it("should not show remove button when previewSrc is null", () => {
     render(
-      <GoalCoverPicker previewSrc={null} onFileSelect={vi.fn()} onRemove={vi.fn()} />,
+      <GoalCoverPicker
+        previewSrc={null}
+        onFileSelect={vi.fn()}
+        onRemove={vi.fn()}
+      />,
     );
     expect(screen.queryByTestId("cover-remove-button")).not.toBeInTheDocument();
   });
@@ -61,7 +69,11 @@ describe("GoalCoverPicker", () => {
 
   it("should trigger file input click when picker button is clicked", async () => {
     render(
-      <GoalCoverPicker previewSrc={null} onFileSelect={vi.fn()} onRemove={vi.fn()} />,
+      <GoalCoverPicker
+        previewSrc={null}
+        onFileSelect={vi.fn()}
+        onRemove={vi.fn()}
+      />,
     );
     const input = screen.getByTestId("cover-file-input");
     const clickSpy = vi.spyOn(input, "click");
@@ -72,7 +84,11 @@ describe("GoalCoverPicker", () => {
   it("should call onFileSelect with selected file when valid image is chosen", async () => {
     const onFileSelect = vi.fn();
     render(
-      <GoalCoverPicker previewSrc={null} onFileSelect={onFileSelect} onRemove={vi.fn()} />,
+      <GoalCoverPicker
+        previewSrc={null}
+        onFileSelect={onFileSelect}
+        onRemove={vi.fn()}
+      />,
     );
     const file = new File(["content"], "photo.jpg", { type: "image/jpeg" });
     const input = screen.getByTestId("cover-file-input");
@@ -83,7 +99,11 @@ describe("GoalCoverPicker", () => {
   it("should not call onFileSelect when no file is selected", async () => {
     const onFileSelect = vi.fn();
     render(
-      <GoalCoverPicker previewSrc={null} onFileSelect={onFileSelect} onRemove={vi.fn()} />,
+      <GoalCoverPicker
+        previewSrc={null}
+        onFileSelect={onFileSelect}
+        onRemove={vi.fn()}
+      />,
     );
     const input = screen.getByTestId("cover-file-input");
     await userEvent.upload(input, []);

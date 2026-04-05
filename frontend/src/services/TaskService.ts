@@ -61,7 +61,9 @@ export class TaskService {
     return updatedTask;
   }
 
-  async complete(id: string): Promise<{ completed: Task; recurring: Task | null }> {
+  async complete(
+    id: string,
+  ): Promise<{ completed: Task; recurring: Task | null }> {
     const existingTask = await this.taskRepository.getById(id);
     if (!existingTask) {
       throw new Error(`Task not found: ${id}`);
@@ -78,15 +80,36 @@ export class TaskService {
   }
 
   private async createRecurringCopy(task: Task): Promise<Task> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id: _id, version: _version, created_at: _ca, updated_at: _ua, is_completed: _ic, completed_at: _cat, ...taskProps } = task;
-    const newTask = await this.create({ ...taskProps, is_completed: false, completed_at: "" });
+    const {
+      id: _id,
+      version: _version,
+      created_at: _created_at,
+      updated_at: _updated_at,
+      is_completed: _is_completed,
+      completed_at: _completed_at,
+      ...taskProps
+    } = task;
+    void _id;
+    void _version;
+    void _created_at;
+    void _updated_at;
+    void _is_completed;
+    void _completed_at;
+    const newTask = await this.create({
+      ...taskProps,
+      is_completed: false,
+      completed_at: "",
+    });
     await this.copyChecklistItems(task.id, newTask.id);
     return newTask;
   }
 
-  private async copyChecklistItems(sourceTaskId: string, targetTaskId: string): Promise<void> {
-    const checklistItems = await this.checklistRepository.getByTaskId(sourceTaskId);
+  private async copyChecklistItems(
+    sourceTaskId: string,
+    targetTaskId: string,
+  ): Promise<void> {
+    const checklistItems =
+      await this.checklistRepository.getByTaskId(sourceTaskId);
     if (checklistItems.length === 0) return;
     const now = new Date().toISOString();
     for (const item of checklistItems) {

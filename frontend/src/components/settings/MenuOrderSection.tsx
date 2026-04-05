@@ -19,7 +19,10 @@ interface SortableMenuOrderItemProps {
   onToggle: () => void;
 }
 
-function SortableMenuOrderItem({ config, onToggle }: SortableMenuOrderItemProps) {
+function SortableMenuOrderItem({
+  config,
+  onToggle,
+}: SortableMenuOrderItemProps) {
   const { t } = useTranslation();
   const filterItem = FILTER_ITEMS.find((item) => item.mode === config.mode)!;
 
@@ -42,25 +45,38 @@ function SortableMenuOrderItem({ config, onToggle }: SortableMenuOrderItemProps)
     <div
       ref={setNodeRef}
       style={dragStyle}
-      className={cn("flex items-center gap-2 px-3 py-2", isDragging && "opacity-50")}
+      className={cn(
+        "flex items-center gap-2 px-3 py-2",
+        isDragging && "opacity-50",
+      )}
     >
       <button
         type="button"
         ref={setActivatorNodeRef}
         {...attributes}
         {...listeners}
-        aria-label={t("settings.menuOrderDragHandle", { label: t(filterItem.labelKey) })}
+        aria-label={t("settings.menuOrderDragHandle", {
+          label: t(filterItem.labelKey),
+        })}
         className="text-gray-300 hover:text-gray-500 transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
       >
         <GripVertical size={18} />
       </button>
 
       <filterItem.Icon
-        className={cn("w-5 h-5 flex-shrink-0", config.visible ? "text-gray-400" : "text-gray-300")}
+        className={cn(
+          "w-5 h-5 flex-shrink-0",
+          config.visible ? "text-gray-400" : "text-gray-300",
+        )}
         aria-hidden="true"
       />
 
-      <span className={cn("flex-1 text-sm", config.visible ? "text-gray-800" : "text-gray-400")}>
+      <span
+        className={cn(
+          "flex-1 text-sm",
+          config.visible ? "text-gray-800" : "text-gray-400",
+        )}
+      >
         {t(filterItem.labelKey)}
       </span>
 
@@ -68,7 +84,9 @@ function SortableMenuOrderItem({ config, onToggle }: SortableMenuOrderItemProps)
         type="button"
         role="switch"
         aria-checked={config.visible}
-        aria-label={t("settings.menuOrderToggle", { label: t(filterItem.labelKey) })}
+        aria-label={t("settings.menuOrderToggle", {
+          label: t(filterItem.labelKey),
+        })}
         onClick={onToggle}
         className={cn(
           "relative inline-flex w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0",
@@ -115,7 +133,11 @@ export function MenuOrderSection() {
       <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
         {t("settings.menuOrder")}
       </h2>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
         <SortableContext
           items={menuOrder.map((item) => item.mode)}
           strategy={verticalListSortingStrategy}

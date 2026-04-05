@@ -4,7 +4,10 @@ import type { Idea } from '../types';
 
 const COLS = colMap(SHEET_NAMES.IDEAS);
 
-const rowToIdea = (row: unknown[]): Idea => rowToNamedEntity(row, COLS);
+const rowToIdea = (row: unknown[]): Idea => ({
+  ...rowToNamedEntity(row, COLS),
+  description: String(row[COLS.description] ?? ''),
+});
 
 export const getAllIdeas = (): Idea[] => getAllRecords(SHEET_NAMES.IDEAS, rowToIdea);
 export const getIdeasByRevision = (sinceRevision: number): Idea[] =>

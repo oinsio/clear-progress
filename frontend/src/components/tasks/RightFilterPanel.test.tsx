@@ -36,7 +36,9 @@ vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
 
 import { RightFilterPanel } from "./RightFilterPanel";
 
-function renderPanel(overrides?: Partial<Parameters<typeof RightFilterPanel>[0]>) {
+function renderPanel(
+  overrides?: Partial<Parameters<typeof RightFilterPanel>[0]>,
+) {
   return render(
     <MemoryRouter>
       <RightFilterPanel

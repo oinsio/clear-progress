@@ -7,10 +7,13 @@ export function useChecklistItemEditing(
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingItemTitle, setEditingItemTitle] = useState("");
 
-  const handleItemTitleClick = useCallback((item: { id: string; title: string }) => {
-    setEditingItemId(item.id);
-    setEditingItemTitle(item.title);
-  }, []);
+  const handleItemTitleClick = useCallback(
+    (item: { id: string; title: string }) => {
+      setEditingItemId(item.id);
+      setEditingItemTitle(item.title);
+    },
+    [],
+  );
 
   const commitItemEdit = useCallback(
     async (id: string) => {

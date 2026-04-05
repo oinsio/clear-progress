@@ -20,7 +20,8 @@ export interface UsePanelSideReturn {
 }
 
 export function usePanelSide(): UsePanelSideReturn {
-  const [panelSide, setPanelSideState] = useState<PanelSide>(getCachedPanelSide);
+  const [panelSide, setPanelSideState] =
+    useState<PanelSide>(getCachedPanelSide);
 
   const setPanelSide = useCallback((side: PanelSide) => {
     try {

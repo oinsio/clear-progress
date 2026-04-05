@@ -7,7 +7,10 @@ import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { useTaskMutations } from "./useTaskMutations";
 
-const defaultTaskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const defaultTaskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 
 export interface UseGoalTasksReturn {
   tasks: Task[];
@@ -28,7 +31,10 @@ export function useGoalTasks(
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const queryFn = useMemo(() => () => taskService.getByGoalId(goalId), [goalId, taskService]);
+  const queryFn = useMemo(
+    () => () => taskService.getByGoalId(goalId),
+    [goalId, taskService],
+  );
 
   useEffect(() => {
     setIsLoading(true);

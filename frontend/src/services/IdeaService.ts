@@ -13,14 +13,13 @@ export class IdeaService {
     return this.ideaRepository.getById(id);
   }
 
-  async create(
-    partialIdea: Pick<Idea, "name"> & Partial<Idea>,
-  ): Promise<Idea> {
+  async create(partialIdea: Pick<Idea, "name"> & Partial<Idea>): Promise<Idea> {
     const now = new Date().toISOString();
     const idea: Idea = {
       sort_order: 0,
       ...partialIdea,
       id: crypto.randomUUID(),
+      description: partialIdea.description ?? "",
       is_deleted: false,
       created_at: now,
       updated_at: now,

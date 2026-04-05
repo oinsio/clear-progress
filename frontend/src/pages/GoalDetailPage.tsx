@@ -87,7 +87,11 @@ export default function GoalDetailPage() {
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { filterBarPosition } = useFilterBarPosition();
   const isDesktop = useIsDesktop();
-  const { ratio, containerRef: splitContainerRef, handleResizeMouseDown } = usePanelSplit();
+  const {
+    ratio,
+    containerRef: splitContainerRef,
+    handleResizeMouseDown,
+  } = usePanelSplit();
 
   const { defaultBox } = useSettings();
   const isUnsynced = useIsUnsynced(goal ?? { updated_at: "" });
@@ -107,7 +111,11 @@ export default function GoalDetailPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  const coverPreviewSrc = useCoverPreview({ pendingCoverFile, isCoverRemoved, existingCoverUrl });
+  const coverPreviewSrc = useCoverPreview({
+    pendingCoverFile,
+    isCoverRemoved,
+    existingCoverUrl,
+  });
 
   const hasLoadedRef = useRef(false);
   const isLoading = isGoalLoading || isTasksLoading;
@@ -121,7 +129,6 @@ export default function GoalDetailPage() {
       }
     }
   }, [isGoalLoading, goal, navigate]);
-
 
   const tasksByBox = useMemo(() => {
     const grouped: Record<Box, Task[]> = {
@@ -139,7 +146,9 @@ export default function GoalDetailPage() {
   const selectedTask = useMemo(
     () =>
       selectedTaskId
-        ? ([...tasks, ...completedTasks].find((task) => task.id === selectedTaskId) ?? null)
+        ? ([...tasks, ...completedTasks].find(
+            (task) => task.id === selectedTaskId,
+          ) ?? null)
         : null,
     [selectedTaskId, tasks, completedTasks],
   );
@@ -204,7 +213,10 @@ export default function GoalDetailPage() {
       let newCoverFileId = originalCoverFileId;
 
       if (pendingCoverFile) {
-        const result = await defaultCoverService.uploadCover(pendingCoverFile, id);
+        const result = await defaultCoverService.uploadCover(
+          pendingCoverFile,
+          id,
+        );
         newCoverFileId = result.file_id;
         if (originalCoverFileId && originalCoverFileId !== newCoverFileId) {
           void defaultCoverService.deleteCover(originalCoverFileId);
@@ -266,11 +278,17 @@ export default function GoalDetailPage() {
   const activeStatus = goal?.status ?? "planning";
 
   return (
-    <div data-testid="goal-detail-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="goal-detail-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
         {/* Main content column */}
         <div
-          className={cn("flex flex-col overflow-hidden", !isDesktop && selectedTask && "hidden")}
+          className={cn(
+            "flex flex-col overflow-hidden",
+            !isDesktop && selectedTask && "hidden",
+          )}
           style={
             isDesktop && selectedTask
               ? { width: `${ratio * 100}%`, flexShrink: 0 }
@@ -302,7 +320,9 @@ export default function GoalDetailPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-semibold text-accent">{t("selector.goal")}</h1>
+            <h1 className="text-lg font-semibold text-accent">
+              {t("selector.goal")}
+            </h1>
           </header>
 
           {/* Scrollable content */}
@@ -369,32 +389,39 @@ export default function GoalDetailPage() {
                         {t("goal.statusLabel")}
                       </label>
                       <div className="flex rounded-full border border-accent overflow-hidden">
-                        {STATUS_OPTIONS.map(({ status: optionStatus, icon: StatusIcon }) => {
-                          const isSelected = activeStatus === optionStatus;
-                          return (
-                            <button
-                              key={optionStatus}
-                              type="button"
-                              aria-label={t(`goal.status.${optionStatus}`)}
-                              aria-pressed={isSelected}
-                              onClick={() => void handleStatusChange(optionStatus)}
-                              className={cn(
-                                "flex-1 flex items-center justify-center py-3 transition-colors",
-                                isSelected
-                                  ? "bg-accent text-white"
-                                  : "text-accent bg-white hover:bg-accent/10",
-                              )}
-                            >
-                              <StatusIcon size={18} />
-                            </button>
-                          );
-                        })}
+                        {STATUS_OPTIONS.map(
+                          ({ status: optionStatus, icon: StatusIcon }) => {
+                            const isSelected = activeStatus === optionStatus;
+                            return (
+                              <button
+                                key={optionStatus}
+                                type="button"
+                                aria-label={t(`goal.status.${optionStatus}`)}
+                                aria-pressed={isSelected}
+                                onClick={() =>
+                                  void handleStatusChange(optionStatus)
+                                }
+                                className={cn(
+                                  "flex-1 flex items-center justify-center py-3 transition-colors",
+                                  isSelected
+                                    ? "bg-accent text-white"
+                                    : "text-accent bg-white hover:bg-accent/10",
+                                )}
+                              >
+                                <StatusIcon size={18} />
+                              </button>
+                            );
+                          },
+                        )}
                       </div>
                     </div>
 
                     {/* Save error */}
                     {saveError && (
-                      <p data-testid="goal-save-error" className="text-sm text-red-500">
+                      <p
+                        data-testid="goal-save-error"
+                        className="text-sm text-red-500"
+                      >
                         {saveError}
                       </p>
                     )}
@@ -439,7 +466,9 @@ export default function GoalDetailPage() {
                         <p className="text-base font-medium text-gray-800 text-center">
                           {t("goal.deleteConfirmTitle")}
                         </p>
-                        <p className="text-sm text-gray-500 text-center">{editTitle}</p>
+                        <p className="text-sm text-gray-500 text-center">
+                          {editTitle}
+                        </p>
                         <div className="flex gap-3 w-full">
                           <button
                             type="button"
@@ -496,7 +525,11 @@ export default function GoalDetailPage() {
                       {/* Toggle completed tasks button */}
                       <button
                         type="button"
-                        aria-label={showCompleted ? t("goal.hideCompleted") : t("goal.showCompleted")}
+                        aria-label={
+                          showCompleted
+                            ? t("goal.hideCompleted")
+                            : t("goal.showCompleted")
+                        }
                         data-testid="toggle-completed-button"
                         onClick={() => setShowCompleted((prev) => !prev)}
                         className={cn(
@@ -589,7 +622,6 @@ export default function GoalDetailPage() {
               </button>
             </div>
           )}
-
         </div>
 
         {/* Resize handle between task list and detail panel */}

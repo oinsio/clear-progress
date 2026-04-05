@@ -53,9 +53,22 @@ describe("SetupPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
-    mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
-    mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
-    mockUseAuth.mockReturnValue({ accessToken: "mock-token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+    mockUsePanelOpen.mockReturnValue({
+      isPanelOpen: false,
+      togglePanelOpen: vi.fn(),
+    });
+    mockUsePanelSide.mockReturnValue({
+      panelSide: "right",
+      setPanelSide: vi.fn(),
+    });
+    mockUseAuth.mockReturnValue({
+      accessToken: "mock-token",
+      userEmail: null,
+      signIn: vi.fn(),
+      signOut: vi.fn(),
+      silentRefresh: vi.fn(),
+      userPicture: null,
+    });
   });
 
   describe("when no URL is configured", () => {
@@ -178,7 +191,9 @@ describe("SetupPage", () => {
       });
       fireEvent.click(screen.getByTestId("setup-connect-button"));
       await waitFor(() => {
-        expect(screen.getByTestId("setup-initialize-button")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("setup-initialize-button"),
+        ).toBeInTheDocument();
       });
     });
 
@@ -186,38 +201,81 @@ describe("SetupPage", () => {
       async function reachNotInitializedPhase() {
         mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
         renderPage();
-        fireEvent.change(screen.getByTestId("setup-url-input"), { target: { value: TEST_URL } });
+        fireEvent.change(screen.getByTestId("setup-url-input"), {
+          target: { value: TEST_URL },
+        });
         fireEvent.click(screen.getByTestId("setup-connect-button"));
         await waitFor(() => screen.getByTestId("setup-initialize-button"));
       }
 
       it("should enable initialize button when authenticated", async () => {
-        mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+        mockUseAuth.mockReturnValue({
+          accessToken: "token",
+          userEmail: null,
+          signIn: vi.fn(),
+          signOut: vi.fn(),
+          silentRefresh: vi.fn(),
+          userPicture: null,
+        });
         await reachNotInitializedPhase();
-        expect(screen.getByTestId("setup-initialize-button")).not.toBeDisabled();
+        expect(
+          screen.getByTestId("setup-initialize-button"),
+        ).not.toBeDisabled();
       });
 
       it("should disable initialize button when not authenticated", async () => {
-        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+        mockUseAuth.mockReturnValue({
+          accessToken: null,
+          userEmail: null,
+          signIn: vi.fn(),
+          signOut: vi.fn(),
+          silentRefresh: vi.fn(),
+          userPicture: null,
+        });
         await reachNotInitializedPhase();
         expect(screen.getByTestId("setup-initialize-button")).toBeDisabled();
       });
 
       it("should show sign-in required message when not authenticated", async () => {
-        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+        mockUseAuth.mockReturnValue({
+          accessToken: null,
+          userEmail: null,
+          signIn: vi.fn(),
+          signOut: vi.fn(),
+          silentRefresh: vi.fn(),
+          userPicture: null,
+        });
         await reachNotInitializedPhase();
-        expect(screen.getByTestId("setup-sign-in-required")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("setup-sign-in-required"),
+        ).toBeInTheDocument();
       });
 
       it("should not show sign-in required when authenticated", async () => {
-        mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+        mockUseAuth.mockReturnValue({
+          accessToken: "token",
+          userEmail: null,
+          signIn: vi.fn(),
+          signOut: vi.fn(),
+          silentRefresh: vi.fn(),
+          userPicture: null,
+        });
         await reachNotInitializedPhase();
-        expect(screen.queryByTestId("setup-sign-in-required")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("setup-sign-in-required"),
+        ).not.toBeInTheDocument();
       });
 
       it("should call signIn when sign-in button in not_initialized is clicked", async () => {
         const signIn = vi.fn();
-        mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn, signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+        mockUseAuth.mockReturnValue({
+          accessToken: null,
+          userEmail: null,
+          signIn,
+          signOut: vi.fn(),
+          silentRefresh: vi.fn(),
+          userPicture: null,
+        });
         await reachNotInitializedPhase();
         fireEvent.click(screen.getByTestId("setup-sign-in-btn"));
         expect(signIn).toHaveBeenCalled();
@@ -294,7 +352,9 @@ describe("SetupPage", () => {
       renderPage();
       fireEvent.click(screen.getByTestId("setup-gas-section-toggle"));
       expect(screen.queryByTestId("setup-url-input")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("setup-client-id-input")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("setup-client-id-input"),
+      ).not.toBeInTheDocument();
     });
 
     it("should show inputs again when GAS section is reopened", () => {
@@ -307,19 +367,35 @@ describe("SetupPage", () => {
 
   describe("sign-in button in GAS collapsible", () => {
     it("should show gas sign-in button when not authenticated in input phase", () => {
-      mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+      mockUseAuth.mockReturnValue({
+        accessToken: null,
+        userEmail: null,
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+        silentRefresh: vi.fn(),
+        userPicture: null,
+      });
       renderPage();
       expect(screen.getByTestId("setup-gas-sign-in-btn")).toBeInTheDocument();
     });
 
     it("should not show gas sign-in button when authenticated in input phase", () => {
       renderPage();
-      expect(screen.queryByTestId("setup-gas-sign-in-btn")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("setup-gas-sign-in-btn"),
+      ).not.toBeInTheDocument();
     });
 
     it("should call signIn when gas sign-in button is clicked", () => {
       const signIn = vi.fn();
-      mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn, signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+      mockUseAuth.mockReturnValue({
+        accessToken: null,
+        userEmail: null,
+        signIn,
+        signOut: vi.fn(),
+        silentRefresh: vi.fn(),
+        userPicture: null,
+      });
       renderPage();
       fireEvent.click(screen.getByTestId("setup-gas-sign-in-btn"));
       expect(signIn).toHaveBeenCalled();
@@ -354,7 +430,9 @@ describe("SetupPage", () => {
       localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, EXISTING_CLIENT_ID);
       renderPage();
       fireEvent.click(screen.getByTestId("setup-disconnect-button"));
-      expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(EXISTING_CLIENT_ID);
+      expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(
+        EXISTING_CLIENT_ID,
+      );
     });
 
     it("should show input form after disconnecting", () => {
@@ -365,13 +443,31 @@ describe("SetupPage", () => {
 
     it("should navigate to inbox when sign-in completes in connected phase", async () => {
       localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, EXISTING_CLIENT_ID);
-      mockUseAuth.mockReturnValue({ accessToken: null, userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
+      mockUseAuth.mockReturnValue({
+        accessToken: null,
+        userEmail: null,
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+        silentRefresh: vi.fn(),
+        userPicture: null,
+      });
       const { rerender } = renderPage();
 
       expect(screen.getByTestId("setup-sign-in-required")).toBeInTheDocument();
 
-      mockUseAuth.mockReturnValue({ accessToken: "token", userEmail: null, signIn: vi.fn(), signOut: vi.fn(), silentRefresh: vi.fn(), userPicture: null });
-      rerender(<MemoryRouter><SetupPage /></MemoryRouter>);
+      mockUseAuth.mockReturnValue({
+        accessToken: "token",
+        userEmail: null,
+        signIn: vi.fn(),
+        signOut: vi.fn(),
+        silentRefresh: vi.fn(),
+        userPicture: null,
+      });
+      rerender(
+        <MemoryRouter>
+          <SetupPage />
+        </MemoryRouter>,
+      );
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith(ROUTES.INBOX);
@@ -381,7 +477,8 @@ describe("SetupPage", () => {
 
   describe("Google Client ID normalization", () => {
     const SHORT_CLIENT_ID = "306298988178-abc123def456";
-    const FULL_CLIENT_ID = "306298988178-abc123def456.apps.googleusercontent.com";
+    const FULL_CLIENT_ID =
+      "306298988178-abc123def456.apps.googleusercontent.com";
 
     beforeEach(() => {
       sessionStorage.clear();
@@ -398,7 +495,9 @@ describe("SetupPage", () => {
       });
       fireEvent.click(screen.getByTestId("setup-connect-button"));
       await waitFor(() => {
-        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(FULL_CLIENT_ID);
+        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(
+          FULL_CLIENT_ID,
+        );
       });
     });
 
@@ -413,7 +512,9 @@ describe("SetupPage", () => {
       });
       fireEvent.click(screen.getByTestId("setup-connect-button"));
       await waitFor(() => {
-        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(FULL_CLIENT_ID);
+        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(
+          FULL_CLIENT_ID,
+        );
       });
     });
 

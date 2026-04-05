@@ -27,49 +27,69 @@ function renderQuickActions(overrides = {}) {
 describe("TaskQuickActions", () => {
   it("should render notes button", () => {
     renderQuickActions();
-    expect(screen.getByRole("button", { name: /редактировать заметку/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /редактировать заметку/i }),
+    ).toBeInTheDocument();
   });
 
   it("should render goal button", () => {
     renderQuickActions();
-    expect(screen.getByRole("button", { name: /выбрать цель/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /выбрать цель/i }),
+    ).toBeInTheDocument();
   });
 
   it("should render box button", () => {
     renderQuickActions();
-    expect(screen.getByRole("button", { name: /переместить/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /переместить/i }),
+    ).toBeInTheDocument();
   });
 
   it("should render full edit button", () => {
     renderQuickActions();
-    expect(screen.getByRole("button", { name: /открыть редактирование/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /открыть редактирование/i }),
+    ).toBeInTheDocument();
   });
 
   it("should show notes textarea when notes button is clicked", async () => {
     renderQuickActions();
-    await userEvent.click(screen.getByRole("button", { name: /редактировать заметку/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /редактировать заметку/i }),
+    );
     expect(screen.getByTestId("quick-notes-input")).toBeInTheDocument();
   });
 
   it("should hide notes textarea when notes button is clicked again", async () => {
     renderQuickActions();
-    await userEvent.click(screen.getByRole("button", { name: /редактировать заметку/i }));
-    await userEvent.click(screen.getByRole("button", { name: /редактировать заметку/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /редактировать заметку/i }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /редактировать заметку/i }),
+    );
     expect(screen.queryByTestId("quick-notes-input")).not.toBeInTheDocument();
   });
 
   it("should prefill notes textarea with task notes", async () => {
     const task = buildTask({ notes: "existing notes" });
     renderQuickActions({ task });
-    await userEvent.click(screen.getByRole("button", { name: /редактировать заметку/i }));
-    expect(screen.getByTestId("quick-notes-input")).toHaveValue("existing notes");
+    await userEvent.click(
+      screen.getByRole("button", { name: /редактировать заметку/i }),
+    );
+    expect(screen.getByTestId("quick-notes-input")).toHaveValue(
+      "existing notes",
+    );
   });
 
   it("should call onUpdate with new notes when notes saved via Enter", async () => {
     const task = buildTask({ notes: "" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, onUpdate });
-    await userEvent.click(screen.getByRole("button", { name: /редактировать заметку/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /редактировать заметку/i }),
+    );
     const textarea = screen.getByTestId("quick-notes-input");
     await userEvent.clear(textarea);
     await userEvent.type(textarea, "new notes");
@@ -81,27 +101,37 @@ describe("TaskQuickActions", () => {
     const task = buildTask({ notes: "" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, onUpdate });
-    await userEvent.click(screen.getByRole("button", { name: /редактировать заметку/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /редактировать заметку/i }),
+    );
     const textarea = screen.getByTestId("quick-notes-input");
     await userEvent.type(textarea, "заметка iOS Done");
     fireEvent.blur(textarea);
     await waitFor(() => {
-      expect(onUpdate).toHaveBeenCalledWith(task.id, { notes: "заметка iOS Done" });
+      expect(onUpdate).toHaveBeenCalledWith(task.id, {
+        notes: "заметка iOS Done",
+      });
     });
   });
 
   it("should show goal list when goal button is clicked", async () => {
     const goal = buildGoal({ title: "Launch app" });
     renderQuickActions({ goals: [goal] });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать цель/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать цель/i }),
+    );
     expect(screen.getByText("Launch app")).toBeInTheDocument();
   });
 
   it("should hide goal list when goal button is clicked again", async () => {
     const goal = buildGoal({ title: "Launch app" });
     renderQuickActions({ goals: [goal] });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать цель/i }));
-    await userEvent.click(screen.getByRole("button", { name: /выбрать цель/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать цель/i }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать цель/i }),
+    );
     expect(screen.queryByText("Launch app")).not.toBeInTheDocument();
   });
 
@@ -110,7 +140,9 @@ describe("TaskQuickActions", () => {
     const task = buildTask({ goal_id: "" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, goals: [goal], onUpdate });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать цель/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать цель/i }),
+    );
     await userEvent.click(screen.getByText("Launch app"));
     expect(onUpdate).toHaveBeenCalledWith(task.id, { goal_id: goal.id });
   });
@@ -118,7 +150,9 @@ describe("TaskQuickActions", () => {
   it("should show box options when box button is clicked", async () => {
     renderQuickActions();
     await userEvent.click(screen.getByRole("button", { name: /переместить/i }));
-    expect(screen.getByRole("button", { name: /сегодня/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /сегодня/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /неделя/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /позже/i })).toBeInTheDocument();
   });
@@ -153,47 +187,65 @@ describe("TaskQuickActions", () => {
   it("should call onOpenEdit when full edit button is clicked", async () => {
     const onOpenEdit = vi.fn();
     renderQuickActions({ onOpenEdit });
-    await userEvent.click(screen.getByRole("button", { name: /открыть редактирование/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /открыть редактирование/i }),
+    );
     expect(onOpenEdit).toHaveBeenCalled();
   });
 
   it("should show no goal option in goal picker", async () => {
     renderQuickActions({ goals: [buildGoal()] });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать цель/i }));
-    expect(screen.getByRole("button", { name: /без цели/i })).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать цель/i }),
+    );
+    expect(
+      screen.getByRole("button", { name: /без цели/i }),
+    ).toBeInTheDocument();
   });
 
   it("should call onUpdate with empty goal_id when no goal selected", async () => {
     const task = buildTask({ goal_id: "some-goal-id" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, goals: [buildGoal()], onUpdate });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать цель/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать цель/i }),
+    );
     await userEvent.click(screen.getByRole("button", { name: /без цели/i }));
     expect(onUpdate).toHaveBeenCalledWith(task.id, { goal_id: "" });
   });
 
   it("should render context button", () => {
     renderQuickActions();
-    expect(screen.getByRole("button", { name: /выбрать контекст/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /выбрать контекст/i }),
+    ).toBeInTheDocument();
   });
 
   it("should render category button", () => {
     renderQuickActions();
-    expect(screen.getByRole("button", { name: /выбрать категорию/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /выбрать категорию/i }),
+    ).toBeInTheDocument();
   });
 
   it("should show context list when context button is clicked", async () => {
     const context = buildContext({ name: "@Home" });
     renderQuickActions({ contexts: [context] });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать контекст/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать контекст/i }),
+    );
     expect(screen.getByText("@Home")).toBeInTheDocument();
   });
 
   it("should hide context list when context button is clicked again", async () => {
     const context = buildContext({ name: "@Home" });
     renderQuickActions({ contexts: [context] });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать контекст/i }));
-    await userEvent.click(screen.getByRole("button", { name: /выбрать контекст/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать контекст/i }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать контекст/i }),
+    );
     expect(screen.queryByText("@Home")).not.toBeInTheDocument();
   });
 
@@ -202,7 +254,9 @@ describe("TaskQuickActions", () => {
     const task = buildTask({ context_id: "" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, contexts: [context], onUpdate });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать контекст/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать контекст/i }),
+    );
     await userEvent.click(screen.getByText("@Home"));
     expect(onUpdate).toHaveBeenCalledWith(task.id, { context_id: context.id });
   });
@@ -211,23 +265,33 @@ describe("TaskQuickActions", () => {
     const task = buildTask({ context_id: "some-context-id" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, contexts: [buildContext()], onUpdate });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать контекст/i }));
-    await userEvent.click(screen.getByRole("button", { name: /без контекста/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать контекст/i }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /без контекста/i }),
+    );
     expect(onUpdate).toHaveBeenCalledWith(task.id, { context_id: "" });
   });
 
   it("should show category list when category button is clicked", async () => {
     const category = buildCategory({ name: "Work" });
     renderQuickActions({ categories: [category] });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать категорию/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать категорию/i }),
+    );
     expect(screen.getByText("Work")).toBeInTheDocument();
   });
 
   it("should hide category list when category button is clicked again", async () => {
     const category = buildCategory({ name: "Work" });
     renderQuickActions({ categories: [category] });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать категорию/i }));
-    await userEvent.click(screen.getByRole("button", { name: /выбрать категорию/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать категорию/i }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать категорию/i }),
+    );
     expect(screen.queryByText("Work")).not.toBeInTheDocument();
   });
 
@@ -236,17 +300,25 @@ describe("TaskQuickActions", () => {
     const task = buildTask({ category_id: "" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, categories: [category], onUpdate });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать категорию/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать категорию/i }),
+    );
     await userEvent.click(screen.getByText("Work"));
-    expect(onUpdate).toHaveBeenCalledWith(task.id, { category_id: category.id });
+    expect(onUpdate).toHaveBeenCalledWith(task.id, {
+      category_id: category.id,
+    });
   });
 
   it("should call onUpdate with empty category_id when no category selected", async () => {
     const task = buildTask({ category_id: "some-category-id" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, categories: [buildCategory()], onUpdate });
-    await userEvent.click(screen.getByRole("button", { name: /выбрать категорию/i }));
-    await userEvent.click(screen.getByRole("button", { name: /без категории/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /выбрать категорию/i }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /без категории/i }),
+    );
     expect(onUpdate).toHaveBeenCalledWith(task.id, { category_id: "" });
   });
 });

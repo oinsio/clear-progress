@@ -4,7 +4,10 @@ import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { TaskList } from "@/components/tasks/TaskList";
 import { GoalItem } from "@/components/goals/GoalItem";
-import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import {
+  RightFilterPanel,
+  type RightPanelMode,
+} from "@/components/tasks/RightFilterPanel";
 import { useSearch } from "@/hooks/useSearch";
 import { useGoals } from "@/hooks/useGoals";
 import { useContexts } from "@/hooks/useContexts";
@@ -53,16 +56,19 @@ export default function SearchPage() {
     [search, clear],
   );
 
-  const handleCompleteTask = useCallback(async (id: string) => {
-    const task = await defaultTaskService.getById(id);
-    if (!task) return;
-    if (task.is_completed) {
-      await defaultTaskService.noncomplete(id);
-    } else {
-      await defaultTaskService.complete(id);
-    }
-    if (searchQuery) void search(searchQuery);
-  }, [searchQuery, search]);
+  const handleCompleteTask = useCallback(
+    async (id: string) => {
+      const task = await defaultTaskService.getById(id);
+      if (!task) return;
+      if (task.is_completed) {
+        await defaultTaskService.noncomplete(id);
+      } else {
+        await defaultTaskService.complete(id);
+      }
+      if (searchQuery) void search(searchQuery);
+    },
+    [searchQuery, search],
+  );
 
   const handleUpdateTask = useCallback(
     async (id: string, changes: Partial<Task>) => {
@@ -89,7 +95,11 @@ export default function SearchPage() {
 
   const handleModeChange = useCallback(
     (newMode: RightPanelMode) => {
-      if (newMode === "inbox" || newMode === "tasks" || newMode === "completed") {
+      if (
+        newMode === "inbox" ||
+        newMode === "tasks" ||
+        newMode === "completed"
+      ) {
         navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
       } else if (newMode === "categories") {
         navigate(ROUTES.CATEGORIES);
@@ -106,12 +116,19 @@ export default function SearchPage() {
   const hasQuery = searchQuery.length > 0;
 
   return (
-    <div data-testid="search-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="search-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Search header */}
         <header className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 bg-white">
-          <Search size={16} className="text-gray-400 flex-shrink-0" aria-hidden="true" />
+          <Search
+            size={16}
+            className="text-gray-400 flex-shrink-0"
+            aria-hidden="true"
+          />
           <input
             type="search"
             value={searchQuery}
@@ -130,49 +147,53 @@ export default function SearchPage() {
         {/* Results */}
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
-          {!hasQuery && (
-            <p className="text-sm text-gray-400 text-center py-16">{t("search.emptyQuery")}</p>
-          )}
+            {!hasQuery && (
+              <p className="text-sm text-gray-400 text-center py-16">
+                {t("search.emptyQuery")}
+              </p>
+            )}
 
-          {hasQuery && !isSearching && !hasResults && (
-            <p className="text-sm text-gray-400 text-center py-16">{t("search.noResults")}</p>
-          )}
+            {hasQuery && !isSearching && !hasResults && (
+              <p className="text-sm text-gray-400 text-center py-16">
+                {t("search.noResults")}
+              </p>
+            )}
 
-          {tasks.length > 0 && (
-            <section aria-label={t("search.tasks")}>
-              <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wide px-4 py-2 border-b border-gray-100">
-                {t("search.tasks")}
-              </h2>
-              <TaskList
-                tasks={tasks}
-                goals={allGoals}
-                contexts={contexts}
-                categories={categories}
-                onComplete={handleCompleteTask}
-                onUpdate={handleUpdateTask}
-                onMove={handleMoveTask}
-                onDelete={() => {}}
-              />
-            </section>
-          )}
+            {tasks.length > 0 && (
+              <section aria-label={t("search.tasks")}>
+                <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wide px-4 py-2 border-b border-gray-100">
+                  {t("search.tasks")}
+                </h2>
+                <TaskList
+                  tasks={tasks}
+                  goals={allGoals}
+                  contexts={contexts}
+                  categories={categories}
+                  onComplete={handleCompleteTask}
+                  onUpdate={handleUpdateTask}
+                  onMove={handleMoveTask}
+                  onDelete={() => {}}
+                />
+              </section>
+            )}
 
-          {goals.length > 0 && (
-            <section aria-label={t("search.goals")}>
-              <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wide px-4 py-2 border-b border-gray-100">
-                {t("search.goals")}
-              </h2>
-              <ul>
-                {goals.map((goal) => (
-                  <GoalItem
-                    key={goal.id}
-                    goal={goal}
-                    taskCount={0}
-                    onNavigate={handleNavigateToGoal}
-                  />
-                ))}
-              </ul>
-            </section>
-          )}
+            {goals.length > 0 && (
+              <section aria-label={t("search.goals")}>
+                <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wide px-4 py-2 border-b border-gray-100">
+                  {t("search.goals")}
+                </h2>
+                <ul>
+                  {goals.map((goal) => (
+                    <GoalItem
+                      key={goal.id}
+                      goal={goal}
+                      taskCount={0}
+                      onNavigate={handleNavigateToGoal}
+                    />
+                  ))}
+                </ul>
+              </section>
+            )}
           </div>
         </main>
       </div>

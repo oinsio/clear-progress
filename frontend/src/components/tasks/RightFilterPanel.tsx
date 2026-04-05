@@ -44,13 +44,38 @@ export interface FilterItem {
 
 export const FILTER_ITEMS: FilterItem[] = [
   { mode: "inbox", labelKey: "filter.inbox", Icon: Inbox },
-  { mode: "contexts", labelKey: "filter.contexts", Icon: MapPin, route: ROUTES.CONTEXTS },
-  { mode: "categories", labelKey: "filter.categories", Icon: Tag, route: ROUTES.CATEGORIES },
-  { mode: "goals", labelKey: "filter.goals", Icon: Target, route: ROUTES.GOALS },
-  { mode: "ideas", labelKey: "filter.ideas", Icon: Lightbulb, route: ROUTES.IDEAS },
+  {
+    mode: "contexts",
+    labelKey: "filter.contexts",
+    Icon: MapPin,
+    route: ROUTES.CONTEXTS,
+  },
+  {
+    mode: "categories",
+    labelKey: "filter.categories",
+    Icon: Tag,
+    route: ROUTES.CATEGORIES,
+  },
+  {
+    mode: "goals",
+    labelKey: "filter.goals",
+    Icon: Target,
+    route: ROUTES.GOALS,
+  },
+  {
+    mode: "ideas",
+    labelKey: "filter.ideas",
+    Icon: Lightbulb,
+    route: ROUTES.IDEAS,
+  },
   { mode: "tasks", labelKey: "filter.tasks", Icon: CheckSquare },
   { mode: "completed", labelKey: "filter.completed", Icon: CheckCheck },
-  { mode: "deleted", labelKey: "filter.deleted", Icon: Trash2, route: ROUTES.DELETED },
+  {
+    mode: "deleted",
+    labelKey: "filter.deleted",
+    Icon: Trash2,
+    route: ROUTES.DELETED,
+  },
 ];
 
 const FILTER_ITEMS_MAP: Record<MenuMode, FilterItem> = Object.fromEntries(
@@ -85,8 +110,10 @@ export function RightFilterPanel({
     .map((config) => FILTER_ITEMS_MAP[config.mode]);
 
   const isSyncing = connectionStatus === "syncing";
-  const hasSyncError = connectionStatus === "error" || connectionStatus === "offline";
-  const needsSignIn = connectionStatus === "unauthorized" || connectionStatus === "no_auth";
+  const hasSyncError =
+    connectionStatus === "error" || connectionStatus === "offline";
+  const needsSignIn =
+    connectionStatus === "unauthorized" || connectionStatus === "no_auth";
   const isConfigured = connectionStatus !== "not_configured";
 
   const syncLabel = isSyncing
@@ -102,14 +129,19 @@ export function RightFilterPanel({
 
   const isLeft = side === "left";
   const effectiveIsOpen = isPanelAlwaysOpen ? true : isOpen;
-  const panelBorder = isLeft ? "border-r border-accent/70" : "border-l border-accent/70";
+  const panelBorder = isLeft
+    ? "border-r border-accent/70"
+    : "border-l border-accent/70";
 
   const accountButton = (
     <button
       type="button"
       aria-label={t("settings.settingsAriaLabel")}
       data-testid="right-panel-account"
-      onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SETTINGS); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        navigate(ROUTES.SETTINGS);
+      }}
       className="flex-shrink-0 flex items-center justify-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
     >
       {userPicture ? (
@@ -129,7 +161,10 @@ export function RightFilterPanel({
       type="button"
       aria-label={t("auth.signInButton")}
       data-testid="right-panel-sign-in"
-      onClick={(e) => { e.stopPropagation(); signIn(); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        signIn();
+      }}
       className="flex-1 flex items-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
     >
       <span className="text-base font-medium">{t("auth.signInButton")}</span>
@@ -152,7 +187,9 @@ export function RightFilterPanel({
         />
         {hasSyncError && (
           <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-red-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-[14px] font-bold leading-none">!</span>
+            <span className="text-white text-[14px] font-bold leading-none">
+              !
+            </span>
           </span>
         )}
       </div>
@@ -163,7 +200,10 @@ export function RightFilterPanel({
       type="button"
       aria-label={t("settings.loginAriaLabel")}
       data-testid="right-panel-login"
-      onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SETUP); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        navigate(ROUTES.SETUP);
+      }}
       className="flex-1 flex items-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
     >
       <span className="text-base font-medium">{t("settings.login")}</span>
@@ -181,7 +221,12 @@ export function RightFilterPanel({
       {effectiveIsOpen ? (
         <>
           {/* Mobile placeholder: keeps flex layout stable while panel is an overlay */}
-          <div className={cn("md:hidden w-14 flex-shrink-0 bg-accent", panelBorder)} />
+          <div
+            className={cn(
+              "md:hidden w-14 flex-shrink-0 bg-accent",
+              panelBorder,
+            )}
+          />
           <div
             className={cn(
               "w-52 flex flex-col bg-accent overflow-hidden",
@@ -195,66 +240,94 @@ export function RightFilterPanel({
             aria-label={isPanelAlwaysOpen ? undefined : t("filter.close")}
             role={isPanelAlwaysOpen ? undefined : "button"}
             tabIndex={isPanelAlwaysOpen ? undefined : 0}
-            onKeyDown={isPanelAlwaysOpen ? undefined : (e) => e.key === "Enter" && onToggle()}
+            onKeyDown={
+              isPanelAlwaysOpen
+                ? undefined
+                : (e) => e.key === "Enter" && onToggle()
+            }
           >
-          {/* Account / sync row */}
-          <div className="flex items-center justify-between border-b border-white/20">
-            {isLeft ? (
-              <>{accountButton}{syncLoginButton}</>
-            ) : (
-              <>{syncLoginButton}{accountButton}</>
-            )}
-          </div>
+            {/* Account / sync row */}
+            <div className="flex items-center justify-between border-b border-white/20">
+              {isLeft ? (
+                <>
+                  {accountButton}
+                  {syncLoginButton}
+                </>
+              ) : (
+                <>
+                  {syncLoginButton}
+                  {accountButton}
+                </>
+              )}
+            </div>
 
-          {/* Filter items */}
-          <nav className="flex-1 px-2 py-2 overflow-y-auto" aria-label={t("filter.open")}>
-            {visibleFilterItems.map(({ mode: itemMode, labelKey, Icon, route }) => {
-              const isActive = mode === itemMode;
-              const label = t(labelKey);
-              return (
-                <button
-                  key={itemMode}
-                  type="button"
-                  aria-label={label}
-                  aria-pressed={isActive}
-                  data-testid={`right-filter-${itemMode}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (route) { navigate(route); } else { onModeChange(isActive ? null : itemMode); }
-                  }}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors text-left",
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "text-white/80 hover:bg-white/10 hover:text-white",
-                  )}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Bottom actions: Search */}
-          <div className="px-2 py-2 border-t border-white/25">
-            <button
-              type="button"
-              aria-label={t("filter.search")}
-              data-testid="right-filter-search"
-              onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SEARCH); }}
-              className="w-full flex items-center gap-3 px-3 h-10 rounded-xl text-sm font-medium transition-colors text-left text-white/80 hover:bg-white/10 hover:text-white"
+            {/* Filter items */}
+            <nav
+              className="flex-1 px-2 py-2 overflow-y-auto"
+              aria-label={t("filter.open")}
             >
-              <Search className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-              <span>{t("filter.search")}</span>
-            </button>
+              {visibleFilterItems.map(
+                ({ mode: itemMode, labelKey, Icon, route }) => {
+                  const isActive = mode === itemMode;
+                  const label = t(labelKey);
+                  return (
+                    <button
+                      key={itemMode}
+                      type="button"
+                      aria-label={label}
+                      aria-pressed={isActive}
+                      data-testid={`right-filter-${itemMode}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (route) {
+                          navigate(route);
+                        } else {
+                          onModeChange(isActive ? null : itemMode);
+                        }
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors text-left",
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "text-white/80 hover:bg-white/10 hover:text-white",
+                      )}
+                    >
+                      <Icon
+                        className="w-5 h-5 flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span>{label}</span>
+                    </button>
+                  );
+                },
+              )}
+            </nav>
+
+            {/* Bottom actions: Search */}
+            <div className="px-2 py-2 border-t border-white/25">
+              <button
+                type="button"
+                aria-label={t("filter.search")}
+                data-testid="right-filter-search"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(ROUTES.SEARCH);
+                }}
+                className="w-full flex items-center gap-3 px-3 h-10 rounded-xl text-sm font-medium transition-colors text-left text-white/80 hover:bg-white/10 hover:text-white"
+              >
+                <Search className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+                <span>{t("filter.search")}</span>
+              </button>
+            </div>
           </div>
-        </div>
         </>
       ) : (
         /* Collapsed strip */
         <div
-          className={cn("w-14 flex flex-col items-center bg-accent overflow-hidden cursor-pointer", panelBorder)}
+          className={cn(
+            "w-14 flex flex-col items-center bg-accent overflow-hidden cursor-pointer",
+            panelBorder,
+          )}
           onClick={onToggle}
           data-testid="right-panel-toggle"
           aria-label={t("filter.open")}
@@ -268,7 +341,10 @@ export function RightFilterPanel({
               type="button"
               aria-label={t("auth.signInButton")}
               data-testid="right-panel-sign-in"
-              onClick={(e) => { e.stopPropagation(); signIn(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                signIn();
+              }}
               className="w-10 h-10 flex items-center justify-center mt-3 mb-1 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-colors"
             >
               <CircleUser className="w-6 h-6" aria-hidden="true" />
@@ -287,7 +363,9 @@ export function RightFilterPanel({
               />
               {hasSyncError && (
                 <span className="absolute top-3.5 right-3.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-[14px] font-bold leading-none">!</span>
+                  <span className="text-white text-[14px] font-bold leading-none">
+                    !
+                  </span>
                 </span>
               )}
             </button>
@@ -296,7 +374,10 @@ export function RightFilterPanel({
               type="button"
               aria-label={t("settings.settingsAriaLabel")}
               data-testid="right-panel-account"
-              onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SETTINGS); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(ROUTES.SETTINGS);
+              }}
               className="w-10 h-10 flex items-center justify-center mt-3 mb-1 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-colors"
             >
               {userPicture ? (
@@ -312,32 +393,41 @@ export function RightFilterPanel({
           )}
 
           {/* All filter icons */}
-          <nav className="flex-1 flex flex-col items-center gap-1 py-1 overflow-y-auto" aria-label={t("filter.open")}>
-            {visibleFilterItems.map(({ mode: itemMode, labelKey, Icon, route }) => {
-              const isActive = mode === itemMode;
-              const label = t(labelKey);
-              return (
-                <button
-                  key={itemMode}
-                  type="button"
-                  aria-label={label}
-                  aria-pressed={isActive}
-                  data-testid={`right-filter-${itemMode}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (route) { navigate(route); } else { onModeChange(isActive ? null : itemMode); }
-                  }}
-                  className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center transition-colors flex-shrink-0",
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "text-white/70 hover:bg-white/10 hover:text-white",
-                  )}
-                >
-                  <Icon className="w-5 h-5" aria-hidden="true" />
-                </button>
-              );
-            })}
+          <nav
+            className="flex-1 flex flex-col items-center gap-1 py-1 overflow-y-auto"
+            aria-label={t("filter.open")}
+          >
+            {visibleFilterItems.map(
+              ({ mode: itemMode, labelKey, Icon, route }) => {
+                const isActive = mode === itemMode;
+                const label = t(labelKey);
+                return (
+                  <button
+                    key={itemMode}
+                    type="button"
+                    aria-label={label}
+                    aria-pressed={isActive}
+                    data-testid={`right-filter-${itemMode}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (route) {
+                        navigate(route);
+                      } else {
+                        onModeChange(isActive ? null : itemMode);
+                      }
+                    }}
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-colors flex-shrink-0",
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "text-white/70 hover:bg-white/10 hover:text-white",
+                    )}
+                  >
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                  </button>
+                );
+              },
+            )}
           </nav>
 
           {/* Bottom: search */}
@@ -346,7 +436,10 @@ export function RightFilterPanel({
               type="button"
               aria-label={t("filter.search")}
               data-testid="right-filter-search"
-              onClick={(e) => { e.stopPropagation(); navigate(ROUTES.SEARCH); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(ROUTES.SEARCH);
+              }}
               className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors text-white/70 hover:bg-white/10 hover:text-white"
             >
               <Search className="w-5 h-5" aria-hidden="true" />

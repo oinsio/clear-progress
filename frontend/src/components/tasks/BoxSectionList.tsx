@@ -49,7 +49,9 @@ function BoxSection({
   onSelect,
   selectedTaskId,
 }: BoxSectionProps) {
-  const { isCollapsed, toggleCollapse } = useSectionCollapse(BOX_SECTION_KEYS[box]);
+  const { isCollapsed, toggleCollapse } = useSectionCollapse(
+    BOX_SECTION_KEYS[box],
+  );
   return (
     <section>
       <button
@@ -57,7 +59,9 @@ function BoxSection({
         onClick={toggleCollapse}
         className="w-full flex items-center justify-between px-4 py-2 text-sm font-semibold text-accent bg-gray-50 sticky top-0"
       >
-        <span>{BOX_SECTION_LABELS[box]} ({tasks.length})</span>
+        <span>
+          {BOX_SECTION_LABELS[box]} ({tasks.length})
+        </span>
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
         />
@@ -110,7 +114,9 @@ export function BoxSectionList({
   selectedTaskId,
 }: BoxSectionListProps) {
   const { t } = useTranslation();
-  const hasAnyTasks = BOX_SECTION_ORDER.some((box) => tasksByBox[box].length > 0);
+  const hasAnyTasks = BOX_SECTION_ORDER.some(
+    (box) => tasksByBox[box].length > 0,
+  );
 
   if (!isLoading && !hasAnyTasks) {
     return (

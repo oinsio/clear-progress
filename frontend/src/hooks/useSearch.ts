@@ -2,7 +2,10 @@ import { useState, useCallback } from "react";
 import type { Task, Goal } from "@/types/entities";
 import { TaskService } from "@/services/TaskService";
 import { GoalService } from "@/services/GoalService";
-import { defaultTaskService, defaultGoalService } from "@/services/defaultServices";
+import {
+  defaultTaskService,
+  defaultGoalService,
+} from "@/services/defaultServices";
 
 export interface UseSearchReturn {
   tasks: Task[];

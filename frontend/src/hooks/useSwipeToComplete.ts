@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { SWIPE_COMPLETE_THRESHOLD_PX, SWIPE_MAX_VERTICAL_DRIFT_PX } from "@/constants";
+import {
+  SWIPE_COMPLETE_THRESHOLD_PX,
+  SWIPE_MAX_VERTICAL_DRIFT_PX,
+} from "@/constants";
 
 export function useSwipeToComplete(
   ref: React.RefObject<HTMLDivElement | null>,
@@ -43,7 +46,12 @@ export function useSwipeToComplete(
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isEnabledRef.current || !hasStartedRef.current || isCancelledRef.current) return;
+      if (
+        !isEnabledRef.current ||
+        !hasStartedRef.current ||
+        isCancelledRef.current
+      )
+        return;
       const touch = e.touches[0];
       const deltaX = touch.clientX - touchStartXRef.current;
       const deltaY = touch.clientY - touchStartYRef.current;
@@ -76,7 +84,12 @@ export function useSwipeToComplete(
     };
 
     const handleTouchEnd = () => {
-      if (!isEnabledRef.current || !hasStartedRef.current || !isDraggingRef.current) return;
+      if (
+        !isEnabledRef.current ||
+        !hasStartedRef.current ||
+        !isDraggingRef.current
+      )
+        return;
       if (translateXRef.current >= SWIPE_COMPLETE_THRESHOLD_PX) {
         onCompleteRef.current();
       }

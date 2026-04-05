@@ -22,7 +22,9 @@ export function formatRepeatRuleLabel(rule: RepeatRule, t: TFunction): string {
       return t("repeat.weekdays");
     case "weekly": {
       if (rule.days && rule.days.length > 0) {
-        const dayLabels = rule.days.map((day) => t(`repeat.day${day}`)).join(", ");
+        const dayLabels = rule.days
+          .map((day) => t(`repeat.day${day}`))
+          .join(", ");
         return t("repeat.weeklyDays", { days: dayLabels });
       }
       return t("repeat.weekly");

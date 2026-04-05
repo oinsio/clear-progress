@@ -1,8 +1,18 @@
-import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import * as React from "react";
 import i18n from "@/i18n";
 import type { Language } from "@/constants";
-import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, STORAGE_KEYS } from "@/constants";
+import {
+  DEFAULT_LANGUAGE,
+  SUPPORTED_LANGUAGES,
+  STORAGE_KEYS,
+} from "@/constants";
 
 interface LanguageContextValue {
   language: Language;

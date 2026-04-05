@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useInboxTasks } from "./useInboxTasks";
 import type { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
-import {BOX} from "@/constants";
+import { BOX } from "@/constants";
 import { createMockTaskService } from "@/test/mocks/taskServiceMock";
 
 const syncState = { version: 0 };

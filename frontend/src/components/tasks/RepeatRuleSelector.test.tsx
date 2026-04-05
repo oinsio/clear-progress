@@ -6,7 +6,8 @@ import type { RepeatRule } from "@/types/common";
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, options?: Record<string, unknown>) => {
-      if (options && Object.keys(options).length > 0) return `${key}:${JSON.stringify(options)}`;
+      if (options && Object.keys(options).length > 0)
+        return `${key}:${JSON.stringify(options)}`;
       return key;
     },
   }),
@@ -104,7 +105,9 @@ describe("RepeatRuleSelector", () => {
     fireEvent.click(screen.getByTestId("repeat-option-weekly"));
     fireEvent.click(screen.getByTestId("repeat-picker-back"));
     expect(screen.getByTestId("repeat-option-daily")).toBeInTheDocument();
-    expect(screen.queryByTestId("repeat-weekly-picker")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("repeat-weekly-picker"),
+    ).not.toBeInTheDocument();
   });
 
   it("should show interval picker when interval is clicked", () => {
@@ -120,7 +123,10 @@ describe("RepeatRuleSelector", () => {
     const input = screen.getByTestId("repeat-interval-input");
     fireEvent.change(input, { target: { value: "7" } });
     fireEvent.click(screen.getByTestId("repeat-interval-apply"));
-    expect(onChangeMock).toHaveBeenCalledWith({ type: "interval", interval: 7 });
+    expect(onChangeMock).toHaveBeenCalledWith({
+      type: "interval",
+      interval: 7,
+    });
     expect(onBackMock).toHaveBeenCalled();
   });
 
@@ -129,16 +135,27 @@ describe("RepeatRuleSelector", () => {
     fireEvent.click(screen.getByTestId("repeat-option-interval"));
     fireEvent.click(screen.getByTestId("repeat-picker-back"));
     expect(screen.getByTestId("repeat-option-daily")).toBeInTheDocument();
-    expect(screen.queryByTestId("repeat-interval-picker")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("repeat-interval-picker"),
+    ).not.toBeInTheDocument();
   });
 
   it("should pre-select days when value is a weekly rule", () => {
     const weeklyValue: RepeatRule = { type: "weekly", days: [2, 5] };
     render(<RepeatRuleSelector {...defaultProps} value={weeklyValue} />);
     fireEvent.click(screen.getByTestId("repeat-option-weekly"));
-    expect(screen.getByTestId("repeat-day-2")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("repeat-day-5")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("repeat-day-1")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("repeat-day-2")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByTestId("repeat-day-5")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByTestId("repeat-day-1")).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 
   it("should pre-fill interval when value is an interval rule", () => {
@@ -151,7 +168,13 @@ describe("RepeatRuleSelector", () => {
   it("should highlight currently selected option", () => {
     const dailyValue: RepeatRule = { type: "daily" };
     render(<RepeatRuleSelector {...defaultProps} value={dailyValue} />);
-    expect(screen.getByTestId("repeat-option-daily")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("repeat-option-weekdays")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("repeat-option-daily")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByTestId("repeat-option-weekdays")).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 });

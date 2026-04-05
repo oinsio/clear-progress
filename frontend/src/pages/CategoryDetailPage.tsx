@@ -25,8 +25,15 @@ export default function CategoryDetailPage() {
   const { categories, updateCategory, deleteCategory } = useCategories();
   const { goals } = useGoals();
   const { contexts } = useContexts();
-  const { tasks, isLoading, createTask, completeTask, updateTask, moveTask, deleteTask } =
-    useCategoryTasks(id ?? "");
+  const {
+    tasks,
+    isLoading,
+    createTask,
+    completeTask,
+    updateTask,
+    moveTask,
+    deleteTask,
+  } = useCategoryTasks(id ?? "");
 
   const category = useMemo(
     () => categories.find((c) => c.id === id && !c.is_deleted),

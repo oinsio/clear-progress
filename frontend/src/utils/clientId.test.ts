@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { parseClientId } from "./clientId";
 
-const FULL_CLIENT_ID = "306298988178-18tatr5tsrlik7kvlcc9rgo6t6lp76ep.apps.googleusercontent.com";
+const FULL_CLIENT_ID =
+  "306298988178-18tatr5tsrlik7kvlcc9rgo6t6lp76ep.apps.googleusercontent.com";
 const SHORT_CLIENT_ID = "306298988178-18tatr5tsrlik7kvlcc9rgo6t6lp76ep";
 
 describe("parseClientId", () => {

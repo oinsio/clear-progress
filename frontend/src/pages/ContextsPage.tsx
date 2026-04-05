@@ -2,11 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { MapPin, Plus, GripVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
@@ -14,7 +10,10 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import {
+  RightFilterPanel,
+  type RightPanelMode,
+} from "@/components/tasks/RightFilterPanel";
 import { useContexts } from "@/hooks/useContexts";
 import { useTasks } from "@/hooks/useTasks";
 import { usePanelSide } from "@/hooks/usePanelSide";
@@ -30,7 +29,10 @@ import { TaskService } from "@/services/TaskService";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 
-const defaultTaskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const defaultTaskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 
 function SortableContextItem({
   context,
@@ -65,7 +67,9 @@ function SortableContextItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        panelSide === "left" ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50" : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
+        panelSide === "left"
+          ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50"
+          : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
         isUnsynced ? "border-l-amber-400" : "border-l-transparent",
       )}
     >
@@ -105,7 +109,9 @@ export default function ContextsPage() {
 
   const sensors = useDndSensors();
 
-  const [contextTaskCounts, setContextTaskCounts] = useState<Record<string, number>>({});
+  const [contextTaskCounts, setContextTaskCounts] = useState<
+    Record<string, number>
+  >({});
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
 
   const {
@@ -149,13 +155,21 @@ export default function ContextsPage() {
   const handleModeChange = useCallback(
     (newMode: RightPanelMode) => {
       if (newMode === "categories") navigate(ROUTES.CATEGORIES);
-      else if (newMode === "inbox" || newMode === "tasks" || newMode === "completed") navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
+      else if (
+        newMode === "inbox" ||
+        newMode === "tasks" ||
+        newMode === "completed"
+      )
+        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
     },
     [navigate],
   );
 
   return (
-    <div data-testid="contexts-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="contexts-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Action bar — top position (above header) */}
@@ -193,13 +207,18 @@ export default function ContextsPage() {
 
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
-          <h1 className="text-lg font-semibold text-accent">{t("filter.contexts")}</h1>
+          <h1 className="text-lg font-semibold text-accent">
+            {t("filter.contexts")}
+          </h1>
         </header>
 
         {/* Scrollable context list */}
         <main className="flex-1 overflow-y-auto">
           {!isLoading && activeContexts.length === 0 && !isAddingContext ? (
-            <div className="flex flex-col items-center py-3" data-testid="empty-contexts-message">
+            <div
+              className="flex flex-col items-center py-3"
+              data-testid="empty-contexts-message"
+            >
               <p className="text-gray-400 text-sm">{t("context.empty")}</p>
             </div>
           ) : (
@@ -229,7 +248,9 @@ export default function ContextsPage() {
                         type="text"
                         autoFocus
                         value={newContextName}
-                        onChange={(event) => setNewContextName(event.target.value)}
+                        onChange={(event) =>
+                          setNewContextName(event.target.value)
+                        }
                         onKeyDown={handleAddContextKeyDown}
                         onBlur={handleAddContextBlur}
                         placeholder={t("context.namePlaceholder")}

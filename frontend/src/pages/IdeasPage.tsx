@@ -1,11 +1,7 @@
 import { useCallback } from "react";
 import { Lightbulb, Plus, GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
@@ -100,7 +96,10 @@ export default function IdeasPage() {
   );
 
   return (
-    <div data-testid="ideas-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="ideas-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Action bar — top position (above header) */}
@@ -129,14 +128,19 @@ export default function IdeasPage() {
 
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
-          <h1 className="text-lg font-semibold text-accent">{t("idea.pageTitle")}</h1>
+          <h1 className="text-lg font-semibold text-accent">
+            {t("idea.pageTitle")}
+          </h1>
         </header>
 
         {/* Scrollable idea list */}
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
             {!isLoading && activeIdeas.length === 0 ? (
-              <div className="flex flex-col items-center py-3" data-testid="empty-ideas-message">
+              <div
+                className="flex flex-col items-center py-3"
+                data-testid="empty-ideas-message"
+              >
                 <p className="text-gray-400 text-sm">{t("idea.empty")}</p>
               </div>
             ) : (

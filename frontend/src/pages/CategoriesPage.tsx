@@ -2,11 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Tag, Plus, GripVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
@@ -14,7 +10,10 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import {
+  RightFilterPanel,
+  type RightPanelMode,
+} from "@/components/tasks/RightFilterPanel";
 import { useCategories } from "@/hooks/useCategories";
 import { useTasks } from "@/hooks/useTasks";
 import { usePanelSide } from "@/hooks/usePanelSide";
@@ -30,7 +29,10 @@ import { TaskService } from "@/services/TaskService";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 
-const defaultTaskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const defaultTaskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 
 function SortableCategoryItem({
   category,
@@ -65,7 +67,9 @@ function SortableCategoryItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        panelSide === "left" ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50" : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
+        panelSide === "left"
+          ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50"
+          : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
         isUnsynced ? "border-l-amber-400" : "border-l-transparent",
       )}
     >
@@ -97,7 +101,8 @@ function SortableCategoryItem({
 
 export default function CategoriesPage() {
   const { t } = useTranslation();
-  const { categories, isLoading, createCategory, reorderCategories } = useCategories();
+  const { categories, isLoading, createCategory, reorderCategories } =
+    useCategories();
   const { createTask } = useTasks(BOX.INBOX);
   const { panelSide } = usePanelSide();
   const { filterBarPosition } = useFilterBarPosition();
@@ -105,7 +110,9 @@ export default function CategoriesPage() {
 
   const sensors = useDndSensors();
 
-  const [categoryTaskCounts, setCategoryTaskCounts] = useState<Record<string, number>>({});
+  const [categoryTaskCounts, setCategoryTaskCounts] = useState<
+    Record<string, number>
+  >({});
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
 
   const {
@@ -126,7 +133,9 @@ export default function CategoriesPage() {
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
 
-  const activeCategories = categories.filter((category) => !category.is_deleted);
+  const activeCategories = categories.filter(
+    (category) => !category.is_deleted,
+  );
 
   useEffect(() => {
     void defaultTaskService.getCategoryTaskCounts().then(setCategoryTaskCounts);
@@ -148,13 +157,17 @@ export default function CategoriesPage() {
 
   const handleModeChange = useCallback(
     (newMode: RightPanelMode) => {
-      if (newMode === "inbox" || newMode === "tasks" || newMode === "completed") navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
+      if (newMode === "inbox" || newMode === "tasks" || newMode === "completed")
+        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
     },
     [navigate],
   );
 
   return (
-    <div data-testid="categories-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="categories-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Action bar — top position (above header) */}
@@ -192,13 +205,18 @@ export default function CategoriesPage() {
 
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
-          <h1 className="text-lg font-semibold text-accent">{t("filter.categories")}</h1>
+          <h1 className="text-lg font-semibold text-accent">
+            {t("filter.categories")}
+          </h1>
         </header>
 
         {/* Scrollable category list */}
         <main className="flex-1 overflow-y-auto">
           {!isLoading && activeCategories.length === 0 && !isAddingCategory ? (
-            <div className="flex flex-col items-center py-3" data-testid="empty-categories-message">
+            <div
+              className="flex flex-col items-center py-3"
+              data-testid="empty-categories-message"
+            >
               <p className="text-gray-400 text-sm">{t("category.empty")}</p>
             </div>
           ) : (
@@ -228,7 +246,9 @@ export default function CategoriesPage() {
                         type="text"
                         autoFocus
                         value={newCategoryName}
-                        onChange={(event) => setNewCategoryName(event.target.value)}
+                        onChange={(event) =>
+                          setNewCategoryName(event.target.value)
+                        }
                         onKeyDown={handleAddCategoryKeyDown}
                         onBlur={handleAddCategoryBlur}
                         placeholder={t("category.namePlaceholder")}

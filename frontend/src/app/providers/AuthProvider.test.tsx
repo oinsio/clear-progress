@@ -1,25 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import React from "react";
-import { AuthProvider, useAuth } from "./AuthProvider";
+import {
+  mockGoogleLogin,
+  createGoogleOAuthMock,
+  getGoogleLoginOptions,
+  clearGoogleLoginOptions,
+} from "@/test/mocks/googleOAuthMock";
 
-const mockLogin = vi.fn();
-
-// Mock GoogleOAuthProvider (just passes children through)
-// Mock useGoogleLogin to capture callbacks — called inside GoogleAuthSync
-vi.mock("@react-oauth/google", () => ({
-  GoogleOAuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useGoogleLogin: vi.fn((options: { onSuccess: (response: unknown) => void; onError: () => void }) => {
-    (globalThis as Record<string, unknown>).__googleLoginOptions = options;
-    return mockLogin;
-  }),
-}));
+vi.mock("@react-oauth/google", () => createGoogleOAuthMock());
 
 vi.mock("@/services/ApiClient", () => ({
   setAccessToken: vi.fn(),
 }));
 
+import { AuthProvider, useAuth } from "./AuthProvider";
 import { setAccessToken } from "@/services/ApiClient";
 
 function TestConsumer() {
@@ -48,12 +43,16 @@ describe("AuthProvider", () => {
     localStorage.setItem("google_client_id", "test-client-id");
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
-    delete (globalThis as Record<string, unknown>).__googleLoginOptions;
+    clearGoogleLoginOptions();
   });
 
   it("should throw when useAuth is used outside AuthProvider", () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    expect(() => render(<ThrowingConsumer />)).toThrow("useAuth must be used within AuthProvider");
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    expect(() => render(<ThrowingConsumer />)).toThrow(
+      "useAuth must be used within AuthProvider",
+    );
     consoleSpy.mockRestore();
   });
 
@@ -76,13 +75,13 @@ describe("AuthProvider", () => {
     );
 
     // Clear the silent login call that happens on mount
-    mockLogin.mockClear();
+    mockGoogleLogin.mockClear();
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "sign-in" }));
     });
 
-    expect(mockLogin).toHaveBeenCalledTimes(1);
+    expect(mockGoogleLogin).toHaveBeenCalledTimes(1);
   });
 
   it("should update accessToken after successful Google login", async () => {
@@ -93,10 +92,7 @@ describe("AuthProvider", () => {
     );
 
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
-        onSuccess: (response: unknown) => void;
-      };
-      options.onSuccess({
+      getGoogleLoginOptions().onSuccess({
         access_token: "test-access-token",
         expires_in: 3600,
       });
@@ -113,10 +109,10 @@ describe("AuthProvider", () => {
     );
 
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
-        onSuccess: (response: unknown) => void;
-      };
-      options.onSuccess({ access_token: "my-token", expires_in: 3600 });
+      getGoogleLoginOptions().onSuccess({
+        access_token: "my-token",
+        expires_in: 3600,
+      });
     });
 
     expect(setAccessToken).toHaveBeenCalledWith("my-token", 3600);
@@ -143,7 +139,9 @@ describe("AuthProvider", () => {
         <TestConsumer />
       </AuthProvider>,
     );
-    expect(screen.getByRole("button", { name: "silent-refresh" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "silent-refresh" }),
+    ).toBeInTheDocument();
   });
 
   it("should call silentGoogleLogin on mount to restore session", () => {
@@ -153,8 +151,8 @@ describe("AuthProvider", () => {
       </AuthProvider>,
     );
 
-    expect(mockLogin).toHaveBeenCalledTimes(1);
-    expect(mockLogin).toHaveBeenCalledWith({ prompt: "none" });
+    expect(mockGoogleLogin).toHaveBeenCalledTimes(1);
+    expect(mockGoogleLogin).toHaveBeenCalledWith({ prompt: "none" });
   });
 
   it("should call the silent Google login function when silentRefresh is invoked", async () => {
@@ -166,14 +164,14 @@ describe("AuthProvider", () => {
     );
 
     // Clear the mount-time silent login call
-    mockLogin.mockClear();
+    mockGoogleLogin.mockClear();
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "silent-refresh" }));
     });
 
-    expect(mockLogin).toHaveBeenCalledTimes(1);
-    expect(mockLogin).toHaveBeenCalledWith({ prompt: "none" });
+    expect(mockGoogleLogin).toHaveBeenCalledTimes(1);
+    expect(mockGoogleLogin).toHaveBeenCalledWith({ prompt: "none" });
   });
 
   it("should update accessToken when silent login succeeds", async () => {
@@ -185,10 +183,10 @@ describe("AuthProvider", () => {
 
     // On mount, isSilentRef.current = true inside GoogleAuthSync
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
-        onSuccess: (response: unknown) => void;
-      };
-      options.onSuccess({ access_token: "refreshed-token", expires_in: 3600 });
+      getGoogleLoginOptions().onSuccess({
+        access_token: "refreshed-token",
+        expires_in: 3600,
+      });
     });
 
     expect(screen.getByTestId("token").textContent).toBe("refreshed-token");
@@ -205,10 +203,10 @@ describe("AuthProvider", () => {
 
     // First set a token via silent refresh
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
-        onSuccess: (response: unknown) => void;
-      };
-      options.onSuccess({ access_token: "my-token", expires_in: 3600 });
+      getGoogleLoginOptions().onSuccess({
+        access_token: "my-token",
+        expires_in: 3600,
+      });
     });
     expect(screen.getByTestId("token").textContent).toBe("my-token");
 
@@ -217,10 +215,7 @@ describe("AuthProvider", () => {
       await user.click(screen.getByRole("button", { name: "sign-in" }));
     });
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
-        onError: () => void;
-      };
-      options.onError();
+      getGoogleLoginOptions().onError();
     });
 
     expect(screen.getByTestId("token").textContent).toBe("null");
@@ -240,10 +235,10 @@ describe("AuthProvider", () => {
       await user.click(screen.getByRole("button", { name: "sign-in" }));
     });
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
-        onSuccess: (response: unknown) => void;
-      };
-      options.onSuccess({ access_token: "my-token", expires_in: 3600 });
+      getGoogleLoginOptions().onSuccess({
+        access_token: "my-token",
+        expires_in: 3600,
+      });
     });
     expect(screen.getByTestId("token").textContent).toBe("my-token");
 
@@ -252,10 +247,7 @@ describe("AuthProvider", () => {
       await user.click(screen.getByRole("button", { name: "silent-refresh" }));
     });
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
-        onError: () => void;
-      };
-      options.onError();
+      getGoogleLoginOptions().onError();
     });
 
     // Token should remain — silent refresh error must not wipe state
@@ -265,7 +257,10 @@ describe("AuthProvider", () => {
   it("should initialize accessToken from localStorage when stored token is valid", () => {
     const expiresAt = Date.now() + 60 * 60 * 1000;
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "cached-token");
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiresAt));
+    localStorage.setItem(
+      STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+      String(expiresAt),
+    );
 
     render(
       <AuthProvider>
@@ -279,7 +274,10 @@ describe("AuthProvider", () => {
   it("should initialize accessToken as null when stored token is expired", () => {
     const expiredAt = Date.now() - 1000;
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "expired-token");
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiredAt));
+    localStorage.setItem(
+      STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+      String(expiredAt),
+    );
 
     render(
       <AuthProvider>
@@ -299,10 +297,10 @@ describe("AuthProvider", () => {
 
     // Sign in first
     await act(async () => {
-      const options = (globalThis as Record<string, unknown>).__googleLoginOptions as {
-        onSuccess: (response: unknown) => void;
-      };
-      options.onSuccess({ access_token: "my-token", expires_in: 3600 });
+      getGoogleLoginOptions().onSuccess({
+        access_token: "my-token",
+        expires_in: 3600,
+      });
     });
 
     expect(screen.getByTestId("token").textContent).toBe("my-token");
@@ -352,6 +350,6 @@ describe("AuthProvider", () => {
     );
     expect(screen.getByTestId("token").textContent).toBe("null");
     // No Google login should be attempted
-    expect(mockLogin).not.toHaveBeenCalled();
+    expect(mockGoogleLogin).not.toHaveBeenCalled();
   });
 });

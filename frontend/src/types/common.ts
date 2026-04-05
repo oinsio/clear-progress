@@ -17,9 +17,21 @@ export type AccentColor =
   | "indigo"
   | "purple";
 
-export type SyncStatus = "idle" | "syncing" | "error" | "offline" | "unauthorized";
+export type SyncStatus =
+  | "idle"
+  | "syncing"
+  | "error"
+  | "offline"
+  | "unauthorized";
 
-export type FullSyncStep = "idle" | "upload_covers" | "push" | "pull" | "download_covers" | "done" | "error";
+export type FullSyncStep =
+  | "idle"
+  | "upload_covers"
+  | "push"
+  | "pull"
+  | "download_covers"
+  | "done"
+  | "error";
 
 export type PushResultStatus = "created" | "accepted" | "conflict" | "rejected";
 
@@ -38,7 +50,15 @@ export type ColorScheme = "system" | "light" | "dark";
 
 export type FilterBarPosition = "top" | "bottom";
 
-export type MenuMode = "inbox" | "contexts" | "categories" | "goals" | "ideas" | "tasks" | "completed" | "deleted";
+export type MenuMode =
+  | "inbox"
+  | "contexts"
+  | "categories"
+  | "goals"
+  | "ideas"
+  | "tasks"
+  | "completed"
+  | "deleted";
 
 export interface MenuItemConfig {
   mode: MenuMode;

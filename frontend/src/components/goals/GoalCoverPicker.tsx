@@ -9,7 +9,11 @@ interface GoalCoverPickerProps {
   onRemove: () => void;
 }
 
-export function GoalCoverPicker({ previewSrc, onFileSelect, onRemove }: GoalCoverPickerProps) {
+export function GoalCoverPicker({
+  previewSrc,
+  onFileSelect,
+  onRemove,
+}: GoalCoverPickerProps) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
 

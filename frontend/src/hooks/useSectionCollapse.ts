@@ -15,7 +15,10 @@ function readCollapsedSections(): Record<string, boolean> {
 
 function writeCollapsedSections(sections: Record<string, boolean>): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.SECTION_COLLAPSE, JSON.stringify(sections));
+    localStorage.setItem(
+      STORAGE_KEYS.SECTION_COLLAPSE,
+      JSON.stringify(sections),
+    );
   } catch {
     // localStorage недоступен
   }
@@ -26,7 +29,9 @@ export interface UseSectionCollapseReturn {
   toggleCollapse: () => void;
 }
 
-export function useSectionCollapse(sectionKey: string): UseSectionCollapseReturn {
+export function useSectionCollapse(
+  sectionKey: string,
+): UseSectionCollapseReturn {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     const sections = readCollapsedSections();
     return sections[sectionKey] ?? false;

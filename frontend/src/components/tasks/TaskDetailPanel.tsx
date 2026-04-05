@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { X, Trash2, ChevronRight, ArrowLeft } from "lucide-react";
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -12,12 +8,22 @@ import {
 } from "@dnd-kit/sortable";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useTranslation } from "react-i18next";
-import type { Task, Goal, Context, Category, ChecklistItem } from "@/types/entities";
+import type {
+  Task,
+  Goal,
+  Context,
+  Category,
+  ChecklistItem,
+} from "@/types/entities";
 import type { Box, RepeatRule } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useSync } from "@/app/providers/SyncProvider";
-import { parseRepeatRule, serializeRepeatRule, formatRepeatRuleLabel } from "@/utils/repeatRule";
+import {
+  parseRepeatRule,
+  serializeRepeatRule,
+  formatRepeatRuleLabel,
+} from "@/utils/repeatRule";
 import { useChecklistItemEditing } from "@/hooks/useChecklistItemEditing";
 import { useTaskEditLabels } from "@/hooks/useTaskEditLabels";
 import { useTaskFormState } from "@/hooks/useTaskFormState";
@@ -48,7 +54,6 @@ interface TaskDetailPanelProps {
   style?: React.CSSProperties;
 }
 
-
 interface DrillDownRowProps {
   label: string;
   value: string;
@@ -65,7 +70,9 @@ function DrillDownRow({ label, value, hasValue, onClick }: DrillDownRowProps) {
     >
       <span className="text-gray-500 font-medium">{label}</span>
       <div className="flex items-center gap-1">
-        <span className={cn(hasValue ? "text-gray-800" : "text-gray-400")}>{value}</span>
+        <span className={cn(hasValue ? "text-gray-800" : "text-gray-400")}>
+          {value}
+        </span>
         <ChevronRight size={16} className="text-gray-400" />
       </div>
     </button>
@@ -84,7 +91,12 @@ interface SelectorOptionListProps {
   onSelect: (id: string) => void;
 }
 
-function SelectorOptionList({ options, selectedId, noSelectionLabel, onSelect }: SelectorOptionListProps) {
+function SelectorOptionList({
+  options,
+  selectedId,
+  noSelectionLabel,
+  onSelect,
+}: SelectorOptionListProps) {
   return (
     <div className="px-4 py-3 flex flex-col gap-1">
       <button
@@ -130,7 +142,10 @@ interface ChecklistSectionProps {
   onStartEdit: (item: ChecklistItem) => void;
   onEditChange: (value: string) => void;
   onCommitEdit: (id: string) => void;
-  onEditKeyDown: (event: React.KeyboardEvent<HTMLInputElement>, id: string) => void;
+  onEditKeyDown: (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    id: string,
+  ) => void;
   onDelete: (id: string) => void;
   getToggleAriaLabel: (item: ChecklistItem) => string;
   getDeleteAriaLabel: (item: ChecklistItem) => string;
@@ -156,9 +171,18 @@ function ChecklistSection({
   const sensors = useDndSensors();
   return (
     <div>
-      <p className="text-center text-sm font-medium text-accent mb-2">{title}</p>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+      <p className="text-center text-sm font-medium text-accent mb-2">
+        {title}
+      </p>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+      >
+        <SortableContext
+          items={items.map((item) => item.id)}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="flex flex-col gap-1">
             {items.map((item) => (
               <SortableChecklistItem
@@ -198,20 +222,35 @@ export function TaskDetailPanel({
 }: TaskDetailPanelProps) {
   const { t } = useTranslation();
   const {
-    title, setTitle,
-    notes, setNotes,
-    selectedGoalId, setSelectedGoalId,
-    selectedContextId, setSelectedContextId,
-    selectedCategoryId, setSelectedCategoryId,
-    selectedBox, setSelectedBox,
-    selectedRepeatRule, setSelectedRepeatRule,
+    title,
+    setTitle,
+    notes,
+    setNotes,
+    selectedGoalId,
+    setSelectedGoalId,
+    selectedContextId,
+    setSelectedContextId,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    selectedBox,
+    setSelectedBox,
+    selectedRepeatRule,
+    setSelectedRepeatRule,
   } = useTaskFormState(task);
   const [activeTab, setActiveTab] = useState<ActiveTab>(ACTIVE_TAB.DETAILS);
   const [openSelector, setOpenSelector] = useState<SelectorType | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
 
-  const { items, progress, createItem: rawCreateItem, toggleItem, deleteItem, updateItem, reorderItems: rawReorderItems } = useChecklist(task.id);
+  const {
+    items,
+    progress,
+    createItem: rawCreateItem,
+    toggleItem,
+    deleteItem,
+    updateItem,
+    reorderItems: rawReorderItems,
+  } = useChecklist(task.id);
   const {
     editingItemId,
     editingItemTitle,
@@ -235,7 +274,16 @@ export function TaskDetailPanel({
     setOpenSelector(null);
     setIsConfirmingDelete(false);
     setNewItemTitle("");
-  }, [task.id, task.title, task.notes, task.goal_id, task.context_id, task.category_id, task.box, task.repeat_rule]);
+  }, [
+    task.id,
+    task.title,
+    task.notes,
+    task.goal_id,
+    task.context_id,
+    task.category_id,
+    task.box,
+    task.repeat_rule,
+  ]);
 
   const handleTitleBlur = useCallback(async () => {
     const trimmedTitle = title.trim();
@@ -250,34 +298,51 @@ export function TaskDetailPanel({
     }
   }, [notes, task.notes, task.id, onUpdate]);
 
-  const handleBoxChange = useCallback(async (box: Box) => {
-    setSelectedBox(box);
-    await onUpdate(task.id, { box });
-  }, [task.id, onUpdate]);
+  const handleBoxChange = useCallback(
+    async (box: Box) => {
+      setSelectedBox(box);
+      await onUpdate(task.id, { box });
+    },
+    [task.id, onUpdate],
+  );
 
-  const handleGoalChange = useCallback(async (goalId: string) => {
-    setSelectedGoalId(goalId);
-    setOpenSelector(null);
-    await onUpdate(task.id, { goal_id: goalId });
-  }, [task.id, onUpdate]);
+  const handleGoalChange = useCallback(
+    async (goalId: string) => {
+      setSelectedGoalId(goalId);
+      setOpenSelector(null);
+      await onUpdate(task.id, { goal_id: goalId });
+    },
+    [task.id, onUpdate],
+  );
 
-  const handleContextChange = useCallback(async (contextId: string) => {
-    setSelectedContextId(contextId);
-    setOpenSelector(null);
-    await onUpdate(task.id, { context_id: contextId });
-  }, [task.id, onUpdate]);
+  const handleContextChange = useCallback(
+    async (contextId: string) => {
+      setSelectedContextId(contextId);
+      setOpenSelector(null);
+      await onUpdate(task.id, { context_id: contextId });
+    },
+    [task.id, onUpdate],
+  );
 
-  const handleCategoryChange = useCallback(async (categoryId: string) => {
-    setSelectedCategoryId(categoryId);
-    setOpenSelector(null);
-    await onUpdate(task.id, { category_id: categoryId });
-  }, [task.id, onUpdate]);
+  const handleCategoryChange = useCallback(
+    async (categoryId: string) => {
+      setSelectedCategoryId(categoryId);
+      setOpenSelector(null);
+      await onUpdate(task.id, { category_id: categoryId });
+    },
+    [task.id, onUpdate],
+  );
 
-  const handleRepeatChange = useCallback(async (rule: RepeatRule | null) => {
-    setSelectedRepeatRule(rule);
-    setOpenSelector(null);
-    await onUpdate(task.id, { repeat_rule: rule ? serializeRepeatRule(rule) : "" });
-  }, [task.id, onUpdate]);
+  const handleRepeatChange = useCallback(
+    async (rule: RepeatRule | null) => {
+      setSelectedRepeatRule(rule);
+      setOpenSelector(null);
+      await onUpdate(task.id, {
+        repeat_rule: rule ? serializeRepeatRule(rule) : "",
+      });
+    },
+    [task.id, onUpdate],
+  );
 
   const handleDeleteClick = useCallback(() => {
     setIsConfirmingDelete(true);
@@ -323,19 +388,43 @@ export function TaskDetailPanel({
     [rawReorderItems],
   );
 
-  const { selectedGoalTitle, selectedContextName, selectedCategoryName, checklistTabLabel } =
-    useTaskEditLabels(selectedGoalId, selectedContextId, selectedCategoryId, goals, contexts, categories, progress);
+  const {
+    selectedGoalTitle,
+    selectedContextName,
+    selectedCategoryName,
+    checklistTabLabel,
+  } = useTaskEditLabels(
+    selectedGoalId,
+    selectedContextId,
+    selectedCategoryId,
+    goals,
+    contexts,
+    categories,
+    progress,
+  );
 
   const newItemInputRef = useRef<HTMLInputElement>(null);
 
-  const goalOptions: SelectorOption[] = goals.map((goal) => ({ id: goal.id, label: goal.title }));
-  const contextOptions: SelectorOption[] = contexts.map((context) => ({ id: context.id, label: context.name }));
-  const categoryOptions: SelectorOption[] = categories.map((category) => ({ id: category.id, label: category.name }));
+  const goalOptions: SelectorOption[] = goals.map((goal) => ({
+    id: goal.id,
+    label: goal.title,
+  }));
+  const contextOptions: SelectorOption[] = contexts.map((context) => ({
+    id: context.id,
+    label: context.name,
+  }));
+  const categoryOptions: SelectorOption[] = categories.map((category) => ({
+    id: category.id,
+    label: category.name,
+  }));
 
   return (
     <div
       data-testid="task-detail-panel"
-      className={cn("border-l border-gray-100 flex flex-col h-full bg-white overflow-hidden relative", className)}
+      className={cn(
+        "border-l border-gray-100 flex flex-col h-full bg-white overflow-hidden relative",
+        className,
+      )}
       style={style}
     >
       {/* Header */}
@@ -393,7 +482,9 @@ export function TaskDetailPanel({
           <div className="px-4 py-4 flex flex-col gap-4">
             {/* Title */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">{t("taskEdit.fieldTitle")}</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                {t("taskEdit.fieldTitle")}
+              </label>
               <input
                 type="text"
                 value={title}
@@ -407,7 +498,9 @@ export function TaskDetailPanel({
 
             {/* Notes */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">{t("taskEdit.fieldNotes")}</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                {t("taskEdit.fieldNotes")}
+              </label>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
@@ -421,7 +514,9 @@ export function TaskDetailPanel({
 
             {/* Box selector */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-2 block">{t("taskEdit.fieldBox")}</label>
+              <label className="text-xs font-medium text-gray-500 mb-2 block">
+                {t("taskEdit.fieldBox")}
+              </label>
               <div className="flex gap-1">
                 {BOX_OPTIONS.map((box) => {
                   const BoxIcon = BOX_ICONS[box];
@@ -476,7 +571,11 @@ export function TaskDetailPanel({
 
             <DrillDownRow
               label={t("taskEdit.fieldRepeat")}
-              value={selectedRepeatRule ? formatRepeatRuleLabel(selectedRepeatRule, t) : t("repeat.none")}
+              value={
+                selectedRepeatRule
+                  ? formatRepeatRuleLabel(selectedRepeatRule, t)
+                  : t("repeat.none")
+              }
               hasValue={!!selectedRepeatRule}
               onClick={() => setOpenSelector(SELECTOR_TYPE.REPEAT)}
             />
@@ -556,10 +655,16 @@ export function TaskDetailPanel({
               onStartEdit={handleItemTitleClick}
               onEditChange={setEditingItemTitle}
               onCommitEdit={(id) => void commitItemEdit(id)}
-              onEditKeyDown={(event, id) => void handleItemEditKeyDown(event, id)}
+              onEditKeyDown={(event, id) =>
+                void handleItemEditKeyDown(event, id)
+              }
               onDelete={(id) => void deleteItem(id)}
-              getToggleAriaLabel={(item) => t("taskEdit.checkItemMark", { title: item.title })}
-              getDeleteAriaLabel={(item) => t("taskEdit.checkItemDelete", { title: item.title })}
+              getToggleAriaLabel={(item) =>
+                t("taskEdit.checkItemMark", { title: item.title })
+              }
+              getDeleteAriaLabel={(item) =>
+                t("taskEdit.checkItemDelete", { title: item.title })
+              }
             />
 
             {/* New item input */}
@@ -583,21 +688,31 @@ export function TaskDetailPanel({
 
             {completedItems.length > 0 && (
               <ChecklistSection
-                title={t("taskEdit.doneSection", { count: completedItems.length })}
+                title={t("taskEdit.doneSection", {
+                  count: completedItems.length,
+                })}
                 items={completedItems}
                 editingItemId={editingItemId}
                 editingItemTitle={editingItemTitle}
                 lastSyncedAt={lastSyncedAt}
                 variant={CHECKLIST_ITEM_VARIANT.COMPLETED}
-                onDragEnd={(event) => handleSectionDragEnd(completedItems, event)}
+                onDragEnd={(event) =>
+                  handleSectionDragEnd(completedItems, event)
+                }
                 onToggle={(id) => void toggleItem(id)}
                 onStartEdit={handleItemTitleClick}
                 onEditChange={setEditingItemTitle}
                 onCommitEdit={(id) => void commitItemEdit(id)}
-                onEditKeyDown={(event, id) => void handleItemEditKeyDown(event, id)}
+                onEditKeyDown={(event, id) =>
+                  void handleItemEditKeyDown(event, id)
+                }
                 onDelete={(id) => void deleteItem(id)}
-                getToggleAriaLabel={(item) => t("taskEdit.checkItemUnmark", { title: item.title })}
-                getDeleteAriaLabel={(item) => t("taskEdit.checkItemDelete", { title: item.title })}
+                getToggleAriaLabel={(item) =>
+                  t("taskEdit.checkItemUnmark", { title: item.title })
+                }
+                getDeleteAriaLabel={(item) =>
+                  t("taskEdit.checkItemDelete", { title: item.title })
+                }
               />
             )}
           </div>
@@ -607,7 +722,9 @@ export function TaskDetailPanel({
       {/* Delete confirmation overlay */}
       {isConfirmingDelete && (
         <div className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center gap-4 px-6">
-          <p className="text-base font-medium text-gray-800 text-center">{t("taskEdit.deleteConfirmTitle")}</p>
+          <p className="text-base font-medium text-gray-800 text-center">
+            {t("taskEdit.deleteConfirmTitle")}
+          </p>
           <p className="text-sm text-gray-500 text-center">{task.title}</p>
           <div className="flex gap-3 w-full">
             <button

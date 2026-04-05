@@ -25,8 +25,15 @@ export default function ContextDetailPage() {
   const { contexts, updateContext, deleteContext } = useContexts();
   const { goals } = useGoals();
   const { categories } = useCategories();
-  const { tasks, isLoading, createTask, completeTask, updateTask, moveTask, deleteTask } =
-    useContextTasks(id ?? "");
+  const {
+    tasks,
+    isLoading,
+    createTask,
+    completeTask,
+    updateTask,
+    moveTask,
+    deleteTask,
+  } = useContextTasks(id ?? "");
 
   const context = useMemo(
     () => contexts.find((c) => c.id === id && !c.is_deleted),
@@ -50,7 +57,11 @@ export default function ContextDetailPage() {
   const handleModeChange = useCallback(
     (newMode: RightPanelMode) => {
       if (newMode === "categories") navigate(ROUTES.CATEGORIES);
-      else if (newMode === "inbox" || newMode === "tasks" || newMode === "completed")
+      else if (
+        newMode === "inbox" ||
+        newMode === "tasks" ||
+        newMode === "completed"
+      )
         navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
     },
     [navigate],

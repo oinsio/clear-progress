@@ -10,22 +10,54 @@ interface ConfirmFullSyncDialogProps {
   onSync: (onProgress: (step: FullSyncStep) => void) => Promise<void>;
 }
 
-const PROGRESS_STEPS: Array<{ key: "upload_covers" | "push" | "pull" | "download_covers"; labelKey: string; testId: string }> = [
-  { key: "upload_covers", labelKey: "settings.fullSyncStepUploadCovers", testId: "full-sync-step-upload-covers" },
-  { key: "push", labelKey: "settings.fullSyncStepPush", testId: "full-sync-step-push" },
-  { key: "pull", labelKey: "settings.fullSyncStepPull", testId: "full-sync-step-pull" },
-  { key: "download_covers", labelKey: "settings.fullSyncStepDownloadCovers", testId: "full-sync-step-download-covers" },
+const PROGRESS_STEPS: Array<{
+  key: "upload_covers" | "push" | "pull" | "download_covers";
+  labelKey: string;
+  testId: string;
+}> = [
+  {
+    key: "upload_covers",
+    labelKey: "settings.fullSyncStepUploadCovers",
+    testId: "full-sync-step-upload-covers",
+  },
+  {
+    key: "push",
+    labelKey: "settings.fullSyncStepPush",
+    testId: "full-sync-step-push",
+  },
+  {
+    key: "pull",
+    labelKey: "settings.fullSyncStepPull",
+    testId: "full-sync-step-pull",
+  },
+  {
+    key: "download_covers",
+    labelKey: "settings.fullSyncStepDownloadCovers",
+    testId: "full-sync-step-download-covers",
+  },
 ];
 
-const STEP_ORDER: FullSyncStep[] = ["upload_covers", "push", "pull", "download_covers"];
+const STEP_ORDER: FullSyncStep[] = [
+  "upload_covers",
+  "push",
+  "pull",
+  "download_covers",
+];
 
-function isStepDone(currentStep: FullSyncStep, stepKey: "upload_covers" | "push" | "pull" | "download_covers"): boolean {
+function isStepDone(
+  currentStep: FullSyncStep,
+  stepKey: "upload_covers" | "push" | "pull" | "download_covers",
+): boolean {
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const stepIndex = STEP_ORDER.indexOf(stepKey);
   return currentIndex > stepIndex || currentStep === "done";
 }
 
-export function ConfirmFullSyncDialog({ isOpen, onClose, onSync }: ConfirmFullSyncDialogProps) {
+export function ConfirmFullSyncDialog({
+  isOpen,
+  onClose,
+  onSync,
+}: ConfirmFullSyncDialogProps) {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState<FullSyncStep>("idle");
   const [isSyncing, setIsSyncing] = useState(false);
@@ -54,7 +86,10 @@ export function ConfirmFullSyncDialog({ isOpen, onClose, onSync }: ConfirmFullSy
   const isInProgress = isSyncing || (currentStep !== "idle" && !isFinished);
 
   return (
-    <div data-testid="full-sync-dialog" className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      data-testid="full-sync-dialog"
+      className="fixed inset-0 z-50 flex items-center justify-center"
+    >
       <div
         data-testid="full-sync-dialog-backdrop"
         className="absolute inset-0 bg-black/40"
@@ -90,12 +125,16 @@ export function ConfirmFullSyncDialog({ isOpen, onClose, onSync }: ConfirmFullSy
                   data-active={isActive}
                   className="flex items-center gap-3 text-sm"
                 >
-                  <span className={cn(
-                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                    isDone ? "bg-green-100 text-green-600" :
-                    isActive ? "bg-accent/10 text-accent" :
-                    "bg-gray-100 text-gray-400",
-                  )}>
+                  <span
+                    className={cn(
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+                      isDone
+                        ? "bg-green-100 text-green-600"
+                        : isActive
+                          ? "bg-accent/10 text-accent"
+                          : "bg-gray-100 text-gray-400",
+                    )}
+                  >
                     {isDone ? (
                       <Check className="h-3 w-3" />
                     ) : isActive ? (
@@ -104,11 +143,15 @@ export function ConfirmFullSyncDialog({ isOpen, onClose, onSync }: ConfirmFullSy
                       <span className="h-1.5 w-1.5 rounded-full bg-current" />
                     )}
                   </span>
-                  <span className={cn(
-                    isDone ? "text-gray-500" :
-                    isActive ? "text-gray-900 font-medium" :
-                    "text-gray-400",
-                  )}>
+                  <span
+                    className={cn(
+                      isDone
+                        ? "text-gray-500"
+                        : isActive
+                          ? "text-gray-900 font-medium"
+                          : "text-gray-400",
+                    )}
+                  >
                     {t(progressStep.labelKey)}
                   </span>
                 </li>

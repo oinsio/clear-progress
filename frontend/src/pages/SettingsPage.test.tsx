@@ -43,7 +43,9 @@ const mockUseSync = vi.mocked(useSync);
 const mockUseConnectionStatus = vi.mocked(useConnectionStatus);
 const mockConfirmFullSyncDialog = vi.mocked(ConfirmFullSyncDialog);
 
-function buildSettingsHook(overrides: Partial<UseSettingsReturn> = {}): UseSettingsReturn {
+function buildSettingsHook(
+  overrides: Partial<UseSettingsReturn> = {},
+): UseSettingsReturn {
   return {
     defaultBox: "today",
     accentColor: "green",
@@ -54,7 +56,12 @@ function buildSettingsHook(overrides: Partial<UseSettingsReturn> = {}): UseSetti
   };
 }
 
-function buildThemeHook(overrides: { accentColor?: AccentColor; setAccentColor?: ReturnType<typeof vi.fn> } = {}): ReturnType<typeof useTheme> {
+function buildThemeHook(
+  overrides: {
+    accentColor?: AccentColor;
+    setAccentColor?: ReturnType<typeof vi.fn>;
+  } = {},
+): ReturnType<typeof useTheme> {
   return {
     accentColor: "green",
     setAccentColor: vi.fn().mockResolvedValue(undefined),
@@ -64,7 +71,12 @@ function buildThemeHook(overrides: { accentColor?: AccentColor; setAccentColor?:
   };
 }
 
-function buildLanguageHook(overrides: { language?: Language; setLanguage?: ReturnType<typeof vi.fn> } = {}): ReturnType<typeof useLanguage> {
+function buildLanguageHook(
+  overrides: {
+    language?: Language;
+    setLanguage?: ReturnType<typeof vi.fn>;
+  } = {},
+): ReturnType<typeof useLanguage> {
   return {
     language: "ru",
     setLanguage: vi.fn(),
@@ -86,9 +98,18 @@ describe("SettingsPage", () => {
     mockUseSettings.mockReturnValue(buildSettingsHook());
     mockUseTheme.mockReturnValue(buildThemeHook());
     mockUseLanguage.mockReturnValue(buildLanguageHook());
-    mockUsePanelOpen.mockReturnValue({ isPanelOpen: false, togglePanelOpen: vi.fn() });
-    mockUsePanelSide.mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() });
-    mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: false, setPanelAlwaysOpen: vi.fn() });
+    mockUsePanelOpen.mockReturnValue({
+      isPanelOpen: false,
+      togglePanelOpen: vi.fn(),
+    });
+    mockUsePanelSide.mockReturnValue({
+      panelSide: "right",
+      setPanelSide: vi.fn(),
+    });
+    mockUsePanelAlwaysOpen.mockReturnValue({
+      isPanelAlwaysOpen: false,
+      setPanelAlwaysOpen: vi.fn(),
+    });
     mockUseConnectionStatus.mockReturnValue("not_configured");
     mockUseSync.mockReturnValue({
       syncStatus: "idle",
@@ -127,13 +148,21 @@ describe("SettingsPage", () => {
   it("should mark the current default box as active", () => {
     mockUseSettings.mockReturnValue(buildSettingsHook({ defaultBox: "week" }));
     renderPage();
-    expect(screen.getByTestId("settings-box-option-week")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("settings-box-option-inbox")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("settings-box-option-week")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByTestId("settings-box-option-inbox")).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 
   it("should call setDefaultBox when a box option is clicked", async () => {
     const setDefaultBox = vi.fn().mockResolvedValue(undefined);
-    mockUseSettings.mockReturnValue(buildSettingsHook({ defaultBox: "today", setDefaultBox }));
+    mockUseSettings.mockReturnValue(
+      buildSettingsHook({ defaultBox: "today", setDefaultBox }),
+    );
     renderPage();
     fireEvent.click(screen.getByTestId("settings-box-option-inbox"));
     expect(setDefaultBox).toHaveBeenCalledWith("inbox");
@@ -146,21 +175,43 @@ describe("SettingsPage", () => {
 
   it("should render all eight color options", () => {
     renderPage();
-    expect(screen.getByTestId("settings-color-option-coral")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-color-option-orange")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-color-option-yellow")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-color-option-green")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-color-option-teal")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-color-option-blue")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-color-option-indigo")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-color-option-purple")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-color-option-coral"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-color-option-orange"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-color-option-yellow"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-color-option-green"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-color-option-teal"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-color-option-blue"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-color-option-indigo"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-color-option-purple"),
+    ).toBeInTheDocument();
   });
 
   it("should mark the current accent color as active", () => {
     mockUseTheme.mockReturnValue(buildThemeHook({ accentColor: "orange" }));
     renderPage();
-    expect(screen.getByTestId("settings-color-option-orange")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("settings-color-option-green")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("settings-color-option-orange")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByTestId("settings-color-option-green")).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 
   it("should call setAccentColor when a color option is clicked", () => {
@@ -174,16 +225,28 @@ describe("SettingsPage", () => {
   it("should render the language section with three buttons", () => {
     renderPage();
     expect(screen.getByTestId("settings-language")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-language-option-ru")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-language-option-en")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-language-option-house")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-language-option-ru"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-language-option-en"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-language-option-house"),
+    ).toBeInTheDocument();
   });
 
   it("should mark the current language as active", () => {
     mockUseLanguage.mockReturnValue(buildLanguageHook({ language: "en" }));
     renderPage();
-    expect(screen.getByTestId("settings-language-option-en")).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByTestId("settings-language-option-ru")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("settings-language-option-en")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByTestId("settings-language-option-ru")).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 
   it("should call setLanguage when a language option is clicked", () => {
@@ -202,25 +265,33 @@ describe("SettingsPage", () => {
 
     it("should show not connected status when no URL is configured", () => {
       renderPage();
-      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("settings.syncNotConnected");
+      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent(
+        "settings.syncNotConnected",
+      );
     });
 
     it("should show connected status when backend is synced", () => {
       mockUseConnectionStatus.mockReturnValue("synced");
       renderPage();
-      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("settings.syncConnected");
+      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent(
+        "settings.syncConnected",
+      );
     });
 
     it("should show error status when sync is failing", () => {
       mockUseConnectionStatus.mockReturnValue("error");
       renderPage();
-      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("sync.noConnection");
+      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent(
+        "sync.noConnection",
+      );
     });
 
     it("should show unauthorized status when token is expired", () => {
       mockUseConnectionStatus.mockReturnValue("unauthorized");
       renderPage();
-      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent("sync.unauthorized");
+      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent(
+        "sync.unauthorized",
+      );
     });
 
     it("should render configure button", () => {
@@ -230,7 +301,9 @@ describe("SettingsPage", () => {
 
     it("should not render full sync button when backend is not configured", () => {
       renderPage();
-      expect(screen.queryByTestId("settings-full-sync-btn")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("settings-full-sync-btn"),
+      ).not.toBeInTheDocument();
     });
 
     it("should render full sync button when backend is configured", () => {

@@ -1,6 +1,10 @@
 import { useState, useCallback } from "react";
 import type { FilterBarPosition } from "@/types/common";
-import { DEFAULT_FILTER_BAR_POSITION, FILTER_BAR_POSITIONS, STORAGE_KEYS } from "@/constants";
+import {
+  DEFAULT_FILTER_BAR_POSITION,
+  FILTER_BAR_POSITIONS,
+  STORAGE_KEYS,
+} from "@/constants";
 
 function getCachedFilterBarPosition(): FilterBarPosition {
   try {
@@ -20,9 +24,8 @@ export interface UseFilterBarPositionReturn {
 }
 
 export function useFilterBarPosition(): UseFilterBarPositionReturn {
-  const [filterBarPosition, setFilterBarPositionState] = useState<FilterBarPosition>(
-    getCachedFilterBarPosition,
-  );
+  const [filterBarPosition, setFilterBarPositionState] =
+    useState<FilterBarPosition>(getCachedFilterBarPosition);
 
   const setFilterBarPosition = useCallback((position: FilterBarPosition) => {
     try {

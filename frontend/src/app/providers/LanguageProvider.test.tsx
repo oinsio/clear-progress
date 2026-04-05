@@ -2,7 +2,11 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LanguageProvider, useLanguage } from "./LanguageProvider";
-import { DEFAULT_LANGUAGE, STORAGE_KEYS, SUPPORTED_LANGUAGES } from "@/constants";
+import {
+  DEFAULT_LANGUAGE,
+  STORAGE_KEYS,
+  SUPPORTED_LANGUAGES,
+} from "@/constants";
 
 vi.mock("@/i18n", () => ({
   default: {
@@ -17,9 +21,15 @@ const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => { store[key] = value; },
-    removeItem: (key: string) => { delete store[key]; },
-    clear: () => { store = {}; },
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
   };
 })();
 
@@ -42,7 +52,13 @@ function TestConsumer() {
 describe("LanguageProvider", () => {
   beforeEach(() => {
     localStorageMock.clear();
-    vi.mocked(i18n.changeLanguage).mockResolvedValue(undefined as unknown as ReturnType<typeof i18n.changeLanguage> extends Promise<infer T> ? T : never);
+    vi.mocked(i18n.changeLanguage).mockResolvedValue(
+      undefined as unknown as ReturnType<
+        typeof i18n.changeLanguage
+      > extends Promise<infer T>
+        ? T
+        : never,
+    );
     (i18n as { language: string }).language = DEFAULT_LANGUAGE;
   });
 
@@ -52,7 +68,9 @@ describe("LanguageProvider", () => {
         <TestConsumer />
       </LanguageProvider>,
     );
-    expect(screen.getByTestId("current-lang").textContent).toBe(DEFAULT_LANGUAGE);
+    expect(screen.getByTestId("current-lang").textContent).toBe(
+      DEFAULT_LANGUAGE,
+    );
   });
 
   it("should call i18n.changeLanguage when setLanguage is invoked", async () => {

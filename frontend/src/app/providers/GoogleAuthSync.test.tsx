@@ -1,23 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, act } from "@testing-library/react";
 import type React from "react";
-import { GoogleAuthSync } from "./GoogleAuthSync";
+import {
+  mockGoogleLogin,
+  createGoogleOAuthMock,
+  getGoogleLoginOptions,
+  clearGoogleLoginOptions,
+} from "@/test/mocks/googleOAuthMock";
 
-const mockLogin = vi.fn();
-
-vi.mock("@react-oauth/google", () => ({
-  useGoogleLogin: vi.fn(
-    (options: { onSuccess: (r: unknown) => void; onError: () => void }) => {
-      (globalThis as Record<string, unknown>).__googleLoginOptions = options;
-      return mockLogin;
-    },
-  ),
-}));
+vi.mock("@react-oauth/google", () => createGoogleOAuthMock());
 
 vi.mock("@/services/ApiClient", () => ({
   setAccessToken: vi.fn(),
 }));
 
+import { GoogleAuthSync } from "./GoogleAuthSync";
 import { setAccessToken } from "@/services/ApiClient";
 
 const TOKEN_RESPONSE = { access_token: "test-token", expires_in: 3600 };
@@ -26,14 +23,9 @@ function makeRefs() {
   return {
     signInRef: { current: () => {} } as React.MutableRefObject<() => void>,
     signOutRef: { current: () => {} } as React.MutableRefObject<() => void>,
-    silentRefreshRef: { current: () => {} } as React.MutableRefObject<() => void>,
-  };
-}
-
-function getLoginOptions() {
-  return (globalThis as Record<string, unknown>).__googleLoginOptions as {
-    onSuccess: (r: unknown) => void;
-    onError: () => void;
+    silentRefreshRef: { current: () => {} } as React.MutableRefObject<
+      () => void
+    >,
   };
 }
 
@@ -51,7 +43,7 @@ describe("GoogleAuthSync", () => {
     onUserPictureUpdate = vi.fn();
     onClear = vi.fn();
     refs = makeRefs();
-    delete (globalThis as Record<string, unknown>).__googleLoginOptions;
+    clearGoogleLoginOptions();
   });
 
   function renderSync() {
@@ -75,14 +67,14 @@ describe("GoogleAuthSync", () => {
 
   it("should attempt silent refresh on mount", () => {
     renderSync();
-    expect(mockLogin).toHaveBeenCalledTimes(1);
-    expect(mockLogin).toHaveBeenCalledWith({ prompt: "none" });
+    expect(mockGoogleLogin).toHaveBeenCalledTimes(1);
+    expect(mockGoogleLogin).toHaveBeenCalledWith({ prompt: "none" });
   });
 
   it("should call onTokenUpdate and setAccessToken on successful login", async () => {
     renderSync();
     await act(async () => {
-      getLoginOptions().onSuccess(TOKEN_RESPONSE);
+      getGoogleLoginOptions().onSuccess(TOKEN_RESPONSE);
     });
     expect(onTokenUpdate).toHaveBeenCalledWith("test-token", 3600);
     expect(setAccessToken).toHaveBeenCalledWith("test-token", 3600);
@@ -92,7 +84,7 @@ describe("GoogleAuthSync", () => {
     renderSync();
     // On mount isSilentRef.current = true — silent mode
     await act(async () => {
-      getLoginOptions().onError();
+      getGoogleLoginOptions().onError();
     });
     expect(onClear).not.toHaveBeenCalled();
     expect(setAccessToken).not.toHaveBeenCalledWith(null);
@@ -105,7 +97,7 @@ describe("GoogleAuthSync", () => {
       refs.signInRef.current();
     });
     await act(async () => {
-      getLoginOptions().onError();
+      getGoogleLoginOptions().onError();
     });
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(setAccessToken).toHaveBeenCalledWith(null);
@@ -113,12 +105,12 @@ describe("GoogleAuthSync", () => {
 
   it("should populate signInRef with explicit (non-silent) login function", () => {
     renderSync();
-    mockLogin.mockClear();
+    mockGoogleLogin.mockClear();
     act(() => {
       refs.signInRef.current();
     });
-    expect(mockLogin).toHaveBeenCalledTimes(1);
-    expect(mockLogin).not.toHaveBeenCalledWith({ prompt: "none" });
+    expect(mockGoogleLogin).toHaveBeenCalledTimes(1);
+    expect(mockGoogleLogin).not.toHaveBeenCalledWith({ prompt: "none" });
   });
 
   it("should populate signOutRef that clears auth state", () => {
@@ -132,12 +124,12 @@ describe("GoogleAuthSync", () => {
 
   it("should populate silentRefreshRef that triggers silent login", () => {
     renderSync();
-    mockLogin.mockClear();
+    mockGoogleLogin.mockClear();
     act(() => {
       refs.silentRefreshRef.current();
     });
-    expect(mockLogin).toHaveBeenCalledTimes(1);
-    expect(mockLogin).toHaveBeenCalledWith({ prompt: "none" });
+    expect(mockGoogleLogin).toHaveBeenCalledTimes(1);
+    expect(mockGoogleLogin).toHaveBeenCalledWith({ prompt: "none" });
   });
 
   it("should call onClear on unmount", () => {
@@ -153,7 +145,7 @@ describe("GoogleAuthSync", () => {
     renderSync();
     // On mount isSilentRef.current = true — silent mode
     await act(async () => {
-      getLoginOptions().onSuccess(TOKEN_RESPONSE);
+      getGoogleLoginOptions().onSuccess(TOKEN_RESPONSE);
     });
     expect(onTokenUpdate).toHaveBeenCalledWith("test-token", 3600);
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -172,10 +164,12 @@ describe("GoogleAuthSync", () => {
       refs.signInRef.current();
     });
     await act(async () => {
-      getLoginOptions().onSuccess(TOKEN_RESPONSE);
+      getGoogleLoginOptions().onSuccess(TOKEN_RESPONSE);
     });
     expect(fetchSpy).toHaveBeenCalled();
-    expect(onUserPictureUpdate).toHaveBeenCalledWith("https://example.com/pic.jpg");
+    expect(onUserPictureUpdate).toHaveBeenCalledWith(
+      "https://example.com/pic.jpg",
+    );
   });
 
   it("should not fetch user picture if already cached in localStorage", async () => {
@@ -188,7 +182,7 @@ describe("GoogleAuthSync", () => {
       refs.signInRef.current();
     });
     await act(async () => {
-      getLoginOptions().onSuccess(TOKEN_RESPONSE);
+      getGoogleLoginOptions().onSuccess(TOKEN_RESPONSE);
     });
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(onUserPictureUpdate).not.toHaveBeenCalled();

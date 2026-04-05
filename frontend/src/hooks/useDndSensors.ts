@@ -1,4 +1,9 @@
-import { useSensor, useSensors, PointerSensor, TouchSensor } from "@dnd-kit/core";
+import {
+  useSensor,
+  useSensors,
+  PointerSensor,
+  TouchSensor,
+} from "@dnd-kit/core";
 
 const DRAG_ACTIVATION_DISTANCE_PX = 8;
 const TOUCH_ACTIVATION_DELAY_MS = 250;

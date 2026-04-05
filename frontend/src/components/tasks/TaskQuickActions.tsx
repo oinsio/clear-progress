@@ -8,7 +8,13 @@ import { BOX, BOX_FILTER_LABELS } from "@/constants";
 import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon } from "./BoxIcons";
 import * as React from "react";
 
-type QuickActionMode = "none" | "notes" | "goal" | "box" | "context" | "category";
+type QuickActionMode =
+  | "none"
+  | "notes"
+  | "goal"
+  | "box"
+  | "context"
+  | "category";
 
 interface TaskQuickActionsProps {
   task: Task;
@@ -24,7 +30,9 @@ const INBOX_BOX_OPTIONS: Box[] = [BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER];
 const TASK_BOX_OPTIONS: Box[] = [BOX.TODAY, BOX.WEEK, BOX.LATER];
 
 const BOX_ICONS: Record<Box, React.FC<{ className?: string }>> = {
-  [BOX.INBOX]: ({ className }: { className?: string }) => <Inbox className={className} />,
+  [BOX.INBOX]: ({ className }: { className?: string }) => (
+    <Inbox className={className} />
+  ),
   [BOX.TODAY]: TodayBoxIcon,
   [BOX.WEEK]: WeekBoxIcon,
   [BOX.LATER]: LaterBoxIcon,
@@ -142,7 +150,10 @@ export function TaskQuickActions({
   );
 
   return (
-    <div data-testid="task-quick-actions" className="border-t border-gray-100 bg-gray-50">
+    <div
+      data-testid="task-quick-actions"
+      className="border-t border-gray-100 bg-gray-50"
+    >
       {/* Action icons row */}
       <div className="flex items-center gap-1 px-3 py-1.5">
         <button
@@ -330,27 +341,29 @@ export function TaskQuickActions({
       {/* Box picker */}
       {activeMode === "box" && (
         <div className="px-3 pb-2 flex gap-1">
-          {(task.box === BOX.INBOX ? INBOX_BOX_OPTIONS : TASK_BOX_OPTIONS).map((box) => {
-            const BoxIcon = BOX_ICONS[box];
-            const isCurrentBox = task.box === box;
-            return (
-              <button
-                key={box}
-                type="button"
-                aria-label={BOX_FILTER_LABELS[box]}
-                aria-pressed={isCurrentBox}
-                onClick={() => handleBoxSelect(box)}
-                className={cn(
-                  "flex items-center justify-center w-10 h-10 rounded-full transition-colors",
-                  isCurrentBox
-                    ? "text-accent"
-                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
-                )}
-              >
-                <BoxIcon className="w-7 h-7" />
-              </button>
-            );
-          })}
+          {(task.box === BOX.INBOX ? INBOX_BOX_OPTIONS : TASK_BOX_OPTIONS).map(
+            (box) => {
+              const BoxIcon = BOX_ICONS[box];
+              const isCurrentBox = task.box === box;
+              return (
+                <button
+                  key={box}
+                  type="button"
+                  aria-label={BOX_FILTER_LABELS[box]}
+                  aria-pressed={isCurrentBox}
+                  onClick={() => handleBoxSelect(box)}
+                  className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-full transition-colors",
+                    isCurrentBox
+                      ? "text-accent"
+                      : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                  )}
+                >
+                  <BoxIcon className="w-7 h-7" />
+                </button>
+              );
+            },
+          )}
         </div>
       )}
     </div>

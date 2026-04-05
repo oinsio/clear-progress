@@ -10,12 +10,32 @@ import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
-import { RightFilterPanel, type RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import {
+  RightFilterPanel,
+  type RightPanelMode,
+} from "@/components/tasks/RightFilterPanel";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
-import { BOX_ORDER, ACCENT_COLORS, ACCENT_COLOR_VALUES, COLOR_SCHEMES, PANEL_SIDES, FILTER_BAR_POSITIONS, ROUTES, STORAGE_KEYS, SUPPORTED_LANGUAGES, BACKEND_CONNECTION_EVENT } from "@/constants";
-import type { Box, AccentColor, ColorScheme, PanelSide, FilterBarPosition } from "@/types/common";
+import {
+  BOX_ORDER,
+  ACCENT_COLORS,
+  ACCENT_COLOR_VALUES,
+  COLOR_SCHEMES,
+  PANEL_SIDES,
+  FILTER_BAR_POSITIONS,
+  ROUTES,
+  STORAGE_KEYS,
+  SUPPORTED_LANGUAGES,
+  BACKEND_CONNECTION_EVENT,
+} from "@/constants";
+import type {
+  Box,
+  AccentColor,
+  ColorScheme,
+  PanelSide,
+  FilterBarPosition,
+} from "@/types/common";
 import type { Language } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 
@@ -28,7 +48,8 @@ export default function SettingsPage() {
 
   const navigate = useNavigate();
   const { defaultBox, setDefaultBox } = useSettings();
-  const { accentColor, setAccentColor, colorScheme, setColorScheme } = useTheme();
+  const { accentColor, setAccentColor, colorScheme, setColorScheme } =
+    useTheme();
   const { panelSide, setPanelSide } = usePanelSide();
   const { language, setLanguage } = useLanguage();
   const { isPanelAlwaysOpen, setPanelAlwaysOpen } = usePanelAlwaysOpen();
@@ -98,12 +119,17 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div data-testid="settings-page" className="relative flex flex-1 overflow-hidden bg-white">
+    <div
+      data-testid="settings-page"
+      className="relative flex flex-1 overflow-hidden bg-white"
+    >
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-4 py-6 space-y-8">
-            <h1 className="text-xl font-semibold text-gray-900">{t("settings.title")}</h1>
+            <h1 className="text-xl font-semibold text-gray-900">
+              {t("settings.title")}
+            </h1>
 
             {/* Default box section */}
             <section data-testid="settings-default-box" className="space-y-3">
@@ -147,7 +173,8 @@ export default function SettingsPage() {
                       onClick={() => handleColorSelect(color)}
                       className={cn(
                         "w-9 h-9 rounded-full transition-all",
-                        isSelected && "ring-2 ring-offset-2 ring-gray-400 scale-110",
+                        isSelected &&
+                          "ring-2 ring-offset-2 ring-gray-400 scale-110",
                       )}
                       style={{ backgroundColor: ACCENT_COLOR_VALUES[color] }}
                     />
@@ -224,7 +251,9 @@ export default function SettingsPage() {
                         : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
                     )}
                   >
-                    {side === "left" ? t("settings.panelLeft") : t("settings.panelRight")}
+                    {side === "left"
+                      ? t("settings.panelLeft")
+                      : t("settings.panelRight")}
                   </button>
                 ))}
               </div>
@@ -260,7 +289,10 @@ export default function SettingsPage() {
             </section>
 
             {/* Filter bar position section */}
-            <section data-testid="settings-filter-bar-position" className="space-y-3">
+            <section
+              data-testid="settings-filter-bar-position"
+              className="space-y-3"
+            >
               <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 {t("settings.filterBarPosition")}
               </h2>
@@ -278,7 +310,9 @@ export default function SettingsPage() {
                         : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
                     )}
                   >
-                    {position === "bottom" ? t("settings.filterBarBottom") : t("settings.filterBarTop")}
+                    {position === "bottom"
+                      ? t("settings.filterBarBottom")
+                      : t("settings.filterBarTop")}
                   </button>
                 ))}
               </div>
@@ -298,9 +332,15 @@ export default function SettingsPage() {
                     className={cn(
                       "size-2 rounded-full",
                       connectionStatus === "synced" && "bg-green-500",
-                      connectionStatus === "syncing" && "bg-yellow-400 animate-pulse",
-                      (connectionStatus === "error" || connectionStatus === "offline" || connectionStatus === "unauthorized") && "bg-red-500",
-                      (connectionStatus === "not_configured" || connectionStatus === "no_auth") && "bg-gray-300",
+                      connectionStatus === "syncing" &&
+                        "bg-yellow-400 animate-pulse",
+                      (connectionStatus === "error" ||
+                        connectionStatus === "offline" ||
+                        connectionStatus === "unauthorized") &&
+                        "bg-red-500",
+                      (connectionStatus === "not_configured" ||
+                        connectionStatus === "no_auth") &&
+                        "bg-gray-300",
                     )}
                   />
                   <span
@@ -309,17 +349,26 @@ export default function SettingsPage() {
                       "text-sm font-medium",
                       connectionStatus === "synced" && "text-green-600",
                       connectionStatus === "syncing" && "text-yellow-600",
-                      (connectionStatus === "error" || connectionStatus === "offline" || connectionStatus === "unauthorized") && "text-red-500",
-                      (connectionStatus === "not_configured" || connectionStatus === "no_auth") && "text-gray-400",
+                      (connectionStatus === "error" ||
+                        connectionStatus === "offline" ||
+                        connectionStatus === "unauthorized") &&
+                        "text-red-500",
+                      (connectionStatus === "not_configured" ||
+                        connectionStatus === "no_auth") &&
+                        "text-gray-400",
                     )}
                   >
-                    {connectionStatus === "synced" && t("settings.syncConnected")}
+                    {connectionStatus === "synced" &&
+                      t("settings.syncConnected")}
                     {connectionStatus === "syncing" && t("sync.syncing")}
                     {connectionStatus === "error" && t("sync.noConnection")}
                     {connectionStatus === "offline" && t("sync.noConnection")}
-                    {connectionStatus === "unauthorized" && t("sync.unauthorized")}
-                    {connectionStatus === "no_auth" && t("settings.syncConnected")}
-                    {connectionStatus === "not_configured" && t("settings.syncNotConnected")}
+                    {connectionStatus === "unauthorized" &&
+                      t("sync.unauthorized")}
+                    {connectionStatus === "no_auth" &&
+                      t("settings.syncConnected")}
+                    {connectionStatus === "not_configured" &&
+                      t("settings.syncNotConnected")}
                   </span>
                 </div>
                 {isBackendConfigured ? (
@@ -348,7 +397,6 @@ export default function SettingsPage() {
                     {t("settings.syncConnect")}
                   </button>
                 )}
-
               </div>
             </section>
           </div>

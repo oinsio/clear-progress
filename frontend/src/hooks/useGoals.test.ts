@@ -94,7 +94,9 @@ describe("useGoals", () => {
       await result.current.updateGoal(goal.id, { title: "New title" });
     });
 
-    await waitFor(() => expect(result.current.goals[0].title).toBe("New title"));
+    await waitFor(() =>
+      expect(result.current.goals[0].title).toBe("New title"),
+    );
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });
 
@@ -109,7 +111,9 @@ describe("useGoals", () => {
       await result.current.updateGoalStatus(goal.id, "in_progress");
     });
 
-    await waitFor(() => expect(result.current.goals[0].status).toBe("in_progress"));
+    await waitFor(() =>
+      expect(result.current.goals[0].status).toBe("in_progress"),
+    );
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });
 

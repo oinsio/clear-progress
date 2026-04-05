@@ -58,7 +58,10 @@ function persistLastSync(timestamp: string): void {
   try {
     localStorage.setItem(STORAGE_KEYS.LAST_SYNC, timestamp);
   } catch (storageError) {
-    console.error("[SyncProvider] Failed to persist last sync timestamp:", storageError);
+    console.error(
+      "[SyncProvider] Failed to persist last sync timestamp:",
+      storageError,
+    );
   }
 }
 
@@ -66,8 +69,8 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const { accessToken, signOut, silentRefresh } = useAuth();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncVersion, setSyncVersion] = useState(0);
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(
-    () => localStorage.getItem(STORAGE_KEYS.LAST_SYNC),
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(() =>
+    localStorage.getItem(STORAGE_KEYS.LAST_SYNC),
   );
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -207,7 +210,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   const startPingInterval = useCallback(() => {
     if (pingIntervalRef.current) return;
-    pingIntervalRef.current = setInterval(() => void performPing(), PING_INTERVAL_MS);
+    pingIntervalRef.current = setInterval(
+      () => void performPing(),
+      PING_INTERVAL_MS,
+    );
   }, [performPing]);
 
   useEffect(() => {
@@ -218,8 +224,12 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     void sync();
     intervalRef.current = setInterval(() => void sync(), SYNC_INTERVAL_MS);
 
-    const handleOnline = () => { void performPing(); };
-    const handleOffline = () => { setSyncStatus("offline"); };
+    const handleOnline = () => {
+      void performPing();
+    };
+    const handleOffline = () => {
+      setSyncStatus("offline");
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -241,7 +251,15 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <SyncContext.Provider
-      value={{ syncStatus, syncVersion, lastSyncedAt, pull: sync, push: sync, schedulePush, triggerFullSync }}
+      value={{
+        syncStatus,
+        syncVersion,
+        lastSyncedAt,
+        pull: sync,
+        push: sync,
+        schedulePush,
+        triggerFullSync,
+      }}
     >
       {children}
     </SyncContext.Provider>
@@ -257,7 +275,9 @@ const SYNC_FALLBACK: SyncContextValue = {
   pull: SYNC_NOOP,
   push: SYNC_NOOP,
   schedulePush: () => {},
-  triggerFullSync: SYNC_NOOP as (onProgress: (step: FullSyncStep) => void) => Promise<void>,
+  triggerFullSync: SYNC_NOOP as (
+    onProgress: (step: FullSyncStep) => void,
+  ) => Promise<void>,
 };
 
 export function useSync(): SyncContextValue {

@@ -20,7 +20,14 @@ interface GoalItemProps {
   dragHandle?: React.ReactNode;
 }
 
-export function GoalItem({ goal, taskCount, onNavigate, nodeRef, style, dragHandle }: GoalItemProps) {
+export function GoalItem({
+  goal,
+  taskCount,
+  onNavigate,
+  nodeRef,
+  style,
+  dragHandle,
+}: GoalItemProps) {
   const { t } = useTranslation();
   const isFinished = FINISHED_GOAL_STATUSES.has(goal.status);
   const isUnsynced = useIsUnsynced(goal);
@@ -32,7 +39,9 @@ export function GoalItem({ goal, taskCount, onNavigate, nodeRef, style, dragHand
       style={style}
       data-testid="goal-item"
       className={cn(
-        panelSide === "left" ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50" : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
+        panelSide === "left"
+          ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50"
+          : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
         isUnsynced ? "border-l-amber-400" : "border-l-transparent",
       )}
     >

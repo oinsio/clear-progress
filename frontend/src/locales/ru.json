@@ -95,6 +95,7 @@
     "pageTitle": "Идеи",
     "add": "Добавить идею",
     "titlePlaceholder": "Название идеи",
+    "descriptionPlaceholder": "Описание идеи",
     "empty": "Нет идей",
     "drag": "Перетащить идею"
   },

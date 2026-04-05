@@ -211,9 +211,9 @@ describe("CategoryService", () => {
 
     it("should throw when category not found", async () => {
       const categoryService = new CategoryService(mockCategoryRepository);
-      await expect(
-        categoryService.restore("nonexistent-id"),
-      ).rejects.toThrow("Category not found: nonexistent-id");
+      await expect(categoryService.restore("nonexistent-id")).rejects.toThrow(
+        "Category not found: nonexistent-id",
+      );
     });
   });
 });

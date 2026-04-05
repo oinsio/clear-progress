@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon-512.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <meta name="theme-color" content="#69b23e" />
     <link rel="manifest" href="/manifest.json" />
     <title>Clear Progress</title>
@@ -32,22 +35,27 @@
     </script>
     <script>
       try {
-          let accentColorValues = {
-              green: "#69b23e",
-              coral: "#fb7185",
-              orange: "#f57c00",
-              yellow: "#f4c943",
-              teal: "#0d9488",
-              blue: "#2563eb",
-              indigo: "#4f46e5",
-              purple: "#a855f7",
-          };
-          let accentColor = localStorage.getItem("accent_color");
-          if (accentColor && accentColorValues[accentColor]) {
+        let accentColorValues = {
+          green: "#69b23e",
+          coral: "#fb7185",
+          orange: "#f57c00",
+          yellow: "#f4c943",
+          teal: "#0d9488",
+          blue: "#2563eb",
+          indigo: "#4f46e5",
+          purple: "#a855f7",
+        };
+        let accentColor = localStorage.getItem("accent_color");
+        if (accentColor && accentColorValues[accentColor]) {
           document.documentElement.setAttribute("data-accent", accentColor);
-          var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+          var metaThemeColor = document.querySelector(
+            'meta[name="theme-color"]',
+          );
           if (metaThemeColor) {
-            metaThemeColor.setAttribute("content", accentColorValues[accentColor]);
+            metaThemeColor.setAttribute(
+              "content",
+              accentColorValues[accentColor],
+            );
           }
         }
       } catch (e) {}

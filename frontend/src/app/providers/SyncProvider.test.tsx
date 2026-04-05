@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, act, screen, fireEvent } from "@testing-library/react";
-import { PING_INTERVAL_MS, SYNC_INTERVAL_MS, SYNC_DEBOUNCE_MS, MAX_SILENT_REFRESH_ATTEMPTS, MAX_PING_ATTEMPTS, AUTH_REQUIRED_EVENT } from "@/constants";
+import {
+  PING_INTERVAL_MS,
+  SYNC_INTERVAL_MS,
+  SYNC_DEBOUNCE_MS,
+  MAX_SILENT_REFRESH_ATTEMPTS,
+  MAX_PING_ATTEMPTS,
+  AUTH_REQUIRED_EVENT,
+} from "@/constants";
 import type { FullSyncStep } from "@/types/common";
 
 const {
@@ -76,13 +83,27 @@ vi.mock("@/services/defaultServices", () => ({
   },
 }));
 
-vi.mock("@/db/repositories/TaskRepository", () => ({ TaskRepository: vi.fn() }));
-vi.mock("@/db/repositories/GoalRepository", () => ({ GoalRepository: vi.fn() }));
-vi.mock("@/db/repositories/ContextRepository", () => ({ ContextRepository: vi.fn() }));
-vi.mock("@/db/repositories/CategoryRepository", () => ({ CategoryRepository: vi.fn() }));
-vi.mock("@/db/repositories/ChecklistRepository", () => ({ ChecklistRepository: vi.fn() }));
-vi.mock("@/db/repositories/SettingsRepository", () => ({ SettingsRepository: vi.fn() }));
-vi.mock("@/db/repositories/SyncMetaRepository", () => ({ SyncMetaRepository: vi.fn() }));
+vi.mock("@/db/repositories/TaskRepository", () => ({
+  TaskRepository: vi.fn(),
+}));
+vi.mock("@/db/repositories/GoalRepository", () => ({
+  GoalRepository: vi.fn(),
+}));
+vi.mock("@/db/repositories/ContextRepository", () => ({
+  ContextRepository: vi.fn(),
+}));
+vi.mock("@/db/repositories/CategoryRepository", () => ({
+  CategoryRepository: vi.fn(),
+}));
+vi.mock("@/db/repositories/ChecklistRepository", () => ({
+  ChecklistRepository: vi.fn(),
+}));
+vi.mock("@/db/repositories/SettingsRepository", () => ({
+  SettingsRepository: vi.fn(),
+}));
+vi.mock("@/db/repositories/SyncMetaRepository", () => ({
+  SyncMetaRepository: vi.fn(),
+}));
 
 import { SyncProvider, useSync } from "./SyncProvider";
 
@@ -113,7 +134,10 @@ function SyncVersionDisplay() {
 function SyncMethodTrigger({ method }: { method: "pull" | "push" }) {
   const syncCtx = useSync();
   return (
-    <button data-testid={`${method}-btn`} onClick={() => void syncCtx[method]()}>
+    <button
+      data-testid={`${method}-btn`}
+      onClick={() => void syncCtx[method]()}
+    >
       {method}
     </button>
   );
@@ -197,7 +221,11 @@ afterEach(() => {
 
 describe("SyncProvider — ping reconnect", () => {
   it("should start ping interval when navigator is offline on initial sync", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
 
     renderProvider();
     await act(async () => {});
@@ -227,7 +255,11 @@ describe("SyncProvider — ping reconnect", () => {
   });
 
   it("should show offline status when navigator is offline", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
 
     renderProvider();
     await act(async () => {});
@@ -245,7 +277,11 @@ describe("SyncProvider — ping reconnect", () => {
   });
 
   it("should not start duplicate ping intervals when already pinging", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
     mockPing.mockRejectedValue(new Error("Still offline"));
 
     renderProvider();
@@ -260,7 +296,11 @@ describe("SyncProvider — ping reconnect", () => {
   });
 
   it("should call push and pull when ping succeeds with initialized=true", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
     mockPing.mockResolvedValue(VALID_PING_INITIALIZED);
 
     renderProvider();
@@ -282,13 +322,23 @@ describe("SyncProvider — ping reconnect", () => {
   });
 
   it("should call init before push and pull when ping returns initialized=false", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
     mockPing.mockResolvedValue(VALID_PING_NOT_INITIALIZED);
 
     const callOrder: string[] = [];
-    mockInit.mockImplementation(async () => { callOrder.push("init"); });
-    mockPush.mockImplementation(async () => { callOrder.push("push"); });
-    mockPull.mockImplementation(async () => { callOrder.push("pull"); });
+    mockInit.mockImplementation(async () => {
+      callOrder.push("init");
+    });
+    mockPush.mockImplementation(async () => {
+      callOrder.push("push");
+    });
+    mockPull.mockImplementation(async () => {
+      callOrder.push("pull");
+    });
 
     renderProvider();
     await act(async () => {});
@@ -301,7 +351,11 @@ describe("SyncProvider — ping reconnect", () => {
   });
 
   it("should continue pinging when ping fails", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
     mockPing.mockRejectedValue(new Error("Still unreachable"));
 
     renderProvider();
@@ -319,7 +373,11 @@ describe("SyncProvider — ping reconnect", () => {
   });
 
   it("should stop pinging after successful ping", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
     mockPing.mockResolvedValue(VALID_PING_INITIALIZED);
 
     renderProvider();
@@ -340,7 +398,11 @@ describe("SyncProvider — ping reconnect", () => {
   });
 
   it("should trigger immediate ping when browser online event fires", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
 
     renderProvider();
     await act(async () => {});
@@ -368,7 +430,11 @@ describe("SyncProvider — ping reconnect", () => {
   });
 
   it("should clear ping interval on unmount", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
     mockPing.mockRejectedValue(new Error("offline"));
 
     const { unmount } = renderProvider();
@@ -406,8 +472,12 @@ describe("SyncProvider — push call", () => {
 describe("SyncProvider — push+pull pairing", () => {
   it("should call push before pull on initial sync", async () => {
     const callOrder: string[] = [];
-    mockPush.mockImplementation(async () => { callOrder.push("push"); });
-    mockPull.mockImplementation(async () => { callOrder.push("pull"); });
+    mockPush.mockImplementation(async () => {
+      callOrder.push("push");
+    });
+    mockPull.mockImplementation(async () => {
+      callOrder.push("pull");
+    });
 
     renderProvider();
     await act(async () => {});
@@ -420,8 +490,12 @@ describe("SyncProvider — push+pull pairing", () => {
     await act(async () => {});
 
     const callOrder: string[] = [];
-    mockPush.mockImplementation(async () => { callOrder.push("push"); });
-    mockPull.mockImplementation(async () => { callOrder.push("pull"); });
+    mockPush.mockImplementation(async () => {
+      callOrder.push("push");
+    });
+    mockPull.mockImplementation(async () => {
+      callOrder.push("pull");
+    });
 
     await act(async () => {
       vi.advanceTimersByTime(SYNC_INTERVAL_MS);
@@ -435,8 +509,12 @@ describe("SyncProvider — push+pull pairing", () => {
     await act(async () => {});
 
     const callOrder: string[] = [];
-    mockPush.mockImplementation(async () => { callOrder.push("push"); });
-    mockPull.mockImplementation(async () => { callOrder.push("pull"); });
+    mockPush.mockImplementation(async () => {
+      callOrder.push("push");
+    });
+    mockPull.mockImplementation(async () => {
+      callOrder.push("pull");
+    });
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("pull-btn"));
@@ -450,8 +528,12 @@ describe("SyncProvider — push+pull pairing", () => {
     await act(async () => {});
 
     const callOrder: string[] = [];
-    mockPush.mockImplementation(async () => { callOrder.push("push"); });
-    mockPull.mockImplementation(async () => { callOrder.push("pull"); });
+    mockPush.mockImplementation(async () => {
+      callOrder.push("push");
+    });
+    mockPull.mockImplementation(async () => {
+      callOrder.push("pull");
+    });
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("push-btn"));
@@ -514,8 +596,12 @@ describe("SyncProvider — schedulePush", () => {
     await act(async () => {});
 
     const callOrder: string[] = [];
-    mockPush.mockImplementation(async () => { callOrder.push("push"); });
-    mockPull.mockImplementation(async () => { callOrder.push("pull"); });
+    mockPush.mockImplementation(async () => {
+      callOrder.push("push");
+    });
+    mockPull.mockImplementation(async () => {
+      callOrder.push("pull");
+    });
 
     await act(async () => {
       fireEvent.click(screen.getByTestId("schedule-btn"));
@@ -611,7 +697,9 @@ describe("SyncProvider — auth gate", () => {
     await act(async () => {});
 
     vi.clearAllMocks();
-    await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); });
+    await act(async () => {
+      vi.advanceTimersByTime(SYNC_INTERVAL_MS);
+    });
 
     expect(mockPush).not.toHaveBeenCalled();
   });
@@ -642,11 +730,15 @@ describe("SyncProvider — auth gate", () => {
     await act(async () => {}); // attempt 1
 
     for (let i = 1; i < MAX_SILENT_REFRESH_ATTEMPTS; i++) {
-      await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); }); // attempts 2..MAX
+      await act(async () => {
+        vi.advanceTimersByTime(SYNC_INTERVAL_MS);
+      }); // attempts 2..MAX
     }
 
     expect(mockSignOut).toHaveBeenCalledTimes(1);
-    expect(mockSilentRefresh).toHaveBeenCalledTimes(MAX_SILENT_REFRESH_ATTEMPTS - 1);
+    expect(mockSilentRefresh).toHaveBeenCalledTimes(
+      MAX_SILENT_REFRESH_ATTEMPTS - 1,
+    );
   });
 
   it("should reset attempt counter after successful sync and not call signOut on next auth error", async () => {
@@ -657,11 +749,15 @@ describe("SyncProvider — auth gate", () => {
 
     // Simulate successful sync (token refreshed: new accessToken triggers useEffect)
     mockPull.mockResolvedValue(undefined);
-    await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); }); // success → reset counter
+    await act(async () => {
+      vi.advanceTimersByTime(SYNC_INTERVAL_MS);
+    }); // success → reset counter
 
     // Now another auth error should silentRefresh, not signOut
     mockPull.mockRejectedValue(new MockApiAuthError());
-    await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); }); // attempt 1 again
+    await act(async () => {
+      vi.advanceTimersByTime(SYNC_INTERVAL_MS);
+    }); // attempt 1 again
 
     expect(mockSignOut).not.toHaveBeenCalled();
     expect(mockSilentRefresh).toHaveBeenCalledTimes(2);
@@ -669,16 +765,25 @@ describe("SyncProvider — auth gate", () => {
 });
 
 describe("SyncProvider — triggerFullSync", () => {
-  function FullSyncTrigger({ onProgress }: { onProgress: (step: FullSyncStep) => void }) {
+  function FullSyncTrigger({
+    onProgress,
+  }: {
+    onProgress: (step: FullSyncStep) => void;
+  }) {
     const { triggerFullSync } = useSync();
     return (
-      <button data-testid="full-sync-btn" onClick={() => void triggerFullSync(onProgress)}>
+      <button
+        data-testid="full-sync-btn"
+        onClick={() => void triggerFullSync(onProgress)}
+      >
         full sync
       </button>
     );
   }
 
-  function renderProviderWithFullSync(onProgress: (step: FullSyncStep) => void) {
+  function renderProviderWithFullSync(
+    onProgress: (step: FullSyncStep) => void,
+  ) {
     return render(
       <SyncProvider>
         <SyncVersionDisplay />
@@ -687,7 +792,9 @@ describe("SyncProvider — triggerFullSync", () => {
     );
   }
 
-  async function setupAndTriggerFullSync(onProgress: (step: FullSyncStep) => void = vi.fn()) {
+  async function setupAndTriggerFullSync(
+    onProgress: (step: FullSyncStep) => void = vi.fn(),
+  ) {
     renderProviderWithFullSync(onProgress);
     await act(async () => {});
     vi.clearAllMocks();
@@ -695,7 +802,9 @@ describe("SyncProvider — triggerFullSync", () => {
     mockCoverSync.mockResolvedValue(undefined);
     mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
     mockCoverEnsureServerCovers.mockResolvedValue(undefined);
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn")); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-btn"));
+    });
   }
 
   it("should call fullSync during full sync", async () => {
@@ -712,20 +821,26 @@ describe("SyncProvider — triggerFullSync", () => {
 
   it("should report progress steps upload_covers, push, download_covers, done in order", async () => {
     const steps: FullSyncStep[] = [];
-    await setupAndTriggerFullSync((step) => { steps.push(step); });
+    await setupAndTriggerFullSync((step) => {
+      steps.push(step);
+    });
     expect(steps).toEqual(["upload_covers", "push", "download_covers", "done"]);
   });
 
   it("should report error step when fullSync fails during full sync", async () => {
     const steps: FullSyncStep[] = [];
-    const onProgress = (step: FullSyncStep) => { steps.push(step); };
+    const onProgress = (step: FullSyncStep) => {
+      steps.push(step);
+    };
     renderProviderWithFullSync(onProgress);
     await act(async () => {});
     vi.clearAllMocks();
     mockFullSync.mockRejectedValue(new Error("fullSync failed"));
     mockCoverSync.mockResolvedValue(undefined);
     mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn")); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-btn"));
+    });
     expect(steps).toContain("error");
     expect(steps).not.toContain("done");
   });
@@ -733,14 +848,20 @@ describe("SyncProvider — triggerFullSync", () => {
   it("should increment syncVersion after successful full sync", async () => {
     renderProviderWithFullSync(vi.fn());
     await act(async () => {});
-    const versionAfterMount = parseInt(screen.getByTestId("version").textContent ?? "0");
+    const versionAfterMount = parseInt(
+      screen.getByTestId("version").textContent ?? "0",
+    );
     vi.clearAllMocks();
     mockFullSync.mockResolvedValue(undefined);
     mockCoverSync.mockResolvedValue(undefined);
     mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
     mockCoverEnsureServerCovers.mockResolvedValue(undefined);
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn")); });
-    const versionAfterFullSync = parseInt(screen.getByTestId("version").textContent ?? "0");
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-btn"));
+    });
+    const versionAfterFullSync = parseInt(
+      screen.getByTestId("version").textContent ?? "0",
+    );
     expect(versionAfterFullSync).toBeGreaterThan(versionAfterMount);
   });
 });
@@ -749,7 +870,10 @@ describe("SyncProvider — sync mutex", () => {
   it("should not start a second sync while one is already in progress", async () => {
     let resolvePush!: () => void;
     mockPush.mockImplementation(
-      () => new Promise<void>((resolve) => { resolvePush = resolve; }),
+      () =>
+        new Promise<void>((resolve) => {
+          resolvePush = resolve;
+        }),
     );
 
     renderProvider();
@@ -758,24 +882,37 @@ describe("SyncProvider — sync mutex", () => {
     vi.clearAllMocks();
 
     // Advance timer to trigger the periodic interval — mutex should block it
-    await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); });
+    await act(async () => {
+      vi.advanceTimersByTime(SYNC_INTERVAL_MS);
+    });
     expect(mockPush).not.toHaveBeenCalled();
 
     // Resolve the initial sync
-    await act(async () => { resolvePush(); });
+    await act(async () => {
+      resolvePush();
+    });
     await act(async () => {}); // let pull complete and mutex release
 
     // Next interval should succeed now
     mockPush.mockResolvedValue(undefined);
-    await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); });
+    await act(async () => {
+      vi.advanceTimersByTime(SYNC_INTERVAL_MS);
+    });
     expect(mockPush).toHaveBeenCalledTimes(1);
   });
 
   it("should not start fullSync if a regular sync is already in progress", async () => {
-    function FullSyncTrigger2({ onProgress }: { onProgress: (step: FullSyncStep) => void }) {
+    function FullSyncTrigger2({
+      onProgress,
+    }: {
+      onProgress: (step: FullSyncStep) => void;
+    }) {
       const { triggerFullSync } = useSync();
       return (
-        <button data-testid="full-sync-btn2" onClick={() => void triggerFullSync(onProgress)}>
+        <button
+          data-testid="full-sync-btn2"
+          onClick={() => void triggerFullSync(onProgress)}
+        >
           full sync
         </button>
       );
@@ -783,7 +920,10 @@ describe("SyncProvider — sync mutex", () => {
 
     let resolvePush!: () => void;
     mockPush.mockImplementation(
-      () => new Promise<void>((resolve) => { resolvePush = resolve; }),
+      () =>
+        new Promise<void>((resolve) => {
+          resolvePush = resolve;
+        }),
     );
 
     const onProgress = vi.fn();
@@ -798,7 +938,9 @@ describe("SyncProvider — sync mutex", () => {
     vi.clearAllMocks();
 
     // Attempt full sync while regular sync holds the mutex
-    await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn2")); });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-btn2"));
+    });
     expect(mockPush).not.toHaveBeenCalled();
     expect(onProgress).not.toHaveBeenCalled();
 
@@ -831,10 +973,12 @@ describe("SyncProvider — cover sync error handling", () => {
 describe("SyncProvider — localStorage resilience", () => {
   it("should not throw when localStorage.setItem fails during sync", async () => {
     const originalSetItem = localStorage.setItem.bind(localStorage);
-    vi.spyOn(localStorage, "setItem").mockImplementation((key: string, value: string) => {
-      if (key === "last_sync") throw new Error("QuotaExceededError");
-      originalSetItem(key, value);
-    });
+    vi.spyOn(localStorage, "setItem").mockImplementation(
+      (key: string, value: string) => {
+        if (key === "last_sync") throw new Error("QuotaExceededError");
+        originalSetItem(key, value);
+      },
+    );
 
     renderProvider();
     await act(async () => {});
@@ -846,7 +990,11 @@ describe("SyncProvider — localStorage resilience", () => {
 
 describe("SyncProvider — max ping attempts", () => {
   it("should stop pinging after MAX_PING_ATTEMPTS failures", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
     mockPing.mockRejectedValue(new Error("Ping failed"));
 
     renderProvider();
@@ -854,35 +1002,53 @@ describe("SyncProvider — max ping attempts", () => {
 
     // Advance enough to exceed MAX_PING_ATTEMPTS
     for (let i = 0; i <= MAX_PING_ATTEMPTS; i++) {
-      await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS); });
+      await act(async () => {
+        vi.advanceTimersByTime(PING_INTERVAL_MS);
+      });
     }
 
     const pingCallsAtMax = mockPing.mock.calls.length;
 
     // Extra intervals should not trigger more pings (interval was stopped)
-    await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS * 5); });
+    await act(async () => {
+      vi.advanceTimersByTime(PING_INTERVAL_MS * 5);
+    });
     expect(mockPing.mock.calls.length).toBe(pingCallsAtMax);
   });
 
   it("should reset ping attempt counter on successful reconnect", async () => {
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
     mockPing.mockRejectedValue(new Error("Ping failed"));
 
     renderProvider();
     await act(async () => {}); // offline, ping interval starts
 
     // A few failed pings
-    await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS * 3); });
+    await act(async () => {
+      vi.advanceTimersByTime(PING_INTERVAL_MS * 3);
+    });
 
     // Now ping succeeds — counter should reset and ping interval should stop
     mockPing.mockResolvedValue(VALID_PING_INITIALIZED);
-    Object.defineProperty(navigator, "onLine", { value: true, writable: true, configurable: true });
-    await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS); });
+    Object.defineProperty(navigator, "onLine", {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(PING_INTERVAL_MS);
+    });
 
     const pingCallsAfterSuccess = mockPing.mock.calls.length;
 
     // No more pings (interval stopped after successful reconnect)
-    await act(async () => { vi.advanceTimersByTime(PING_INTERVAL_MS * 5); });
+    await act(async () => {
+      vi.advanceTimersByTime(PING_INTERVAL_MS * 5);
+    });
     expect(mockPing.mock.calls.length).toBe(pingCallsAfterSuccess);
   });
 
@@ -892,8 +1058,14 @@ describe("SyncProvider — max ping attempts", () => {
 
     expect(screen.getByTestId("status").textContent).toBe("idle");
 
-    Object.defineProperty(navigator, "onLine", { value: false, writable: true, configurable: true });
-    await act(async () => { window.dispatchEvent(new Event("offline")); });
+    Object.defineProperty(navigator, "onLine", {
+      value: false,
+      writable: true,
+      configurable: true,
+    });
+    await act(async () => {
+      window.dispatchEvent(new Event("offline"));
+    });
 
     expect(screen.getByTestId("status").textContent).toBe("offline");
   });
@@ -904,14 +1076,18 @@ describe("SyncProvider — AUTH_REQUIRED_EVENT", () => {
     mockPull.mockRejectedValue(new MockApiAuthError());
 
     const authRequiredEvents: string[] = [];
-    const handler = () => { authRequiredEvents.push(AUTH_REQUIRED_EVENT); };
+    const handler = () => {
+      authRequiredEvents.push(AUTH_REQUIRED_EVENT);
+    };
     window.addEventListener(AUTH_REQUIRED_EVENT, handler);
 
     renderProvider();
     await act(async () => {}); // attempt 1
 
     for (let i = 1; i < MAX_SILENT_REFRESH_ATTEMPTS; i++) {
-      await act(async () => { vi.advanceTimersByTime(SYNC_INTERVAL_MS); });
+      await act(async () => {
+        vi.advanceTimersByTime(SYNC_INTERVAL_MS);
+      });
     }
 
     expect(authRequiredEvents).toContain(AUTH_REQUIRED_EVENT);
@@ -922,7 +1098,9 @@ describe("SyncProvider — AUTH_REQUIRED_EVENT", () => {
     mockPull.mockRejectedValue(new MockApiAuthError());
 
     const authRequiredEvents: string[] = [];
-    const handler = () => { authRequiredEvents.push(AUTH_REQUIRED_EVENT); };
+    const handler = () => {
+      authRequiredEvents.push(AUTH_REQUIRED_EVENT);
+    };
     window.addEventListener(AUTH_REQUIRED_EVENT, handler);
 
     renderProvider();

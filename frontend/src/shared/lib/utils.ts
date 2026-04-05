@@ -16,8 +16,12 @@ export function groupCompletedTasks(tasks: Task[]): GroupedCompletedTasks {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
   const startOfYesterday = new Date(startOfToday.getTime() - MS_PER_DAY);
-  const startOf7DaysAgo = new Date(startOfToday.getTime() - DAYS_IN_WEEK * MS_PER_DAY);
-  const startOf30DaysAgo = new Date(startOfToday.getTime() - DAYS_IN_MONTH * MS_PER_DAY);
+  const startOf7DaysAgo = new Date(
+    startOfToday.getTime() - DAYS_IN_WEEK * MS_PER_DAY,
+  );
+  const startOf30DaysAgo = new Date(
+    startOfToday.getTime() - DAYS_IN_MONTH * MS_PER_DAY,
+  );
 
   const todayTasks: Task[] = [];
   const yesterdayTasks: Task[] = [];
@@ -26,7 +30,9 @@ export function groupCompletedTasks(tasks: Task[]): GroupedCompletedTasks {
   const earlierTasks: Task[] = [];
 
   for (const task of tasks) {
-    const completedDate = task.completed_at ? new Date(task.completed_at) : null;
+    const completedDate = task.completed_at
+      ? new Date(task.completed_at)
+      : null;
     if (completedDate && completedDate >= startOfToday) {
       todayTasks.push(task);
     } else if (completedDate && completedDate >= startOfYesterday) {
@@ -48,8 +54,14 @@ export function formatCompletedAt(isoString: string): string {
   const completedDate = new Date(isoString);
   const now = new Date();
 
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  const startOfYesterday = new Date(
+    startOfToday.getTime() - 24 * 60 * 60 * 1000,
+  );
 
   const timeString = completedDate.toLocaleTimeString("ru-RU", {
     hour: "2-digit",
@@ -75,8 +87,14 @@ export function formatShortDateTime(isoString: string): string {
   const date = new Date(isoString);
   const now = new Date();
 
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  const startOfYesterday = new Date(
+    startOfToday.getTime() - 24 * 60 * 60 * 1000,
+  );
 
   const timeString = date.toLocaleTimeString("ru-RU", {
     hour: "2-digit",

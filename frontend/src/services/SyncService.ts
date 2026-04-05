@@ -1,4 +1,11 @@
-import type { Task, Goal, Context, Category, ChecklistItem, Setting } from "@/types/entities";
+import type {
+  Task,
+  Goal,
+  Context,
+  Category,
+  ChecklistItem,
+  Setting,
+} from "@/types/entities";
 import type { PushResponseData } from "@/types/api";
 import { ApiClient } from "./ApiClient";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
@@ -8,7 +15,11 @@ import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
-import { PUSH_RESULT_STATUS, LOCAL_COVER_ID_PREFIX, SYNC_META_KEYS } from "@/constants";
+import {
+  PUSH_RESULT_STATUS,
+  LOCAL_COVER_ID_PREFIX,
+  SYNC_META_KEYS,
+} from "@/constants";
 import { db } from "@/db/database";
 
 export class SyncService {
@@ -52,7 +63,9 @@ export class SyncService {
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
     );
 
-    const pullResponse = await this.apiClient.pull({ since_revision: sinceRevision });
+    const pullResponse = await this.apiClient.pull({
+      since_revision: sinceRevision,
+    });
 
     if (!pullResponse.ok) {
       throw new Error("Pull failed");
@@ -63,7 +76,9 @@ export class SyncService {
       this.goalRepository.applyServerRecords(pullResponse.data.goals),
       this.contextRepository.applyServerRecords(pullResponse.data.contexts),
       this.categoryRepository.applyServerRecords(pullResponse.data.categories),
-      this.checklistRepository.applyServerRecords(pullResponse.data.checklist_items),
+      this.checklistRepository.applyServerRecords(
+        pullResponse.data.checklist_items,
+      ),
       this.settingsRepository.bulkUpsert(pullResponse.settings),
     ]);
 
@@ -97,9 +112,15 @@ export class SyncService {
     const sentVersions = new Map<string, number>([
       ...tasks.map((task) => [task.id, task.version] as [string, number]),
       ...goals.map((goal) => [goal.id, goal.version] as [string, number]),
-      ...contexts.map((context) => [context.id, context.version] as [string, number]),
-      ...categories.map((category) => [category.id, category.version] as [string, number]),
-      ...checklist_items.map((item) => [item.id, item.version] as [string, number]),
+      ...contexts.map(
+        (context) => [context.id, context.version] as [string, number],
+      ),
+      ...categories.map(
+        (category) => [category.id, category.version] as [string, number],
+      ),
+      ...checklist_items.map(
+        (item) => [item.id, item.version] as [string, number],
+      ),
     ]);
 
     const stripDirty = <T extends { _dirty?: boolean }>(records: T[]): Omit<T, "_dirty">[] =>
@@ -126,7 +147,11 @@ export class SyncService {
       throw new Error("Push failed");
     }
 
-    await this._applyPushResults(pushResponse.results, sentVersions, pushResponse.revision);
+    await this._applyPushResults(
+      pushResponse.results,
+      sentVersions,
+      pushResponse.revision,
+    );
 
     if (pushResponse.revision !== undefined) {
       await this.syncMetaRepository.setValue(
@@ -142,11 +167,36 @@ export class SyncService {
     pushRevision: number | undefined,
   ): Promise<void> {
     await Promise.all([
-      this._applyEntityPushResults(results.tasks ?? [], sentVersions, this.taskRepository, pushRevision),
-      this._applyEntityPushResults(results.goals ?? [], sentVersions, this.goalRepository, pushRevision),
-      this._applyEntityPushResults(results.contexts ?? [], sentVersions, this.contextRepository, pushRevision),
-      this._applyEntityPushResults(results.categories ?? [], sentVersions, this.categoryRepository, pushRevision),
-      this._applyEntityPushResults(results.checklist_items ?? [], sentVersions, this.checklistRepository, pushRevision),
+      this._applyEntityPushResults(
+        results.tasks ?? [],
+        sentVersions,
+        this.taskRepository,
+        pushRevision,
+      ),
+      this._applyEntityPushResults(
+        results.goals ?? [],
+        sentVersions,
+        this.goalRepository,
+        pushRevision,
+      ),
+      this._applyEntityPushResults(
+        results.contexts ?? [],
+        sentVersions,
+        this.contextRepository,
+        pushRevision,
+      ),
+      this._applyEntityPushResults(
+        results.categories ?? [],
+        sentVersions,
+        this.categoryRepository,
+        pushRevision,
+      ),
+      this._applyEntityPushResults(
+        results.checklist_items ?? [],
+        sentVersions,
+        this.checklistRepository,
+        pushRevision,
+      ),
       this._applySettingsPushResults(results.settings ?? []),
     ]);
   }
@@ -169,17 +219,33 @@ export class SyncService {
     }
   }
 
-  private async _applyEntityPushResults<T extends { id: string; _dirty: boolean; version: number; revision: number }>(
+  private async _applyEntityPushResults<
+    T extends {
+      id: string;
+      _dirty: boolean;
+      version: number;
+      revision: number;
+    },
+  >(
     results: PushResponseData["tasks"],
     sentVersions: Map<string, number>,
-    repository: { getById(id: string): Promise<T | undefined>; update(record: T): Promise<void> },
+    repository: {
+      getById(id: string): Promise<T | undefined>;
+      update(record: T): Promise<void>;
+    },
     pushRevision: number | undefined,
   ): Promise<void> {
     if (!results || results.length === 0) return;
 
     for (const result of results) {
-      if (result.status === PUSH_RESULT_STATUS.CONFLICT && result.server_record) {
-        await repository.update({ ...(result.server_record as unknown as T), _dirty: false });
+      if (
+        result.status === PUSH_RESULT_STATUS.CONFLICT &&
+        result.server_record
+      ) {
+        await repository.update({
+          ...(result.server_record as unknown as T),
+          _dirty: false,
+        });
         continue;
       }
 
@@ -203,7 +269,10 @@ export class SyncService {
   }
 
   async fullSync(): Promise<void> {
-    await this.syncMetaRepository.setValue(SYNC_META_KEYS.LAST_KNOWN_REVISION, 0);
+    await this.syncMetaRepository.setValue(
+      SYNC_META_KEYS.LAST_KNOWN_REVISION,
+      0,
+    );
 
     await db.tasks.toCollection().modify({ _dirty: true });
     await db.goals.toCollection().modify({ _dirty: true });

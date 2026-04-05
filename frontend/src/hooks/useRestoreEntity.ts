@@ -11,7 +11,10 @@ import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { useSync } from "@/app/providers/SyncProvider";
 
-const defaultTaskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+const defaultTaskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 const defaultGoalService = new GoalService(new GoalRepository());
 const defaultContextService = new ContextService(new ContextRepository());
 const defaultCategoryService = new CategoryService(new CategoryRepository());

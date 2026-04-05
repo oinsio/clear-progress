@@ -1,11 +1,13 @@
 import { renderHook } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockUseAuth, mockUseSync, mockUseBackendConnected } = vi.hoisted(() => ({
-  mockUseAuth: vi.fn(),
-  mockUseSync: vi.fn(),
-  mockUseBackendConnected: vi.fn(),
-}));
+const { mockUseAuth, mockUseSync, mockUseBackendConnected } = vi.hoisted(
+  () => ({
+    mockUseAuth: vi.fn(),
+    mockUseSync: vi.fn(),
+    mockUseBackendConnected: vi.fn(),
+  }),
+);
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: mockUseAuth,

@@ -39,7 +39,20 @@ interface SortableTaskItemProps {
   onExpand?: (id: string | null) => void;
 }
 
-function SortableTaskItem({ task, goals, contexts, categories, onComplete, onUpdate, onMove, onDelete, onSelect, selectedTaskId, expandedTaskId, onExpand }: SortableTaskItemProps) {
+function SortableTaskItem({
+  task,
+  goals,
+  contexts,
+  categories,
+  onComplete,
+  onUpdate,
+  onMove,
+  onDelete,
+  onSelect,
+  selectedTaskId,
+  expandedTaskId,
+  onExpand,
+}: SortableTaskItemProps) {
   const {
     attributes,
     listeners,
@@ -97,7 +110,21 @@ interface TaskListProps {
   selectedTaskId?: string | null;
 }
 
-export function TaskList({ tasks, goals, contexts, categories, onComplete, onUpdate, onMove, onDelete, onReorder, emptyMessage, onEmptyClick, onSelect, selectedTaskId }: TaskListProps) {
+export function TaskList({
+  tasks,
+  goals,
+  contexts,
+  categories,
+  onComplete,
+  onUpdate,
+  onMove,
+  onDelete,
+  onReorder,
+  emptyMessage,
+  onEmptyClick,
+  onSelect,
+  selectedTaskId,
+}: TaskListProps) {
   const { t } = useTranslation();
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
@@ -170,8 +197,15 @@ export function TaskList({ tasks, goals, contexts, categories, onComplete, onUpd
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={tasks.map((task) => task.id)}
+        strategy={verticalListSortingStrategy}
+      >
         <ul data-testid="task-list">
           {tasks.map((task) => (
             <SortableTaskItem

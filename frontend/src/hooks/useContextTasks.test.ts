@@ -11,8 +11,10 @@ describe("useContextTasks", () => {
   const contextId = "ctx-1";
   let testTask: ReturnType<typeof buildTask>;
 
-  const renderContextTasksHook = (ctxId = contextId, service = mockTaskService) =>
-    renderHook(() => useContextTasks(ctxId, service));
+  const renderContextTasksHook = (
+    ctxId = contextId,
+    service = mockTaskService,
+  ) => renderHook(() => useContextTasks(ctxId, service));
 
   beforeEach(() => {
     testTask = buildTask({ context_id: contextId });
@@ -52,7 +54,9 @@ describe("useContextTasks", () => {
 
   it("should call create with context_id when createTask is called", async () => {
     const mockGetByContextId = vi.fn().mockResolvedValue([]);
-    mockTaskService = createMockTaskService({ getByContextId: mockGetByContextId });
+    mockTaskService = createMockTaskService({
+      getByContextId: mockGetByContextId,
+    });
     const { result } = renderContextTasksHook();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -87,7 +91,10 @@ describe("useContextTasks", () => {
       await result.current.moveTask(testTask.id, BOX.WEEK);
     });
 
-    expect(mockTaskService.moveToBox).toHaveBeenCalledWith(testTask.id, BOX.WEEK);
+    expect(mockTaskService.moveToBox).toHaveBeenCalledWith(
+      testTask.id,
+      BOX.WEEK,
+    );
   });
 
   it("should call update when updateTask is called", async () => {
@@ -98,7 +105,9 @@ describe("useContextTasks", () => {
       await result.current.updateTask(testTask.id, { title: "Updated" });
     });
 
-    expect(mockTaskService.update).toHaveBeenCalledWith(testTask.id, { title: "Updated" });
+    expect(mockTaskService.update).toHaveBeenCalledWith(testTask.id, {
+      title: "Updated",
+    });
   });
 
   it("should have empty initial tasks before loading completes", () => {
@@ -111,7 +120,9 @@ describe("useContextTasks", () => {
 
   it("should create task with updated contextId after contextId changes", async () => {
     const mockGetByContextId = vi.fn().mockResolvedValue([]);
-    mockTaskService = createMockTaskService({ getByContextId: mockGetByContextId });
+    mockTaskService = createMockTaskService({
+      getByContextId: mockGetByContextId,
+    });
     const { result, rerender } = renderHook(
       ({ ctxId }: { ctxId: string }) => useContextTasks(ctxId, mockTaskService),
       { initialProps: { ctxId: "ctx-1" } },
@@ -119,7 +130,9 @@ describe("useContextTasks", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     rerender({ ctxId: "ctx-2" });
-    await waitFor(() => expect(mockTaskService.getByContextId).toHaveBeenCalledWith("ctx-2"));
+    await waitFor(() =>
+      expect(mockTaskService.getByContextId).toHaveBeenCalledWith("ctx-2"),
+    );
 
     await act(async () => {
       await result.current.createTask("New task", BOX.TODAY);

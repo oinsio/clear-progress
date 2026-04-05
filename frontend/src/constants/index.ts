@@ -1,4 +1,12 @@
-import type { Box, BoxFilter, AccentColor, PanelSide, RepeatRuleType, ColorScheme, FilterBarPosition } from "@/types/common";
+import type {
+  Box,
+  BoxFilter,
+  AccentColor,
+  PanelSide,
+  RepeatRuleType,
+  ColorScheme,
+  FilterBarPosition,
+} from "@/types/common";
 
 export const ROUTES = {
   INBOX: "/tasks",
@@ -25,7 +33,6 @@ export const BOX = {
   LATER: "later",
 } as const satisfies Record<string, Box>;
 
-
 export const BOX_ORDER: Box[] = ["inbox", "today", "week", "later"];
 
 export const BOX_FILTER_ALL = "all" as const satisfies BoxFilter;
@@ -38,7 +45,12 @@ export const BOX_FILTER_LABELS: Record<BoxFilter, string> = {
   later: "Позже",
 };
 
-export const TASK_BOX_FILTER_ORDER: BoxFilter[] = ["today", "week", "later", "all"];
+export const TASK_BOX_FILTER_ORDER: BoxFilter[] = [
+  "today",
+  "week",
+  "later",
+  "all",
+];
 
 export const DEFAULT_PANEL_SIDE: PanelSide = "right";
 
@@ -127,7 +139,8 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN_EXPIRES_AT: "access_token_expires_at",
 } as const;
 
-export const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+export const GOOGLE_USERINFO_URL =
+  "https://www.googleapis.com/oauth2/v3/userinfo";
 
 export const PANEL_SPLIT_DEFAULT_RATIO = 0.5;
 export const PANEL_SPLIT_MIN_RATIO = 0.2;

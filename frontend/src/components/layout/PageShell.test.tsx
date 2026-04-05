@@ -19,6 +19,8 @@ describe("PageShell", () => {
 
   it("should render BottomNav for mobile navigation", () => {
     renderWithRouter(<div>Content</div>);
-    expect(screen.getByRole("navigation", { name: /навигация/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: /навигация/i }),
+    ).toBeInTheDocument();
   });
 });

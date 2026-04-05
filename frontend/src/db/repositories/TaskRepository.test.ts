@@ -95,7 +95,10 @@ describe("TaskRepository", () => {
   describe("getByGoalId", () => {
     it("should return non-deleted tasks for the specified goal", async () => {
       const goalTask = buildTask({ goal_id: "goal-1", is_deleted: false });
-      const deletedGoalTask = buildTask({ goal_id: "goal-1", is_deleted: true });
+      const deletedGoalTask = buildTask({
+        goal_id: "goal-1",
+        is_deleted: true,
+      });
       const otherTask = buildTask({ goal_id: "goal-2", is_deleted: false });
       await db.tasks.bulkAdd([goalTask, deletedGoalTask, otherTask]);
 
@@ -108,7 +111,10 @@ describe("TaskRepository", () => {
   describe("getActiveIncomplete", () => {
     it("should return only non-deleted and non-completed tasks", async () => {
       const activeTask = buildTask({ is_deleted: false, is_completed: false });
-      const completedTask = buildTask({ is_deleted: false, is_completed: true });
+      const completedTask = buildTask({
+        is_deleted: false,
+        is_completed: true,
+      });
       const deletedTask = buildTask({ is_deleted: true, is_completed: false });
       await db.tasks.bulkAdd([activeTask, completedTask, deletedTask]);
 
@@ -120,10 +126,26 @@ describe("TaskRepository", () => {
 
   describe("getByCategoryId", () => {
     it("should return non-deleted, non-completed tasks for the category", async () => {
-      const categoryTask = buildTask({ category_id: "cat-1", is_deleted: false, is_completed: false });
-      const completedCategoryTask = buildTask({ category_id: "cat-1", is_deleted: false, is_completed: true });
-      const deletedCategoryTask = buildTask({ category_id: "cat-1", is_deleted: true, is_completed: false });
-      await db.tasks.bulkAdd([categoryTask, completedCategoryTask, deletedCategoryTask]);
+      const categoryTask = buildTask({
+        category_id: "cat-1",
+        is_deleted: false,
+        is_completed: false,
+      });
+      const completedCategoryTask = buildTask({
+        category_id: "cat-1",
+        is_deleted: false,
+        is_completed: true,
+      });
+      const deletedCategoryTask = buildTask({
+        category_id: "cat-1",
+        is_deleted: true,
+        is_completed: false,
+      });
+      await db.tasks.bulkAdd([
+        categoryTask,
+        completedCategoryTask,
+        deletedCategoryTask,
+      ]);
 
       const tasks = await taskRepository.getByCategoryId("cat-1");
       expect(tasks).toHaveLength(1);
@@ -133,10 +155,26 @@ describe("TaskRepository", () => {
 
   describe("getByContextId", () => {
     it("should return non-deleted, non-completed tasks for the context", async () => {
-      const contextTask = buildTask({ context_id: "ctx-1", is_deleted: false, is_completed: false });
-      const completedContextTask = buildTask({ context_id: "ctx-1", is_deleted: false, is_completed: true });
-      const deletedContextTask = buildTask({ context_id: "ctx-1", is_deleted: true, is_completed: false });
-      await db.tasks.bulkAdd([contextTask, completedContextTask, deletedContextTask]);
+      const contextTask = buildTask({
+        context_id: "ctx-1",
+        is_deleted: false,
+        is_completed: false,
+      });
+      const completedContextTask = buildTask({
+        context_id: "ctx-1",
+        is_deleted: false,
+        is_completed: true,
+      });
+      const deletedContextTask = buildTask({
+        context_id: "ctx-1",
+        is_deleted: true,
+        is_completed: false,
+      });
+      await db.tasks.bulkAdd([
+        contextTask,
+        completedContextTask,
+        deletedContextTask,
+      ]);
 
       const tasks = await taskRepository.getByContextId("ctx-1");
       expect(tasks).toHaveLength(1);
@@ -156,7 +194,11 @@ describe("TaskRepository", () => {
     });
 
     it("should persist all task fields", async () => {
-      const task = buildTask({ title: "My task", box: "today", notes: "some notes" });
+      const task = buildTask({
+        title: "My task",
+        box: "today",
+        notes: "some notes",
+      });
       await taskRepository.create(task);
 
       const savedTask = await db.tasks.get(task.id);
@@ -223,10 +265,23 @@ describe("TaskRepository", () => {
 
   describe("getCompleted", () => {
     it("should return only non-deleted completed tasks", async () => {
-      const completedTask = buildTask({ is_completed: true, is_deleted: false });
-      const incompleteTask = buildTask({ is_completed: false, is_deleted: false });
-      const deletedCompletedTask = buildTask({ is_completed: true, is_deleted: true });
-      await db.tasks.bulkAdd([completedTask, incompleteTask, deletedCompletedTask]);
+      const completedTask = buildTask({
+        is_completed: true,
+        is_deleted: false,
+      });
+      const incompleteTask = buildTask({
+        is_completed: false,
+        is_deleted: false,
+      });
+      const deletedCompletedTask = buildTask({
+        is_completed: true,
+        is_deleted: true,
+      });
+      await db.tasks.bulkAdd([
+        completedTask,
+        incompleteTask,
+        deletedCompletedTask,
+      ]);
 
       const tasks = await taskRepository.getCompleted();
       expect(tasks).toHaveLength(1);
@@ -248,7 +303,9 @@ describe("TaskRepository", () => {
       const newTask = buildTask({ updated_at: "2026-03-01T00:00:00.000Z" });
       await db.tasks.bulkAdd([oldTask, newTask]);
 
-      const tasks = await taskRepository.getChangedSince("2026-02-01T00:00:00.000Z");
+      const tasks = await taskRepository.getChangedSince(
+        "2026-02-01T00:00:00.000Z",
+      );
       expect(tasks).toHaveLength(1);
       expect(tasks[0].id).toBe(newTask.id);
     });
@@ -257,7 +314,9 @@ describe("TaskRepository", () => {
       const task = buildTask({ updated_at: "2026-01-01T00:00:00.000Z" });
       await db.tasks.add(task);
 
-      const tasks = await taskRepository.getChangedSince("2026-06-01T00:00:00.000Z");
+      const tasks = await taskRepository.getChangedSince(
+        "2026-06-01T00:00:00.000Z",
+      );
       expect(tasks).toEqual([]);
     });
 
@@ -265,15 +324,22 @@ describe("TaskRepository", () => {
       const task = buildTask({ updated_at: "2026-03-01T00:00:00.000Z" });
       await db.tasks.add(task);
 
-      const tasks = await taskRepository.getChangedSince("2026-03-01T00:00:00.000Z");
+      const tasks = await taskRepository.getChangedSince(
+        "2026-03-01T00:00:00.000Z",
+      );
       expect(tasks).toEqual([]);
     });
 
     it("should include soft-deleted tasks that changed after since", async () => {
-      const deletedTask = buildTask({ is_deleted: true, updated_at: "2026-03-01T00:00:00.000Z" });
+      const deletedTask = buildTask({
+        is_deleted: true,
+        updated_at: "2026-03-01T00:00:00.000Z",
+      });
       await db.tasks.add(deletedTask);
 
-      const tasks = await taskRepository.getChangedSince("2026-01-01T00:00:00.000Z");
+      const tasks = await taskRepository.getChangedSince(
+        "2026-01-01T00:00:00.000Z",
+      );
       expect(tasks).toHaveLength(1);
       expect(tasks[0].id).toBe(deletedTask.id);
     });
@@ -312,7 +378,11 @@ describe("TaskRepository", () => {
     });
 
     it("should overwrite clean local records with server version", async () => {
-      const localTask = buildTask({ title: "local", _dirty: false, revision: 1 });
+      const localTask = buildTask({
+        title: "local",
+        _dirty: false,
+        revision: 1,
+      });
       await db.tasks.add(localTask);
 
       const serverTask = { ...localTask, title: "server", revision: 2 };
@@ -324,7 +394,11 @@ describe("TaskRepository", () => {
     });
 
     it("should skip dirty local records", async () => {
-      const localTask = buildTask({ title: "local dirty", _dirty: true, revision: 1 });
+      const localTask = buildTask({
+        title: "local dirty",
+        _dirty: true,
+        revision: 1,
+      });
       await db.tasks.add(localTask);
 
       const serverTask = { ...localTask, title: "server", revision: 2 };

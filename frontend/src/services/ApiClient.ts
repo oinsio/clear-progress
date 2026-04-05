@@ -11,7 +11,13 @@ import type {
   DeleteCoverResponse,
   GetCoversResponse,
 } from "@/types/api";
-import { STORAGE_KEYS, API_ACTIONS, GAS_AUTH_ERROR_CODE, TOKEN_EXPIRY_BUFFER_S, API_AUTH_ERROR_NAME } from "@/constants";
+import {
+  STORAGE_KEYS,
+  API_ACTIONS,
+  GAS_AUTH_ERROR_CODE,
+  TOKEN_EXPIRY_BUFFER_S,
+  API_AUTH_ERROR_NAME,
+} from "@/constants";
 
 // Module-level shared state — all ApiClient instances use the same token
 let sharedAccessToken: string | null = null;
@@ -19,7 +25,9 @@ let sharedTokenExpiresAt: number | null = null;
 
 // Restore persisted token from localStorage on module load (survives app restart)
 const _storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-const _storedExpiresAt = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
+const _storedExpiresAt = localStorage.getItem(
+  STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+);
 if (_storedToken && _storedExpiresAt) {
   const expiresAt = Number(_storedExpiresAt);
   if (Date.now() < expiresAt) {
@@ -40,7 +48,10 @@ export function setAccessToken(token: string | null, expiresIn?: number): void {
 
   if (token && sharedTokenExpiresAt !== null) {
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(sharedTokenExpiresAt));
+    localStorage.setItem(
+      STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+      String(sharedTokenExpiresAt),
+    );
   } else {
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
@@ -142,7 +153,9 @@ export class ApiClient {
     return { file_id, reused };
   }
 
-  async uploadCovers(covers: UploadCoverBatchItem[]): Promise<UploadCoversResponse> {
+  async uploadCovers(
+    covers: UploadCoverBatchItem[],
+  ): Promise<UploadCoversResponse> {
     return this.request<UploadCoversResponse>({
       action: API_ACTIONS.UPLOAD_COVERS,
       covers,
@@ -156,7 +169,9 @@ export class ApiClient {
     });
   }
 
-  async deleteCover(payload: { file_id: string }): Promise<Pick<DeleteCoverResponse, "deleted" | "ref_count">> {
+  async deleteCover(payload: {
+    file_id: string;
+  }): Promise<Pick<DeleteCoverResponse, "deleted" | "ref_count">> {
     const response = await this.request<DeleteCoverResponse>({
       action: "delete_cover",
       ...payload,

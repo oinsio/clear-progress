@@ -1,5 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Check, FileText, GripVertical, ListChecks, RotateCcw } from "lucide-react";
+import {
+  Check,
+  FileText,
+  GripVertical,
+  ListChecks,
+  RotateCcw,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import type { Task, Goal, Context, Category } from "@/types/entities";
@@ -37,9 +43,24 @@ interface TaskItemProps {
   onExpand?: (id: string | null) => void;
 }
 
-export function TaskItem({ task, goals, contexts, categories, onComplete, onUpdate, onMove, dragHandleProps, onSelect, isSelected, isExpanded = false, onExpand }: TaskItemProps) {
+export function TaskItem({
+  task,
+  goals,
+  contexts,
+  categories,
+  onComplete,
+  onUpdate,
+  onMove,
+  dragHandleProps,
+  onSelect,
+  isSelected,
+  isExpanded = false,
+  onExpand,
+}: TaskItemProps) {
   const { t } = useTranslation();
-  const { progress: checklistProgress, hasUnsyncedItems } = useChecklist(task.id);
+  const { progress: checklistProgress, hasUnsyncedItems } = useChecklist(
+    task.id,
+  );
   const isTaskUnsynced = useIsUnsynced(task);
   const isUnsynced = isTaskUnsynced || hasUnsyncedItems;
   const isDesktop = useIsDesktop();
@@ -90,7 +111,10 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
 
   useEffect(() => {
     if ((isExpanded || isConfirmingRestore) && containerRef.current) {
-      containerRef.current.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+      containerRef.current.scrollIntoView?.({
+        block: "nearest",
+        behavior: "smooth",
+      });
     }
   }, [isExpanded, isConfirmingRestore]);
 
@@ -108,8 +132,14 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
         data-testid="task-item"
         className={cn(
           "relative overflow-hidden",
-          panelSide === "left" ? "border-b border-gray-100 border-l-2 transition-colors hover:bg-gray-50" : "border-b border-gray-100 border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
-          isUnsynced ? "border-l-amber-400" : isSelected ? "border-l-accent" : "border-l-transparent",
+          panelSide === "left"
+            ? "border-b border-gray-100 border-l-2 transition-colors hover:bg-gray-50"
+            : "border-b border-gray-100 border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
+          isUnsynced
+            ? "border-l-amber-400"
+            : isSelected
+              ? "border-l-accent"
+              : "border-l-transparent",
           isSelected && "bg-accent/5",
         )}
       >
@@ -120,7 +150,11 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
             data-testid="swipe-background"
             className={cn(
               "absolute inset-0 bg-green-500 flex items-center pl-4 transition-opacity",
-              translateX === 0 ? "opacity-0" : isThresholdReached ? "opacity-100" : "opacity-70",
+              translateX === 0
+                ? "opacity-0"
+                : isThresholdReached
+                  ? "opacity-100"
+                  : "opacity-70",
             )}
           >
             <Check size={20} className="text-white" />
@@ -131,14 +165,19 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
         <div
           style={{
             transform: `translateX(${translateX}px)`,
-            transition: translateX === 0 ? `transform ${SWIPE_SNAP_BACK_DURATION_MS}ms ease-out` : "none",
+            transition:
+              translateX === 0
+                ? `transform ${SWIPE_SNAP_BACK_DURATION_MS}ms ease-out`
+                : "none",
           }}
         >
           {/* Main task row */}
           <div className="flex items-center gap-3 px-4 py-3">
             <button
               type="button"
-              aria-label={task.is_completed ? t("task.noncomplete") : t("task.complete")}
+              aria-label={
+                task.is_completed ? t("task.noncomplete") : t("task.complete")
+              }
               onClick={handleCompleteClick}
               className={cn(
                 "w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors self-start mt-0.5",
@@ -170,10 +209,15 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
                   {formatCompletedAt(task.completed_at)}
                 </span>
               )}
-              {(task.notes && !task.is_completed || checklistProgress.total > 0 || task.repeat_rule) && (
+              {((task.notes && !task.is_completed) ||
+                checklistProgress.total > 0 ||
+                task.repeat_rule) && (
                 <span className="flex items-center gap-2 mt-0.5">
                   {task.notes && !task.is_completed && (
-                    <FileText size={12} className="text-gray-400 flex-shrink-0" />
+                    <FileText
+                      size={12}
+                      className="text-gray-400 flex-shrink-0"
+                    />
                   )}
                   {checklistProgress.total > 0 && (
                     <span
@@ -181,7 +225,9 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
                       className="flex items-center gap-0.5 text-gray-400"
                     >
                       <ListChecks size={10} />
-                      <span className="text-[10px]">{checklistProgress.completed}/{checklistProgress.total}</span>
+                      <span className="text-[10px]">
+                        {checklistProgress.completed}/{checklistProgress.total}
+                      </span>
                     </span>
                   )}
                   {task.repeat_rule && (
@@ -215,7 +261,9 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
               data-testid="restore-confirmation"
               className="flex items-center justify-between px-4 py-2 bg-gray-50 border-t border-gray-100"
             >
-              <span className="text-sm text-gray-600">{t("task.restoreConfirm")}</span>
+              <span className="text-sm text-gray-600">
+                {t("task.restoreConfirm")}
+              </span>
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -251,7 +299,6 @@ export function TaskItem({ task, goals, contexts, categories, onComplete, onUpda
           )}
         </div>
       </div>
-
     </>
   );
 }

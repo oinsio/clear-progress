@@ -66,5 +66,12 @@ export function useContexts(
     [contextService, schedulePush],
   );
 
-  return { contexts, isLoading, createContext, updateContext, deleteContext, reorderContexts };
+  return {
+    contexts,
+    isLoading,
+    createContext,
+    updateContext,
+    deleteContext,
+    reorderContexts,
+  };
 }

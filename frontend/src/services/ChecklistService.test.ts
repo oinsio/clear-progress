@@ -206,9 +206,9 @@ describe("ChecklistService", () => {
 
     it("should throw when item not found", async () => {
       const { service } = createService();
-      await expect(
-        service.softDelete("nonexistent-id"),
-      ).rejects.toThrow("ChecklistItem not found: nonexistent-id");
+      await expect(service.softDelete("nonexistent-id")).rejects.toThrow(
+        "ChecklistItem not found: nonexistent-id",
+      );
     });
   });
 
@@ -254,9 +254,8 @@ describe("ChecklistService", () => {
       ];
       const { service, repository } = createService();
       await service.reorderItems(items);
-      const updatedItems = (
-        repository.bulkUpsert as ReturnType<typeof vi.fn>
-      ).mock.calls[0][0] as ChecklistItem[];
+      const updatedItems = (repository.bulkUpsert as ReturnType<typeof vi.fn>)
+        .mock.calls[0][0] as ChecklistItem[];
       expect(updatedItems[0].sort_order).toBe(0);
       expect(updatedItems[1].sort_order).toBe(1);
       expect(updatedItems[2].sort_order).toBe(2);
@@ -269,9 +268,8 @@ describe("ChecklistService", () => {
       ];
       const { service, repository } = createService();
       await service.reorderItems(items);
-      const updatedItems = (
-        repository.bulkUpsert as ReturnType<typeof vi.fn>
-      ).mock.calls[0][0] as ChecklistItem[];
+      const updatedItems = (repository.bulkUpsert as ReturnType<typeof vi.fn>)
+        .mock.calls[0][0] as ChecklistItem[];
       expect(updatedItems[0].version).toBe(4);
       expect(updatedItems[1].version).toBe(6);
     });
@@ -284,9 +282,8 @@ describe("ChecklistService", () => {
       ];
       const { service, repository } = createService();
       await service.reorderItems(items);
-      const updatedItems = (
-        repository.bulkUpsert as ReturnType<typeof vi.fn>
-      ).mock.calls[0][0] as ChecklistItem[];
+      const updatedItems = (repository.bulkUpsert as ReturnType<typeof vi.fn>)
+        .mock.calls[0][0] as ChecklistItem[];
       expect(updatedItems[0].updated_at).not.toBe(oldTimestamp);
       expect(updatedItems[1].updated_at).not.toBe(oldTimestamp);
     });

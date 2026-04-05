@@ -6,8 +6,12 @@ import { ApiClient, setAccessToken, ApiAuthError } from "./ApiClient";
 import type { UploadCoverBatchItem } from "@/types/api";
 import { STORAGE_KEYS } from "@/constants";
 
-function getLastRequestBody(fetchSpy: MockInstance<typeof fetch>): Record<string, unknown> {
-  return JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string) as Record<string, unknown>;
+function getLastRequestBody(
+  fetchSpy: MockInstance<typeof fetch>,
+): Record<string, unknown> {
+  return JSON.parse(
+    (fetchSpy.mock.calls[0][1] as RequestInit).body as string,
+  ) as Record<string, unknown>;
 }
 
 const TEST_URL = "https://script.google.com/macros/s/test-deploy-id/exec";
@@ -31,11 +35,15 @@ describe("ApiClient.pingUrl", () => {
   });
 
   it("should throw when URL is empty", async () => {
-    await expect(apiClient.pingUrl("")).rejects.toThrow("GAS URL is not configured");
+    await expect(apiClient.pingUrl("")).rejects.toThrow(
+      "GAS URL is not configured",
+    );
   });
 
   it("should return valid PingResponse when server responds with all required fields", async () => {
-    server.use(http.get(TEST_URL, () => HttpResponse.json(VALID_PING_RESPONSE)));
+    server.use(
+      http.get(TEST_URL, () => HttpResponse.json(VALID_PING_RESPONSE)),
+    );
 
     const result = await apiClient.pingUrl(TEST_URL);
 
@@ -43,7 +51,9 @@ describe("ApiClient.pingUrl", () => {
   });
 
   it("should pass redirect: follow option to fetch", async () => {
-    server.use(http.get(TEST_URL, () => HttpResponse.json(VALID_PING_RESPONSE)));
+    server.use(
+      http.get(TEST_URL, () => HttpResponse.json(VALID_PING_RESPONSE)),
+    );
     const fetchSpy = vi.spyOn(global, "fetch");
 
     await apiClient.pingUrl(TEST_URL);
@@ -55,9 +65,13 @@ describe("ApiClient.pingUrl", () => {
   });
 
   it("should throw HTTP error when server responds with non-OK status", async () => {
-    server.use(http.get(TEST_URL, () => new HttpResponse(null, { status: 403 })));
+    server.use(
+      http.get(TEST_URL, () => new HttpResponse(null, { status: 403 })),
+    );
 
-    await expect(apiClient.pingUrl(TEST_URL)).rejects.toThrow("HTTP error: 403");
+    await expect(apiClient.pingUrl(TEST_URL)).rejects.toThrow(
+      "HTTP error: 403",
+    );
   });
 
   it("should throw when server response is not valid JSON", async () => {
@@ -65,9 +79,12 @@ describe("ApiClient.pingUrl", () => {
       http.get(
         TEST_URL,
         () =>
-          new HttpResponse('<html lang="en"><body>Sign in to Google</body></html>', {
-            headers: { "Content-Type": "text/html" },
-          }),
+          new HttpResponse(
+            '<html lang="en"><body>Sign in to Google</body></html>',
+            {
+              headers: { "Content-Type": "text/html" },
+            },
+          ),
       ),
     );
 
@@ -96,7 +113,9 @@ describe("ApiClient.pingUrl", () => {
 
   it("should throw when response JSON is missing field: version", async () => {
     server.use(
-      http.get(TEST_URL, () => HttpResponse.json({ ok: true, app: "CP", initialized: true })),
+      http.get(TEST_URL, () =>
+        HttpResponse.json({ ok: true, app: "CP", initialized: true }),
+      ),
     );
 
     await expect(apiClient.pingUrl(TEST_URL)).rejects.toThrow();
@@ -104,7 +123,9 @@ describe("ApiClient.pingUrl", () => {
 
   it("should throw when response JSON is missing field: initialized", async () => {
     server.use(
-      http.get(TEST_URL, () => HttpResponse.json({ ok: true, app: "CP", version: "1.0" })),
+      http.get(TEST_URL, () =>
+        HttpResponse.json({ ok: true, app: "CP", version: "1.0" }),
+      ),
     );
 
     await expect(apiClient.pingUrl(TEST_URL)).rejects.toThrow();
@@ -113,7 +134,12 @@ describe("ApiClient.pingUrl", () => {
   it("should return response with ok: false so the caller can handle the error", async () => {
     server.use(
       http.get(TEST_URL, () =>
-        HttpResponse.json({ ok: false, app: "CP", version: "1.0", initialized: false }),
+        HttpResponse.json({
+          ok: false,
+          app: "CP",
+          version: "1.0",
+          initialized: false,
+        }),
       ),
     );
 
@@ -125,7 +151,12 @@ describe("ApiClient.pingUrl", () => {
   it("should return response with initialized: false so the caller can trigger init", async () => {
     server.use(
       http.get(TEST_URL, () =>
-        HttpResponse.json({ ok: true, app: "CP", version: "1.0", initialized: false }),
+        HttpResponse.json({
+          ok: true,
+          app: "CP",
+          version: "1.0",
+          initialized: false,
+        }),
       ),
     );
 
@@ -175,7 +206,11 @@ describe("ApiClient auth", () => {
     setAccessToken("expired-token");
     server.use(
       http.post(TEST_URL, () =>
-        HttpResponse.json({ ok: false, error: "UNAUTHORIZED", message: "Unauthorized" }),
+        HttpResponse.json({
+          ok: false,
+          error: "UNAUTHORIZED",
+          message: "Unauthorized",
+        }),
       ),
     );
 
@@ -215,15 +250,20 @@ describe("ApiClient.uploadCovers", () => {
 
   const mockResponse = {
     ok: true,
-    results: [{ local_id: "local-uuid-1", goal_id: "goal-uuid-1", file_id: "drive-file-id", reused: false }],
+    results: [
+      {
+        local_id: "local-uuid-1",
+        goal_id: "goal-uuid-1",
+        file_id: "drive-file-id",
+        reused: false,
+      },
+    ],
   };
 
   beforeEach(() => {
     apiClient = new ApiClient();
     localStorage.setItem(STORAGE_KEYS.GAS_URL, TEST_URL);
-    server.use(
-      http.post(TEST_URL, () => HttpResponse.json(mockResponse)),
-    );
+    server.use(http.post(TEST_URL, () => HttpResponse.json(mockResponse)));
   });
 
   afterEach(() => {
@@ -257,7 +297,10 @@ describe("ApiClient.uploadCovers", () => {
 
   it("should pass multiple covers in the request", async () => {
     const fetchSpy = vi.spyOn(global, "fetch");
-    const covers = [validCover, { ...validCover, local_id: "local-uuid-2", goal_id: "goal-uuid-2" }];
+    const covers = [
+      validCover,
+      { ...validCover, local_id: "local-uuid-2", goal_id: "goal-uuid-2" },
+    ];
 
     await apiClient.uploadCovers(covers);
 
@@ -281,7 +324,9 @@ describe("setAccessToken — localStorage persistence", () => {
   it("should persist expiry timestamp to localStorage when token is set", () => {
     const before = Date.now();
     setAccessToken("my-token", 3600);
-    const storedExpiresAt = Number(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT));
+    const storedExpiresAt = Number(
+      localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT),
+    );
     expect(storedExpiresAt).toBeGreaterThan(before);
   });
 
@@ -289,7 +334,9 @@ describe("setAccessToken — localStorage persistence", () => {
     setAccessToken("my-token", 3600);
     setAccessToken(null);
     expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)).toBeNull();
-    expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)).toBeNull();
+    expect(
+      localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT),
+    ).toBeNull();
   });
 });
 
@@ -300,7 +347,9 @@ describe("ApiClient module initialization — token restoration from localStorag
     vi.restoreAllMocks();
   });
 
-  async function loadFreshClientAndCaptureInitRequestBody(): Promise<Record<string, unknown>> {
+  async function loadFreshClientAndCaptureInitRequestBody(): Promise<
+    Record<string, unknown>
+  > {
     localStorage.setItem(STORAGE_KEYS.GAS_URL, TEST_URL);
 
     vi.resetModules();
@@ -317,7 +366,10 @@ describe("ApiClient module initialization — token restoration from localStorag
   it("should restore valid token from localStorage on module load", async () => {
     const expiresAt = Date.now() + 60 * 60 * 1000;
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "restored-token");
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiresAt));
+    localStorage.setItem(
+      STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+      String(expiresAt),
+    );
 
     const requestBody = await loadFreshClientAndCaptureInitRequestBody();
 
@@ -327,7 +379,10 @@ describe("ApiClient module initialization — token restoration from localStorag
   it("should not restore expired token from localStorage on module load", async () => {
     const expiredAt = Date.now() - 1000;
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "expired-token");
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiredAt));
+    localStorage.setItem(
+      STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+      String(expiredAt),
+    );
 
     const requestBody = await loadFreshClientAndCaptureInitRequestBody();
 
@@ -337,12 +392,17 @@ describe("ApiClient module initialization — token restoration from localStorag
   it("should clean up expired token from localStorage on module load", async () => {
     const expiredAt = Date.now() - 1000;
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "expired-token");
-    localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, String(expiredAt));
+    localStorage.setItem(
+      STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+      String(expiredAt),
+    );
 
     vi.resetModules();
     await import("./ApiClient");
 
     expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)).toBeNull();
-    expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)).toBeNull();
+    expect(
+      localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT),
+    ).toBeNull();
   });
 });

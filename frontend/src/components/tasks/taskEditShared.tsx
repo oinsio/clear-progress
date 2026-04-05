@@ -14,7 +14,9 @@ export type ActiveTab = (typeof ACTIVE_TAB)[keyof typeof ACTIVE_TAB];
 export const BOX_OPTIONS: Box[] = [BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER];
 
 export const BOX_ICONS: Record<Box, React.FC<{ className?: string }>> = {
-  [BOX.INBOX]: ({ className }: { className?: string }) => <Inbox className={className} />,
+  [BOX.INBOX]: ({ className }: { className?: string }) => (
+    <Inbox className={className} />
+  ),
   [BOX.TODAY]: TodayBoxIcon,
   [BOX.WEEK]: WeekBoxIcon,
   [BOX.LATER]: LaterBoxIcon,
@@ -41,14 +43,17 @@ export const CHECKLIST_ITEM_VARIANT = {
   COMPLETED: "completed",
 } as const;
 
-export type ChecklistItemVariant = (typeof CHECKLIST_ITEM_VARIANT)[keyof typeof CHECKLIST_ITEM_VARIANT];
+export type ChecklistItemVariant =
+  (typeof CHECKLIST_ITEM_VARIANT)[keyof typeof CHECKLIST_ITEM_VARIANT];
 
 export function resolveEntityTitle(
   id: string,
   entities: Array<{ id: string; title: string }>,
   fallback: string,
 ): string {
-  return id ? (entities.find((entity) => entity.id === id)?.title ?? fallback) : fallback;
+  return id
+    ? (entities.find((entity) => entity.id === id)?.title ?? fallback)
+    : fallback;
 }
 
 export function resolveEntityName(
@@ -56,5 +61,7 @@ export function resolveEntityName(
   entities: Array<{ id: string; name: string }>,
   fallback: string,
 ): string {
-  return id ? (entities.find((entity) => entity.id === id)?.name ?? fallback) : fallback;
+  return id
+    ? (entities.find((entity) => entity.id === id)?.name ?? fallback)
+    : fallback;
 }

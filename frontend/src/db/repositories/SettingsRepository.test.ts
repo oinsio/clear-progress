@@ -5,10 +5,10 @@ import type { Setting } from "@/types/entities";
 
 function buildSetting(overrides: Partial<Setting> = {}): Setting {
   return <Setting>{
-      key: "default_box",
-      value: "inbox",
-      updated_at: "2026-01-01T00:00:00.000Z",
-      ...overrides,
+    key: "default_box",
+    value: "inbox",
+    updated_at: "2026-01-01T00:00:00.000Z",
+    ...overrides,
   };
 }
 
@@ -54,7 +54,9 @@ describe("SettingsRepository", () => {
 
   describe("getValue", () => {
     it("should return value when key exists", async () => {
-      await db.settings.add(buildSetting({ key: "accent_color", value: "purple" }));
+      await db.settings.add(
+        buildSetting({ key: "accent_color", value: "purple" }),
+      );
 
       const value = await settingsRepository.getValue("accent_color");
       expect(value).toBe("purple");
@@ -76,7 +78,9 @@ describe("SettingsRepository", () => {
     });
 
     it("should update existing setting value", async () => {
-      await db.settings.add(buildSetting({ key: "default_box", value: "inbox" }));
+      await db.settings.add(
+        buildSetting({ key: "default_box", value: "inbox" }),
+      );
       await settingsRepository.set("default_box", "today");
 
       const setting = await db.settings.get("default_box");
@@ -97,7 +101,11 @@ describe("SettingsRepository", () => {
   describe("bulkUpsert", () => {
     it("should insert new settings that do not exist locally", async () => {
       const incoming = [
-        buildSetting({ key: "default_box", value: "today", updated_at: "2026-03-01T00:00:00.000Z" }),
+        buildSetting({
+          key: "default_box",
+          value: "today",
+          updated_at: "2026-03-01T00:00:00.000Z",
+        }),
       ];
 
       await settingsRepository.bulkUpsert(incoming);
@@ -108,11 +116,19 @@ describe("SettingsRepository", () => {
 
     it("should update local setting when incoming has newer updated_at", async () => {
       await db.settings.add(
-        buildSetting({ key: "default_box", value: "inbox", updated_at: "2026-01-01T00:00:00.000Z" }),
+        buildSetting({
+          key: "default_box",
+          value: "inbox",
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }),
       );
 
       await settingsRepository.bulkUpsert([
-        buildSetting({ key: "default_box", value: "week", updated_at: "2026-03-01T00:00:00.000Z" }),
+        buildSetting({
+          key: "default_box",
+          value: "week",
+          updated_at: "2026-03-01T00:00:00.000Z",
+        }),
       ]);
 
       const setting = await db.settings.get("default_box");
@@ -121,11 +137,19 @@ describe("SettingsRepository", () => {
 
     it("should not overwrite local setting when incoming has older updated_at", async () => {
       await db.settings.add(
-        buildSetting({ key: "default_box", value: "today", updated_at: "2026-03-01T00:00:00.000Z" }),
+        buildSetting({
+          key: "default_box",
+          value: "today",
+          updated_at: "2026-03-01T00:00:00.000Z",
+        }),
       );
 
       await settingsRepository.bulkUpsert([
-        buildSetting({ key: "default_box", value: "inbox", updated_at: "2026-01-01T00:00:00.000Z" }),
+        buildSetting({
+          key: "default_box",
+          value: "inbox",
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }),
       ]);
 
       const setting = await db.settings.get("default_box");
@@ -135,11 +159,19 @@ describe("SettingsRepository", () => {
     it("should not overwrite local setting when incoming has same updated_at", async () => {
       const sameTimestamp = "2026-03-01T00:00:00.000Z";
       await db.settings.add(
-        buildSetting({ key: "accent_color", value: "green", updated_at: sameTimestamp }),
+        buildSetting({
+          key: "accent_color",
+          value: "green",
+          updated_at: sameTimestamp,
+        }),
       );
 
       await settingsRepository.bulkUpsert([
-        buildSetting({ key: "accent_color", value: "purple", updated_at: sameTimestamp }),
+        buildSetting({
+          key: "accent_color",
+          value: "purple",
+          updated_at: sameTimestamp,
+        }),
       ]);
 
       const setting = await db.settings.get("accent_color");
@@ -148,13 +180,29 @@ describe("SettingsRepository", () => {
 
     it("should handle mixed incoming — update newer, skip older", async () => {
       await db.settings.bulkAdd([
-        buildSetting({ key: "default_box", value: "today", updated_at: "2026-03-01T00:00:00.000Z" }),
-        buildSetting({ key: "accent_color", value: "green", updated_at: "2026-01-01T00:00:00.000Z" }),
+        buildSetting({
+          key: "default_box",
+          value: "today",
+          updated_at: "2026-03-01T00:00:00.000Z",
+        }),
+        buildSetting({
+          key: "accent_color",
+          value: "green",
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }),
       ]);
 
       await settingsRepository.bulkUpsert([
-        buildSetting({ key: "default_box", value: "inbox", updated_at: "2026-01-01T00:00:00.000Z" }),
-        buildSetting({ key: "accent_color", value: "purple", updated_at: "2026-03-01T00:00:00.000Z" }),
+        buildSetting({
+          key: "default_box",
+          value: "inbox",
+          updated_at: "2026-01-01T00:00:00.000Z",
+        }),
+        buildSetting({
+          key: "accent_color",
+          value: "purple",
+          updated_at: "2026-03-01T00:00:00.000Z",
+        }),
       ]);
 
       const defaultBox = await db.settings.get("default_box");
@@ -164,7 +212,9 @@ describe("SettingsRepository", () => {
     });
 
     it("should do nothing when incoming array is empty", async () => {
-      await db.settings.add(buildSetting({ key: "default_box", value: "inbox" }));
+      await db.settings.add(
+        buildSetting({ key: "default_box", value: "inbox" }),
+      );
 
       await settingsRepository.bulkUpsert([]);
 
@@ -175,26 +225,42 @@ describe("SettingsRepository", () => {
 
   describe("getChangedSince", () => {
     it("should return settings with updated_at after since", async () => {
-      const oldSetting = buildSetting({ key: "default_box", updated_at: "2026-01-01T00:00:00.000Z" });
-      const newSetting = buildSetting({ key: "accent_color", updated_at: "2026-03-01T00:00:00.000Z" });
+      const oldSetting = buildSetting({
+        key: "default_box",
+        updated_at: "2026-01-01T00:00:00.000Z",
+      });
+      const newSetting = buildSetting({
+        key: "accent_color",
+        updated_at: "2026-03-01T00:00:00.000Z",
+      });
       await db.settings.bulkAdd([oldSetting, newSetting]);
 
-      const settings = await settingsRepository.getChangedSince("2026-02-01T00:00:00.000Z");
+      const settings = await settingsRepository.getChangedSince(
+        "2026-02-01T00:00:00.000Z",
+      );
       expect(settings).toHaveLength(1);
       expect(settings[0].key).toBe(newSetting.key);
     });
 
     it("should return empty array when no settings are newer than since", async () => {
-      await db.settings.add(buildSetting({ updated_at: "2026-01-01T00:00:00.000Z" }));
+      await db.settings.add(
+        buildSetting({ updated_at: "2026-01-01T00:00:00.000Z" }),
+      );
 
-      const settings = await settingsRepository.getChangedSince("2026-06-01T00:00:00.000Z");
+      const settings = await settingsRepository.getChangedSince(
+        "2026-06-01T00:00:00.000Z",
+      );
       expect(settings).toEqual([]);
     });
 
     it("should not include settings with updated_at equal to since", async () => {
-      await db.settings.add(buildSetting({ updated_at: "2026-03-01T00:00:00.000Z" }));
+      await db.settings.add(
+        buildSetting({ updated_at: "2026-03-01T00:00:00.000Z" }),
+      );
 
-      const settings = await settingsRepository.getChangedSince("2026-03-01T00:00:00.000Z");
+      const settings = await settingsRepository.getChangedSince(
+        "2026-03-01T00:00:00.000Z",
+      );
       expect(settings).toEqual([]);
     });
   });

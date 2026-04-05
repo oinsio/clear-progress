@@ -99,5 +99,15 @@ export function useTasks(
     // liveQuery handles reactive updates automatically
   }, []);
 
-  return { tasks, isLoading, createTask, completeTask, deleteTask, moveTask, updateTask, reorderTasks, reload };
+  return {
+    tasks,
+    isLoading,
+    createTask,
+    completeTask,
+    deleteTask,
+    moveTask,
+    updateTask,
+    reorderTasks,
+    reload,
+  };
 }

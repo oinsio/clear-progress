@@ -21,7 +21,9 @@ vi.mock("@/app/providers/SyncProvider", () => ({
 
 const checklistService = new ChecklistService(new ChecklistRepository());
 
-async function setupWithItem(overrides: Parameters<typeof buildChecklistItem>[0] = {}) {
+async function setupWithItem(
+  overrides: Parameters<typeof buildChecklistItem>[0] = {},
+) {
   const taskId = overrides.task_id ?? "task-1";
   const item = buildChecklistItem({ task_id: taskId, ...overrides });
   await db.checklist_items.add(item);
@@ -37,17 +39,23 @@ describe("useChecklist", () => {
   });
 
   it("should set isLoading to true on initial render", () => {
-    const { result } = renderHook(() => useChecklist("task-1", checklistService));
+    const { result } = renderHook(() =>
+      useChecklist("task-1", checklistService),
+    );
     expect(result.current.isLoading).toBe(true);
   });
 
   it("should set isLoading to false after items are fetched", async () => {
-    const { result } = renderHook(() => useChecklist("task-1", checklistService));
+    const { result } = renderHook(() =>
+      useChecklist("task-1", checklistService),
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it("should return empty array when task has no checklist items", async () => {
-    const { result } = renderHook(() => useChecklist("task-1", checklistService));
+    const { result } = renderHook(() =>
+      useChecklist("task-1", checklistService),
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.items).toEqual([]);
   });
@@ -73,7 +81,9 @@ describe("useChecklist", () => {
     ]);
 
     const { result } = renderHook(() => useChecklist(taskId, checklistService));
-    await waitFor(() => expect(result.current.progress).toEqual({ completed: 2, total: 3 }));
+    await waitFor(() =>
+      expect(result.current.progress).toEqual({ completed: 2, total: 3 }),
+    );
   });
 
   it("should add new item when createItem is called", async () => {
@@ -90,7 +100,9 @@ describe("useChecklist", () => {
   });
 
   it("should schedule push when createItem is called", async () => {
-    const { result } = renderHook(() => useChecklist("task-1", checklistService));
+    const { result } = renderHook(() =>
+      useChecklist("task-1", checklistService),
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
@@ -107,7 +119,9 @@ describe("useChecklist", () => {
       await result.current.toggleItem(item.id);
     });
 
-    await waitFor(() => expect(result.current.items[0].is_completed).toBe(true));
+    await waitFor(() =>
+      expect(result.current.items[0].is_completed).toBe(true),
+    );
   });
 
   it("should schedule push when toggleItem is called", async () => {
@@ -147,7 +161,9 @@ describe("useChecklist", () => {
       await result.current.updateItem(item.id, "Updated title");
     });
 
-    await waitFor(() => expect(result.current.items[0].title).toBe("Updated title"));
+    await waitFor(() =>
+      expect(result.current.items[0].title).toBe("Updated title"),
+    );
   });
 
   it("should schedule push when updateItem is called", async () => {
@@ -201,9 +217,13 @@ describe("useChecklist", () => {
       buildChecklistItem({ task_id: "task-1" }),
     ]);
 
-    const { result } = renderHook(() => useChecklist("task-1", checklistService));
+    const { result } = renderHook(() =>
+      useChecklist("task-1", checklistService),
+    );
     await waitFor(() => expect(result.current.items).toHaveLength(2));
-    expect(result.current.items.every((item) => item.task_id === "task-1")).toBe(true);
+    expect(
+      result.current.items.every((item) => item.task_id === "task-1"),
+    ).toBe(true);
   });
 
   it("should reactively update when items change from another source", async () => {

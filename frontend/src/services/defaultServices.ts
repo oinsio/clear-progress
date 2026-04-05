@@ -11,7 +11,10 @@ import { ApiClient } from "./ApiClient";
 
 export const defaultApiClient = new ApiClient();
 
-export const defaultTaskService = new TaskService(new TaskRepository(), new ChecklistRepository());
+export const defaultTaskService = new TaskService(
+  new TaskRepository(),
+  new ChecklistRepository(),
+);
 export const defaultGoalService = new GoalService(new GoalRepository());
 export const defaultCoverService = new CoverService(
   new ApiClient(),

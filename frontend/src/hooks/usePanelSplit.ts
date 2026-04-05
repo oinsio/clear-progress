@@ -8,7 +8,10 @@ import {
 } from "@/constants";
 
 function clampRatio(value: number): number {
-  return Math.min(PANEL_SPLIT_MAX_RATIO, Math.max(PANEL_SPLIT_MIN_RATIO, value));
+  return Math.min(
+    PANEL_SPLIT_MAX_RATIO,
+    Math.max(PANEL_SPLIT_MIN_RATIO, value),
+  );
 }
 
 function readStoredRatio(): number {
@@ -46,7 +49,8 @@ export function usePanelSplit() {
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
         const containerRect = container.getBoundingClientRect();
-        const newRatio = (moveEvent.clientX - containerRect.left) / containerRect.width;
+        const newRatio =
+          (moveEvent.clientX - containerRect.left) / containerRect.width;
         setRatio(newRatio);
       };
 

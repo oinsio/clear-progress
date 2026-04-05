@@ -2,11 +2,13 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { AddTaskInput } from "./AddTaskInput";
 
-function renderInput(overrides: {
-  targetBox?: string;
-  onAdd?: (title: string) => Promise<void>;
-  onCancel?: () => void;
-} = {}) {
+function renderInput(
+  overrides: {
+    targetBox?: string;
+    onAdd?: (title: string) => Promise<void>;
+    onCancel?: () => void;
+  } = {},
+) {
   const props = {
     targetBox: "Входящие",
     onAdd: vi.fn().mockResolvedValue(undefined),

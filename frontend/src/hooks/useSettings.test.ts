@@ -14,7 +14,13 @@ vi.mock("@/app/providers/SyncProvider", () => ({
   }),
 }));
 import type { SettingsService } from "@/services/SettingsService";
-import { ACCENT_COLORS, BOX, DEFAULT_ACCENT_COLOR, SETTING_KEYS, STORAGE_KEYS } from "@/constants";
+import {
+  ACCENT_COLORS,
+  BOX,
+  DEFAULT_ACCENT_COLOR,
+  SETTING_KEYS,
+  STORAGE_KEYS,
+} from "@/constants";
 import type { AccentColor } from "@/types/common";
 
 function createMockSettingsService(
@@ -76,7 +82,10 @@ describe("useSettings", () => {
       await result.current.setDefaultBox(BOX.WEEK);
     });
 
-    expect(mockSettingsService.set).toHaveBeenCalledWith(SETTING_KEYS.DEFAULT_BOX, BOX.WEEK);
+    expect(mockSettingsService.set).toHaveBeenCalledWith(
+      SETTING_KEYS.DEFAULT_BOX,
+      BOX.WEEK,
+    );
     expect(mockSettingsService.getDefaultBox).toHaveBeenCalledTimes(2);
   });
 
@@ -88,13 +97,17 @@ describe("useSettings", () => {
       await result.current.setAccentColor("orange");
     });
 
-    expect(mockSettingsService.set).toHaveBeenCalledWith(SETTING_KEYS.ACCENT_COLOR, "orange");
+    expect(mockSettingsService.set).toHaveBeenCalledWith(
+      SETTING_KEYS.ACCENT_COLOR,
+      "orange",
+    );
     expect(mockSettingsService.getAccentColor).toHaveBeenCalledTimes(2);
   });
 
   it("should update defaultBox state after setDefaultBox is called", async () => {
     mockSettingsService = createMockSettingsService({
-      getDefaultBox: vi.fn()
+      getDefaultBox: vi
+        .fn()
         .mockResolvedValueOnce(BOX.INBOX)
         .mockResolvedValueOnce(BOX.WEEK),
     });
@@ -110,7 +123,8 @@ describe("useSettings", () => {
 
   it("should update accentColor state after setAccentColor is called", async () => {
     mockSettingsService = createMockSettingsService({
-      getAccentColor: vi.fn()
+      getAccentColor: vi
+        .fn()
         .mockResolvedValueOnce(DEFAULT_ACCENT_COLOR)
         .mockResolvedValueOnce("purple"),
     });
@@ -150,31 +164,40 @@ describe("useSettings", () => {
     expect(secondService.getDefaultBox).toHaveBeenCalled();
   });
 
-  it.each(ACCENT_COLORS)("should accept '%s' as valid accent color", async (color: AccentColor) => {
-    mockSettingsService = createMockSettingsService({
-      getAccentColor: vi.fn().mockResolvedValue(color),
-    });
-    const { result } = renderHook(() => useSettings(mockSettingsService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.accentColor).toBe(color);
-  });
+  it.each(ACCENT_COLORS)(
+    "should accept '%s' as valid accent color",
+    async (color: AccentColor) => {
+      mockSettingsService = createMockSettingsService({
+        getAccentColor: vi.fn().mockResolvedValue(color),
+      });
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.accentColor).toBe(color);
+    },
+  );
 
-  it.each([BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER])("should accept '%s' as valid default box", async (box) => {
-    mockSettingsService = createMockSettingsService({
-      getDefaultBox: vi.fn().mockResolvedValue(box),
-    });
-    const { result } = renderHook(() => useSettings(mockSettingsService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.defaultBox).toBe(box);
-  });
+  it.each([BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER])(
+    "should accept '%s' as valid default box",
+    async (box) => {
+      mockSettingsService = createMockSettingsService({
+        getDefaultBox: vi.fn().mockResolvedValue(box),
+      });
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.defaultBox).toBe(box);
+    },
+  );
 
   it("should reload settings when syncVersion changes after sync", async () => {
     mockSettingsService = createMockSettingsService({
-      getDefaultBox: vi.fn()
+      getDefaultBox: vi
+        .fn()
         .mockResolvedValueOnce(BOX.LATER)
         .mockResolvedValueOnce(BOX.WEEK),
     });
-    const { result, rerender } = renderHook(() => useSettings(mockSettingsService));
+    const { result, rerender } = renderHook(() =>
+      useSettings(mockSettingsService),
+    );
     await waitFor(() => expect(result.current.defaultBox).toBe(BOX.LATER));
 
     syncVersionStore.version = 1;

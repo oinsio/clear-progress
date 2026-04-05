@@ -10,7 +10,11 @@ void i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources: { ru: { translation: ru }, en: { translation: en }, house: { translation: house } },
+    resources: {
+      ru: { translation: ru },
+      en: { translation: en },
+      house: { translation: house },
+    },
     fallbackLng: DEFAULT_LANGUAGE,
     detection: {
       order: ["localStorage", "navigator"],

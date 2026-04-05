@@ -11,14 +11,18 @@ import type { ChecklistItem } from "@/types/entities";
 import type { ChecklistService } from "@/services/ChecklistService";
 import { BOX } from "@/constants";
 
-function buildMockChecklistService(items: ChecklistItem[] = []): ChecklistService {
+function buildMockChecklistService(
+  items: ChecklistItem[] = [],
+): ChecklistService {
   const completedCount = items.filter((item) => item.is_completed).length;
   return {
     getByTaskId: vi.fn().mockResolvedValue(items),
     getById: vi.fn(),
-    create: vi.fn().mockImplementation(async (_taskId: string, title: string) =>
-      buildChecklistItem({ title }),
-    ),
+    create: vi
+      .fn()
+      .mockImplementation(async (_taskId: string, title: string) =>
+        buildChecklistItem({ title }),
+      ),
     update: vi.fn(),
     toggle: vi.fn().mockImplementation(async (id: string) => {
       const found = items.find((item) => item.id === id);
@@ -28,7 +32,9 @@ function buildMockChecklistService(items: ChecklistItem[] = []): ChecklistServic
       const found = items.find((item) => item.id === id);
       return found ? { ...found, is_deleted: true } : null;
     }),
-    getProgress: vi.fn().mockResolvedValue({ completed: completedCount, total: items.length }),
+    getProgress: vi
+      .fn()
+      .mockResolvedValue({ completed: completedCount, total: items.length }),
   } as unknown as ChecklistService;
 }
 
@@ -55,14 +61,15 @@ describe("TaskEditModal", () => {
     const task = buildTask();
     render(
       <TaskEditModal
-          task={task}
-          goals={[]}
-          contexts={[]}
-          categories={[]}
-          isOpen={false}
-          onClose={vi.fn()}
-          onUpdate={vi.fn()}
-          onDelete={vi.fn()} />,
+        task={task}
+        goals={[]}
+        contexts={[]}
+        categories={[]}
+        isOpen={false}
+        onClose={vi.fn()}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+      />,
     );
     expect(screen.queryByTestId("task-edit-modal")).not.toBeInTheDocument();
   });
@@ -127,7 +134,9 @@ describe("TaskEditModal", () => {
 
   it("should show box selector with today, week, later options", () => {
     renderModal();
-    expect(screen.getByRole("button", { name: /сегодня/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /сегодня/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /неделя/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /позже/i })).toBeInTheDocument();
   });
@@ -190,7 +199,9 @@ describe("TaskEditModal", () => {
     renderModal({ goals: [goal] });
     await userEvent.click(screen.getByTestId("task-edit-goal-row"));
     await userEvent.click(screen.getByText("My goal"));
-    expect(screen.queryByTestId("task-edit-selector-sheet")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("task-edit-selector-sheet"),
+    ).not.toBeInTheDocument();
   });
 
   it("should call onUpdate with selected goal when saved", async () => {
@@ -247,7 +258,9 @@ describe("TaskEditModal", () => {
     await userEvent.click(screen.getByTestId("task-edit-goal-row"));
     expect(screen.getByTestId("task-edit-selector-sheet")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /назад/i }));
-    expect(screen.queryByTestId("task-edit-selector-sheet")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("task-edit-selector-sheet"),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -261,7 +274,9 @@ describe("TaskEditModal — checklist tab", () => {
   it("should show details content by default when Детали tab is active", () => {
     renderModal({ checklistService: buildMockChecklistService() });
     expect(screen.getByTestId("task-edit-title")).toBeInTheDocument();
-    expect(screen.queryByTestId("task-edit-checklist-panel")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("task-edit-checklist-panel"),
+    ).not.toBeInTheDocument();
   });
 
   it("should show checklist panel when Чек-лист tab is clicked", async () => {
@@ -281,25 +296,41 @@ describe("TaskEditModal — checklist tab", () => {
       buildChecklistItem({ task_id: taskId, is_completed: false }),
     ];
     renderModal({ task, checklistService: buildMockChecklistService(items) });
-    expect(await screen.findByTestId("task-edit-tab-checklist")).toHaveTextContent("Чек-лист (2/4)");
+    expect(
+      await screen.findByTestId("task-edit-tab-checklist"),
+    ).toHaveTextContent("Чек-лист (2/4)");
   });
 
   it("should show Чек-лист without progress when no items", async () => {
     renderModal({ checklistService: buildMockChecklistService([]) });
-    expect(await screen.findByTestId("task-edit-tab-checklist")).toHaveTextContent("Чек-лист");
-    expect(screen.getByTestId("task-edit-tab-checklist")).not.toHaveTextContent("(");
+    expect(
+      await screen.findByTestId("task-edit-tab-checklist"),
+    ).toHaveTextContent("Чек-лист");
+    expect(screen.getByTestId("task-edit-tab-checklist")).not.toHaveTextContent(
+      "(",
+    );
   });
 
   it("should show active items in Активно section", async () => {
     const taskId = crypto.randomUUID();
     const task = buildTask({ id: taskId });
     const items = [
-      buildChecklistItem({ task_id: taskId, title: "Пункт 1", is_completed: false }),
-      buildChecklistItem({ task_id: taskId, title: "Пункт 2", is_completed: true }),
+      buildChecklistItem({
+        task_id: taskId,
+        title: "Пункт 1",
+        is_completed: false,
+      }),
+      buildChecklistItem({
+        task_id: taskId,
+        title: "Пункт 2",
+        is_completed: true,
+      }),
     ];
     renderModal({ task, checklistService: buildMockChecklistService(items) });
     await userEvent.click(screen.getByTestId("task-edit-tab-checklist"));
-    expect(await screen.findByTestId("task-edit-checklist-active-section")).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("task-edit-checklist-active-section"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Пункт 1")).toBeInTheDocument();
   });
 
@@ -307,22 +338,36 @@ describe("TaskEditModal — checklist tab", () => {
     const taskId = crypto.randomUUID();
     const task = buildTask({ id: taskId });
     const items = [
-      buildChecklistItem({ task_id: taskId, title: "Пункт готов", is_completed: true }),
+      buildChecklistItem({
+        task_id: taskId,
+        title: "Пункт готов",
+        is_completed: true,
+      }),
     ];
     renderModal({ task, checklistService: buildMockChecklistService(items) });
     await userEvent.click(screen.getByTestId("task-edit-tab-checklist"));
-    expect(await screen.findByTestId("task-edit-checklist-done-section")).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("task-edit-checklist-done-section"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Пункт готов")).toBeInTheDocument();
   });
 
   it("should call toggle when checkbox of active item is clicked", async () => {
     const taskId = crypto.randomUUID();
     const task = buildTask({ id: taskId });
-    const items = [buildChecklistItem({ task_id: taskId, title: "Пункт", is_completed: false })];
+    const items = [
+      buildChecklistItem({
+        task_id: taskId,
+        title: "Пункт",
+        is_completed: false,
+      }),
+    ];
     const mockService = buildMockChecklistService(items);
     renderModal({ task, checklistService: mockService });
     await userEvent.click(screen.getByTestId("task-edit-tab-checklist"));
-    const checkbox = await screen.findByTestId(`checklist-item-checkbox-${items[0].id}`);
+    const checkbox = await screen.findByTestId(
+      `checklist-item-checkbox-${items[0].id}`,
+    );
     await userEvent.click(checkbox);
     expect(mockService.toggle).toHaveBeenCalledWith(items[0].id);
   });
@@ -333,7 +378,9 @@ describe("TaskEditModal — checklist tab", () => {
     const mockService = buildMockChecklistService([]);
     renderModal({ task, checklistService: mockService });
     await userEvent.click(screen.getByTestId("task-edit-tab-checklist"));
-    const input = await screen.findByTestId("task-edit-checklist-new-item-input");
+    const input = await screen.findByTestId(
+      "task-edit-checklist-new-item-input",
+    );
     await userEvent.type(input, "Новый пункт{Enter}");
     expect(mockService.create).toHaveBeenCalledWith(taskId, "Новый пункт");
   });
@@ -344,52 +391,79 @@ describe("TaskEditModal — checklist tab", () => {
     const mockService = buildMockChecklistService([]);
     renderModal({ task, checklistService: mockService });
     await userEvent.click(screen.getByTestId("task-edit-tab-checklist"));
-    const input = await screen.findByTestId("task-edit-checklist-new-item-input");
+    const input = await screen.findByTestId(
+      "task-edit-checklist-new-item-input",
+    );
     await userEvent.type(input, "Пункт через iOS Done");
     fireEvent.blur(input);
     await waitFor(() => {
-      expect(mockService.create).toHaveBeenCalledWith(taskId, "Пункт через iOS Done");
+      expect(mockService.create).toHaveBeenCalledWith(
+        taskId,
+        "Пункт через iOS Done",
+      );
     });
   });
 
   async function setupChecklistItemEditing(title = "Пункт") {
     const taskId = crypto.randomUUID();
     const task = buildTask({ id: taskId });
-    const items = [buildChecklistItem({ task_id: taskId, title, is_completed: false })];
+    const items = [
+      buildChecklistItem({ task_id: taskId, title, is_completed: false }),
+    ];
     const mockService = buildMockChecklistService(items);
     renderModal({ task, checklistService: mockService });
     await userEvent.click(screen.getByTestId("task-edit-tab-checklist"));
-    const itemTitle = await screen.findByTestId(`checklist-item-title-${items[0].id}`);
+    const itemTitle = await screen.findByTestId(
+      `checklist-item-title-${items[0].id}`,
+    );
     await userEvent.click(itemTitle);
     return { item: items[0], mockService };
   }
 
   it("should show editable input when clicking on active checklist item title", async () => {
-    const { item } = await setupChecklistItemEditing("Пункт для редактирования");
-    expect(screen.getByTestId(`checklist-item-edit-input-${item.id}`)).toBeInTheDocument();
+    const { item } = await setupChecklistItemEditing(
+      "Пункт для редактирования",
+    );
+    expect(
+      screen.getByTestId(`checklist-item-edit-input-${item.id}`),
+    ).toBeInTheDocument();
   });
 
   it("should call update service when editing an item and pressing Enter", async () => {
-    const { item, mockService } = await setupChecklistItemEditing("Старый текст");
-    const editInput = screen.getByTestId(`checklist-item-edit-input-${item.id}`);
+    const { item, mockService } =
+      await setupChecklistItemEditing("Старый текст");
+    const editInput = screen.getByTestId(
+      `checklist-item-edit-input-${item.id}`,
+    );
     await userEvent.clear(editInput);
     await userEvent.type(editInput, "Новый текст{Enter}");
-    expect(mockService.update).toHaveBeenCalledWith(item.id, { title: "Новый текст" });
+    expect(mockService.update).toHaveBeenCalledWith(item.id, {
+      title: "Новый текст",
+    });
   });
 
   it("should call update service when editing an item and losing focus", async () => {
-    const { item, mockService } = await setupChecklistItemEditing("Старый текст");
-    const editInput = screen.getByTestId(`checklist-item-edit-input-${item.id}`);
+    const { item, mockService } =
+      await setupChecklistItemEditing("Старый текст");
+    const editInput = screen.getByTestId(
+      `checklist-item-edit-input-${item.id}`,
+    );
     await userEvent.clear(editInput);
     await userEvent.type(editInput, "Изменённый текст");
     await userEvent.tab();
-    expect(mockService.update).toHaveBeenCalledWith(item.id, { title: "Изменённый текст" });
+    expect(mockService.update).toHaveBeenCalledWith(item.id, {
+      title: "Изменённый текст",
+    });
   });
 
   it("should hide edit input after committing changes", async () => {
     const { item } = await setupChecklistItemEditing();
-    const editInput = screen.getByTestId(`checklist-item-edit-input-${item.id}`);
+    const editInput = screen.getByTestId(
+      `checklist-item-edit-input-${item.id}`,
+    );
     await userEvent.type(editInput, "{Enter}");
-    expect(screen.queryByTestId(`checklist-item-edit-input-${item.id}`)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId(`checklist-item-edit-input-${item.id}`),
+    ).not.toBeInTheDocument();
   });
 });

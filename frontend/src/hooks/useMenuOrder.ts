@@ -14,10 +14,12 @@ const DEFAULT_MENU_MODE_ORDER: MenuMode[] = [
 ];
 
 const DEFAULT_MENU_ORDER: MenuItemConfig[] = [
-  ...DEFAULT_MENU_MODE_ORDER.filter((mode) => mode !== "deleted").map((mode) => ({
-    mode,
-    visible: true,
-  })),
+  ...DEFAULT_MENU_MODE_ORDER.filter((mode) => mode !== "deleted").map(
+    (mode) => ({
+      mode,
+      visible: true,
+    }),
+  ),
   { mode: "deleted", visible: false },
 ];
 
@@ -29,7 +31,9 @@ function loadMenuOrder(): MenuItemConfig[] {
     const validModes = new Set<MenuMode>(DEFAULT_MENU_MODE_ORDER);
     const filtered = parsed.filter((item) => validModes.has(item.mode));
     const storedModes = new Set(filtered.map((item) => item.mode));
-    const missing = DEFAULT_MENU_ORDER.filter((item) => !storedModes.has(item.mode));
+    const missing = DEFAULT_MENU_ORDER.filter(
+      (item) => !storedModes.has(item.mode),
+    );
     return [...filtered, ...missing];
   } catch {
     return DEFAULT_MENU_ORDER;
@@ -37,7 +41,8 @@ function loadMenuOrder(): MenuItemConfig[] {
 }
 
 export function useMenuOrder() {
-  const [menuOrder, setMenuOrderState] = useState<MenuItemConfig[]>(loadMenuOrder);
+  const [menuOrder, setMenuOrderState] =
+    useState<MenuItemConfig[]>(loadMenuOrder);
   const shouldBroadcast = useRef(false);
 
   // Broadcast to other hook instances after state is committed to localStorage
@@ -53,11 +58,19 @@ export function useMenuOrder() {
       setMenuOrderState(loadMenuOrder());
     };
     window.addEventListener(MENU_ORDER_CHANGED_EVENT, handleExternalChange);
-    return () => window.removeEventListener(MENU_ORDER_CHANGED_EVENT, handleExternalChange);
+    return () =>
+      window.removeEventListener(
+        MENU_ORDER_CHANGED_EVENT,
+        handleExternalChange,
+      );
   }, []);
 
   const setMenuOrder = useCallback(
-    (updater: MenuItemConfig[] | ((prev: MenuItemConfig[]) => MenuItemConfig[])) => {
+    (
+      updater:
+        | MenuItemConfig[]
+        | ((prev: MenuItemConfig[]) => MenuItemConfig[]),
+    ) => {
       shouldBroadcast.current = true;
       setMenuOrderState((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;

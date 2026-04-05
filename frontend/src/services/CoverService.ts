@@ -1,4 +1,9 @@
-import { MAX_COVER_SIZE_BYTES, LOCAL_COVER_ID_PREFIX, COVER_HASH_PREFIX_LENGTH, DEFAULT_COVER_EXTENSION } from "@/constants";
+import {
+  MAX_COVER_SIZE_BYTES,
+  LOCAL_COVER_ID_PREFIX,
+  COVER_HASH_PREFIX_LENGTH,
+  DEFAULT_COVER_EXTENSION,
+} from "@/constants";
 import type { ApiClient } from "./ApiClient";
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
@@ -14,7 +19,9 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";
   const chunkSize = 8192;
   for (let offset = 0; offset < bytes.length; offset += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+    binary += String.fromCharCode(
+      ...bytes.subarray(offset, offset + chunkSize),
+    );
   }
   return btoa(binary);
 }
@@ -28,7 +35,10 @@ export async function computeSha256Hex(buffer: ArrayBuffer): Promise<string> {
 
 export function buildCoverFilename(dataHash: string, mimeType: string): string {
   const subtype = mimeType.split("/")[1] ?? "";
-  const ext = subtype === "jpeg" ? DEFAULT_COVER_EXTENSION : subtype || DEFAULT_COVER_EXTENSION;
+  const ext =
+    subtype === "jpeg"
+      ? DEFAULT_COVER_EXTENSION
+      : subtype || DEFAULT_COVER_EXTENSION;
   return `${dataHash.substring(0, COVER_HASH_PREFIX_LENGTH)}.${ext}`;
 }
 
@@ -48,10 +58,7 @@ export class CoverService {
     private readonly pendingCoverRepository: PendingCoverRepository,
   ) {}
 
-  async uploadCover(
-    file: File,
-    goalId: string,
-  ): Promise<{ file_id: string }> {
+  async uploadCover(file: File, goalId: string): Promise<{ file_id: string }> {
     if (!file.type.startsWith("image/")) {
       throw new Error(COVER_ERROR.INVALID_TYPE);
     }
@@ -62,7 +69,8 @@ export class CoverService {
     const buffer = await file.arrayBuffer();
     const dataHash = await computeSha256Hex(buffer);
 
-    const existingPending = await this.pendingCoverRepository.getByHash(dataHash);
+    const existingPending =
+      await this.pendingCoverRepository.getByHash(dataHash);
     if (existingPending) {
       return { file_id: `${LOCAL_COVER_ID_PREFIX}${existingPending.local_id}` };
     }
@@ -92,7 +100,12 @@ export class CoverService {
 
       return { file_id: response.file_id };
     } catch (error) {
-      if (error instanceof Error && Object.values(COVER_ERROR).includes(error.message as typeof COVER_ERROR[keyof typeof COVER_ERROR])) {
+      if (
+        error instanceof Error &&
+        Object.values(COVER_ERROR).includes(
+          error.message as (typeof COVER_ERROR)[keyof typeof COVER_ERROR],
+        )
+      ) {
         throw error;
       }
 
@@ -128,5 +141,4 @@ export class CoverService {
       localCoverCache.delete(fileId);
     }
   }
-
 }

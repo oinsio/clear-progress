@@ -3,11 +3,7 @@ import { useChecklistItemEditing } from "@/hooks/useChecklistItemEditing";
 import { useTaskEditLabels } from "@/hooks/useTaskEditLabels";
 import { useTaskFormState } from "@/hooks/useTaskFormState";
 import { X, ChevronRight, ArrowLeft } from "lucide-react";
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -21,7 +17,11 @@ import { cn } from "@/shared/lib/cn";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useSync } from "@/app/providers/SyncProvider";
 import type { ChecklistService } from "@/services/ChecklistService";
-import { parseRepeatRule, serializeRepeatRule, formatRepeatRuleLabel } from "@/utils/repeatRule";
+import {
+  parseRepeatRule,
+  serializeRepeatRule,
+  formatRepeatRuleLabel,
+} from "@/utils/repeatRule";
 import { RepeatRuleSelector } from "./RepeatRuleSelector";
 import {
   ACTIVE_TAB,
@@ -31,7 +31,7 @@ import {
   SELECTOR_TYPE,
   type SelectorType,
   SELECTOR_TITLE_KEYS,
-  CHECKLIST_ITEM_VARIANT
+  CHECKLIST_ITEM_VARIANT,
 } from "./taskEditShared";
 import { SortableChecklistItem } from "./SortableChecklistItem";
 import * as React from "react";
@@ -49,7 +49,6 @@ interface TaskEditModalProps {
   checklistService?: ChecklistService;
 }
 
-
 export function TaskEditModal({
   task,
   goals,
@@ -64,13 +63,20 @@ export function TaskEditModal({
 }: TaskEditModalProps) {
   const { t } = useTranslation();
   const {
-    title, setTitle,
-    notes, setNotes,
-    selectedGoalId, setSelectedGoalId,
-    selectedContextId, setSelectedContextId,
-    selectedCategoryId, setSelectedCategoryId,
-    selectedBox, setSelectedBox,
-    selectedRepeatRule, setSelectedRepeatRule,
+    title,
+    setTitle,
+    notes,
+    setNotes,
+    selectedGoalId,
+    setSelectedGoalId,
+    selectedContextId,
+    setSelectedContextId,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    selectedBox,
+    setSelectedBox,
+    selectedRepeatRule,
+    setSelectedRepeatRule,
   } = useTaskFormState(task);
   const [isSaving, setIsSaving] = useState(false);
   const [openSelector, setOpenSelector] = useState<SelectorType | null>(null);
@@ -79,33 +85,56 @@ export function TaskEditModal({
   const [newItemTitle, setNewItemTitle] = useState("");
   const newItemInputRef = useRef<HTMLInputElement>(null);
 
-  const { items, progress, createItem: rawCreateItem, toggleItem: rawToggleItem, deleteItem: rawDeleteItem, updateItem: rawUpdateItem, reorderItems: rawReorderItems } = useChecklist(task.id, checklistService);
+  const {
+    items,
+    progress,
+    createItem: rawCreateItem,
+    toggleItem: rawToggleItem,
+    deleteItem: rawDeleteItem,
+    updateItem: rawUpdateItem,
+    reorderItems: rawReorderItems,
+  } = useChecklist(task.id, checklistService);
   const { lastSyncedAt } = useSync();
 
-  const createItem = useCallback(async (title: string) => {
-    await rawCreateItem(title);
-    onChecklistChange?.();
-  }, [rawCreateItem, onChecklistChange]);
+  const createItem = useCallback(
+    async (title: string) => {
+      await rawCreateItem(title);
+      onChecklistChange?.();
+    },
+    [rawCreateItem, onChecklistChange],
+  );
 
-  const toggleItem = useCallback(async (id: string) => {
-    await rawToggleItem(id);
-    onChecklistChange?.();
-  }, [rawToggleItem, onChecklistChange]);
+  const toggleItem = useCallback(
+    async (id: string) => {
+      await rawToggleItem(id);
+      onChecklistChange?.();
+    },
+    [rawToggleItem, onChecklistChange],
+  );
 
-  const deleteItem = useCallback(async (id: string) => {
-    await rawDeleteItem(id);
-    onChecklistChange?.();
-  }, [rawDeleteItem, onChecklistChange]);
+  const deleteItem = useCallback(
+    async (id: string) => {
+      await rawDeleteItem(id);
+      onChecklistChange?.();
+    },
+    [rawDeleteItem, onChecklistChange],
+  );
 
-  const updateItem = useCallback(async (id: string, title: string) => {
-    await rawUpdateItem(id, title);
-    onChecklistChange?.();
-  }, [rawUpdateItem, onChecklistChange]);
+  const updateItem = useCallback(
+    async (id: string, title: string) => {
+      await rawUpdateItem(id, title);
+      onChecklistChange?.();
+    },
+    [rawUpdateItem, onChecklistChange],
+  );
 
-  const reorderItems = useCallback(async (reorderedItems: ChecklistItem[]) => {
-    await rawReorderItems(reorderedItems);
-    onChecklistChange?.();
-  }, [rawReorderItems, onChecklistChange]);
+  const reorderItems = useCallback(
+    async (reorderedItems: ChecklistItem[]) => {
+      await rawReorderItems(reorderedItems);
+      onChecklistChange?.();
+    },
+    [rawReorderItems, onChecklistChange],
+  );
 
   const {
     editingItemId,
@@ -156,13 +185,26 @@ export function TaskEditModal({
         context_id: selectedContextId,
         category_id: selectedCategoryId,
         box: selectedBox,
-        repeat_rule: selectedRepeatRule ? serializeRepeatRule(selectedRepeatRule) : "",
+        repeat_rule: selectedRepeatRule
+          ? serializeRepeatRule(selectedRepeatRule)
+          : "",
       });
       onClose();
     } finally {
       setIsSaving(false);
     }
-  }, [task.id, title, notes, selectedGoalId, selectedContextId, selectedCategoryId, selectedBox, selectedRepeatRule, onUpdate, onClose]);
+  }, [
+    task.id,
+    title,
+    notes,
+    selectedGoalId,
+    selectedContextId,
+    selectedCategoryId,
+    selectedBox,
+    selectedRepeatRule,
+    onUpdate,
+    onClose,
+  ]);
 
   const handleNewItemKeyDown = useCallback(
     async (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -181,7 +223,6 @@ export function TaskEditModal({
     }
   }, [newItemTitle, createItem]);
 
-
   const dndSensors = useDndSensors();
 
   const activeItems = items.filter((item) => !item.is_completed);
@@ -199,13 +240,28 @@ export function TaskEditModal({
     [reorderItems],
   );
 
-  const { selectedGoalTitle, selectedContextName, selectedCategoryName, checklistTabLabel } =
-    useTaskEditLabels(selectedGoalId, selectedContextId, selectedCategoryId, goals, contexts, categories, progress);
+  const {
+    selectedGoalTitle,
+    selectedContextName,
+    selectedCategoryName,
+    checklistTabLabel,
+  } = useTaskEditLabels(
+    selectedGoalId,
+    selectedContextId,
+    selectedCategoryId,
+    goals,
+    contexts,
+    categories,
+    progress,
+  );
 
   if (!isOpen) return null;
 
   return (
-    <div data-testid="task-edit-modal" className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div
+      data-testid="task-edit-modal"
+      className="fixed inset-0 z-50 flex flex-col justify-end"
+    >
       {/* Backdrop */}
       <div
         data-testid="task-edit-modal-backdrop"
@@ -217,7 +273,9 @@ export function TaskEditModal({
       <div className="relative bg-white rounded-t-2xl shadow-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800">{t("taskEdit.title")}</h2>
+          <h2 className="text-base font-semibold text-gray-800">
+            {t("taskEdit.title")}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -263,7 +321,9 @@ export function TaskEditModal({
           <div className="px-4 py-4 flex flex-col gap-4">
             {/* Title */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">{t("taskEdit.fieldTitle")}</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                {t("taskEdit.fieldTitle")}
+              </label>
               <input
                 type="text"
                 value={title}
@@ -276,7 +336,9 @@ export function TaskEditModal({
 
             {/* Notes */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">{t("taskEdit.fieldNotes")}</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                {t("taskEdit.fieldNotes")}
+              </label>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
@@ -289,7 +351,9 @@ export function TaskEditModal({
 
             {/* Box selector */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-2 block">{t("taskEdit.fieldBox")}</label>
+              <label className="text-xs font-medium text-gray-500 mb-2 block">
+                {t("taskEdit.fieldBox")}
+              </label>
               <div className="flex gap-1">
                 {BOX_OPTIONS.map((box) => {
                   const BoxIcon = BOX_ICONS[box];
@@ -323,9 +387,15 @@ export function TaskEditModal({
                 onClick={() => setOpenSelector(SELECTOR_TYPE.GOAL)}
                 className="flex items-center justify-between w-full py-2.5 text-sm border-b border-gray-100"
               >
-                <span className="text-gray-500 font-medium">{t("selector.goal")}</span>
+                <span className="text-gray-500 font-medium">
+                  {t("selector.goal")}
+                </span>
                 <div className="flex items-center gap-1">
-                  <span className={cn(selectedGoalId ? "text-gray-800" : "text-gray-400")}>
+                  <span
+                    className={cn(
+                      selectedGoalId ? "text-gray-800" : "text-gray-400",
+                    )}
+                  >
                     {selectedGoalTitle}
                   </span>
                   <ChevronRight size={16} className="text-gray-400" />
@@ -341,9 +411,15 @@ export function TaskEditModal({
                 onClick={() => setOpenSelector(SELECTOR_TYPE.CONTEXT)}
                 className="flex items-center justify-between w-full py-2.5 text-sm border-b border-gray-100"
               >
-                <span className="text-gray-500 font-medium">{t("selector.context")}</span>
+                <span className="text-gray-500 font-medium">
+                  {t("selector.context")}
+                </span>
                 <div className="flex items-center gap-1">
-                  <span className={cn(selectedContextId ? "text-gray-800" : "text-gray-400")}>
+                  <span
+                    className={cn(
+                      selectedContextId ? "text-gray-800" : "text-gray-400",
+                    )}
+                  >
                     {selectedContextName}
                   </span>
                   <ChevronRight size={16} className="text-gray-400" />
@@ -359,9 +435,15 @@ export function TaskEditModal({
                 onClick={() => setOpenSelector(SELECTOR_TYPE.CATEGORY)}
                 className="flex items-center justify-between w-full py-2.5 text-sm border-b border-gray-100"
               >
-                <span className="text-gray-500 font-medium">{t("selector.category")}</span>
+                <span className="text-gray-500 font-medium">
+                  {t("selector.category")}
+                </span>
                 <div className="flex items-center gap-1">
-                  <span className={cn(selectedCategoryId ? "text-gray-800" : "text-gray-400")}>
+                  <span
+                    className={cn(
+                      selectedCategoryId ? "text-gray-800" : "text-gray-400",
+                    )}
+                  >
                     {selectedCategoryName}
                   </span>
                   <ChevronRight size={16} className="text-gray-400" />
@@ -376,10 +458,18 @@ export function TaskEditModal({
               onClick={() => setOpenSelector(SELECTOR_TYPE.REPEAT)}
               className="flex items-center justify-between w-full py-2.5 text-sm border-b border-gray-100"
             >
-              <span className="text-gray-500 font-medium">{t("taskEdit.fieldRepeat")}</span>
+              <span className="text-gray-500 font-medium">
+                {t("taskEdit.fieldRepeat")}
+              </span>
               <div className="flex items-center gap-1">
-                <span className={cn(selectedRepeatRule ? "text-gray-800" : "text-gray-400")}>
-                  {selectedRepeatRule ? formatRepeatRuleLabel(selectedRepeatRule, t) : t("repeat.none")}
+                <span
+                  className={cn(
+                    selectedRepeatRule ? "text-gray-800" : "text-gray-400",
+                  )}
+                >
+                  {selectedRepeatRule
+                    ? formatRepeatRuleLabel(selectedRepeatRule, t)
+                    : t("repeat.none")}
                 </span>
                 <ChevronRight size={16} className="text-gray-400" />
               </div>
@@ -389,7 +479,10 @@ export function TaskEditModal({
 
         {/* Checklist tab content */}
         {activeTab === ACTIVE_TAB.CHECKLIST && (
-          <div data-testid="task-edit-checklist-panel" className="px-4 py-4 flex flex-col gap-4">
+          <div
+            data-testid="task-edit-checklist-panel"
+            className="px-4 py-4 flex flex-col gap-4"
+          >
             {/* Active items section */}
             <div data-testid="task-edit-checklist-active-section">
               <p className="text-center text-sm font-medium text-accent mb-2">
@@ -413,13 +506,19 @@ export function TaskEditModal({
                         editingTitle={editingItemTitle}
                         lastSyncedAt={lastSyncedAt}
                         variant={CHECKLIST_ITEM_VARIANT.ACTIVE}
-                        toggleAriaLabel={t("taskEdit.checkItemMark", { title: item.title })}
-                        deleteAriaLabel={t("taskEdit.checkItemDelete", { title: item.title })}
+                        toggleAriaLabel={t("taskEdit.checkItemMark", {
+                          title: item.title,
+                        })}
+                        deleteAriaLabel={t("taskEdit.checkItemDelete", {
+                          title: item.title,
+                        })}
                         onToggle={() => void toggleItem(item.id)}
                         onStartEdit={() => handleItemTitleClick(item)}
                         onEditChange={setEditingItemTitle}
                         onEditBlur={() => void commitItemEdit(item.id)}
-                        onEditKeyDown={(event) => void handleItemEditKeyDown(event, item.id)}
+                        onEditKeyDown={(event) =>
+                          void handleItemEditKeyDown(event, item.id)
+                        }
                         onDelete={() => void deleteItem(item.id)}
                       />
                     ))}
@@ -435,7 +534,9 @@ export function TaskEditModal({
                         type="text"
                         data-testid="task-edit-checklist-new-item-input"
                         value={newItemTitle}
-                        onChange={(event) => setNewItemTitle(event.target.value)}
+                        onChange={(event) =>
+                          setNewItemTitle(event.target.value)
+                        }
                         onKeyDown={(event) => void handleNewItemKeyDown(event)}
                         onBlur={() => void handleNewItemBlur()}
                         placeholder={t("taskEdit.newChecklistItemPlaceholder")}
@@ -456,7 +557,9 @@ export function TaskEditModal({
                 <DndContext
                   sensors={dndSensors}
                   collisionDetection={closestCenter}
-                  onDragEnd={(event) => handleSectionDragEnd(completedItems, event)}
+                  onDragEnd={(event) =>
+                    handleSectionDragEnd(completedItems, event)
+                  }
                 >
                   <SortableContext
                     items={completedItems.map((item) => item.id)}
@@ -471,13 +574,19 @@ export function TaskEditModal({
                           editingTitle={editingItemTitle}
                           lastSyncedAt={lastSyncedAt}
                           variant={CHECKLIST_ITEM_VARIANT.COMPLETED}
-                          toggleAriaLabel={t("taskEdit.checkItemUnmark", { title: item.title })}
-                          deleteAriaLabel={t("taskEdit.checkItemDelete", { title: item.title })}
+                          toggleAriaLabel={t("taskEdit.checkItemUnmark", {
+                            title: item.title,
+                          })}
+                          deleteAriaLabel={t("taskEdit.checkItemDelete", {
+                            title: item.title,
+                          })}
                           onToggle={() => void toggleItem(item.id)}
                           onStartEdit={() => handleItemTitleClick(item)}
                           onEditChange={setEditingItemTitle}
                           onEditBlur={() => void commitItemEdit(item.id)}
-                          onEditKeyDown={(event) => void handleItemEditKeyDown(event, item.id)}
+                          onEditKeyDown={(event) =>
+                            void handleItemEditKeyDown(event, item.id)
+                          }
                           onDelete={() => void deleteItem(item.id)}
                         />
                       ))}
@@ -525,7 +634,9 @@ export function TaskEditModal({
             data-testid="task-edit-delete-confirm"
             className="absolute inset-0 bg-white/95 rounded-t-2xl flex flex-col items-center justify-center gap-4 px-6"
           >
-            <p className="text-base font-medium text-gray-800 text-center">{t("taskEdit.deleteConfirmTitle")}</p>
+            <p className="text-base font-medium text-gray-800 text-center">
+              {t("taskEdit.deleteConfirmTitle")}
+            </p>
             <p className="text-sm text-gray-500 text-center">{task.title}</p>
             <div className="flex gap-3 w-full">
               <button
@@ -568,137 +679,137 @@ export function TaskEditModal({
             />
           ) : (
             <>
-          {/* Selector header */}
-          <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-gray-100">
-            <button
-              type="button"
-              onClick={() => setOpenSelector(null)}
-              aria-label={t("taskEdit.back")}
-              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <h2 className="text-base font-semibold text-gray-800">
-              {t(SELECTOR_TITLE_KEYS[openSelector])}
-            </h2>
-          </div>
-
-          {/* Selector list */}
-          <div className="px-4 py-3 flex flex-col gap-1">
-            {openSelector === SELECTOR_TYPE.GOAL && (
-              <>
+              {/* Selector header */}
+              <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-gray-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedGoalId("");
-                    setOpenSelector(null);
-                  }}
-                  className={cn(
-                    "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
-                    selectedGoalId === ""
-                      ? "bg-accent/10 text-accent font-medium"
-                      : "text-gray-500 hover:bg-gray-100",
-                  )}
+                  onClick={() => setOpenSelector(null)}
+                  aria-label={t("taskEdit.back")}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 >
-                  {t("selector.noGoal")}
+                  <ArrowLeft size={18} />
                 </button>
-                {goals.map((goal) => (
-                  <button
-                    key={goal.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedGoalId(goal.id);
-                      setOpenSelector(null);
-                    }}
-                    className={cn(
-                      "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
-                      selectedGoalId === goal.id
-                        ? "bg-accent/10 text-accent font-medium"
-                        : "text-gray-700 hover:bg-gray-100",
-                    )}
-                  >
-                    {goal.title}
-                  </button>
-                ))}
-              </>
-            )}
+                <h2 className="text-base font-semibold text-gray-800">
+                  {t(SELECTOR_TITLE_KEYS[openSelector])}
+                </h2>
+              </div>
 
-            {openSelector === SELECTOR_TYPE.CONTEXT && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedContextId("");
-                    setOpenSelector(null);
-                  }}
-                  className={cn(
-                    "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
-                    selectedContextId === ""
-                      ? "bg-accent/10 text-accent font-medium"
-                      : "text-gray-500 hover:bg-gray-100",
-                  )}
-                >
-                  {t("selector.noContext")}
-                </button>
-                {contexts.map((context) => (
-                  <button
-                    key={context.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedContextId(context.id);
-                      setOpenSelector(null);
-                    }}
-                    className={cn(
-                      "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
-                      selectedContextId === context.id
-                        ? "bg-accent/10 text-accent font-medium"
-                        : "text-gray-700 hover:bg-gray-100",
-                    )}
-                  >
-                    {context.name}
-                  </button>
-                ))}
-              </>
-            )}
+              {/* Selector list */}
+              <div className="px-4 py-3 flex flex-col gap-1">
+                {openSelector === SELECTOR_TYPE.GOAL && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedGoalId("");
+                        setOpenSelector(null);
+                      }}
+                      className={cn(
+                        "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
+                        selectedGoalId === ""
+                          ? "bg-accent/10 text-accent font-medium"
+                          : "text-gray-500 hover:bg-gray-100",
+                      )}
+                    >
+                      {t("selector.noGoal")}
+                    </button>
+                    {goals.map((goal) => (
+                      <button
+                        key={goal.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedGoalId(goal.id);
+                          setOpenSelector(null);
+                        }}
+                        className={cn(
+                          "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
+                          selectedGoalId === goal.id
+                            ? "bg-accent/10 text-accent font-medium"
+                            : "text-gray-700 hover:bg-gray-100",
+                        )}
+                      >
+                        {goal.title}
+                      </button>
+                    ))}
+                  </>
+                )}
 
-            {openSelector === SELECTOR_TYPE.CATEGORY && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategoryId("");
-                    setOpenSelector(null);
-                  }}
-                  className={cn(
-                    "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
-                    selectedCategoryId === ""
-                      ? "bg-accent/10 text-accent font-medium"
-                      : "text-gray-500 hover:bg-gray-100",
-                  )}
-                >
-                  {t("selector.noCategory")}
-                </button>
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCategoryId(category.id);
-                      setOpenSelector(null);
-                    }}
-                    className={cn(
-                      "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
-                      selectedCategoryId === category.id
-                        ? "bg-accent/10 text-accent font-medium"
-                        : "text-gray-700 hover:bg-gray-100",
-                    )}
-                  >
-                    {category.name}
-                  </button>
-                ))}
-              </>
-            )}
-          </div>
+                {openSelector === SELECTOR_TYPE.CONTEXT && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedContextId("");
+                        setOpenSelector(null);
+                      }}
+                      className={cn(
+                        "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
+                        selectedContextId === ""
+                          ? "bg-accent/10 text-accent font-medium"
+                          : "text-gray-500 hover:bg-gray-100",
+                      )}
+                    >
+                      {t("selector.noContext")}
+                    </button>
+                    {contexts.map((context) => (
+                      <button
+                        key={context.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedContextId(context.id);
+                          setOpenSelector(null);
+                        }}
+                        className={cn(
+                          "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
+                          selectedContextId === context.id
+                            ? "bg-accent/10 text-accent font-medium"
+                            : "text-gray-700 hover:bg-gray-100",
+                        )}
+                      >
+                        {context.name}
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {openSelector === SELECTOR_TYPE.CATEGORY && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategoryId("");
+                        setOpenSelector(null);
+                      }}
+                      className={cn(
+                        "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
+                        selectedCategoryId === ""
+                          ? "bg-accent/10 text-accent font-medium"
+                          : "text-gray-500 hover:bg-gray-100",
+                      )}
+                    >
+                      {t("selector.noCategory")}
+                    </button>
+                    {categories.map((category) => (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategoryId(category.id);
+                          setOpenSelector(null);
+                        }}
+                        className={cn(
+                          "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
+                          selectedCategoryId === category.id
+                            ? "bg-accent/10 text-accent font-medium"
+                            : "text-gray-700 hover:bg-gray-100",
+                        )}
+                      >
+                        {category.name}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
             </>
           )}
         </div>

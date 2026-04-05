@@ -66,5 +66,12 @@ export function useCategories(
     [categoryService, schedulePush],
   );
 
-  return { categories, isLoading, createCategory, updateCategory, deleteCategory, reorderCategories };
+  return {
+    categories,
+    isLoading,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    reorderCategories,
+  };
 }
