@@ -134,6 +134,7 @@ export class CoverSyncService {
           cover_file_id: result.file_id,
           version: entry.goal.version + 1,
           updated_at: now,
+          _dirty: true,
         });
         await this.coverRepository.save({
           file_id: result.file_id,
@@ -276,6 +277,7 @@ export class CoverSyncService {
         cover_file_id: fileId,
         version: goal.version + 1,
         updated_at: now,
+        _dirty: true,
       });
     }
 

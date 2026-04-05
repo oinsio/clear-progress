@@ -356,6 +356,37 @@ describe("CoverSyncService", () => {
       expect(mockGoalRepository.update).not.toHaveBeenCalled();
     });
 
+    it("should mark goal as _dirty after updating cover_file_id", async () => {
+      const pendingCover = createPendingCover();
+      const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
+      const matchingGoal = {
+        id: pendingCover.goal_id,
+        title: "Test Goal",
+        description: "",
+        cover_file_id: localFileId,
+        status: "in_progress" as const,
+        sort_order: 0,
+        is_deleted: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        version: 1,
+        _dirty: false,
+      };
+      mockPendingCoverRepository = createMockPendingCoverRepository({
+        getAll: vi.fn().mockResolvedValue([pendingCover]),
+      });
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue([matchingGoal]),
+      });
+      const service = createService();
+
+      await service.sync();
+
+      expect(mockGoalRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ _dirty: true }),
+      );
+    });
+
     it("should update all goals that share the same local cover file_id", async () => {
       const pendingCover = createPendingCover({ local_id: "shared-local-id" });
       const localFileId = `${LOCAL_COVER_ID_PREFIX}shared-local-id`;
@@ -731,6 +762,20 @@ describe("CoverSyncService", () => {
         await service.reuploadLocalCovers();
 
         expect(mockCoverRepository.delete).toHaveBeenCalledWith(EXISTING_SERVER_FILE_ID);
+      });
+
+      it("should mark goal as _dirty after updating cover_file_id", async () => {
+        const goalWithCleanDirty = createGoalWithServerCover({ _dirty: false });
+        mockGoalRepository = createMockGoalRepository({
+          getActive: vi.fn().mockResolvedValue([goalWithCleanDirty]),
+        });
+        const service = createService();
+
+        await service.reuploadLocalCovers();
+
+        expect(mockGoalRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({ _dirty: true }),
+        );
       });
 
       it("should transfer localCoverCache entry", async () => {
