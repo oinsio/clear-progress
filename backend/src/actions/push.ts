@@ -6,11 +6,12 @@ import { getAllGoals, upsertGoals } from '../sheets/goals.sheet';
 import { getAllContexts, upsertContexts } from '../sheets/contexts.sheet';
 import { getAllCategories, upsertCategories } from '../sheets/categories.sheet';
 import { getAllChecklistItems, upsertChecklistItems } from '../sheets/checklists.sheet';
+import { getAllIdeas, upsertIdeas } from '../sheets/ideas.sheet';
 import { getAllSettings, upsertSettings } from '../sheets/settings.sheet';
 import { readNextRevision, saveNextRevision } from '../sheets/meta.sheet';
-import type { Task, Goal, Context, Category, ChecklistItem, Setting, PushItemResult } from '../types';
+import type { Task, Goal, Context, Category, ChecklistItem, Idea, Setting, PushItemResult } from '../types';
 
-type AnyEntity = Task | Goal | Context | Category | ChecklistItem;
+type AnyEntity = Task | Goal | Context | Category | Idea | ChecklistItem;
 type UpsertFn = (records: AnyEntity[]) => void;
 
 type EntityBatch = {
@@ -99,6 +100,7 @@ export function push(changes: {
   contexts?: Context[];
   categories?: Category[];
   checklist_items?: ChecklistItem[];
+  ideas?: Idea[];
   settings?: Setting[];
 }): GoogleAppsScript.Content.TextOutput {
   const lock = LockService.getScriptLock();
@@ -117,6 +119,7 @@ export function push(changes: {
       { key: 'contexts', data: changes.contexts, getAll: getAllContexts, upsert: upsertContexts as UpsertFn },
       { key: 'categories', data: changes.categories, getAll: getAllCategories, upsert: upsertCategories as UpsertFn },
       { key: 'checklist_items', data: changes.checklist_items, getAll: getAllChecklistItems, upsert: upsertChecklistItems as UpsertFn },
+      { key: 'ideas', data: changes.ideas, getAll: getAllIdeas, upsert: upsertIdeas as UpsertFn },
     ];
 
     const hasPushableChanges = entityBatches.some(({ data }) => (data?.length ?? 0) > 0);

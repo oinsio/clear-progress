@@ -3,6 +3,7 @@
     "inbox": "Inbox",
     "today": "Today",
     "goals": "Goals",
+    "ideas": "Ideas",
     "search": "Search",
     "ariaLabel": "Navigation"
   },
@@ -89,6 +90,13 @@
     "notFound": "Goal not found",
     "deleteConfirmTitle": "Delete goal?",
     "taskCount": "Tasks:"
+  },
+  "idea": {
+    "pageTitle": "Ideas",
+    "add": "Add idea",
+    "titlePlaceholder": "Idea name",
+    "empty": "No ideas",
+    "drag": "Drag idea"
   },
   "context": {
     "empty": "No contexts yet",

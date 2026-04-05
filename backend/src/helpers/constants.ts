@@ -9,6 +9,7 @@ export const SHEET_NAMES = {
   CONTEXTS: 'Contexts',
   CATEGORIES: 'Categories',
   CHECKLIST_ITEMS: 'Checklist_Items',
+  IDEAS: 'Ideas',
   SETTINGS: 'Settings',
   META: 'Meta',
 } as const;
@@ -46,6 +47,7 @@ export const SHEET_HEADERS: Record<string, string[]> = {
   [SHEET_NAMES.CONTEXTS]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.CATEGORIES]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.CHECKLIST_ITEMS]: ['id', 'task_id', 'title', 'is_completed', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.IDEAS]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.SETTINGS]: ['key', 'value', 'updated_at'],
 };
 

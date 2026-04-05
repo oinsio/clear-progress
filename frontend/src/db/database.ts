@@ -5,6 +5,7 @@ import type {
   Context,
   Category,
   ChecklistItem,
+  Idea,
   Setting,
   SyncMeta,
   CoverRecord,
@@ -29,6 +30,7 @@ export class ClearProgressDatabase extends Dexie {
   contexts!: EntityTable<Context, "id">;
   categories!: EntityTable<Category, "id">;
   checklist_items!: EntityTable<ChecklistItem, "id">;
+  ideas!: EntityTable<Idea, "id">;
   settings!: EntityTable<Setting, "key">;
   covers!: EntityTable<CoverRecord, "file_id">;
   pending_covers!: EntityTable<PendingCoverRecord, "local_id">;
@@ -56,6 +58,11 @@ export class ClearProgressDatabase extends Dexie {
         await tx
           .table("sync_meta")
           .put({ key: SYNC_META_KEYS.LAST_KNOWN_REVISION, value: 0 });
+      });
+    this.version(5)
+      .stores(DB_SCHEMA_V4)
+      .upgrade(async (tx) => {
+        await tx.table("ideas").toCollection().modify({ _dirty: true, revision: 0 });
       });
   }
 }

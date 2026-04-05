@@ -7,6 +7,7 @@ vi.mock('../sheets/goals.sheet', () => ({ getGoalsByRevision: vi.fn() }));
 vi.mock('../sheets/contexts.sheet', () => ({ getContextsByRevision: vi.fn() }));
 vi.mock('../sheets/categories.sheet', () => ({ getCategoriesByRevision: vi.fn() }));
 vi.mock('../sheets/checklists.sheet', () => ({ getChecklistItemsByRevision: vi.fn() }));
+vi.mock('../sheets/ideas.sheet', () => ({ getIdeasByRevision: vi.fn() }));
 vi.mock('../sheets/settings.sheet', () => ({ getAllSettings: vi.fn() }));
 vi.mock('../sheets/meta.sheet', () => ({ readNextRevision: vi.fn() }));
 
@@ -15,6 +16,7 @@ import { getGoalsByRevision } from '../sheets/goals.sheet';
 import { getContextsByRevision } from '../sheets/contexts.sheet';
 import { getCategoriesByRevision } from '../sheets/categories.sheet';
 import { getChecklistItemsByRevision } from '../sheets/checklists.sheet';
+import { getIdeasByRevision } from '../sheets/ideas.sheet';
 import { getAllSettings } from '../sheets/settings.sheet';
 import { readNextRevision } from '../sheets/meta.sheet';
 import { parseResponse } from '../../tests/helpers/response';
@@ -27,6 +29,7 @@ describe('pull', () => {
     vi.mocked(getContextsByRevision).mockReturnValue([]);
     vi.mocked(getCategoriesByRevision).mockReturnValue([]);
     vi.mocked(getChecklistItemsByRevision).mockReturnValue([]);
+    vi.mocked(getIdeasByRevision).mockReturnValue([]);
     vi.mocked(getAllSettings).mockReturnValue([]);
     vi.mocked(readNextRevision).mockReturnValue(1);
   });
@@ -36,7 +39,7 @@ describe('pull', () => {
     expect(parseResponse().ok).toBe(true);
   });
 
-  it('should return data with all five entity arrays', () => {
+  it('should return data with all six entity arrays', () => {
     pull({ since_revision: 0 });
     const response = parseResponse();
     const data = response.data as Record<string, unknown>;
@@ -45,6 +48,7 @@ describe('pull', () => {
     expect(data).toHaveProperty('contexts');
     expect(data).toHaveProperty('categories');
     expect(data).toHaveProperty('checklist_items');
+    expect(data).toHaveProperty('ideas');
   });
 
   it('should return settings array in response', () => {
@@ -82,6 +86,11 @@ describe('pull', () => {
   it('should pass since_revision to getChecklistItemsByRevision', () => {
     pull({ since_revision: 20 });
     expect(getChecklistItemsByRevision).toHaveBeenCalledWith(20);
+  });
+
+  it('should pass since_revision to getIdeasByRevision', () => {
+    pull({ since_revision: 15 });
+    expect(getIdeasByRevision).toHaveBeenCalledWith(15);
   });
 
   it('should use 0 as default when since_revision is undefined', () => {

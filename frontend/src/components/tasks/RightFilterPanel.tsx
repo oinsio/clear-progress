@@ -27,6 +27,7 @@ export type RightPanelMode =
   | "tasks"
   | "completed"
   | "goals"
+  | "ideas"
   | "contexts"
   | "categories"
   | "deleted"

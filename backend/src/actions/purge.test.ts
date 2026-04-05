@@ -22,12 +22,17 @@ vi.mock('../sheets/checklists.sheet', () => ({
   getAllChecklistItems: vi.fn(),
   deleteChecklistItemsByIds: vi.fn(),
 }));
+vi.mock('../sheets/ideas.sheet', () => ({
+  getAllIdeas: vi.fn(),
+  deleteIdeasByIds: vi.fn(),
+}));
 
 import { getAllTasks, deleteTasksByIds } from '../sheets/tasks.sheet';
 import { getAllGoals, deleteGoalsByIds } from '../sheets/goals.sheet';
 import { getAllContexts, deleteContextsByIds } from '../sheets/contexts.sheet';
 import { getAllCategories, deleteCategoriesByIds } from '../sheets/categories.sheet';
 import { getAllChecklistItems, deleteChecklistItemsByIds } from '../sheets/checklists.sheet';
+import { getAllIdeas, deleteIdeasByIds } from '../sheets/ideas.sheet';
 
 function parseResponse(): Record<string, unknown> {
   const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>).mock.calls;
@@ -35,8 +40,8 @@ function parseResponse(): Record<string, unknown> {
   return JSON.parse(lastCall[0]);
 }
 
-const getAllMocks = [getAllTasks, getAllGoals, getAllContexts, getAllCategories, getAllChecklistItems];
-const deleteMocks = [deleteTasksByIds, deleteGoalsByIds, deleteContextsByIds, deleteCategoriesByIds, deleteChecklistItemsByIds];
+const getAllMocks = [getAllTasks, getAllGoals, getAllContexts, getAllCategories, getAllChecklistItems, getAllIdeas];
+const deleteMocks = [deleteTasksByIds, deleteGoalsByIds, deleteContextsByIds, deleteCategoriesByIds, deleteChecklistItemsByIds, deleteIdeasByIds];
 
 describe('purge', () => {
   beforeEach(() => {
@@ -84,7 +89,7 @@ describe('purge', () => {
     purge({ confirm: true });
     const response = parseResponse();
     expect(response.ok).toBe(true);
-    expect(response.purged).toEqual({ tasks: 0, goals: 0, contexts: 0, categories: 0, checklist_items: 0 });
+    expect(response.purged).toEqual({ tasks: 0, goals: 0, contexts: 0, categories: 0, checklist_items: 0, ideas: 0 });
   });
 
   it('should delete soft-deleted tasks and return correct count', () => {
@@ -168,6 +173,20 @@ describe('purge', () => {
     expect(response.purged).toMatchObject({ checklist_items: 1 });
   });
 
+  it('should delete only soft-deleted ideas and exclude active ones', () => {
+    vi.mocked(getAllIdeas).mockReturnValue([
+      { id: 'idea-1', is_deleted: true } as never,
+      { id: 'idea-2', is_deleted: false } as never,
+    ]);
+    vi.mocked(deleteIdeasByIds).mockReturnValue(1);
+
+    purge({ confirm: true });
+    const response = parseResponse();
+
+    expect(deleteIdeasByIds).toHaveBeenCalledWith(['idea-1']);
+    expect(response.purged).toMatchObject({ ideas: 1 });
+  });
+
   it('should return INTERNAL_ERROR when a sheet operation throws', () => {
     vi.mocked(getAllTasks).mockImplementation(() => { throw new Error('Sheet error'); });
 
@@ -184,11 +203,13 @@ describe('purge', () => {
     vi.mocked(getAllContexts).mockReturnValue([{ id: 'context1', is_deleted: true } as never]);
     vi.mocked(getAllCategories).mockReturnValue([{ id: 'category1', is_deleted: true } as never]);
     vi.mocked(getAllChecklistItems).mockReturnValue([{ id: 'checklist1', is_deleted: true } as never]);
+    vi.mocked(getAllIdeas).mockReturnValue([{ id: 'idea1', is_deleted: true } as never]);
     vi.mocked(deleteTasksByIds).mockReturnValue(1);
     vi.mocked(deleteGoalsByIds).mockReturnValue(1);
     vi.mocked(deleteContextsByIds).mockReturnValue(1);
     vi.mocked(deleteCategoriesByIds).mockReturnValue(1);
     vi.mocked(deleteChecklistItemsByIds).mockReturnValue(1);
+    vi.mocked(deleteIdeasByIds).mockReturnValue(1);
 
     purge({ confirm: true });
     const response = parseResponse();
@@ -197,6 +218,7 @@ describe('purge', () => {
     expect(deleteContextsByIds).toHaveBeenCalledWith(['context1']);
     expect(deleteCategoriesByIds).toHaveBeenCalledWith(['category1']);
     expect(deleteChecklistItemsByIds).toHaveBeenCalledWith(['checklist1']);
-    expect(response.purged).toEqual({ tasks: 1, goals: 1, contexts: 1, categories: 1, checklist_items: 1 });
+    expect(deleteIdeasByIds).toHaveBeenCalledWith(['idea1']);
+    expect(response.purged).toEqual({ tasks: 1, goals: 1, contexts: 1, categories: 1, checklist_items: 1, ideas: 1 });
   });
 });

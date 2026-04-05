@@ -1,4 +1,4 @@
-import { Inbox, CalendarDays, Target, Search } from "lucide-react";
+import { Inbox, CalendarDays, Target, Lightbulb, Search } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,7 @@ export const BOTTOM_NAV_ITEMS: NavItem[] = [
   { href: ROUTES.INBOX, labelKey: "nav.inbox", icon: Inbox },
   { href: ROUTES.TODAY, labelKey: "nav.today", icon: CalendarDays },
   { href: ROUTES.GOALS, labelKey: "nav.goals", icon: Target },
+  { href: ROUTES.IDEAS, labelKey: "nav.ideas", icon: Lightbulb },
   { href: ROUTES.SEARCH, labelKey: "nav.search", icon: Search },
 ];
 

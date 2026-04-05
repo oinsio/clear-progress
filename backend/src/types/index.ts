@@ -44,6 +44,8 @@ export interface Context extends NamedEntity {}
 
 export interface Category extends NamedEntity {}
 
+export interface Idea extends NamedEntity {}
+
 export interface ChecklistItem extends SortableEntity {
   task_id: string;
   title: string;
@@ -60,6 +62,6 @@ export interface PushItemResult {
   id: string;
   status: PushItemStatus;
   version?: number;
-  server_record?: Task | Goal | Context | Category | ChecklistItem;
+  server_record?: Task | Goal | Context | Category | Idea | ChecklistItem;
   reason?: string;
 }

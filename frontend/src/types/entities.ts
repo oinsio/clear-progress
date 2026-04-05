@@ -51,6 +51,8 @@ export type Context = NamedEntity;
 
 export type Category = NamedEntity;
 
+export type Idea = NamedEntity;
+
 export interface ChecklistItem {
   id: string;
   task_id: string;

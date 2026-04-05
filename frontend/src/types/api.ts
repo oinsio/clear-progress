@@ -4,6 +4,7 @@ import type {
   Context,
   Category,
   ChecklistItem,
+  Idea,
   Setting,
 } from "./entities";
 import type { PushResultStatus } from "./common";
@@ -19,6 +20,7 @@ export interface PullResponseData {
   contexts: Context[];
   categories: Category[];
   checklist_items: ChecklistItem[];
+  ideas: Idea[];
 }
 
 export interface PullResponse {
@@ -35,6 +37,7 @@ export interface PushChanges {
   contexts?: Context[];
   categories?: Category[];
   checklist_items?: ChecklistItem[];
+  ideas?: Idea[];
   settings?: Setting[];
 }
 
@@ -46,7 +49,7 @@ export interface PushRequest {
 export interface PushItemResult {
   id: string;
   status: PushResultStatus;
-  server_record?: Task | Goal | Context | Category | ChecklistItem;
+  server_record?: Task | Goal | Context | Category | Idea | ChecklistItem;
   reason?: string;
 }
 
@@ -56,6 +59,7 @@ export interface PushResponseData {
   contexts?: PushItemResult[];
   categories?: PushItemResult[];
   checklist_items?: PushItemResult[];
+  ideas?: PushItemResult[];
   settings?: PushItemResult[];
 }
 

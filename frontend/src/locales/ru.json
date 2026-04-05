@@ -3,6 +3,7 @@
     "inbox": "Входящие",
     "today": "Сегодня",
     "goals": "Цели",
+    "ideas": "Идеи",
     "search": "Поиск",
     "ariaLabel": "Навигация"
   },
@@ -89,6 +90,13 @@
     "notFound": "Цель не найдена",
     "deleteConfirmTitle": "Удалить цель?",
     "taskCount": "Задач:"
+  },
+  "idea": {
+    "pageTitle": "Идеи",
+    "add": "Добавить идею",
+    "titlePlaceholder": "Название идеи",
+    "empty": "Нет идей",
+    "drag": "Перетащить идею"
   },
   "context": {
     "empty": "Нет ни одного контекста",

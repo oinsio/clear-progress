@@ -7,6 +7,7 @@ export const ROUTES = {
   LATER: "/later",
   GOALS: "/goals",
   GOAL: "/goals/:id",
+  IDEAS: "/ideas",
   CATEGORIES: "/categories",
   CATEGORY: "/categories/:id",
   CONTEXTS: "/contexts",
@@ -98,7 +99,7 @@ export const MENU_ORDER_CHANGED_EVENT = "menu_order_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
 
 export const DB_NAME = "clear-progress";
-export const DB_VERSION = 4;
+export const DB_VERSION = 5;
 export const LOCAL_COVER_ID_PREFIX = "local:";
 
 export const SYNC_META_KEYS = {
