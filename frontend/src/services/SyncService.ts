@@ -126,50 +126,27 @@ export class SyncService {
       throw new Error("Push failed");
     }
 
-    await this._applyPushResults(pushResponse.results, sentVersions);
+    await this._applyPushResults(pushResponse.results, sentVersions, pushResponse.revision);
 
-    const maxRevision = this._getMaxRevisionFromResults(pushResponse.results);
-    if (maxRevision > 0) {
-      const currentRevision = await this.syncMetaRepository.getValue(
+    if (pushResponse.revision !== undefined) {
+      await this.syncMetaRepository.setValue(
         SYNC_META_KEYS.LAST_KNOWN_REVISION,
+        pushResponse.revision,
       );
-      if (maxRevision > currentRevision) {
-        await this.syncMetaRepository.setValue(
-          SYNC_META_KEYS.LAST_KNOWN_REVISION,
-          maxRevision,
-        );
-      }
     }
-  }
-
-  private _getMaxRevisionFromResults(results: PushResponseData): number {
-    const allResults = [
-      ...(results.tasks ?? []),
-      ...(results.goals ?? []),
-      ...(results.contexts ?? []),
-      ...(results.categories ?? []),
-      ...(results.checklist_items ?? []),
-      ...(results.settings ?? []),
-    ];
-    let max = 0;
-    for (const result of allResults) {
-      if (result.revision !== undefined && result.revision > max) {
-        max = result.revision;
-      }
-    }
-    return max;
   }
 
   private async _applyPushResults(
     results: PushResponseData,
     sentVersions: Map<string, number>,
+    pushRevision: number | undefined,
   ): Promise<void> {
     await Promise.all([
-      this._applyEntityPushResults(results.tasks ?? [], sentVersions, this.taskRepository),
-      this._applyEntityPushResults(results.goals ?? [], sentVersions, this.goalRepository),
-      this._applyEntityPushResults(results.contexts ?? [], sentVersions, this.contextRepository),
-      this._applyEntityPushResults(results.categories ?? [], sentVersions, this.categoryRepository),
-      this._applyEntityPushResults(results.checklist_items ?? [], sentVersions, this.checklistRepository),
+      this._applyEntityPushResults(results.tasks ?? [], sentVersions, this.taskRepository, pushRevision),
+      this._applyEntityPushResults(results.goals ?? [], sentVersions, this.goalRepository, pushRevision),
+      this._applyEntityPushResults(results.contexts ?? [], sentVersions, this.contextRepository, pushRevision),
+      this._applyEntityPushResults(results.categories ?? [], sentVersions, this.categoryRepository, pushRevision),
+      this._applyEntityPushResults(results.checklist_items ?? [], sentVersions, this.checklistRepository, pushRevision),
     ]);
   }
 
@@ -177,6 +154,7 @@ export class SyncService {
     results: PushResponseData["tasks"],
     sentVersions: Map<string, number>,
     repository: { getById(id: string): Promise<T | undefined>; update(record: T): Promise<void> },
+    pushRevision: number | undefined,
   ): Promise<void> {
     if (!results || results.length === 0) return;
 
@@ -198,7 +176,7 @@ export class SyncService {
 
         await repository.update({
           ...currentRecord,
-          revision: result.revision ?? currentRecord.revision,
+          revision: pushRevision ?? currentRecord.revision,
           _dirty: !versionUnchanged,
         });
       }

@@ -20,11 +20,24 @@ import { getAllChecklistItems, upsertChecklistItems } from '../sheets/checklists
 import { upsertSettings, getAllSettings } from '../sheets/settings.sheet';
 import { readNextRevision, saveNextRevision } from '../sheets/meta.sheet';
 import { getMockLock } from '../../tests/setup/gas-mocks';
+import { parseResponse, getResults } from '../../tests/helpers/response';
 
-function parseResponse(): Record<string, unknown> {
-  const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>).mock.calls;
-  const lastCall = calls[calls.length - 1];
-  return JSON.parse(lastCall[0]);
+function assertMixedTaskBatch(validTask: Task, invalidTask: Task): void {
+  vi.mocked(getAllTasks).mockReturnValue([]);
+  push({ tasks: [validTask, invalidTask] });
+  const results = getResults();
+  expect(results.tasks).toHaveLength(2);
+  expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
+  expect(results.tasks[1]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
+}
+
+function assertRejectedTaskWithCreatedGoal(invalidTask: Task, validGoal: Goal): void {
+  vi.mocked(getAllTasks).mockReturnValue([]);
+  vi.mocked(getAllGoals).mockReturnValue([]);
+  push({ tasks: [invalidTask], goals: [validGoal] });
+  const results = getResults();
+  expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
+  expect(results.goals[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
 }
 
 function makeTask(overrides: Partial<Task> = {}): Task {
@@ -166,7 +179,7 @@ describe('push', () => {
 
       push({ tasks: [newTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toMatchObject({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', status: PUSH_STATUSES.CREATED });
     });
 
@@ -186,7 +199,7 @@ describe('push', () => {
 
       push({ tasks: [newTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toMatchObject({ version: 3 });
     });
   });
@@ -199,7 +212,7 @@ describe('push', () => {
 
       push({ tasks: [clientTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toMatchObject({ id: '11111111-1111-4111-a111-111111111111', status: PUSH_STATUSES.ACCEPTED });
     });
 
@@ -221,7 +234,7 @@ describe('push', () => {
 
       push({ tasks: [clientTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toMatchObject({ version: 6 });
     });
 
@@ -233,7 +246,7 @@ describe('push', () => {
 
       push({ tasks: [clientTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.ACCEPTED });
     });
   });
@@ -246,7 +259,7 @@ describe('push', () => {
 
       push({ tasks: [clientTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toMatchObject({ id: '11111111-1111-4111-a111-111111111111', status: PUSH_STATUSES.CONFLICT });
     });
 
@@ -267,7 +280,7 @@ describe('push', () => {
 
       push({ tasks: [clientTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toMatchObject({ server_record: serverTask });
     });
   });
@@ -281,7 +294,7 @@ describe('push', () => {
       const clientTask = makeTask({ id: '22222222-2222-4222-a222-222222222222', updated_at: '2025-06-01T00:00:00.000Z' });
       push({ tasks: [clientTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       // serverTask2.version (10) + 1 = 11; if find() matched serverTask1, version would be 6
       expect(results.tasks[0]).toMatchObject({ version: 11 });
     });
@@ -296,7 +309,7 @@ describe('push', () => {
 
       push({ tasks: [newTask, clientExisting] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks).toHaveLength(2);
     });
   });
@@ -310,7 +323,7 @@ describe('push', () => {
 
       expect(upsertGoals).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({ id: 'eeeeeeee-eeee-4eee-aeee-eeeeeeeeeeee' })]));
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.goals[0]).toMatchObject({ id: 'eeeeeeee-eeee-4eee-aeee-eeeeeeeeeeee', status: PUSH_STATUSES.CREATED });
     });
 
@@ -322,7 +335,7 @@ describe('push', () => {
 
       expect(upsertContexts).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({ id: 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1' })]));
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.contexts[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
     });
 
@@ -334,7 +347,7 @@ describe('push', () => {
 
       expect(upsertCategories).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({ id: 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3' })]));
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.categories[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
     });
 
@@ -346,7 +359,7 @@ describe('push', () => {
 
       expect(upsertChecklistItems).toHaveBeenCalledWith(expect.arrayContaining([expect.objectContaining({ id: 'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5' })]));
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.checklist_items[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
     });
   });
@@ -371,7 +384,7 @@ describe('push', () => {
 
       push({ settings });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.settings[0]).toMatchObject({ id: 'default_box', status: PUSH_STATUSES.ACCEPTED });
     });
 
@@ -408,7 +421,7 @@ describe('push', () => {
 
       push({ settings: [clientSetting] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.settings[0]).toMatchObject({ id: 'default_box', status: PUSH_STATUSES.ACCEPTED });
     });
 
@@ -431,7 +444,7 @@ describe('push', () => {
 
       push({ settings: [clientSetting] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.settings[0]).toMatchObject({ id: 'default_box', status: PUSH_STATUSES.CONFLICT });
     });
 
@@ -446,7 +459,7 @@ describe('push', () => {
       const clientSetting: Setting = { key: 'accent_color', value: 'purple', updated_at: '2025-01-01T00:00:00.000Z' };
       push({ settings: [clientSetting] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       // If find() incorrectly matched default_box (first), client (2025-01-01) < server (2025-01-02) → CONFLICT
       expect(results.settings[0]).toMatchObject({ id: 'accent_color', status: PUSH_STATUSES.ACCEPTED });
     });
@@ -459,8 +472,8 @@ describe('push', () => {
 
       push({ tasks: [blankTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', status: 'rejected' });
+      const results = getResults();
+      expect(results.tasks[0]).toMatchObject({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any task when task title is empty', () => {
@@ -478,8 +491,8 @@ describe('push', () => {
 
       push({ tasks: [blankTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ id: 'dddddddd-dddd-4ddd-addd-dddddddddddd', status: 'rejected' });
+      const results = getResults();
+      expect(results.tasks[0]).toMatchObject({ id: 'dddddddd-dddd-4ddd-addd-dddddddddddd', status: PUSH_STATUSES.REJECTED });
     });
 
     it('should return status: rejected for goal with empty title', () => {
@@ -488,8 +501,8 @@ describe('push', () => {
 
       push({ goals: [blankGoal] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.goals[0]).toMatchObject({ id: 'ffffffff-ffff-4fff-afff-ffffffffffff', status: 'rejected' });
+      const results = getResults();
+      expect(results.goals[0]).toMatchObject({ id: 'ffffffff-ffff-4fff-afff-ffffffffffff', status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any goal when goal title is empty', () => {
@@ -507,8 +520,8 @@ describe('push', () => {
 
       push({ contexts: [blankContext] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.contexts[0]).toMatchObject({ id: 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2', status: 'rejected' });
+      const results = getResults();
+      expect(results.contexts[0]).toMatchObject({ id: 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2', status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any context when context name is empty', () => {
@@ -526,8 +539,8 @@ describe('push', () => {
 
       push({ categories: [blankCategory] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.categories[0]).toMatchObject({ id: 'd4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4', status: 'rejected' });
+      const results = getResults();
+      expect(results.categories[0]).toMatchObject({ id: 'd4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4', status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any category when category name is empty', () => {
@@ -545,8 +558,8 @@ describe('push', () => {
 
       push({ checklist_items: [blankItem] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.checklist_items[0]).toMatchObject({ id: 'f0f0f0f0-f0f0-4f0f-8f0f-f0f0f0f0f0f0', status: 'rejected' });
+      const results = getResults();
+      expect(results.checklist_items[0]).toMatchObject({ id: 'f0f0f0f0-f0f0-4f0f-8f0f-f0f0f0f0f0f0', status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any checklist item when checklist item title is empty', () => {
@@ -564,34 +577,22 @@ describe('push', () => {
 
       push({ tasks: [blankTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toHaveProperty('reason');
     });
 
     it('should process valid records alongside rejected ones in same array', () => {
-      const validTask = makeTask({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567', title: 'Valid task' });
-      const blankTask = makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', title: '' });
-      vi.mocked(getAllTasks).mockReturnValue([]);
-
-      push({ tasks: [validTask, blankTask] });
-
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks).toHaveLength(2);
-      expect(results.tasks[0]).toMatchObject({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567', status: 'created' });
-      expect(results.tasks[1]).toMatchObject({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', status: 'rejected' });
+      assertMixedTaskBatch(
+        makeTask({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567', title: 'Valid task' }),
+        makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', title: '' }),
+      );
     });
 
     it('should handle rejected task and created goal in same push', () => {
-      const blankTask = makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', title: '' });
-      const validGoal = makeGoal({ id: 'f7a8b9c0-d1e2-4f34-9a5b-6c7d8e9f0a1b', title: 'Valid goal' });
-      vi.mocked(getAllTasks).mockReturnValue([]);
-      vi.mocked(getAllGoals).mockReturnValue([]);
-
-      push({ tasks: [blankTask], goals: [validGoal] });
-
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', status: 'rejected' });
-      expect(results.goals[0]).toMatchObject({ id: 'f7a8b9c0-d1e2-4f34-9a5b-6c7d8e9f0a1b', status: 'created' });
+      assertRejectedTaskWithCreatedGoal(
+        makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', title: '' }),
+        makeGoal({ id: 'f7a8b9c0-d1e2-4f34-9a5b-6c7d8e9f0a1b', title: 'Valid goal' }),
+      );
     });
   });
 
@@ -604,8 +605,8 @@ describe('push', () => {
 
         push({ tasks: [task] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
-        expect(results.tasks[0]).toMatchObject({ status: 'rejected' });
+        const results = getResults();
+        expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
       },
     );
 
@@ -624,7 +625,7 @@ describe('push', () => {
 
       push({ tasks: [task] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toHaveProperty('reason');
     });
 
@@ -636,22 +637,16 @@ describe('push', () => {
 
         push({ tasks: [task] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
-        expect(results.tasks[0]).toMatchObject({ status: 'created' });
+        const results = getResults();
+        expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
       },
     );
 
     it('should process valid task alongside rejected one with invalid box', () => {
-      const validTask = makeTask({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567', box: 'today' });
-      const invalidBoxTask = makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', box: 'invalid' as Task['box'] });
-      vi.mocked(getAllTasks).mockReturnValue([]);
-
-      push({ tasks: [validTask, invalidBoxTask] });
-
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks).toHaveLength(2);
-      expect(results.tasks[0]).toMatchObject({ status: 'created' });
-      expect(results.tasks[1]).toMatchObject({ status: 'rejected' });
+      assertMixedTaskBatch(
+        makeTask({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567', box: 'today' }),
+        makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', box: 'invalid' as Task['box'] }),
+      );
     });
   });
 
@@ -665,8 +660,8 @@ describe('push', () => {
 
         push({ tasks: [task] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
-        expect(results.tasks[0]).toMatchObject({ status: 'rejected' });
+        const results = getResults();
+        expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
       });
 
       it('should not upsert any task when task has invalid goal_id', () => {
@@ -684,8 +679,8 @@ describe('push', () => {
 
         push({ tasks: [task] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
-        expect(results.tasks[0]).toMatchObject({ status: 'rejected' });
+        const results = getResults();
+        expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
       });
 
       it('should return status: rejected for task with invalid category_id', () => {
@@ -694,8 +689,8 @@ describe('push', () => {
 
         push({ tasks: [task] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
-        expect(results.tasks[0]).toMatchObject({ status: 'rejected' });
+        const results = getResults();
+        expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
       });
 
       it('should NOT reject task when goal_id is empty string', () => {
@@ -704,7 +699,7 @@ describe('push', () => {
 
         push({ tasks: [task] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
+        const results = getResults();
         expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
       });
 
@@ -714,7 +709,7 @@ describe('push', () => {
 
         push({ tasks: [task] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
+        const results = getResults();
         expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
       });
 
@@ -724,7 +719,7 @@ describe('push', () => {
 
         push({ tasks: [task] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
+        const results = getResults();
         expect(results.tasks[0]).toHaveProperty('reason');
       });
     });
@@ -736,8 +731,8 @@ describe('push', () => {
 
         push({ checklist_items: [item] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
-        expect(results.checklist_items[0]).toMatchObject({ status: 'rejected' });
+        const results = getResults();
+        expect(results.checklist_items[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
       });
 
       it('should not upsert any checklist item when task_id is empty', () => {
@@ -755,8 +750,8 @@ describe('push', () => {
 
         push({ checklist_items: [item] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
-        expect(results.checklist_items[0]).toMatchObject({ status: 'rejected' });
+        const results = getResults();
+        expect(results.checklist_items[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
       });
 
       it('should NOT reject checklist_item when task_id is a valid UUID', () => {
@@ -765,7 +760,7 @@ describe('push', () => {
 
         push({ checklist_items: [item] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
+        const results = getResults();
         expect(results.checklist_items[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
       });
 
@@ -775,7 +770,7 @@ describe('push', () => {
 
         push({ checklist_items: [item] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
+        const results = getResults();
         expect(results.checklist_items[0]).toHaveProperty('reason');
       });
 
@@ -787,7 +782,7 @@ describe('push', () => {
 
         push({ tasks: [taskWithBadGoal], checklist_items: [itemWithNoTaskId] });
 
-        const results = parseResponse().results as Record<string, unknown[]>;
+        const results = getResults();
         const taskReason = (results.tasks[0] as Record<string, unknown>).reason;
         const itemReason = (results.checklist_items[0] as Record<string, unknown>).reason;
         expect(taskReason).not.toBe(itemReason);
@@ -796,16 +791,10 @@ describe('push', () => {
 
     describe('mixed batch with FK errors', () => {
       it('should process valid task alongside task with invalid FK in same array', () => {
-        const validTask = makeTask({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567' });
-        const invalidTask = makeTask({ goal_id: 'bad-fk' });
-        vi.mocked(getAllTasks).mockReturnValue([]);
-
-        push({ tasks: [validTask, invalidTask] });
-
-        const results = parseResponse().results as Record<string, unknown[]>;
-        expect(results.tasks).toHaveLength(2);
-        expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
-        expect(results.tasks[1]).toMatchObject({ status: 'rejected' });
+        assertMixedTaskBatch(
+          makeTask({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567' }),
+          makeTask({ goal_id: 'bad-fk' }),
+        );
       });
     });
   });
@@ -817,8 +806,8 @@ describe('push', () => {
 
       push({ tasks: [task] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ status: 'rejected' });
+      const results = getResults();
+      expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any task when task id is empty', () => {
@@ -836,8 +825,8 @@ describe('push', () => {
 
       push({ tasks: [task] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ status: 'rejected' });
+      const results = getResults();
+      expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
     });
 
     it('should return status: rejected for task with wrong-format id', () => {
@@ -846,8 +835,8 @@ describe('push', () => {
 
       push({ tasks: [task] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ status: 'rejected' });
+      const results = getResults();
+      expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
     });
 
     it('should return status: rejected for goal with invalid id', () => {
@@ -856,8 +845,8 @@ describe('push', () => {
 
       push({ goals: [goal] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.goals[0]).toMatchObject({ status: 'rejected' });
+      const results = getResults();
+      expect(results.goals[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any goal when goal id is invalid', () => {
@@ -875,8 +864,8 @@ describe('push', () => {
 
       push({ contexts: [context] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.contexts[0]).toMatchObject({ status: 'rejected' });
+      const results = getResults();
+      expect(results.contexts[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any context when context id is invalid', () => {
@@ -894,8 +883,8 @@ describe('push', () => {
 
       push({ categories: [category] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.categories[0]).toMatchObject({ status: 'rejected' });
+      const results = getResults();
+      expect(results.categories[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any category when category id is invalid', () => {
@@ -913,8 +902,8 @@ describe('push', () => {
 
       push({ checklist_items: [item] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.checklist_items[0]).toMatchObject({ status: 'rejected' });
+      const results = getResults();
+      expect(results.checklist_items[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
     });
 
     it('should not upsert any checklist item when checklist item id is invalid', () => {
@@ -932,34 +921,22 @@ describe('push', () => {
 
       push({ tasks: [task] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).toHaveProperty('reason');
     });
 
     it('should process valid records alongside invalid-id records in same array', () => {
-      const validTask = makeTask({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', title: 'Valid task' });
-      const invalidTask = makeTask({ id: 'bad-id', title: 'Valid title' });
-      vi.mocked(getAllTasks).mockReturnValue([]);
-
-      push({ tasks: [validTask, invalidTask] });
-
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks).toHaveLength(2);
-      expect(results.tasks[0]).toMatchObject({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', status: 'created' });
-      expect(results.tasks[1]).toMatchObject({ status: 'rejected' });
+      assertMixedTaskBatch(
+        makeTask({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', title: 'Valid task' }),
+        makeTask({ id: 'bad-id', title: 'Valid title' }),
+      );
     });
 
     it('should handle invalid-id task and created goal in same push', () => {
-      const invalidTask = makeTask({ id: '', title: 'Valid title' });
-      const validGoal = makeGoal({ id: 'e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b', title: 'Valid goal' });
-      vi.mocked(getAllTasks).mockReturnValue([]);
-      vi.mocked(getAllGoals).mockReturnValue([]);
-
-      push({ tasks: [invalidTask], goals: [validGoal] });
-
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ status: 'rejected' });
-      expect(results.goals[0]).toMatchObject({ id: 'e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b', status: 'created' });
+      assertRejectedTaskWithCreatedGoal(
+        makeTask({ id: '', title: 'Valid title' }),
+        makeGoal({ id: 'e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b', title: 'Valid goal' }),
+      );
     });
   });
 
@@ -1043,8 +1020,14 @@ describe('push', () => {
   });
 
   describe('readNextRevision gating', () => {
-    it('should call readNextRevision when tasks are pushed', () => {
-      push({ tasks: [makeTask()] });
+    it.each([
+      { entityName: 'tasks', makePush: () => push({ tasks: [makeTask()] }) },
+      { entityName: 'goals', makePush: () => push({ goals: [makeGoal()] }) },
+      { entityName: 'contexts', makePush: () => push({ contexts: [makeContext()] }) },
+      { entityName: 'categories', makePush: () => push({ categories: [makeCategory()] }) },
+      { entityName: 'checklist_items', makePush: () => push({ checklist_items: [makeChecklistItem()] }) },
+    ])('should call readNextRevision when $entityName are pushed', ({ makePush }) => {
+      makePush();
       expect(readNextRevision).toHaveBeenCalled();
     });
 
@@ -1056,26 +1039,6 @@ describe('push', () => {
     it('should NOT call readNextRevision when push is empty', () => {
       push({});
       expect(readNextRevision).not.toHaveBeenCalled();
-    });
-
-    it('should call readNextRevision when goals are pushed', () => {
-      push({ goals: [makeGoal()] });
-      expect(readNextRevision).toHaveBeenCalled();
-    });
-
-    it('should call readNextRevision when contexts are pushed', () => {
-      push({ contexts: [makeContext()] });
-      expect(readNextRevision).toHaveBeenCalled();
-    });
-
-    it('should call readNextRevision when categories are pushed', () => {
-      push({ categories: [makeCategory()] });
-      expect(readNextRevision).toHaveBeenCalled();
-    });
-
-    it('should call readNextRevision when checklist_items are pushed', () => {
-      push({ checklist_items: [makeChecklistItem()] });
-      expect(readNextRevision).toHaveBeenCalled();
     });
   });
 
@@ -1106,49 +1069,19 @@ describe('push', () => {
   });
 
   describe('saveNextRevision triggered by any entity type', () => {
-    it('should call saveNextRevision when only goals have accepted records', () => {
-      vi.mocked(readNextRevision).mockReturnValue(5);
-      const newGoal = makeGoal({ id: 'eeeeeeee-eeee-4eee-aeee-eeeeeeeeeeee' });
-      vi.mocked(getAllGoals).mockReturnValue([]);
-
-      push({ goals: [newGoal] });
-
-      expect(saveNextRevision).toHaveBeenCalledWith(6);
-    });
-
-    it('should call saveNextRevision when only contexts have accepted records', () => {
-      vi.mocked(readNextRevision).mockReturnValue(3);
-      const newContext = makeContext({ id: 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1' });
-      vi.mocked(getAllContexts).mockReturnValue([]);
-
-      push({ contexts: [newContext] });
-
-      expect(saveNextRevision).toHaveBeenCalledWith(4);
-    });
-
-    it('should call saveNextRevision when only categories have accepted records', () => {
-      vi.mocked(readNextRevision).mockReturnValue(2);
-      const newCategory = makeCategory({ id: 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3' });
-      vi.mocked(getAllCategories).mockReturnValue([]);
-
-      push({ categories: [newCategory] });
-
-      expect(saveNextRevision).toHaveBeenCalledWith(3);
-    });
-
-    it('should call saveNextRevision when only checklist_items have accepted records', () => {
-      vi.mocked(readNextRevision).mockReturnValue(10);
-      const newItem = makeChecklistItem({ id: 'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5' });
-      vi.mocked(getAllChecklistItems).mockReturnValue([]);
-
-      push({ checklist_items: [newItem] });
-
-      expect(saveNextRevision).toHaveBeenCalledWith(11);
+    it.each([
+      { entityName: 'goals', currentRevision: 5, makePush: () => push({ goals: [makeGoal({ id: 'eeeeeeee-eeee-4eee-aeee-eeeeeeeeeeee' })] }), expectedRevision: 6 },
+      { entityName: 'contexts', currentRevision: 3, makePush: () => push({ contexts: [makeContext({ id: 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1' })] }), expectedRevision: 4 },
+      { entityName: 'categories', currentRevision: 2, makePush: () => push({ categories: [makeCategory({ id: 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3' })] }), expectedRevision: 3 },
+      { entityName: 'checklist_items', currentRevision: 10, makePush: () => push({ checklist_items: [makeChecklistItem({ id: 'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5' })] }), expectedRevision: 11 },
+    ])('should call saveNextRevision when only $entityName have accepted records', ({ currentRevision, makePush, expectedRevision }) => {
+      vi.mocked(readNextRevision).mockReturnValue(currentRevision);
+      makePush();
+      expect(saveNextRevision).toHaveBeenCalledWith(expectedRevision);
     });
 
     it('should NOT call saveNextRevision when tasks are all rejected', () => {
       const rejectedTask = makeTask({ id: '', title: 'Valid' });
-      vi.mocked(getAllTasks).mockReturnValue([]);
 
       push({ tasks: [rejectedTask] });
 
@@ -1157,38 +1090,52 @@ describe('push', () => {
   });
 
   describe('revision assignment', () => {
-    it('should return revision in result for a created record', () => {
+    it('should assign same revision to all accepted/created records in one push', () => {
+      vi.mocked(readNextRevision).mockReturnValue(10);
+      const task1 = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
+      const task2 = makeTask({ id: 'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb' });
+      vi.mocked(getAllTasks).mockReturnValue([]);
+
+      push({ tasks: [task1, task2] });
+
+      expect(upsertTasks).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', revision: 10 }),
+          expect.objectContaining({ id: 'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb', revision: 10 }),
+        ]),
+      );
+    });
+
+    it('should save next_revision incremented by 1 regardless of record count', () => {
+      vi.mocked(readNextRevision).mockReturnValue(1);
+      const task1 = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
+      const task2 = makeTask({ id: 'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb' });
+      vi.mocked(getAllTasks).mockReturnValue([]);
+
+      push({ tasks: [task1, task2] });
+
+      expect(saveNextRevision).toHaveBeenCalledWith(2);
+    });
+
+    it('should return top-level revision in response when any record is accepted', () => {
       vi.mocked(readNextRevision).mockReturnValue(5);
       const newTask = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
       vi.mocked(getAllTasks).mockReturnValue([]);
 
       push({ tasks: [newTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toHaveProperty('revision');
+      expect(parseResponse()).toHaveProperty('revision', 5);
     });
 
-    it('should assign next_revision to a created record', () => {
+    it('should NOT include revision in individual task result items', () => {
       vi.mocked(readNextRevision).mockReturnValue(5);
       const newTask = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
       vi.mocked(getAllTasks).mockReturnValue([]);
 
       push({ tasks: [newTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ revision: 5 });
-    });
-
-    it('should return revision in result for an accepted record', () => {
-      vi.mocked(readNextRevision).mockReturnValue(3);
-      const serverTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-01T00:00:00.000Z', version: 2 });
-      const clientTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-02T00:00:00.000Z', version: 1 });
-      vi.mocked(getAllTasks).mockReturnValue([serverTask]);
-
-      push({ tasks: [clientTask] });
-
-      const results = parseResponse().results as Record<string, unknown[]>;
-      expect(results.tasks[0]).toMatchObject({ status: 'accepted', revision: 3 });
+      const results = getResults();
+      expect(results.tasks[0]).not.toHaveProperty('revision');
     });
 
     it('should NOT return revision for a conflict result', () => {
@@ -1198,33 +1145,24 @@ describe('push', () => {
 
       push({ tasks: [clientTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
+      const results = getResults();
       expect(results.tasks[0]).not.toHaveProperty('revision');
     });
 
-    it('should increment revision for each accepted/created record', () => {
-      vi.mocked(readNextRevision).mockReturnValue(10);
-      const task1 = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
-      const task2 = makeTask({ id: 'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb' });
-      vi.mocked(getAllTasks).mockReturnValue([]);
+    it('should NOT return top-level revision when all records are conflict', () => {
+      const serverTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-02T00:00:00.000Z', version: 3 });
+      const clientTask = makeTask({ id: '11111111-1111-4111-a111-111111111111', updated_at: '2025-01-01T00:00:00.000Z', version: 1 });
+      vi.mocked(getAllTasks).mockReturnValue([serverTask]);
 
-      push({ tasks: [task1, task2] });
+      push({ tasks: [clientTask] });
 
-      const results = parseResponse().results as Record<string, unknown[]>;
-      const revisions = results.tasks.map((r) => (r as Record<string, unknown>).revision as number);
-      expect(revisions[0]).not.toBe(revisions[1]);
-      expect(Math.abs(revisions[0] - revisions[1])).toBe(1);
+      expect(parseResponse()).not.toHaveProperty('revision');
     });
 
-    it('should save updated next_revision to Meta after processing', () => {
-      vi.mocked(readNextRevision).mockReturnValue(1);
-      const task1 = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
-      const task2 = makeTask({ id: 'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb' });
-      vi.mocked(getAllTasks).mockReturnValue([]);
+    it('should NOT return top-level revision for empty push', () => {
+      push({});
 
-      push({ tasks: [task1, task2] });
-
-      expect(saveNextRevision).toHaveBeenCalledWith(3);
+      expect(parseResponse()).not.toHaveProperty('revision');
     });
 
     it('should NOT save next_revision when no records were created or accepted', () => {
@@ -1232,15 +1170,17 @@ describe('push', () => {
       expect(saveNextRevision).not.toHaveBeenCalled();
     });
 
-    it('should save revision field on the record written to the sheet', () => {
-      vi.mocked(readNextRevision).mockReturnValue(7);
-      const newTask = makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
-      vi.mocked(getAllTasks).mockReturnValue([]);
-
-      push({ tasks: [newTask] });
-
-      expect(upsertTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([expect.objectContaining({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', revision: 7 })]),
+    it.each([
+      { entityName: 'task', revision: 7, makePush: () => push({ tasks: [makeTask({ id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' })] }), getUpsertMock: () => vi.mocked(upsertTasks), id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' },
+      { entityName: 'goal', revision: 9, makePush: () => push({ goals: [makeGoal({ id: '22222222-2222-4222-a222-222222222222' })] }), getUpsertMock: () => vi.mocked(upsertGoals), id: '22222222-2222-4222-a222-222222222222' },
+      { entityName: 'context', revision: 11, makePush: () => push({ contexts: [makeContext({ id: '33333333-3333-4333-a333-333333333333' })] }), getUpsertMock: () => vi.mocked(upsertContexts), id: '33333333-3333-4333-a333-333333333333' },
+      { entityName: 'category', revision: 13, makePush: () => push({ categories: [makeCategory({ id: '44444444-4444-4444-a444-444444444444' })] }), getUpsertMock: () => vi.mocked(upsertCategories), id: '44444444-4444-4444-a444-444444444444' },
+      { entityName: 'checklist item', revision: 15, makePush: () => push({ checklist_items: [makeChecklistItem({ id: '55555555-5555-4555-a555-555555555555' })] }), getUpsertMock: () => vi.mocked(upsertChecklistItems), id: '55555555-5555-4555-a555-555555555555' },
+    ])('should save pushRevision on $entityName written to the sheet', ({ revision, makePush, getUpsertMock, id }) => {
+      vi.mocked(readNextRevision).mockReturnValue(revision);
+      makePush();
+      expect(getUpsertMock()).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ id, revision })]),
       );
     });
   });

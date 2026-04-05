@@ -17,12 +17,7 @@ import { getCategoriesByRevision } from '../sheets/categories.sheet';
 import { getChecklistItemsByRevision } from '../sheets/checklists.sheet';
 import { getAllSettings } from '../sheets/settings.sheet';
 import { readNextRevision } from '../sheets/meta.sheet';
-
-function parseResponse(): Record<string, unknown> {
-  const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>).mock.calls;
-  const lastCall = calls[calls.length - 1];
-  return JSON.parse(lastCall[0]);
-}
+import { parseResponse } from '../../tests/helpers/response';
 
 describe('pull', () => {
   beforeEach(() => {

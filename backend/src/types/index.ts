@@ -1,10 +1,27 @@
 // Shared types for GAS backend
 
 export type Box = 'inbox' | 'today' | 'week' | 'later';
-export type GoalStatus = 'planning' |'in_progress' | 'paused' | 'completed' | 'cancelled';
+export type GoalStatus = 'planning' | 'in_progress' | 'paused' | 'completed' | 'cancelled';
+export type PushItemStatus = 'created' | 'accepted' | 'conflict' | 'rejected';
 
-export interface Task {
+interface BaseEntity {
   id: string;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+  version: number;
+  revision: number;
+}
+
+interface SortableEntity extends BaseEntity {
+  sort_order: number;
+}
+
+interface NamedEntity extends SortableEntity {
+  name: string;
+}
+
+export interface Task extends SortableEntity {
   title: string;
   notes: string;
   box: Box;
@@ -14,61 +31,23 @@ export interface Task {
   is_completed: boolean;
   completed_at: string;
   repeat_rule: string;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
-  version: number;
-  revision: number;
 }
 
-export interface Goal {
-  id: string;
+export interface Goal extends SortableEntity {
   title: string;
   description: string;
   cover_file_id: string;
   status: GoalStatus;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
-  version: number;
-  revision: number;
 }
 
-export interface Context {
-  id: string;
-  name: string;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
-  version: number;
-  revision: number;
-}
+export interface Context extends NamedEntity {}
 
-export interface Category {
-  id: string;
-  name: string;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
-  version: number;
-  revision: number;
-}
+export interface Category extends NamedEntity {}
 
-export interface ChecklistItem {
-  id: string;
+export interface ChecklistItem extends SortableEntity {
   task_id: string;
   title: string;
   is_completed: boolean;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
-  version: number;
-  revision: number;
 }
 
 export interface Setting {
@@ -79,9 +58,8 @@ export interface Setting {
 
 export interface PushItemResult {
   id: string;
-  status: 'created' | 'accepted' | 'conflict' | 'rejected';
+  status: PushItemStatus;
   version?: number;
-  revision?: number;
   server_record?: Task | Goal | Context | Category | ChecklistItem;
   reason?: string;
 }

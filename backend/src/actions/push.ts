@@ -11,9 +11,25 @@ import { readNextRevision, saveNextRevision } from '../sheets/meta.sheet';
 import type { Task, Goal, Context, Category, ChecklistItem, Setting, PushItemResult } from '../types';
 
 type AnyEntity = Task | Goal | Context | Category | ChecklistItem;
+type UpsertFn = (records: AnyEntity[]) => void;
+
+type EntityBatch = {
+  key: string;
+  data: AnyEntity[] | undefined;
+  getAll: () => AnyEntity[];
+  upsert: UpsertFn;
+};
+
+function hasWrittenResults(results: PushItemResult[]): boolean {
+  return results.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
+}
 
 function getEntityLabel(entity: AnyEntity): string {
   return 'title' in entity ? entity.title : entity.name;
+}
+
+function isInvalidOptionalFk(value: string): boolean {
+  return value !== '' && !isValidUuid(value);
 }
 
 function getInvalidForeignKeyReason(record: AnyEntity): string | null {
@@ -23,13 +39,7 @@ function getInvalidForeignKeyReason(record: AnyEntity): string | null {
     }
   }
   if ('goal_id' in record) {
-    if (record.goal_id !== '' && !isValidUuid(record.goal_id)) {
-      return ERROR_MESSAGES.INVALID_OPTIONAL_FK;
-    }
-    if (record.context_id !== '' && !isValidUuid(record.context_id)) {
-      return ERROR_MESSAGES.INVALID_OPTIONAL_FK;
-    }
-    if (record.category_id !== '' && !isValidUuid(record.category_id)) {
+    if (isInvalidOptionalFk(record.goal_id) || isInvalidOptionalFk(record.context_id) || isInvalidOptionalFk(record.category_id)) {
       return ERROR_MESSAGES.INVALID_OPTIONAL_FK;
     }
   }
@@ -40,7 +50,7 @@ function processRecords<T extends AnyEntity>(
   incoming: T[],
   existing: T[],
   batchUpsertFn: (records: T[]) => void,
-  nextRevisionRef: { value: number },
+  pushRevision: number,
 ): PushItemResult[] {
   const recordsToUpsert: T[] = [];
 
@@ -63,21 +73,19 @@ function processRecords<T extends AnyEntity>(
     }
 
     const serverRecord = existing.find(e => e.id === record.id);
-    const assignedRevision = nextRevisionRef.value++;
 
     if (!serverRecord) {
-      recordsToUpsert.push({ ...record, revision: assignedRevision });
-      return { id: record.id, status: PUSH_STATUSES.CREATED, version: record.version, revision: assignedRevision };
+      recordsToUpsert.push({ ...record, revision: pushRevision });
+      return { id: record.id, status: PUSH_STATUSES.CREATED, version: record.version };
     }
 
     const resolution = resolveConflict(record.updated_at, serverRecord.updated_at);
     if (resolution === CONFLICT_RESOLUTION.ACCEPT) {
       const updatedVersion = serverRecord.version + 1;
-      recordsToUpsert.push({ ...record, version: updatedVersion, revision: assignedRevision });
-      return { id: record.id, status: PUSH_STATUSES.ACCEPTED, version: updatedVersion, revision: assignedRevision };
+      recordsToUpsert.push({ ...record, version: updatedVersion, revision: pushRevision });
+      return { id: record.id, status: PUSH_STATUSES.ACCEPTED, version: updatedVersion };
     }
 
-    nextRevisionRef.value--;
     return { id: record.id, status: PUSH_STATUSES.CONFLICT, server_record: serverRecord };
   });
 
@@ -100,64 +108,53 @@ export function push(changes: {
 
   try {
     const results: Record<string, PushItemResult[]> = {};
-    const nextRevisionRef = { value: 0 };
+    let pushRevision: number | undefined = undefined;
     let hasAcceptedOrCreated = false;
 
-    const hasPushableChanges =
-      (changes.tasks?.length ?? 0) > 0 ||
-      (changes.goals?.length ?? 0) > 0 ||
-      (changes.contexts?.length ?? 0) > 0 ||
-      (changes.categories?.length ?? 0) > 0 ||
-      (changes.checklist_items?.length ?? 0) > 0;
+    const entityBatches: EntityBatch[] = [
+      { key: 'tasks', data: changes.tasks, getAll: getAllTasks, upsert: upsertTasks as UpsertFn },
+      { key: 'goals', data: changes.goals, getAll: getAllGoals, upsert: upsertGoals as UpsertFn },
+      { key: 'contexts', data: changes.contexts, getAll: getAllContexts, upsert: upsertContexts as UpsertFn },
+      { key: 'categories', data: changes.categories, getAll: getAllCategories, upsert: upsertCategories as UpsertFn },
+      { key: 'checklist_items', data: changes.checklist_items, getAll: getAllChecklistItems, upsert: upsertChecklistItems as UpsertFn },
+    ];
 
+    const hasPushableChanges = entityBatches.some(({ data }) => (data?.length ?? 0) > 0);
     if (hasPushableChanges) {
-      nextRevisionRef.value = readNextRevision();
+      pushRevision = readNextRevision();
     }
 
-    if (changes.tasks?.length) {
-      results.tasks = processRecords(changes.tasks, getAllTasks(), upsertTasks, nextRevisionRef);
-      hasAcceptedOrCreated = hasAcceptedOrCreated || results.tasks.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
-    }
-    if (changes.goals?.length) {
-      results.goals = processRecords(changes.goals, getAllGoals(), upsertGoals, nextRevisionRef);
-      hasAcceptedOrCreated = hasAcceptedOrCreated || results.goals.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
-    }
-    if (changes.contexts?.length) {
-      results.contexts = processRecords(changes.contexts, getAllContexts(), upsertContexts, nextRevisionRef);
-      hasAcceptedOrCreated = hasAcceptedOrCreated || results.contexts.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
-    }
-    if (changes.categories?.length) {
-      results.categories = processRecords(changes.categories, getAllCategories(), upsertCategories, nextRevisionRef);
-      hasAcceptedOrCreated = hasAcceptedOrCreated || results.categories.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
-    }
-    if (changes.checklist_items?.length) {
-      results.checklist_items = processRecords(changes.checklist_items, getAllChecklistItems(), upsertChecklistItems, nextRevisionRef);
-      hasAcceptedOrCreated = hasAcceptedOrCreated || results.checklist_items.some(r => r.status === PUSH_STATUSES.CREATED || r.status === PUSH_STATUSES.ACCEPTED);
+    for (const { key, data, getAll, upsert } of entityBatches) {
+      if (data?.length) {
+        const entityResults = processRecords(data, getAll(), upsert, pushRevision ?? 0);
+        results[key] = entityResults;
+        hasAcceptedOrCreated = hasAcceptedOrCreated || hasWrittenResults(entityResults);
+      }
     }
     if (changes.settings?.length) {
-      const serverSettings = getAllSettings();
+      const serverByKey = new Map(getAllSettings().map(s => [s.key, s]));
       const settingsToUpsert: typeof changes.settings = [];
       results.settings = changes.settings.map(clientSetting => {
-        const serverSetting = serverSettings.find(s => s.key === clientSetting.key);
-        const resolution = serverSetting
-          ? resolveConflict(clientSetting.updated_at, serverSetting.updated_at)
-          : CONFLICT_RESOLUTION.ACCEPT;
-
-        if (resolution === CONFLICT_RESOLUTION.ACCEPT) {
+        const serverSetting = serverByKey.get(clientSetting.key);
+        const isClientNewer = !serverSetting || clientSetting.updated_at >= serverSetting.updated_at;
+        if (isClientNewer) {
           settingsToUpsert.push(clientSetting);
           return { id: clientSetting.key, status: PUSH_STATUSES.ACCEPTED };
         }
-
         return { id: clientSetting.key, status: PUSH_STATUSES.CONFLICT };
       });
       upsertSettings(settingsToUpsert);
     }
 
     if (hasAcceptedOrCreated) {
-      saveNextRevision(nextRevisionRef.value);
+      saveNextRevision((pushRevision ?? 0) + 1);
     }
 
-    return jsonOk({ results, server_time: new Date().toISOString() });
+    return jsonOk({
+      ...(hasAcceptedOrCreated ? { revision: pushRevision } : {}),
+      results,
+      server_time: new Date().toISOString(),
+    });
   } catch (e) {
     const err = e as Error;
     if (err.message === ERROR_CODES.NOT_INITIALIZED) {

@@ -46,7 +46,6 @@ export interface PushRequest {
 export interface PushItemResult {
   id: string;
   status: PushResultStatus;
-  revision?: number;
   server_record?: Task | Goal | Context | Category | ChecklistItem;
   reason?: string;
 }
@@ -62,6 +61,7 @@ export interface PushResponseData {
 
 export interface PushResponse {
   ok: boolean;
+  revision?: number;
   results: PushResponseData;
   server_time: string;
 }

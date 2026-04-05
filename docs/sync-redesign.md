@@ -9,7 +9,7 @@
 Два независимых поля:
 
 - **`version`** (клиентский) — инкрементируется клиентом при каждом локальном изменении. Используется для определения "менялась ли запись" и для conflict detection (сравнение `updated_at` при push). Не участвует в pull-фильтрации.
-- **`revision`** (серверный) — глобальный монотонный счётчик. Назначается **только сервером** при каждом принятом push. Клиент при pull отправляет `since_revision` — одно число. Сервер возвращает все записи с `revision > since_revision`.
+- **`revision`** (серверный) — глобальный монотонный счётчик. Назначается **только сервером**: один revision на весь push-запрос (все принятые записи в одном push получают одинаковый revision). Клиент при pull отправляет `since_revision` — одно число. Сервер возвращает все записи с `revision > since_revision`. Revision должен быть монотонным между push-запросами, но не обязан быть уникальным между записями внутри одного запроса.
 - **`_dirty`** (клиентский, только IndexedDB) — boolean-флаг, отмечающий записи, изменённые локально и ещё не подтверждённые сервером. Не передаётся на сервер.
 
 ---
@@ -82,16 +82,18 @@ Bump `DB_VERSION`. В upgrade-функции:
 
 2. **Прочитать `next_revision`** из листа Meta.
 
-3. **Для каждой принятой записи** (status = `created` или `accepted`):
-   - Назначить `revision = currentRevision++`.
-   - Записать в Sheets с этим revision.
-   - Клиентское поле `version` сохраняется as-is (без изменений).
+3. **Назначить `pushRevision = next_revision`** — одно значение для всего запроса.
 
-4. **Сохранить обновлённый `next_revision`** в Meta.
+4. **Обработать все записи.** Для каждой принятой (status = `created` или `accepted`):
+    - Назначить `revision = pushRevision` (одинаковый для всех записей в этом push).
+    - Записать в Sheets с этим revision.
+    - Клиентское поле `version` сохраняется as-is (без изменений).
 
-5. **Освободить lock.**
+5. **Если хотя бы одна запись принята** → сохранить `next_revision = pushRevision + 1` в Meta. Если все записи отклонены (conflict) — не инкрементировать.
 
-6. **В ответе** для каждой записи с status `created`/`accepted` вернуть назначенный `revision`.
+6. **Освободить lock.**
+
+7. **В ответе** вернуть `revision` (единый для всего push) для записей с status `created`/`accepted`.
 
 #### Push Response формат
 
@@ -99,11 +101,11 @@ Bump `DB_VERSION`. В upgrade-функции:
 interface PushResponseItem {
   id: string;
   status: 'created' | 'accepted' | 'conflict';
-  revision?: number;         // присутствует для created/accepted
-  server_record?: EntityRecord; // присутствует для conflict
+  server_record?: EntityRecord; // присутствует только для conflict
 }
 
 interface PushResponse {
+  revision: number; // единый revision, назначенный этому push (отсутствует, если все записи conflict)
   results: {
     tasks?: PushResponseItem[];
     goals?: PushResponseItem[];
@@ -115,6 +117,8 @@ interface PushResponse {
   server_time: string; // ISO 8601 UTC
 }
 ```
+
+`revision` — одно число на уровне ответа, а не в каждом PushResponseItem. Все принятые записи получают этот revision. Conflict-записи revision не получают.
 
 #### Conflict resolution
 
@@ -183,7 +187,7 @@ interface PullResponse {
 3. Запомнить version каждой отправляемой записи (sentVersions map: id → version)
 4. Отправить push({ action: 'push', changes })
 5. Применить результаты (applyPushResults — описано ниже)
-6. Обновить last_known_revision если max revision из ответа > текущего
+6. Обновить last_known_revision: если response.revision > текущего — записать response.revision
 ```
 
 #### Мьютекс sync-операций
@@ -232,15 +236,17 @@ class SyncService {
 Для каждого элемента из ответа push:
 
 ```
+pushRevision = response.revision (единый для всего push)
+
 status === 'created' или 'accepted':
   1. Прочитать текущую запись из IndexedDB
   2. Сравнить текущий version с sentVersion (version на момент отправки push)
   3. Если version === sentVersion:
      → Запись не менялась пока шёл push
-     → Обновить: _dirty = false, revision = response.revision
+     → Обновить: _dirty = false, revision = pushRevision
   4. Если version > sentVersion:
      → Запись менялась во время push
-     → Обновить: revision = response.revision (но _dirty ОСТАВИТЬ true)
+     → Обновить: revision = pushRevision (но _dirty ОСТАВИТЬ true)
      → Запись уйдёт на сервер повторно при следующем push
 
 status === 'conflict':
@@ -340,7 +346,7 @@ await db.tasks.update(id, {
 
 ### 1. LockService в push (бэкенд)
 
-**Угроза:** два одновременных push-запроса читают один и тот же `next_revision`, назначают дублирующиеся revision.
+**Угроза:** два одновременных push-запроса читают один и тот же `next_revision`, назначают одинаковый revision разным batch-ам записей. При pull клиент может пропустить один из batch-ей.
 
 **Решение:** оборачивать всю логику push в `LockService.getScriptLock().tryLock(30000)`. GAS однопоточен, но Google не гарантирует строгую сериализацию. Lock это гарантирует.
 
@@ -414,10 +420,10 @@ function processPush(payload) {
 - [ ] Добавить столбец `revision` в структуру всех листов (init action)
 - [ ] Создать лист `Meta` с `next_revision = 1` (init action, идемпотентно)
 - [ ] Push: добавить `LockService.getScriptLock().tryLock(30000)`
-- [ ] Push: читать `next_revision` из Meta, инкрементировать для каждой принятой записи
-- [ ] Push: записывать `revision` в Sheets для created/accepted записей
-- [ ] Push: сохранять обновлённый `next_revision` в Meta
-- [ ] Push: возвращать `revision` в ответе для created/accepted
+- [ ] Push: читать `next_revision` из Meta, назначить его как единый revision для всего push-запроса
+- [ ] Push: записывать этот revision в Sheets для всех created/accepted записей
+- [ ] Push: инкрементировать `next_revision` на 1 (не на количество записей) и сохранить в Meta, только если хотя бы одна запись принята
+- [ ] Push: возвращать единый `revision` на уровне ответа (не per-record)
 - [ ] Pull: принимать `since_revision` (число) вместо `versions` (объект)
 - [ ] Pull: фильтровать `record.revision > since_revision` для всех листов
 - [ ] Pull: возвращать `current_revision` в ответе
@@ -445,12 +451,13 @@ function processPush(payload) {
 - [ ] Обновить интерфейсы entity: добавить `revision: number`
 - [ ] Обновить PullRequest: `since_revision: number` вместо `versions`
 - [ ] Обновить PullResponse: добавить `current_revision: number`
-- [ ] Обновить PushResponseItem: добавить `revision?: number`
+- [ ] Обновить PushResponse: единый `revision: number` на уровне ответа, убрать revision из PushResponseItem
 - [ ] Создать/обновить интерфейс SyncMeta
 
 ### Тесты
 
-- [ ] Unit: push назначает уникальные revision через LockService
+- [ ] Unit: push назначает один revision всем принятым записям в одном запросе
+- [ ] Unit: push не инкрементирует next_revision, если все записи conflict
 - [ ] Unit: pull фильтрует по revision > since_revision
 - [ ] Unit: applyPullResults пропускает _dirty записи
 - [ ] Unit: applyPushResults не снимает _dirty, если version вырос
