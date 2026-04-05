@@ -31,8 +31,18 @@ export function IdeaItem({ idea, nodeRef, style, dragHandle, onEdit }: IdeaItemP
         isUnsynced ? "border-l-amber-400" : "border-l-transparent",
       )}
     >
-      {/* Drag handle (if provided) */}
-      {dragHandle}
+      {/* Edit button */}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={t("idea.edit")}
+          className="px-3 py-3 text-gray-400 hover:text-gray-600 transition-colors"
+          data-testid="idea-edit-button"
+        >
+          <Pencil className="w-4 h-4" aria-hidden="true" />
+        </button>
+      )}
 
       {/* Main content */}
       <div className="flex flex-1 items-center gap-3 px-4 py-3 min-w-0">
@@ -48,18 +58,8 @@ export function IdeaItem({ idea, nodeRef, style, dragHandle, onEdit }: IdeaItemP
         </div>
       </div>
 
-      {/* Edit button */}
-      {onEdit && (
-        <button
-          type="button"
-          onClick={onEdit}
-          aria-label={t("idea.edit")}
-          className="px-3 py-3 text-gray-400 hover:text-gray-600 transition-colors"
-          data-testid="idea-edit-button"
-        >
-          <Pencil className="w-4 h-4" aria-hidden="true" />
-        </button>
-      )}
+      {/* Drag handle (if provided) */}
+      {dragHandle}
     </li>
   );
 }
