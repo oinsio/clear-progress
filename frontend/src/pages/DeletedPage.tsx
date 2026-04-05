@@ -97,7 +97,6 @@ export default function DeletedPage() {
     checklistItems,
     taskTitleMap,
     isLoading,
-    reload,
   } = useDeletedEntities();
   const {
     restoreTask,
@@ -105,7 +104,7 @@ export default function DeletedPage() {
     restoreContext,
     restoreCategory,
     restoreChecklistItem,
-  } = useRestoreEntity(reload);
+  } = useRestoreEntity();
   const handleModeChange = useRightPanelNavigation();
 
   const isEmpty =

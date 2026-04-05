@@ -9,50 +9,51 @@ import { createMockTaskService } from "@/test/mocks/taskServiceMock";
 describe("useContextTasks", () => {
   let mockTaskService: TaskService;
   const contextId = "ctx-1";
+  let testTask: ReturnType<typeof buildTask>;
+
+  const renderContextTasksHook = (ctxId = contextId, service = mockTaskService) =>
+    renderHook(() => useContextTasks(ctxId, service));
 
   beforeEach(() => {
-    mockTaskService = createMockTaskService();
+    testTask = buildTask({ context_id: contextId });
+    mockTaskService = createMockTaskService({
+      getByContextId: vi.fn().mockResolvedValue([testTask]),
+    });
   });
 
   it("should set isLoading to true on initial render", () => {
-    const { result } = renderHook(() => useContextTasks(contextId, mockTaskService));
+    const { result } = renderContextTasksHook();
     expect(result.current.isLoading).toBe(true);
   });
 
   it("should set isLoading to false after tasks are fetched", async () => {
-    const { result } = renderHook(() => useContextTasks(contextId, mockTaskService));
+    const { result } = renderContextTasksHook();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it("should return empty array when context has no tasks", async () => {
-    const { result } = renderHook(() => useContextTasks(contextId, mockTaskService));
+    mockTaskService = createMockTaskService();
+    const { result } = renderContextTasksHook();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.tasks).toEqual([]);
   });
 
   it("should call getByContextId with the given contextId", async () => {
-    const { result } = renderHook(() => useContextTasks(contextId, mockTaskService));
+    const { result } = renderContextTasksHook();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(mockTaskService.getByContextId).toHaveBeenCalledWith(contextId);
   });
 
   it("should return context tasks after loading", async () => {
-    const tasks = [
-      buildTask({ context_id: contextId }),
-      buildTask({ context_id: contextId }),
-    ];
-    mockTaskService = createMockTaskService({
-      getByContextId: vi.fn().mockResolvedValue(tasks),
-    });
-    const { result } = renderHook(() => useContextTasks(contextId, mockTaskService));
+    const { result } = renderContextTasksHook();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.tasks).toEqual(tasks);
+    expect(result.current.tasks).toEqual([testTask]);
   });
 
-  it("should call create with context_id and reload when createTask is called", async () => {
+  it("should call create with context_id when createTask is called", async () => {
     const mockGetByContextId = vi.fn().mockResolvedValue([]);
     mockTaskService = createMockTaskService({ getByContextId: mockGetByContextId });
-    const { result } = renderHook(() => useContextTasks(contextId, mockTaskService));
+    const { result } = renderContextTasksHook();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
@@ -65,56 +66,46 @@ describe("useContextTasks", () => {
       notes: "",
       context_id: contextId,
     });
-    expect(mockGetByContextId).toHaveBeenCalledTimes(2);
   });
 
-  async function setupHookWithTask() {
-    const task = buildTask({ context_id: contextId });
-    const mockGetByContextId = vi.fn().mockResolvedValue([task]);
-    mockTaskService = createMockTaskService({ getByContextId: mockGetByContextId });
-    const { result } = renderHook(() => useContextTasks(contextId, mockTaskService));
+  it("should call softDelete when deleteTask is called", async () => {
+    const { result } = renderContextTasksHook();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    return { result, task, mockGetByContextId };
-  }
-
-  it("should call softDelete and reload when deleteTask is called", async () => {
-    const { result, task, mockGetByContextId } = await setupHookWithTask();
 
     await act(async () => {
-      await result.current.deleteTask(task.id);
+      await result.current.deleteTask(testTask.id);
     });
 
-    expect(mockTaskService.softDelete).toHaveBeenCalledWith(task.id);
-    expect(mockGetByContextId).toHaveBeenCalledTimes(2);
+    expect(mockTaskService.softDelete).toHaveBeenCalledWith(testTask.id);
   });
 
-  it("should call moveToBox and reload when moveTask is called", async () => {
-    const { result, task, mockGetByContextId } = await setupHookWithTask();
+  it("should call moveToBox when moveTask is called", async () => {
+    const { result } = renderContextTasksHook();
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.moveTask(task.id, BOX.WEEK);
+      await result.current.moveTask(testTask.id, BOX.WEEK);
     });
 
-    expect(mockTaskService.moveToBox).toHaveBeenCalledWith(task.id, BOX.WEEK);
-    expect(mockGetByContextId).toHaveBeenCalledTimes(2);
+    expect(mockTaskService.moveToBox).toHaveBeenCalledWith(testTask.id, BOX.WEEK);
   });
 
-  it("should call update and reload when updateTask is called", async () => {
-    const { result, task, mockGetByContextId } = await setupHookWithTask();
+  it("should call update when updateTask is called", async () => {
+    const { result } = renderContextTasksHook();
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.updateTask(task.id, { title: "Updated" });
+      await result.current.updateTask(testTask.id, { title: "Updated" });
     });
 
-    expect(mockTaskService.update).toHaveBeenCalledWith(task.id, { title: "Updated" });
-    expect(mockGetByContextId).toHaveBeenCalledTimes(2);
+    expect(mockTaskService.update).toHaveBeenCalledWith(testTask.id, { title: "Updated" });
   });
 
   it("should have empty initial tasks before loading completes", () => {
     mockTaskService = createMockTaskService({
       getByContextId: vi.fn().mockReturnValue(new Promise(() => {})),
     });
-    const { result } = renderHook(() => useContextTasks(contextId, mockTaskService));
+    const { result } = renderContextTasksHook();
     expect(result.current.tasks).toEqual([]);
   });
 

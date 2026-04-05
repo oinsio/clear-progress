@@ -49,7 +49,7 @@ describe("useCategoryTasks", () => {
     expect(result.current.tasks).toEqual(tasks);
   });
 
-  it("should call create with category_id and reload when createTask is called", async () => {
+  it("should call create with category_id when createTask is called", async () => {
     const mockGetByCategoryId = vi.fn().mockResolvedValue([]);
     mockTaskService = createMockTaskService({ getByCategoryId: mockGetByCategoryId });
     const { result } = renderHook(() => useCategoryTasks(categoryId, mockTaskService));
@@ -65,7 +65,6 @@ describe("useCategoryTasks", () => {
       notes: "",
       category_id: categoryId,
     });
-    expect(mockGetByCategoryId).toHaveBeenCalledTimes(2);
   });
 
   async function setupHookWithTask() {
@@ -77,37 +76,30 @@ describe("useCategoryTasks", () => {
     return { result, task, mockGetByCategoryId };
   }
 
-  it("should call softDelete and reload when deleteTask is called", async () => {
-    const { result, task, mockGetByCategoryId } = await setupHookWithTask();
+  it.each([
+    {
+      name: "should call softDelete when deleteTask is called",
+      action: (result: any, task: any) => result.current.deleteTask(task.id),
+      expectation: (task: any) => expect(mockTaskService.softDelete).toHaveBeenCalledWith(task.id),
+    },
+    {
+      name: "should call moveToBox when moveTask is called",
+      action: (result: any, task: any) => result.current.moveTask(task.id, BOX.WEEK),
+      expectation: (task: any) => expect(mockTaskService.moveToBox).toHaveBeenCalledWith(task.id, BOX.WEEK),
+    },
+    {
+      name: "should call update when updateTask is called",
+      action: (result: any, task: any) => result.current.updateTask(task.id, { title: "Updated" }),
+      expectation: (task: any) => expect(mockTaskService.update).toHaveBeenCalledWith(task.id, { title: "Updated" }),
+    },
+  ])("$name", async ({ action, expectation }) => {
+    const { result, task } = await setupHookWithTask();
 
     await act(async () => {
-      await result.current.deleteTask(task.id);
+      await action(result, task);
     });
 
-    expect(mockTaskService.softDelete).toHaveBeenCalledWith(task.id);
-    expect(mockGetByCategoryId).toHaveBeenCalledTimes(2);
-  });
-
-  it("should call moveToBox and reload when moveTask is called", async () => {
-    const { result, task, mockGetByCategoryId } = await setupHookWithTask();
-
-    await act(async () => {
-      await result.current.moveTask(task.id, BOX.WEEK);
-    });
-
-    expect(mockTaskService.moveToBox).toHaveBeenCalledWith(task.id, BOX.WEEK);
-    expect(mockGetByCategoryId).toHaveBeenCalledTimes(2);
-  });
-
-  it("should call update and reload when updateTask is called", async () => {
-    const { result, task, mockGetByCategoryId } = await setupHookWithTask();
-
-    await act(async () => {
-      await result.current.updateTask(task.id, { title: "Updated" });
-    });
-
-    expect(mockTaskService.update).toHaveBeenCalledWith(task.id, { title: "Updated" });
-    expect(mockGetByCategoryId).toHaveBeenCalledTimes(2);
+    expectation(task);
   });
 
   it("should have empty initial tasks before loading completes", () => {

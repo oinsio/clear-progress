@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { liveQuery } from "dexie";
 import type { Task } from "@/types/entities";
 import type { Box } from "@/types/common";
 import { TaskService } from "@/services/TaskService";
@@ -27,36 +28,38 @@ export function useGoalTasks(
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadTasks = useCallback(async () => {
-    const allGoalTasks = await taskService.getByGoalId(goalId);
-    setTasks(allGoalTasks.filter((task) => !task.is_completed));
-    setCompletedTasks(
-      allGoalTasks
-        .filter((task) => task.is_completed)
-        .sort((taskA, taskB) => {
-          if (taskA.completed_at && taskB.completed_at) {
-            return taskB.completed_at.localeCompare(taskA.completed_at);
-          }
-          return taskB.sort_order - taskA.sort_order;
-        }),
-    );
-    setIsLoading(false);
-  }, [taskService, goalId]);
+  const queryFn = useMemo(() => () => taskService.getByGoalId(goalId), [goalId, taskService]);
 
   useEffect(() => {
     setIsLoading(true);
-    void loadTasks();
-  }, [loadTasks]);
+    const subscription = liveQuery(queryFn).subscribe({
+      next: (allGoalTasks) => {
+        setTasks(allGoalTasks.filter((task) => !task.is_completed));
+        setCompletedTasks(
+          allGoalTasks
+            .filter((task) => task.is_completed)
+            .sort((taskA, taskB) => {
+              if (taskA.completed_at && taskB.completed_at) {
+                return taskB.completed_at.localeCompare(taskA.completed_at);
+              }
+              return taskB.sort_order - taskA.sort_order;
+            }),
+        );
+        setIsLoading(false);
+      },
+    });
+    return () => subscription.unsubscribe();
+  }, [queryFn]);
 
   const createTask = useCallback(
     async (title: string, box: Box, notes = "") => {
       await taskService.create({ title, box, notes, goal_id: goalId });
-      await loadTasks();
     },
-    [taskService, loadTasks, goalId],
+    [taskService, goalId],
   );
 
-  const mutations = useTaskMutations(taskService, loadTasks);
+  const noopReload = useCallback(async () => {}, []);
+  const mutations = useTaskMutations(taskService, noopReload);
 
   return { tasks, completedTasks, isLoading, createTask, ...mutations };
 }

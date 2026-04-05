@@ -25,54 +25,47 @@ export interface UseRestoreEntityReturn {
   restoreChecklistItem: (id: string) => Promise<void>;
 }
 
-export function useRestoreEntity(
-  reload: () => Promise<void>,
-): UseRestoreEntityReturn {
+export function useRestoreEntity(): UseRestoreEntityReturn {
   const { schedulePush } = useSync();
 
   const restoreTask = useCallback(
     async (id: string) => {
       await defaultTaskService.restore(id);
       schedulePush();
-      await reload();
     },
-    [reload, schedulePush],
+    [schedulePush],
   );
 
   const restoreGoal = useCallback(
     async (id: string) => {
       await defaultGoalService.restore(id);
       schedulePush();
-      await reload();
     },
-    [reload, schedulePush],
+    [schedulePush],
   );
 
   const restoreContext = useCallback(
     async (id: string) => {
       await defaultContextService.restore(id);
       schedulePush();
-      await reload();
     },
-    [reload, schedulePush],
+    [schedulePush],
   );
 
   const restoreCategory = useCallback(
     async (id: string) => {
       await defaultCategoryService.restore(id);
       schedulePush();
-      await reload();
     },
-    [reload, schedulePush],
+    [schedulePush],
   );
 
   const restoreChecklistItem = useCallback(
     async (id: string) => {
       await defaultChecklistService.restore(id);
       schedulePush();
-      await reload();
     },
-    [reload, schedulePush],
+    [schedulePush],
   );
 
   return {
