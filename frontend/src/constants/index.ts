@@ -98,8 +98,12 @@ export const MENU_ORDER_CHANGED_EVENT = "menu_order_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
 
 export const DB_NAME = "clear-progress";
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 export const LOCAL_COVER_ID_PREFIX = "local:";
+
+export const SYNC_META_KEYS = {
+  LAST_KNOWN_REVISION: "last_known_revision",
+} as const;
 
 export const STORAGE_KEYS = {
   GAS_URL: "gas_url",

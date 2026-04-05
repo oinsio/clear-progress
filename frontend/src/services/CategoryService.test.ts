@@ -13,7 +13,6 @@ function createMockCategoryRepository(
     create: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockResolvedValue(undefined),
     bulkUpsert: vi.fn().mockResolvedValue(undefined),
-    getMaxVersion: vi.fn().mockResolvedValue(0),
     ...overrides,
   } as unknown as CategoryRepository;
 }

@@ -13,6 +13,8 @@ export function buildCategory(overrides: Partial<Category> = {}): Category {
     created_at: now,
     updated_at: now,
     version: 1,
+    revision: 0,
+    _dirty: false,
     ...overrides,
   };
 }

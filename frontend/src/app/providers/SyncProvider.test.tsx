@@ -8,6 +8,7 @@ const {
   mockInit,
   mockPull,
   mockPush,
+  mockFullSync,
   mockInitializeLocalCovers,
   mockCoverSync,
   mockCoverReuploadLocalCovers,
@@ -27,6 +28,7 @@ const {
     mockInit: vi.fn(),
     mockPull: vi.fn(),
     mockPush: vi.fn(),
+    mockFullSync: vi.fn(),
     mockInitializeLocalCovers: vi.fn(),
     mockCoverSync: vi.fn(),
     mockCoverReuploadLocalCovers: vi.fn(),
@@ -61,6 +63,7 @@ vi.mock("@/services/SyncService", () => ({
   SyncService: vi.fn().mockImplementation(() => ({
     pull: mockPull,
     push: mockPush,
+    fullSync: mockFullSync,
   })),
 }));
 
@@ -79,6 +82,7 @@ vi.mock("@/db/repositories/ContextRepository", () => ({ ContextRepository: vi.fn
 vi.mock("@/db/repositories/CategoryRepository", () => ({ CategoryRepository: vi.fn() }));
 vi.mock("@/db/repositories/ChecklistRepository", () => ({ ChecklistRepository: vi.fn() }));
 vi.mock("@/db/repositories/SettingsRepository", () => ({ SettingsRepository: vi.fn() }));
+vi.mock("@/db/repositories/SyncMetaRepository", () => ({ SyncMetaRepository: vi.fn() }));
 
 import { SyncProvider, useSync } from "./SyncProvider";
 
@@ -162,6 +166,7 @@ beforeEach(() => {
 
   mockPull.mockResolvedValue(undefined);
   mockPush.mockResolvedValue(undefined);
+  mockFullSync.mockResolvedValue(undefined);
   mockPing.mockResolvedValue(VALID_PING_INITIALIZED);
   mockInit.mockResolvedValue({ ok: true });
   mockInitializeLocalCovers.mockResolvedValue(undefined);
@@ -380,24 +385,21 @@ describe("SyncProvider — ping reconnect", () => {
   });
 });
 
-describe("SyncProvider — push since argument", () => {
-  it("should call push with null on the first sync when no previous sync exists", async () => {
-    localStorage.removeItem("last_sync");
-
+describe("SyncProvider — push call", () => {
+  it("should call push with no arguments on sync", async () => {
     renderProvider();
     await act(async () => {});
 
-    expect(mockPush).toHaveBeenCalledWith(null);
+    expect(mockPush).toHaveBeenCalledWith();
   });
 
-  it("should call push with the lastSyncedAt timestamp on subsequent syncs", async () => {
-    const previousSyncTime = "2026-03-01T10:00:00.000Z";
-    localStorage.setItem("last_sync", previousSyncTime);
+  it("should call push with no arguments regardless of lastSyncedAt", async () => {
+    localStorage.setItem("last_sync", "2026-03-01T10:00:00.000Z");
 
     renderProvider();
     await act(async () => {});
 
-    expect(mockPush).toHaveBeenCalledWith(previousSyncTime);
+    expect(mockPush).toHaveBeenCalledWith();
   });
 });
 
@@ -689,21 +691,16 @@ describe("SyncProvider — triggerFullSync", () => {
     renderProviderWithFullSync(onProgress);
     await act(async () => {});
     vi.clearAllMocks();
-    mockPush.mockResolvedValue(undefined);
-    mockPull.mockResolvedValue(undefined);
+    mockFullSync.mockResolvedValue(undefined);
+    mockCoverSync.mockResolvedValue(undefined);
+    mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
+    mockCoverEnsureServerCovers.mockResolvedValue(undefined);
     await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn")); });
   }
 
-  it("should call push with null during full sync", async () => {
+  it("should call fullSync during full sync", async () => {
     await setupAndTriggerFullSync();
-    expect(mockPush).toHaveBeenCalledWith(null);
-  });
-
-  it("should call pull with zero versions during full sync", async () => {
-    await setupAndTriggerFullSync();
-    expect(mockPull).toHaveBeenCalledWith(
-      { tasks: 0, goals: 0, contexts: 0, categories: 0, checklist_items: 0 },
-    );
+    expect(mockFullSync).toHaveBeenCalledTimes(1);
   });
 
   it("should call coverSyncService.sync, reuploadLocalCovers and ensureServerCoversAreCached during full sync", async () => {
@@ -713,19 +710,21 @@ describe("SyncProvider — triggerFullSync", () => {
     expect(mockCoverEnsureServerCovers).toHaveBeenCalledTimes(1);
   });
 
-  it("should report progress steps upload_covers, push, pull, download_covers, done in order", async () => {
+  it("should report progress steps upload_covers, push, download_covers, done in order", async () => {
     const steps: FullSyncStep[] = [];
     await setupAndTriggerFullSync((step) => { steps.push(step); });
-    expect(steps).toEqual(["upload_covers", "push", "pull", "download_covers", "done"]);
+    expect(steps).toEqual(["upload_covers", "push", "download_covers", "done"]);
   });
 
-  it("should report error step when push fails during full sync", async () => {
+  it("should report error step when fullSync fails during full sync", async () => {
     const steps: FullSyncStep[] = [];
     const onProgress = (step: FullSyncStep) => { steps.push(step); };
     renderProviderWithFullSync(onProgress);
     await act(async () => {});
     vi.clearAllMocks();
-    mockPush.mockRejectedValue(new Error("Push failed"));
+    mockFullSync.mockRejectedValue(new Error("fullSync failed"));
+    mockCoverSync.mockResolvedValue(undefined);
+    mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
     await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn")); });
     expect(steps).toContain("error");
     expect(steps).not.toContain("done");
@@ -736,8 +735,10 @@ describe("SyncProvider — triggerFullSync", () => {
     await act(async () => {});
     const versionAfterMount = parseInt(screen.getByTestId("version").textContent ?? "0");
     vi.clearAllMocks();
-    mockPush.mockResolvedValue(undefined);
-    mockPull.mockResolvedValue(undefined);
+    mockFullSync.mockResolvedValue(undefined);
+    mockCoverSync.mockResolvedValue(undefined);
+    mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
+    mockCoverEnsureServerCovers.mockResolvedValue(undefined);
     await act(async () => { fireEvent.click(screen.getByTestId("full-sync-btn")); });
     const versionAfterFullSync = parseInt(screen.getByTestId("version").textContent ?? "0");
     expect(versionAfterFullSync).toBeGreaterThan(versionAfterMount);

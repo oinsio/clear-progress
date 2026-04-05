@@ -1,5 +1,5 @@
-import type { VersionMap } from "@/types/api";
-import type { Goal, Context, Category, ChecklistItem } from "@/types/entities";
+import type { Task, Goal, Context, Category, ChecklistItem, Setting } from "@/types/entities";
+import type { PushResponseData } from "@/types/api";
 import { ApiClient } from "./ApiClient";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
@@ -7,11 +7,16 @@ import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
-import { PUSH_RESULT_STATUS, LOCAL_COVER_ID_PREFIX } from "@/constants";
+import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
+import { PUSH_RESULT_STATUS, LOCAL_COVER_ID_PREFIX, SYNC_META_KEYS } from "@/constants";
+import { db } from "@/db/database";
 
 export class SyncService {
+  private syncMutex: Promise<void> = Promise.resolve();
+
   constructor(
     private readonly apiClient: ApiClient,
+    private readonly syncMetaRepository: SyncMetaRepository,
     private readonly taskRepository: TaskRepository,
     private readonly goalRepository: GoalRepository,
     private readonly contextRepository: ContextRepository,
@@ -20,44 +25,85 @@ export class SyncService {
     private readonly settingsRepository: SettingsRepository,
   ) {}
 
-  async pull(versionsOverride?: VersionMap): Promise<void> {
-    const versions = versionsOverride ?? await this.getLocalVersions();
-    const pullResponse = await this.apiClient.pull({ versions });
+  private async withLock<T>(fn: () => Promise<T>): Promise<T> {
+    let release!: () => void;
+    const prev = this.syncMutex;
+    this.syncMutex = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await prev;
+    try {
+      return await fn();
+    } finally {
+      release();
+    }
+  }
+
+  async pull(): Promise<void> {
+    return this.withLock(() => this._pull());
+  }
+
+  async push(): Promise<void> {
+    return this.withLock(() => this._push());
+  }
+
+  private async _pull(): Promise<void> {
+    const sinceRevision = await this.syncMetaRepository.getValue(
+      SYNC_META_KEYS.LAST_KNOWN_REVISION,
+    );
+
+    const pullResponse = await this.apiClient.pull({ since_revision: sinceRevision });
 
     if (!pullResponse.ok) {
       throw new Error("Pull failed");
     }
 
-    const { data, settings } = pullResponse;
     await Promise.all([
-      this.taskRepository.bulkUpsert(data.tasks),
-      this.goalRepository.bulkUpsert(data.goals),
-      this.contextRepository.bulkUpsert(data.contexts),
-      this.categoryRepository.bulkUpsert(data.categories),
-      this.checklistRepository.bulkUpsert(data.checklist_items),
-      this.settingsRepository.bulkUpsert(settings),
+      this.taskRepository.applyServerRecords(pullResponse.data.tasks),
+      this.goalRepository.applyServerRecords(pullResponse.data.goals),
+      this.contextRepository.applyServerRecords(pullResponse.data.contexts),
+      this.categoryRepository.applyServerRecords(pullResponse.data.categories),
+      this.checklistRepository.applyServerRecords(pullResponse.data.checklist_items),
+      this.settingsRepository.bulkUpsert(pullResponse.settings),
     ]);
+
+    await this.syncMetaRepository.setValue(
+      SYNC_META_KEYS.LAST_KNOWN_REVISION,
+      pullResponse.current_revision,
+    );
   }
 
-  async push(since: string | null): Promise<void> {
+  private async _push(): Promise<void> {
     const [tasks, goals, contexts, categories, checklist_items, settings] =
-      since === null
-        ? await Promise.all([
-            this.taskRepository.getAll(),
-            this.goalRepository.getAll(),
-            this.contextRepository.getAll(),
-            this.categoryRepository.getAll(),
-            this.checklistRepository.getAll(),
-            this.settingsRepository.getAll(),
-          ])
-        : await Promise.all([
-            this.taskRepository.getChangedSince(since),
-            this.goalRepository.getChangedSince(since),
-            this.contextRepository.getChangedSince(since),
-            this.categoryRepository.getChangedSince(since),
-            this.checklistRepository.getChangedSince(since),
-            this.settingsRepository.getChangedSince(since),
-          ]);
+      await Promise.all([
+        this.taskRepository.getDirty(),
+        this.goalRepository.getDirty(),
+        this.contextRepository.getDirty(),
+        this.categoryRepository.getDirty(),
+        this.checklistRepository.getDirty(),
+        this.settingsRepository.getDirty(),
+      ]);
+
+    const hasChanges =
+      tasks.length > 0 ||
+      goals.length > 0 ||
+      contexts.length > 0 ||
+      categories.length > 0 ||
+      checklist_items.length > 0 ||
+      settings.length > 0;
+
+    if (!hasChanges) return;
+
+    const sentVersions = new Map<string, number>([
+      ...tasks.map((task) => [task.id, task.version] as [string, number]),
+      ...goals.map((goal) => [goal.id, goal.version] as [string, number]),
+      ...contexts.map((context) => [context.id, context.version] as [string, number]),
+      ...categories.map((category) => [category.id, category.version] as [string, number]),
+      ...checklist_items.map((item) => [item.id, item.version] as [string, number]),
+    ]);
+
+    const stripDirty = <T extends { _dirty?: boolean }>(records: T[]): Omit<T, "_dirty">[] =>
+      records.map(({ _dirty: _, ...rest }) => rest as Omit<T, "_dirty">);
 
     const goalsForPush = goals.map((goal) =>
       goal.cover_file_id.startsWith(LOCAL_COVER_ID_PREFIX)
@@ -66,53 +112,110 @@ export class SyncService {
     );
 
     const pushResponse = await this.apiClient.push({
-      changes: { tasks, goals: goalsForPush, contexts, categories, checklist_items, settings },
+      changes: {
+        tasks: stripDirty(tasks) as Task[],
+        goals: stripDirty(goalsForPush) as Goal[],
+        contexts: stripDirty(contexts) as Context[],
+        categories: stripDirty(categories) as Category[],
+        checklist_items: stripDirty(checklist_items) as ChecklistItem[],
+        settings: stripDirty(settings) as Setting[],
+      },
     });
 
     if (!pushResponse.ok) {
       throw new Error("Push failed");
     }
 
-    await this.resolveConflicts(pushResponse.results);
+    await this._applyPushResults(pushResponse.results, sentVersions);
+
+    const maxRevision = this._getMaxRevisionFromResults(pushResponse.results);
+    if (maxRevision > 0) {
+      const currentRevision = await this.syncMetaRepository.getValue(
+        SYNC_META_KEYS.LAST_KNOWN_REVISION,
+      );
+      if (maxRevision > currentRevision) {
+        await this.syncMetaRepository.setValue(
+          SYNC_META_KEYS.LAST_KNOWN_REVISION,
+          maxRevision,
+        );
+      }
+    }
   }
 
-  private async resolveConflicts(
-    responseData: Awaited<ReturnType<ApiClient["push"]>>["results"],
-  ): Promise<void> {
-    const conflictedWithRecord = (results: typeof responseData.tasks) =>
-      results?.filter((r) => r.status === PUSH_RESULT_STATUS.CONFLICT && r.server_record) ?? [];
+  private _getMaxRevisionFromResults(results: PushResponseData): number {
+    const allResults = [
+      ...(results.tasks ?? []),
+      ...(results.goals ?? []),
+      ...(results.contexts ?? []),
+      ...(results.categories ?? []),
+      ...(results.checklist_items ?? []),
+      ...(results.settings ?? []),
+    ];
+    let max = 0;
+    for (const result of allResults) {
+      if (result.revision !== undefined && result.revision > max) {
+        max = result.revision;
+      }
+    }
+    return max;
+  }
 
+  private async _applyPushResults(
+    results: PushResponseData,
+    sentVersions: Map<string, number>,
+  ): Promise<void> {
     await Promise.all([
-      ...conflictedWithRecord(responseData.tasks).map((r) =>
-        this.taskRepository.update(
-          r.server_record as Parameters<TaskRepository["update"]>[0],
-        ),
-      ),
-      ...conflictedWithRecord(responseData.goals).map((r) =>
-        this.goalRepository.update(r.server_record as Goal),
-      ),
-      ...conflictedWithRecord(responseData.contexts).map((r) =>
-        this.contextRepository.update(r.server_record as Context),
-      ),
-      ...conflictedWithRecord(responseData.categories).map((r) =>
-        this.categoryRepository.update(r.server_record as Category),
-      ),
-      ...conflictedWithRecord(responseData.checklist_items).map((r) =>
-        this.checklistRepository.update(r.server_record as ChecklistItem),
-      ),
+      this._applyEntityPushResults(results.tasks ?? [], sentVersions, this.taskRepository),
+      this._applyEntityPushResults(results.goals ?? [], sentVersions, this.goalRepository),
+      this._applyEntityPushResults(results.contexts ?? [], sentVersions, this.contextRepository),
+      this._applyEntityPushResults(results.categories ?? [], sentVersions, this.categoryRepository),
+      this._applyEntityPushResults(results.checklist_items ?? [], sentVersions, this.checklistRepository),
     ]);
   }
 
-  private async getLocalVersions(): Promise<VersionMap> {
-    const [tasks, goals, contexts, categories, checklist_items] =
-      await Promise.all([
-        this.taskRepository.getMaxVersion(),
-        this.goalRepository.getMaxVersion(),
-        this.contextRepository.getMaxVersion(),
-        this.categoryRepository.getMaxVersion(),
-        this.checklistRepository.getMaxVersion(),
-      ]);
+  private async _applyEntityPushResults<T extends { id: string; _dirty: boolean; version: number; revision: number }>(
+    results: PushResponseData["tasks"],
+    sentVersions: Map<string, number>,
+    repository: { getById(id: string): Promise<T | undefined>; update(record: T): Promise<void> },
+  ): Promise<void> {
+    if (!results || results.length === 0) return;
 
-    return { tasks, goals, contexts, categories, checklist_items };
+    for (const result of results) {
+      if (result.status === PUSH_RESULT_STATUS.CONFLICT && result.server_record) {
+        await repository.update({ ...(result.server_record as unknown as T), _dirty: false });
+        continue;
+      }
+
+      if (
+        result.status === PUSH_RESULT_STATUS.CREATED ||
+        result.status === PUSH_RESULT_STATUS.ACCEPTED
+      ) {
+        const currentRecord = await repository.getById(result.id);
+        if (!currentRecord) continue;
+
+        const sentVersion = sentVersions.get(result.id) ?? 0;
+        const versionUnchanged = currentRecord.version === sentVersion;
+
+        await repository.update({
+          ...currentRecord,
+          revision: result.revision ?? currentRecord.revision,
+          _dirty: !versionUnchanged,
+        });
+      }
+    }
+  }
+
+  async fullSync(): Promise<void> {
+    await this.syncMetaRepository.setValue(SYNC_META_KEYS.LAST_KNOWN_REVISION, 0);
+
+    await db.tasks.toCollection().modify({ _dirty: true });
+    await db.goals.toCollection().modify({ _dirty: true });
+    await db.contexts.toCollection().modify({ _dirty: true });
+    await db.categories.toCollection().modify({ _dirty: true });
+    await db.checklist_items.toCollection().modify({ _dirty: true });
+    await db.settings.toCollection().modify({ _dirty: true });
+
+    await this.pull();
+    await this.push();
   }
 }

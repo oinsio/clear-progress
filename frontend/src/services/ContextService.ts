@@ -25,6 +25,8 @@ export class ContextService {
       created_at: now,
       updated_at: now,
       version: 1,
+      revision: 0,
+      _dirty: true,
     };
     await this.contextRepository.create(context);
     return context;
@@ -50,6 +52,7 @@ export class ContextService {
       sort_order: index,
       updated_at: now,
       version: context.version + 1,
+      _dirty: true,
     }));
     await this.contextRepository.bulkUpsert(updated);
   }
@@ -68,6 +71,7 @@ export class ContextService {
       id,
       updated_at: new Date().toISOString(),
       version: existingContext.version + 1,
+      _dirty: true,
     };
     await this.contextRepository.update(updatedContext);
     return updatedContext;

@@ -37,6 +37,8 @@ export class TaskService {
       created_at: now,
       updated_at: now,
       version: 1,
+      revision: 0,
+      _dirty: true,
     };
     await this.taskRepository.create(task);
     return task;
@@ -53,6 +55,7 @@ export class TaskService {
       id,
       updated_at: new Date().toISOString(),
       version: existingTask.version + 1,
+      _dirty: true,
     };
     await this.taskRepository.update(updatedTask);
     return updatedTask;
@@ -95,6 +98,8 @@ export class TaskService {
         created_at: now,
         updated_at: now,
         version: 1,
+        revision: 0,
+        _dirty: true,
       };
       await this.checklistRepository.create(copiedItem);
     }
@@ -141,6 +146,7 @@ export class TaskService {
       sort_order: index,
       updated_at: now,
       version: task.version + 1,
+      _dirty: true,
     }));
     await this.taskRepository.bulkUpsert(updatedTasks);
   }

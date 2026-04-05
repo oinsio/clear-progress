@@ -6,11 +6,12 @@ import type {
   Category,
   ChecklistItem,
   Setting,
+  SyncMeta,
   CoverRecord,
   PendingCoverRecord,
 } from "@/types/entities";
-import { DB_NAME } from "@/constants";
-import { DB_SCHEMA } from "./schema";
+import { DB_NAME, SYNC_META_KEYS } from "@/constants";
+import { DB_SCHEMA, DB_SCHEMA_V4 } from "./schema";
 
 const V1_SCHEMA = {
   tasks:
@@ -31,12 +32,31 @@ export class ClearProgressDatabase extends Dexie {
   settings!: EntityTable<Setting, "key">;
   covers!: EntityTable<CoverRecord, "file_id">;
   pending_covers!: EntityTable<PendingCoverRecord, "local_id">;
+  sync_meta!: EntityTable<SyncMeta, "key">;
 
   constructor() {
     super(DB_NAME);
     this.version(1).stores(V1_SCHEMA);
     this.version(2).stores(DB_SCHEMA);
     this.version(3).stores({ pending_covers: "local_id, goal_id, data_hash" });
+    this.version(4)
+      .stores(DB_SCHEMA_V4)
+      .upgrade(async (tx) => {
+        const entityTables = [
+          "tasks",
+          "goals",
+          "contexts",
+          "categories",
+          "checklist_items",
+        ];
+        for (const tableName of entityTables) {
+          await tx.table(tableName).toCollection().modify({ _dirty: true, revision: 0 });
+        }
+        await tx.table("settings").toCollection().modify({ _dirty: true });
+        await tx
+          .table("sync_meta")
+          .put({ key: SYNC_META_KEYS.LAST_KNOWN_REVISION, value: 0 });
+      });
   }
 }
 

@@ -35,6 +35,8 @@ export class ChecklistService {
       created_at: now,
       updated_at: now,
       version: 1,
+      revision: 0,
+      _dirty: true,
     };
     await this.checklistRepository.create(item);
     return item;
@@ -71,6 +73,7 @@ export class ChecklistService {
       sort_order: index,
       version: item.version + 1,
       updated_at: now,
+      _dirty: true,
     }));
     await this.checklistRepository.bulkUpsert(updatedItems);
   }
@@ -97,6 +100,7 @@ export class ChecklistService {
       id,
       updated_at: new Date().toISOString(),
       version: existingItem.version + 1,
+      _dirty: true,
     };
     await this.checklistRepository.update(updatedItem);
     return updatedItem;

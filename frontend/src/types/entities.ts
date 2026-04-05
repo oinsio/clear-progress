@@ -16,6 +16,8 @@ export interface Task {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
+  _dirty: boolean;
 }
 
 export interface Goal {
@@ -29,6 +31,8 @@ export interface Goal {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
+  _dirty: boolean;
 }
 
 interface NamedEntity {
@@ -39,6 +43,8 @@ interface NamedEntity {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
+  _dirty: boolean;
 }
 
 export type Context = NamedEntity;
@@ -55,12 +61,20 @@ export interface ChecklistItem {
   created_at: string;
   updated_at: string;
   version: number;
+  revision: number;
+  _dirty: boolean;
+}
+
+export interface SyncMeta {
+  key: string;
+  value: number;
 }
 
 export interface Setting {
   key: string;
   value: string;
   updated_at: string;
+  _dirty: boolean;
 }
 
 export interface CoverRecord {

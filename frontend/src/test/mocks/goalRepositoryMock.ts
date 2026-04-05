@@ -13,7 +13,6 @@ export function createMockGoalRepository(
       create: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       bulkUpsert: vi.fn().mockResolvedValue(undefined),
-      getMaxVersion: vi.fn().mockResolvedValue(0),
     },
     overrides,
   );

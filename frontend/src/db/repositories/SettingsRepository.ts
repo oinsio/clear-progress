@@ -17,11 +17,15 @@ export class SettingsRepository {
 
   async set(key: string, value: string): Promise<void> {
     const updatedAt = new Date().toISOString();
-    await db.settings.put({ key, value, updated_at: updatedAt });
+    await db.settings.put({ key, value, updated_at: updatedAt, _dirty: true });
   }
 
   async getChangedSince(since: string): Promise<Setting[]> {
     return db.settings.where("updated_at").above(since).toArray();
+  }
+
+  async getDirty(): Promise<Setting[]> {
+    return db.settings.filter((setting) => setting._dirty).toArray();
   }
 
   async bulkUpsert(settings: Setting[]): Promise<void> {
@@ -32,11 +36,14 @@ export class SettingsRepository {
 
     const settingsToUpsert = settings.filter((incoming) => {
       const existing = existingByKey.get(incoming.key);
+      if (existing?._dirty) return false;
       return !existing || incoming.updated_at > existing.updated_at;
     });
 
     if (settingsToUpsert.length > 0) {
-      await db.settings.bulkPut(settingsToUpsert);
+      await db.settings.bulkPut(
+        settingsToUpsert.map((s) => ({ ...s, _dirty: false })),
+      );
     }
   }
 }

@@ -7,7 +7,6 @@ import React, {
   useState,
 } from "react";
 import type { SyncStatus, FullSyncStep } from "@/types/common";
-import type { VersionMap } from "@/types/api";
 import {
   SYNC_INTERVAL_MS,
   PING_INTERVAL_MS,
@@ -27,15 +26,8 @@ import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { defaultCoverSyncService } from "@/services/defaultServices";
-
-const FULL_SYNC_ZERO_VERSIONS: VersionMap = {
-  tasks: 0,
-  goals: 0,
-  contexts: 0,
-  categories: 0,
-  checklist_items: 0,
-};
 
 interface SyncContextValue {
   syncStatus: SyncStatus;
@@ -53,6 +45,7 @@ const apiClient = new ApiClient();
 
 const syncService = new SyncService(
   apiClient,
+  new SyncMetaRepository(),
   new TaskRepository(),
   new GoalRepository(),
   new ContextRepository(),
@@ -99,7 +92,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
   const applySyncResult = useCallback(async (): Promise<void> => {
     const syncTimestamp = new Date().toISOString();
-    await syncService.push(lastSyncedAtRef.current);
+    await syncService.push();
     await syncService.pull();
     // Cover sync runs after entities — errors are caught separately so they don't
     // roll back the already-completed entity sync.
@@ -170,9 +163,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         await defaultCoverSyncService.sync();
         await defaultCoverSyncService.reuploadLocalCovers();
         onProgress("push");
-        await syncService.push(null);
-        onProgress("pull");
-        await syncService.pull(FULL_SYNC_ZERO_VERSIONS);
+        await syncService.fullSync();
         onProgress("download_covers");
         await defaultCoverSyncService.ensureServerCoversAreCached();
         const syncTimestamp = new Date().toISOString();

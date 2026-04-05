@@ -31,6 +31,8 @@ export class GoalService {
       created_at: now,
       updated_at: now,
       version: 1,
+      revision: 0,
+      _dirty: true,
     };
     await this.goalRepository.create(goal);
     return goal;
@@ -47,6 +49,7 @@ export class GoalService {
       id,
       updated_at: new Date().toISOString(),
       version: existingGoal.version + 1,
+      _dirty: true,
     };
     await this.goalRepository.update(updatedGoal);
     return updatedGoal;
@@ -86,6 +89,7 @@ export class GoalService {
       sort_order: index,
       updated_at: now,
       version: goal.version + 1,
+      _dirty: true,
     }));
     await this.goalRepository.bulkUpsert(updatedGoals);
   }

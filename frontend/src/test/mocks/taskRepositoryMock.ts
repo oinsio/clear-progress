@@ -19,8 +19,6 @@ export function createMockTaskRepository(
       create: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       bulkUpsert: vi.fn().mockResolvedValue(undefined),
-      getByMinVersion: vi.fn().mockResolvedValue([]),
-      getMaxVersion: vi.fn().mockResolvedValue(0),
     },
     overrides,
   );

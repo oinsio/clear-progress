@@ -2,10 +2,6 @@ import type { ChecklistItem } from "@/types/entities";
 import { db } from "../database";
 
 export class ChecklistRepository {
-  async getAll(): Promise<ChecklistItem[]> {
-    return db.checklist_items.toArray();
-  }
-
   async getByTaskId(taskId: string): Promise<ChecklistItem[]> {
     return db.checklist_items
       .where("task_id")
@@ -34,12 +30,18 @@ export class ChecklistRepository {
     return db.checklist_items.where("updated_at").above(since).toArray();
   }
 
-  async getMaxVersion(): Promise<number> {
-    const items = await db.checklist_items
-      .orderBy("version")
-      .reverse()
-      .limit(1)
-      .toArray();
-    return items[0]?.version ?? 0;
+  async getDirty(): Promise<ChecklistItem[]> {
+    return db.checklist_items.filter((item) => item._dirty).toArray();
+  }
+
+  async applyServerRecords(records: ChecklistItem[]): Promise<void> {
+    await db.transaction("rw", db.checklist_items, async () => {
+      for (const serverRecord of records) {
+        const localRecord = await db.checklist_items.get(serverRecord.id);
+        if (!localRecord || !localRecord._dirty) {
+          await db.checklist_items.put({ ...serverRecord, _dirty: false });
+        }
+      }
+    });
   }
 }

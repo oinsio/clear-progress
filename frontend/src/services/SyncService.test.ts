@@ -7,46 +7,85 @@ import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
-import type { Goal, Context, Category, ChecklistItem } from "@/types/entities";
-import { LOCAL_COVER_ID_PREFIX } from "@/constants";
+import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
+import type { Task, Goal } from "@/types/entities";
+import type { PullResponse, PushResponse, PushResponseData } from "@/types/api";
+import { LOCAL_COVER_ID_PREFIX, SYNC_META_KEYS } from "@/constants";
+
+function makePullResponse(overrides: Partial<PullResponse> = {}): PullResponse {
+  return {
+    ok: true,
+    data: {
+      tasks: [],
+      goals: [],
+      contexts: [],
+      categories: [],
+      checklist_items: [],
+    },
+    settings: [],
+    current_revision: 10,
+    server_time: "2026-03-04T11:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function makePushResponse(resultOverrides: PushResponseData = {}): PushResponse {
+  return {
+    ok: true,
+    results: {
+      tasks: [],
+      goals: [],
+      contexts: [],
+      categories: [],
+      checklist_items: [],
+      settings: [],
+      ...resultOverrides,
+    },
+    server_time: "2026-03-04T11:00:00.000Z",
+  };
+}
 
 function createMockApiClient(
   overrides: Partial<Record<keyof ApiClient, unknown>> = {},
 ): ApiClient {
   return {
     uploadCover: vi.fn(),
+    uploadCovers: vi.fn(),
     deleteCover: vi.fn(),
+    getCovers: vi.fn(),
     ping: vi.fn(),
+    pingUrl: vi.fn(),
     init: vi.fn(),
-    pull: vi.fn().mockResolvedValue({
-      ok: true,
-      data: {
-        tasks: [],
-        goals: [],
-        contexts: [],
-        categories: [],
-        checklist_items: [],
-      },
-      settings: [],
-      server_time: "2026-03-04T11:00:00.000Z",
-    }),
-    push: vi.fn().mockResolvedValue({
-      ok: true,
-      results: {
-        tasks: [],
-        goals: [],
-        contexts: [],
-        categories: [],
-        checklist_items: [],
-        settings: [],
-      },
-      server_time: "2026-03-04T11:00:00.000Z",
-    }),
+    pull: vi.fn().mockResolvedValue(makePullResponse()),
+    push: vi.fn().mockResolvedValue(makePushResponse()),
     ...overrides,
   } as ApiClient;
 }
 
-function createGoal(overrides: Partial<Goal> = {}): Goal {
+function makeTask(overrides: Partial<Task> = {}): Task {
+  return {
+    id: "task-id",
+    title: "Test Task",
+    notes: "",
+    box: "inbox",
+    goal_id: "",
+    context_id: "",
+    category_id: "",
+    is_completed: false,
+    completed_at: "",
+    repeat_rule: "",
+    sort_order: 0,
+    is_deleted: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    version: 1,
+    revision: 0,
+    _dirty: true,
+    ...overrides,
+  };
+}
+
+function makeGoal(overrides: Partial<Goal> = {}): Goal {
   return {
     id: "goal-id",
     title: "Test Goal",
@@ -58,47 +97,8 @@ function createGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     version: 1,
-    ...overrides,
-  };
-}
-
-function createContext(overrides: Partial<Context> = {}): Context {
-  return {
-    id: "context-id",
-    name: "Test Context",
-    sort_order: 0,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    version: 1,
-    ...overrides,
-  };
-}
-
-function createCategory(overrides: Partial<Category> = {}): Category {
-  return {
-    id: "category-id",
-    name: "Test Category",
-    sort_order: 0,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    version: 1,
-    ...overrides,
-  };
-}
-
-function createChecklistItem(overrides: Partial<ChecklistItem> = {}): ChecklistItem {
-  return {
-    id: "checklist-id",
-    task_id: "task-id",
-    title: "Test Item",
-    is_completed: false,
-    sort_order: 0,
-    is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    version: 1,
+    revision: 0,
+    _dirty: true,
     ...overrides,
   };
 }
@@ -111,391 +111,338 @@ describe("SyncService", () => {
   let categoryRepository: CategoryRepository;
   let checklistRepository: ChecklistRepository;
   let settingsRepository: SettingsRepository;
+  let syncMetaRepository: SyncMetaRepository;
 
   beforeEach(() => {
     mockApiClient = createMockApiClient();
 
     taskRepository = {
-      getAll: vi.fn().mockResolvedValue([]),
-      getChangedSince: vi.fn().mockResolvedValue([]),
-      getMaxVersion: vi.fn().mockResolvedValue(0),
+      getDirty: vi.fn().mockResolvedValue([]),
+      getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
-      bulkUpsert: vi.fn().mockResolvedValue(undefined),
+      applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as TaskRepository;
 
     goalRepository = {
-      getAll: vi.fn().mockResolvedValue([]),
-      getChangedSince: vi.fn().mockResolvedValue([]),
-      getMaxVersion: vi.fn().mockResolvedValue(0),
+      getDirty: vi.fn().mockResolvedValue([]),
+      getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
-      bulkUpsert: vi.fn().mockResolvedValue(undefined),
+      applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as GoalRepository;
 
     contextRepository = {
-      getAll: vi.fn().mockResolvedValue([]),
-      getChangedSince: vi.fn().mockResolvedValue([]),
-      getMaxVersion: vi.fn().mockResolvedValue(0),
+      getDirty: vi.fn().mockResolvedValue([]),
+      getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
-      bulkUpsert: vi.fn().mockResolvedValue(undefined),
+      applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as ContextRepository;
 
     categoryRepository = {
-      getAll: vi.fn().mockResolvedValue([]),
-      getChangedSince: vi.fn().mockResolvedValue([]),
-      getMaxVersion: vi.fn().mockResolvedValue(0),
+      getDirty: vi.fn().mockResolvedValue([]),
+      getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
-      bulkUpsert: vi.fn().mockResolvedValue(undefined),
+      applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as CategoryRepository;
 
     checklistRepository = {
-      getAll: vi.fn().mockResolvedValue([]),
-      getChangedSince: vi.fn().mockResolvedValue([]),
-      getMaxVersion: vi.fn().mockResolvedValue(0),
+      getDirty: vi.fn().mockResolvedValue([]),
+      getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
-      bulkUpsert: vi.fn().mockResolvedValue(undefined),
+      applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as ChecklistRepository;
 
     settingsRepository = {
-      getAll: vi.fn().mockResolvedValue([]),
-      getChangedSince: vi.fn().mockResolvedValue([]),
+      getDirty: vi.fn().mockResolvedValue([]),
+      getById: vi.fn().mockResolvedValue(undefined),
+      update: vi.fn().mockResolvedValue(undefined),
       bulkUpsert: vi.fn().mockResolvedValue(undefined),
     } as unknown as SettingsRepository;
+
+    syncMetaRepository = {
+      getValue: vi.fn().mockResolvedValue(0),
+      setValue: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SyncMetaRepository;
   });
 
-  describe("pull", () => {
-    it("should save settings from top-level response field, not from data", async () => {
-      const serverSettings = [{ key: "default_box", value: "inbox", updated_at: "2026-03-04T10:00:00.000Z" }];
-      mockApiClient = createMockApiClient({
-        pull: vi.fn().mockResolvedValue({
-          ok: true,
-          data: { tasks: [], goals: [], contexts: [], categories: [], checklist_items: [] },
-          settings: serverSettings,
-          server_time: "2026-03-04T11:00:00.000Z",
-        }),
-      });
+  function createService(): SyncService {
+    return new SyncService(
+      mockApiClient,
+      syncMetaRepository,
+      taskRepository,
+      goalRepository,
+      contextRepository,
+      categoryRepository,
+      checklistRepository,
+      settingsRepository,
+    );
+  }
 
-      const service = new SyncService(
-        mockApiClient,
-        taskRepository,
-        goalRepository,
-        contextRepository,
-        categoryRepository,
-        checklistRepository,
-        settingsRepository,
-      );
+  describe("pull", () => {
+    it("should read last_known_revision from sync_meta", async () => {
+      (syncMetaRepository.getValue as ReturnType<typeof vi.fn>).mockResolvedValue(42);
+      const service = createService();
+
+      await service.pull();
+
+      expect(syncMetaRepository.getValue).toHaveBeenCalledWith(SYNC_META_KEYS.LAST_KNOWN_REVISION);
+    });
+
+    it("should send since_revision from sync_meta to apiClient.pull", async () => {
+      (syncMetaRepository.getValue as ReturnType<typeof vi.fn>).mockResolvedValue(42);
+      const service = createService();
+
+      await service.pull();
+
+      expect(mockApiClient.pull).toHaveBeenCalledWith({ since_revision: 42 });
+    });
+
+    it("should call applyServerRecords on all entity repositories", async () => {
+      const serverTasks = [makeTask({ _dirty: false })];
+      mockApiClient = createMockApiClient({
+        pull: vi.fn().mockResolvedValue(makePullResponse({ data: { tasks: serverTasks, goals: [], contexts: [], categories: [], checklist_items: [] }, current_revision: 5 })),
+      });
+      const service = createService();
+
+      await service.pull();
+
+      expect(taskRepository.applyServerRecords).toHaveBeenCalledWith(serverTasks);
+      expect(goalRepository.applyServerRecords).toHaveBeenCalledWith([]);
+      expect(contextRepository.applyServerRecords).toHaveBeenCalledWith([]);
+      expect(categoryRepository.applyServerRecords).toHaveBeenCalledWith([]);
+      expect(checklistRepository.applyServerRecords).toHaveBeenCalledWith([]);
+    });
+
+    it("should call settingsRepository.bulkUpsert with server settings", async () => {
+      const serverSettings = [{ key: "default_box", value: "inbox", updated_at: "2026-03-04T10:00:00.000Z", _dirty: false }];
+      mockApiClient = createMockApiClient({
+        pull: vi.fn().mockResolvedValue(makePullResponse({ settings: serverSettings, current_revision: 5 })),
+      });
+      const service = createService();
 
       await service.pull();
 
       expect(settingsRepository.bulkUpsert).toHaveBeenCalledWith(serverSettings);
     });
+
+    it("should save current_revision to sync_meta after pull", async () => {
+      mockApiClient = createMockApiClient({
+        pull: vi.fn().mockResolvedValue(makePullResponse({ current_revision: 55 })),
+      });
+      const service = createService();
+
+      await service.pull();
+
+      expect(syncMetaRepository.setValue).toHaveBeenCalledWith(SYNC_META_KEYS.LAST_KNOWN_REVISION, 55);
+    });
+
+    it("should throw if pull response is not ok", async () => {
+      mockApiClient = createMockApiClient({
+        pull: vi.fn().mockResolvedValue({ ok: false }),
+      });
+      const service = createService();
+
+      await expect(service.pull()).rejects.toThrow("Pull failed");
+    });
   });
 
   describe("push", () => {
-    it("should call settingsRepository.getAll during push", async () => {
-      const service = new SyncService(
-        mockApiClient,
-        taskRepository,
-        goalRepository,
-        contextRepository,
-        categoryRepository,
-        checklistRepository,
-        settingsRepository,
-      );
+    it("should call getDirty on all repositories", async () => {
+      const dirtyTask = makeTask();
+      (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([dirtyTask]);
+      (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(dirtyTask);
+      const service = createService();
 
-      await service.push(null);
+      await service.push();
 
-      expect(settingsRepository.getAll).toHaveBeenCalledOnce();
+      expect(taskRepository.getDirty).toHaveBeenCalledOnce();
+      expect(goalRepository.getDirty).toHaveBeenCalledOnce();
+      expect(contextRepository.getDirty).toHaveBeenCalledOnce();
+      expect(categoryRepository.getDirty).toHaveBeenCalledOnce();
+      expect(checklistRepository.getDirty).toHaveBeenCalledOnce();
+      expect(settingsRepository.getDirty).toHaveBeenCalledOnce();
     });
 
-    it("should include settings in push payload", async () => {
-      const localSettings = [
-        { key: "default_box", value: "today", updated_at: "2026-03-21T10:00:00.000Z" },
-        { key: "accent_color", value: "orange", updated_at: "2026-03-21T10:00:00.000Z" },
-      ];
-      (settingsRepository.getAll as ReturnType<typeof vi.fn>).mockResolvedValue(localSettings);
+    it("should not call apiClient.push when no dirty records exist", async () => {
+      const service = createService();
 
-      const service = new SyncService(
-        mockApiClient,
-        taskRepository,
-        goalRepository,
-        contextRepository,
-        categoryRepository,
-        checklistRepository,
-        settingsRepository,
-      );
+      await service.push();
 
-      await service.push(null);
+      expect(mockApiClient.push).not.toHaveBeenCalled();
+    });
+
+    it("should strip _dirty from records before sending to apiClient", async () => {
+      const dirtyTask = makeTask({ _dirty: true });
+      (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([dirtyTask]);
+      (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(dirtyTask);
+      const service = createService();
+
+      await service.push();
 
       const pushCall = (mockApiClient.push as ReturnType<typeof vi.fn>).mock.calls[0][0];
-      expect(pushCall.changes.settings).toEqual(localSettings);
-    });
-
-    it("should apply server_record from goal conflict response to goalRepository", async () => {
-      const serverGoal = createGoal({ id: "goal-conflict-id", title: "Server Goal", version: 5 });
-      mockApiClient = createMockApiClient({
-        push: vi.fn().mockResolvedValue({
-          ok: true,
-          results: {
-            goals: [{ id: serverGoal.id, status: "conflict", server_record: serverGoal }],
-          },
-          server_time: new Date().toISOString(),
-        }),
-      });
-      (goalRepository.getAll as ReturnType<typeof vi.fn>).mockResolvedValue([createGoal({ id: serverGoal.id })]);
-
-      const service = new SyncService(
-        mockApiClient, taskRepository, goalRepository, contextRepository,
-        categoryRepository, checklistRepository, settingsRepository,
-      );
-      await service.push(null);
-
-      expect(goalRepository.update).toHaveBeenCalledWith(serverGoal);
-    });
-
-    it("should apply server_record from context conflict response to contextRepository", async () => {
-      const serverContext = createContext({ id: "ctx-conflict-id", name: "Server Context", version: 3 });
-      mockApiClient = createMockApiClient({
-        push: vi.fn().mockResolvedValue({
-          ok: true,
-          results: {
-            contexts: [{ id: serverContext.id, status: "conflict", server_record: serverContext }],
-          },
-          server_time: new Date().toISOString(),
-        }),
-      });
-
-      const service = new SyncService(
-        mockApiClient, taskRepository, goalRepository, contextRepository,
-        categoryRepository, checklistRepository, settingsRepository,
-      );
-      await service.push(null);
-
-      expect(contextRepository.update).toHaveBeenCalledWith(serverContext);
-    });
-
-    it("should apply server_record from category conflict response to categoryRepository", async () => {
-      const serverCategory = createCategory({ id: "cat-conflict-id", name: "Server Category", version: 4 });
-      mockApiClient = createMockApiClient({
-        push: vi.fn().mockResolvedValue({
-          ok: true,
-          results: {
-            categories: [{ id: serverCategory.id, status: "conflict", server_record: serverCategory }],
-          },
-          server_time: new Date().toISOString(),
-        }),
-      });
-
-      const service = new SyncService(
-        mockApiClient, taskRepository, goalRepository, contextRepository,
-        categoryRepository, checklistRepository, settingsRepository,
-      );
-      await service.push(null);
-
-      expect(categoryRepository.update).toHaveBeenCalledWith(serverCategory);
-    });
-
-    it("should apply server_record from checklist_item conflict response to checklistRepository", async () => {
-      const serverItem = createChecklistItem({ id: "item-conflict-id", title: "Server Item", version: 2 });
-      mockApiClient = createMockApiClient({
-        push: vi.fn().mockResolvedValue({
-          ok: true,
-          results: {
-            checklist_items: [{ id: serverItem.id, status: "conflict", server_record: serverItem }],
-          },
-          server_time: new Date().toISOString(),
-        }),
-      });
-
-      const service = new SyncService(
-        mockApiClient, taskRepository, goalRepository, contextRepository,
-        categoryRepository, checklistRepository, settingsRepository,
-      );
-      await service.push(null);
-
-      expect(checklistRepository.update).toHaveBeenCalledWith(serverItem);
+      expect(pushCall.changes.tasks[0]._dirty).toBeUndefined();
     });
 
     it.each([
-      {
-        description: "local cover_file_id",
-        inputCoverFileId: `${LOCAL_COVER_ID_PREFIX}some-local-uuid`,
-        expectedCoverFileId: "",
-      },
-      {
-        description: "remote cover_file_id",
-        inputCoverFileId: "remote-file-id",
-        expectedCoverFileId: "remote-file-id",
-      },
-      {
-        description: "empty cover_file_id",
-        inputCoverFileId: "",
-        expectedCoverFileId: "",
-      },
-    ])(
-      "should send correct cover_file_id when goal has $description",
-      async ({ inputCoverFileId, expectedCoverFileId }) => {
-        (goalRepository.getAll as ReturnType<typeof vi.fn>).mockResolvedValue([
-          createGoal({ cover_file_id: inputCoverFileId }),
-        ]);
-
-        const service = new SyncService(
-          mockApiClient,
-          taskRepository,
-          goalRepository,
-          contextRepository,
-          categoryRepository,
-          checklistRepository,
-          settingsRepository,
-        );
-
-        await service.push(null);
-
-        const pushCall = (mockApiClient.push as ReturnType<typeof vi.fn>).mock.calls[0][0];
-        expect(pushCall.changes.goals[0].cover_file_id).toBe(expectedCoverFileId);
-      },
-    );
-  });
-
-  describe("push — with since timestamp", () => {
-    function createService() {
-      return new SyncService(
-        mockApiClient,
-        taskRepository,
-        goalRepository,
-        contextRepository,
-        categoryRepository,
-        checklistRepository,
-        settingsRepository,
-      );
-    }
-
-    it("should call getChangedSince on all repositories when since is provided", async () => {
-      const since = "2026-03-01T00:00:00.000Z";
+      ["strips local cover_file_id", `${LOCAL_COVER_ID_PREFIX}local-uuid`, ""],
+      ["keeps remote cover_file_id", "remote-file-id", "remote-file-id"],
+    ])("should %s before sending goal to server", async (_, cover_file_id, expected) => {
+      const dirtyGoal = makeGoal({ cover_file_id, _dirty: true });
+      (goalRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([dirtyGoal]);
+      (goalRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(dirtyGoal);
       const service = createService();
 
-      await service.push(since);
-
-      expect(taskRepository.getChangedSince).toHaveBeenCalledWith(since);
-      expect(goalRepository.getChangedSince).toHaveBeenCalledWith(since);
-      expect(contextRepository.getChangedSince).toHaveBeenCalledWith(since);
-      expect(categoryRepository.getChangedSince).toHaveBeenCalledWith(since);
-      expect(checklistRepository.getChangedSince).toHaveBeenCalledWith(since);
-      expect(settingsRepository.getChangedSince).toHaveBeenCalledWith(since);
-    });
-
-    it("should not call getAll on any repository when since is provided", async () => {
-      const service = createService();
-
-      await service.push("2026-03-01T00:00:00.000Z");
-
-      expect(taskRepository.getAll).not.toHaveBeenCalled();
-      expect(goalRepository.getAll).not.toHaveBeenCalled();
-      expect(contextRepository.getAll).not.toHaveBeenCalled();
-      expect(categoryRepository.getAll).not.toHaveBeenCalled();
-      expect(checklistRepository.getAll).not.toHaveBeenCalled();
-      expect(settingsRepository.getAll).not.toHaveBeenCalled();
-    });
-
-    it("should send only the records returned by getChangedSince to apiClient.push", async () => {
-      const changedTask = { id: "task-1", title: "Changed Task" };
-      (taskRepository.getChangedSince as ReturnType<typeof vi.fn>).mockResolvedValue([changedTask]);
-
-      const service = createService();
-      await service.push("2026-03-01T00:00:00.000Z");
+      await service.push();
 
       const pushCall = (mockApiClient.push as ReturnType<typeof vi.fn>).mock.calls[0][0];
-      expect(pushCall.changes.tasks).toEqual([changedTask]);
-    });
-  });
-
-  describe("push — null since (first sync)", () => {
-    function createService() {
-      return new SyncService(
-        mockApiClient,
-        taskRepository,
-        goalRepository,
-        contextRepository,
-        categoryRepository,
-        checklistRepository,
-        settingsRepository,
-      );
-    }
-
-    it("should call getAll on all repositories when since is null", async () => {
-      const service = createService();
-
-      await service.push(null);
-
-      expect(taskRepository.getAll).toHaveBeenCalled();
-      expect(goalRepository.getAll).toHaveBeenCalled();
-      expect(contextRepository.getAll).toHaveBeenCalled();
-      expect(categoryRepository.getAll).toHaveBeenCalled();
-      expect(checklistRepository.getAll).toHaveBeenCalled();
-      expect(settingsRepository.getAll).toHaveBeenCalled();
+      expect(pushCall.changes.goals[0].cover_file_id).toBe(expected);
     });
 
-    it("should not call getChangedSince on any repository when since is null", async () => {
-      const service = createService();
-
-      await service.push(null);
-
-      expect(taskRepository.getChangedSince).not.toHaveBeenCalled();
-      expect(goalRepository.getChangedSince).not.toHaveBeenCalled();
-      expect(contextRepository.getChangedSince).not.toHaveBeenCalled();
-      expect(categoryRepository.getChangedSince).not.toHaveBeenCalled();
-      expect(checklistRepository.getChangedSince).not.toHaveBeenCalled();
-      expect(settingsRepository.getChangedSince).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("pull — versionsOverride", () => {
-    function createService() {
-      return new SyncService(
-        mockApiClient,
-        taskRepository,
-        goalRepository,
-        contextRepository,
-        categoryRepository,
-        checklistRepository,
-        settingsRepository,
-      );
-    }
-
-    it("should use provided versionsOverride instead of local versions when override is given", async () => {
-      const override = { tasks: 0, goals: 0, contexts: 0, categories: 0, checklist_items: 0 };
-      const service = createService();
-
-      await service.pull(override);
-
-      expect(mockApiClient.pull).toHaveBeenCalledWith({ versions: override });
-    });
-
-    it("should not call getMaxVersion on any repository when versionsOverride is provided", async () => {
-      const override = { tasks: 0, goals: 0, contexts: 0, categories: 0, checklist_items: 0 };
-      const service = createService();
-
-      await service.pull(override);
-
-      expect(taskRepository.getMaxVersion).not.toHaveBeenCalled();
-      expect(goalRepository.getMaxVersion).not.toHaveBeenCalled();
-      expect(contextRepository.getMaxVersion).not.toHaveBeenCalled();
-      expect(categoryRepository.getMaxVersion).not.toHaveBeenCalled();
-      expect(checklistRepository.getMaxVersion).not.toHaveBeenCalled();
-    });
-
-    it("should use local versions from repositories when versionsOverride is not provided", async () => {
-      (taskRepository.getMaxVersion as ReturnType<typeof vi.fn>).mockResolvedValue(10);
-      (goalRepository.getMaxVersion as ReturnType<typeof vi.fn>).mockResolvedValue(5);
-      (contextRepository.getMaxVersion as ReturnType<typeof vi.fn>).mockResolvedValue(3);
-      (categoryRepository.getMaxVersion as ReturnType<typeof vi.fn>).mockResolvedValue(2);
-      (checklistRepository.getMaxVersion as ReturnType<typeof vi.fn>).mockResolvedValue(7);
-
-      const service = createService();
-      await service.pull();
-
-      expect(mockApiClient.pull).toHaveBeenCalledWith({
-        versions: { tasks: 10, goals: 5, contexts: 3, categories: 2, checklist_items: 7 },
+    it("should throw if push response is not ok", async () => {
+      const dirtyTask = makeTask();
+      (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([dirtyTask]);
+      mockApiClient = createMockApiClient({
+        push: vi.fn().mockResolvedValue({ ok: false, results: {} }),
       });
+      const service = createService();
+
+      await expect(service.push()).rejects.toThrow("Push failed");
+    });
+
+    describe("applyPushResults — created/accepted", () => {
+      it("should clear _dirty and set revision when version is unchanged", async () => {
+        const task = makeTask({ id: "t1", version: 3, _dirty: true });
+        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([task]);
+        // version same as when sent
+        (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({ ...task, version: 3 });
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ tasks: [{ id: "t1", status: "created", revision: 7 }] })),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(taskRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({ id: "t1", _dirty: false, revision: 7 }),
+        );
+      });
+
+      it("should keep _dirty and set revision when version changed during push", async () => {
+        const task = makeTask({ id: "t1", version: 3, _dirty: true });
+        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([task]);
+        // version has bumped since sending
+        (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({ ...task, version: 4 });
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ tasks: [{ id: "t1", status: "accepted", revision: 8 }] })),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(taskRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({ id: "t1", _dirty: true, revision: 8 }),
+        );
+      });
+    });
+
+    describe("applyPushResults — conflict", () => {
+      it("should overwrite local record with server_record and clear _dirty", async () => {
+        const task = makeTask({ id: "t1", _dirty: true });
+        const serverTask = makeTask({ id: "t1", title: "Server version", revision: 9, _dirty: false });
+        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([task]);
+        (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(task);
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ tasks: [{ id: "t1", status: "conflict", server_record: serverTask }] })),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(taskRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({ id: "t1", title: "Server version", _dirty: false }),
+        );
+      });
+
+      it("should apply goal conflict server_record", async () => {
+        const goal = makeGoal({ id: "g1", _dirty: true });
+        const serverGoal = makeGoal({ id: "g1", title: "Server Goal", revision: 3, _dirty: false });
+        (goalRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([goal]);
+        (goalRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(goal);
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ goals: [{ id: "g1", status: "conflict", server_record: serverGoal }] })),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(goalRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({ id: "g1", title: "Server Goal", _dirty: false }),
+        );
+      });
+    });
+
+    describe("last_known_revision update after push", () => {
+      it("should update last_known_revision if push response contains higher revision", async () => {
+        const task = makeTask({ id: "t1" });
+        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([task]);
+        (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(task);
+        (syncMetaRepository.getValue as ReturnType<typeof vi.fn>)
+          .mockResolvedValueOnce(5) // first call: last_known_revision
+          .mockResolvedValueOnce(5); // second call: current value check
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ tasks: [{ id: "t1", status: "created", revision: 20 }] })),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(syncMetaRepository.setValue).toHaveBeenCalledWith(SYNC_META_KEYS.LAST_KNOWN_REVISION, 20);
+      });
+
+      it("should not update last_known_revision if push response has no revisions", async () => {
+        const task = makeTask({ id: "t1" });
+        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([task]);
+        (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(task);
+        mockApiClient = createMockApiClient({
+          push: vi.fn().mockResolvedValue(makePushResponse({ tasks: [{ id: "t1", status: "conflict", server_record: task }] })),
+        });
+        const service = createService();
+
+        await service.push();
+
+        expect(syncMetaRepository.setValue).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe("mutex (withLock)", () => {
+    it("should serialize concurrent pull calls", async () => {
+      const callOrder: string[] = [];
+      let resolveFirst!: () => void;
+
+      (mockApiClient.pull as ReturnType<typeof vi.fn>)
+        .mockImplementationOnce(async () => {
+          callOrder.push("pull1-start");
+          await new Promise<void>((resolve) => { resolveFirst = resolve; });
+          callOrder.push("pull1-end");
+          return makePullResponse({ current_revision: 1, server_time: "" });
+        })
+        .mockImplementationOnce(async () => {
+          callOrder.push("pull2-start");
+          return makePullResponse({ current_revision: 2, server_time: "" });
+        });
+
+      const service = createService();
+
+      const p1 = service.pull();
+      const p2 = service.pull();
+
+      // Let the first pull get to the awaiting state
+      await Promise.resolve();
+      await Promise.resolve();
+      resolveFirst();
+      await Promise.all([p1, p2]);
+
+      expect(callOrder).toEqual(["pull1-start", "pull1-end", "pull2-start"]);
     });
   });
 });

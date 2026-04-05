@@ -16,6 +16,8 @@ export function buildGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: now,
     updated_at: now,
     version: 1,
+    revision: 0,
+    _dirty: false,
     ...overrides,
   };
 }

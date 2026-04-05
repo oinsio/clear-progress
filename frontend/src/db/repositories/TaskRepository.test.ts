@@ -279,20 +279,60 @@ describe("TaskRepository", () => {
     });
   });
 
-  describe("getMaxVersion", () => {
-    it("should return 0 when no tasks exist", async () => {
-      const maxVersion = await taskRepository.getMaxVersion();
-      expect(maxVersion).toBe(0);
+  describe("getDirty", () => {
+    it("should return only dirty tasks", async () => {
+      const dirtyTask = buildTask({ _dirty: true });
+      const cleanTask = buildTask({ _dirty: false });
+      await db.tasks.bulkAdd([dirtyTask, cleanTask]);
+
+      const dirtyTasks = await taskRepository.getDirty();
+      expect(dirtyTasks).toHaveLength(1);
+      expect(dirtyTasks[0].id).toBe(dirtyTask.id);
     });
 
-    it("should return the highest version number", async () => {
-      const taskV1 = buildTask({ version: 1 });
-      const taskV7 = buildTask({ version: 7 });
-      const taskV3 = buildTask({ version: 3 });
-      await db.tasks.bulkAdd([taskV1, taskV7, taskV3]);
+    it("should return empty array when no dirty tasks exist", async () => {
+      const cleanTask = buildTask({ _dirty: false });
+      await db.tasks.add(cleanTask);
 
-      const maxVersion = await taskRepository.getMaxVersion();
-      expect(maxVersion).toBe(7);
+      const dirtyTasks = await taskRepository.getDirty();
+      expect(dirtyTasks).toEqual([]);
+    });
+  });
+
+  describe("applyServerRecords", () => {
+    it("should insert new records with _dirty = false", async () => {
+      const serverTask = buildTask({ _dirty: false, revision: 5 });
+
+      await taskRepository.applyServerRecords([serverTask]);
+
+      const saved = await db.tasks.get(serverTask.id);
+      expect(saved).toBeDefined();
+      expect(saved!._dirty).toBe(false);
+      expect(saved!.revision).toBe(5);
+    });
+
+    it("should overwrite clean local records with server version", async () => {
+      const localTask = buildTask({ title: "local", _dirty: false, revision: 1 });
+      await db.tasks.add(localTask);
+
+      const serverTask = { ...localTask, title: "server", revision: 2 };
+      await taskRepository.applyServerRecords([serverTask]);
+
+      const saved = await db.tasks.get(localTask.id);
+      expect(saved!.title).toBe("server");
+      expect(saved!._dirty).toBe(false);
+    });
+
+    it("should skip dirty local records", async () => {
+      const localTask = buildTask({ title: "local dirty", _dirty: true, revision: 1 });
+      await db.tasks.add(localTask);
+
+      const serverTask = { ...localTask, title: "server", revision: 2 };
+      await taskRepository.applyServerRecords([serverTask]);
+
+      const saved = await db.tasks.get(localTask.id);
+      expect(saved!.title).toBe("local dirty");
+      expect(saved!._dirty).toBe(true);
     });
   });
 });

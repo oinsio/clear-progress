@@ -2,10 +2,6 @@ import type { Context } from "@/types/entities";
 import { db } from "../database";
 
 export class ContextRepository {
-  async getAll(): Promise<Context[]> {
-    return db.contexts.toArray();
-  }
-
   async getActive(): Promise<Context[]> {
     return db.contexts.filter((context) => !context.is_deleted).toArray();
   }
@@ -30,12 +26,18 @@ export class ContextRepository {
     return db.contexts.where("updated_at").above(since).toArray();
   }
 
-  async getMaxVersion(): Promise<number> {
-    const contexts = await db.contexts
-      .orderBy("version")
-      .reverse()
-      .limit(1)
-      .toArray();
-    return contexts[0]?.version ?? 0;
+  async getDirty(): Promise<Context[]> {
+    return db.contexts.filter((context) => context._dirty).toArray();
+  }
+
+  async applyServerRecords(records: Context[]): Promise<void> {
+    await db.transaction("rw", db.contexts, async () => {
+      for (const serverRecord of records) {
+        const localRecord = await db.contexts.get(serverRecord.id);
+        if (!localRecord || !localRecord._dirty) {
+          await db.contexts.put({ ...serverRecord, _dirty: false });
+        }
+      }
+    });
   }
 }

@@ -8,29 +8,24 @@ import type {
 } from "./entities";
 import type { PushResultStatus } from "./common";
 
-export interface VersionMap {
-  tasks: number;
-  goals: number;
-  contexts: number;
-  categories: number;
-  checklist_items: number;
-}
-
 export interface PullRequest {
   action: "pull";
-  versions: VersionMap;
+  since_revision: number;
+}
+
+export interface PullResponseData {
+  tasks: Task[];
+  goals: Goal[];
+  contexts: Context[];
+  categories: Category[];
+  checklist_items: ChecklistItem[];
 }
 
 export interface PullResponse {
   ok: boolean;
-  data: {
-    tasks: Task[];
-    goals: Goal[];
-    contexts: Context[];
-    categories: Category[];
-    checklist_items: ChecklistItem[];
-  };
+  data: PullResponseData;
   settings: Setting[];
+  current_revision: number;
   server_time: string;
 }
 
@@ -51,7 +46,7 @@ export interface PushRequest {
 export interface PushItemResult {
   id: string;
   status: PushResultStatus;
-  version?: number;
+  revision?: number;
   server_record?: Task | Goal | Context | Category | ChecklistItem;
   reason?: string;
 }

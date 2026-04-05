@@ -25,6 +25,8 @@ export class CategoryService {
       created_at: now,
       updated_at: now,
       version: 1,
+      revision: 0,
+      _dirty: true,
     };
     await this.categoryRepository.create(category);
     return category;
@@ -50,6 +52,7 @@ export class CategoryService {
       sort_order: index,
       updated_at: now,
       version: category.version + 1,
+      _dirty: true,
     }));
     await this.categoryRepository.bulkUpsert(updated);
   }
@@ -68,6 +71,7 @@ export class CategoryService {
       id,
       updated_at: new Date().toISOString(),
       version: existingCategory.version + 1,
+      _dirty: true,
     };
     await this.categoryRepository.update(updatedCategory);
     return updatedCategory;

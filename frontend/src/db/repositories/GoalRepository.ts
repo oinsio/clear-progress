@@ -30,12 +30,18 @@ export class GoalRepository {
     return db.goals.where("updated_at").above(since).toArray();
   }
 
-  async getMaxVersion(): Promise<number> {
-    const goals = await db.goals
-      .orderBy("version")
-      .reverse()
-      .limit(1)
-      .toArray();
-    return goals[0]?.version ?? 0;
+  async getDirty(): Promise<Goal[]> {
+    return db.goals.filter((goal) => goal._dirty).toArray();
+  }
+
+  async applyServerRecords(records: Goal[]): Promise<void> {
+    await db.transaction("rw", db.goals, async () => {
+      for (const serverRecord of records) {
+        const localRecord = await db.goals.get(serverRecord.id);
+        if (!localRecord || !localRecord._dirty) {
+          await db.goals.put({ ...serverRecord, _dirty: false });
+        }
+      }
+    });
   }
 }

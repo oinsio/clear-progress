@@ -2,10 +2,6 @@ import type { Category } from "@/types/entities";
 import { db } from "../database";
 
 export class CategoryRepository {
-  async getAll(): Promise<Category[]> {
-    return db.categories.toArray();
-  }
-
   async getActive(): Promise<Category[]> {
     return db.categories.filter((category) => !category.is_deleted).toArray();
   }
@@ -30,12 +26,18 @@ export class CategoryRepository {
     return db.categories.where("updated_at").above(since).toArray();
   }
 
-  async getMaxVersion(): Promise<number> {
-    const categories = await db.categories
-      .orderBy("version")
-      .reverse()
-      .limit(1)
-      .toArray();
-    return categories[0]?.version ?? 0;
+  async getDirty(): Promise<Category[]> {
+    return db.categories.filter((category) => category._dirty).toArray();
+  }
+
+  async applyServerRecords(records: Category[]): Promise<void> {
+    await db.transaction("rw", db.categories, async () => {
+      for (const serverRecord of records) {
+        const localRecord = await db.categories.get(serverRecord.id);
+        if (!localRecord || !localRecord._dirty) {
+          await db.categories.put({ ...serverRecord, _dirty: false });
+        }
+      }
+    });
   }
 }

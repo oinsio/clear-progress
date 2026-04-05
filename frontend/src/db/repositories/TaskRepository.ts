@@ -79,12 +79,18 @@ export class TaskRepository {
     return db.tasks.where("updated_at").above(since).toArray();
   }
 
-  async getMaxVersion(): Promise<number> {
-    const tasks = await db.tasks
-      .orderBy("version")
-      .reverse()
-      .limit(1)
-      .toArray();
-    return tasks[0]?.version ?? 0;
+  async getDirty(): Promise<Task[]> {
+    return db.tasks.filter((task) => task._dirty).toArray();
+  }
+
+  async applyServerRecords(records: Task[]): Promise<void> {
+    await db.transaction("rw", db.tasks, async () => {
+      for (const serverRecord of records) {
+        const localRecord = await db.tasks.get(serverRecord.id);
+        if (!localRecord || !localRecord._dirty) {
+          await db.tasks.put({ ...serverRecord, _dirty: false });
+        }
+      }
+    });
   }
 }
