@@ -13,6 +13,7 @@ import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { useIdeas } from "@/hooks/useIdeas";
+import { useTasks } from "@/hooks/useTasks";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
@@ -21,6 +22,7 @@ import { useDndSensors } from "@/hooks/useDndSensors";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { BOX } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
 
@@ -70,6 +72,7 @@ export default function IdeasPage() {
   const { t } = useTranslation();
   const { ideas, isLoading, createIdea, updateIdea, deleteIdea, reorderIdeas } =
     useIdeas();
+  const { createTask } = useTasks(BOX.INBOX);
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { filterBarPosition } = useFilterBarPosition();
@@ -91,6 +94,15 @@ export default function IdeasPage() {
     handleKeyDown: handleAddIdeaKeyDown,
     handleBlur: handleAddIdeaBlur,
   } = useInlineAdd((name) => createIdea({ name }));
+
+  const {
+    isAdding: isAddingTask,
+    setIsAdding: setIsAddingTask,
+    value: newTaskTitle,
+    setValue: setNewTaskTitle,
+    handleKeyDown: handleAddTaskKeyDown,
+    handleBlur: handleAddTaskBlur,
+  } = useInlineAdd(createTask);
 
   const activeIdeas = ideas.filter((idea) => !idea.is_deleted);
 
@@ -174,6 +186,15 @@ export default function IdeasPage() {
                 aria-hidden="true"
               />
             </button>
+            <button
+              type="button"
+              aria-label={t("idea.addTask")}
+              data-testid="add-task-button"
+              onClick={() => setIsAddingTask(true)}
+              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+            >
+              <Plus className="w-5 h-5" aria-hidden="true" />
+            </button>
           </div>
         )}
 
@@ -233,6 +254,23 @@ export default function IdeasPage() {
                 />
               </div>
             )}
+
+            {/* Inline add task input */}
+            {isAddingTask && (
+              <div className="px-4 py-3 border-b border-gray-100">
+                <input
+                  type="text"
+                  autoFocus
+                  value={newTaskTitle}
+                  onChange={(event) => setNewTaskTitle(event.target.value)}
+                  onKeyDown={handleAddTaskKeyDown}
+                  onBlur={handleAddTaskBlur}
+                  placeholder={t("idea.taskPlaceholder")}
+                  className="w-full text-sm outline-none placeholder:text-gray-400"
+                  data-testid="add-task-input"
+                />
+              </div>
+            )}
           </div>
         </main>
 
@@ -257,6 +295,17 @@ export default function IdeasPage() {
                 className="w-3 h-3 absolute bottom-1 right-1"
                 aria-hidden="true"
               />
+            </button>
+
+            {/* Add task button */}
+            <button
+              type="button"
+              aria-label={t("idea.addTask")}
+              data-testid="add-task-button"
+              onClick={() => setIsAddingTask(true)}
+              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+            >
+              <Plus className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
         )}

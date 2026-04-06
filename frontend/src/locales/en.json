@@ -111,7 +111,9 @@
     "cancelLabel": "Cancel changes",
     "deleteConfirmTitle": "Delete idea?",
     "deleteConfirmCancel": "Cancel",
-    "deleteConfirmOk": "Delete"
+    "deleteConfirmOk": "Delete",
+    "addTask": "Add task",
+    "taskPlaceholder": "Task title..."
   },
   "context": {
     "empty": "No contexts yet",

@@ -111,7 +111,9 @@
     "cancelLabel": "Отменить изменения",
     "deleteConfirmTitle": "Удалить идею?",
     "deleteConfirmCancel": "Отмена",
-    "deleteConfirmOk": "Удалить"
+    "deleteConfirmOk": "Удалить",
+    "addTask": "Добавить задачу",
+    "taskPlaceholder": "Название задачи..."
   },
   "context": {
     "empty": "Нет ни одного контекста",
