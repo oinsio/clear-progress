@@ -87,6 +87,17 @@ export const ACCENT_COLOR_VALUES: Record<AccentColor, string> = {
   purple: "#a855f7",
 };
 
+export const ACCENT_COLOR_VALUES_DARK: Record<AccentColor, string> = {
+  coral: "#e11d48",
+  orange: "#c55a00",
+  yellow: "#ca9a04",
+  green: "#4d7c0f",
+  teal: "#0f766e",
+  blue: "#3b82f6",
+  indigo: "#6366f1",
+  purple: "#7c3aed",
+};
+
 export const API_ACTIONS = {
   PING: "ping",
   INIT: "init",

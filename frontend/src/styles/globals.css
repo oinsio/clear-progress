@@ -39,6 +39,39 @@
     --color-accent: 251 113 133;
   }
 
+  /* Dark mode accent colors */
+  .dark:root[data-accent="coral"] {
+    --color-accent: 225 29 72;
+  }
+
+  .dark:root[data-accent="orange"] {
+    --color-accent: 197 90 0;
+  }
+
+  .dark:root[data-accent="yellow"] {
+    --color-accent: 202 154 4;
+  }
+
+  .dark:root[data-accent="green"] {
+    --color-accent: 77 124 15;
+  }
+
+  .dark:root[data-accent="teal"] {
+    --color-accent: 15 118 110;
+  }
+
+  .dark:root[data-accent="blue"] {
+    --color-accent: 59 130 246;
+  }
+
+  .dark:root[data-accent="indigo"] {
+    --color-accent: 99 102 241;
+  }
+
+  .dark:root[data-accent="purple"] {
+    --color-accent: 124 58 237;
+  }
+
   /* Dark mode overrides */
   html.dark body,
   html.dark #root {

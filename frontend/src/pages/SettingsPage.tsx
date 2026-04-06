@@ -21,6 +21,7 @@ import {
   BOX_ORDER,
   ACCENT_COLORS,
   ACCENT_COLOR_VALUES,
+  ACCENT_COLOR_VALUES_DARK,
   COLOR_SCHEMES,
   PANEL_SIDES,
   FILTER_BAR_POSITIONS,
@@ -164,6 +165,15 @@ export default function SettingsPage() {
               <div className="flex gap-4">
                 {ACCENT_COLORS.map((color) => {
                   const isSelected = accentColor === color;
+                  const isDarkTheme =
+                    colorScheme === "dark" ||
+                    (colorScheme === "system" &&
+                      window.matchMedia("(prefers-color-scheme: dark)")
+                        .matches);
+                  const colorValue = isDarkTheme
+                    ? ACCENT_COLOR_VALUES_DARK[color]
+                    : ACCENT_COLOR_VALUES[color];
+
                   return (
                     <button
                       key={color}
@@ -176,7 +186,7 @@ export default function SettingsPage() {
                         isSelected &&
                           "ring-2 ring-offset-2 ring-gray-400 scale-110",
                       )}
-                      style={{ backgroundColor: ACCENT_COLOR_VALUES[color] }}
+                      style={{ backgroundColor: colorValue }}
                     />
                   );
                 })}

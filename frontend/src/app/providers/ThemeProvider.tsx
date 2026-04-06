@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { AccentColor, ColorScheme } from "@/types/common";
 import {
   ACCENT_COLOR_VALUES,
+  ACCENT_COLOR_VALUES_DARK,
   ACCENT_COLORS,
   COLOR_SCHEMES,
   DEFAULT_ACCENT_COLOR,
@@ -97,6 +98,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const handleSystemThemeChange = (): void => {
       if (colorScheme === "system") {
         applyColorScheme("system");
+        applyAccentColor(accentColor);
       }
     };
 
@@ -117,6 +119,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyColorScheme(scheme);
     setColorSchemeState(scheme);
     localStorage.setItem(STORAGE_KEYS.COLOR_SCHEME, scheme);
+    applyAccentColor(accentColor);
   };
 
   return (
@@ -132,7 +135,11 @@ function applyAccentColor(color: AccentColor): void {
   document.documentElement.setAttribute("data-accent", color);
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');
   if (metaThemeColor) {
-    metaThemeColor.setAttribute("content", ACCENT_COLOR_VALUES[color]);
+    const isDark = document.documentElement.classList.contains("dark");
+    const colorValue = isDark
+      ? ACCENT_COLOR_VALUES_DARK[color]
+      : ACCENT_COLOR_VALUES[color];
+    metaThemeColor.setAttribute("content", colorValue);
   }
 }
 
