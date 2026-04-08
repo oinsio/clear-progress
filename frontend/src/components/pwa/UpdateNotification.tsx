@@ -40,7 +40,6 @@ export function UpdateNotification() {
       <div
         data-testid="update-notification-backdrop"
         className="absolute inset-0 bg-black/40"
-        onClick={handleClose}
       />
       <div className="relative w-full max-w-sm mx-4 rounded-2xl bg-white p-6 shadow-xl">
         <p
