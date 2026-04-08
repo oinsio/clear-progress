@@ -219,12 +219,16 @@ describe("useSwipeToComplete", () => {
     expect(result.current.phase).toBe("completing");
   });
 
-  it("should call onComplete immediately on touchend when threshold is reached", () => {
+  it("should call onComplete after transitionend in completing phase", () => {
     const onComplete = vi.fn();
     renderHook(() => useSwipeToComplete(ref, onComplete, true));
     const threshold = DEFAULT_ELEMENT_WIDTH * SWIPE_COMPLETE_THRESHOLD_RATIO;
     act(() => {
       swipeToThreshold(element, threshold);
+    });
+    expect(onComplete).not.toHaveBeenCalled();
+    act(() => {
+      fireTransitionEnd(element, "transform");
     });
     expect(onComplete).toHaveBeenCalledOnce();
   });
@@ -335,6 +339,9 @@ describe("useSwipeToComplete", () => {
       fireTouchEnd(element);
     });
     expect(result.current.phase).toBe("completing");
+    act(() => {
+      fireTransitionEnd(element, "transform");
+    });
     expect(onComplete).toHaveBeenCalledOnce();
   });
 

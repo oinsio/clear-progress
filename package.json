@@ -1,9 +1,0 @@
-{
-  "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.0"
-  },
-  "scripts": {
-    "sonar": "./scripts/sonar-check.sh",
-    "sonar:fix-only": "./scripts/sonar-check.sh --fix-only"
-  }
-}
