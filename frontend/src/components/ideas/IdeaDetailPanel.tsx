@@ -58,7 +58,6 @@ export function IdeaDetailPanel({
     setIsConfirmingDelete(false);
   }, []);
 
-
   return (
     <div
       data-testid="idea-detail-panel"

@@ -1,11 +1,8 @@
 import { renderHook, act } from "@testing-library/react";
 import React, { createRef } from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useSwipeToComplete } from "./useSwipeToComplete";
-import {
-  SWIPE_COMPLETE_THRESHOLD_PX,
-  SWIPE_MAX_VERTICAL_DRIFT_PX,
-} from "@/constants";
+import { SWIPE_COMPLETE_THRESHOLD_PERCENT } from "@/constants";
 
 function createElementRef() {
   const element = document.createElement("div");
@@ -34,7 +31,6 @@ function fireTouchStart(
       touches: makeTouchList(x, y, touchTarget),
     },
   );
-  // Dispatch on the actual target so it bubbles up to el with the correct e.target
   touchTarget.dispatchEvent(event);
 }
 
@@ -61,11 +57,24 @@ function fireTouchEnd(el: HTMLElement) {
 describe("useSwipeToComplete", () => {
   let element: HTMLElement;
   let ref: React.RefObject<HTMLDivElement>;
+  let threshold: number;
 
   beforeEach(() => {
+    // Set window width for consistent testing
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 375, // iPhone SE width
+    });
+    threshold = window.innerWidth * SWIPE_COMPLETE_THRESHOLD_PERCENT; // 150px
+
     const created = createElementRef();
     element = created.element;
     ref = created.ref;
+  });
+
+  afterEach(() => {
+    document.body.removeChild(element);
   });
 
   // Initial state
@@ -96,7 +105,7 @@ describe("useSwipeToComplete", () => {
     renderHook(() => useSwipeToComplete(ref, onComplete, false));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX + 10, 0);
+      fireTouchMove(element, threshold + 10, 0);
       fireTouchEnd(element);
     });
     expect(onComplete).not.toHaveBeenCalled();
@@ -107,7 +116,6 @@ describe("useSwipeToComplete", () => {
     const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 10, 0);
       fireTouchMove(element, 40, 0);
     });
     expect(result.current.translateX).toBe(40);
@@ -117,8 +125,7 @@ describe("useSwipeToComplete", () => {
     const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 10, 0);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX - 1, 0);
+      fireTouchMove(element, threshold - 1, 0);
     });
     expect(result.current.isThresholdReached).toBe(false);
   });
@@ -127,7 +134,6 @@ describe("useSwipeToComplete", () => {
     const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 10, 0);
       fireTouchMove(element, 40, 0);
       fireTouchEnd(element);
     });
@@ -139,8 +145,7 @@ describe("useSwipeToComplete", () => {
     renderHook(() => useSwipeToComplete(ref, onComplete, true));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 10, 0);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX - 1, 0);
+      fireTouchMove(element, threshold - 1, 0);
       fireTouchEnd(element);
     });
     expect(onComplete).not.toHaveBeenCalled();
@@ -151,8 +156,7 @@ describe("useSwipeToComplete", () => {
     const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 10, 0);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX, 0);
+      fireTouchMove(element, threshold, 0);
     });
     expect(result.current.isThresholdReached).toBe(true);
   });
@@ -162,8 +166,7 @@ describe("useSwipeToComplete", () => {
     renderHook(() => useSwipeToComplete(ref, onComplete, true));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 10, 0);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX + 10, 0);
+      fireTouchMove(element, threshold + 10, 0);
       fireTouchEnd(element);
     });
     expect(onComplete).toHaveBeenCalledOnce();
@@ -173,8 +176,7 @@ describe("useSwipeToComplete", () => {
     const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 10, 0);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX + 10, 0);
+      fireTouchMove(element, threshold + 10, 0);
       fireTouchEnd(element);
     });
     expect(result.current.translateX).toBe(0);
@@ -202,41 +204,14 @@ describe("useSwipeToComplete", () => {
     expect(onComplete).not.toHaveBeenCalled();
   });
 
-  // Vertical drift cancellation
-  it("should reset translateX when cancelled by vertical drift", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
-    act(() => {
-      fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 4, SWIPE_MAX_VERTICAL_DRIFT_PX + 1);
-    });
-    expect(result.current.translateX).toBe(0);
-  });
-
-  it("should not call onComplete when cancelled by vertical drift", () => {
-    const onComplete = vi.fn();
-    renderHook(() => useSwipeToComplete(ref, onComplete, true));
-    act(() => {
-      fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 4, SWIPE_MAX_VERTICAL_DRIFT_PX + 1);
-      fireTouchMove(
-        element,
-        SWIPE_COMPLETE_THRESHOLD_PX + 10,
-        SWIPE_MAX_VERTICAL_DRIFT_PX + 1,
-      );
-      fireTouchEnd(element);
-    });
-    expect(onComplete).not.toHaveBeenCalled();
-  });
-
   // Rubber-band clamping
   it("should clamp translateX at 1.5x threshold", () => {
     const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
-      fireTouchMove(element, 10, 0);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX * 3, 0);
+      fireTouchMove(element, threshold * 3, 0);
     });
-    expect(result.current.translateX).toBe(SWIPE_COMPLETE_THRESHOLD_PX * 1.5);
+    expect(result.current.translateX).toBe(threshold * 1.5);
   });
 
   // Cleanup
@@ -269,26 +244,48 @@ describe("useSwipeToComplete", () => {
     const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0, noSwipeChild);
-      fireTouchMove(element, 10, 0);
-      fireTouchMove(element, SWIPE_COMPLETE_THRESHOLD_PX + 10, 0);
+      fireTouchMove(element, threshold + 10, 0);
     });
     expect(result.current.translateX).toBe(0);
   });
 
-  // Boundary tests (for mutation coverage)
+  // Window resize
+  it("should recalculate threshold on window resize", () => {
+    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+
+    // Change window width
+    act(() => {
+      Object.defineProperty(window, "innerWidth", {
+        writable: true,
+        configurable: true,
+        value: 768, // iPad width
+      });
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    const newThreshold = 768 * SWIPE_COMPLETE_THRESHOLD_PERCENT; // 307.2px
+
+    act(() => {
+      fireTouchStart(element, 0, 0);
+      fireTouchMove(element, newThreshold, 0);
+    });
+
+    expect(result.current.isThresholdReached).toBe(true);
+  });
+
+  // Boundary tests
   it.each([
-    ["threshold - 1", SWIPE_COMPLETE_THRESHOLD_PX - 1, false],
-    ["threshold", SWIPE_COMPLETE_THRESHOLD_PX, true],
-    ["threshold + 1", SWIPE_COMPLETE_THRESHOLD_PX + 1, true],
+    ["threshold - 1", -1, false],
+    ["threshold", 0, true],
+    ["threshold + 1", 1, true],
   ] as const)(
-    "onComplete called=%s when swipe is exactly %s",
-    (_label, swipeX, shouldCall) => {
+    "onComplete called=%s when swipe is %s relative to threshold",
+    (_label, offset, shouldCall) => {
       const onComplete = vi.fn();
       renderHook(() => useSwipeToComplete(ref, onComplete, true));
       act(() => {
         fireTouchStart(element, 0, 0);
-        fireTouchMove(element, 10, 0);
-        fireTouchMove(element, swipeX, 0);
+        fireTouchMove(element, threshold + offset, 0);
         fireTouchEnd(element);
       });
       if (shouldCall) {

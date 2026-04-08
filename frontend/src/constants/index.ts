@@ -185,8 +185,7 @@ export const TOKEN_EXPIRY_BUFFER_S = 60;
 export const GAS_AUTH_ERROR_CODE = "UNAUTHORIZED";
 export const API_AUTH_ERROR_NAME = "ApiAuthError";
 
-export const SWIPE_COMPLETE_THRESHOLD_PX = 80;
-export const SWIPE_MAX_VERTICAL_DRIFT_PX = 30;
+export const SWIPE_COMPLETE_THRESHOLD_PERCENT = 0.4;
 export const SWIPE_SNAP_BACK_DURATION_MS = 300;
 
 export const REPEAT_RULE_TYPE = {

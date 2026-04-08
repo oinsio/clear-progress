@@ -159,7 +159,9 @@ describe("IdeaDetailPanel", () => {
     const deleteButton = screen.getByLabelText("idea.deleteLabel");
     fireEvent.click(deleteButton);
 
-    expect(screen.getByTestId("idea-detail-delete-confirm")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("idea-detail-delete-confirm"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Test Idea")).toBeInTheDocument();
   });
 

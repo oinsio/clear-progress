@@ -104,9 +104,7 @@ describe("ContextService", () => {
     });
 
     it("should call repository.create with the constructed context", () => {
-      expect(mockContextRepository.create).toHaveBeenCalledWith(
-        createdContext,
-      );
+      expect(mockContextRepository.create).toHaveBeenCalledWith(createdContext);
     });
   });
 

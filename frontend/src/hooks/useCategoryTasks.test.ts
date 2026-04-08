@@ -2,6 +2,7 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useCategoryTasks } from "./useCategoryTasks";
 import type { TaskService } from "@/services/TaskService";
+import type { Task } from "@/types/entities";
 import { buildTask } from "@/test/factories/taskFactory";
 import { BOX } from "@/constants";
 import { createMockTaskService } from "@/test/mocks/taskServiceMock";
@@ -97,18 +98,41 @@ describe("useCategoryTasks", () => {
   it.each([
     {
       name: "should call softDelete when deleteTask is called",
-      action: (result: any, task: any) => result.current.deleteTask(task.id),
-      expectation: (task: any) => expect(mockTaskService.softDelete).toHaveBeenCalledWith(task.id),
+      action: (
+        result: ReturnType<
+          typeof renderHook<ReturnType<typeof useCategoryTasks>, unknown>
+        >["result"],
+        task: Task,
+      ) => result.current.deleteTask(task.id),
+      expectation: (task: Task) =>
+        expect(mockTaskService.softDelete).toHaveBeenCalledWith(task.id),
     },
     {
       name: "should call moveToBox when moveTask is called",
-      action: (result: any, task: any) => result.current.moveTask(task.id, BOX.WEEK),
-      expectation: (task: any) => expect(mockTaskService.moveToBox).toHaveBeenCalledWith(task.id, BOX.WEEK),
+      action: (
+        result: ReturnType<
+          typeof renderHook<ReturnType<typeof useCategoryTasks>, unknown>
+        >["result"],
+        task: Task,
+      ) => result.current.moveTask(task.id, BOX.WEEK),
+      expectation: (task: Task) =>
+        expect(mockTaskService.moveToBox).toHaveBeenCalledWith(
+          task.id,
+          BOX.WEEK,
+        ),
     },
     {
       name: "should call update when updateTask is called",
-      action: (result: any, task: any) => result.current.updateTask(task.id, { title: "Updated" }),
-      expectation: (task: any) => expect(mockTaskService.update).toHaveBeenCalledWith(task.id, { title: "Updated" }),
+      action: (
+        result: ReturnType<
+          typeof renderHook<ReturnType<typeof useCategoryTasks>, unknown>
+        >["result"],
+        task: Task,
+      ) => result.current.updateTask(task.id, { title: "Updated" }),
+      expectation: (task: Task) =>
+        expect(mockTaskService.update).toHaveBeenCalledWith(task.id, {
+          title: "Updated",
+        }),
     },
   ])("$name", async ({ action, expectation }) => {
     const { result, task } = await setupHookWithTask();

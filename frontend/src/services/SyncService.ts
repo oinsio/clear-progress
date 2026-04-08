@@ -93,16 +93,23 @@ export class SyncService {
   }
 
   private async _push(): Promise<void> {
-    const [tasks, goals, contexts, categories, checklist_items, ideas, settings] =
-      await Promise.all([
-        this.taskRepository.getDirty(),
-        this.goalRepository.getDirty(),
-        this.contextRepository.getDirty(),
-        this.categoryRepository.getDirty(),
-        this.checklistRepository.getDirty(),
-        this.ideaRepository.getDirty(),
-        this.settingsRepository.getDirty(),
-      ]);
+    const [
+      tasks,
+      goals,
+      contexts,
+      categories,
+      checklist_items,
+      ideas,
+      settings,
+    ] = await Promise.all([
+      this.taskRepository.getDirty(),
+      this.goalRepository.getDirty(),
+      this.contextRepository.getDirty(),
+      this.categoryRepository.getDirty(),
+      this.checklistRepository.getDirty(),
+      this.ideaRepository.getDirty(),
+      this.settingsRepository.getDirty(),
+    ]);
 
     const hasChanges =
       tasks.length > 0 ||
@@ -130,7 +137,9 @@ export class SyncService {
       ...ideas.map((idea) => [idea.id, idea.version] as [string, number]),
     ]);
 
-    const stripDirty = <T extends { _dirty?: boolean }>(records: T[]): Omit<T, "_dirty">[] =>
+    const stripDirty = <T extends { _dirty?: boolean }>(
+      records: T[],
+    ): Omit<T, "_dirty">[] =>
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       records.map(({ _dirty: _, ...rest }) => rest as Omit<T, "_dirty">);
 

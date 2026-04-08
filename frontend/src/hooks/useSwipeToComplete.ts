@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  SWIPE_COMPLETE_THRESHOLD_PX,
-  SWIPE_MAX_VERTICAL_DRIFT_PX,
-} from "@/constants";
+import { SWIPE_COMPLETE_THRESHOLD_PERCENT } from "@/constants";
 
 export function useSwipeToComplete(
   ref: React.RefObject<HTMLDivElement | null>,
@@ -11,6 +8,9 @@ export function useSwipeToComplete(
 ): { translateX: number; isThresholdReached: boolean } {
   const [translateX, setTranslateX] = useState(0);
   const [isThresholdReached, setIsThresholdReached] = useState(false);
+  const [threshold, setThreshold] = useState(
+    () => window.innerWidth * SWIPE_COMPLETE_THRESHOLD_PERCENT,
+  );
 
   const isEnabledRef = useRef(isEnabled);
   useEffect(() => {
@@ -28,6 +28,22 @@ export function useSwipeToComplete(
   const isDraggingRef = useRef(false);
   const isCancelledRef = useRef(false);
   const translateXRef = useRef(0);
+  const thresholdRef = useRef(threshold);
+
+  useEffect(() => {
+    thresholdRef.current = threshold;
+  }, [threshold]);
+
+  // Update threshold on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const newThreshold = window.innerWidth * SWIPE_COMPLETE_THRESHOLD_PERCENT;
+      setThreshold(newThreshold);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const element = ref.current;
@@ -56,19 +72,27 @@ export function useSwipeToComplete(
       const deltaX = touch.clientX - touchStartXRef.current;
       const deltaY = touch.clientY - touchStartYRef.current;
 
+      // Cancel on left swipe
       if (deltaX < 0) {
         isCancelledRef.current = true;
         return;
       }
 
+      // Detect horizontal swipe (allow some vertical drift)
       if (!isDraggingRef.current) {
-        if (Math.abs(deltaY) > SWIPE_MAX_VERTICAL_DRIFT_PX) {
+        const absY = Math.abs(deltaY);
+        const absX = Math.abs(deltaX);
+
+        // If vertical movement is dominant, cancel
+        if (absY > absX && absY > 10) {
           isCancelledRef.current = true;
           translateXRef.current = 0;
           setTranslateX(0);
           setIsThresholdReached(false);
           return;
         }
+
+        // Start dragging if horizontal movement is significant
         if (deltaX > 5) {
           isDraggingRef.current = true;
         }
@@ -76,10 +100,11 @@ export function useSwipeToComplete(
 
       if (isDraggingRef.current) {
         e.preventDefault();
-        const clamped = Math.min(deltaX, SWIPE_COMPLETE_THRESHOLD_PX * 1.5);
+        const maxTranslate = thresholdRef.current * 1.5;
+        const clamped = Math.min(deltaX, maxTranslate);
         translateXRef.current = clamped;
         setTranslateX(clamped);
-        setIsThresholdReached(clamped >= SWIPE_COMPLETE_THRESHOLD_PX);
+        setIsThresholdReached(clamped >= thresholdRef.current);
       }
     };
 
@@ -90,7 +115,7 @@ export function useSwipeToComplete(
         !isDraggingRef.current
       )
         return;
-      if (translateXRef.current >= SWIPE_COMPLETE_THRESHOLD_PX) {
+      if (translateXRef.current >= thresholdRef.current) {
         onCompleteRef.current();
       }
       translateXRef.current = 0;

@@ -14,7 +14,13 @@ interface IdeaItemProps {
   onEdit?: () => void;
 }
 
-export function IdeaItem({ idea, nodeRef, style, dragHandle, onEdit }: IdeaItemProps) {
+export function IdeaItem({
+  idea,
+  nodeRef,
+  style,
+  dragHandle,
+  onEdit,
+}: IdeaItemProps) {
   const isUnsynced = useIsUnsynced(idea);
   const { panelSide } = usePanelSide();
   const { t } = useTranslation();
