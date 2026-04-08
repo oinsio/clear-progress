@@ -9,7 +9,6 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
   RightFilterPanel,
   type RightPanelMode,
@@ -57,7 +56,9 @@ function SortableCategoryItem({
   const { panelSide } = usePanelSide();
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: transform
+      ? `translate3d(0, ${transform.y}px, 0)`
+      : undefined,
     transition,
     opacity: isDragging ? 0.4 : 1,
   };

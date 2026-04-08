@@ -6,7 +6,6 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/cn";
 import { useDndSensors } from "@/hooks/useDndSensors";
@@ -37,7 +36,9 @@ function SortableMenuOrderItem({
   } = useSortable({ id: config.mode });
 
   const dragStyle = {
-    transform: CSS.Transform.toString(transform),
+    transform: transform
+      ? `translate3d(0, ${transform.y}px, 0)`
+      : undefined,
     transition,
   };
 

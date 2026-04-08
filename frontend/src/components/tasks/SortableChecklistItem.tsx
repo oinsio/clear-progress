@@ -1,7 +1,6 @@
 import { GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/shared/lib/cn";
 import type { ChecklistItem } from "@/types/entities";
 import {
@@ -54,7 +53,9 @@ export function SortableChecklistItem({
   } = useSortable({ id: item.id });
 
   const dragStyle = {
-    transform: CSS.Transform.toString(transform),
+    transform: transform
+      ? `translate3d(0, ${transform.y}px, 0)`
+      : undefined,
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
