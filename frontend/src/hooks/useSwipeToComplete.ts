@@ -159,9 +159,10 @@ export function useSwipeToComplete(
         deltaX > SWIPE_MIN_DISTANCE_FOR_VELOCITY;
 
       if (isPositionSuccess || isVelocitySuccess) {
-        // Start completing phase
+        // Call onComplete IMMEDIATELY before animation
+        onCompleteRef.current();
+        // Then start completing phase for visual feedback
         setPhase("completing");
-        // onComplete will be called after transition ends
       } else {
         // Reset to idle
         translateXRef.current = 0;
@@ -184,7 +185,6 @@ export function useSwipeToComplete(
       if (e.target !== element || e.propertyName !== "transform") return;
 
       if (phaseRef.current === "completing") {
-        onCompleteRef.current();
         // Reset state after completion
         translateXRef.current = 0;
         element.style.transform = "";
