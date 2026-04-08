@@ -41,6 +41,8 @@ export function useLongPress({
       const touch = event.touches[0];
       if (!touch) return;
 
+      event.preventDefault();
+
       startPositionRef.current = {
         x: touch.clientX,
         y: touch.clientY,

@@ -211,7 +211,7 @@ export function TaskItem({
               type="button"
               data-testid="task-item-body"
               {...longPressHandlers}
-              className="flex flex-col flex-1 min-w-0 text-left"
+              className="flex flex-col flex-1 min-w-0 text-left select-none [-webkit-touch-callout:none]"
             >
               <span
                 data-testid="task-item-title"
