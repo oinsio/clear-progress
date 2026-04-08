@@ -32,6 +32,7 @@ interface BoxSectionProps {
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
   onMove: (id: string, box: Box) => Promise<void>;
   onDelete: (id: string) => void;
+  onReorder?: (tasks: Task[]) => Promise<void>;
   onSelect?: (id: string) => void;
   selectedTaskId?: string | null;
 }
@@ -46,6 +47,7 @@ function BoxSection({
   onUpdate,
   onMove,
   onDelete,
+  onReorder,
   onSelect,
   selectedTaskId,
 }: BoxSectionProps) {
@@ -76,6 +78,7 @@ function BoxSection({
           onUpdate={onUpdate}
           onMove={onMove}
           onDelete={onDelete}
+          onReorder={onReorder}
           onSelect={onSelect}
           selectedTaskId={selectedTaskId}
         />
@@ -95,6 +98,7 @@ interface BoxSectionListProps {
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
   onMove: (id: string, box: Box) => Promise<void>;
   onDelete: (id: string) => void;
+  onReorder?: (box: Box, tasks: Task[]) => Promise<void>;
   onSelect?: (id: string) => void;
   selectedTaskId?: string | null;
 }
@@ -110,6 +114,7 @@ export function BoxSectionList({
   onUpdate,
   onMove,
   onDelete,
+  onReorder,
   onSelect,
   selectedTaskId,
 }: BoxSectionListProps) {
@@ -148,6 +153,7 @@ export function BoxSectionList({
             onUpdate={onUpdate}
             onMove={onMove}
             onDelete={onDelete}
+            onReorder={onReorder ? (tasks) => onReorder(box, tasks) : undefined}
             onSelect={onSelect}
             selectedTaskId={selectedTaskId}
           />

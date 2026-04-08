@@ -6,6 +6,7 @@ import { TaskService } from "@/services/TaskService";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { useTaskMutations } from "./useTaskMutations";
+import { useSync } from "@/app/providers/SyncProvider";
 
 const defaultTaskService = new TaskService(
   new TaskRepository(),
@@ -22,6 +23,7 @@ export interface UseGoalTasksReturn {
   moveTask: (id: string, box: Box) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   duplicateTask: (id: string) => Promise<Task>;
+  reorderTasks: (orderedTasks: Task[]) => Promise<void>;
 }
 
 export function useGoalTasks(
@@ -31,6 +33,7 @@ export function useGoalTasks(
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { schedulePush } = useSync();
 
   const queryFn = useMemo(
     () => () => taskService.getByGoalId(goalId),
@@ -65,8 +68,24 @@ export function useGoalTasks(
     [taskService, goalId],
   );
 
+  const reorderTasks = useCallback(
+    async (orderedTasks: Task[]) => {
+      setTasks(orderedTasks);
+      await taskService.reorderTasks(orderedTasks);
+      schedulePush();
+    },
+    [taskService, schedulePush],
+  );
+
   const noopReload = useCallback(async () => {}, []);
   const mutations = useTaskMutations(taskService, noopReload);
 
-  return { tasks, completedTasks, isLoading, createTask, ...mutations };
+  return {
+    tasks,
+    completedTasks,
+    isLoading,
+    createTask,
+    reorderTasks,
+    ...mutations,
+  };
 }

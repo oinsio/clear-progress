@@ -80,6 +80,7 @@ export default function GoalDetailPage() {
     moveTask,
     deleteTask,
     duplicateTask,
+    reorderTasks,
   } = useGoalTasks(id ?? "");
   const { goals } = useGoals();
   const { contexts } = useContexts();
@@ -175,6 +176,13 @@ export default function GoalDetailPage() {
       await createTask(title, box, notes);
     },
     [createTask],
+  );
+
+  const handleReorderTasks = useCallback(
+    async (_box: Box, orderedTasks: Task[]) => {
+      await reorderTasks(orderedTasks);
+    },
+    [reorderTasks],
   );
 
   const handleStartEdit = useCallback(() => {
@@ -583,6 +591,7 @@ export default function GoalDetailPage() {
               onUpdate={updateTask}
               onMove={moveTask}
               onDelete={deleteTask}
+              onReorder={handleReorderTasks}
               onSelect={handleTaskSelect}
               selectedTaskId={selectedTaskId}
             />
