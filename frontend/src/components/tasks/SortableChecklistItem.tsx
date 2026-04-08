@@ -2,6 +2,7 @@ import { GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
 import { cn } from "@/shared/lib/cn";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import type { ChecklistItem } from "@/types/entities";
 import {
   CHECKLIST_ITEM_VARIANT,
@@ -21,7 +22,7 @@ export interface SortableChecklistItemProps {
   onStartEdit: () => void;
   onEditChange: (value: string) => void;
   onEditBlur: () => void;
-  onEditKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onEditKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onDelete: () => void;
 }
 
@@ -42,6 +43,7 @@ export function SortableChecklistItem({
 }: SortableChecklistItemProps) {
   const { t } = useTranslation();
   const isCompleted = variant === CHECKLIST_ITEM_VARIANT.COMPLETED;
+  const editingTextareaRef = useAutoResizeTextarea(editingTitle);
   const {
     attributes,
     listeners,
@@ -53,9 +55,7 @@ export function SortableChecklistItem({
   } = useSortable({ id: item.id });
 
   const dragStyle = {
-    transform: transform
-      ? `translate3d(0, ${transform.y}px, 0)`
-      : undefined,
+    transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
@@ -114,8 +114,9 @@ export function SortableChecklistItem({
         </button>
       </div>
       {isEditing ? (
-        <input
-          type="text"
+        <textarea
+          ref={editingTextareaRef}
+          rows={1}
           data-testid={`checklist-item-edit-input-${item.id}`}
           value={editingTitle}
           onChange={(event) => onEditChange(event.target.value)}
@@ -123,7 +124,7 @@ export function SortableChecklistItem({
           onKeyDown={onEditKeyDown}
           autoFocus
           className={cn(
-            "flex-1 text-sm outline-none",
+            "flex-1 text-sm outline-none resize-none overflow-hidden",
             isCompleted ? "text-gray-400 line-through" : "text-gray-800",
           )}
         />

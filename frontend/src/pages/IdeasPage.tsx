@@ -19,6 +19,7 @@ import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { BOX } from "@/constants";
@@ -110,6 +111,9 @@ export default function IdeasPage() {
     handleKeyDown: handleAddTaskKeyDown,
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
+
+  const newIdeaTextareaRef = useAutoResizeTextarea(newIdeaName);
+  const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
 
   const activeIdeas = ideas.filter((idea) => !idea.is_deleted);
 
@@ -248,15 +252,16 @@ export default function IdeasPage() {
               {/* Inline add idea input */}
               {isAddingIdea && (
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <input
-                    type="text"
+                  <textarea
+                    ref={newIdeaTextareaRef}
+                    rows={1}
                     autoFocus
                     value={newIdeaName}
                     onChange={(event) => setNewIdeaName(event.target.value)}
                     onKeyDown={handleAddIdeaKeyDown}
                     onBlur={handleAddIdeaBlur}
                     placeholder={t("idea.titlePlaceholder")}
-                    className="w-full text-sm outline-none placeholder:text-gray-400"
+                    className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                     data-testid="add-idea-input"
                   />
                 </div>
@@ -265,15 +270,16 @@ export default function IdeasPage() {
               {/* Inline add task input */}
               {isAddingTask && (
                 <div className="px-4 py-3 border-b border-gray-100">
-                  <input
-                    type="text"
+                  <textarea
+                    ref={newTaskTextareaRef}
+                    rows={1}
                     autoFocus
                     value={newTaskTitle}
                     onChange={(event) => setNewTaskTitle(event.target.value)}
                     onKeyDown={handleAddTaskKeyDown}
                     onBlur={handleAddTaskBlur}
                     placeholder={t("idea.taskPlaceholder")}
-                    className="w-full text-sm outline-none placeholder:text-gray-400"
+                    className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                     data-testid="add-task-input"
                   />
                 </div>

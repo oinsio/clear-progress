@@ -20,6 +20,7 @@ import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { BOX, ROUTES } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import type { Category } from "@/types/entities";
@@ -134,6 +135,9 @@ export default function CategoriesPage() {
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
 
+  const newCategoryTextareaRef = useAutoResizeTextarea(newCategoryName);
+  const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
+
   const activeCategories = categories.filter(
     (category) => !category.is_deleted,
   );
@@ -243,8 +247,9 @@ export default function CategoriesPage() {
                   {/* Inline add category input */}
                   {isAddingCategory && (
                     <li className="px-4 py-3 border-b border-gray-100">
-                      <input
-                        type="text"
+                      <textarea
+                        ref={newCategoryTextareaRef}
+                        rows={1}
                         autoFocus
                         value={newCategoryName}
                         onChange={(event) =>
@@ -253,7 +258,7 @@ export default function CategoriesPage() {
                         onKeyDown={handleAddCategoryKeyDown}
                         onBlur={handleAddCategoryBlur}
                         placeholder={t("category.namePlaceholder")}
-                        className="w-full text-sm outline-none placeholder:text-gray-400"
+                        className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                         data-testid="add-category-input"
                       />
                     </li>
@@ -266,15 +271,16 @@ export default function CategoriesPage() {
           {/* Inline add task input */}
           {isAddingTask && (
             <div className="px-4 py-3 border-b border-gray-100">
-              <input
-                type="text"
+              <textarea
+                ref={newTaskTextareaRef}
+                rows={1}
                 autoFocus
                 value={newTaskTitle}
                 onChange={(event) => setNewTaskTitle(event.target.value)}
                 onKeyDown={handleAddTaskKeyDown}
                 onBlur={handleAddTaskBlur}
                 placeholder={t("category.taskPlaceholder")}
-                className="w-full text-sm outline-none placeholder:text-gray-400"
+                className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                 data-testid="add-task-input"
               />
             </div>

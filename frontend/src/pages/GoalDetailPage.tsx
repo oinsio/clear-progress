@@ -29,6 +29,7 @@ import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useSettings } from "@/hooks/useSettings";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
@@ -118,6 +119,9 @@ export default function GoalDetailPage() {
     isCoverRemoved,
     existingCoverUrl,
   });
+
+  const editTitleTextareaRef = useAutoResizeTextarea(editTitle);
+  const editDescriptionTextareaRef = useAutoResizeTextarea(editDescription);
 
   const hasLoadedRef = useRef(false);
   const isLoading = isGoalLoading || isTasksLoading;
@@ -360,14 +364,15 @@ export default function GoalDetailPage() {
                         <label htmlFor="goal-edit-title" className="sr-only">
                           {t("goal.titleLabel")}
                         </label>
-                        <input
+                        <textarea
+                          ref={editTitleTextareaRef}
                           id="goal-edit-title"
                           autoFocus
-                          type="text"
+                          rows={1}
                           value={editTitle}
                           onChange={(e) => setEditTitle(e.target.value)}
                           placeholder={t("goal.titlePlaceholder")}
-                          className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
+                          className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
                           data-testid="goal-title-input"
                         />
                       </div>
@@ -382,12 +387,12 @@ export default function GoalDetailPage() {
                         {t("goal.descriptionLabel")}
                       </label>
                       <textarea
+                        ref={editDescriptionTextareaRef}
                         id="goal-edit-description"
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
                         placeholder={t("goal.descriptionPlaceholder")}
-                        rows={3}
-                        className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none"
+                        className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px]"
                         data-testid="goal-description-input"
                       />
                     </div>

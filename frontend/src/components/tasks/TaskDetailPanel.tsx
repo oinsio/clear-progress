@@ -27,6 +27,7 @@ import {
 import { useChecklistItemEditing } from "@/hooks/useChecklistItemEditing";
 import { useTaskEditLabels } from "@/hooks/useTaskEditLabels";
 import { useTaskFormState } from "@/hooks/useTaskFormState";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { RepeatRuleSelector } from "./RepeatRuleSelector";
 import {
   ACTIVE_TAB,
@@ -243,6 +244,9 @@ export function TaskDetailPanel({
   const [openSelector, setOpenSelector] = useState<SelectorType | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
+
+  const titleTextareaRef = useAutoResizeTextarea(title);
+  const notesTextareaRef = useAutoResizeTextarea(notes);
 
   const {
     items,
@@ -492,13 +496,14 @@ export function TaskDetailPanel({
               <label className="text-xs font-medium text-gray-500 mb-1 block">
                 {t("taskEdit.fieldTitle")}
               </label>
-              <input
-                type="text"
+              <textarea
+                ref={titleTextareaRef}
+                rows={1}
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 onBlur={() => void handleTitleBlur()}
                 placeholder={t("task.titlePlaceholder")}
-                className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
+                className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
                 data-testid="task-detail-title"
               />
             </div>
@@ -509,12 +514,12 @@ export function TaskDetailPanel({
                 {t("taskEdit.fieldNotes")}
               </label>
               <textarea
+                ref={notesTextareaRef}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 onBlur={() => void handleNotesBlur()}
                 placeholder={t("taskEdit.notesPlaceholder")}
-                rows={4}
-                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none"
+                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px]"
                 data-testid="task-detail-notes"
               />
             </div>

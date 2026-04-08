@@ -14,14 +14,22 @@ export function AddTaskInput({
 }: AddTaskInputProps) {
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    textareaRef.current?.focus();
   }, []);
 
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [inputValue]);
+
   const handleKeyDown = useCallback(
-    async (event: React.KeyboardEvent<HTMLInputElement>) => {
+    async (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === "Enter" && inputValue.trim()) {
         await onAdd(inputValue.trim());
         setInputValue("");
@@ -44,15 +52,15 @@ export function AddTaskInput({
   return (
     <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
       <div className="w-5 h-5 rounded-full border-2 border-accent flex-shrink-0" />
-      <input
-        ref={inputRef}
-        type="text"
+      <textarea
+        ref={textareaRef}
+        rows={1}
         value={inputValue}
         onChange={(event) => setInputValue(event.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         placeholder={t("task.addPlaceholder", { box: targetBox })}
-        className="flex-1 text-sm outline-none placeholder:text-gray-400"
+        className="flex-1 text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
         data-testid="add-task-input"
       />
     </div>

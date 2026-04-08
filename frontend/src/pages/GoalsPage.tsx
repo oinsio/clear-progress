@@ -19,6 +19,7 @@ import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { BOX } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import { TaskService } from "@/services/TaskService";
@@ -115,6 +116,9 @@ export default function GoalsPage() {
     handleKeyDown: handleAddGoalKeyDown,
     handleBlur: handleAddGoalBlur,
   } = useInlineAdd((title) => createGoal({ title }));
+
+  const newGoalTextareaRef = useAutoResizeTextarea(newGoalTitle);
+  const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
 
   const activeGoals = goals.filter((goal) => !goal.is_deleted);
 
@@ -227,15 +231,16 @@ export default function GoalsPage() {
             {/* Inline add goal input */}
             {isAddingGoal && (
               <div className="px-4 py-3 border-b border-gray-100">
-                <input
-                  type="text"
+                <textarea
+                  ref={newGoalTextareaRef}
+                  rows={1}
                   autoFocus
                   value={newGoalTitle}
                   onChange={(event) => setNewGoalTitle(event.target.value)}
                   onKeyDown={handleAddGoalKeyDown}
                   onBlur={handleAddGoalBlur}
                   placeholder={t("goal.titlePlaceholder")}
-                  className="w-full text-sm outline-none placeholder:text-gray-400"
+                  className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                   data-testid="add-goal-input"
                 />
               </div>
@@ -244,15 +249,16 @@ export default function GoalsPage() {
             {/* Inline add task input */}
             {isAddingTask && (
               <div className="px-4 py-3 border-b border-gray-100">
-                <input
-                  type="text"
+                <textarea
+                  ref={newTaskTextareaRef}
+                  rows={1}
                   autoFocus
                   value={newTaskTitle}
                   onChange={(event) => setNewTaskTitle(event.target.value)}
                   onKeyDown={handleAddTaskKeyDown}
                   onBlur={handleAddTaskBlur}
                   placeholder={t("goal.taskPlaceholder")}
-                  className="w-full text-sm outline-none placeholder:text-gray-400"
+                  className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                   data-testid="add-task-input"
                 />
               </div>

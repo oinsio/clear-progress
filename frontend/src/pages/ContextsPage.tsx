@@ -20,6 +20,7 @@ import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { BOX, ROUTES } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import type { Context } from "@/types/entities";
@@ -133,6 +134,9 @@ export default function ContextsPage() {
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
 
+  const newContextTextareaRef = useAutoResizeTextarea(newContextName);
+  const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
+
   const activeContexts = contexts.filter((context) => !context.is_deleted);
 
   useEffect(() => {
@@ -245,8 +249,9 @@ export default function ContextsPage() {
                   {/* Inline add context input */}
                   {isAddingContext && (
                     <li className="px-4 py-3 border-b border-gray-100">
-                      <input
-                        type="text"
+                      <textarea
+                        ref={newContextTextareaRef}
+                        rows={1}
                         autoFocus
                         value={newContextName}
                         onChange={(event) =>
@@ -255,7 +260,7 @@ export default function ContextsPage() {
                         onKeyDown={handleAddContextKeyDown}
                         onBlur={handleAddContextBlur}
                         placeholder={t("context.namePlaceholder")}
-                        className="w-full text-sm outline-none placeholder:text-gray-400"
+                        className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                         data-testid="add-context-input"
                       />
                     </li>
@@ -268,15 +273,16 @@ export default function ContextsPage() {
           {/* Inline add task input */}
           {isAddingTask && (
             <div className="px-4 py-3 border-b border-gray-100">
-              <input
-                type="text"
+              <textarea
+                ref={newTaskTextareaRef}
+                rows={1}
                 autoFocus
                 value={newTaskTitle}
                 onChange={(event) => setNewTaskTitle(event.target.value)}
                 onKeyDown={handleAddTaskKeyDown}
                 onBlur={handleAddTaskBlur}
                 placeholder={t("context.taskPlaceholder")}
-                className="w-full text-sm outline-none placeholder:text-gray-400"
+                className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                 data-testid="add-task-input"
               />
             </div>

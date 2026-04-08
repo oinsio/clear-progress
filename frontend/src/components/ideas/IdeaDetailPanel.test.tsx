@@ -159,10 +159,9 @@ describe("IdeaDetailPanel", () => {
     const deleteButton = screen.getByLabelText("idea.deleteLabel");
     fireEvent.click(deleteButton);
 
-    expect(
-      screen.getByTestId("idea-detail-delete-confirm"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Test Idea")).toBeInTheDocument();
+    const confirmDialog = screen.getByTestId("idea-detail-delete-confirm");
+    expect(confirmDialog).toBeInTheDocument();
+    expect(confirmDialog).toHaveTextContent("Test Idea");
   });
 
   it("should call onDelete and onClose when delete is confirmed", () => {

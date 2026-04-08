@@ -3,6 +3,7 @@ import { X, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Idea } from "@/types/entities";
 import { cn } from "@/shared/lib/cn";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 
 interface IdeaDetailPanelProps {
   idea: Idea;
@@ -25,6 +26,9 @@ export function IdeaDetailPanel({
   const [name, setName] = useState(idea.name);
   const [description, setDescription] = useState(idea.description);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const nameTextareaRef = useAutoResizeTextarea(name);
+  const descriptionTextareaRef = useAutoResizeTextarea(description);
 
   useEffect(() => {
     setName(idea.name);
@@ -95,13 +99,14 @@ export function IdeaDetailPanel({
             <label className="text-xs font-medium text-gray-500 mb-1 block">
               {t("idea.nameLabel")}
             </label>
-            <input
-              type="text"
+            <textarea
+              ref={nameTextareaRef}
+              rows={1}
               value={name}
               onChange={(event) => setName(event.target.value)}
               onBlur={() => void handleNameBlur()}
               placeholder={t("idea.titlePlaceholder")}
-              className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
+              className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
               data-testid="idea-detail-name"
             />
           </div>
@@ -112,12 +117,12 @@ export function IdeaDetailPanel({
               {t("idea.descriptionLabel")}
             </label>
             <textarea
+              ref={descriptionTextareaRef}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               onBlur={() => void handleDescriptionBlur()}
               placeholder={t("idea.descriptionPlaceholder")}
-              rows={3}
-              className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none"
+              className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px]"
               data-testid="idea-detail-description"
             />
           </div>
