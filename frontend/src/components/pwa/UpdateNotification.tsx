@@ -10,6 +10,7 @@ export function UpdateNotification() {
 
   const {
     needRefresh: [needRefresh],
+    updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(_swUrl: string, registration: ServiceWorkerRegistration | undefined) {
       if (registration) {
@@ -28,6 +29,7 @@ export function UpdateNotification() {
 
   const handleClose = () => {
     setShowNotification(false);
+    void updateServiceWorker(true);
   };
 
   if (!showNotification) return null;
