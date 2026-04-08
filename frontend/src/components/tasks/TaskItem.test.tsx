@@ -21,6 +21,10 @@ vi.mock("@/hooks/useChecklist", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useIsDesktop", () => ({
+  useIsDesktop: vi.fn().mockReturnValue(false),
+}));
+
 function StatefulTaskItem(props: Record<string, unknown>) {
   const task = props.task as { id: string };
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -279,5 +283,21 @@ describe("TaskItem", () => {
     });
     renderTaskItem();
     expect(screen.getByTestId("checklist-badge")).toHaveTextContent("2/5");
+  });
+
+  // Desktop behavior - should work as before
+  describe("desktop behavior", () => {
+    it("should call onSelect on click when on desktop", async () => {
+      const { useIsDesktop } = await import("@/hooks/useIsDesktop");
+      vi.mocked(useIsDesktop).mockReturnValue(true);
+
+      const onSelect = vi.fn();
+      const task = buildTask();
+      renderTaskItem({ task, onSelect });
+
+      await userEvent.click(screen.getByTestId("task-item-body"));
+
+      expect(onSelect).toHaveBeenCalledWith(task.id);
+    });
   });
 });

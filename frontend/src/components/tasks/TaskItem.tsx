@@ -18,7 +18,12 @@ import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSwipeToComplete } from "@/hooks/useSwipeToComplete";
-import { SWIPE_SNAP_BACK_DURATION_MS } from "@/constants";
+import { useLongPress } from "@/hooks/useLongPress";
+import {
+  SWIPE_SNAP_BACK_DURATION_MS,
+  LONG_PRESS_THRESHOLD_MS,
+  LONG_PRESS_MOVE_THRESHOLD_PX,
+} from "@/constants";
 import * as React from "react";
 
 export interface DragHandleProps {
@@ -80,6 +85,22 @@ export function TaskItem({
       onExpand(isExpanded ? null : task.id);
     }
   }, [isDesktop, onSelect, task.id, isExpanded, onExpand]);
+
+  const handleLongPress = useCallback(() => {
+    if (!isDesktop && onSelect) {
+      onSelect(task.id);
+      if (onExpand) {
+        onExpand(null);
+      }
+    }
+  }, [isDesktop, onSelect, task.id, onExpand]);
+
+  const longPressHandlers = useLongPress({
+    onLongPress: handleLongPress,
+    onClick: handleBodyClick,
+    threshold: LONG_PRESS_THRESHOLD_MS,
+    moveThreshold: LONG_PRESS_MOVE_THRESHOLD_PX,
+  });
 
   const handleOpenEdit = useCallback(() => {
     if (onSelect) {
@@ -189,7 +210,7 @@ export function TaskItem({
             <button
               type="button"
               data-testid="task-item-body"
-              onClick={handleBodyClick}
+              {...longPressHandlers}
               className="flex flex-col flex-1 min-w-0 text-left"
             >
               <span
