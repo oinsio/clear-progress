@@ -185,13 +185,9 @@ export const TOKEN_EXPIRY_BUFFER_S = 60;
 export const GAS_AUTH_ERROR_CODE = "UNAUTHORIZED";
 export const API_AUTH_ERROR_NAME = "ApiAuthError";
 
-export const SWIPE_COMPLETE_THRESHOLD_RATIO = 0.3;
-export const SWIPE_VELOCITY_THRESHOLD = 0.5;
-export const SWIPE_MIN_DISTANCE_FOR_VELOCITY = 40;
+export const SWIPE_COMPLETE_THRESHOLD_PX = 80;
 export const SWIPE_MAX_VERTICAL_DRIFT_PX = 30;
-export const SWIPE_FLY_OUT_DURATION_MS = 250;
-export const SWIPE_COLLAPSE_DURATION_MS = 200;
-export const SWIPE_DAMPING_FACTOR = 0.3;
+export const SWIPE_SNAP_BACK_DURATION_MS = 300;
 
 export const REPEAT_RULE_TYPE = {
   DAILY: "daily",

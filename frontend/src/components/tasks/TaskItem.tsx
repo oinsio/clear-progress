@@ -18,10 +18,7 @@ import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSwipeToComplete } from "@/hooks/useSwipeToComplete";
-import {
-  SWIPE_FLY_OUT_DURATION_MS,
-  SWIPE_COLLAPSE_DURATION_MS,
-} from "@/constants";
+import { SWIPE_SNAP_BACK_DURATION_MS } from "@/constants";
 import * as React from "react";
 
 export interface DragHandleProps {
@@ -122,39 +119,19 @@ export function TaskItem({
   }, [isExpanded, isConfirmingRestore]);
 
   const isSwipeEnabled = !isDesktop && !task.is_completed;
-  const { progress, isThresholdReached, phase } = useSwipeToComplete(
+  const { translateX, isThresholdReached } = useSwipeToComplete(
     containerRef,
     () => onComplete(task.id),
     isSwipeEnabled,
   );
-
-  // Spring effect for icon when threshold is reached
-  const [iconScale, setIconScale] = useState(1);
-  useEffect(() => {
-    if (isThresholdReached && phase === "swiping") {
-      setIconScale(1.2);
-      const timer = setTimeout(() => setIconScale(1), 150);
-      return () => clearTimeout(timer);
-    }
-  }, [isThresholdReached, phase]);
 
   return (
     <>
       <div
         ref={containerRef}
         data-testid="task-item"
-        style={{
-          maxHeight: phase === "completing" ? 0 : undefined,
-          marginTop: phase === "completing" ? 0 : undefined,
-          marginBottom: phase === "completing" ? 0 : undefined,
-          overflow: "hidden",
-          transition:
-            phase === "completing"
-              ? `max-height ${SWIPE_COLLAPSE_DURATION_MS}ms ease-out, margin ${SWIPE_COLLAPSE_DURATION_MS}ms ease-out`
-              : "none",
-        }}
         className={cn(
-          "relative",
+          "relative overflow-hidden",
           panelSide === "left"
             ? "border-b border-gray-100 border-l-2 transition-colors hover:bg-gray-50"
             : "border-b border-gray-100 border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
@@ -171,34 +148,26 @@ export function TaskItem({
           <div
             aria-hidden="true"
             data-testid="swipe-background"
-            style={{
-              opacity:
-                progress < 0.3 ? 0 : progress < 1.0 ? 0.4 + progress * 0.6 : 1,
-              backgroundColor:
-                progress < 0.3 ? "rgb(229, 231, 235)" : "rgb(34, 197, 94)",
-            }}
-            className="absolute inset-0 flex items-center pl-4 transition-opacity"
+            className={cn(
+              "absolute inset-0 bg-green-500 flex items-center pl-4 transition-opacity",
+              translateX === 0
+                ? "opacity-0"
+                : isThresholdReached
+                  ? "opacity-100"
+                  : "opacity-70",
+            )}
           >
-            <Check
-              size={20}
-              className="text-white transition-transform"
-              style={{
-                transform: `scale(${iconScale * (0.5 + progress * 0.5)})`,
-                opacity: Math.min(progress * 1.5, 1),
-              }}
-            />
+            <Check size={20} className="text-white" />
           </div>
         )}
 
         {/* Swipe content wrapper */}
         <div
           style={{
-            transform:
-              phase === "completing" ? "translateX(110%)" : undefined,
-            opacity: phase === "completing" ? 0 : 1,
+            transform: `translateX(${translateX}px)`,
             transition:
-              phase === "completing"
-                ? `transform ${SWIPE_FLY_OUT_DURATION_MS}ms ease-in, opacity ${SWIPE_FLY_OUT_DURATION_MS}ms ease-in`
+              translateX === 0
+                ? `transform ${SWIPE_SNAP_BACK_DURATION_MS}ms ease-out`
                 : "none",
           }}
         >
