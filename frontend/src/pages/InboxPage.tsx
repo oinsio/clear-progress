@@ -137,6 +137,7 @@ export default function InboxPage() {
     updateTask: updateInbox,
     moveTask: moveInbox,
     reorderTasks: reorderInbox,
+    duplicateTask: duplicateInbox,
     reload: reloadInbox,
   } = useTasks(BOX.INBOX);
   const {
@@ -147,6 +148,7 @@ export default function InboxPage() {
     updateTask: updateToday,
     moveTask: moveToday,
     reorderTasks: reorderToday,
+    duplicateTask: duplicateToday,
     reload: reloadToday,
   } = useTasks(BOX.TODAY);
   const {
@@ -157,6 +159,7 @@ export default function InboxPage() {
     updateTask: updateWeek,
     moveTask: moveWeek,
     reorderTasks: reorderWeek,
+    duplicateTask: duplicateWeek,
     reload: reloadWeek,
   } = useTasks(BOX.WEEK);
   const {
@@ -167,6 +170,7 @@ export default function InboxPage() {
     updateTask: updateLater,
     moveTask: moveLater,
     reorderTasks: reorderLater,
+    duplicateTask: duplicateLater,
     reload: reloadLater,
   } = useTasks(BOX.LATER);
   const { goals } = useGoals();
@@ -270,6 +274,37 @@ export default function InboxPage() {
       updateLater,
       handleMoveTask,
       reloadAllBoxes,
+    ],
+  );
+
+  const handleDuplicateTask = useCallback(
+    async (id: string) => {
+      const allTasks = [
+        ...inboxTasks,
+        ...todayTasks,
+        ...weekTasks,
+        ...laterTasks,
+      ];
+      const task = allTasks.find((t) => t.id === id);
+      if (!task) return;
+
+      const duplicateByBox: Record<Box, (taskId: string) => Promise<Task>> = {
+        [BOX.INBOX]: duplicateInbox,
+        [BOX.TODAY]: duplicateToday,
+        [BOX.WEEK]: duplicateWeek,
+        [BOX.LATER]: duplicateLater,
+      };
+      await duplicateByBox[task.box](id);
+    },
+    [
+      inboxTasks,
+      todayTasks,
+      weekTasks,
+      laterTasks,
+      duplicateInbox,
+      duplicateToday,
+      duplicateWeek,
+      duplicateLater,
     ],
   );
 
@@ -871,6 +906,7 @@ export default function InboxPage() {
               const deleteFn = allBoxDelete[selectedTask.box] ?? deleteToday;
               void deleteFn(id);
             }}
+            onDuplicate={handleDuplicateTask}
             onClose={handleDetailPanelClose}
             style={
               isDesktop

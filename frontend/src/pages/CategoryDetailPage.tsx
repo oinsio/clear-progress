@@ -33,6 +33,7 @@ export default function CategoryDetailPage() {
     updateTask,
     moveTask,
     deleteTask,
+    duplicateTask,
   } = useCategoryTasks(id ?? "");
 
   const category = useMemo(
@@ -82,6 +83,7 @@ export default function CategoryDetailPage() {
       onUpdateTask={updateTask}
       onMoveTask={moveTask}
       onDeleteTask={deleteTask}
+      onDuplicateTask={duplicateTask}
       onModeChange={handleModeChange}
     />
   );

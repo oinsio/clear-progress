@@ -50,6 +50,7 @@ interface TaskDetailPanelProps {
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
   onDelete: (id: string) => void;
   onClose: () => void;
+  onDuplicate: (id: string) => Promise<void>;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -217,6 +218,7 @@ export function TaskDetailPanel({
   onUpdate,
   onDelete,
   onClose,
+  onDuplicate,
   className,
   style,
 }: TaskDetailPanelProps) {
@@ -355,6 +357,11 @@ export function TaskDetailPanel({
   const handleDeleteCancel = useCallback(() => {
     setIsConfirmingDelete(false);
   }, []);
+
+  const handleDuplicateTask = useCallback(async () => {
+    await onDuplicate(task.id);
+    onClose();
+  }, [task.id, onDuplicate, onClose]);
 
   const handleNewItemKeyDown = useCallback(
     async (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -579,6 +586,15 @@ export function TaskDetailPanel({
               hasValue={!!selectedRepeatRule}
               onClick={() => setOpenSelector(SELECTOR_TYPE.REPEAT)}
             />
+
+            {/* Duplicate button */}
+            <button
+              type="button"
+              onClick={() => void handleDuplicateTask()}
+              className="w-full py-2.5 text-sm text-accent border border-accent/40 rounded-lg hover:bg-accent/5 transition-colors mt-2"
+            >
+              {t("taskEdit.duplicateButton")}
+            </button>
           </div>
         )}
 

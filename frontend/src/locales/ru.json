@@ -290,7 +290,8 @@
     "deleteConfirmOk": "Удалить",
     "checkItemMark": "Отметить: {{title}}",
     "checkItemUnmark": "Снять отметку: {{title}}",
-    "checkItemDelete": "Удалить: {{title}}"
+    "checkItemDelete": "Удалить: {{title}}",
+    "duplicateButton": "Сделать копию этой задачи"
   },
   "color": {
     "coral": "Коралловый",

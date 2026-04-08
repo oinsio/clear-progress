@@ -9,9 +9,13 @@ export class TaskService {
     private readonly checklistRepository: ChecklistRepository,
   ) {}
 
+  private sortBySortOrder(tasks: Task[]): Task[] {
+    return tasks.sort((taskA, taskB) => taskA.sort_order - taskB.sort_order);
+  }
+
   async getByBox(box: Box): Promise<Task[]> {
     const tasks = await this.taskRepository.getByBox(box);
-    return tasks.sort((taskA, taskB) => taskA.sort_order - taskB.sort_order);
+    return this.sortBySortOrder(tasks);
   }
 
   async getById(id: string): Promise<Task | undefined> {
@@ -176,50 +180,46 @@ export class TaskService {
 
   async getByGoalId(goalId: string): Promise<Task[]> {
     const tasks = await this.taskRepository.getByGoalId(goalId);
-    return tasks.sort((taskA, taskB) => taskA.sort_order - taskB.sort_order);
+    return this.sortBySortOrder(tasks);
+  }
+
+  private countTasksByField(
+    tasks: Task[],
+    fieldGetter: (task: Task) => string,
+  ): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const task of tasks) {
+      const fieldValue = fieldGetter(task);
+      if (fieldValue) {
+        counts[fieldValue] = (counts[fieldValue] ?? 0) + 1;
+      }
+    }
+    return counts;
   }
 
   async getGoalTaskCounts(): Promise<Record<string, number>> {
     const tasks = await this.taskRepository.getActiveIncomplete();
-    const counts: Record<string, number> = {};
-    for (const task of tasks) {
-      if (task.goal_id) {
-        counts[task.goal_id] = (counts[task.goal_id] ?? 0) + 1;
-      }
-    }
-    return counts;
+    return this.countTasksByField(tasks, (task) => task.goal_id);
   }
 
   async getCategoryTaskCounts(): Promise<Record<string, number>> {
     const tasks = await this.taskRepository.getActiveIncomplete();
-    const counts: Record<string, number> = {};
-    for (const task of tasks) {
-      if (task.category_id) {
-        counts[task.category_id] = (counts[task.category_id] ?? 0) + 1;
-      }
-    }
-    return counts;
+    return this.countTasksByField(tasks, (task) => task.category_id);
   }
 
   async getByCategoryId(categoryId: string): Promise<Task[]> {
     const tasks = await this.taskRepository.getByCategoryId(categoryId);
-    return tasks.sort((taskA, taskB) => taskA.sort_order - taskB.sort_order);
+    return this.sortBySortOrder(tasks);
   }
 
   async getContextTaskCounts(): Promise<Record<string, number>> {
     const tasks = await this.taskRepository.getActiveIncomplete();
-    const counts: Record<string, number> = {};
-    for (const task of tasks) {
-      if (task.context_id) {
-        counts[task.context_id] = (counts[task.context_id] ?? 0) + 1;
-      }
-    }
-    return counts;
+    return this.countTasksByField(tasks, (task) => task.context_id);
   }
 
   async getByContextId(contextId: string): Promise<Task[]> {
     const tasks = await this.taskRepository.getByContextId(contextId);
-    return tasks.sort((taskA, taskB) => taskA.sort_order - taskB.sort_order);
+    return this.sortBySortOrder(tasks);
   }
 
   async searchByTitle(query: string): Promise<Task[]> {
@@ -232,5 +232,26 @@ export class TaskService {
       if (taskA.is_completed === taskB.is_completed) return 0;
       return taskA.is_completed ? 1 : -1;
     });
+  }
+
+  async duplicate(id: string): Promise<Task> {
+    const originalTask = await this.taskRepository.getById(id);
+    if (!originalTask) {
+      throw new Error(`Task not found: ${id}`);
+    }
+
+    const newTask = await this.create({
+      title: originalTask.title,
+      box: originalTask.box,
+      notes: originalTask.notes,
+      goal_id: originalTask.goal_id,
+      context_id: originalTask.context_id,
+      category_id: originalTask.category_id,
+      repeat_rule: originalTask.repeat_rule,
+    });
+
+    await this.copyChecklistItems(originalTask.id, newTask.id);
+
+    return newTask;
   }
 }

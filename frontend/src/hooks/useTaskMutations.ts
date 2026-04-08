@@ -9,6 +9,7 @@ export interface UseTaskMutationsReturn {
   updateTask: (id: string, changes: Partial<Task>) => Promise<void>;
   moveTask: (id: string, box: Box) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  duplicateTask: (id: string) => Promise<Task>;
 }
 
 export function useTaskMutations(
@@ -62,5 +63,15 @@ export function useTaskMutations(
     [taskService, onReload, schedulePush],
   );
 
-  return { completeTask, updateTask, moveTask, deleteTask };
+  const duplicateTask = useCallback(
+    async (id: string): Promise<Task> => {
+      const newTask = await taskService.duplicate(id);
+      await onReload();
+      schedulePush();
+      return newTask;
+    },
+    [taskService, onReload, schedulePush],
+  );
+
+  return { completeTask, updateTask, moveTask, deleteTask, duplicateTask };
 }

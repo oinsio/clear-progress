@@ -33,6 +33,7 @@ export default function ContextDetailPage() {
     updateTask,
     moveTask,
     deleteTask,
+    duplicateTask,
   } = useContextTasks(id ?? "");
 
   const context = useMemo(
@@ -87,6 +88,7 @@ export default function ContextDetailPage() {
       onUpdateTask={updateTask}
       onMoveTask={moveTask}
       onDeleteTask={deleteTask}
+      onDuplicateTask={duplicateTask}
       onModeChange={handleModeChange}
     />
   );

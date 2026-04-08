@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import GoalsPage from "./GoalsPage";
 import { buildGoal } from "@/test/factories/goalFactory";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
+import type { Task } from "@/types/entities";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -69,6 +70,7 @@ function buildTasksHook(
     updateTask: vi.fn().mockResolvedValue(undefined),
     moveTask: vi.fn().mockResolvedValue(undefined),
     reorderTasks: vi.fn().mockResolvedValue(undefined),
+    duplicateTask: vi.fn().mockResolvedValue({} as Task),
     reload: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };

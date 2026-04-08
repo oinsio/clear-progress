@@ -79,6 +79,7 @@ export default function GoalDetailPage() {
     updateTask,
     moveTask,
     deleteTask,
+    duplicateTask,
   } = useGoalTasks(id ?? "");
   const { goals } = useGoals();
   const { contexts } = useContexts();
@@ -643,6 +644,9 @@ export default function GoalDetailPage() {
             onDelete={(taskId) => {
               setSelectedTaskId(null);
               void deleteTask(taskId);
+            }}
+            onDuplicate={async (taskId) => {
+              await duplicateTask(taskId);
             }}
             onClose={handleDetailPanelClose}
             style={

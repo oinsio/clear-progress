@@ -50,6 +50,7 @@ export interface EntityDetailLayoutProps {
   onUpdateTask: (id: string, changes: Partial<Task>) => Promise<void>;
   onMoveTask: (id: string, box: Box) => Promise<void>;
   onDeleteTask: (id: string) => void;
+  onDuplicateTask: (id: string) => Promise<Task>;
   onModeChange: (mode: RightPanelMode) => void;
 }
 
@@ -72,6 +73,7 @@ export function EntityDetailLayout({
   onUpdateTask,
   onMoveTask,
   onDeleteTask,
+  onDuplicateTask,
   onModeChange,
 }: EntityDetailLayoutProps) {
   const { t } = useTranslation();
@@ -365,6 +367,9 @@ export function EntityDetailLayout({
             onDelete={(taskId) => {
               setSelectedTaskId(null);
               void onDeleteTask(taskId);
+            }}
+            onDuplicate={async (taskId) => {
+              await onDuplicateTask(taskId);
             }}
             onClose={handleDetailPanelClose}
             style={

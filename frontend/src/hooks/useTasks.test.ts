@@ -7,6 +7,7 @@ import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
 import { BOX } from "@/constants";
+import type { Task } from "@/types/entities";
 
 const mockSchedulePush = vi.fn();
 
@@ -282,6 +283,70 @@ describe("useTasks", () => {
       });
 
       expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("duplicateTask", () => {
+    it("should create a duplicate task with same title", async () => {
+      const { result, task } = await setupHookWithOneTask({
+        title: "Original task",
+      });
+
+      let duplicatedTask: Task | undefined;
+      await act(async () => {
+        duplicatedTask = await result.current.duplicateTask(task.id);
+      });
+
+      expect(duplicatedTask).toBeDefined();
+      expect(duplicatedTask!.title).toBe("Original task");
+    });
+
+    it("should create a duplicate task with different id", async () => {
+      const { result, task } = await setupHookWithOneTask();
+
+      let duplicatedTask: Task | undefined;
+      await act(async () => {
+        duplicatedTask = await result.current.duplicateTask(task.id);
+      });
+
+      expect(duplicatedTask).toBeDefined();
+      expect(duplicatedTask!.id).not.toBe(task.id);
+    });
+
+    it("should add duplicated task to the list", async () => {
+      const { result, task } = await setupHookWithOneTask();
+
+      await act(async () => {
+        await result.current.duplicateTask(task.id);
+      });
+
+      await waitFor(() => expect(result.current.tasks).toHaveLength(2));
+    });
+
+    it("should schedule push when duplicateTask is called", async () => {
+      const { result, task } = await setupHookWithOneTask();
+
+      await act(async () => {
+        await result.current.duplicateTask(task.id);
+      });
+
+      expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+    });
+
+    it("should return the duplicated task", async () => {
+      const { result, task } = await setupHookWithOneTask({
+        title: "Test task",
+        box: "today",
+      });
+
+      let duplicatedTask: Task | undefined;
+      await act(async () => {
+        duplicatedTask = await result.current.duplicateTask(task.id);
+      });
+
+      expect(duplicatedTask).toBeDefined();
+      expect(duplicatedTask!.title).toBe("Test task");
+      expect(duplicatedTask!.box).toBe("today");
     });
   });
 });

@@ -288,7 +288,8 @@
     "deleteConfirmOk": "Delete",
     "checkItemMark": "Check: {{title}}",
     "checkItemUnmark": "Uncheck: {{title}}",
-    "checkItemDelete": "Delete: {{title}}"
+    "checkItemDelete": "Delete: {{title}}",
+    "duplicateButton": "Make a copy of this task"
   },
   "color": {
     "coral": "Coral",

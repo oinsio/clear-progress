@@ -15,6 +15,7 @@ export interface UseTasksReturn {
   moveTask: (id: string, box: Box) => Promise<void>;
   updateTask: (id: string, changes: Partial<Task>) => Promise<void>;
   reorderTasks: (orderedTasks: Task[]) => Promise<void>;
+  duplicateTask: (id: string) => Promise<Task>;
   reload: () => Promise<void>;
 }
 
@@ -95,6 +96,15 @@ export function useTasks(
     [taskService, schedulePush],
   );
 
+  const duplicateTask = useCallback(
+    async (id: string): Promise<Task> => {
+      const newTask = await taskService.duplicate(id);
+      schedulePush();
+      return newTask;
+    },
+    [taskService, schedulePush],
+  );
+
   const reload = useCallback(async () => {
     // liveQuery handles reactive updates automatically
   }, []);
@@ -108,6 +118,7 @@ export function useTasks(
     moveTask,
     updateTask,
     reorderTasks,
+    duplicateTask,
     reload,
   };
 }

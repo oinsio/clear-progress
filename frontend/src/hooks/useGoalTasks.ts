@@ -21,6 +21,7 @@ export interface UseGoalTasksReturn {
   updateTask: (id: string, changes: Partial<Task>) => Promise<void>;
   moveTask: (id: string, box: Box) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  duplicateTask: (id: string) => Promise<Task>;
 }
 
 export function useGoalTasks(

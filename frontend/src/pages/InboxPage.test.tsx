@@ -10,6 +10,7 @@ import type { UseSearchReturn } from "@/hooks/useSearch";
 import type { UseContextsReturn } from "@/hooks/useContexts";
 import type { UseCategoriesReturn } from "@/hooks/useCategories";
 import type { UseCompletedTasksReturn } from "@/hooks/useCompletedTasks";
+import type { Task } from "@/types/entities";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -54,6 +55,7 @@ function buildTasksHook(
     updateTask: vi.fn(),
     moveTask: vi.fn(),
     reorderTasks: vi.fn(),
+    duplicateTask: vi.fn().mockResolvedValue({} as Task),
     reload: vi.fn(),
     ...overrides,
   };

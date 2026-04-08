@@ -7,6 +7,7 @@ import type { UseGoalReturn } from "@/hooks/useGoal";
 import type { UseGoalTasksReturn } from "@/hooks/useGoalTasks";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
+import type { Task } from "@/types/entities";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -85,6 +86,7 @@ function buildGoalTasksHook(
     updateTask: vi.fn().mockResolvedValue(undefined),
     moveTask: vi.fn().mockResolvedValue(undefined),
     deleteTask: vi.fn().mockResolvedValue(undefined),
+    duplicateTask: vi.fn().mockResolvedValue({} as Task),
     ...overrides,
   };
 }

@@ -7,6 +7,7 @@ import {
   type EntityDetailLayoutProps,
 } from "./EntityDetailLayout";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
+import type { Task } from "@/types/entities";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -81,6 +82,7 @@ function buildProps(
     onUpdateTask: vi.fn().mockResolvedValue(undefined),
     onMoveTask: vi.fn().mockResolvedValue(undefined),
     onDeleteTask: vi.fn(),
+    onDuplicateTask: vi.fn().mockResolvedValue({} as Task),
     onModeChange: vi.fn(),
     ...overrides,
   };

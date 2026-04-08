@@ -995,4 +995,150 @@ describe("TaskService", () => {
       expect(results).toHaveLength(2);
     });
   });
+
+  describe("duplicate", () => {
+    const getCreatedTask = () =>
+      (mockTaskRepository.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const getCreatedItem = () =>
+      (mockChecklistRepository.create as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
+
+    const setupDuplicateTest = async (
+      taskOverrides: Partial<Task> = {},
+      checklistItems: ChecklistItem[] = [],
+    ) => {
+      const originalTask = buildTask(taskOverrides);
+      mockTaskRepository = createMockTaskRepository({
+        getById: vi.fn().mockResolvedValue(originalTask),
+      });
+      mockChecklistRepository = createMockChecklistRepository({
+        getByTaskId: vi.fn().mockResolvedValue(checklistItems),
+      });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.duplicate(originalTask.id);
+      return originalTask;
+    };
+
+    it("should throw when task not found", async () => {
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await expect(taskService.duplicate("nonexistent")).rejects.toThrow(
+        "Task not found: nonexistent",
+      );
+    });
+
+    it("should create new task with copied title", async () => {
+      await setupDuplicateTest({ title: "Original task" });
+      const createdTask = getCreatedTask();
+      expect(createdTask.title).toBe("Original task");
+    });
+
+    it("should create new task with copied box", async () => {
+      await setupDuplicateTest({ box: "today" });
+      const createdTask = getCreatedTask();
+      expect(createdTask.box).toBe("today");
+    });
+
+    it("should create new task with copied notes", async () => {
+      await setupDuplicateTest({ notes: "Important notes" });
+      const createdTask = getCreatedTask();
+      expect(createdTask.notes).toBe("Important notes");
+    });
+
+    it("should create new task with copied goal_id", async () => {
+      await setupDuplicateTest({ goal_id: "goal-123" });
+      const createdTask = getCreatedTask();
+      expect(createdTask.goal_id).toBe("goal-123");
+    });
+
+    it("should create new task with copied context_id", async () => {
+      await setupDuplicateTest({ context_id: "ctx-456" });
+      const createdTask = getCreatedTask();
+      expect(createdTask.context_id).toBe("ctx-456");
+    });
+
+    it("should create new task with copied category_id", async () => {
+      await setupDuplicateTest({ category_id: "cat-789" });
+      const createdTask = getCreatedTask();
+      expect(createdTask.category_id).toBe("cat-789");
+    });
+
+    it("should create new task with copied repeat_rule", async () => {
+      const repeatRule = JSON.stringify({ type: "weekly" });
+      await setupDuplicateTest({ repeat_rule: repeatRule });
+      const createdTask = getCreatedTask();
+      expect(createdTask.repeat_rule).toBe(repeatRule);
+    });
+
+    it("should create new task with different id", async () => {
+      const originalTask = await setupDuplicateTest();
+      const createdTask = getCreatedTask();
+      expect(createdTask.id).not.toBe(originalTask.id);
+    });
+
+    it("should return the newly created task", async () => {
+      const originalTask = buildTask({ title: "Test task" });
+      mockTaskRepository = createMockTaskRepository({
+        getById: vi.fn().mockResolvedValue(originalTask),
+      });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      const duplicatedTask = await taskService.duplicate(originalTask.id);
+      expect(duplicatedTask.title).toBe("Test task");
+      expect(duplicatedTask.id).toBeDefined();
+    });
+
+    it("should copy checklist items when task has checklist", async () => {
+      const originalTask = buildTask();
+      const checklistItems = [
+        buildChecklistItem({ task_id: originalTask.id }),
+        buildChecklistItem({ task_id: originalTask.id }),
+      ];
+      await setupDuplicateTest({}, checklistItems);
+      expect(mockChecklistRepository.create).toHaveBeenCalledTimes(2);
+    });
+
+    it("should copy checklist items with new task_id", async () => {
+      const originalTask = buildTask();
+      const originalItem = buildChecklistItem({ task_id: originalTask.id });
+      await setupDuplicateTest({}, [originalItem]);
+      const createdTask = getCreatedTask();
+      const copiedItem = getCreatedItem();
+      expect(copiedItem.task_id).toBe(createdTask.id);
+    });
+
+    it("should copy checklist items with preserved title", async () => {
+      const originalTask = buildTask();
+      const originalItem = buildChecklistItem({
+        task_id: originalTask.id,
+        title: "Checklist item title",
+      });
+      await setupDuplicateTest({}, [originalItem]);
+      const copiedItem = getCreatedItem();
+      expect(copiedItem.title).toBe("Checklist item title");
+    });
+
+    it("should copy checklist items with preserved sort_order", async () => {
+      const originalTask = buildTask();
+      const originalItem = buildChecklistItem({
+        task_id: originalTask.id,
+        sort_order: 5,
+      });
+      await setupDuplicateTest({}, [originalItem]);
+      const copiedItem = getCreatedItem();
+      expect(copiedItem.sort_order).toBe(5);
+    });
+
+    it("should not copy checklist items when task has no checklist", async () => {
+      await setupDuplicateTest({}, []);
+      expect(mockChecklistRepository.create).not.toHaveBeenCalled();
+    });
+  });
 });
