@@ -10,13 +10,14 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "allowArbitraryExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
 
     /* Types */
-    "types": ["vitest/globals", "vite-plugin-pwa/client"],
+    "types": ["vitest/globals", "vite/client", "vite-plugin-pwa/client"],
 
     /* Strict mode */
     "strict": true,
