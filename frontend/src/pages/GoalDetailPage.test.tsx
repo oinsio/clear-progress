@@ -87,6 +87,7 @@ function buildGoalTasksHook(
     moveTask: vi.fn().mockResolvedValue(undefined),
     deleteTask: vi.fn().mockResolvedValue(undefined),
     duplicateTask: vi.fn().mockResolvedValue({} as Task),
+    reorderTasks: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

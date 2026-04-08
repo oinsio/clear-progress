@@ -145,7 +145,7 @@ interface ChecklistSectionProps {
   onEditChange: (value: string) => void;
   onCommitEdit: (id: string) => void;
   onEditKeyDown: (
-    event: React.KeyboardEvent<HTMLInputElement>,
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
     id: string,
   ) => void;
   onDelete: (id: string) => void;
@@ -289,6 +289,13 @@ export function TaskDetailPanel({
     task.category_id,
     task.box,
     task.repeat_rule,
+    setTitle,
+    setNotes,
+    setSelectedGoalId,
+    setSelectedContextId,
+    setSelectedCategoryId,
+    setSelectedBox,
+    setSelectedRepeatRule,
   ]);
 
   const handleTitleBlur = useCallback(async () => {
@@ -309,7 +316,7 @@ export function TaskDetailPanel({
       setSelectedBox(box);
       await onUpdate(task.id, { box });
     },
-    [task.id, onUpdate],
+    [task.id, onUpdate, setSelectedBox],
   );
 
   const handleGoalChange = useCallback(
@@ -318,7 +325,7 @@ export function TaskDetailPanel({
       setOpenSelector(null);
       await onUpdate(task.id, { goal_id: goalId });
     },
-    [task.id, onUpdate],
+    [task.id, onUpdate, setSelectedGoalId],
   );
 
   const handleContextChange = useCallback(
@@ -327,7 +334,7 @@ export function TaskDetailPanel({
       setOpenSelector(null);
       await onUpdate(task.id, { context_id: contextId });
     },
-    [task.id, onUpdate],
+    [task.id, onUpdate, setSelectedContextId],
   );
 
   const handleCategoryChange = useCallback(
@@ -336,7 +343,7 @@ export function TaskDetailPanel({
       setOpenSelector(null);
       await onUpdate(task.id, { category_id: categoryId });
     },
-    [task.id, onUpdate],
+    [task.id, onUpdate, setSelectedCategoryId],
   );
 
   const handleRepeatChange = useCallback(
@@ -347,7 +354,7 @@ export function TaskDetailPanel({
         repeat_rule: rule ? serializeRepeatRule(rule) : "",
       });
     },
-    [task.id, onUpdate],
+    [task.id, onUpdate, setSelectedRepeatRule],
   );
 
   const handleDeleteClick = useCallback(() => {
