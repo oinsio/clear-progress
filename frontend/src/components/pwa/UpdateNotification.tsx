@@ -9,7 +9,7 @@ export function UpdateNotification() {
   const [showNotification, setShowNotification] = useState(false);
 
   const {
-    offlineReady: [offlineReady],
+    needRefresh: [needRefresh],
   } = useRegisterSW({
     onRegisteredSW(_swUrl: string, registration: ServiceWorkerRegistration | undefined) {
       if (registration) {
@@ -21,10 +21,10 @@ export function UpdateNotification() {
   });
 
   useEffect(() => {
-    if (offlineReady) {
+    if (needRefresh) {
       setShowNotification(true);
     }
-  }, [offlineReady]);
+  }, [needRefresh]);
 
   const handleClose = () => {
     setShowNotification(false);
