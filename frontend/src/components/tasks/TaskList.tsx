@@ -173,7 +173,7 @@ export function TaskList({
 
   if (!onReorder) {
     return (
-      <ul data-testid="task-list" className="overflow-x-hidden">
+      <ul data-testid="task-list">
         {tasks.map((task) => (
           <li key={task.id}>
             <TaskItem
@@ -206,7 +206,7 @@ export function TaskList({
         items={tasks.map((task) => task.id)}
         strategy={verticalListSortingStrategy}
       >
-        <ul data-testid="task-list" className="overflow-x-hidden">
+        <ul data-testid="task-list">
           {tasks.map((task) => (
             <SortableTaskItem
               key={task.id}
