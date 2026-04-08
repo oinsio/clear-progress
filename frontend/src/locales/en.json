@@ -346,5 +346,9 @@
     "sessionExpired": "Session expired. Sign in again to sync.",
     "accountSection": "Account",
     "signInRequired": "Sign in with Google to initialize storage."
+  },
+  "pwa": {
+    "appUpdated": "App updated",
+    "ok": "OK"
   }
 }

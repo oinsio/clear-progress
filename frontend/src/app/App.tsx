@@ -4,6 +4,7 @@ import { SyncProvider } from "./providers/SyncProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
 import { AuthProvider } from "./providers/AuthProvider";
 import { PanelSettingsProvider } from "./providers/PanelSettingsProvider";
+import { UpdateNotification } from "@/components/pwa/UpdateNotification";
 import { router } from "./router";
 
 // GoogleOAuthProvider is now managed inside AuthProvider (see AuthProvider.tsx).
@@ -15,6 +16,7 @@ export default function App() {
         <SyncProvider>
           <ThemeProvider>
             <PanelSettingsProvider>
+              <UpdateNotification />
               <RouterProvider router={router} />
             </PanelSettingsProvider>
           </ThemeProvider>

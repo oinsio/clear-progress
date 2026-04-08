@@ -16,7 +16,7 @@
     "jsx": "react-jsx",
 
     /* Types */
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals", "vite-plugin-pwa/client"],
 
     /* Strict mode */
     "strict": true,
