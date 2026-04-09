@@ -198,12 +198,14 @@ export default function GoalsPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
             {!isLoading && activeGoals.length === 0 ? (
-              <div
-                className="flex flex-col items-center py-3"
+              <button
+                type="button"
+                onClick={() => setIsAddingGoal(true)}
+                className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
                 data-testid="empty-goals-message"
               >
-                <p className="text-gray-400 text-sm">{t("goal.empty")}</p>
-              </div>
+                <p className="text-sm">{t("goal.empty")}</p>
+              </button>
             ) : (
               <DndContext
                 sensors={sensors}

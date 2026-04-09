@@ -220,12 +220,14 @@ export default function IdeasPage() {
           <main className="flex-1 overflow-y-auto">
             <div className="xl:max-w-3xl xl:mx-auto">
               {!isLoading && activeIdeas.length === 0 ? (
-                <div
-                  className="flex flex-col items-center py-3"
+                <button
+                  type="button"
+                  onClick={() => setIsAddingIdea(true)}
+                  className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
                   data-testid="empty-ideas-message"
                 >
-                  <p className="text-gray-400 text-sm">{t("idea.empty")}</p>
-                </div>
+                  <p className="text-sm">{t("idea.empty")}</p>
+                </button>
               ) : (
                 <DndContext
                   sensors={sensors}

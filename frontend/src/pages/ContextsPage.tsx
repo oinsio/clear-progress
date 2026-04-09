@@ -220,12 +220,14 @@ export default function ContextsPage() {
         {/* Scrollable context list */}
         <main className="flex-1 overflow-y-auto">
           {!isLoading && activeContexts.length === 0 && !isAddingContext ? (
-            <div
-              className="flex flex-col items-center py-3"
+            <button
+              type="button"
+              onClick={() => setIsAddingContext(true)}
+              className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
               data-testid="empty-contexts-message"
             >
-              <p className="text-gray-400 text-sm">{t("context.empty")}</p>
-            </div>
+              <p className="text-sm">{t("context.empty")}</p>
+            </button>
           ) : (
             <DndContext
               sensors={sensors}

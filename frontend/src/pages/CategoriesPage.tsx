@@ -218,12 +218,14 @@ export default function CategoriesPage() {
         {/* Scrollable category list */}
         <main className="flex-1 overflow-y-auto">
           {!isLoading && activeCategories.length === 0 && !isAddingCategory ? (
-            <div
-              className="flex flex-col items-center py-3"
+            <button
+              type="button"
+              onClick={() => setIsAddingCategory(true)}
+              className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
               data-testid="empty-categories-message"
             >
-              <p className="text-gray-400 text-sm">{t("category.empty")}</p>
-            </div>
+              <p className="text-sm">{t("category.empty")}</p>
+            </button>
           ) : (
             <DndContext
               sensors={sensors}
