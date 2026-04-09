@@ -171,7 +171,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         await defaultCoverSyncService.sync();
 
         onProgress("push");
-        await syncService.push();
+        await syncService.push(true);
 
         onProgress("pull");
         await syncService.resetAndPull();

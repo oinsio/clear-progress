@@ -796,17 +796,21 @@ describe("SyncProvider — triggerFullSync", () => {
     return parseInt(screen.getByTestId("version").textContent ?? "0");
   }
 
-  async function setupAndTriggerFullSync(
-    onProgress: (step: FullSyncStep) => void = vi.fn(),
-  ) {
-    renderProviderWithFullSync(onProgress);
-    await act(async () => {});
+  function setupFullSyncMocks() {
     vi.clearAllMocks();
     mockPush.mockResolvedValue(undefined);
     mockResetAndPull.mockResolvedValue(undefined);
     mockCoverSync.mockResolvedValue(undefined);
     mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
     mockCoverEnsureServerCovers.mockResolvedValue(undefined);
+  }
+
+  async function setupAndTriggerFullSync(
+    onProgress: (step: FullSyncStep) => void = vi.fn(),
+  ) {
+    renderProviderWithFullSync(onProgress);
+    await act(async () => {});
+    setupFullSyncMocks();
     await act(async () => {
       fireEvent.click(screen.getByTestId("full-sync-btn"));
     });
@@ -840,12 +844,8 @@ describe("SyncProvider — triggerFullSync", () => {
     };
     renderProviderWithFullSync(onProgress);
     await act(async () => {});
-    vi.clearAllMocks();
-    mockPush.mockResolvedValue(undefined);
+    setupFullSyncMocks();
     mockResetAndPull.mockRejectedValue(new Error("resetAndPull failed"));
-    mockCoverSync.mockResolvedValue(undefined);
-    mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
-    mockCoverEnsureServerCovers.mockResolvedValue(undefined);
     await act(async () => {
       fireEvent.click(screen.getByTestId("full-sync-btn"));
     });
@@ -857,7 +857,13 @@ describe("SyncProvider — triggerFullSync", () => {
     renderProviderWithFullSync(vi.fn());
     await act(async () => {});
     const versionAfterMount = getSyncVersion();
-    await setupAndTriggerFullSync();
+
+    setupFullSyncMocks();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("full-sync-btn"));
+    });
+
     const versionAfterFullSync = getSyncVersion();
     expect(versionAfterFullSync).toBeGreaterThan(versionAfterMount);
   });

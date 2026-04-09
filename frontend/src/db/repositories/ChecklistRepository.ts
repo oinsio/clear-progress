@@ -2,6 +2,10 @@ import type { ChecklistItem } from "@/types/entities";
 import { db } from "../database";
 
 export class ChecklistRepository {
+  async getAll(): Promise<ChecklistItem[]> {
+    return db.checklist_items.toArray();
+  }
+
   async getByTaskId(taskId: string): Promise<ChecklistItem[]> {
     return db.checklist_items
       .where("task_id")

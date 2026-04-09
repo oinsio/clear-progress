@@ -2,6 +2,10 @@ import type { Category } from "@/types/entities";
 import { db } from "../database";
 
 export class CategoryRepository {
+  async getAll(): Promise<Category[]> {
+    return db.categories.toArray();
+  }
+
   async getActive(): Promise<Category[]> {
     return db.categories.filter((category) => !category.is_deleted).toArray();
   }

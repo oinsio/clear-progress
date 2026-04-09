@@ -57,8 +57,8 @@ export class SyncService {
     return this.withLock(() => this._pull());
   }
 
-  async push(): Promise<void> {
-    return this.withLock(() => this._push());
+  async push(force = false): Promise<void> {
+    return this.withLock(() => this._push(force));
   }
 
   private async _pull(): Promise<void> {
@@ -92,7 +92,7 @@ export class SyncService {
     );
   }
 
-  private async _push(): Promise<void> {
+  private async _push(force = false): Promise<void> {
     const [
       tasks,
       goals,
@@ -101,26 +101,38 @@ export class SyncService {
       checklist_items,
       ideas,
       settings,
-    ] = await Promise.all([
-      this.taskRepository.getDirty(),
-      this.goalRepository.getDirty(),
-      this.contextRepository.getDirty(),
-      this.categoryRepository.getDirty(),
-      this.checklistRepository.getDirty(),
-      this.ideaRepository.getDirty(),
-      this.settingsRepository.getDirty(),
-    ]);
+    ] = force
+      ? await Promise.all([
+          this.taskRepository.getAll(),
+          this.goalRepository.getAll(),
+          this.contextRepository.getAll(),
+          this.categoryRepository.getAll(),
+          this.checklistRepository.getAll(),
+          this.ideaRepository.getAll(),
+          this.settingsRepository.getAll(),
+        ])
+      : await Promise.all([
+          this.taskRepository.getDirty(),
+          this.goalRepository.getDirty(),
+          this.contextRepository.getDirty(),
+          this.categoryRepository.getDirty(),
+          this.checklistRepository.getDirty(),
+          this.ideaRepository.getDirty(),
+          this.settingsRepository.getDirty(),
+        ]);
 
-    const hasChanges =
-      tasks.length > 0 ||
-      goals.length > 0 ||
-      contexts.length > 0 ||
-      categories.length > 0 ||
-      checklist_items.length > 0 ||
-      ideas.length > 0 ||
-      settings.length > 0;
+    if (!force) {
+      const hasChanges =
+        tasks.length > 0 ||
+        goals.length > 0 ||
+        contexts.length > 0 ||
+        categories.length > 0 ||
+        checklist_items.length > 0 ||
+        ideas.length > 0 ||
+        settings.length > 0;
 
-    if (!hasChanges) return;
+      if (!hasChanges) return;
+    }
 
     const sentVersions = new Map<string, number>([
       ...tasks.map((task) => [task.id, task.version] as [string, number]),

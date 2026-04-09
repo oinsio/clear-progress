@@ -2,6 +2,10 @@ import type { Context } from "@/types/entities";
 import { db } from "../database";
 
 export class ContextRepository {
+  async getAll(): Promise<Context[]> {
+    return db.contexts.toArray();
+  }
+
   async getActive(): Promise<Context[]> {
     return db.contexts.filter((context) => !context.is_deleted).toArray();
   }

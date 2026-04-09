@@ -2,6 +2,10 @@ import type { Idea } from "@/types/entities";
 import { db } from "../database";
 
 export class IdeaRepository {
+  async getAll(): Promise<Idea[]> {
+    return db.ideas.toArray();
+  }
+
   async getActive(): Promise<Idea[]> {
     return db.ideas.filter((idea) => !idea.is_deleted).toArray();
   }
