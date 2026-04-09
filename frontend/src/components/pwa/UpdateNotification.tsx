@@ -27,8 +27,7 @@ export function UpdateNotification() {
     }
   }, [needRefresh]);
 
-  const handleClose = () => {
-    setShowNotification(false);
+  const handleUpdate = () => {
     void updateServiceWorker(true);
   };
 
@@ -48,15 +47,15 @@ export function UpdateNotification() {
           data-testid="update-notification-message"
           className="text-base text-gray-900 text-center mb-6"
         >
-          {t("pwa.appUpdated")}
+          {t("pwa.newVersionAvailable")}
         </p>
         <div className="flex justify-center">
           <button
-            data-testid="update-notification-ok-btn"
-            onClick={handleClose}
+            data-testid="update-notification-update-btn"
+            onClick={handleUpdate}
             className="rounded-lg bg-accent px-6 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
           >
-            {t("pwa.ok")}
+            {t("pwa.update")}
           </button>
         </div>
       </div>
