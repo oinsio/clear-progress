@@ -206,6 +206,11 @@ export class CoverSyncService {
 
   async ensureServerCoversAreCached(): Promise<void> {
     const activeGoals = await this.goalRepository.getActive();
+    console.log(
+      "[CoverSyncService] ensureServerCoversAreCached: active goals count =",
+      activeGoals.length,
+    );
+
     const uncachedFileIds = activeGoals
       .map((goal) => goal.cover_file_id)
       .filter(
@@ -214,6 +219,10 @@ export class CoverSyncService {
           !fileId.startsWith(LOCAL_COVER_ID_PREFIX) &&
           !localCoverCache.get(fileId),
       );
+    console.log(
+      "[CoverSyncService] ensureServerCoversAreCached: uncached file IDs =",
+      uncachedFileIds,
+    );
 
     const missingFromDb: string[] = [];
     for (const fileId of uncachedFileIds) {
@@ -225,8 +234,15 @@ export class CoverSyncService {
         missingFromDb.push(fileId);
       }
     }
+    console.log(
+      "[CoverSyncService] ensureServerCoversAreCached: missing from DB =",
+      missingFromDb,
+    );
 
     if (missingFromDb.length > 0) {
+      console.log(
+        "[CoverSyncService] ensureServerCoversAreCached: calling batchCacheFromServer",
+      );
       await this.batchCacheFromServer(missingFromDb);
     }
   }
@@ -240,14 +256,31 @@ export class CoverSyncService {
   }
 
   async batchCacheFromServer(fileIds: string[]): Promise<void> {
+    console.log(
+      "[CoverSyncService] batchCacheFromServer: total files =",
+      fileIds.length,
+    );
+
     for (
       let offset = 0;
       offset < fileIds.length;
       offset += MAX_COVER_BATCH_SIZE
     ) {
       const chunk = fileIds.slice(offset, offset + MAX_COVER_BATCH_SIZE);
+      console.log(
+        "[CoverSyncService] batchCacheFromServer: requesting chunk, size =",
+        chunk.length,
+        "file_ids =",
+        chunk,
+      );
+
       try {
         const response = await this.apiClient.getCovers(chunk);
+        console.log(
+          "[CoverSyncService] batchCacheFromServer: received response, covers count =",
+          response.covers.length,
+        );
+
         for (const coverResult of response.covers) {
           if (coverResult.error || !coverResult.data) continue;
           try {
@@ -263,12 +296,20 @@ export class CoverSyncService {
             await this.coverRepository.save(coverRecord);
             const url = URL.createObjectURL(blob);
             localCoverCache.set(coverResult.file_id, url);
-          } catch {
-            // best-effort: skip this cover
+          } catch (coverError) {
+            console.error(
+              "[CoverSyncService] batchCacheFromServer: failed to process cover",
+              coverResult.file_id,
+              coverError,
+            );
           }
         }
-      } catch {
-        // best-effort: skip this chunk
+      } catch (error) {
+        console.error(
+          "[CoverSyncService] batchCacheFromServer: request failed for chunk",
+          chunk,
+          error,
+        );
       }
     }
   }

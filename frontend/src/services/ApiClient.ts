@@ -163,10 +163,16 @@ export class ApiClient {
   }
 
   async getCovers(fileIds: string[]): Promise<GetCoversResponse> {
-    return this.request<GetCoversResponse>({
+    console.log("[ApiClient] getCovers: requesting file_ids =", fileIds);
+    const response = await this.request<GetCoversResponse>({
       action: "get_cover",
       file_ids: fileIds,
     });
+    console.log(
+      "[ApiClient] getCovers: response received, covers count =",
+      response.covers?.length ?? 0,
+    );
+    return response;
   }
 
   async deleteCover(payload: {
