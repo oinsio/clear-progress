@@ -604,7 +604,7 @@ export default function GoalDetailPage() {
             {/* Completed tasks section */}
             {showCompleted && completedTasks.length > 0 && (
               <section>
-                <h2 className="px-4 py-2 text-sm font-semibold text-accent bg-gray-50 sticky top-0">
+                <h2 className="px-4 py-2 text-sm font-semibold text-accent bg-white border-b border-gray-100 sticky top-0 z-10">
                   {t("goal.completedSection", { count: completedTasks.length })}
                 </h2>
                 <TaskList

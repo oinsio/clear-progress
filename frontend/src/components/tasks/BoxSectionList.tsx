@@ -59,7 +59,7 @@ function BoxSection({
       <button
         type="button"
         onClick={toggleCollapse}
-        className="w-full flex items-center justify-between px-4 py-2 text-sm font-semibold text-accent bg-gray-50 sticky top-0"
+        className="w-full flex items-center justify-between px-4 py-2 text-sm font-semibold text-accent bg-white border-b border-gray-100 sticky top-0 z-10"
       >
         <span>
           {BOX_SECTION_LABELS[box]} ({tasks.length})
