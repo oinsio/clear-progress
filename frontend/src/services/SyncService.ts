@@ -292,21 +292,23 @@ export class SyncService {
     }
   }
 
-  async fullSync(): Promise<void> {
+  async resetAndPull(): Promise<void> {
+    // 1. Сбросить revision в 0
     await this.syncMetaRepository.setValue(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
       0,
     );
 
-    await db.tasks.toCollection().modify({ _dirty: true });
-    await db.goals.toCollection().modify({ _dirty: true });
-    await db.contexts.toCollection().modify({ _dirty: true });
-    await db.categories.toCollection().modify({ _dirty: true });
-    await db.checklist_items.toCollection().modify({ _dirty: true });
-    await db.ideas.toCollection().modify({ _dirty: true });
-    await db.settings.toCollection().modify({ _dirty: true });
+    // 2. Пометить все записи как не-dirty (чтобы pull перезаписал их)
+    await db.tasks.toCollection().modify({ _dirty: false });
+    await db.goals.toCollection().modify({ _dirty: false });
+    await db.contexts.toCollection().modify({ _dirty: false });
+    await db.categories.toCollection().modify({ _dirty: false });
+    await db.checklist_items.toCollection().modify({ _dirty: false });
+    await db.ideas.toCollection().modify({ _dirty: false });
+    await db.settings.toCollection().modify({ _dirty: false });
 
+    // 3. Получить полное состояние с сервера
     await this.pull();
-    await this.push();
   }
 }

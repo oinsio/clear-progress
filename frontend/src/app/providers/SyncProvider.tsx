@@ -164,13 +164,21 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       isSyncingRef.current = true;
       setSyncStatus("syncing");
       try {
+        onProgress("reupload_covers");
+        await defaultCoverSyncService.reuploadLocalCovers();
+
         onProgress("upload_covers");
         await defaultCoverSyncService.sync();
-        await defaultCoverSyncService.reuploadLocalCovers();
+
         onProgress("push");
-        await syncService.fullSync();
+        await syncService.push();
+
+        onProgress("pull");
+        await syncService.resetAndPull();
+
         onProgress("download_covers");
         await defaultCoverSyncService.ensureServerCoversAreCached();
+
         const syncTimestamp = new Date().toISOString();
         persistLastSync(syncTimestamp);
         setLastSyncedAt(syncTimestamp);

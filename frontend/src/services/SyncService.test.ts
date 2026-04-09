@@ -913,11 +913,11 @@ describe("SyncService", () => {
     });
   });
 
-  describe("fullSync", () => {
-    it("should reset last_known_revision to 0 before syncing", async () => {
+  describe("resetAndPull", () => {
+    it("should reset last_known_revision to 0 before pulling", async () => {
       const service = createService();
 
-      await service.fullSync();
+      await service.resetAndPull();
 
       expect(syncMetaRepository.setValue).toHaveBeenCalledWith(
         SYNC_META_KEYS.LAST_KNOWN_REVISION,
@@ -925,15 +925,15 @@ describe("SyncService", () => {
       );
     });
 
-    it("should call pull during fullSync", async () => {
+    it("should call pull during resetAndPull", async () => {
       const service = createService();
 
-      await service.fullSync();
+      await service.resetAndPull();
 
       expect(mockApiClient.pull).toHaveBeenCalled();
     });
 
-    it("should mark all tasks as _dirty in db", async () => {
+    it("should mark all tasks as _dirty: false in db", async () => {
       const taskId = crypto.randomUUID();
       await db.tasks.put({
         id: taskId,
@@ -952,17 +952,17 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: false,
+        _dirty: true,
       });
       const service = createService();
 
-      await service.fullSync();
+      await service.resetAndPull();
 
       const task = await db.tasks.get(taskId);
-      expect(task!._dirty).toBe(true);
+      expect(task!._dirty).toBe(false);
     });
 
-    it("should mark all goals as _dirty in db", async () => {
+    it("should mark all goals as _dirty: false in db", async () => {
       const goalId = crypto.randomUUID();
       await db.goals.put({
         id: goalId,
@@ -976,17 +976,17 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: false,
+        _dirty: true,
       });
       const service = createService();
 
-      await service.fullSync();
+      await service.resetAndPull();
 
       const goal = await db.goals.get(goalId);
-      expect(goal!._dirty).toBe(true);
+      expect(goal!._dirty).toBe(false);
     });
 
-    it("should mark all contexts as _dirty in db", async () => {
+    it("should mark all contexts as _dirty: false in db", async () => {
       const contextId = crypto.randomUUID();
       await db.contexts.put({
         id: contextId,
@@ -997,17 +997,17 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: false,
+        _dirty: true,
       });
       const service = createService();
 
-      await service.fullSync();
+      await service.resetAndPull();
 
       const context = await db.contexts.get(contextId);
-      expect(context!._dirty).toBe(true);
+      expect(context!._dirty).toBe(false);
     });
 
-    it("should mark all categories as _dirty in db", async () => {
+    it("should mark all categories as _dirty: false in db", async () => {
       const categoryId = crypto.randomUUID();
       await db.categories.put({
         id: categoryId,
@@ -1018,17 +1018,17 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: false,
+        _dirty: true,
       });
       const service = createService();
 
-      await service.fullSync();
+      await service.resetAndPull();
 
       const category = await db.categories.get(categoryId);
-      expect(category!._dirty).toBe(true);
+      expect(category!._dirty).toBe(false);
     });
 
-    it("should mark all checklist_items as _dirty in db", async () => {
+    it("should mark all checklist_items as _dirty: false in db", async () => {
       const itemId = crypto.randomUUID();
       const taskId = crypto.randomUUID();
       await db.checklist_items.put({
@@ -1042,29 +1042,29 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: false,
+        _dirty: true,
       });
       const service = createService();
 
-      await service.fullSync();
+      await service.resetAndPull();
 
       const item = await db.checklist_items.get(itemId);
-      expect(item!._dirty).toBe(true);
+      expect(item!._dirty).toBe(false);
     });
 
-    it("should mark all settings as _dirty in db", async () => {
+    it("should mark all settings as _dirty: false in db", async () => {
       await db.settings.put({
         key: "accent_color",
         value: "green",
         updated_at: "",
-        _dirty: false,
+        _dirty: true,
       });
       const service = createService();
 
-      await service.fullSync();
+      await service.resetAndPull();
 
       const setting = await db.settings.get("accent_color");
-      expect(setting!._dirty).toBe(true);
+      expect(setting!._dirty).toBe(false);
     });
   });
 

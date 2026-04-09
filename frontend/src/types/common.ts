@@ -26,6 +26,7 @@ export type SyncStatus =
 
 export type FullSyncStep =
   | "idle"
+  | "reupload_covers"
   | "upload_covers"
   | "push"
   | "pull"
