@@ -207,6 +207,13 @@
     "disconnectConfirm": "Отключить",
     "disconnectCancel": "Отмена",
     "theme": "Тема",
+    "interfaceScale": "Размер интерфейса",
+    "scale": {
+      "small": "Мелкий",
+      "normal": "Обычный",
+      "large": "Крупный",
+      "xLarge": "Очень крупный"
+    },
     "menuOrder": "Пункты меню",
     "menuOrderHint": "Перетащите, чтобы изменить порядок. Отключённые пункты скрыты в панели.",
     "menuOrderDragHandle": "Переместить: {{label}}",

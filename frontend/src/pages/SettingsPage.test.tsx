@@ -13,6 +13,8 @@ vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/usePanelAlwaysOpen");
 vi.mock("@/hooks/useConnectionStatus");
+vi.mock("@/hooks/useFilterBarPosition");
+vi.mock("@/app/providers/InterfaceScaleProvider");
 vi.mock("@/components/tasks/RightFilterPanel");
 vi.mock("@/components/settings/MenuOrderSection");
 vi.mock("@/components/settings/ConfirmFullSyncDialog");
@@ -29,6 +31,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
@@ -39,6 +43,8 @@ const mockUseLanguage = vi.mocked(useLanguage);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelAlwaysOpen = vi.mocked(usePanelAlwaysOpen);
+const mockUseFilterBarPosition = vi.mocked(useFilterBarPosition);
+const mockUseInterfaceScale = vi.mocked(useInterfaceScale);
 const mockUseSync = vi.mocked(useSync);
 const mockUseConnectionStatus = vi.mocked(useConnectionStatus);
 const mockConfirmFullSyncDialog = vi.mocked(ConfirmFullSyncDialog);
@@ -109,6 +115,14 @@ describe("SettingsPage", () => {
     mockUsePanelAlwaysOpen.mockReturnValue({
       isPanelAlwaysOpen: false,
       setPanelAlwaysOpen: vi.fn(),
+    });
+    mockUseFilterBarPosition.mockReturnValue({
+      filterBarPosition: "bottom",
+      setFilterBarPosition: vi.fn(),
+    });
+    mockUseInterfaceScale.mockReturnValue({
+      interfaceScale: "normal",
+      setInterfaceScale: vi.fn(),
     });
     mockUseConnectionStatus.mockReturnValue("not_configured");
     mockUseSync.mockReturnValue({

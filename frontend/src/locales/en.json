@@ -207,6 +207,13 @@
     "disconnectConfirm": "Disconnect",
     "disconnectCancel": "Cancel",
     "theme": "Theme",
+    "interfaceScale": "Interface Size",
+    "scale": {
+      "small": "Small",
+      "normal": "Normal",
+      "large": "Large",
+      "xLarge": "Extra Large"
+    },
     "menuOrder": "Menu items",
     "menuOrderHint": "Drag to reorder. Hidden items won't appear in the panel.",
     "menuOrderDragHandle": "Move: {{label}}",

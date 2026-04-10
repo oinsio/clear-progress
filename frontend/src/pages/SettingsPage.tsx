@@ -8,6 +8,7 @@ import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import {
@@ -25,6 +26,7 @@ import {
   COLOR_SCHEMES,
   PANEL_SIDES,
   FILTER_BAR_POSITIONS,
+  INTERFACE_SCALES,
   ROUTES,
   STORAGE_KEYS,
   SUPPORTED_LANGUAGES,
@@ -55,6 +57,7 @@ export default function SettingsPage() {
   const { language, setLanguage } = useLanguage();
   const { isPanelAlwaysOpen, setPanelAlwaysOpen } = usePanelAlwaysOpen();
   const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
+  const { interfaceScale, setInterfaceScale } = useInterfaceScale();
 
   const handlePanelToggle = togglePanelOpen;
 
@@ -214,6 +217,49 @@ export default function SettingsPage() {
                     {t(`theme.${scheme}`)}
                   </button>
                 ))}
+              </div>
+            </section>
+
+            {/* Interface scale section */}
+            <section data-testid="settings-interface-scale" className="space-y-3">
+              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                {t("settings.interfaceScale")}
+              </h2>
+              <div className="flex gap-3">
+                {INTERFACE_SCALES.map((scale) => {
+                  const isSelected = interfaceScale === scale;
+                  const iconSize =
+                    scale === "small"
+                      ? 16
+                      : scale === "normal"
+                        ? 20
+                        : scale === "large"
+                          ? 24
+                          : 28;
+
+                  return (
+                    <button
+                      key={scale}
+                      data-testid={`settings-scale-option-${scale}`}
+                      aria-pressed={isSelected}
+                      aria-label={t(`settings.scale.${scale}`)}
+                      onClick={() => setInterfaceScale(scale)}
+                      className={cn(
+                        "flex items-center justify-center w-12 h-12 rounded-lg border-2 transition-all",
+                        isSelected
+                          ? "border-accent bg-accent/10"
+                          : "border-gray-200 hover:border-gray-300",
+                      )}
+                    >
+                      <span
+                        className="font-semibold text-gray-700"
+                        style={{ fontSize: `${iconSize}px` }}
+                      >
+                        Aa
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </section>
 

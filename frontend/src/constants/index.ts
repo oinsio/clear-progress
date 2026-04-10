@@ -6,6 +6,7 @@ import type {
   RepeatRuleType,
   ColorScheme,
   FilterBarPosition,
+  InterfaceScale,
 } from "@/types/common";
 
 export const ROUTES = {
@@ -64,6 +65,14 @@ export const DEFAULT_ACCENT_COLOR: AccentColor = "green";
 
 export const COLOR_SCHEMES: ColorScheme[] = ["system", "light", "dark"];
 export const DEFAULT_COLOR_SCHEME: ColorScheme = "system";
+
+export const INTERFACE_SCALES: InterfaceScale[] = [
+  "small",
+  "normal",
+  "large",
+  "xLarge",
+];
+export const DEFAULT_INTERFACE_SCALE: InterfaceScale = "normal";
 
 export const ACCENT_COLORS: AccentColor[] = [
   "coral",
@@ -141,6 +150,7 @@ export const STORAGE_KEYS = {
   PANEL_SPLIT: "panel_split",
   PANEL_ALWAYS_OPEN: "panel_always_open",
   FILTER_BAR_POSITION: "filter_bar_position",
+  INTERFACE_SCALE: "interface_scale",
   MENU_ORDER: "menu_order",
   SECTION_COLLAPSE: "section_collapse",
   COLOR_SCHEME: "color_scheme",

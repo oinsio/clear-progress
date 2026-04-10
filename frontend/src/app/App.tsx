@@ -4,6 +4,7 @@ import { SyncProvider } from "./providers/SyncProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
 import { AuthProvider } from "./providers/AuthProvider";
 import { PanelSettingsProvider } from "./providers/PanelSettingsProvider";
+import { InterfaceScaleProvider } from "./providers/InterfaceScaleProvider";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
 import { router } from "./router";
 
@@ -15,10 +16,12 @@ export default function App() {
       <LanguageProvider>
         <SyncProvider>
           <ThemeProvider>
-            <PanelSettingsProvider>
-              <UpdateNotification />
-              <RouterProvider router={router} />
-            </PanelSettingsProvider>
+            <InterfaceScaleProvider>
+              <PanelSettingsProvider>
+                <UpdateNotification />
+                <RouterProvider router={router} />
+              </PanelSettingsProvider>
+            </InterfaceScaleProvider>
           </ThemeProvider>
         </SyncProvider>
       </LanguageProvider>
