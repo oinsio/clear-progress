@@ -6,12 +6,14 @@ import { getCategoriesByRevision } from '../sheets/categories.sheet';
 import { getChecklistItemsByRevision } from '../sheets/checklists.sheet';
 import { getIdeasByRevision } from '../sheets/ideas.sheet';
 import { getAllSettings } from '../sheets/settings.sheet';
-import { readNextRevision } from '../sheets/meta.sheet';
+import { readNextRevision, readPurgeRevision } from '../sheets/meta.sheet';
 
 export function pull({ since_revision }: { since_revision?: number }): GoogleAppsScript.Content.TextOutput {
   const sinceRevision = since_revision ?? 0;
   try {
     const currentRevision = readNextRevision() - 1;
+    const purgeRevision = readPurgeRevision();
+
     return jsonOk({
       data: {
         tasks: getTasksByRevision(sinceRevision),
@@ -23,6 +25,7 @@ export function pull({ since_revision }: { since_revision?: number }): GoogleApp
       },
       settings: getAllSettings(),
       current_revision: currentRevision,
+      purge_revision: purgeRevision,
       server_time: new Date().toISOString(),
     });
   } catch (e) {

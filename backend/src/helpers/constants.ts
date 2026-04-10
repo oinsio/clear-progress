@@ -16,10 +16,12 @@ export const SHEET_NAMES = {
 
 export const META_KEYS = {
   NEXT_REVISION: 'next_revision',
+  PURGE_REVISION: 'purge_revision',
 } as const;
 
 export const LOCK_TIMEOUT_MS = 30000;
 export const META_INITIAL_REVISION = 1;
+export const META_INITIAL_PURGE_REVISION = 0;
 
 export const DRIVE_FOLDER_NAMES = {
   ROOT: 'Clear_Progress',

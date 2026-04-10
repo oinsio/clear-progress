@@ -136,6 +136,7 @@ export const LOCAL_COVER_ID_PREFIX = "local:";
 
 export const SYNC_META_KEYS = {
   LAST_KNOWN_REVISION: "last_known_revision",
+  LAST_KNOWN_PURGE_REVISION: "last_known_purge_revision",
 } as const;
 
 export const STORAGE_KEYS = {

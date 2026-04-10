@@ -337,7 +337,16 @@
     "checklists": "Checklists",
     "checklistParent": "Task: {{task}}",
     "restore": "Restore",
-    "restoreAriaLabel": "Restore {{title}}"
+    "restoreAriaLabel": "Restore {{title}}",
+    "purgeButton": "Purge Forever",
+    "purgeConfirmTitle": "Delete Forever?",
+    "purgeConfirmMessage": "This action cannot be undone. All deleted records will be permanently removed from the server and all devices.",
+    "purgeConfirmCount": "Will delete: {{tasks}} tasks, {{goals}} goals, {{contexts}} contexts, {{categories}} categories, {{checklist_items}} checklist items, {{ideas}} ideas",
+    "purgeCancel": "Cancel",
+    "purgeConfirm": "Delete Forever",
+    "purgeSuccess": "Deleted: {{tasks}} tasks, {{goals}} goals, {{contexts}} contexts, {{categories}} categories, {{checklist_items}} checklist items, {{ideas}} ideas",
+    "purgeError": "Failed to purge records",
+    "purgingInProgress": "Purging..."
   },
   "sync": {
     "syncing": "Syncing...",

@@ -1,5 +1,5 @@
-import React from "react";
-import { Trash2, ChevronDown, ArchiveRestore } from "lucide-react";
+import React, { useState } from "react";
+import { Trash2, ChevronDown, ArchiveRestore, AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
 import { useDeletedEntities } from "@/hooks/useDeletedEntities";
@@ -8,6 +8,7 @@ import { useSectionCollapse } from "@/hooks/useSectionCollapse";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
+import { usePurge } from "@/hooks/usePurge";
 import { cn } from "@/shared/lib/cn";
 
 const SECTION_KEY_TASKS = "deleted-tasks";
@@ -118,6 +119,9 @@ export default function DeletedPage() {
     restoreChecklistItem,
   } = useRestoreEntity();
   const handleModeChange = useRightPanelNavigation();
+  const { purge, isPurging } = usePurge();
+  const [showPurgeDialog, setShowPurgeDialog] = useState(false);
+  const [purgeError, setPurgeError] = useState<string | null>(null);
 
   const isEmpty =
     tasks.length === 0 &&
@@ -126,21 +130,46 @@ export default function DeletedPage() {
     categories.length === 0 &&
     checklistItems.length === 0;
 
+  const handlePurgeClick = () => {
+    setShowPurgeDialog(true);
+  };
+
+  const handlePurgeConfirm = async () => {
+    try {
+      setPurgeError(null);
+      await purge();
+      setShowPurgeDialog(false);
+    } catch (error) {
+      setPurgeError(t("deleted.purgeError"));
+    }
+  };
+
   return (
     <div
       data-testid="deleted-page"
       className="relative flex flex-1 overflow-hidden bg-white"
     >
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 bg-white">
-          <Trash2
-            size={16}
-            className="text-accent flex-shrink-0"
-            aria-hidden="true"
-          />
-          <h1 className="text-lg font-semibold text-accent">
-            {t("deleted.pageTitle")}
-          </h1>
+        <header className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2 bg-white">
+          <div className="flex items-center gap-2">
+            <Trash2
+              size={16}
+              className="text-accent flex-shrink-0"
+              aria-hidden="true"
+            />
+            <h1 className="text-lg font-semibold text-accent">
+              {t("deleted.pageTitle")}
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={handlePurgeClick}
+            disabled={isEmpty || isPurging}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <AlertTriangle size={14} aria-hidden="true" />
+            {isPurging ? t("deleted.purgingInProgress") : t("deleted.purgeButton")}
+          </button>
         </header>
 
         <main className="flex-1 overflow-y-auto">
@@ -298,6 +327,52 @@ export default function DeletedPage() {
         onToggle={togglePanelOpen}
         onModeChange={handleModeChange}
       />
+
+      {showPurgeDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              {t("deleted.purgeConfirmTitle")}
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              {t("deleted.purgeConfirmMessage")}
+            </p>
+            <div className="text-sm text-gray-600 mb-6">
+              {t("deleted.purgeConfirmCount", {
+                tasks: tasks.length,
+                goals: goals.length,
+                contexts: contexts.length,
+                categories: categories.length,
+                checklist_items: checklistItems.length,
+                ideas: 0,
+              })}
+            </div>
+            {purgeError && (
+              <p className="text-sm text-red-500 mb-4">{purgeError}</p>
+            )}
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPurgeDialog(false);
+                  setPurgeError(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                {t("deleted.purgeCancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handlePurgeConfirm}
+                disabled={isPurging}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isPurging ? t("deleted.purgingInProgress") : t("deleted.purgeConfirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

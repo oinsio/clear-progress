@@ -7,7 +7,7 @@ import type {
   Idea,
   Setting,
 } from "@/types/entities";
-import type { PushResponseData } from "@/types/api";
+import type { PushResponseData, PurgeResponse } from "@/types/api";
 import { ApiClient } from "./ApiClient";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
@@ -72,6 +72,20 @@ export class SyncService {
 
     if (!pullResponse.ok) {
       throw new Error("Pull failed");
+    }
+
+    // Проверить purge_revision
+    const localPurgeRevision = await this.syncMetaRepository.getValue(
+      SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+    );
+
+    if (pullResponse.purge_revision > localPurgeRevision) {
+      // Кто-то другой вызвал purge — удалить локальные soft-deleted записи
+      await this._purgeLocalDeletedRecords();
+      await this.syncMetaRepository.setValue(
+        SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+        pullResponse.purge_revision,
+      );
     }
 
     await Promise.all([
@@ -322,5 +336,55 @@ export class SyncService {
 
     // 3. Получить полное состояние с сервера
     await this.pull();
+  }
+
+  private async _purgeLocalDeletedRecords(): Promise<void> {
+    await db.transaction(
+      "rw",
+      [
+        db.tasks,
+        db.goals,
+        db.contexts,
+        db.categories,
+        db.checklist_items,
+        db.ideas,
+      ],
+      async () => {
+        await db.tasks.filter((t) => t.is_deleted).delete();
+        await db.goals.filter((g) => g.is_deleted).delete();
+        await db.contexts.filter((c) => c.is_deleted).delete();
+        await db.categories.filter((c) => c.is_deleted).delete();
+        await db.checklist_items.filter((i) => i.is_deleted).delete();
+        await db.ideas.filter((i) => i.is_deleted).delete();
+      },
+    );
+  }
+
+  async purge(): Promise<PurgeResponse["purged"]> {
+    return this.withLock(() => this._purge());
+  }
+
+  private async _purge(): Promise<PurgeResponse["purged"]> {
+    // 1. Вызвать API purge
+    const response = await this.apiClient.purge();
+
+    if (!response.ok) {
+      throw new Error("Purge failed");
+    }
+
+    // 2. Удалить локальные soft-deleted записи
+    await this._purgeLocalDeletedRecords();
+
+    // 3. Обновить last_known_purge_revision
+    await this.syncMetaRepository.setValue(
+      SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+      response.purge_revision,
+    );
+
+    // 4. Сделать pull для синхронизации (обновит current_revision)
+    await this._pull();
+
+    // 5. Вернуть статистику для UI
+    return response.purged;
   }
 }

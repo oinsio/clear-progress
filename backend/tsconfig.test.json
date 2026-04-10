@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": ["ESNext"],
     "types": ["google-apps-script", "vitest/globals"]
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"],

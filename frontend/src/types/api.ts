@@ -28,6 +28,7 @@ export interface PullResponse {
   data: PullResponseData;
   settings: Setting[];
   current_revision: number;
+  purge_revision: number;
   server_time: string;
 }
 
@@ -124,4 +125,17 @@ export interface DeleteCoverResponse {
   ok: boolean;
   deleted: boolean;
   ref_count: number;
+}
+
+export interface PurgeResponse {
+  ok: boolean;
+  purged: {
+    tasks: number;
+    goals: number;
+    contexts: number;
+    categories: number;
+    checklist_items: number;
+    ideas: number;
+  };
+  purge_revision: number;
 }

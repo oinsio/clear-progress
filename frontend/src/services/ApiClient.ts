@@ -10,6 +10,7 @@ import type {
   UploadCoversResponse,
   DeleteCoverResponse,
   GetCoversResponse,
+  PurgeResponse,
 } from "@/types/api";
 import {
   STORAGE_KEYS,
@@ -184,6 +185,13 @@ export class ApiClient {
     });
     const { deleted, ref_count } = response;
     return { deleted, ref_count };
+  }
+
+  async purge(): Promise<PurgeResponse> {
+    return this.request<PurgeResponse>({
+      action: API_ACTIONS.PURGE,
+      confirm: true,
+    });
   }
 }
 

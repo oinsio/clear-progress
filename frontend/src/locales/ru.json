@@ -339,7 +339,16 @@
     "checklists": "Чек-листы",
     "checklistParent": "Задача: {{task}}",
     "restore": "Восстановить",
-    "restoreAriaLabel": "Восстановить {{title}}"
+    "restoreAriaLabel": "Восстановить {{title}}",
+    "purgeButton": "Очистить навсегда",
+    "purgeConfirmTitle": "Удалить навсегда?",
+    "purgeConfirmMessage": "Это действие нельзя отменить. Все удалённые записи будут удалены с сервера и со всех устройств.",
+    "purgeConfirmCount": "Будет удалено: {{tasks}} задач, {{goals}} целей, {{contexts}} контекстов, {{categories}} категорий, {{checklist_items}} пунктов чек-листа, {{ideas}} идей",
+    "purgeCancel": "Отмена",
+    "purgeConfirm": "Удалить навсегда",
+    "purgeSuccess": "Удалено: {{tasks}} задач, {{goals}} целей, {{contexts}} контекстов, {{categories}} категорий, {{checklist_items}} пунктов чек-листа, {{ideas}} идей",
+    "purgeError": "Не удалось очистить записи",
+    "purgingInProgress": "Удаление..."
   },
   "sync": {
     "syncing": "Обновляю...",
