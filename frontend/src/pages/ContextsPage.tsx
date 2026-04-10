@@ -219,7 +219,8 @@ export default function ContextsPage() {
 
         {/* Scrollable context list */}
         <main className="flex-1 overflow-y-auto">
-          {!isLoading && activeContexts.length === 0 && !isAddingContext ? (
+          <div className="xl:max-w-3xl xl:mx-auto">
+            {!isLoading && activeContexts.length === 0 && !isAddingContext ? (
             <button
               type="button"
               onClick={() => setIsAddingContext(true)}
@@ -289,6 +290,7 @@ export default function ContextsPage() {
               />
             </div>
           )}
+          </div>
         </main>
 
         {/* Action bar — bottom position (default) */}

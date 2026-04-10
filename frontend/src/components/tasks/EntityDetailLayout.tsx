@@ -199,8 +199,9 @@ export function EntityDetailLayout({
 
           {/* Scrollable content */}
           <main className="flex-1 overflow-y-auto">
-            {/* Entity card */}
-            {entity && (
+            <div className="xl:max-w-3xl xl:mx-auto">
+              {/* Entity card */}
+              {entity && (
               <div
                 data-testid={`${testIdPrefix}-card`}
                 className={cn(
@@ -296,6 +297,7 @@ export function EntityDetailLayout({
               onSelect={handleTaskSelect}
               selectedTaskId={selectedTaskId}
             />
+            </div>
           </main>
 
           {/* Action bar — bottom position (default) */}

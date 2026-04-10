@@ -340,8 +340,9 @@ export default function GoalDetailPage() {
 
           {/* Scrollable content */}
           <main className="flex-1 overflow-y-auto">
-            {/* Goal card */}
-            {goal && (
+            <div className="xl:max-w-3xl xl:mx-auto">
+              {/* Goal card */}
+              {goal && (
               <div
                 data-testid="goal-card"
                 className={cn(
@@ -621,6 +622,7 @@ export default function GoalDetailPage() {
                 />
               </section>
             )}
+            </div>
           </main>
 
           {/* Action bar — bottom position (default) */}

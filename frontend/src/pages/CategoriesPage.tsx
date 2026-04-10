@@ -217,7 +217,8 @@ export default function CategoriesPage() {
 
         {/* Scrollable category list */}
         <main className="flex-1 overflow-y-auto">
-          {!isLoading && activeCategories.length === 0 && !isAddingCategory ? (
+          <div className="xl:max-w-3xl xl:mx-auto">
+            {!isLoading && activeCategories.length === 0 && !isAddingCategory ? (
             <button
               type="button"
               onClick={() => setIsAddingCategory(true)}
@@ -287,6 +288,7 @@ export default function CategoriesPage() {
               />
             </div>
           )}
+          </div>
         </main>
 
         {/* Action bar — bottom position (default) */}
