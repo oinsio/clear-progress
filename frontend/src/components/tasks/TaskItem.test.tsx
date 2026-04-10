@@ -59,8 +59,8 @@ describe("TaskItem", () => {
     vi.useRealTimers();
   });
 
-  it("should render the task title", () => {
-    renderTaskItem({ task: buildTask({ title: "Buy groceries" }) });
+  it("should render the task name", () => {
+    renderTaskItem({ task: buildTask({ name: "Buy groceries" }) });
     expect(screen.getByText("Buy groceries")).toBeInTheDocument();
   });
 
@@ -71,19 +71,19 @@ describe("TaskItem", () => {
 
   it("should apply line-through styling when task is completed", () => {
     renderTaskItem({ task: buildTask({ is_completed: true }) });
-    expect(screen.getByTestId("task-item-title")).toHaveClass("line-through");
+    expect(screen.getByTestId("task-item-name")).toHaveClass("line-through");
   });
 
   it("should not apply line-through styling when task is not completed", () => {
     renderTaskItem({ task: buildTask({ is_completed: false }) });
-    expect(screen.getByTestId("task-item-title")).not.toHaveClass(
+    expect(screen.getByTestId("task-item-name")).not.toHaveClass(
       "line-through",
     );
   });
 
-  it("should apply base text-sm styling to title regardless of completion state", () => {
+  it("should apply base text-sm styling to name regardless of completion state", () => {
     renderTaskItem({ task: buildTask({ is_completed: false }) });
-    expect(screen.getByTestId("task-item-title")).toHaveClass("text-sm");
+    expect(screen.getByTestId("task-item-name")).toHaveClass("text-sm");
   });
 
   it("should call onComplete with task id after animation delay when complete button is clicked on incomplete task", () => {
@@ -247,7 +247,7 @@ describe("TaskItem", () => {
   });
 
   it("should pass goals to quick actions", async () => {
-    const goal = buildGoal({ title: "My Goal" });
+    const goal = buildGoal({ name: "My Goal" });
     renderTaskItem({ goals: [goal] });
     await userEvent.click(screen.getByTestId("task-item-body"));
     await userEvent.click(

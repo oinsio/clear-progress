@@ -362,14 +362,14 @@ paths:
                       settings: []
                     server_time: "2026-03-04T14:35:00.000Z"
                 rejected_task:
-                  summary: Rejected — task has blank title
+                  summary: Rejected — task has blank name
                   value:
                     ok: true
                     results:
                       tasks:
                         - id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
                           status: rejected
-                          reason: title or name must not be blank
+                          reason: name must not be blank
                       goals: []
                       contexts: []
                       categories: []
@@ -377,7 +377,7 @@ paths:
                       settings: []
                     server_time: "2026-03-04T13:00:02.000Z"
                 rejected_goal:
-                  summary: Rejected — goal has blank title
+                  summary: Rejected — goal has blank name
                   value:
                     ok: true
                     results:
@@ -385,7 +385,7 @@ paths:
                       goals:
                         - id: b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e
                           status: rejected
-                          reason: title or name must not be blank
+                          reason: name must not be blank
                       contexts: []
                       categories: []
                       checklist_items: []
@@ -401,7 +401,7 @@ paths:
                       contexts:
                         - id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
                           status: rejected
-                          reason: title or name must not be blank
+                          reason: name must not be blank
                       categories: []
                       checklist_items: []
                       settings: []
@@ -417,12 +417,12 @@ paths:
                       categories:
                         - id: d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a
                           status: rejected
-                          reason: title or name must not be blank
+                          reason: name must not be blank
                       checklist_items: []
                       settings: []
                     server_time: "2026-03-04T13:00:02.000Z"
                 rejected_checklist_item:
-                  summary: Rejected — checklist item has blank title
+                  summary: Rejected — checklist item has blank name
                   value:
                     ok: true
                     results:
@@ -433,7 +433,7 @@ paths:
                       checklist_items:
                         - id: e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b
                           status: rejected
-                          reason: title or name must not be blank
+                          reason: name must not be blank
                       settings: []
                     server_time: "2026-03-04T13:00:02.000Z"
                 rejected_invalid_id:
@@ -509,7 +509,7 @@ paths:
                       goals:
                         - id: b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e
                           status: rejected
-                          reason: title or name must not be blank
+                          reason: name must not be blank
                       contexts: []
                       categories: []
                       checklist_items: []
@@ -836,11 +836,11 @@ components:
           example: f47ac10b-58cc-4372-a567-0e02b2c3d479
         title:
           type: string
-          description: Task title
+          description: Task name
           example: Buy groceries
         notes:
           type: string
-          description: Text notes. Empty string if no notes
+          description: Text description. Empty string if no description
           example: "Milk, bread, eggs"
         box:
           type: string

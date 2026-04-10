@@ -40,7 +40,7 @@ export default function GoalPage({
     useGoal(goalId);
   const { url: existingCoverUrl } = useCoverUrl(goal?.cover_file_id ?? "");
 
-  const [title, setTitle] = useState<string | undefined>(undefined);
+  const [name, setName] = useState<string | undefined>(undefined);
   const [description, setDescription] = useState<string | undefined>(undefined);
   const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null);
   const [isCoverRemoved, setIsCoverRemoved] = useState(false);
@@ -54,9 +54,9 @@ export default function GoalPage({
     existingCoverUrl,
   });
 
-  const currentTitle = title ?? goal?.title ?? "";
+  const currentName = name ?? goal?.name ?? "";
   const currentDescription = description ?? goal?.description ?? "";
-  const canSave = currentTitle.trim().length > 0 && !isSaving;
+  const canSave = currentName.trim().length > 0 && !isSaving;
 
   const handleCoverSelect = useCallback((file: File) => {
     setPendingCoverFile(file);
@@ -90,7 +90,7 @@ export default function GoalPage({
       }
 
       await updateGoal({
-        title: currentTitle.trim(),
+        name: currentName.trim(),
         description: currentDescription.trim(),
         cover_file_id: newCoverFileId,
       });
@@ -108,7 +108,7 @@ export default function GoalPage({
     isCoverRemoved,
     coverService,
     updateGoal,
-    currentTitle,
+    currentName,
     currentDescription,
     onClose,
   ]);
@@ -183,16 +183,16 @@ export default function GoalPage({
             />
             <div className="flex-1">
               <label htmlFor="goal-edit-title" className="sr-only">
-                {t("goal.titleLabel")}
+                {t("goal.nameLabel")}
               </label>
               <input
                 id="goal-edit-title"
                 type="text"
-                value={currentTitle}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={t("goal.titlePlaceholder")}
+                value={currentName}
+                onChange={(event) => setName(event.target.value)}
+                placeholder={t("goal.namePlaceholder")}
                 className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
-                data-testid="goal-title-input"
+                data-testid="goal-name-input"
               />
             </div>
           </div>
@@ -296,7 +296,7 @@ export default function GoalPage({
             <p className="text-base font-medium text-gray-800 text-center">
               {t("goal.deleteConfirmTitle")}
             </p>
-            <p className="text-sm text-gray-500 text-center">{currentTitle}</p>
+            <p className="text-sm text-gray-500 text-center">{currentName}</p>
             <div className="flex gap-3 w-full">
               <button
                 type="button"

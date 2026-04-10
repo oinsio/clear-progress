@@ -4,8 +4,8 @@ import type { Box, RepeatRule } from "@/types/common";
 import { parseRepeatRule } from "@/utils/repeatRule";
 
 export function useTaskFormState(task: Task) {
-  const [title, setTitle] = useState(task.title);
-  const [notes, setNotes] = useState(task.notes);
+  const [title, setTitle] = useState(task.name);
+  const [notes, setNotes] = useState(task.description);
   const [selectedGoalId, setSelectedGoalId] = useState(task.goal_id);
   const [selectedContextId, setSelectedContextId] = useState(task.context_id);
   const [selectedCategoryId, setSelectedCategoryId] = useState(
@@ -16,10 +16,10 @@ export function useTaskFormState(task: Task) {
     useState<RepeatRule | null>(() => parseRepeatRule(task.repeat_rule));
 
   return {
-    title,
-    setTitle,
-    notes,
-    setNotes,
+    name: title,
+    setName: setTitle,
+    description: notes,
+    setDescription: setNotes,
     selectedGoalId,
     setSelectedGoalId,
     selectedContextId,

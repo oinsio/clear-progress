@@ -12,7 +12,7 @@ export interface UseGoalsReturn {
   goals: Goal[];
   isLoading: boolean;
   reloadGoals: () => Promise<void>;
-  createGoal: (data: Pick<Goal, "title"> & Partial<Goal>) => Promise<void>;
+  createGoal: (data: Pick<Goal, "name"> & Partial<Goal>) => Promise<void>;
   updateGoal: (id: string, changes: Partial<Goal>) => Promise<void>;
   updateGoalStatus: (id: string, status: GoalStatus) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
@@ -38,7 +38,7 @@ export function useGoals(
   }, [goalService]);
 
   const createGoal = useCallback(
-    async (data: Pick<Goal, "title"> & Partial<Goal>) => {
+    async (data: Pick<Goal, "name"> & Partial<Goal>) => {
       await goalService.create(data);
       schedulePush();
     },

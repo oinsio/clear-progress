@@ -9,7 +9,7 @@ import { useSync } from "@/app/providers/SyncProvider";
 export interface UseTasksReturn {
   tasks: Task[];
   isLoading: boolean;
-  createTask: (title: string) => Promise<void>;
+  createTask: (name: string) => Promise<void>;
   completeTask: (id: string) => Promise<string | null>;
   deleteTask: (id: string) => Promise<void>;
   moveTask: (id: string, box: Box) => Promise<void>;
@@ -39,8 +39,8 @@ export function useTasks(
   }, [box, taskService]);
 
   const createTask = useCallback(
-    async (title: string) => {
-      await taskService.create({ title, box });
+    async (name: string) => {
+      await taskService.create({ name, box });
       schedulePush();
     },
     [taskService, box, schedulePush],

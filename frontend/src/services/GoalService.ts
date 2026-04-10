@@ -16,7 +16,7 @@ export class GoalService {
   }
 
   async create(
-    partialGoal: Pick<Goal, "title"> & Partial<Goal>,
+    partialGoal: Pick<Goal, "name"> & Partial<Goal>,
   ): Promise<Goal> {
     const existingGoals = await this.goalRepository.getActive();
     const now = new Date().toISOString();
@@ -72,7 +72,7 @@ export class GoalService {
     const lowerQuery = query.toLowerCase();
     const matchingGoals = allGoals.filter(
       (goal) =>
-        goal.title.toLowerCase().includes(lowerQuery) ||
+        goal.name.toLowerCase().includes(lowerQuery) ||
         goal.description.toLowerCase().includes(lowerQuery),
     );
     return matchingGoals.sort((goalA, goalB) => {

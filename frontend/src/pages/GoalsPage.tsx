@@ -115,7 +115,7 @@ export default function GoalsPage() {
     setValue: setNewGoalTitle,
     handleKeyDown: handleAddGoalKeyDown,
     handleBlur: handleAddGoalBlur,
-  } = useInlineAdd((title) => createGoal({ title }));
+  } = useInlineAdd((name) => createGoal({ name }));
 
   const newGoalTextareaRef = useAutoResizeTextarea(newGoalTitle);
   const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
@@ -241,7 +241,7 @@ export default function GoalsPage() {
                   onChange={(event) => setNewGoalTitle(event.target.value)}
                   onKeyDown={handleAddGoalKeyDown}
                   onBlur={handleAddGoalBlur}
-                  placeholder={t("goal.titlePlaceholder")}
+                  placeholder={t("goal.namePlaceholder")}
                   className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                   data-testid="add-goal-input"
                 />

@@ -22,8 +22,8 @@ function renderGoalItem(overrides = {}) {
 }
 
 describe("GoalItem", () => {
-  it("should render goal title", () => {
-    const goal = buildGoal({ title: "Learn guitar" });
+  it("should render goal name", () => {
+    const goal = buildGoal({ name: "Learn guitar" });
     renderGoalItem({ goal });
     expect(screen.getByText("Learn guitar")).toBeInTheDocument();
   });

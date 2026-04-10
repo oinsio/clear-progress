@@ -7,7 +7,7 @@ export function buildGoal(overrides: Partial<Goal> = {}): Goal {
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
-    title: `Goal ${goalCounter}`,
+    name: `Goal ${goalCounter}`,
     description: "",
     cover_file_id: "",
     status: "planning",

@@ -138,8 +138,8 @@ const GAS_URL = 'https://script.google.com/macros/s/*/exec';
 export function createTask(overrides = {}) {
   return {
     id: crypto.randomUUID(),
-    title: 'Test Task',
-    notes: '',
+    name: 'Test Task',
+    description: '',
     box: 'inbox',
     goal_id: '',
     context_id: '',
@@ -263,24 +263,24 @@ import { createTask } from '@/test/mocks/handlers';
 describe('sortTasks', () => {
   it('сортирует по sort_order по возрастанию', () => {
     const tasks = [
-      createTask({ title: 'C', sort_order: 3 }),
-      createTask({ title: 'A', sort_order: 1 }),
-      createTask({ title: 'B', sort_order: 2 }),
+      createTask({ name: 'C', sort_order: 3 }),
+      createTask({ name: 'A', sort_order: 1 }),
+      createTask({ name: 'B', sort_order: 2 }),
     ];
 
     const sorted = sortTasks(tasks);
-    expect(sorted.map(t => t.title)).toEqual(['A', 'B', 'C']);
+    expect(sorted.map(t => t.name)).toEqual(['A', 'B', 'C']);
   });
 
   it('исключает soft-deleted задачи', () => {
     const tasks = [
-      createTask({ title: 'Active', is_deleted: false }),
-      createTask({ title: 'Deleted', is_deleted: true }),
+      createTask({ name: 'Active', is_deleted: false }),
+      createTask({ name: 'Deleted', is_deleted: true }),
     ];
 
     const sorted = sortTasks(tasks);
     expect(sorted).toHaveLength(1);
-    expect(sorted[0].title).toBe('Active');
+    expect(sorted[0].name).toBe('Active');
   });
 });
 ```
@@ -312,7 +312,7 @@ describe('TaskCreateForm', () => {
 
     expect(onCreated).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: 'Купить молоко',
+        name: 'Купить молоко',
         box: 'inbox',
       })
     );
@@ -354,14 +354,14 @@ describe('SyncService.push', () => {
   it('обрабатывает conflict — перезаписывает локальную версию', async () => {
     const localTask = createTask({
       id: 'task-1',
-      title: 'Local Version',
+      name: 'Local Version',
       version: 2,
     });
     await db.tasks.put(localTask);
 
     const serverTask = createTask({
       id: 'task-1',
-      title: 'Server Version',
+      name: 'Server Version',
       version: 3,
       updated_at: new Date(Date.now() + 1000).toISOString(),
     });
@@ -380,7 +380,7 @@ describe('SyncService.push', () => {
     await SyncService.push([localTask]);
     const stored = await db.tasks.get('task-1');
 
-    expect(stored?.title).toBe('Server Version');
+    expect(stored?.name).toBe('Server Version');
     expect(stored?.version).toBe(3);
   });
 });
@@ -415,7 +415,7 @@ describe('TasksDB', () => {
   });
 
   it('хранит очередь неотправленных изменений', async () => {
-    const task = createTask({ id: '1', title: 'Offline Task' });
+    const task = createTask({ id: '1', name: 'Offline Task' });
     await db.tasks.put(task);
     await db.pendingChanges.put({
       id: crypto.randomUUID(),

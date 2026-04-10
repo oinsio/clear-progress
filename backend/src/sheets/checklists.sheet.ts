@@ -8,7 +8,7 @@ function rowToItem(row: unknown[]): ChecklistItem {
   return {
     id: String(row[COLS.id] ?? ''),
     task_id: String(row[COLS.task_id] ?? ''),
-    title: String(row[COLS.title] ?? ''),
+    name: String(row[COLS.name] ?? ''),
     is_completed: coerceSheetBool(row[COLS.is_completed]),
     sort_order: Number(row[COLS.sort_order] ?? 0),
     is_deleted: coerceSheetBool(row[COLS.is_deleted]),

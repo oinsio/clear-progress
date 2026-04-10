@@ -7,8 +7,8 @@ export function buildTask(overrides: Partial<Task> = {}): Task {
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
-    title: `Task ${taskCounter}`,
-    notes: "",
+    name: `Task ${taskCounter}`,
+    description: "",
     box: "inbox",
     goal_id: "",
     context_id: "",

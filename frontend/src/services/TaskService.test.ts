@@ -123,13 +123,13 @@ describe("TaskService", () => {
         mockChecklistRepository,
       );
       createdTask = await taskService.create({
-        title: "My task",
+        name: "My task",
         box: "inbox",
       });
     });
 
-    it("should create task with given title and box", () => {
-      expect(createdTask.title).toBe("My task");
+    it("should create task with given name and box", () => {
+      expect(createdTask.name).toBe("My task");
       expect(createdTask.box).toBe("inbox");
     });
 
@@ -148,7 +148,7 @@ describe("TaskService", () => {
     });
 
     it("should create task with empty string defaults for optional fields", () => {
-      expect(createdTask.notes).toBe("");
+      expect(createdTask.description).toBe("");
       expect(createdTask.goal_id).toBe("");
       expect(createdTask.context_id).toBe("");
       expect(createdTask.category_id).toBe("");
@@ -171,7 +171,7 @@ describe("TaskService", () => {
 
   describe("update", () => {
     it("should update task fields", async () => {
-      const task = buildTask({ title: "Old title" });
+      const task = buildTask({ name: "Old name" });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
       });
@@ -179,8 +179,8 @@ describe("TaskService", () => {
         mockTaskRepository,
         mockChecklistRepository,
       );
-      const updated = await taskService.update(task.id, { title: "New title" });
-      expect(updated.title).toBe("New title");
+      const updated = await taskService.update(task.id, { name: "New name" });
+      expect(updated.name).toBe("New name");
     });
 
     it("should increment version on update", async () => {
@@ -192,7 +192,7 @@ describe("TaskService", () => {
         mockTaskRepository,
         mockChecklistRepository,
       );
-      const updated = await taskService.update(task.id, { title: "X" });
+      const updated = await taskService.update(task.id, { name: "X" });
       expect(updated.version).toBe(3);
     });
 
@@ -321,9 +321,9 @@ describe("TaskService", () => {
       expect(mockTaskRepository.create).toHaveBeenCalledOnce();
     });
 
-    it("should create recurring copy with same title and box", async () => {
+    it("should create recurring copy with same name and box", async () => {
       const task = buildTask({
-        title: "Daily standup",
+        name: "Daily standup",
         box: "today",
         repeat_rule: JSON.stringify({ type: "daily" }),
       });
@@ -336,7 +336,7 @@ describe("TaskService", () => {
       );
       await taskService.complete(task.id);
       const createdTask = getCreatedTask();
-      expect(createdTask.title).toBe("Daily standup");
+      expect(createdTask.name).toBe("Daily standup");
       expect(createdTask.box).toBe("today");
     });
 
@@ -462,10 +462,10 @@ describe("TaskService", () => {
       expect(copiedItem.is_completed).toBe(false);
     });
 
-    it("should copy checklist items with preserved title and sort_order", async () => {
-      await setupRecurringTaskWithItem({ title: "Buy milk", sort_order: 3 });
+    it("should copy checklist items with preserved name and sort_order", async () => {
+      await setupRecurringTaskWithItem({ name: "Buy milk", sort_order: 3 });
       const copiedItem = getCreatedItem();
-      expect(copiedItem.title).toBe("Buy milk");
+      expect(copiedItem.name).toBe("Buy milk");
       expect(copiedItem.sort_order).toBe(3);
     });
 
@@ -980,29 +980,29 @@ describe("TaskService", () => {
     };
 
     it("should return empty array when no tasks match", async () => {
-      const tasks = [buildTask({ title: "Buy groceries" })];
+      const tasks = [buildTask({ name: "Buy groceries" })];
       const results = await setupSearchTest(tasks, "nonexistent");
       expect(results).toEqual([]);
     });
 
     it("should return matching tasks case-insensitively", async () => {
       const tasks = [
-        buildTask({ title: "Buy groceries" }),
-        buildTask({ title: "Call dentist" }),
-        buildTask({ title: "Buy medicine" }),
+        buildTask({ name: "Buy groceries" }),
+        buildTask({ name: "Call dentist" }),
+        buildTask({ name: "Buy medicine" }),
       ];
       const results = await setupSearchTest(tasks, "buy");
       expect(results).toHaveLength(2);
     });
 
-    it("should return tasks whose notes contain the query", async () => {
+    it("should return tasks whose description contain the query", async () => {
       const matchingTask = buildTask({
-        title: "Project meeting",
-        notes: "Discuss budget allocation",
+        name: "Project meeting",
+        description: "Discuss budget allocation",
       });
       const nonMatchingTask = buildTask({
-        title: "Shopping",
-        notes: "Buy groceries",
+        name: "Shopping",
+        description: "Buy groceries",
       });
       const results = await setupSearchTest(
         [matchingTask, nonMatchingTask],
@@ -1011,16 +1011,16 @@ describe("TaskService", () => {
       expect(results).toEqual([matchingTask]);
     });
 
-    it("should return tasks matching in either title or notes", async () => {
+    it("should return tasks matching in either name or description", async () => {
       const matchInTitle = buildTask({
-        title: "Budget review",
-        notes: "Quarterly report",
+        name: "Budget review",
+        description: "Quarterly report",
       });
       const matchInNotes = buildTask({
-        title: "Team meeting",
-        notes: "Review budget proposals",
+        name: "Team meeting",
+        description: "Review budget proposals",
       });
-      const noMatch = buildTask({ title: "Lunch", notes: "Restaurant" });
+      const noMatch = buildTask({ name: "Lunch", description: "Restaurant" });
       const results = await setupSearchTest(
         [matchInTitle, matchInNotes, noMatch],
         "budget",
@@ -1030,10 +1030,10 @@ describe("TaskService", () => {
       expect(results).toContain(matchInNotes);
     });
 
-    it("should match case-insensitively in notes", async () => {
+    it("should match case-insensitively in description", async () => {
       const task = buildTask({
-        title: "Meeting",
-        notes: "Discuss Budget",
+        name: "Meeting",
+        description: "Discuss Budget",
       });
       const results = await setupSearchTest([task], "budget");
       expect(results).toHaveLength(1);
@@ -1047,17 +1047,17 @@ describe("TaskService", () => {
       async ({ isCompleted }) => {
         const tasks = [
           buildTask({
-            title: "Task A",
+            name: "Task A",
             is_completed: isCompleted,
             updated_at: "2025-01-01T10:00:00.000Z",
           }),
           buildTask({
-            title: "Task B",
+            name: "Task B",
             is_completed: isCompleted,
             updated_at: "2025-01-03T10:00:00.000Z",
           }),
           buildTask({
-            title: "Task C",
+            name: "Task C",
             is_completed: isCompleted,
             updated_at: "2025-01-02T10:00:00.000Z",
           }),
@@ -1071,12 +1071,12 @@ describe("TaskService", () => {
 
     it("should place incomplete tasks before completed tasks", async () => {
       const completedTask = buildTask({
-        title: "Task A",
+        name: "Task A",
         is_completed: true,
         updated_at: "2025-01-03T10:00:00.000Z",
       });
       const incompleteTask = buildTask({
-        title: "Task B",
+        name: "Task B",
         is_completed: false,
         updated_at: "2025-01-01T10:00:00.000Z",
       });
@@ -1125,10 +1125,10 @@ describe("TaskService", () => {
       );
     });
 
-    it("should create new task with copied title", async () => {
-      await setupDuplicateTest({ title: "Original task" });
+    it("should create new task with copied name", async () => {
+      await setupDuplicateTest({ name: "Original task" });
       const createdTask = getCreatedTask();
-      expect(createdTask.title).toBe("Original task");
+      expect(createdTask.name).toBe("Original task");
     });
 
     it("should create new task with copied box", async () => {
@@ -1137,10 +1137,10 @@ describe("TaskService", () => {
       expect(createdTask.box).toBe("today");
     });
 
-    it("should create new task with copied notes", async () => {
-      await setupDuplicateTest({ notes: "Important notes" });
+    it("should create new task with copied description", async () => {
+      await setupDuplicateTest({ description: "Important description" });
       const createdTask = getCreatedTask();
-      expect(createdTask.notes).toBe("Important notes");
+      expect(createdTask.description).toBe("Important description");
     });
 
     it("should create new task with copied goal_id", async () => {
@@ -1175,7 +1175,7 @@ describe("TaskService", () => {
     });
 
     it("should return the newly created task", async () => {
-      const originalTask = buildTask({ title: "Test task" });
+      const originalTask = buildTask({ name: "Test task" });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(originalTask),
       });
@@ -1184,7 +1184,7 @@ describe("TaskService", () => {
         mockChecklistRepository,
       );
       const duplicatedTask = await taskService.duplicate(originalTask.id);
-      expect(duplicatedTask.title).toBe("Test task");
+      expect(duplicatedTask.name).toBe("Test task");
       expect(duplicatedTask.id).toBeDefined();
     });
 
@@ -1207,15 +1207,15 @@ describe("TaskService", () => {
       expect(copiedItem.task_id).toBe(createdTask.id);
     });
 
-    it("should copy checklist items with preserved title", async () => {
+    it("should copy checklist items with preserved name", async () => {
       const originalTask = buildTask();
       const originalItem = buildChecklistItem({
         task_id: originalTask.id,
-        title: "Checklist item title",
+        name: "Checklist item name",
       });
       await setupDuplicateTest({}, [originalItem]);
       const copiedItem = getCreatedItem();
-      expect(copiedItem.title).toBe("Checklist item title");
+      expect(copiedItem.name).toBe("Checklist item name");
     });
 
     it("should copy checklist items with preserved sort_order", async () => {

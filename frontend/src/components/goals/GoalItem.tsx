@@ -57,7 +57,7 @@ export function GoalItem({
           <img
             data-testid={coverUrl ? "goal-cover-img" : "goal-cover-placeholder"}
             src={coverUrl ?? defaultCoverSvg}
-            alt={coverUrl ? goal.title : ""}
+            alt={coverUrl ? goal.name : ""}
             aria-hidden={!coverUrl}
             className="w-full h-full object-cover"
           />
@@ -66,7 +66,7 @@ export function GoalItem({
         {/* Title + task count */}
         <div className="flex-1 min-w-0">
           <p className="text-sm text-gray-800 font-medium leading-snug break-words">
-            {goal.title}
+            {goal.name}
           </p>
           {taskCount > 0 && (
             <span

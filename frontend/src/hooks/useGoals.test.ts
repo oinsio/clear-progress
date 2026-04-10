@@ -75,27 +75,27 @@ describe("useGoals", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.createGoal({ title: "New goal" });
+      await result.current.createGoal({ name: "New goal" });
     });
 
     await waitFor(() => expect(result.current.goals).toHaveLength(1));
-    expect(result.current.goals[0].title).toBe("New goal");
+    expect(result.current.goals[0].name).toBe("New goal");
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });
 
-  it("should update goal title and schedule push when updateGoal is called", async () => {
-    const goal = buildGoal({ title: "Old title" });
+  it("should update goal name and schedule push when updateGoal is called", async () => {
+    const goal = buildGoal({ name: "Old name" });
     await db.goals.add(goal);
 
     const { result } = renderHook(() => useGoals(goalService));
     await waitFor(() => expect(result.current.goals).toHaveLength(1));
 
     await act(async () => {
-      await result.current.updateGoal(goal.id, { title: "New title" });
+      await result.current.updateGoal(goal.id, { name: "New name" });
     });
 
     await waitFor(() =>
-      expect(result.current.goals[0].title).toBe("New title"),
+      expect(result.current.goals[0].name).toBe("New name"),
     );
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });

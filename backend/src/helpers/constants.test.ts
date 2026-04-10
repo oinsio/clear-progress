@@ -53,8 +53,8 @@ describe('colMap', () => {
     expect(colMap(SHEET_NAMES.TASKS).id).toBe(0);
   });
 
-  it('should map title column to index 1 for Tasks sheet', () => {
-    expect(colMap(SHEET_NAMES.TASKS).title).toBe(1);
+  it('should map name column to index 1 for Tasks sheet', () => {
+    expect(colMap(SHEET_NAMES.TASKS).name).toBe(1);
   });
 
   it('should map id column to index 0 for Goals sheet', () => {

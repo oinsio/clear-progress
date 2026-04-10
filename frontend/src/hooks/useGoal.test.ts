@@ -105,22 +105,22 @@ describe("useGoal", () => {
   });
 
   it("should reactively update when goal is written to DB externally", async () => {
-    const goal = buildGoal({ title: "Initial title" });
+    const goal = buildGoal({ name: "Initial name" });
     await db.goals.add(goal);
 
     const { result } = renderHook(() =>
       useGoal(goal.id, goalService, taskService),
     );
     await waitFor(() =>
-      expect(result.current.goal?.title).toBe("Initial title"),
+      expect(result.current.goal?.name).toBe("Initial name"),
     );
 
     await act(async () => {
-      await db.goals.put({ ...goal, title: "Updated title" });
+      await db.goals.put({ ...goal, name: "Updated name" });
     });
 
     await waitFor(() =>
-      expect(result.current.goal?.title).toBe("Updated title"),
+      expect(result.current.goal?.name).toBe("Updated name"),
     );
   });
 
@@ -141,22 +141,22 @@ describe("useGoal", () => {
     await waitFor(() => expect(result.current.tasks).toHaveLength(1));
   });
 
-  it("should update goal title when updateGoal is called", async () => {
-    const goal = buildGoal({ title: "Old title" });
+  it("should update goal name when updateGoal is called", async () => {
+    const goal = buildGoal({ name: "Old name" });
     const result = await renderGoalHook(goal);
 
     await act(async () => {
-      await result.current.updateGoal({ title: "New title" });
+      await result.current.updateGoal({ name: "New name" });
     });
 
-    await waitFor(() => expect(result.current.goal?.title).toBe("New title"));
+    await waitFor(() => expect(result.current.goal?.name).toBe("New name"));
   });
 
   it("should schedule push when updateGoal is called", async () => {
     const result = await renderGoalHook(buildGoal());
 
     await act(async () => {
-      await result.current.updateGoal({ title: "Updated" });
+      await result.current.updateGoal({ name: "Updated" });
     });
 
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
@@ -202,7 +202,7 @@ describe("useGoal", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.updateGoal({ title: "New title" });
+      await result.current.updateGoal({ name: "New name" });
     });
 
     expect(mockSchedulePush).not.toHaveBeenCalled();

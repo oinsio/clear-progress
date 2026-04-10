@@ -63,7 +63,7 @@ const mockUseSettings = vi.mocked(useSettings);
 
 function buildGoalHook(overrides: Partial<UseGoalReturn> = {}): UseGoalReturn {
   return {
-    goal: buildGoal({ title: "Моя цель" }),
+    goal: buildGoal({ name: "Моя цель" }),
     tasks: [],
     isLoading: false,
     updateGoal: vi.fn().mockResolvedValue(undefined),
@@ -192,7 +192,7 @@ describe("GoalDetailPage — inline task creation", () => {
     expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
   });
 
-  it("should call createTask with title and defaultBox when Enter is pressed", async () => {
+  it("should call createTask with name and defaultBox when Enter is pressed", async () => {
     const createTask = vi.fn().mockResolvedValue(undefined);
     mockUseGoalTasks.mockReturnValue(buildGoalTasksHook({ createTask }));
     renderPage();

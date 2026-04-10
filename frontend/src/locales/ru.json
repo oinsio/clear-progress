@@ -36,7 +36,7 @@
     "drag": "Перетащить задачу",
     "add": "Добавить задачу",
     "newTitle": "Новая задача",
-    "titlePlaceholder": "Название задачи...",
+    "namePlaceholder": "Название задачи...",
     "create": "Создать",
     "createLabel": "Создать задачу"
   },
@@ -54,9 +54,9 @@
   "goal": {
     "pageTitle": "Мои цели",
     "empty": "Нет ни одной цели",
-    "titlePlaceholder": "Название цели",
+    "namePlaceholder": "Название цели",
     "descriptionPlaceholder": "Добавить описание",
-    "titleLabel": "Название",
+    "nameLabel": "Название",
     "descriptionLabel": "Описание",
     "statusLabel": "Статус",
     "cancel": "Отмена",
@@ -94,7 +94,7 @@
   "idea": {
     "pageTitle": "Идеи",
     "add": "Добавить идею",
-    "titlePlaceholder": "Название идеи",
+    "namePlaceholder": "Название идеи",
     "descriptionPlaceholder": "Описание идеи",
     "empty": "Нет идей",
     "drag": "Перетащить идею",

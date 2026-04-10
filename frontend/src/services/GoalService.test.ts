@@ -13,7 +13,7 @@ describe("GoalService", () => {
 
   describe("searchByTitle", () => {
     it("should return empty array when no goals match", async () => {
-      const goals = [buildGoal({ title: "Learn piano" })];
+      const goals = [buildGoal({ name: "Learn piano" })];
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(goals),
       });
@@ -24,9 +24,9 @@ describe("GoalService", () => {
 
     it("should return matching goals case-insensitively", async () => {
       const goals = [
-        buildGoal({ title: "Learn piano" }),
-        buildGoal({ title: "Read books" }),
-        buildGoal({ title: "Learn Spanish" }),
+        buildGoal({ name: "Learn piano" }),
+        buildGoal({ name: "Read books" }),
+        buildGoal({ name: "Learn Spanish" }),
       ];
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(goals),
@@ -36,8 +36,8 @@ describe("GoalService", () => {
       expect(results).toHaveLength(2);
     });
 
-    it("should match partial title", async () => {
-      const goal = buildGoal({ title: "My important goal" });
+    it("should match partial name", async () => {
+      const goal = buildGoal({ name: "My important goal" });
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue([goal]),
       });
@@ -48,11 +48,11 @@ describe("GoalService", () => {
 
     it("should return goals whose description contains the query", async () => {
       const matchingGoal = buildGoal({
-        title: "Career growth",
+        name: "Career growth",
         description: "Learn advanced programming techniques",
       });
       const nonMatchingGoal = buildGoal({
-        title: "Fitness",
+        name: "Fitness",
         description: "Run marathon",
       });
       mockGoalRepository = createMockGoalRepository({
@@ -63,31 +63,31 @@ describe("GoalService", () => {
       expect(results).toEqual([matchingGoal]);
     });
 
-    it("should return goals matching in either title or description", async () => {
-      const matchInTitle = buildGoal({
-        title: "Programming mastery",
+    it("should return goals matching in either name or description", async () => {
+      const matchInName = buildGoal({
+        name: "Programming mastery",
         description: "Become expert developer",
       });
       const matchInDescription = buildGoal({
-        title: "Career development",
+        name: "Career development",
         description: "Focus on programming skills",
       });
-      const noMatch = buildGoal({ title: "Fitness", description: "Exercise" });
+      const noMatch = buildGoal({ name: "Fitness", description: "Exercise" });
       mockGoalRepository = createMockGoalRepository({
         getActive: vi
           .fn()
-          .mockResolvedValue([matchInTitle, matchInDescription, noMatch]),
+          .mockResolvedValue([matchInName, matchInDescription, noMatch]),
       });
       const goalService = new GoalService(mockGoalRepository);
       const results = await goalService.searchByTitle("programming");
       expect(results).toHaveLength(2);
-      expect(results).toContain(matchInTitle);
+      expect(results).toContain(matchInName);
       expect(results).toContain(matchInDescription);
     });
 
     it("should match case-insensitively in description", async () => {
       const goal = buildGoal({
-        title: "Career",
+        name: "Career",
         description: "Learn Programming",
       });
       mockGoalRepository = createMockGoalRepository({
@@ -199,11 +199,11 @@ describe("GoalService", () => {
 
     beforeEach(async () => {
       const goalService = new GoalService(mockGoalRepository);
-      createdGoal = await goalService.create({ title: "My goal" });
+      createdGoal = await goalService.create({ name: "My goal" });
     });
 
-    it("should create goal with given title", () => {
-      expect(createdGoal.title).toBe("My goal");
+    it("should create goal with given name", () => {
+      expect(createdGoal.name).toBe("My goal");
     });
 
     it("should create goal with is_deleted false", () => {
@@ -248,7 +248,7 @@ describe("GoalService", () => {
     it("should preserve provided description", async () => {
       const goalService = new GoalService(mockGoalRepository);
       const goal = await goalService.create({
-        title: "Test",
+        name: "Test",
         description: "Custom description",
       });
       expect(goal.description).toBe("Custom description");
@@ -257,7 +257,7 @@ describe("GoalService", () => {
     it("should preserve provided status", async () => {
       const goalService = new GoalService(mockGoalRepository);
       const goal = await goalService.create({
-        title: "Test",
+        name: "Test",
         status: "in_progress",
       });
       expect(goal.status).toBe("in_progress");
@@ -266,13 +266,13 @@ describe("GoalService", () => {
 
   describe("update", () => {
     it("should update goal fields", async () => {
-      const goal = buildGoal({ title: "Old title" });
+      const goal = buildGoal({ name: "Old name" });
       mockGoalRepository = createMockGoalRepository({
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const updated = await goalService.update(goal.id, { title: "New title" });
-      expect(updated.title).toBe("New title");
+      const updated = await goalService.update(goal.id, { name: "New name" });
+      expect(updated.name).toBe("New name");
     });
 
     it("should increment version on update", async () => {
@@ -281,7 +281,7 @@ describe("GoalService", () => {
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const updated = await goalService.update(goal.id, { title: "X" });
+      const updated = await goalService.update(goal.id, { name: "X" });
       expect(updated.version).toBe(3);
     });
 
@@ -291,7 +291,7 @@ describe("GoalService", () => {
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const updated = await goalService.update(goal.id, { title: "X" });
+      const updated = await goalService.update(goal.id, { name: "X" });
       expect(updated.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
@@ -301,7 +301,7 @@ describe("GoalService", () => {
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const updated = await goalService.update(goal.id, { title: "X" });
+      const updated = await goalService.update(goal.id, { name: "X" });
       expect(updated._dirty).toBe(true);
     });
 
@@ -318,7 +318,7 @@ describe("GoalService", () => {
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
-      await goalService.update(goal.id, { title: "Updated" });
+      await goalService.update(goal.id, { name: "Updated" });
       expect(mockGoalRepository.update).toHaveBeenCalled();
     });
 
@@ -328,7 +328,7 @@ describe("GoalService", () => {
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const updated = await goalService.update(goal.id, { title: "X" });
+      const updated = await goalService.update(goal.id, { name: "X" });
       expect(updated.id).toBe(goal.id);
     });
   });
@@ -462,7 +462,7 @@ describe("GoalService", () => {
 
   describe("searchByTitle - edge cases", () => {
     it("should return empty array when query is empty string", async () => {
-      const goals = [buildGoal({ title: "Test" })];
+      const goals = [buildGoal({ name: "Test" })];
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(goals),
       });
@@ -473,10 +473,10 @@ describe("GoalService", () => {
 
     it("should sort finished goals after non-finished goals", async () => {
       const completedGoal = buildGoal({
-        title: "Learn A",
+        name: "Learn A",
         status: "completed",
       });
-      const activeGoal = buildGoal({ title: "Learn B", status: "in_progress" });
+      const activeGoal = buildGoal({ name: "Learn B", status: "in_progress" });
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue([completedGoal, activeGoal]),
       });
@@ -488,10 +488,10 @@ describe("GoalService", () => {
 
     it("should sort cancelled goals after non-finished goals", async () => {
       const cancelledGoal = buildGoal({
-        title: "Learn A",
+        name: "Learn A",
         status: "cancelled",
       });
-      const activeGoal = buildGoal({ title: "Learn B", status: "planning" });
+      const activeGoal = buildGoal({ name: "Learn B", status: "planning" });
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue([cancelledGoal, activeGoal]),
       });
@@ -503,11 +503,11 @@ describe("GoalService", () => {
 
     it("should keep order when both goals are finished", async () => {
       const completedGoal = buildGoal({
-        title: "Learn A",
+        name: "Learn A",
         status: "completed",
       });
       const cancelledGoal = buildGoal({
-        title: "Learn B",
+        name: "Learn B",
         status: "cancelled",
       });
       mockGoalRepository = createMockGoalRepository({
@@ -519,9 +519,9 @@ describe("GoalService", () => {
     });
 
     it("should keep order when both goals are non-finished", async () => {
-      const planningGoal = buildGoal({ title: "Learn A", status: "planning" });
+      const planningGoal = buildGoal({ name: "Learn A", status: "planning" });
       const activeGoal = buildGoal({
-        title: "Learn B",
+        name: "Learn B",
         status: "in_progress",
       });
       mockGoalRepository = createMockGoalRepository({
@@ -534,11 +534,11 @@ describe("GoalService", () => {
 
     it("should sort goals by status priority (in_progress first, cancelled last)", async () => {
       const goals = [
-        buildGoal({ title: "Goal A", status: "cancelled" }),
-        buildGoal({ title: "Goal B", status: "in_progress" }),
-        buildGoal({ title: "Goal C", status: "completed" }),
-        buildGoal({ title: "Goal D", status: "planning" }),
-        buildGoal({ title: "Goal E", status: "paused" }),
+        buildGoal({ name: "Goal A", status: "cancelled" }),
+        buildGoal({ name: "Goal B", status: "in_progress" }),
+        buildGoal({ name: "Goal C", status: "completed" }),
+        buildGoal({ name: "Goal D", status: "planning" }),
+        buildGoal({ name: "Goal E", status: "paused" }),
       ];
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(goals),
@@ -555,17 +555,17 @@ describe("GoalService", () => {
     it("should sort goals with same status by updated_at descending", async () => {
       const goals = [
         buildGoal({
-          title: "Goal A",
+          name: "Goal A",
           status: "in_progress",
           updated_at: "2025-01-01T10:00:00.000Z",
         }),
         buildGoal({
-          title: "Goal B",
+          name: "Goal B",
           status: "in_progress",
           updated_at: "2025-01-03T10:00:00.000Z",
         }),
         buildGoal({
-          title: "Goal C",
+          name: "Goal C",
           status: "in_progress",
           updated_at: "2025-01-02T10:00:00.000Z",
         }),
@@ -582,12 +582,12 @@ describe("GoalService", () => {
 
     it("should prioritize in_progress over planning", async () => {
       const planningGoal = buildGoal({
-        title: "Goal A",
+        name: "Goal A",
         status: "planning",
         updated_at: "2025-01-03T10:00:00.000Z",
       });
       const inProgressGoal = buildGoal({
-        title: "Goal B",
+        name: "Goal B",
         status: "in_progress",
         updated_at: "2025-01-01T10:00:00.000Z",
       });
@@ -601,8 +601,8 @@ describe("GoalService", () => {
     });
 
     it("should prioritize planning over paused", async () => {
-      const pausedGoal = buildGoal({ title: "Goal A", status: "paused" });
-      const planningGoal = buildGoal({ title: "Goal B", status: "planning" });
+      const pausedGoal = buildGoal({ name: "Goal A", status: "paused" });
+      const planningGoal = buildGoal({ name: "Goal B", status: "planning" });
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue([pausedGoal, planningGoal]),
       });
@@ -613,8 +613,8 @@ describe("GoalService", () => {
     });
 
     it("should prioritize paused over completed", async () => {
-      const completedGoal = buildGoal({ title: "Goal A", status: "completed" });
-      const pausedGoal = buildGoal({ title: "Goal B", status: "paused" });
+      const completedGoal = buildGoal({ name: "Goal A", status: "completed" });
+      const pausedGoal = buildGoal({ name: "Goal B", status: "paused" });
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue([completedGoal, pausedGoal]),
       });
@@ -625,8 +625,8 @@ describe("GoalService", () => {
     });
 
     it("should prioritize completed over cancelled", async () => {
-      const cancelledGoal = buildGoal({ title: "Goal A", status: "cancelled" });
-      const completedGoal = buildGoal({ title: "Goal B", status: "completed" });
+      const cancelledGoal = buildGoal({ name: "Goal A", status: "cancelled" });
+      const completedGoal = buildGoal({ name: "Goal B", status: "completed" });
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue([cancelledGoal, completedGoal]),
       });

@@ -61,11 +61,11 @@ describe("ChecklistService", () => {
   });
 
   describe("create", () => {
-    it("should create item with given taskId and title", async () => {
+    it("should create item with given taskId and name", async () => {
       const { service } = createService();
       const item = await service.create("task-1", "Buy groceries");
       expect(item.task_id).toBe("task-1");
-      expect(item.title).toBe("Buy groceries");
+      expect(item.name).toBe("Buy groceries");
     });
 
     it("should create item with is_completed false", async () => {
@@ -121,13 +121,13 @@ describe("ChecklistService", () => {
   });
 
   describe("update", () => {
-    it("should update the title of the item", async () => {
-      const item = buildChecklistItem({ title: "Old title" });
+    it("should update the name of the item", async () => {
+      const item = buildChecklistItem({ name: "Old name" });
       const { service } = createService({
         getById: vi.fn().mockResolvedValue(item),
       });
-      const updated = await service.update(item.id, { title: "New title" });
-      expect(updated.title).toBe("New title");
+      const updated = await service.update(item.id, { name: "New name" });
+      expect(updated.name).toBe("New name");
     });
 
     it("should increment version on update", async () => {
@@ -135,7 +135,7 @@ describe("ChecklistService", () => {
       const { service } = createService({
         getById: vi.fn().mockResolvedValue(item),
       });
-      const updated = await service.update(item.id, { title: "New title" });
+      const updated = await service.update(item.id, { name: "New name" });
       expect(updated.version).toBe(3);
     });
 
@@ -146,14 +146,14 @@ describe("ChecklistService", () => {
       const { service } = createService({
         getById: vi.fn().mockResolvedValue(item),
       });
-      const updated = await service.update(item.id, { title: "New title" });
+      const updated = await service.update(item.id, { name: "New name" });
       expect(updated.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
     it("should throw when item not found", async () => {
       const { service } = createService();
       await expect(
-        service.update("nonexistent-id", { title: "X" }),
+        service.update("nonexistent-id", { name: "X" }),
       ).rejects.toThrow("ChecklistItem not found: nonexistent-id");
     });
   });

@@ -26,7 +26,7 @@ function hasWrittenResults(results: PushItemResult[]): boolean {
 }
 
 function getEntityLabel(entity: AnyEntity): string {
-  return 'title' in entity ? entity.title : entity.name;
+  return entity.name;
 }
 
 function isInvalidOptionalFk(value: string): boolean {
@@ -61,7 +61,7 @@ function processRecords<T extends AnyEntity>(
     }
 
     if (isBlankString(getEntityLabel(record))) {
-      return { id: record.id, status: PUSH_STATUSES.REJECTED, reason: ERROR_MESSAGES.BLANK_TITLE };
+      return { id: record.id, status: PUSH_STATUSES.REJECTED, reason: ERROR_MESSAGES.BLANK_NAME };
     }
 
     if ('box' in record && !VALID_BOXES.includes(record.box)) {

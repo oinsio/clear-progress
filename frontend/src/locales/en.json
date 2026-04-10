@@ -36,7 +36,7 @@
     "drag": "Drag task",
     "add": "Add task",
     "newTitle": "New task",
-    "titlePlaceholder": "Task title...",
+    "namePlaceholder": "Task title...",
     "create": "Create",
     "createLabel": "Create task"
   },
@@ -54,9 +54,9 @@
   "goal": {
     "pageTitle": "My Goals",
     "empty": "No goals yet",
-    "titlePlaceholder": "Goal title",
+    "namePlaceholder": "Goal title",
     "descriptionPlaceholder": "Add description",
-    "titleLabel": "Title",
+    "nameLabel": "Title",
     "descriptionLabel": "Description",
     "statusLabel": "Status",
     "cancel": "Cancel",
@@ -94,7 +94,7 @@
   "idea": {
     "pageTitle": "Ideas",
     "add": "Add idea",
-    "titlePlaceholder": "Idea name",
+    "namePlaceholder": "Idea name",
     "descriptionPlaceholder": "Idea description",
     "empty": "No ideas",
     "drag": "Drag idea",

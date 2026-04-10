@@ -195,7 +195,7 @@ POST {WEB_APP_URL}
     "tasks": [
       {
         "id": "uuid-1",
-        "title": "Купить молоко",
+        "name": "Купить молоко",
         "box": "today",
         "is_completed": false,
         "is_deleted": false,

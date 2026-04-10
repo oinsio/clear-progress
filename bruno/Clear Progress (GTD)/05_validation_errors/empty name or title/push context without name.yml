@@ -50,7 +50,7 @@ runtime:
       value: rejected
     - expression: res.body.results.contexts[0].reason
       operator: eq
-      value: title or name must not be blank
+      value: name must not be blank
 
 settings:
   encodeUrl: false

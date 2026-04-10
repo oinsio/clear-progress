@@ -196,13 +196,13 @@ export default function DeletedPage() {
                   renderItem={(task) => (
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm text-gray-400 line-through">
-                        {task.title}
+                        {task.name}
                       </span>
                       <button
                         type="button"
                         onClick={() => void restoreTask(task.id)}
                         aria-label={t("deleted.restoreAriaLabel", {
-                          title: task.title,
+                          title: task.name,
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
@@ -222,7 +222,7 @@ export default function DeletedPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <span className="text-sm text-gray-400 line-through">
-                            {item.title}
+                            {item.name}
                           </span>
                           {parentTaskTitle !== undefined && (
                             <p className="text-xs text-gray-300 mt-0.5">
@@ -236,7 +236,7 @@ export default function DeletedPage() {
                           type="button"
                           onClick={() => void restoreChecklistItem(item.id)}
                           aria-label={t("deleted.restoreAriaLabel", {
-                            title: item.title,
+                            title: item.name,
                           })}
                           className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                         >
@@ -254,13 +254,13 @@ export default function DeletedPage() {
                   renderItem={(goal) => (
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm text-gray-400 line-through">
-                        {goal.title}
+                        {goal.name}
                       </span>
                       <button
                         type="button"
                         onClick={() => void restoreGoal(goal.id)}
                         aria-label={t("deleted.restoreAriaLabel", {
-                          title: goal.title,
+                          title: goal.name,
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >

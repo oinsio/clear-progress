@@ -195,7 +195,7 @@
 - [ ] `services/task.service.ts`
 - [ ] Методы: `createTask(data)`, `updateTask(id, changes)`, `completeTask(id)`, `uncompleteTask(id)`, `moveToBox(id, box)`, `deleteTask(id)`, `getTasksByBox(box)`, `getTasksByGoal(goalId)`, `searchTasks(query)`
 - [ ] `completeTask` ставит `is_completed: true`, `completed_at: nowISO()`
-- [ ] `searchTasks` ищет по `title` и `notes` (case-insensitive, подстрока)
+- [ ] `searchTasks` ищет по `name` и `description` (case-insensitive, подстрока)
 - [ ] Все мутации вызывают repository и возвращают обновлённую сущность
 
 **Зависимости:** → M-09, M-07
@@ -237,7 +237,7 @@
 
 **AC:**
 - [ ] `services/checklist.service.ts`
-- [ ] Методы: `addItem(taskId, title)`, `toggleItem(id)`, `updateItem(id, changes)`, `deleteItem(id)`, `reorderItems(taskId, orderedIds)`, `getItemsByTask(taskId)`
+- [ ] Методы: `addItem(taskId, name)`, `toggleItem(id)`, `updateItem(id, changes)`, `deleteItem(id)`, `reorderItems(taskId, orderedIds)`, `getItemsByTask(taskId)`
 
 **Зависимости:** → M-14
 
@@ -274,7 +274,7 @@
 
 **AC:**
 - [ ] `components/layout/PageShell.tsx` — обёртка для всех страниц
-- [ ] Props: `title`, `children`, `actions?` (кнопки в шапке)
+- [ ] Props: `name`, `children`, `actions?` (кнопки в шапке)
 - [ ] Обеспечивает единообразный отступ и скроллинг
 - [ ] Содержит Sidebar + Header + контентную область
 
@@ -286,7 +286,7 @@
 
 **AC:**
 - [ ] `components/shared/EmptyState.tsx`
-- [ ] Props: `icon?`, `title`, `description?`, `action?` (кнопка)
+- [ ] Props: `icon?`, `name`, `description?`, `action?` (кнопка)
 - [ ] Центрируется в контентной области
 
 **Зависимости:** → M-02
@@ -297,7 +297,7 @@
 
 **AC:**
 - [ ] `components/shared/ConfirmDialog.tsx`
-- [ ] Props: `open`, `onConfirm`, `onCancel`, `title`, `description`, `confirmLabel?`, `variant?` (danger/default)
+- [ ] Props: `open`, `onConfirm`, `onCancel`, `name`, `description`, `confirmLabel?`, `variant?` (danger/default)
 - [ ] Построен на shadcn AlertDialog
 
 **Зависимости:** → M-02
@@ -310,7 +310,7 @@
 
 **AC:**
 - [ ] `components/tasks/TaskItem.tsx`
-- [ ] Отображает: checkbox (завершение), title, метки (goal, context, category) как chips, индикатор заметок
+- [ ] Отображает: checkbox (завершение), name, метки (goal, context, category) как chips, индикатор заметок
 - [ ] Клик по checkbox → вызывает `completeTask` / `uncompleteTask`
 - [ ] Клик по задаче → переход к деталям / открытие формы редактирования
 - [ ] Завершённые задачи визуально отличаются (strikethrough, приглушённый цвет)
@@ -351,10 +351,10 @@
 
 **AC:**
 - [ ] `components/tasks/TaskForm.tsx`
-- [ ] Поля: title (обязательное), notes (textarea), box (select), goal (select), context (select), category (select)
-- [ ] Режим создания: открывается снизу как Sheet, title в фокусе
+- [ ] Поля: name (обязательное), description (textarea), box (select), goal (select), context (select), category (select)
+- [ ] Режим создания: открывается снизу как Sheet, name в фокусе
 - [ ] Режим редактирования: заполняет поля текущими значениями
-- [ ] Валидация: title не пустой
+- [ ] Валидация: name не пустой
 - [ ] При сохранении: вызывает `createTask` или `updateTask`
 - [ ] Селекты goal/context/category подтягивают данные из соответствующих сервисов
 
@@ -422,7 +422,7 @@
 
 **AC:**
 - [ ] `components/goals/GoalCard.tsx`
-- [ ] Отображает: обложку (или placeholder), title, статус (badge), каунтер задач
+- [ ] Отображает: обложку (или placeholder), name, статус (badge), каунтер задач
 - [ ] Обложка занимает верхнюю часть карточки (aspect-ratio 16:9)
 - [ ] Клик → переход на `/goals/:id`
 
@@ -446,7 +446,7 @@
 
 **AC:**
 - [ ] `components/goals/GoalForm.tsx`
-- [ ] Поля: title (обязательное), description (textarea), status (select), обложка (upload)
+- [ ] Поля: name (обязательное), description (textarea), status (select), обложка (upload)
 - [ ] CoverUploader: выбор файла, превью, ограничение 2МБ, кроп (если возможно) или fit
 - [ ] При сохранении: создаёт/обновляет цель
 
@@ -458,7 +458,7 @@
 
 **AC:**
 - [ ] `components/goals/GoalDetails.tsx`
-- [ ] Верхняя часть: обложка (на всю ширину), title, description, статус
+- [ ] Верхняя часть: обложка (на всю ширину), name, description, статус
 - [ ] Нижняя часть: список задач, привязанных к цели (`TaskList` с фильтром по `goal_id`)
 - [ ] Кнопка «+» создаёт задачу с предвыбранной целью
 - [ ] Кнопка редактирования → `GoalForm`
@@ -564,7 +564,7 @@
 **AC:**
 - [ ] `components/search/SearchDialog.tsx`
 - [ ] Открывается по кнопке в Header или Cmd+K / Ctrl+K
-- [ ] Поиск по задачам (title + notes) и целям (title + description)
+- [ ] Поиск по задачам (name + description) и целям (name + description)
 - [ ] Debounce ввода: 300мс
 - [ ] Результаты группируются: «Задачи», «Цели»
 - [ ] Клик по результату → навигация к сущности
@@ -891,9 +891,9 @@
 **AC:**
 - [ ] `components/checklists/ChecklistPanel.tsx`
 - [ ] Встраивается в TaskDetails / TaskForm
-- [ ] Отображает список подзадач с checkbox и title
+- [ ] Отображает список подзадач с checkbox и name
 - [ ] Кнопка «+ Добавить пункт» внизу
-- [ ] Inline-редактирование title
+- [ ] Inline-редактирование name
 - [ ] Drag-and-drop для reorder
 - [ ] Свайп влево для удаления пункта
 - [ ] Прогресс-бар: N из M выполнено
@@ -906,7 +906,7 @@
 
 **AC:**
 - [ ] `components/checklists/ChecklistItem.tsx`
-- [ ] Checkbox + editable title
+- [ ] Checkbox + editable name
 - [ ] Завершённые — strikethrough
 - [ ] Анимация при завершении
 
@@ -933,7 +933,7 @@
 - [ ] Поле `repeat_rule` в Task: `{ type: 'daily' | 'weekly' | 'monthly' | 'custom', interval: number, days_of_week?: number[], end_date?: string }`
 - [ ] При завершении повторяющейся задачи: создаётся новая копия с очищенным `is_completed`, обновлённым `created_at`
 - [ ] Оригинал остаётся завершённым в истории
-- [ ] Новая задача наследует: title, notes, box, goal_id, context_id, category_id, repeat_rule, чеклист (с очищенными is_completed)
+- [ ] Новая задача наследует: name, description, box, goal_id, context_id, category_id, repeat_rule, чеклист (с очищенными is_completed)
 
 **Зависимости:** → M-05, M-15
 
@@ -1006,7 +1006,7 @@
 
 **AC:**
 - [ ] В InboxPage: режим «Разобрать» — последовательный просмотр задач одна за другой
-- [ ] Для каждой задачи: карточка с title + notes, кнопки: Today / Week / Later / Delete / Skip
+- [ ] Для каждой задачи: карточка с name + description, кнопки: Today / Week / Later / Delete / Skip
 - [ ] Прогресс-бар: N из M обработано
 - [ ] По завершении: сообщение «Inbox Zero!» 🎉
 
@@ -1031,8 +1031,8 @@
 
 **AC:**
 - [ ] Настройка `creation_fields` в Settings: мультиселект полей, отображаемых в TaskForm при создании
-- [ ] Доступные поля: notes, goal, context, category, repeat (v1.1)
-- [ ] По умолчанию: только title + box
+- [ ] Доступные поля: description, goal, context, category, repeat (v1.1)
+- [ ] По умолчанию: только name + box
 - [ ] Остальные поля доступны через «Ещё» или при редактировании
 
 **Зависимости:** → M-28, M-13

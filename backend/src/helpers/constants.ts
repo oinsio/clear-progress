@@ -44,11 +44,11 @@ export const PROPERTY_KEYS = {
 export const GOOGLE_TOKENINFO_URL = 'https://www.googleapis.com/oauth2/v3/tokeninfo';
 
 export const SHEET_HEADERS: Record<string, string[]> = {
-  [SHEET_NAMES.TASKS]: ['id', 'title', 'notes', 'box', 'goal_id', 'context_id', 'category_id', 'is_completed', 'completed_at', 'repeat_rule', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
-  [SHEET_NAMES.GOALS]: ['id', 'title', 'description', 'cover_file_id', 'status', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.TASKS]: ['id', 'name', 'description', 'box', 'goal_id', 'context_id', 'category_id', 'is_completed', 'completed_at', 'repeat_rule', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.GOALS]: ['id', 'name', 'description', 'cover_file_id', 'status', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.CONTEXTS]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.CATEGORIES]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
-  [SHEET_NAMES.CHECKLIST_ITEMS]: ['id', 'task_id', 'title', 'is_completed', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.CHECKLIST_ITEMS]: ['id', 'task_id', 'name', 'is_completed', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.IDEAS]: ['id', 'name', 'description', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.SETTINGS]: ['key', 'value', 'updated_at'],
 };
@@ -158,7 +158,7 @@ export const ERROR_MESSAGES = {
   COVERS_TOO_MANY: `covers must contain at most ${MAX_COVER_BATCH_SIZE} items`,
   DATA_REQUIRED: 'data field is required',
   COVER_INVALID_MIME: 'mime_type must be an image type (image/*)',
-  BLANK_TITLE: 'title or name must not be blank',
+  BLANK_NAME: 'name must not be blank',
   INVALID_ID: 'id must be a valid UUID v4',
   INVALID_OPTIONAL_FK: 'foreign key must be empty or a valid UUID v4',
   INVALID_REQUIRED_FK: 'task_id is required and must be a valid UUID v4',

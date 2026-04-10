@@ -25,7 +25,7 @@ function renderQuickActions(overrides = {}) {
 }
 
 describe("TaskQuickActions", () => {
-  it("should render notes button", () => {
+  it("should render description button", () => {
     renderQuickActions();
     expect(
       screen.getByRole("button", { name: /редактировать заметку/i }),
@@ -53,15 +53,15 @@ describe("TaskQuickActions", () => {
     ).toBeInTheDocument();
   });
 
-  it("should show notes textarea when notes button is clicked", async () => {
+  it("should show description textarea when description button is clicked", async () => {
     renderQuickActions();
     await userEvent.click(
       screen.getByRole("button", { name: /редактировать заметку/i }),
     );
-    expect(screen.getByTestId("quick-notes-input")).toBeInTheDocument();
+    expect(screen.getByTestId("quick-description-input")).toBeInTheDocument();
   });
 
-  it("should hide notes textarea when notes button is clicked again", async () => {
+  it("should hide description textarea when description button is clicked again", async () => {
     renderQuickActions();
     await userEvent.click(
       screen.getByRole("button", { name: /редактировать заметку/i }),
@@ -69,53 +69,53 @@ describe("TaskQuickActions", () => {
     await userEvent.click(
       screen.getByRole("button", { name: /редактировать заметку/i }),
     );
-    expect(screen.queryByTestId("quick-notes-input")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("quick-description-input")).not.toBeInTheDocument();
   });
 
-  it("should prefill notes textarea with task notes", async () => {
-    const task = buildTask({ notes: "existing notes" });
+  it("should prefill description textarea with task description", async () => {
+    const task = buildTask({ description: "existing description" });
     renderQuickActions({ task });
     await userEvent.click(
       screen.getByRole("button", { name: /редактировать заметку/i }),
     );
-    expect(screen.getByTestId("quick-notes-input")).toHaveValue(
-      "existing notes",
+    expect(screen.getByTestId("quick-description-input")).toHaveValue(
+      "existing description",
     );
   });
 
-  it("should call onUpdate with new notes when notes saved via Enter", async () => {
-    const task = buildTask({ notes: "" });
+  it("should call onUpdate with new description when description saved via Enter", async () => {
+    const task = buildTask({ description: "" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, onUpdate });
     await userEvent.click(
       screen.getByRole("button", { name: /редактировать заметку/i }),
     );
-    const textarea = screen.getByTestId("quick-notes-input");
+    const textarea = screen.getByTestId("quick-description-input");
     await userEvent.clear(textarea);
-    await userEvent.type(textarea, "new notes");
+    await userEvent.type(textarea, "new description");
     await userEvent.keyboard("{Enter}");
-    expect(onUpdate).toHaveBeenCalledWith(task.id, { notes: "new notes" });
+    expect(onUpdate).toHaveBeenCalledWith(task.id, { description: "new description" });
   });
 
-  it("should save notes when notes textarea loses focus", async () => {
-    const task = buildTask({ notes: "" });
+  it("should save description when description textarea loses focus", async () => {
+    const task = buildTask({ description: "" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, onUpdate });
     await userEvent.click(
       screen.getByRole("button", { name: /редактировать заметку/i }),
     );
-    const textarea = screen.getByTestId("quick-notes-input");
+    const textarea = screen.getByTestId("quick-description-input");
     await userEvent.type(textarea, "заметка iOS Done");
     fireEvent.blur(textarea);
     await waitFor(() => {
       expect(onUpdate).toHaveBeenCalledWith(task.id, {
-        notes: "заметка iOS Done",
+        description: "заметка iOS Done",
       });
     });
   });
 
   it("should show goal list when goal button is clicked", async () => {
-    const goal = buildGoal({ title: "Launch app" });
+    const goal = buildGoal({ name: "Launch app" });
     renderQuickActions({ goals: [goal] });
     await userEvent.click(
       screen.getByRole("button", { name: /выбрать цель/i }),
@@ -124,7 +124,7 @@ describe("TaskQuickActions", () => {
   });
 
   it("should hide goal list when goal button is clicked again", async () => {
-    const goal = buildGoal({ title: "Launch app" });
+    const goal = buildGoal({ name: "Launch app" });
     renderQuickActions({ goals: [goal] });
     await userEvent.click(
       screen.getByRole("button", { name: /выбрать цель/i }),
@@ -136,7 +136,7 @@ describe("TaskQuickActions", () => {
   });
 
   it("should call onUpdate with goal_id when goal selected", async () => {
-    const goal = buildGoal({ title: "Launch app" });
+    const goal = buildGoal({ name: "Launch app" });
     const task = buildTask({ goal_id: "" });
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     renderQuickActions({ task, goals: [goal], onUpdate });

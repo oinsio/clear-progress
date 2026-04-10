@@ -154,7 +154,7 @@ export default function SetupPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-lg space-y-8 px-4 py-6">
             <h1 className="text-xl font-semibold text-gray-900">
-              {t("setup.title")}
+              {t("setup.name")}
             </h1>
 
             {isConnected ? (

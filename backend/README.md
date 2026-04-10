@@ -21,7 +21,7 @@ clasp login
 Вариант Б — через clasp:
 ```bash
 cd backend
-clasp create --title "Clear Progress Backend" --type webapp
+clasp create --name "Clear Progress Backend" --type webapp
 ```
 
 ### 3. Настроить окружение

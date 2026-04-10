@@ -11,8 +11,8 @@ const TASK_HEADERS = SHEET_HEADERS[SHEET_NAMES.TASKS];
 function makeTaskRow(overrides: Partial<Record<string, unknown>> = {}): unknown[] {
   const defaults: Record<string, unknown> = {
     id: 'task-1',
-    title: 'Test task',
-    notes: '',
+    name: 'Test task',
+    description: '',
     box: 'inbox',
     goal_id: '',
     context_id: '',
@@ -88,8 +88,8 @@ describe('getAllTasks', () => {
       TASK_HEADERS,
       makeTaskRow({
         id: 'task-abc',
-        title: 'My title',
-        notes: 'Some notes',
+        name: 'My name',
+        description: 'Some description',
         goal_id: 'goal-1',
         context_id: 'ctx-1',
         category_id: 'cat-1',
@@ -103,8 +103,8 @@ describe('getAllTasks', () => {
 
     const [task] = getAllTasks();
     expect(task.id).toBe('task-abc');
-    expect(task.title).toBe('My title');
-    expect(task.notes).toBe('Some notes');
+    expect(task.name).toBe('My name');
+    expect(task.description).toBe('Some description');
     expect(task.goal_id).toBe('goal-1');
     expect(task.context_id).toBe('ctx-1');
     expect(task.category_id).toBe('cat-1');
@@ -174,8 +174,8 @@ describe('getAllTasks', () => {
     const sheetMock = makeSheetMock([
       TASK_HEADERS,
       makeTaskRow({
-        title: null,
-        notes: null,
+        name: null,
+        description: null,
         goal_id: null,
         context_id: null,
         category_id: null,
@@ -188,8 +188,8 @@ describe('getAllTasks', () => {
     vi.mocked(getSheet).mockReturnValue(sheetMock as never);
 
     const [task] = getAllTasks();
-    expect(task.title).toBe('');
-    expect(task.notes).toBe('');
+    expect(task.name).toBe('');
+    expect(task.description).toBe('');
     expect(task.goal_id).toBe('');
     expect(task.context_id).toBe('');
     expect(task.category_id).toBe('');
@@ -376,8 +376,8 @@ describe('upsertTasks', () => {
 
     const newTask: Task = {
       id: 'task-new',
-      title: 'Buy groceries',
-      notes: '',
+      name: 'Buy groceries',
+      description: '',
       box: 'inbox',
       goal_id: '',
       context_id: '',

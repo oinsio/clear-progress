@@ -132,7 +132,7 @@ export default function SettingsPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-4 py-6 space-y-8">
             <h1 className="text-xl font-semibold text-gray-900">
-              {t("settings.title")}
+              {t("settings.name")}
             </h1>
 
             {/* Default box section */}

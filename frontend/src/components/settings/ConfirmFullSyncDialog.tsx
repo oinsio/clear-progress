@@ -103,7 +103,7 @@ export function ConfirmFullSyncDialog({
       />
       <div className="relative w-full max-w-sm mx-4 rounded-2xl bg-white p-6 shadow-xl">
         <h2
-          data-testid="full-sync-dialog-title"
+          data-testid="full-sync-dialog-name"
           className="text-base font-semibold text-gray-900 mb-2"
         >
           {t("settings.fullSyncConfirmTitle")}

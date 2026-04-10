@@ -378,9 +378,9 @@ describe('push', () => {
     });
   });
 
-  describe('rejected record (blank title/name)', () => {
-    it('should return status: rejected for task with empty title', () => {
-      const blankTask = makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', title: '' });
+  describe('rejected record (blank name/name)', () => {
+    it('should return status: rejected for task with empty name', () => {
+      const blankTask = makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', name: '' });
 
       push({ tasks: [blankTask] });
 
@@ -388,16 +388,16 @@ describe('push', () => {
       expect(results.tasks[0]).toMatchObject({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', status: PUSH_STATUSES.REJECTED });
     });
 
-    it('should not upsert any task when task title is empty', () => {
-      const blankTask = makeTask({ title: '' });
+    it('should not upsert any task when task name is empty', () => {
+      const blankTask = makeTask({ name: '' });
 
       push({ tasks: [blankTask] });
 
       expect(upsertTasks).toHaveBeenCalledWith([]);
     });
 
-    it('should return status: rejected for task with whitespace-only title', () => {
-      const blankTask = makeTask({ id: 'dddddddd-dddd-4ddd-addd-dddddddddddd', title: '   ' });
+    it('should return status: rejected for task with whitespace-only name', () => {
+      const blankTask = makeTask({ id: 'dddddddd-dddd-4ddd-addd-dddddddddddd', name: '   ' });
 
       push({ tasks: [blankTask] });
 
@@ -405,8 +405,8 @@ describe('push', () => {
       expect(results.tasks[0]).toMatchObject({ id: 'dddddddd-dddd-4ddd-addd-dddddddddddd', status: PUSH_STATUSES.REJECTED });
     });
 
-    it('should return status: rejected for goal with empty title', () => {
-      const blankGoal = makeGoal({ id: 'ffffffff-ffff-4fff-afff-ffffffffffff', title: '' });
+    it('should return status: rejected for goal with empty name', () => {
+      const blankGoal = makeGoal({ id: 'ffffffff-ffff-4fff-afff-ffffffffffff', name: '' });
 
       push({ goals: [blankGoal] });
 
@@ -414,8 +414,8 @@ describe('push', () => {
       expect(results.goals[0]).toMatchObject({ id: 'ffffffff-ffff-4fff-afff-ffffffffffff', status: PUSH_STATUSES.REJECTED });
     });
 
-    it('should not upsert any goal when goal title is empty', () => {
-      const blankGoal = makeGoal({ title: '' });
+    it('should not upsert any goal when goal name is empty', () => {
+      const blankGoal = makeGoal({ name: '' });
 
       push({ goals: [blankGoal] });
 
@@ -456,8 +456,8 @@ describe('push', () => {
       expect(upsertCategories).toHaveBeenCalledWith([]);
     });
 
-    it('should return status: rejected for checklist_item with empty title', () => {
-      const blankItem = makeChecklistItem({ id: 'f0f0f0f0-f0f0-4f0f-8f0f-f0f0f0f0f0f0', title: '' });
+    it('should return status: rejected for checklist_item with empty name', () => {
+      const blankItem = makeChecklistItem({ id: 'f0f0f0f0-f0f0-4f0f-8f0f-f0f0f0f0f0f0', name: '' });
 
       push({ checklist_items: [blankItem] });
 
@@ -465,8 +465,8 @@ describe('push', () => {
       expect(results.checklist_items[0]).toMatchObject({ id: 'f0f0f0f0-f0f0-4f0f-8f0f-f0f0f0f0f0f0', status: PUSH_STATUSES.REJECTED });
     });
 
-    it('should not upsert any checklist item when checklist item title is empty', () => {
-      const blankItem = makeChecklistItem({ title: '' });
+    it('should not upsert any checklist item when checklist item name is empty', () => {
+      const blankItem = makeChecklistItem({ name: '' });
 
       push({ checklist_items: [blankItem] });
 
@@ -474,7 +474,7 @@ describe('push', () => {
     });
 
     it('should include reason field in rejected result', () => {
-      const blankTask = makeTask({ title: '' });
+      const blankTask = makeTask({ name: '' });
 
       push({ tasks: [blankTask] });
 
@@ -484,15 +484,15 @@ describe('push', () => {
 
     it('should process valid records alongside rejected ones in same array', () => {
       assertMixedTaskBatch(
-        makeTask({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567', title: 'Valid task' }),
-        makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', title: '' }),
+        makeTask({ id: 'a7b8c9d0-e1f2-4345-89ab-cdef01234567', name: 'Valid task' }),
+        makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', name: '' }),
       );
     });
 
     it('should handle rejected task and created goal in same push', () => {
       assertRejectedTaskWithCreatedGoal(
-        makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', title: '' }),
-        makeGoal({ id: 'f7a8b9c0-d1e2-4f34-9a5b-6c7d8e9f0a1b', title: 'Valid goal' }),
+        makeTask({ id: 'cccccccc-cccc-4ccc-accc-cccccccccccc', name: '' }),
+        makeGoal({ id: 'f7a8b9c0-d1e2-4f34-9a5b-6c7d8e9f0a1b', name: 'Valid goal' }),
       );
     });
   });
@@ -684,7 +684,7 @@ describe('push', () => {
 
   describe('rejected record (invalid id)', () => {
     it('should return status: rejected for task with empty id', () => {
-      const task = makeTask({ id: '', title: 'Valid title' });
+      const task = makeTask({ id: '', name: 'Valid name' });
 
       push({ tasks: [task] });
 
@@ -693,7 +693,7 @@ describe('push', () => {
     });
 
     it('should not upsert any task when task id is empty', () => {
-      const task = makeTask({ id: '', title: 'Valid title' });
+      const task = makeTask({ id: '', name: 'Valid name' });
 
       push({ tasks: [task] });
 
@@ -701,7 +701,7 @@ describe('push', () => {
     });
 
     it('should return status: rejected for task with unreadable id', () => {
-      const task = makeTask({ id: '!!!###$$$', title: 'Valid title' });
+      const task = makeTask({ id: '!!!###$$$', name: 'Valid name' });
 
       push({ tasks: [task] });
 
@@ -710,7 +710,7 @@ describe('push', () => {
     });
 
     it('should return status: rejected for task with wrong-format id', () => {
-      const task = makeTask({ id: 'not-a-uuid', title: 'Valid title' });
+      const task = makeTask({ id: 'not-a-uuid', name: 'Valid name' });
 
       push({ tasks: [task] });
 
@@ -719,7 +719,7 @@ describe('push', () => {
     });
 
     it('should return status: rejected for goal with invalid id', () => {
-      const goal = makeGoal({ id: '', title: 'Valid title' });
+      const goal = makeGoal({ id: '', name: 'Valid name' });
 
       push({ goals: [goal] });
 
@@ -728,7 +728,7 @@ describe('push', () => {
     });
 
     it('should not upsert any goal when goal id is invalid', () => {
-      const goal = makeGoal({ id: 'bad-id', title: 'Valid title' });
+      const goal = makeGoal({ id: 'bad-id', name: 'Valid name' });
 
       push({ goals: [goal] });
 
@@ -770,7 +770,7 @@ describe('push', () => {
     });
 
     it('should return status: rejected for checklist_item with invalid id', () => {
-      const item = makeChecklistItem({ id: '', title: 'Valid title' });
+      const item = makeChecklistItem({ id: '', name: 'Valid name' });
 
       push({ checklist_items: [item] });
 
@@ -779,7 +779,7 @@ describe('push', () => {
     });
 
     it('should not upsert any checklist item when checklist item id is invalid', () => {
-      const item = makeChecklistItem({ id: 'bad-id', title: 'Valid title' });
+      const item = makeChecklistItem({ id: 'bad-id', name: 'Valid name' });
 
       push({ checklist_items: [item] });
 
@@ -787,7 +787,7 @@ describe('push', () => {
     });
 
     it('should include reason field in rejected result', () => {
-      const task = makeTask({ id: '', title: 'Valid title' });
+      const task = makeTask({ id: '', name: 'Valid name' });
 
       push({ tasks: [task] });
 
@@ -797,15 +797,15 @@ describe('push', () => {
 
     it('should process valid records alongside invalid-id records in same array', () => {
       assertMixedTaskBatch(
-        makeTask({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', title: 'Valid task' }),
-        makeTask({ id: 'bad-id', title: 'Valid title' }),
+        makeTask({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'Valid task' }),
+        makeTask({ id: 'bad-id', name: 'Valid name' }),
       );
     });
 
     it('should handle invalid-id task and created goal in same push', () => {
       assertRejectedTaskWithCreatedGoal(
-        makeTask({ id: '', title: 'Valid title' }),
-        makeGoal({ id: 'e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b', title: 'Valid goal' }),
+        makeTask({ id: '', name: 'Valid name' }),
+        makeGoal({ id: 'e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b', name: 'Valid goal' }),
       );
     });
   });
@@ -945,7 +945,7 @@ describe('push', () => {
     });
 
     it('should NOT call saveNextRevision when tasks are all rejected', () => {
-      const rejectedTask = makeTask({ id: '', title: 'Valid' });
+      const rejectedTask = makeTask({ id: '', name: 'Valid' });
 
       push({ tasks: [rejectedTask] });
 

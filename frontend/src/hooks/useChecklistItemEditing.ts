@@ -2,29 +2,29 @@ import { useState, useCallback } from "react";
 import * as React from "react";
 
 export function useChecklistItemEditing(
-  updateItem: (id: string, title: string) => Promise<void>,
+  updateItem: (id: string, name: string) => Promise<void>,
 ) {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [editingItemTitle, setEditingItemTitle] = useState("");
+  const [editingItemName, setEditingItemName] = useState("");
 
-  const handleItemTitleClick = useCallback(
-    (item: { id: string; title: string }) => {
+  const handleItemNameClick = useCallback(
+    (item: { id: string; name: string }) => {
       setEditingItemId(item.id);
-      setEditingItemTitle(item.title);
+      setEditingItemName(item.name);
     },
     [],
   );
 
   const commitItemEdit = useCallback(
     async (id: string) => {
-      const trimmedTitle = editingItemTitle.trim();
+      const trimmedTitle = editingItemName.trim();
       if (trimmedTitle) {
         await updateItem(id, trimmedTitle);
       }
       setEditingItemId(null);
-      setEditingItemTitle("");
+      setEditingItemName("");
     },
-    [editingItemTitle, updateItem],
+    [editingItemName, updateItem],
   );
 
   const handleItemEditKeyDown = useCallback(
@@ -38,9 +38,9 @@ export function useChecklistItemEditing(
 
   return {
     editingItemId,
-    editingItemTitle,
-    setEditingItemTitle,
-    handleItemTitleClick,
+    editingItemName,
+    setEditingItemName,
+    handleItemNameClick,
     commitItemEdit,
     handleItemEditKeyDown,
   };

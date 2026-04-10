@@ -1,9 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Goal, Context, Category } from "@/types/entities";
-import {
-  resolveEntityTitle,
-  resolveEntityName,
-} from "@/components/tasks/taskEditShared";
+import { resolveEntityName } from "@/components/tasks/taskEditShared";
 
 interface ChecklistProgress {
   completed: number;
@@ -11,7 +8,7 @@ interface ChecklistProgress {
 }
 
 interface TaskEditLabels {
-  selectedGoalTitle: string;
+  selectedGoalName: string;
   selectedContextName: string;
   selectedCategoryName: string;
   checklistTabLabel: string;
@@ -28,7 +25,7 @@ export function useTaskEditLabels(
 ): TaskEditLabels {
   const { t } = useTranslation();
 
-  const selectedGoalTitle = resolveEntityTitle(
+  const selectedGoalName = resolveEntityName(
     selectedGoalId,
     goals,
     t("selector.noGoal"),
@@ -52,7 +49,7 @@ export function useTaskEditLabels(
       : t("taskEdit.tabChecklist");
 
   return {
-    selectedGoalTitle,
+    selectedGoalName,
     selectedContextName,
     selectedCategoryName,
     checklistTabLabel,

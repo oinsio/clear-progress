@@ -1,5 +1,5 @@
 info:
-  name: push goal without title
+  name: push goal without name
   type: http
   seq: 1
 
@@ -53,7 +53,7 @@ runtime:
       value: rejected
     - expression: res.body.results.goals[0].reason
       operator: eq
-      value: title or name must not be blank
+      value: name must not be blank
 
 settings:
   encodeUrl: false

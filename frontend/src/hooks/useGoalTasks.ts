@@ -17,7 +17,7 @@ export interface UseGoalTasksReturn {
   tasks: Task[];
   completedTasks: Task[];
   isLoading: boolean;
-  createTask: (title: string, box: Box, notes?: string) => Promise<void>;
+  createTask: (name: string, box: Box, description?: string) => Promise<void>;
   completeTask: (id: string) => Promise<string | null>;
   updateTask: (id: string, changes: Partial<Task>) => Promise<void>;
   moveTask: (id: string, box: Box) => Promise<void>;
@@ -62,8 +62,8 @@ export function useGoalTasks(
   }, [queryFn]);
 
   const createTask = useCallback(
-    async (title: string, box: Box, notes = "") => {
-      await taskService.create({ title, box, notes, goal_id: goalId });
+    async (name: string, box: Box, description = "") => {
+      await taskService.create({ name, box, description, goal_id: goalId });
     },
     [taskService, goalId],
   );

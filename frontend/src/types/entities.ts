@@ -2,8 +2,8 @@ import type { Box, GoalStatus } from "./common";
 
 export interface Task {
   id: string;
-  title: string;
-  notes: string;
+  name: string;
+  description: string;
   box: Box;
   goal_id: string;
   context_id: string;
@@ -22,7 +22,7 @@ export interface Task {
 
 export interface Goal {
   id: string;
-  title: string;
+  name: string;
   description: string;
   cover_file_id: string;
   status: GoalStatus;
@@ -58,7 +58,7 @@ export interface Idea extends NamedEntity {
 export interface ChecklistItem {
   id: string;
   task_id: string;
-  title: string;
+  name: string;
   is_completed: boolean;
   sort_order: number;
   is_deleted: boolean;

@@ -18,13 +18,13 @@ export class ChecklistService {
     return this.checklistRepository.getById(id);
   }
 
-  async create(taskId: string, title: string): Promise<ChecklistItem> {
+  async create(taskId: string, name: string): Promise<ChecklistItem> {
     const existingItems = await this.checklistRepository.getByTaskId(taskId);
     const now = new Date().toISOString();
     const item: ChecklistItem = {
       id: crypto.randomUUID(),
       task_id: taskId,
-      title,
+      name,
       is_completed: false,
       sort_order: existingItems.length,
       is_deleted: false,

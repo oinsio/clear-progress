@@ -133,10 +133,10 @@ function SelectorOptionList({
 }
 
 interface ChecklistSectionProps {
-  title: string;
+  name: string;
   items: ChecklistItem[];
   editingItemId: string | null;
-  editingItemTitle: string;
+  editingItemName: string;
   lastSyncedAt: string | null;
   variant: ChecklistItemVariant;
   onDragEnd: (event: DragEndEvent) => void;
@@ -154,10 +154,10 @@ interface ChecklistSectionProps {
 }
 
 function ChecklistSection({
-  title,
+  name,
   items,
   editingItemId,
-  editingItemTitle,
+  editingItemName,
   lastSyncedAt,
   variant,
   onDragEnd,
@@ -174,7 +174,7 @@ function ChecklistSection({
   return (
     <div>
       <p className="text-center text-sm font-medium text-accent mb-2">
-        {title}
+        {name}
       </p>
       <DndContext
         sensors={sensors}
@@ -191,7 +191,7 @@ function ChecklistSection({
                 key={item.id}
                 item={item}
                 isEditing={editingItemId === item.id}
-                editingTitle={editingItemTitle}
+                editingTitle={editingItemName}
                 lastSyncedAt={lastSyncedAt}
                 variant={variant}
                 toggleAriaLabel={getToggleAriaLabel(item)}
@@ -225,10 +225,10 @@ export function TaskDetailPanel({
 }: TaskDetailPanelProps) {
   const { t } = useTranslation();
   const {
-    title,
-    setTitle,
-    notes,
-    setNotes,
+    name,
+    setName,
+    description,
+    setDescription,
     selectedGoalId,
     setSelectedGoalId,
     selectedContextId,
@@ -245,8 +245,8 @@ export function TaskDetailPanel({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
 
-  const titleTextareaRef = useAutoResizeTextarea(title);
-  const notesTextareaRef = useAutoResizeTextarea(notes);
+  const titleTextareaRef = useAutoResizeTextarea(name);
+  const notesTextareaRef = useAutoResizeTextarea(description);
 
   const {
     items,
@@ -259,9 +259,9 @@ export function TaskDetailPanel({
   } = useChecklist(task.id);
   const {
     editingItemId,
-    editingItemTitle,
-    setEditingItemTitle,
-    handleItemTitleClick,
+    editingItemName,
+    setEditingItemName,
+    handleItemNameClick,
     commitItemEdit,
     handleItemEditKeyDown,
   } = useChecklistItemEditing(updateItem);
@@ -269,8 +269,8 @@ export function TaskDetailPanel({
 
   // Reset state when selected task changes
   useEffect(() => {
-    setTitle(task.title);
-    setNotes(task.notes);
+    setName(task.name);
+    setDescription(task.description);
     setSelectedGoalId(task.goal_id);
     setSelectedContextId(task.context_id);
     setSelectedCategoryId(task.category_id);
@@ -282,15 +282,15 @@ export function TaskDetailPanel({
     setNewItemTitle("");
   }, [
     task.id,
-    task.title,
-    task.notes,
+    task.name,
+    task.description,
     task.goal_id,
     task.context_id,
     task.category_id,
     task.box,
     task.repeat_rule,
-    setTitle,
-    setNotes,
+    setName,
+    setDescription,
     setSelectedGoalId,
     setSelectedContextId,
     setSelectedCategoryId,
@@ -298,18 +298,18 @@ export function TaskDetailPanel({
     setSelectedRepeatRule,
   ]);
 
-  const handleTitleBlur = useCallback(async () => {
-    const trimmedTitle = title.trim();
-    if (trimmedTitle && trimmedTitle !== task.title) {
-      await onUpdate(task.id, { title: trimmedTitle });
+  const handleNameBlur = useCallback(async () => {
+    const trimmedName = name.trim();
+    if (trimmedName && trimmedName !== task.name) {
+      await onUpdate(task.id, { name: trimmedName });
     }
-  }, [title, task.title, task.id, onUpdate]);
+  }, [name, task.name, task.id, onUpdate]);
 
-  const handleNotesBlur = useCallback(async () => {
-    if (notes !== task.notes) {
-      await onUpdate(task.id, { notes });
+  const handleDescriptionBlur = useCallback(async () => {
+    if (description !== task.description) {
+      await onUpdate(task.id, { description });
     }
-  }, [notes, task.notes, task.id, onUpdate]);
+  }, [description, task.description, task.id, onUpdate]);
 
   const handleBoxChange = useCallback(
     async (box: Box) => {
@@ -407,7 +407,7 @@ export function TaskDetailPanel({
   );
 
   const {
-    selectedGoalTitle,
+    selectedGoalName,
     selectedContextName,
     selectedCategoryName,
     checklistTabLabel,
@@ -425,7 +425,7 @@ export function TaskDetailPanel({
 
   const goalOptions: SelectorOption[] = goals.map((goal) => ({
     id: goal.id,
-    label: goal.title,
+    label: goal.name,
   }));
   const contextOptions: SelectorOption[] = contexts.map((context) => ({
     id: context.id,
@@ -473,12 +473,12 @@ export function TaskDetailPanel({
         <textarea
           ref={titleTextareaRef}
           rows={1}
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          onBlur={() => void handleTitleBlur()}
-          placeholder={t("task.titlePlaceholder")}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          onBlur={() => void handleNameBlur()}
+          placeholder={t("task.namePlaceholder")}
           className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
-          data-testid="task-detail-title"
+          data-testid="task-detail-name"
         />
       </div>
 
@@ -522,12 +522,12 @@ export function TaskDetailPanel({
               </label>
               <textarea
                 ref={notesTextareaRef}
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                onBlur={() => void handleNotesBlur()}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                onBlur={() => void handleDescriptionBlur()}
                 placeholder={t("taskEdit.notesPlaceholder")}
                 className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px]"
-                data-testid="task-detail-notes"
+                data-testid="task-detail-description"
               />
             </div>
 
@@ -564,7 +564,7 @@ export function TaskDetailPanel({
             {goals.length > 0 && (
               <DrillDownRow
                 label={t("selector.goal")}
-                value={selectedGoalTitle}
+                value={selectedGoalName}
                 hasValue={!!selectedGoalId}
                 onClick={() => setOpenSelector(SELECTOR_TYPE.GOAL)}
               />
@@ -672,26 +672,26 @@ export function TaskDetailPanel({
         {activeTab === ACTIVE_TAB.CHECKLIST && (
           <div className="px-4 py-4 flex flex-col gap-4">
             <ChecklistSection
-              title={t("taskEdit.activeSection", { count: activeItems.length })}
+              name={t("taskEdit.activeSection", { count: activeItems.length })}
               items={activeItems}
               editingItemId={editingItemId}
-              editingItemTitle={editingItemTitle}
+              editingItemName={editingItemName}
               lastSyncedAt={lastSyncedAt}
               variant={CHECKLIST_ITEM_VARIANT.ACTIVE}
               onDragEnd={(event) => handleSectionDragEnd(activeItems, event)}
               onToggle={(id) => void toggleItem(id)}
-              onStartEdit={handleItemTitleClick}
-              onEditChange={setEditingItemTitle}
+              onStartEdit={handleItemNameClick}
+              onEditChange={setEditingItemName}
               onCommitEdit={(id) => void commitItemEdit(id)}
               onEditKeyDown={(event, id) =>
                 void handleItemEditKeyDown(event, id)
               }
               onDelete={(id) => void deleteItem(id)}
               getToggleAriaLabel={(item) =>
-                t("taskEdit.checkItemMark", { title: item.title })
+                t("taskEdit.checkItemMark", { title: item.name })
               }
               getDeleteAriaLabel={(item) =>
-                t("taskEdit.checkItemDelete", { title: item.title })
+                t("taskEdit.checkItemDelete", { title: item.name })
               }
             />
 
@@ -716,30 +716,30 @@ export function TaskDetailPanel({
 
             {completedItems.length > 0 && (
               <ChecklistSection
-                title={t("taskEdit.doneSection", {
+                name={t("taskEdit.doneSection", {
                   count: completedItems.length,
                 })}
                 items={completedItems}
                 editingItemId={editingItemId}
-                editingItemTitle={editingItemTitle}
+                editingItemName={editingItemName}
                 lastSyncedAt={lastSyncedAt}
                 variant={CHECKLIST_ITEM_VARIANT.COMPLETED}
                 onDragEnd={(event) =>
                   handleSectionDragEnd(completedItems, event)
                 }
                 onToggle={(id) => void toggleItem(id)}
-                onStartEdit={handleItemTitleClick}
-                onEditChange={setEditingItemTitle}
+                onStartEdit={handleItemNameClick}
+                onEditChange={setEditingItemName}
                 onCommitEdit={(id) => void commitItemEdit(id)}
                 onEditKeyDown={(event, id) =>
                   void handleItemEditKeyDown(event, id)
                 }
                 onDelete={(id) => void deleteItem(id)}
                 getToggleAriaLabel={(item) =>
-                  t("taskEdit.checkItemUnmark", { title: item.title })
+                  t("taskEdit.checkItemUnmark", { title: item.name })
                 }
                 getDeleteAriaLabel={(item) =>
-                  t("taskEdit.checkItemDelete", { title: item.title })
+                  t("taskEdit.checkItemDelete", { title: item.name })
                 }
               />
             )}
@@ -753,7 +753,7 @@ export function TaskDetailPanel({
           <p className="text-base font-medium text-gray-800 text-center">
             {t("taskEdit.deleteConfirmTitle")}
           </p>
-          <p className="text-sm text-gray-500 text-center">{task.title}</p>
+          <p className="text-sm text-gray-500 text-center">{task.name}</p>
           <div className="flex gap-3 w-full">
             <button
               type="button"

@@ -23,12 +23,12 @@ export class TaskService {
   }
 
   async create(
-    partialTask: Pick<Task, "title" | "box"> & Partial<Task>,
+    partialTask: Pick<Task, "name" | "box"> & Partial<Task>,
   ): Promise<Task> {
     const existingTasks = await this.taskRepository.getByBox(partialTask.box);
     const now = new Date().toISOString();
     const task: Task = {
-      notes: "",
+      description: "",
       goal_id: "",
       context_id: "",
       category_id: "",
@@ -228,8 +228,8 @@ export class TaskService {
     const lowerQuery = query.toLowerCase();
     const matchingTasks = allTasks.filter(
       (task) =>
-        task.title.toLowerCase().includes(lowerQuery) ||
-        task.notes.toLowerCase().includes(lowerQuery),
+        task.name.toLowerCase().includes(lowerQuery) ||
+        task.description.toLowerCase().includes(lowerQuery),
     );
     return matchingTasks.sort((taskA, taskB) => {
       if (taskA.is_completed !== taskB.is_completed) {
@@ -246,9 +246,9 @@ export class TaskService {
     }
 
     const newTask = await this.create({
-      title: originalTask.title,
+      name: originalTask.name,
       box: originalTask.box,
-      notes: originalTask.notes,
+      description: originalTask.description,
       goal_id: originalTask.goal_id,
       context_id: originalTask.context_id,
       category_id: originalTask.category_id,

@@ -36,7 +36,7 @@
     "drag": "В другую палату",
     "add": "Новый симптом",
     "newTitle": "Новое страдание",
-    "titlePlaceholder": "Название страдания...",
+    "namePlaceholder": "Название страдания...",
     "create": "Задокументировать",
     "createLabel": "Задокументировать страдание"
   },
@@ -55,9 +55,9 @@
     "pageTitle": "Навязчивые идеи",
     "empty": "Никаких иллюзий. Молодец.",
     "newTitle": "Новая иллюзия",
-    "titlePlaceholder": "Название иллюзии",
+    "namePlaceholder": "Название иллюзии",
     "descriptionPlaceholder": "Подробности страдания",
-    "titleLabel": "Иллюзия",
+    "nameLabel": "Иллюзия",
     "descriptionLabel": "Детали",
     "statusLabel": "Стадия",
     "cancel": "Забить",
@@ -96,7 +96,7 @@
   "idea": {
     "pageTitle": "Бредовые идеи",
     "add": "Новый бред",
-    "titlePlaceholder": "Название бреда",
+    "namePlaceholder": "Название бреда",
     "empty": "Бреда нет. Это тоже подозрительно.",
     "drag": "Перетащить бред"
   },

@@ -11,7 +11,7 @@ const GOAL_HEADERS = SHEET_HEADERS[SHEET_NAMES.GOALS];
 function makeGoalRow(overrides: Partial<Record<string, unknown>> = {}): unknown[] {
   const defaults: Record<string, unknown> = {
     id: 'goal-1',
-    title: 'Test goal',
+    name: 'Test goal',
     description: '',
     cover_file_id: '',
     status: 'planning',
@@ -83,7 +83,7 @@ describe('getAllGoals', () => {
       GOAL_HEADERS,
       makeGoalRow({
         id: 'goal-abc',
-        title: 'My goal',
+        name: 'My goal',
         description: 'Some description',
         cover_file_id: 'drive-file-id',
         created_at: '2025-01-01T00:00:00.000Z',
@@ -93,7 +93,7 @@ describe('getAllGoals', () => {
 
     const [goal] = getAllGoals();
     expect(goal.id).toBe('goal-abc');
-    expect(goal.title).toBe('My goal');
+    expect(goal.name).toBe('My goal');
     expect(goal.description).toBe('Some description');
     expect(goal.cover_file_id).toBe('drive-file-id');
     expect(goal.created_at).toBe('2025-01-01T00:00:00.000Z');
@@ -103,11 +103,11 @@ describe('getAllGoals', () => {
   it('should coerce null row values to empty string for string fields', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       GOAL_HEADERS,
-      makeGoalRow({ title: null, description: null, cover_file_id: null, created_at: null, updated_at: null }),
+      makeGoalRow({ name: null, description: null, cover_file_id: null, created_at: null, updated_at: null }),
     ]) as never);
 
     const [goal] = getAllGoals();
-    expect(goal.title).toBe('');
+    expect(goal.name).toBe('');
     expect(goal.description).toBe('');
     expect(goal.cover_file_id).toBe('');
     expect(goal.created_at).toBe('');
@@ -420,7 +420,7 @@ describe('upsertGoals', () => {
 
     const newGoal: Goal = {
       id: 'goal-new',
-      title: 'Learn TypeScript',
+      name: 'Learn TypeScript',
       description: '',
       cover_file_id: '',
       status: 'planning',

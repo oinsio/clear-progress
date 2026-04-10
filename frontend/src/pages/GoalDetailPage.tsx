@@ -176,8 +176,8 @@ export default function GoalDetailPage() {
   );
 
   const handleCreateTask = useCallback(
-    async (title: string, box: Box, notes: string) => {
-      await createTask(title, box, notes);
+    async (name: string, box: Box, description: string) => {
+      await createTask(name, box, description);
     },
     [createTask],
   );
@@ -190,7 +190,7 @@ export default function GoalDetailPage() {
   );
 
   const handleStartEdit = useCallback(() => {
-    setEditTitle(goal?.title ?? "");
+    setEditTitle(goal?.name ?? "");
     setEditDescription(goal?.description ?? "");
     setPendingCoverFile(null);
     setIsCoverRemoved(false);
@@ -242,7 +242,7 @@ export default function GoalDetailPage() {
       }
 
       await updateGoal({
-        title: editTitle.trim(),
+        name: editTitle.trim(),
         description: editDescription.trim(),
         cover_file_id: newCoverFileId,
       });
@@ -363,7 +363,7 @@ export default function GoalDetailPage() {
                       />
                       <div className="flex-1">
                         <label htmlFor="goal-edit-title" className="sr-only">
-                          {t("goal.titleLabel")}
+                          {t("goal.nameLabel")}
                         </label>
                         <textarea
                           ref={editTitleTextareaRef}
@@ -372,9 +372,9 @@ export default function GoalDetailPage() {
                           rows={1}
                           value={editTitle}
                           onChange={(e) => setEditTitle(e.target.value)}
-                          placeholder={t("goal.titlePlaceholder")}
+                          placeholder={t("goal.namePlaceholder")}
                           className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
-                          data-testid="goal-title-input"
+                          data-testid="goal-name-input"
                         />
                       </div>
                     </div>
@@ -514,7 +514,7 @@ export default function GoalDetailPage() {
                     <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
                       <img
                         src={existingCoverUrl ?? defaultCoverSvg}
-                        alt={existingCoverUrl ? goal.title : ""}
+                        alt={existingCoverUrl ? goal.name : ""}
                         aria-hidden={!existingCoverUrl}
                         className="w-full h-full object-cover"
                       />
@@ -523,7 +523,7 @@ export default function GoalDetailPage() {
                     {/* Title + description + status */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800 font-medium leading-snug">
-                        {goal.title}
+                        {goal.name}
                       </p>
                       {goal.description && (
                         <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-snug">
@@ -577,8 +577,8 @@ export default function GoalDetailPage() {
             {isAddingTask && (
               <AddTaskInput
                 targetBox={t(`box.${defaultBox}`)}
-                onAdd={async (title) => {
-                  await handleCreateTask(title, defaultBox, "");
+                onAdd={async (name) => {
+                  await handleCreateTask(name, defaultBox, "");
                   setIsAddingTask(false);
                 }}
                 onCancel={() => setIsAddingTask(false)}

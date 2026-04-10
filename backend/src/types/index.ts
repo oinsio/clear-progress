@@ -22,8 +22,8 @@ interface NamedEntity extends SortableEntity {
 }
 
 export interface Task extends SortableEntity {
-  title: string;
-  notes: string;
+  name: string;
+  description: string;
   box: Box;
   goal_id: string;
   context_id: string;
@@ -34,7 +34,7 @@ export interface Task extends SortableEntity {
 }
 
 export interface Goal extends SortableEntity {
-  title: string;
+  name: string;
   description: string;
   cover_file_id: string;
   status: GoalStatus;
@@ -50,7 +50,7 @@ export interface Idea extends NamedEntity {
 
 export interface ChecklistItem extends SortableEntity {
   task_id: string;
-  title: string;
+  name: string;
   is_completed: boolean;
 }
 

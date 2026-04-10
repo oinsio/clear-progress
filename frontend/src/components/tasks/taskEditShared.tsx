@@ -46,16 +46,6 @@ export const CHECKLIST_ITEM_VARIANT = {
 export type ChecklistItemVariant =
   (typeof CHECKLIST_ITEM_VARIANT)[keyof typeof CHECKLIST_ITEM_VARIANT];
 
-export function resolveEntityTitle(
-  id: string,
-  entities: Array<{ id: string; title: string }>,
-  fallback: string,
-): string {
-  return id
-    ? (entities.find((entity) => entity.id === id)?.title ?? fallback)
-    : fallback;
-}
-
 export function resolveEntityName(
   id: string,
   entities: Array<{ id: string; name: string }>,

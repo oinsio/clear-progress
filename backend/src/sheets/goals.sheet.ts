@@ -7,7 +7,7 @@ const COLS = colMap(SHEET_NAMES.GOALS);
 function rowToGoal(row: unknown[]): Goal {
   return {
     id: String(row[COLS.id] ?? ''),
-    title: String(row[COLS.title] ?? ''),
+    name: String(row[COLS.name] ?? ''),
     description: String(row[COLS.description] ?? ''),
     cover_file_id: String(row[COLS.cover_file_id] ?? ''),
     status: coerceSheetGoalStatus(row[COLS.status]),

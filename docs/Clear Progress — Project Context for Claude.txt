@@ -14,15 +14,15 @@
 
 ## Ключевые сущности и структура данных
 
-**Tasks** — основная сущность. Поля: id (UUID v4), title, notes, box (inbox|today|week|later), goal_id?, context_id?, category_id?, is_completed, completed_at?, repeat_rule? (v1.1), sort_order, is_deleted, created_at, updated_at, version.
+**Tasks** — основная сущность. Поля: id (UUID v4), name, description, box (inbox|today|week|later), goal_id?, context_id?, category_id?, is_completed, completed_at?, repeat_rule? (v1.1), sort_order, is_deleted, created_at, updated_at, version.
 
-**Goals** — цели. Поля: id, title, description?, cover_file_id? (Google Drive), status (not_started|in_progress|paused|completed|cancelled), sort_order, is_deleted, created_at, updated_at, version.
+**Goals** — цели. Поля: id, name, description?, cover_file_id? (Google Drive), status (not_started|in_progress|paused|completed|cancelled), sort_order, is_deleted, created_at, updated_at, version.
 
 **Contexts** — GTD-контексты (@Дом, @Офис...). Поля: id, name, sort_order, is_deleted, created_at, updated_at, version.
 
 **Categories** — сферы жизни (Работа, Семья...). Структура аналогична Contexts.
 
-**Checklist_Items** (v1.1) — подзадачи. Поля: id, task_id, title, is_completed, sort_order, is_deleted, created_at, updated_at, version.
+**Checklist_Items** (v1.1) — подзадачи. Поля: id, task_id, name, is_completed, sort_order, is_deleted, created_at, updated_at, version.
 
 **Settings** — ключ-значение. Ключи MVP: default_box, accent_color. Ключи v1.1: creation_fields, quick_property, menu_always_visible, menu_items, inbox_fields, focus_entity.
 

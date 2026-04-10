@@ -55,17 +55,17 @@ describe('recordToRow', () => {
   });
 
   it('should place field values at correct column indices', () => {
-    const record = { id: 'abc', title: 'Hello', version: 5 };
+    const record = { id: 'abc', name: 'Hello', version: 5 };
     const row = recordToRow(SHEET_NAMES.TASKS, record);
     expect(row[TASK_COL.id]).toBe('abc');
-    expect(row[TASK_COL.title]).toBe('Hello');
+    expect(row[TASK_COL.name]).toBe('Hello');
     expect(row[TASK_COL.version]).toBe(5);
   });
 
   it('should place undefined for fields not present in record', () => {
     const record = { id: 'abc' };
     const row = recordToRow(SHEET_NAMES.TASKS, record);
-    expect(row[TASK_COL.title]).toBeUndefined();
+    expect(row[TASK_COL.name]).toBeUndefined();
   });
 });
 
@@ -165,11 +165,11 @@ describe('upsertRecord', () => {
   it('should append row with record data in correct column order', () => {
     const sheetMock = setupSheet([TASK_HEADERS]);
 
-    upsertRecord(SHEET_NAMES.TASKS, { id: 'new-id', title: 'My task', version: 3 });
+    upsertRecord(SHEET_NAMES.TASKS, { id: 'new-id', name: 'My task', version: 3 });
 
     const appendedRow = sheetMock.appendRow.mock.calls[0][0] as unknown[];
     expect(appendedRow[TASK_COL.id]).toBe('new-id');
-    expect(appendedRow[TASK_COL.title]).toBe('My task');
+    expect(appendedRow[TASK_COL.name]).toBe('My task');
     expect(appendedRow[TASK_COL.version]).toBe(3);
   });
 
@@ -208,12 +208,12 @@ describe('upsertRecord', () => {
   });
 
   it('should write updated record data when updating existing row', () => {
-    const sheetMock = setupSheet([TASK_HEADERS, makeTaskRow('task-1', { title: 'Old title' })]);
+    const sheetMock = setupSheet([TASK_HEADERS, makeTaskRow('task-1', { name: 'Old name' })]);
 
-    upsertRecord(SHEET_NAMES.TASKS, { id: 'task-1', title: 'New title' });
+    upsertRecord(SHEET_NAMES.TASKS, { id: 'task-1', name: 'New name' });
 
     const writtenRow = sheetMock._setValues.mock.calls[0][0][0] as unknown[];
-    expect(writtenRow[TASK_COL.title]).toBe('New title');
+    expect(writtenRow[TASK_COL.name]).toBe('New name');
   });
 
   it('should call getSheet with the given sheet name', () => {
@@ -295,23 +295,23 @@ describe('upsertRecords', () => {
   it('should write updated data into the correct row index', () => {
     const sheetMock = setupSheet([
       TASK_HEADERS,
-      makeTaskRow('task-1', { title: 'Old' }),
-      makeTaskRow('task-2', { title: 'Keep' }),
+      makeTaskRow('task-1', { name: 'Old' }),
+      makeTaskRow('task-2', { name: 'Keep' }),
     ]);
 
-    upsertRecords(SHEET_NAMES.TASKS, [{ id: 'task-1', title: 'New' }]);
+    upsertRecords(SHEET_NAMES.TASKS, [{ id: 'task-1', name: 'New' }]);
 
     const writtenMatrix = sheetMock._setValues.mock.calls[0][0] as unknown[][];
-    expect(writtenMatrix[1][TASK_COL.title]).toBe('New');
-    expect(writtenMatrix[2][TASK_COL.title]).toBe('Keep');
+    expect(writtenMatrix[1][TASK_COL.name]).toBe('New');
+    expect(writtenMatrix[2][TASK_COL.name]).toBe('Keep');
   });
 
   it('should handle mixed batch: update existing + append new', () => {
     const sheetMock = setupSheetWithTasks('task-existing');
 
     upsertRecords(SHEET_NAMES.TASKS, [
-      { id: 'task-existing', title: 'Updated' },
-      { id: 'task-new', title: 'Created' },
+      { id: 'task-existing', name: 'Updated' },
+      { id: 'task-new', name: 'Created' },
     ]);
 
     expect(sheetMock._setValues).toHaveBeenCalledTimes(1);
@@ -321,11 +321,11 @@ describe('upsertRecords', () => {
   it('should append new rows with correct data', () => {
     const sheetMock = setupSheet([TASK_HEADERS]);
 
-    upsertRecords(SHEET_NAMES.TASKS, [{ id: 'task-new', title: 'My new task', version: 7 }]);
+    upsertRecords(SHEET_NAMES.TASKS, [{ id: 'task-new', name: 'My new task', version: 7 }]);
 
     const appendedRow = sheetMock.appendRow.mock.calls[0][0] as unknown[];
     expect(appendedRow[TASK_COL.id]).toBe('task-new');
-    expect(appendedRow[TASK_COL.title]).toBe('My new task');
+    expect(appendedRow[TASK_COL.name]).toBe('My new task');
     expect(appendedRow[TASK_COL.version]).toBe(7);
   });
 

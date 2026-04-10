@@ -7,8 +7,8 @@ const COLS = colMap(SHEET_NAMES.TASKS);
 function rowToTask(row: unknown[]): Task {
   return {
     id: String(row[COLS.id] ?? ''),
-    title: String(row[COLS.title] ?? ''),
-    notes: String(row[COLS.notes] ?? ''),
+    name: String(row[COLS.name] ?? ''),
+    description: String(row[COLS.description] ?? ''),
     box: coerceSheetBox(row[COLS.box]),
     goal_id: String(row[COLS.goal_id] ?? ''),
     context_id: String(row[COLS.context_id] ?? ''),

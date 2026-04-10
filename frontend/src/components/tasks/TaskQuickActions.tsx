@@ -49,14 +49,14 @@ export function TaskQuickActions({
 }: TaskQuickActionsProps) {
   const { t } = useTranslation();
   const [activeMode, setActiveMode] = useState<QuickActionMode>("none");
-  const [notesValue, setNotesValue] = useState(task.notes);
+  const [notesValue, setNotesValue] = useState(task.description);
 
   const handleModeToggle = useCallback((mode: QuickActionMode) => {
     setActiveMode((current) => (current === mode ? "none" : mode));
   }, []);
 
   const handleNotesSave = useCallback(async () => {
-    await onUpdate(task.id, { notes: notesValue });
+    await onUpdate(task.id, { description: notesValue });
     setActiveMode("none");
   }, [task.id, notesValue, onUpdate]);
 
@@ -64,10 +64,10 @@ export function TaskQuickActions({
     if (activeMode === "notes") {
       await handleNotesSave();
     } else {
-      setNotesValue(task.notes);
+      setNotesValue(task.description);
       setActiveMode("notes");
     }
-  }, [activeMode, task.notes, handleNotesSave]);
+  }, [activeMode, task.description, handleNotesSave]);
 
   const handleNotesKeyDown = useCallback(
     async (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -117,7 +117,7 @@ export function TaskQuickActions({
     "flex items-center justify-center w-9 h-9 rounded-lg transition-colors",
     activeMode === "notes"
       ? "bg-accent/15 text-accent"
-      : task.notes
+      : task.description
         ? "text-accent hover:bg-accent/10"
         : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
   );
@@ -223,7 +223,7 @@ export function TaskQuickActions({
       {activeMode === "notes" && (
         <div className="px-3 pb-2">
           <textarea
-            data-testid="quick-notes-input"
+            data-testid="quick-description-input"
             value={notesValue}
             onChange={(event) => setNotesValue(event.target.value)}
             onKeyDown={handleNotesKeyDown}
@@ -264,7 +264,7 @@ export function TaskQuickActions({
                   : "text-gray-700 hover:bg-gray-100",
               )}
             >
-              {goal.title}
+              {goal.name}
             </button>
           ))}
         </div>

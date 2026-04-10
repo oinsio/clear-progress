@@ -10,7 +10,7 @@ export function buildChecklistItem(
   return {
     id: crypto.randomUUID(),
     task_id: crypto.randomUUID(),
-    title: `Checklist Item ${checklistItemCounter}`,
+    name: `Checklist Item ${checklistItemCounter}`,
     is_completed: false,
     sort_order: checklistItemCounter,
     is_deleted: false,

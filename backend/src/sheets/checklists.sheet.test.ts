@@ -12,7 +12,7 @@ function makeItemRow(overrides: Partial<Record<string, unknown>> = {}): unknown[
   const defaults: Record<string, unknown> = {
     id: 'item-1',
     task_id: 'task-1',
-    title: 'Subtask',
+    name: 'Subtask',
     is_completed: false,
     sort_order: 0,
     is_deleted: false,
@@ -82,7 +82,7 @@ describe('getAllChecklistItems', () => {
       makeItemRow({
         id: 'item-abc',
         task_id: 'task-xyz',
-        title: 'Buy milk',
+        name: 'Buy milk',
         created_at: '2025-01-01T00:00:00.000Z',
         updated_at: '2025-06-01T00:00:00.000Z',
       }),
@@ -91,7 +91,7 @@ describe('getAllChecklistItems', () => {
     const [item] = getAllChecklistItems();
     expect(item.id).toBe('item-abc');
     expect(item.task_id).toBe('task-xyz');
-    expect(item.title).toBe('Buy milk');
+    expect(item.name).toBe('Buy milk');
     expect(item.created_at).toBe('2025-01-01T00:00:00.000Z');
     expect(item.updated_at).toBe('2025-06-01T00:00:00.000Z');
   });
@@ -163,12 +163,12 @@ describe('getAllChecklistItems', () => {
   it('should coerce null row values to empty string for string fields', () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([
       ITEM_HEADERS,
-      makeItemRow({ task_id: null, title: null, created_at: null, updated_at: null }),
+      makeItemRow({ task_id: null, name: null, created_at: null, updated_at: null }),
     ]) as never);
 
     const [item] = getAllChecklistItems();
     expect(item.task_id).toBe('');
-    expect(item.title).toBe('');
+    expect(item.name).toBe('');
     expect(item.created_at).toBe('');
     expect(item.updated_at).toBe('');
   });
@@ -343,7 +343,7 @@ describe('upsertChecklistItems', () => {
     const newItem: ChecklistItem = {
       id: 'item-new',
       task_id: '11111111-1111-4111-a111-111111111111',
-      title: 'Buy milk',
+      name: 'Buy milk',
       is_completed: false,
       sort_order: 0,
       is_deleted: false,

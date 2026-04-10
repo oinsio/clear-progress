@@ -137,7 +137,7 @@ export function SortableChecklistItem({
             isCompleted ? "text-gray-400 line-through" : "text-gray-800",
           )}
         >
-          {item.title}
+          {item.name}
         </span>
       )}
       {isEditing && (

@@ -96,7 +96,7 @@ describe("useChecklist", () => {
     });
 
     await waitFor(() => expect(result.current.items).toHaveLength(1));
-    expect(result.current.items[0].title).toBe("New item");
+    expect(result.current.items[0].name).toBe("New item");
   });
 
   it("should schedule push when createItem is called", async () => {
@@ -154,15 +154,15 @@ describe("useChecklist", () => {
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });
 
-  it("should update item title when updateItem is called", async () => {
-    const { item, result } = await setupWithItem({ title: "Old title" });
+  it("should update item name when updateItem is called", async () => {
+    const { item, result } = await setupWithItem({ name: "Old name" });
 
     await act(async () => {
-      await result.current.updateItem(item.id, "Updated title");
+      await result.current.updateItem(item.id, "Updated name");
     });
 
     await waitFor(() =>
-      expect(result.current.items[0].title).toBe("Updated title"),
+      expect(result.current.items[0].name).toBe("Updated name"),
     );
   });
 

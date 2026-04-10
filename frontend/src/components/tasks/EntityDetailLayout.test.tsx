@@ -69,7 +69,7 @@ function buildProps(
     testIdPrefix: "context",
     i18nKeys: {
       back: "context.back",
-      title: "context.title",
+      name: "context.name",
       notFound: "context.notFound",
       deleteLabel: "context.deleteLabel",
       editName: "context.editName",
@@ -138,7 +138,7 @@ describe("EntityDetailLayout — inline task creation", () => {
     expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
   });
 
-  it("should call onCreateTask with title and defaultBox when Enter is pressed", async () => {
+  it("should call onCreateTask with name and defaultBox when Enter is pressed", async () => {
     const onCreateTask = vi.fn().mockResolvedValue(undefined);
     renderLayout({ onCreateTask });
     fireEvent.click(screen.getByTestId("add-task-button"));

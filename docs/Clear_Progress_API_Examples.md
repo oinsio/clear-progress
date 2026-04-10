@@ -186,8 +186,8 @@ Content-Type: application/json
     "tasks": [
       {
         "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Купить продукты",
-        "notes": "Молоко, хлеб, яйца, сыр",
+        "name": "Купить продукты",
+        "description": "Молоко, хлеб, яйца, сыр",
         "box": "today",
         "goal_id": "",
         "context_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
@@ -203,8 +203,8 @@ Content-Type: application/json
       },
       {
         "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-        "title": "Подготовить отчёт за февраль",
-        "notes": "Включить данные по продажам и маркетингу.\nОтправить директору до пятницы.",
+        "name": "Подготовить отчёт за февраль",
+        "description": "Включить данные по продажам и маркетингу.\nОтправить директору до пятницы.",
         "box": "week",
         "goal_id": "e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b",
         "context_id": "7d8e9f0a-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
@@ -220,8 +220,8 @@ Content-Type: application/json
       },
       {
         "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-        "title": "Позвонить стоматологу",
-        "notes": "",
+        "name": "Позвонить стоматологу",
+        "description": "",
         "box": "inbox",
         "goal_id": "",
         "context_id": "",
@@ -237,8 +237,8 @@ Content-Type: application/json
       },
       {
         "id": "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f",
-        "title": "Утренняя зарядка",
-        "notes": "15 минут разминка + 20 минут силовые",
+        "name": "Утренняя зарядка",
+        "description": "15 минут разминка + 20 минут силовые",
         "box": "today",
         "goal_id": "3f4a5b6c-7d8e-4f0a-1b2c-3d4e5f6a7b8c",
         "context_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
@@ -256,7 +256,7 @@ Content-Type: application/json
     "goals": [
       {
         "id": "e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b",
-        "title": "Запустить новый проект",
+        "name": "Запустить новый проект",
         "description": "Разработать и запустить MVP мобильного приложения для трекинга привычек до конца Q2 2026",
         "cover_file_id": "1AbCdEfGhIjKlMnOpQrStUvWxYz",
         "status": "in_progress",
@@ -268,7 +268,7 @@ Content-Type: application/json
       },
       {
         "id": "3f4a5b6c-7d8e-4f0a-1b2c-3d4e5f6a7b8c",
-        "title": "Здоровый образ жизни",
+        "name": "Здоровый образ жизни",
         "description": "Регулярные тренировки, правильное питание, режим сна",
         "cover_file_id": "",
         "status": "in_progress",
@@ -341,7 +341,7 @@ Content-Type: application/json
       {
         "id": "11111111-aaaa-4bbb-cccc-dddddddddddd",
         "task_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Молоко 2.5%",
+        "name": "Молоко 2.5%",
         "is_completed": true,
         "sort_order": 1000,
         "is_deleted": false,
@@ -352,7 +352,7 @@ Content-Type: application/json
       {
         "id": "22222222-aaaa-4bbb-cccc-dddddddddddd",
         "task_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Хлеб бородинский",
+        "name": "Хлеб бородинский",
         "is_completed": false,
         "sort_order": 2000,
         "is_deleted": false,
@@ -363,7 +363,7 @@ Content-Type: application/json
       {
         "id": "33333333-aaaa-4bbb-cccc-dddddddddddd",
         "task_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Яйца (десяток)",
+        "name": "Яйца (десяток)",
         "is_completed": false,
         "sort_order": 3000,
         "is_deleted": false,
@@ -374,7 +374,7 @@ Content-Type: application/json
       {
         "id": "44444444-aaaa-4bbb-cccc-dddddddddddd",
         "task_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Сыр голландский",
+        "name": "Сыр голландский",
         "is_completed": false,
         "sort_order": 4000,
         "is_deleted": false,
@@ -420,8 +420,8 @@ Content-Type: application/json
     "tasks": [
       {
         "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-        "title": "Подготовить отчёт за февраль",
-        "notes": "Включить данные по продажам и маркетингу.\nОтправить директору до пятницы.",
+        "name": "Подготовить отчёт за февраль",
+        "description": "Включить данные по продажам и маркетингу.\nОтправить директору до пятницы.",
         "box": "today",
         "goal_id": "e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b",
         "context_id": "7d8e9f0a-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
@@ -443,7 +443,7 @@ Content-Type: application/json
       {
         "id": "22222222-aaaa-4bbb-cccc-dddddddddddd",
         "task_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Хлеб бородинский",
+        "name": "Хлеб бородинский",
         "is_completed": true,
         "sort_order": 2000,
         "is_deleted": false,
@@ -558,8 +558,8 @@ Content-Type: application/json
     "tasks": [
       {
         "id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
-        "title": "Записаться к врачу",
-        "notes": "Терапевт, ежегодный осмотр.\nВзять с собой полис и паспорт.",
+        "name": "Записаться к врачу",
+        "description": "Терапевт, ежегодный осмотр.\nВзять с собой полис и паспорт.",
         "box": "week",
         "goal_id": "3f4a5b6c-7d8e-4f0a-1b2c-3d4e5f6a7b8c",
         "context_id": "5a6b7c8d-9e0f-4a1b-2c3d-4e5f6a7b8c9d",
@@ -591,7 +591,7 @@ Content-Type: application/json
       {
         "id": "55555555-aaaa-4bbb-cccc-dddddddddddd",
         "task_id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
-        "title": "Позвонить в регистратуру",
+        "name": "Позвонить в регистратуру",
         "is_completed": false,
         "sort_order": 1000,
         "is_deleted": false,
@@ -602,7 +602,7 @@ Content-Type: application/json
       {
         "id": "66666666-aaaa-4bbb-cccc-dddddddddddd",
         "task_id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
-        "title": "Найти полис ОМС",
+        "name": "Найти полис ОМС",
         "is_completed": false,
         "sort_order": 2000,
         "is_deleted": false,
@@ -653,8 +653,8 @@ Content-Type: application/json
     "tasks": [
       {
         "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Купить продукты",
-        "notes": "Молоко, хлеб, яйца, сыр",
+        "name": "Купить продукты",
+        "description": "Молоко, хлеб, яйца, сыр",
         "box": "today",
         "goal_id": "",
         "context_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
@@ -726,8 +726,8 @@ Content-Type: application/json
     "tasks": [
       {
         "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Купить продукты и воду",
-        "notes": "Молоко, хлеб, яйца, сыр, вода 5л",
+        "name": "Купить продукты и воду",
+        "description": "Молоко, хлеб, яйца, сыр, вода 5л",
         "box": "today",
         "goal_id": "",
         "context_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
@@ -763,8 +763,8 @@ Content-Type: application/json
         "status": "conflict",
         "server_record": {
           "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-          "title": "Купить продукты",
-          "notes": "Молоко, хлеб, яйца, сыр",
+          "name": "Купить продукты",
+          "description": "Молоко, хлеб, яйца, сыр",
           "box": "today",
           "goal_id": "",
           "context_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
@@ -803,8 +803,8 @@ Content-Type: application/json
     "tasks": [
       {
         "id": "eeee1111-2222-4333-4444-555566667777",
-        "title": "Новая задача из офлайна",
-        "notes": "",
+        "name": "Новая задача из офлайна",
+        "description": "",
         "box": "inbox",
         "goal_id": "",
         "context_id": "",
@@ -820,8 +820,8 @@ Content-Type: application/json
       },
       {
         "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-        "title": "Позвонить стоматологу",
-        "notes": "Записаться на чистку",
+        "name": "Позвонить стоматологу",
+        "description": "Записаться на чистку",
         "box": "today",
         "goal_id": "",
         "context_id": "5a6b7c8d-9e0f-4a1b-2c3d-4e5f6a7b8c9d",
@@ -839,7 +839,7 @@ Content-Type: application/json
     "goals": [
       {
         "id": "e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b",
-        "title": "Запустить новый проект",
+        "name": "Запустить новый проект",
         "description": "Разработать и запустить MVP до конца Q2 2026. Обновлённое описание.",
         "cover_file_id": "1AbCdEfGhIjKlMnOpQrStUvWxYz",
         "status": "in_progress",
@@ -876,7 +876,7 @@ Content-Type: application/json
         "status": "conflict",
         "server_record": {
           "id": "e8b5f7d2-3c4a-4e6f-9a1b-7c8d9e0f1a2b",
-          "title": "Запустить новый проект",
+          "name": "Запустить новый проект",
           "description": "Разработать и запустить MVP мобильного приложения для трекинга привычек до конца Q2 2026",
           "cover_file_id": "1AbCdEfGhIjKlMnOpQrStUvWxYz",
           "status": "in_progress",
@@ -914,8 +914,8 @@ Content-Type: application/json
     "tasks": [
       {
         "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
-        "title": "Позвонить стоматологу",
-        "notes": "Записаться на чистку",
+        "name": "Позвонить стоматологу",
+        "description": "Записаться на чистку",
         "box": "today",
         "goal_id": "",
         "context_id": "5a6b7c8d-9e0f-4a1b-2c3d-4e5f6a7b8c9d",
@@ -937,7 +937,7 @@ Content-Type: application/json
       {
         "id": "55555555-aaaa-4bbb-cccc-dddddddddddd",
         "task_id": "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e",
-        "title": "Позвонить в регистратуру",
+        "name": "Позвонить в регистратуру",
         "is_completed": true,
         "sort_order": 1000,
         "is_deleted": true,
@@ -990,7 +990,7 @@ Content-Type: application/json
     "settings": [
       { "key": "default_box", "value": "today", "updated_at": "2026-03-04T17:00:00.000Z" },
       { "key": "accent_color", "value": "purple", "updated_at": "2026-03-04T17:00:00.000Z" },
-      { "key": "creation_fields", "value": "[\"goal\",\"context\",\"notes\"]", "updated_at": "2026-03-04T17:00:00.000Z" },
+      { "key": "creation_fields", "value": "[\"goal\",\"context\",\"description\"]", "updated_at": "2026-03-04T17:00:00.000Z" },
       { "key": "quick_property", "value": "context", "updated_at": "2026-03-04T17:00:00.000Z" },
       { "key": "menu_always_visible", "value": "true", "updated_at": "2026-03-04T17:00:00.000Z" },
       { "key": "menu_items", "value": "[\"inbox\",\"goals\",\"tasks\",\"completed\"]", "updated_at": "2026-03-04T17:00:00.000Z" },
@@ -1043,8 +1043,8 @@ Content-Type: application/json
     "tasks": [
       {
         "id": "77778888-9999-4aaa-bbbb-ccccddddeeee",
-        "title": "Выбрать фреймворк",
-        "notes": "Сравнить React Native, Flutter, Kotlin Multiplatform",
+        "name": "Выбрать фреймворк",
+        "description": "Сравнить React Native, Flutter, Kotlin Multiplatform",
         "box": "today",
         "goal_id": "aabbccdd-eeff-4112-2334-556677889900",
         "context_id": "7d8e9f0a-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
@@ -1060,8 +1060,8 @@ Content-Type: application/json
       },
       {
         "id": "88889999-aaaa-4bbb-cccc-ddddeeeeffff",
-        "title": "Составить ТЗ",
-        "notes": "",
+        "name": "Составить ТЗ",
+        "description": "",
         "box": "week",
         "goal_id": "aabbccdd-eeff-4112-2334-556677889900",
         "context_id": "7d8e9f0a-1b2c-4d3e-5f6a-7b8c9d0e1f2a",
@@ -1079,7 +1079,7 @@ Content-Type: application/json
     "goals": [
       {
         "id": "aabbccdd-eeff-4112-2334-556677889900",
-        "title": "Создать мобильное приложение",
+        "name": "Создать мобильное приложение",
         "description": "Кроссплатформенное приложение для учёта личных финансов",
         "cover_file_id": "1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ",
         "status": "not_started",
@@ -1613,7 +1613,7 @@ Push без обязательного поля `changes`.
     "tasks": [
       {
         "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "title": "Задача без обязательных полей"
+        "name": "Задача без обязательных полей"
       }
     ],
     "goals": [],
@@ -1769,7 +1769,7 @@ Push без обязательного поля `changes`.
    POST push → status: "accepted", version: 6
 
 2. Устройство B (офлайн с 10:00): переименовывает в "Купить молоко и кефир" (updated_at: 10:03)
-   POST push → status: "conflict", server_record: { title: "Купить молоко 3.2%", version: 6 }
+   POST push → status: "conflict", server_record: { name: "Купить молоко 3.2%", version: 6 }
 
 3. Устройство B перезаписывает локальную копию серверной версией
    Результат: на обоих устройствах "Купить молоко 3.2%" (version: 6)
@@ -1809,7 +1809,7 @@ Push без обязательного поля `changes`.
   "goal_id": "",
   "context_id": "",
   "category_id": "",
-  "notes": "",
+  "description": "",
   "completed_at": "",
   "repeat_rule": "",
   "cover_file_id": ""

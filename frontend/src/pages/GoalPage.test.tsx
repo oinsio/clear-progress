@@ -65,11 +65,11 @@ describe("GoalPage", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("should show goal title in input", () => {
-    const goal = buildGoal({ title: "My Goal Title" });
+  it("should show goal name in input", () => {
+    const goal = buildGoal({ name: "My Goal Title" });
     mockUseGoal.mockReturnValue(buildGoalHook({ goal }));
     renderGoalPage();
-    expect(screen.getByTestId("goal-title-input")).toHaveValue("My Goal Title");
+    expect(screen.getByTestId("goal-name-input")).toHaveValue("My Goal Title");
   });
 
   it("should show goal description in textarea", () => {
@@ -81,20 +81,20 @@ describe("GoalPage", () => {
     );
   });
 
-  it("should call updateGoal with new title on save", async () => {
+  it("should call updateGoal with new name on save", async () => {
     const updateGoal = vi.fn().mockResolvedValue(undefined);
-    const goal = buildGoal({ title: "Old Title" });
+    const goal = buildGoal({ name: "Old Title" });
     mockUseGoal.mockReturnValue(buildGoalHook({ goal, updateGoal }));
     renderGoalPage();
 
-    fireEvent.change(screen.getByTestId("goal-title-input"), {
+    fireEvent.change(screen.getByTestId("goal-name-input"), {
       target: { value: "New Title" },
     });
     fireEvent.click(screen.getByTestId("goal-save-button"));
 
     await waitFor(() => {
       expect(updateGoal).toHaveBeenCalledWith(
-        expect.objectContaining({ title: "New Title" }),
+        expect.objectContaining({ name: "New Title" }),
       );
     });
   });
@@ -130,8 +130,8 @@ describe("GoalPage", () => {
     });
   });
 
-  it("should disable save button when title is empty", () => {
-    const goal = buildGoal({ title: "" });
+  it("should disable save button when name is empty", () => {
+    const goal = buildGoal({ name: "" });
     mockUseGoal.mockReturnValue(buildGoalHook({ goal }));
     renderGoalPage();
     expect(screen.getByTestId("goal-save-button")).toBeDisabled();
@@ -150,7 +150,7 @@ describe("GoalPage", () => {
       coverService: CoverService,
       onClose = vi.fn(),
     ) {
-      const goal = buildGoal({ title: "My Goal" });
+      const goal = buildGoal({ name: "My Goal" });
       mockUseGoal.mockReturnValue(buildGoalHook({ goal }));
       renderGoalPage("test-id", onClose, coverService);
 

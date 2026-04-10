@@ -240,13 +240,13 @@ export function TaskItem({
               className="flex flex-col flex-1 min-w-0 text-left select-none [-webkit-touch-callout:none]"
             >
               <span
-                data-testid="task-item-title"
+                data-testid="task-item-name"
                 className={cn(
                   "text-sm",
                   task.is_completed && "line-through text-gray-400",
                 )}
               >
-                {task.title}
+                {task.name}
               </span>
               {task.is_completed && task.completed_at && (
                 <span
@@ -256,11 +256,11 @@ export function TaskItem({
                   {formatCompletedAt(task.completed_at)}
                 </span>
               )}
-              {((task.notes && !task.is_completed) ||
+              {((task.description && !task.is_completed) ||
                 checklistProgress.total > 0 ||
                 task.repeat_rule) && (
                 <span className="flex items-center gap-2 mt-0.5">
-                  {task.notes && !task.is_completed && (
+                  {task.description && !task.is_completed && (
                     <FileText
                       size={12}
                       className="text-gray-400 flex-shrink-0"

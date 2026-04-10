@@ -190,34 +190,34 @@ describe("TaskRepository", () => {
       const savedTask = await db.tasks.get(task.id);
       expect(savedTask).toBeDefined();
       expect(savedTask?.id).toBe(task.id);
-      expect(savedTask?.title).toBe(task.title);
+      expect(savedTask?.name).toBe(task.name);
     });
 
     it("should persist all task fields", async () => {
       const task = buildTask({
-        title: "My task",
+        name: "My task",
         box: "today",
-        notes: "some notes",
+        description: "some description",
       });
       await taskRepository.create(task);
 
       const savedTask = await db.tasks.get(task.id);
-      expect(savedTask?.title).toBe("My task");
+      expect(savedTask?.name).toBe("My task");
       expect(savedTask?.box).toBe("today");
-      expect(savedTask?.notes).toBe("some notes");
+      expect(savedTask?.description).toBe("some description");
     });
   });
 
   describe("update", () => {
     it("should update an existing task", async () => {
-      const task = buildTask({ title: "Old title" });
+      const task = buildTask({ name: "Old name" });
       await db.tasks.add(task);
 
-      const updatedTask = { ...task, title: "New title" };
+      const updatedTask = { ...task, name: "New name" };
       await taskRepository.update(updatedTask);
 
       const savedTask = await db.tasks.get(task.id);
-      expect(savedTask?.title).toBe("New title");
+      expect(savedTask?.name).toBe("New name");
     });
   });
 
@@ -231,14 +231,14 @@ describe("TaskRepository", () => {
     });
 
     it("should update existing tasks", async () => {
-      const task = buildTask({ title: "Original" });
+      const task = buildTask({ name: "Original" });
       await db.tasks.add(task);
 
-      const updatedTask = { ...task, title: "Updated" };
+      const updatedTask = { ...task, name: "Updated" };
       await taskRepository.bulkUpsert([updatedTask]);
 
       const savedTask = await db.tasks.get(task.id);
-      expect(savedTask?.title).toBe("Updated");
+      expect(savedTask?.name).toBe("Updated");
     });
   });
 
@@ -379,33 +379,33 @@ describe("TaskRepository", () => {
 
     it("should overwrite clean local records with server version", async () => {
       const localTask = buildTask({
-        title: "local",
+        name: "local",
         _dirty: false,
         revision: 1,
       });
       await db.tasks.add(localTask);
 
-      const serverTask = { ...localTask, title: "server", revision: 2 };
+      const serverTask = { ...localTask, name: "server", revision: 2 };
       await taskRepository.applyServerRecords([serverTask]);
 
       const saved = await db.tasks.get(localTask.id);
-      expect(saved!.title).toBe("server");
+      expect(saved!.name).toBe("server");
       expect(saved!._dirty).toBe(false);
     });
 
     it("should skip dirty local records", async () => {
       const localTask = buildTask({
-        title: "local dirty",
+        name: "local dirty",
         _dirty: true,
         revision: 1,
       });
       await db.tasks.add(localTask);
 
-      const serverTask = { ...localTask, title: "server", revision: 2 };
+      const serverTask = { ...localTask, name: "server", revision: 2 };
       await taskRepository.applyServerRecords([serverTask]);
 
       const saved = await db.tasks.get(localTask.id);
-      expect(saved!.title).toBe("local dirty");
+      expect(saved!.name).toBe("local dirty");
       expect(saved!._dirty).toBe(true);
     });
   });

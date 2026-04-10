@@ -110,7 +110,7 @@ describe("useTasks", () => {
     });
 
     await waitFor(() => expect(result.current.tasks).toHaveLength(1));
-    expect(result.current.tasks[0].title).toBe("New task");
+    expect(result.current.tasks[0].name).toBe("New task");
   });
 
   it("should schedule push when createTask is called", async () => {
@@ -242,15 +242,15 @@ describe("useTasks", () => {
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });
 
-  it("should update task title when updateTask is called", async () => {
-    const { result, task } = await setupHookWithOneTask({ title: "Old title" });
+  it("should update task name when updateTask is called", async () => {
+    const { result, task } = await setupHookWithOneTask({ name: "Old name" });
 
     await act(async () => {
-      await result.current.updateTask(task.id, { title: "New title" });
+      await result.current.updateTask(task.id, { name: "New name" });
     });
 
     await waitFor(() =>
-      expect(result.current.tasks[0].title).toBe("New title"),
+      expect(result.current.tasks[0].name).toBe("New name"),
     );
   });
 
@@ -258,7 +258,7 @@ describe("useTasks", () => {
     const { result, task } = await setupHookWithOneTask();
 
     await act(async () => {
-      await result.current.updateTask(task.id, { notes: "updated notes" });
+      await result.current.updateTask(task.id, { description: "updated description" });
     });
 
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
@@ -287,9 +287,9 @@ describe("useTasks", () => {
   });
 
   describe("duplicateTask", () => {
-    it("should create a duplicate task with same title", async () => {
+    it("should create a duplicate task with same name", async () => {
       const { result, task } = await setupHookWithOneTask({
-        title: "Original task",
+        name: "Original task",
       });
 
       let duplicatedTask: Task | undefined;
@@ -298,7 +298,7 @@ describe("useTasks", () => {
       });
 
       expect(duplicatedTask).toBeDefined();
-      expect(duplicatedTask!.title).toBe("Original task");
+      expect(duplicatedTask!.name).toBe("Original task");
     });
 
     it("should create a duplicate task with different id", async () => {
@@ -335,7 +335,7 @@ describe("useTasks", () => {
 
     it("should return the duplicated task", async () => {
       const { result, task } = await setupHookWithOneTask({
-        title: "Test task",
+        name: "Test task",
         box: "today",
       });
 
@@ -345,7 +345,7 @@ describe("useTasks", () => {
       });
 
       expect(duplicatedTask).toBeDefined();
-      expect(duplicatedTask!.title).toBe("Test task");
+      expect(duplicatedTask!.name).toBe("Test task");
       expect(duplicatedTask!.box).toBe("today");
     });
   });

@@ -57,8 +57,8 @@ export function expectValidServerTime() {
 export function makeTask(overrides: Partial<Task> = {}): Task {
   return {
     id: '11111111-1111-4111-a111-111111111111',
-    title: 'Test task',
-    notes: '',
+    name: 'Test task',
+    description: '',
     box: 'inbox',
     goal_id: '',
     context_id: '',
@@ -79,7 +79,7 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
 export function makeGoal(overrides: Partial<Goal> = {}): Goal {
   return {
     id: '22222222-2222-4222-a222-222222222222',
-    title: 'Test goal',
+    name: 'Test goal',
     description: '',
     cover_file_id: '',
     status: 'planning',
@@ -125,7 +125,7 @@ export function makeChecklistItem(overrides: Partial<ChecklistItem> = {}): Check
   return {
     id: '55555555-5555-4555-a555-555555555555',
     task_id: '11111111-1111-4111-a111-111111111111',
-    title: 'Subtask',
+    name: 'Subtask',
     is_completed: false,
     sort_order: 0,
     is_deleted: false,

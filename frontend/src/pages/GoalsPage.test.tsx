@@ -109,8 +109,8 @@ describe("GoalsPage", () => {
 
   it("should render goal items for each active goal", () => {
     const goals = [
-      buildGoal({ title: "Goal A" }),
-      buildGoal({ title: "Goal B" }),
+      buildGoal({ name: "Goal A" }),
+      buildGoal({ name: "Goal B" }),
     ];
     mockUseGoals.mockReturnValue(buildGoalsHook({ goals }));
     renderGoalsPage();
@@ -120,8 +120,8 @@ describe("GoalsPage", () => {
 
   it("should not render deleted goals", () => {
     const goals = [
-      buildGoal({ title: "Active Goal" }),
-      buildGoal({ title: "Deleted Goal", is_deleted: true }),
+      buildGoal({ name: "Active Goal" }),
+      buildGoal({ name: "Deleted Goal", is_deleted: true }),
     ];
     mockUseGoals.mockReturnValue(buildGoalsHook({ goals }));
     renderGoalsPage();
@@ -160,7 +160,7 @@ describe("GoalsPage", () => {
     expect(screen.getByTestId("add-goal-input")).toBeInTheDocument();
   });
 
-  it("should call createGoal with title when Enter is pressed in inline goal input", async () => {
+  it("should call createGoal with name when Enter is pressed in inline goal input", async () => {
     const createGoal = vi.fn().mockResolvedValue(undefined);
     mockUseGoals.mockReturnValue(buildGoalsHook({ createGoal }));
     renderGoalsPage();
@@ -168,7 +168,7 @@ describe("GoalsPage", () => {
     const input = screen.getByTestId("add-goal-input");
     fireEvent.change(input, { target: { value: "New Goal" } });
     fireEvent.keyDown(input, { key: "Enter" });
-    expect(createGoal).toHaveBeenCalledWith({ title: "New Goal" });
+    expect(createGoal).toHaveBeenCalledWith({ name: "New Goal" });
   });
 
   it("should hide inline goal input when Escape is pressed", () => {

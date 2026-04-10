@@ -69,9 +69,9 @@ describe("ConfirmFullSyncDialog", () => {
     expect(screen.getByTestId("full-sync-dialog")).toBeInTheDocument();
   });
 
-  it("should show confirmation title initially", () => {
+  it("should show confirmation name initially", () => {
     renderDialog();
-    expect(screen.getByTestId("full-sync-dialog-title")).toHaveTextContent(
+    expect(screen.getByTestId("full-sync-dialog-name")).toHaveTextContent(
       "settings.fullSyncConfirmTitle",
     );
   });

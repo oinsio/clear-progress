@@ -193,11 +193,11 @@ describe("useTaskMutations", () => {
       );
 
       await act(async () => {
-        await result.current.updateTask("task-1", { title: "New title" });
+        await result.current.updateTask("task-1", { name: "New name" });
       });
 
       expect(mockTaskService.update).toHaveBeenCalledWith("task-1", {
-        title: "New title",
+        name: "New name",
       });
     });
 
@@ -207,7 +207,7 @@ describe("useTaskMutations", () => {
       );
 
       await act(async () => {
-        await result.current.updateTask("task-1", { notes: "new notes" });
+        await result.current.updateTask("task-1", { description: "new description" });
       });
 
       expect(onReload).toHaveBeenCalledOnce();
@@ -219,7 +219,7 @@ describe("useTaskMutations", () => {
       );
 
       await act(async () => {
-        await result.current.updateTask("task-1", { title: "New title" });
+        await result.current.updateTask("task-1", { name: "New name" });
       });
 
       expect(mockSchedulePush).toHaveBeenCalledOnce();
@@ -358,7 +358,7 @@ describe("useTaskMutations", () => {
       rerender({ reload: secondOnReload });
 
       await act(async () => {
-        await result.current.updateTask("task-1", { title: "Updated" });
+        await result.current.updateTask("task-1", { description: "Updated" });
       });
 
       expect(secondOnReload).toHaveBeenCalledOnce();

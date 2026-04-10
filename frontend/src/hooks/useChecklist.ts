@@ -16,10 +16,10 @@ export interface UseChecklistReturn {
   hasUnsyncedItems: boolean;
   isLoading: boolean;
   reload: () => Promise<void>;
-  createItem: (title: string) => Promise<void>;
+  createItem: (name: string) => Promise<void>;
   toggleItem: (id: string) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
-  updateItem: (id: string, title: string) => Promise<void>;
+  updateItem: (id: string, name: string) => Promise<void>;
   reorderItems: (items: ChecklistItem[]) => Promise<void>;
 }
 
@@ -54,8 +54,8 @@ export function useChecklist(
   }, [checklistService, taskId]);
 
   const createItem = useCallback(
-    async (title: string) => {
-      await checklistService.create(taskId, title);
+    async (name: string) => {
+      await checklistService.create(taskId, name);
       schedulePush();
     },
     [checklistService, taskId, schedulePush],
@@ -78,8 +78,8 @@ export function useChecklist(
   );
 
   const updateItem = useCallback(
-    async (id: string, title: string) => {
-      await checklistService.update(id, { title });
+    async (id: string, name: string) => {
+      await checklistService.update(id, { name });
       schedulePush();
     },
     [checklistService, schedulePush],

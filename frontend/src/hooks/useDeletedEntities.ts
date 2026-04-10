@@ -91,7 +91,7 @@ export function useDeletedEntities(): DeletedEntities {
     const allTasksSubscription = liveQuery(() => db.tasks.toArray()).subscribe({
       next: (allTasks) => {
         const newTaskTitleMap = new Map<string, string>(
-          allTasks.map((task) => [task.id, task.title]),
+          allTasks.map((task) => [task.id, task.name]),
         );
         setTaskTitleMap(newTaskTitleMap);
         checkAllLoaded();
