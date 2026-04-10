@@ -46,6 +46,58 @@ describe("GoalService", () => {
       expect(results).toEqual([goal]);
     });
 
+    it("should return goals whose description contains the query", async () => {
+      const matchingGoal = buildGoal({
+        title: "Career growth",
+        description: "Learn advanced programming techniques",
+      });
+      const nonMatchingGoal = buildGoal({
+        title: "Fitness",
+        description: "Run marathon",
+      });
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue([matchingGoal, nonMatchingGoal]),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("programming");
+      expect(results).toEqual([matchingGoal]);
+    });
+
+    it("should return goals matching in either title or description", async () => {
+      const matchInTitle = buildGoal({
+        title: "Programming mastery",
+        description: "Become expert developer",
+      });
+      const matchInDescription = buildGoal({
+        title: "Career development",
+        description: "Focus on programming skills",
+      });
+      const noMatch = buildGoal({ title: "Fitness", description: "Exercise" });
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi
+          .fn()
+          .mockResolvedValue([matchInTitle, matchInDescription, noMatch]),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("programming");
+      expect(results).toHaveLength(2);
+      expect(results).toContain(matchInTitle);
+      expect(results).toContain(matchInDescription);
+    });
+
+    it("should match case-insensitively in description", async () => {
+      const goal = buildGoal({
+        title: "Career",
+        description: "Learn Programming",
+      });
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue([goal]),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("programming");
+      expect(results).toHaveLength(1);
+    });
+
     it("should call getActive on repository", async () => {
       const goalService = new GoalService(mockGoalRepository);
       await goalService.searchByTitle("query");
@@ -478,6 +530,110 @@ describe("GoalService", () => {
       const goalService = new GoalService(mockGoalRepository);
       const results = await goalService.searchByTitle("learn");
       expect(results).toHaveLength(2);
+    });
+
+    it("should sort goals by status priority (in_progress first, cancelled last)", async () => {
+      const goals = [
+        buildGoal({ title: "Goal A", status: "cancelled" }),
+        buildGoal({ title: "Goal B", status: "in_progress" }),
+        buildGoal({ title: "Goal C", status: "completed" }),
+        buildGoal({ title: "Goal D", status: "planning" }),
+        buildGoal({ title: "Goal E", status: "paused" }),
+      ];
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue(goals),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("goal");
+      expect(results[0].status).toBe("in_progress");
+      expect(results[1].status).toBe("planning");
+      expect(results[2].status).toBe("paused");
+      expect(results[3].status).toBe("completed");
+      expect(results[4].status).toBe("cancelled");
+    });
+
+    it("should sort goals with same status by updated_at descending", async () => {
+      const goals = [
+        buildGoal({
+          title: "Goal A",
+          status: "in_progress",
+          updated_at: "2025-01-01T10:00:00.000Z",
+        }),
+        buildGoal({
+          title: "Goal B",
+          status: "in_progress",
+          updated_at: "2025-01-03T10:00:00.000Z",
+        }),
+        buildGoal({
+          title: "Goal C",
+          status: "in_progress",
+          updated_at: "2025-01-02T10:00:00.000Z",
+        }),
+      ];
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue(goals),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("goal");
+      expect(results[0].updated_at).toBe("2025-01-03T10:00:00.000Z");
+      expect(results[1].updated_at).toBe("2025-01-02T10:00:00.000Z");
+      expect(results[2].updated_at).toBe("2025-01-01T10:00:00.000Z");
+    });
+
+    it("should prioritize in_progress over planning", async () => {
+      const planningGoal = buildGoal({
+        title: "Goal A",
+        status: "planning",
+        updated_at: "2025-01-03T10:00:00.000Z",
+      });
+      const inProgressGoal = buildGoal({
+        title: "Goal B",
+        status: "in_progress",
+        updated_at: "2025-01-01T10:00:00.000Z",
+      });
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue([planningGoal, inProgressGoal]),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("goal");
+      expect(results[0].status).toBe("in_progress");
+      expect(results[1].status).toBe("planning");
+    });
+
+    it("should prioritize planning over paused", async () => {
+      const pausedGoal = buildGoal({ title: "Goal A", status: "paused" });
+      const planningGoal = buildGoal({ title: "Goal B", status: "planning" });
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue([pausedGoal, planningGoal]),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("goal");
+      expect(results[0].status).toBe("planning");
+      expect(results[1].status).toBe("paused");
+    });
+
+    it("should prioritize paused over completed", async () => {
+      const completedGoal = buildGoal({ title: "Goal A", status: "completed" });
+      const pausedGoal = buildGoal({ title: "Goal B", status: "paused" });
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue([completedGoal, pausedGoal]),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("goal");
+      expect(results[0].status).toBe("paused");
+      expect(results[1].status).toBe("completed");
+    });
+
+    it("should prioritize completed over cancelled", async () => {
+      const cancelledGoal = buildGoal({ title: "Goal A", status: "cancelled" });
+      const completedGoal = buildGoal({ title: "Goal B", status: "completed" });
+      mockGoalRepository = createMockGoalRepository({
+        getActive: vi.fn().mockResolvedValue([cancelledGoal, completedGoal]),
+      });
+      const goalService = new GoalService(mockGoalRepository);
+      const results = await goalService.searchByTitle("goal");
+      expect(results[0].status).toBe("completed");
+      expect(results[1].status).toBe("cancelled");
     });
   });
 });

@@ -210,3 +210,14 @@ export const REPEAT_RULE_TYPE = {
   MONTHLY: "monthly",
   INTERVAL: "interval",
 } as const satisfies Record<string, RepeatRuleType>;
+
+export const GOAL_STATUS_SORT_ORDER: Record<
+  import("@/types/common").GoalStatus,
+  number
+> = {
+  in_progress: 0,
+  planning: 1,
+  paused: 2,
+  completed: 3,
+  cancelled: 4,
+} as const;

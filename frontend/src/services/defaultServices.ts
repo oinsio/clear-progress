@@ -3,6 +3,7 @@ import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { GoalService } from "./GoalService";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
+import { IdeaService } from "./IdeaService";
 import { CoverService } from "./CoverService";
 import { CoverRepository } from "@/db/repositories/CoverRepository";
 import { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
@@ -22,6 +23,7 @@ export const defaultTaskService = new TaskService(
   new ChecklistRepository(),
 );
 export const defaultGoalService = new GoalService(new GoalRepository());
+export const defaultIdeaService = new IdeaService(new IdeaRepository());
 export const defaultCoverService = new CoverService(
   new ApiClient(),
   new CoverRepository(),

@@ -226,12 +226,16 @@ export class TaskService {
   async searchByTitle(query: string): Promise<Task[]> {
     const allTasks = await this.taskRepository.getActive();
     const lowerQuery = query.toLowerCase();
-    const matchingTasks = allTasks.filter((task) =>
-      task.title.toLowerCase().includes(lowerQuery),
+    const matchingTasks = allTasks.filter(
+      (task) =>
+        task.title.toLowerCase().includes(lowerQuery) ||
+        task.notes.toLowerCase().includes(lowerQuery),
     );
     return matchingTasks.sort((taskA, taskB) => {
-      if (taskA.is_completed === taskB.is_completed) return 0;
-      return taskA.is_completed ? 1 : -1;
+      if (taskA.is_completed !== taskB.is_completed) {
+        return taskA.is_completed ? 1 : -1;
+      }
+      return taskB.updated_at.localeCompare(taskA.updated_at);
     });
   }
 

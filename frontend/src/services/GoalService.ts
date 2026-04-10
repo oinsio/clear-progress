@@ -1,8 +1,7 @@
 import type { Goal } from "@/types/entities";
 import type { GoalStatus } from "@/types/common";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
-
-const FINISHED_GOAL_STATUSES = new Set<GoalStatus>(["completed", "cancelled"]);
+import { GOAL_STATUS_SORT_ORDER } from "@/constants";
 
 export class GoalService {
   constructor(private readonly goalRepository: GoalRepository) {}
@@ -71,14 +70,20 @@ export class GoalService {
   async searchByTitle(query: string): Promise<Goal[]> {
     const allGoals = await this.goalRepository.getActive();
     const lowerQuery = query.toLowerCase();
-    const matchingGoals = allGoals.filter((goal) =>
-      goal.title.toLowerCase().includes(lowerQuery),
+    const matchingGoals = allGoals.filter(
+      (goal) =>
+        goal.title.toLowerCase().includes(lowerQuery) ||
+        goal.description.toLowerCase().includes(lowerQuery),
     );
     return matchingGoals.sort((goalA, goalB) => {
-      const aIsFinished = FINISHED_GOAL_STATUSES.has(goalA.status);
-      const bIsFinished = FINISHED_GOAL_STATUSES.has(goalB.status);
-      if (aIsFinished === bIsFinished) return 0;
-      return aIsFinished ? 1 : -1;
+      const priorityA = GOAL_STATUS_SORT_ORDER[goalA.status];
+      const priorityB = GOAL_STATUS_SORT_ORDER[goalB.status];
+
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      return goalB.updated_at.localeCompare(goalA.updated_at);
     });
   }
 

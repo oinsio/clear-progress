@@ -57,6 +57,18 @@ export class IdeaService {
     return this.update(id, { is_deleted: false });
   }
 
+  async searchByTitle(query: string): Promise<Idea[]> {
+    const allIdeas = await this.ideaRepository.getActive();
+    const lowerQuery = query.toLowerCase();
+    return allIdeas
+      .filter(
+        (idea) =>
+          idea.name.toLowerCase().includes(lowerQuery) ||
+          idea.description.toLowerCase().includes(lowerQuery),
+      )
+      .sort((ideaA, ideaB) => ideaB.updated_at.localeCompare(ideaA.updated_at));
+  }
+
   async reorderIdeas(orderedIdeas: Idea[]): Promise<void> {
     if (orderedIdeas.length === 0) return;
     const now = new Date().toISOString();

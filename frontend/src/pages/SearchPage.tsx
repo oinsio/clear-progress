@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { TaskList } from "@/components/tasks/TaskList";
 import { GoalItem } from "@/components/goals/GoalItem";
+import { IdeaItem } from "@/components/ideas/IdeaItem";
 import {
   RightFilterPanel,
   type RightPanelMode,
@@ -25,7 +26,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 export default function SearchPage() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
-  const { tasks, goals, isSearching, search, clear } = useSearch();
+  const { tasks, goals, ideas, isSearching, search, clear } = useSearch();
   const { goals: allGoals } = useGoals();
   const { contexts } = useContexts();
   const { categories } = useCategories();
@@ -93,6 +94,10 @@ export default function SearchPage() {
     [navigate],
   );
 
+  const handleNavigateToIdeas = useCallback(() => {
+    navigate(ROUTES.IDEAS);
+  }, [navigate]);
+
   const handleModeChange = useCallback(
     (newMode: RightPanelMode) => {
       if (
@@ -112,7 +117,7 @@ export default function SearchPage() {
     [navigate],
   );
 
-  const hasResults = tasks.length > 0 || goals.length > 0;
+  const hasResults = tasks.length > 0 || goals.length > 0 || ideas.length > 0;
   const hasQuery = searchQuery.length > 0;
 
   return (
@@ -189,6 +194,23 @@ export default function SearchPage() {
                       goal={goal}
                       taskCount={0}
                       onNavigate={handleNavigateToGoal}
+                    />
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {ideas.length > 0 && (
+              <section aria-label={t("search.ideas")}>
+                <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wide px-4 py-2 border-b border-gray-100">
+                  {t("search.ideas")}
+                </h2>
+                <ul>
+                  {ideas.map((idea) => (
+                    <IdeaItem
+                      key={idea.id}
+                      idea={idea}
+                      onEdit={handleNavigateToIdeas}
                     />
                   ))}
                 </ul>

@@ -965,8 +965,10 @@ describe("TaskService", () => {
   });
 
   describe("searchByTitle", () => {
-    it("should return empty array when no tasks match", async () => {
-      const tasks = [buildTask({ title: "Buy groceries" })];
+    const setupSearchTest = async (
+      tasks: Task[],
+      query: string,
+    ): Promise<Task[]> => {
       mockTaskRepository = createMockTaskRepository({
         getActive: vi.fn().mockResolvedValue(tasks),
       });
@@ -974,7 +976,12 @@ describe("TaskService", () => {
         mockTaskRepository,
         mockChecklistRepository,
       );
-      const results = await taskService.searchByTitle("nonexistent");
+      return await taskService.searchByTitle(query);
+    };
+
+    it("should return empty array when no tasks match", async () => {
+      const tasks = [buildTask({ title: "Buy groceries" })];
+      const results = await setupSearchTest(tasks, "nonexistent");
       expect(results).toEqual([]);
     });
 
@@ -984,15 +991,101 @@ describe("TaskService", () => {
         buildTask({ title: "Call dentist" }),
         buildTask({ title: "Buy medicine" }),
       ];
-      mockTaskRepository = createMockTaskRepository({
-        getActive: vi.fn().mockResolvedValue(tasks),
-      });
-      const taskService = new TaskService(
-        mockTaskRepository,
-        mockChecklistRepository,
-      );
-      const results = await taskService.searchByTitle("buy");
+      const results = await setupSearchTest(tasks, "buy");
       expect(results).toHaveLength(2);
+    });
+
+    it("should return tasks whose notes contain the query", async () => {
+      const matchingTask = buildTask({
+        title: "Project meeting",
+        notes: "Discuss budget allocation",
+      });
+      const nonMatchingTask = buildTask({
+        title: "Shopping",
+        notes: "Buy groceries",
+      });
+      const results = await setupSearchTest(
+        [matchingTask, nonMatchingTask],
+        "budget",
+      );
+      expect(results).toEqual([matchingTask]);
+    });
+
+    it("should return tasks matching in either title or notes", async () => {
+      const matchInTitle = buildTask({
+        title: "Budget review",
+        notes: "Quarterly report",
+      });
+      const matchInNotes = buildTask({
+        title: "Team meeting",
+        notes: "Review budget proposals",
+      });
+      const noMatch = buildTask({ title: "Lunch", notes: "Restaurant" });
+      const results = await setupSearchTest(
+        [matchInTitle, matchInNotes, noMatch],
+        "budget",
+      );
+      expect(results).toHaveLength(2);
+      expect(results).toContain(matchInTitle);
+      expect(results).toContain(matchInNotes);
+    });
+
+    it("should match case-insensitively in notes", async () => {
+      const task = buildTask({
+        title: "Meeting",
+        notes: "Discuss Budget",
+      });
+      const results = await setupSearchTest([task], "budget");
+      expect(results).toHaveLength(1);
+    });
+
+    it.each([
+      { isCompleted: false, label: "incomplete" },
+      { isCompleted: true, label: "completed" },
+    ])(
+      "should sort $label tasks by updated_at descending",
+      async ({ isCompleted }) => {
+        const tasks = [
+          buildTask({
+            title: "Task A",
+            is_completed: isCompleted,
+            updated_at: "2025-01-01T10:00:00.000Z",
+          }),
+          buildTask({
+            title: "Task B",
+            is_completed: isCompleted,
+            updated_at: "2025-01-03T10:00:00.000Z",
+          }),
+          buildTask({
+            title: "Task C",
+            is_completed: isCompleted,
+            updated_at: "2025-01-02T10:00:00.000Z",
+          }),
+        ];
+        const results = await setupSearchTest(tasks, "task");
+        expect(results[0].updated_at).toBe("2025-01-03T10:00:00.000Z");
+        expect(results[1].updated_at).toBe("2025-01-02T10:00:00.000Z");
+        expect(results[2].updated_at).toBe("2025-01-01T10:00:00.000Z");
+      },
+    );
+
+    it("should place incomplete tasks before completed tasks", async () => {
+      const completedTask = buildTask({
+        title: "Task A",
+        is_completed: true,
+        updated_at: "2025-01-03T10:00:00.000Z",
+      });
+      const incompleteTask = buildTask({
+        title: "Task B",
+        is_completed: false,
+        updated_at: "2025-01-01T10:00:00.000Z",
+      });
+      const results = await setupSearchTest(
+        [completedTask, incompleteTask],
+        "task",
+      );
+      expect(results[0].is_completed).toBe(false);
+      expect(results[1].is_completed).toBe(true);
     });
   });
 

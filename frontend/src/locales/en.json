@@ -148,9 +148,10 @@
     "saveName": "Save name"
   },
   "search": {
-    "placeholder": "Tasks and goals...",
+    "placeholder": "Tasks, goals and ideas...",
     "tasks": "Tasks",
     "goals": "Goals",
+    "ideas": "Ideas",
     "noResults": "Nothing found",
     "emptyQuery": "Type to search"
   },

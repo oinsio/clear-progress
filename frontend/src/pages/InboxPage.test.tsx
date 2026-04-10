@@ -83,6 +83,7 @@ function buildSearchHook(
   return {
     tasks: [],
     goals: [],
+    ideas: [],
     isSearching: false,
     search: vi.fn(),
     clear: vi.fn(),
