@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { useState } from "react";
 import { TaskItem } from "./TaskItem";
 import { buildTask } from "@/test/factories/taskFactory";
@@ -55,6 +55,10 @@ function renderTaskItem(overrides: Record<string, unknown> = {}) {
 }
 
 describe("TaskItem", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("should render the task title", () => {
     renderTaskItem({ task: buildTask({ title: "Buy groceries" }) });
     expect(screen.getByText("Buy groceries")).toBeInTheDocument();
@@ -82,13 +86,14 @@ describe("TaskItem", () => {
     expect(screen.getByTestId("task-item-title")).toHaveClass("text-sm");
   });
 
-  it("should call onComplete with task id when complete button is clicked on incomplete task", async () => {
+  it("should call onComplete with task id after animation delay when complete button is clicked on incomplete task", () => {
+    vi.useFakeTimers();
     const task = buildTask({ is_completed: false });
     const onComplete = vi.fn();
     renderTaskItem({ task, onComplete });
-    await userEvent.click(
-      screen.getByRole("button", { name: /завершить задачу/i }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /завершить задачу/i }));
+    expect(onComplete).not.toHaveBeenCalled();
+    vi.runAllTimers();
     expect(onComplete).toHaveBeenCalledWith(task.id);
   });
 
@@ -168,9 +173,30 @@ describe("TaskItem", () => {
 
   it("should show filled complete button when task is completed", () => {
     renderTaskItem({ task: buildTask({ is_completed: true }) });
-    expect(
-      screen.getByRole("button", { name: /снять завершение/i }),
-    ).toHaveClass("bg-accent");
+    const btn = screen.getByRole("button", { name: /снять завершение/i });
+    expect(btn).toHaveClass("bg-accent/20");
+    expect(btn).toHaveClass("border-accent");
+  });
+
+  it("should show checkmark svg when task is completed", () => {
+    renderTaskItem({ task: buildTask({ is_completed: true }) });
+    const btn = screen.getByRole("button", { name: /снять завершение/i });
+    expect(btn.querySelector("svg")).toBeInTheDocument();
+  });
+
+  it("should show checkmark svg immediately when complete button is clicked before delay", () => {
+    vi.useFakeTimers();
+    renderTaskItem({ task: buildTask({ is_completed: false }) });
+    fireEvent.click(screen.getByRole("button", { name: /завершить задачу/i }));
+    const btn = screen.getByRole("button", { name: /завершить задачу/i });
+    expect(btn.querySelector("svg")).toBeInTheDocument();
+    vi.runAllTimers();
+  });
+
+  it("should not show checkmark svg when task is not completed", () => {
+    renderTaskItem({ task: buildTask({ is_completed: false }) });
+    const btn = screen.getByRole("button", { name: /завершить задачу/i });
+    expect(btn.querySelector("svg")).not.toBeInTheDocument();
   });
 
   it("should show completed_at label when task is completed and has completed_at", () => {

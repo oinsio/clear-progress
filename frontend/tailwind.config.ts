@@ -6,6 +6,15 @@ const config: Config = {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      keyframes: {
+        "draw-check": {
+          "0%": { strokeDashoffset: "20" },
+          "100%": { strokeDashoffset: "0" },
+        },
+      },
+      animation: {
+        "draw-check": "draw-check 0.3s ease forwards",
+      },
       colors: {
         accent: "rgb(var(--color-accent) / <alpha-value>)",
         green: {

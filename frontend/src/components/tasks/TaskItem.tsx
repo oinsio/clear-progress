@@ -23,6 +23,7 @@ import {
   SWIPE_SNAP_BACK_DURATION_MS,
   LONG_PRESS_THRESHOLD_MS,
   LONG_PRESS_MOVE_THRESHOLD_PX,
+  TASK_COMPLETE_ANIMATION_DELAY_MS,
 } from "@/constants";
 import * as React from "react";
 
@@ -71,6 +72,7 @@ export function TaskItem({
   const isDesktop = useIsDesktop();
   const { panelSide } = usePanelSide();
   const [isConfirmingRestore, setIsConfirmingRestore] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   useEffect(() => {
     if (isDesktop && isExpanded && onExpand) {
@@ -115,7 +117,10 @@ export function TaskItem({
     if (task.is_completed) {
       setIsConfirmingRestore(true);
     } else {
-      onComplete(task.id);
+      setIsCompleting(true);
+      setTimeout(() => {
+        onComplete(task.id);
+      }, TASK_COMPLETE_ANIMATION_DELAY_MS);
     }
   }, [task.is_completed, task.id, onComplete]);
 
@@ -202,11 +207,32 @@ export function TaskItem({
               onClick={handleCompleteClick}
               className={cn(
                 "w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors self-start mt-0.5",
-                task.is_completed
-                  ? "bg-accent border-accent"
+                "flex items-center justify-center",
+                task.is_completed || isCompleting
+                  ? "bg-accent/20 border-accent"
                   : "border-gray-300 hover:border-accent",
               )}
-            />
+            >
+              {(task.is_completed || isCompleting) && (
+                <svg
+                  width="10"
+                  height="8"
+                  viewBox="0 0 10 8"
+                  fill="none"
+                  className="text-accent"
+                >
+                  <path
+                    d="M1 4L3.5 6.5L9 1"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="animate-draw-check"
+                    style={{ strokeDasharray: 20 }}
+                  />
+                </svg>
+              )}
+            </button>
             <button
               type="button"
               data-testid="task-item-body"
