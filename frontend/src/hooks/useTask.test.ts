@@ -49,7 +49,7 @@ describe("useTask", () => {
 
   it("should call update and refresh when updateTask is called", async () => {
     const task = buildTask();
-    const updatedTask = { ...task, title: "Updated" };
+    const updatedTask = { ...task, name: "Updated" };
     const mockGetById = vi
       .fn()
       .mockResolvedValueOnce(task)
@@ -59,11 +59,11 @@ describe("useTask", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.updateTask({ title: "Updated" });
+      await result.current.updateTask({ name: "Updated" });
     });
 
     expect(mockTaskService.update).toHaveBeenCalledWith(task.id, {
-      title: "Updated",
+      name: "Updated",
     });
     expect(mockGetById).toHaveBeenCalledTimes(2);
   });
@@ -120,7 +120,7 @@ describe("useTask", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.updateTask({ title: "X" });
+      await result.current.updateTask({ name: "X" });
     });
 
     expect(mockTaskService.update).not.toHaveBeenCalled();

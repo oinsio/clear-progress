@@ -40,8 +40,8 @@ export function useFilteredTasks(
   }, [config.queryFn]);
 
   const createTask = useCallback(
-    async (title: string, box: Box, notes = "") => {
-      await taskService.create({ title, box, notes, ...config.createTaskData });
+    async (name: string, box: Box, description = "") => {
+      await taskService.create({ name, box, description, ...config.createTaskData });
     },
     [taskService, config.createTaskData],
   );

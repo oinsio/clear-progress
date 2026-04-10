@@ -210,7 +210,7 @@ describe("CoverSyncService", () => {
       const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
       const matchingGoal = {
         id: pendingCover.goal_id,
-        title: "Test Goal",
+        name: "Test Goal",
         description: "",
         cover_file_id: localFileId,
         status: "in_progress" as const,
@@ -378,7 +378,7 @@ describe("CoverSyncService", () => {
       const pendingCover = createPendingCover({ local_id: "changed-local-id" });
       const goalWithDifferentCover = {
         id: pendingCover.goal_id,
-        title: "Test Goal",
+        name: "Test Goal",
         description: "",
         cover_file_id: "some-other-remote-file-id",
         status: "in_progress" as const,
@@ -406,7 +406,7 @@ describe("CoverSyncService", () => {
       const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
       const matchingGoal = {
         id: pendingCover.goal_id,
-        title: "Test Goal",
+        name: "Test Goal",
         description: "",
         cover_file_id: localFileId,
         status: "in_progress" as const,
@@ -437,7 +437,7 @@ describe("CoverSyncService", () => {
       const localFileId = `${LOCAL_COVER_ID_PREFIX}shared-local-id`;
 
       const baseGoal = {
-        title: "Test Goal",
+        name: "Test Goal",
         description: "",
         status: "in_progress" as const,
         sort_order: 0,
@@ -497,7 +497,7 @@ describe("CoverSyncService", () => {
     ) {
       return {
         id: "goal-reupload",
-        title: "Test Goal",
+        name: "Test Goal",
         description: "",
         cover_file_id: EXISTING_SERVER_FILE_ID,
         status: "in_progress" as const,
@@ -922,7 +922,7 @@ describe("CoverSyncService", () => {
     function createActiveGoal(coverFileId: string) {
       return {
         id: "goal-1",
-        title: "Goal",
+        name: "Goal",
         description: "",
         cover_file_id: coverFileId,
         status: "in_progress" as const,

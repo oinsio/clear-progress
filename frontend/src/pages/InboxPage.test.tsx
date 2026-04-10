@@ -223,7 +223,7 @@ describe("InboxPage", () => {
   });
 
   it("should navigate to goals page when goals filter is clicked", () => {
-    const goals = [buildGoal({ title: "My Goal" })];
+    const goals = [buildGoal({ name: "My Goal" })];
     mockUseGoals.mockReturnValue(buildGoalsHook({ goals }));
     renderPage();
     openRightPanel();
@@ -232,7 +232,7 @@ describe("InboxPage", () => {
   });
 
   it("should not show search results inline when search filter is clicked (navigates to search page)", () => {
-    const foundTasks = [buildTask({ title: "Found task" })];
+    const foundTasks = [buildTask({ name: "Found task" })];
     mockUseSearch.mockReturnValue(buildSearchHook({ tasks: foundTasks }));
     renderPage();
     openRightPanel();
@@ -242,7 +242,7 @@ describe("InboxPage", () => {
 
   it("should show completed tasks when completed filter is selected", () => {
     const finishedTasks = [
-      buildTask({ title: "Done task", is_completed: true }),
+      buildTask({ name: "Done task", is_completed: true }),
     ];
     mockUseCompletedTasks.mockReturnValue(
       buildCompletedTasksHook({ completedTasks: finishedTasks }),
@@ -254,7 +254,7 @@ describe("InboxPage", () => {
   });
 
   it("should show inbox tasks when inbox filter is selected", () => {
-    const inboxTasks = [buildTask({ title: "Inbox task", box: "inbox" })];
+    const inboxTasks = [buildTask({ name: "Inbox task", box: "inbox" })];
     mockUseTasks.mockImplementation((box) =>
       buildTasksHook({ tasks: box === "inbox" ? inboxTasks : [] }),
     );

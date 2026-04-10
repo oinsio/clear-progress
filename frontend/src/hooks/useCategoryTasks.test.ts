@@ -75,9 +75,9 @@ describe("useCategoryTasks", () => {
     });
 
     expect(mockTaskService.create).toHaveBeenCalledWith({
-      title: "New task",
+      name: "New task",
       box: BOX.TODAY,
-      notes: "",
+      description: "",
       category_id: categoryId,
     });
   });
@@ -128,10 +128,10 @@ describe("useCategoryTasks", () => {
           typeof renderHook<ReturnType<typeof useCategoryTasks>, unknown>
         >["result"],
         task: Task,
-      ) => result.current.updateTask(task.id, { title: "Updated" }),
+      ) => result.current.updateTask(task.id, { name: "Updated" }),
       expectation: (task: Task) =>
         expect(mockTaskService.update).toHaveBeenCalledWith(task.id, {
-          title: "Updated",
+          name: "Updated",
         }),
     },
   ])("$name", async ({ action, expectation }) => {
@@ -176,9 +176,9 @@ describe("useCategoryTasks", () => {
     });
 
     expect(mockTaskService.create).toHaveBeenCalledWith({
-      title: "New task",
+      name: "New task",
       box: BOX.TODAY,
-      notes: "",
+      description: "",
       category_id: "cat-2",
     });
   });

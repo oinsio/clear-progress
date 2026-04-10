@@ -44,7 +44,7 @@ describe("useSearch", () => {
   });
 
   it("should return matching tasks when search is called with a query", async () => {
-    const tasks = [buildTask({ title: "Buy groceries" })];
+    const tasks = [buildTask({ name: "Buy groceries" })];
     mockTaskService = createMockTaskService({
       searchByTitle: vi.fn().mockResolvedValue(tasks),
     });
@@ -60,7 +60,7 @@ describe("useSearch", () => {
   });
 
   it("should return matching goals when search is called with a query", async () => {
-    const goals = [buildGoal({ title: "Learn piano" })];
+    const goals = [buildGoal({ name: "Learn piano" })];
     mockGoalService = createMockGoalService({
       searchByTitle: vi.fn().mockResolvedValue(goals),
     });
@@ -76,8 +76,8 @@ describe("useSearch", () => {
   });
 
   it("should search tasks and goals simultaneously", async () => {
-    const tasks = [buildTask({ title: "Buy groceries" })];
-    const goals = [buildGoal({ title: "Buy a house" })];
+    const tasks = [buildTask({ name: "Buy groceries" })];
+    const goals = [buildGoal({ name: "Buy a house" })];
     mockTaskService = createMockTaskService({
       searchByTitle: vi.fn().mockResolvedValue(tasks),
     });
@@ -192,10 +192,10 @@ describe("useSearch", () => {
   });
 
   it("should update results on subsequent searches", async () => {
-    const firstTasks = [buildTask({ title: "First task" })];
+    const firstTasks = [buildTask({ name: "First task" })];
     const secondTasks = [
-      buildTask({ title: "Second task A" }),
-      buildTask({ title: "Second task B" }),
+      buildTask({ name: "Second task A" }),
+      buildTask({ name: "Second task B" }),
     ];
     const mockSearchByTitle = vi
       .fn()
@@ -243,8 +243,8 @@ describe("useSearch", () => {
   });
 
   it("should search tasks, goals and ideas simultaneously", async () => {
-    const tasks = [buildTask({ title: "Buy groceries" })];
-    const goals = [buildGoal({ title: "Buy a house" })];
+    const tasks = [buildTask({ name: "Buy groceries" })];
+    const goals = [buildGoal({ name: "Buy a house" })];
     const ideas = [buildIdea({ name: "Buy a car" })];
     mockTaskService = createMockTaskService({
       searchByTitle: vi.fn().mockResolvedValue(tasks),

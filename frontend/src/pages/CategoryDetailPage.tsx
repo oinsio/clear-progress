@@ -11,7 +11,7 @@ import { ROUTES } from "@/constants";
 
 const CATEGORY_I18N_KEYS = {
   back: "category.back",
-  title: "selector.category",
+  name: "selector.category",
   notFound: "category.notFound",
   deleteLabel: "category.deleteLabel",
   editName: "category.editName",

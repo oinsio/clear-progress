@@ -24,7 +24,7 @@ import type { Box } from "@/types/common";
 
 interface EntityDetailLayoutI18nKeys {
   back: string;
-  title: string;
+  name: string;
   notFound: string;
   deleteLabel: string;
   editName: string;
@@ -193,7 +193,7 @@ export function EntityDetailLayout({
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-semibold text-accent">
-              {t(i18nKeys.title)}
+              {t(i18nKeys.name)}
             </h1>
           </header>
 

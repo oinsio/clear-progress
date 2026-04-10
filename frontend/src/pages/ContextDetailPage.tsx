@@ -11,7 +11,7 @@ import { ROUTES } from "@/constants";
 
 const CONTEXT_I18N_KEYS = {
   back: "context.back",
-  title: "selector.context",
+  name: "selector.context",
   notFound: "context.notFound",
   deleteLabel: "context.deleteLabel",
   editName: "context.editName",

@@ -67,8 +67,8 @@ function createMockApiClient(
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
     id: "task-id",
-    title: "Test Task",
-    notes: "",
+    name: "Test Task",
+    description: "",
     box: "inbox",
     goal_id: "",
     context_id: "",
@@ -90,7 +90,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 function makeGoal(overrides: Partial<Goal> = {}): Goal {
   return {
     id: "goal-id",
-    title: "Test Goal",
+    name: "Test Goal",
     description: "",
     cover_file_id: "",
     status: "in_progress",
@@ -413,7 +413,7 @@ describe("SyncService", () => {
       const item = {
         id: "ci1",
         task_id: "t1",
-        title: "Item",
+        name: "Item",
         is_completed: false,
         sort_order: 0,
         is_deleted: false,
@@ -624,7 +624,7 @@ describe("SyncService", () => {
       const item = {
         id: "ci1",
         task_id: "t1",
-        title: "Item",
+        name: "Item",
         is_completed: false,
         sort_order: 0,
         is_deleted: false,
@@ -734,7 +734,7 @@ describe("SyncService", () => {
         const task = makeTask({ id: "t1", _dirty: true });
         const serverTask = makeTask({
           id: "t1",
-          title: "Server version",
+          name: "Server version",
           revision: 9,
           _dirty: false,
         });
@@ -760,7 +760,7 @@ describe("SyncService", () => {
         expect(taskRepository.update).toHaveBeenCalledWith(
           expect.objectContaining({
             id: "t1",
-            title: "Server version",
+            name: "Server version",
             _dirty: false,
           }),
         );
@@ -770,7 +770,7 @@ describe("SyncService", () => {
         const goal = makeGoal({ id: "g1", _dirty: true });
         const serverGoal = makeGoal({
           id: "g1",
-          title: "Server Goal",
+          name: "Server Goal",
           revision: 3,
           _dirty: false,
         });
@@ -796,7 +796,7 @@ describe("SyncService", () => {
         expect(goalRepository.update).toHaveBeenCalledWith(
           expect.objectContaining({
             id: "g1",
-            title: "Server Goal",
+            name: "Server Goal",
             _dirty: false,
           }),
         );
@@ -880,7 +880,7 @@ describe("SyncService", () => {
 
       it("should not enter conflict branch for created record even if server_record is present", async () => {
         const task = makeTask({ id: "t1", version: 3, _dirty: true });
-        const serverTask = makeTask({ id: "t1", title: "Server Version" });
+        const serverTask = makeTask({ id: "t1", name: "Server Version" });
         (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
           [task],
         );
@@ -938,8 +938,8 @@ describe("SyncService", () => {
       const taskId = crypto.randomUUID();
       await db.tasks.put({
         id: taskId,
-        title: "Task",
-        notes: "",
+        name: "Task",
+        description: "",
         box: "inbox",
         goal_id: "",
         context_id: "",
@@ -967,7 +967,7 @@ describe("SyncService", () => {
       const goalId = crypto.randomUUID();
       await db.goals.put({
         id: goalId,
-        title: "Goal",
+        name: "Goal",
         description: "",
         cover_file_id: "",
         status: "planning",
@@ -1035,7 +1035,7 @@ describe("SyncService", () => {
       await db.checklist_items.put({
         id: itemId,
         task_id: taskId,
-        title: "Item",
+        name: "Item",
         is_completed: false,
         sort_order: 0,
         is_deleted: false,

@@ -65,9 +65,9 @@ describe("useContextTasks", () => {
     });
 
     expect(mockTaskService.create).toHaveBeenCalledWith({
-      title: "New task",
+      name: "New task",
       box: BOX.TODAY,
-      notes: "",
+      description: "",
       context_id: contextId,
     });
   });
@@ -102,11 +102,11 @@ describe("useContextTasks", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.updateTask(testTask.id, { title: "Updated" });
+      await result.current.updateTask(testTask.id, { name: "Updated" });
     });
 
     expect(mockTaskService.update).toHaveBeenCalledWith(testTask.id, {
-      title: "Updated",
+      name: "Updated",
     });
   });
 
@@ -139,9 +139,9 @@ describe("useContextTasks", () => {
     });
 
     expect(mockTaskService.create).toHaveBeenCalledWith({
-      title: "New task",
+      name: "New task",
       box: BOX.TODAY,
-      notes: "",
+      description: "",
       context_id: "ctx-2",
     });
   });
