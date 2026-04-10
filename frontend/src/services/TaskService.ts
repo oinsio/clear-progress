@@ -25,6 +25,7 @@ export class TaskService {
   async create(
     partialTask: Pick<Task, "title" | "box"> & Partial<Task>,
   ): Promise<Task> {
+    const existingTasks = await this.taskRepository.getByBox(partialTask.box);
     const now = new Date().toISOString();
     const task: Task = {
       notes: "",
@@ -34,7 +35,7 @@ export class TaskService {
       is_completed: false,
       completed_at: "",
       repeat_rule: "",
-      sort_order: 0,
+      sort_order: existingTasks.length,
       ...partialTask,
       id: crypto.randomUUID(),
       is_deleted: false,

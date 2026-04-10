@@ -14,9 +14,10 @@ export class IdeaService {
   }
 
   async create(partialIdea: Pick<Idea, "name"> & Partial<Idea>): Promise<Idea> {
+    const existingIdeas = await this.ideaRepository.getActive();
     const now = new Date().toISOString();
     const idea: Idea = {
-      sort_order: 0,
+      sort_order: existingIdeas.length,
       ...partialIdea,
       id: crypto.randomUUID(),
       description: partialIdea.description ?? "",

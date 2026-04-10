@@ -16,11 +16,12 @@ export class CategoryService {
   }
 
   async create(name: string): Promise<Category> {
+    const existingCategories = await this.categoryRepository.getActive();
     const now = new Date().toISOString();
     const category: Category = {
       id: crypto.randomUUID(),
       name,
-      sort_order: 0,
+      sort_order: existingCategories.length,
       is_deleted: false,
       created_at: now,
       updated_at: now,

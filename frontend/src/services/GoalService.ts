@@ -19,12 +19,13 @@ export class GoalService {
   async create(
     partialGoal: Pick<Goal, "title"> & Partial<Goal>,
   ): Promise<Goal> {
+    const existingGoals = await this.goalRepository.getActive();
     const now = new Date().toISOString();
     const goal: Goal = {
       description: "",
       cover_file_id: "",
       status: "planning",
-      sort_order: 0,
+      sort_order: existingGoals.length,
       ...partialGoal,
       id: crypto.randomUUID(),
       is_deleted: false,

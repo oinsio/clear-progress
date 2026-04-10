@@ -16,11 +16,12 @@ export class ContextService {
   }
 
   async create(name: string): Promise<Context> {
+    const existingContexts = await this.contextRepository.getActive();
     const now = new Date().toISOString();
     const context: Context = {
       id: crypto.randomUUID(),
       name,
-      sort_order: 0,
+      sort_order: existingContexts.length,
       is_deleted: false,
       created_at: now,
       updated_at: now,
