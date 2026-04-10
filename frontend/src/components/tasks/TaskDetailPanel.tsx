@@ -465,6 +465,23 @@ export function TaskDetailPanel({
         </button>
       </div>
 
+      {/* Title field — always visible */}
+      <div className="px-4 pt-3 pb-2 flex-shrink-0">
+        <label className="text-xs font-medium text-gray-500 mb-1 block">
+          {t("taskEdit.fieldTitle")}
+        </label>
+        <textarea
+          ref={titleTextareaRef}
+          rows={1}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          onBlur={() => void handleTitleBlur()}
+          placeholder={t("task.titlePlaceholder")}
+          className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
+          data-testid="task-detail-title"
+        />
+      </div>
+
       {/* Tab switcher */}
       <div className="flex px-4 pt-3 pb-1 gap-2 flex-shrink-0">
         <button
@@ -498,23 +515,6 @@ export function TaskDetailPanel({
         {/* Details tab */}
         {activeTab === ACTIVE_TAB.DETAILS && openSelector === null && (
           <div className="px-4 py-4 flex flex-col gap-4">
-            {/* Title */}
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
-                {t("taskEdit.fieldTitle")}
-              </label>
-              <textarea
-                ref={titleTextareaRef}
-                rows={1}
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                onBlur={() => void handleTitleBlur()}
-                placeholder={t("task.titlePlaceholder")}
-                className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
-                data-testid="task-detail-title"
-              />
-            </div>
-
             {/* Notes */}
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
