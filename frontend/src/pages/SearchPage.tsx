@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { TaskList } from "@/components/tasks/TaskList";
+import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { GoalItem } from "@/components/goals/GoalItem";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
+import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import {
   RightFilterPanel,
   type RightPanelMode,
@@ -15,8 +17,11 @@ import { useContexts } from "@/hooks/useContexts";
 import { useCategories } from "@/hooks/useCategories";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { defaultTaskService } from "@/services/defaultServices";
-import type { Task } from "@/types/entities";
+import {
+  defaultTaskService,
+  defaultIdeaService,
+} from "@/services/defaultServices";
+import type { Task, Idea } from "@/types/entities";
 import type { Box } from "@/types/common";
 import { ROUTES } from "@/constants";
 import { cn } from "@/shared/lib/cn";
@@ -26,6 +31,8 @@ const SEARCH_DEBOUNCE_MS = 300;
 export default function SearchPage() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
   const { tasks, goals, ideas, isSearching, search, clear } = useSearch();
   const { goals: allGoals } = useGoals();
   const { contexts } = useContexts();
@@ -89,14 +96,60 @@ export default function SearchPage() {
 
   const handleNavigateToGoal = useCallback(
     (id: string) => {
-      navigate(ROUTES.GOALS, { state: { openGoalId: id } });
+      navigate(`/goals/${id}`);
     },
     [navigate],
   );
 
-  const handleNavigateToIdeas = useCallback(() => {
-    navigate(ROUTES.IDEAS);
-  }, [navigate]);
+  const handleIdeaClick = useCallback((id: string) => {
+    setSelectedIdeaId(id);
+  }, []);
+
+  const handleIdeaUpdate = useCallback(
+    async (id: string, changes: Partial<Idea>) => {
+      await defaultIdeaService.update(id, changes);
+      if (searchQuery) void search(searchQuery);
+    },
+    [searchQuery, search],
+  );
+
+  const handleIdeaDelete = useCallback(
+    async (id: string) => {
+      setSelectedIdeaId(null);
+      await defaultIdeaService.softDelete(id);
+      if (searchQuery) void search(searchQuery);
+    },
+    [searchQuery, search],
+  );
+
+  const handleIdeaClose = useCallback(() => {
+    setSelectedIdeaId(null);
+  }, []);
+
+  const handleTaskSelect = useCallback((taskId: string) => {
+    setSelectedTaskId(taskId);
+  }, []);
+
+  const handleTaskDetailClose = useCallback(() => {
+    setSelectedTaskId(null);
+  }, []);
+
+  const handleTaskDelete = useCallback(
+    async (id: string) => {
+      setSelectedTaskId(null);
+      await defaultTaskService.softDelete(id);
+      if (searchQuery) void search(searchQuery);
+    },
+    [searchQuery, search],
+  );
+
+  const handleTaskDuplicate = useCallback(
+    async (id: string) => {
+      await defaultTaskService.duplicate(id);
+      if (searchQuery) void search(searchQuery);
+    },
+    [searchQuery, search],
+  );
 
   const handleModeChange = useCallback(
     (newMode: RightPanelMode) => {
@@ -177,7 +230,9 @@ export default function SearchPage() {
                   onComplete={handleCompleteTask}
                   onUpdate={handleUpdateTask}
                   onMove={handleMoveTask}
-                  onDelete={() => {}}
+                  onDelete={handleTaskDelete}
+                  onSelect={handleTaskSelect}
+                  selectedTaskId={selectedTaskId}
                 />
               </section>
             )}
@@ -207,11 +262,15 @@ export default function SearchPage() {
                 </h2>
                 <ul>
                   {ideas.map((idea) => (
-                    <IdeaItem
-                      key={idea.id}
-                      idea={idea}
-                      onEdit={handleNavigateToIdeas}
-                    />
+                    <li key={idea.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleIdeaClick(idea.id)}
+                        className="w-full text-left"
+                      >
+                        <IdeaItem idea={idea} />
+                      </button>
+                    </li>
                   ))}
                 </ul>
               </section>
@@ -219,6 +278,40 @@ export default function SearchPage() {
           </div>
         </main>
       </div>
+
+      {/* Task detail panel */}
+      {selectedTaskId &&
+        (() => {
+          const selectedTask = tasks.find((t) => t.id === selectedTaskId);
+          return selectedTask ? (
+            <TaskDetailPanel
+              task={selectedTask}
+              goals={allGoals}
+              contexts={contexts}
+              categories={categories}
+              onUpdate={handleUpdateTask}
+              onDelete={handleTaskDelete}
+              onDuplicate={handleTaskDuplicate}
+              onClose={handleTaskDetailClose}
+              className="absolute inset-0 z-10 md:relative md:w-96 md:border-l md:border-gray-100"
+            />
+          ) : null;
+        })()}
+
+      {/* Idea detail panel */}
+      {selectedIdeaId &&
+        (() => {
+          const selectedIdea = ideas.find((idea) => idea.id === selectedIdeaId);
+          return selectedIdea ? (
+            <IdeaDetailPanel
+              idea={selectedIdea}
+              onUpdate={handleIdeaUpdate}
+              onDelete={handleIdeaDelete}
+              onClose={handleIdeaClose}
+              className="absolute inset-0 z-10 md:relative md:w-96 md:border-l md:border-gray-100"
+            />
+          ) : null;
+        })()}
 
       {/* Right filter panel */}
       <RightFilterPanel
