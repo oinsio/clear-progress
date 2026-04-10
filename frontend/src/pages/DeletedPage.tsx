@@ -140,6 +140,7 @@ export default function DeletedPage() {
       await purge();
       setShowPurgeDialog(false);
     } catch (error) {
+      console.error("Purge failed:", error);
       setPurgeError(t("deleted.purgeError"));
     }
   };

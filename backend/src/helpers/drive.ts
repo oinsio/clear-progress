@@ -9,7 +9,8 @@ export function driveFileExists(fileId: string): boolean {
   try {
     const file = Drive.Files.get(fileId, { fields: DRIVE_QUERY_FIELDS.FILE_EXISTS });
     return !file.trashed;
-  } catch {
+  } catch (error) {
+    console.error(`[driveFileExists] Failed to check file ${fileId}:`, error);
     return false;
   }
 }

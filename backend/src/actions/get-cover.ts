@@ -26,7 +26,8 @@ export function getCover(payload: { file_ids: string[] }): GoogleAppsScript.Cont
       const data = Utilities.base64Encode(bytes);
       const mimeType = blob.getContentType() ?? undefined;
       return { file_id: fileId, mime_type: mimeType, data };
-    } catch {
+    } catch (error) {
+      console.error(`[get-cover] Failed to fetch file ${fileId}:`, error);
       return { file_id: fileId, error: ERROR_CODES.FILE_NOT_FOUND };
     }
   });
