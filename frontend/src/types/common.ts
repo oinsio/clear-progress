@@ -38,13 +38,6 @@ export type PushResultStatus = "created" | "accepted" | "conflict" | "rejected";
 
 export type BoxFilter = Box | "all";
 
-export type RepeatRuleType =
-  | "daily"
-  | "weekdays"
-  | "weekly"
-  | "monthly"
-  | "interval";
-
 export type PanelSide = "left" | "right";
 
 export type ColorScheme = "system" | "light" | "dark";
@@ -69,7 +62,20 @@ export interface MenuItemConfig {
 }
 
 export interface RepeatRule {
-  type: RepeatRuleType;
-  days?: number[];
-  interval?: number;
+  type: "fixed" | "after_completion";
+  // Для fixed
+  frequency?: "daily" | "weekly" | "monthly" | "yearly";
+  interval?: number; // >= 1
+  weekdays?: number[]; // для weekly: 1=Пн ... 7=Вс
+  day_of_month?: number; // для monthly: 1-31
+  month_and_day?: {
+    // для yearly
+    month: number; // 1-12
+    day: number; // 1-31
+  };
+  // Для after_completion
+  delay_days?: number; // >= 1
+  // Общее
+  target_box: "today" | "week" | "later";
+  advance_days: number; // >= 0
 }

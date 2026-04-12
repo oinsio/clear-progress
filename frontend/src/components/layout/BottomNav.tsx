@@ -4,6 +4,7 @@ import { type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/constants";
 import { cn } from "@/shared/lib/cn";
+import { HiddenTasksToggle } from "@/components/tasks/HiddenTasksToggle";
 
 export type NavItem = { href: string; labelKey: string; icon: LucideIcon };
 
@@ -43,6 +44,7 @@ export function BottomNav() {
           </NavLink>
         );
       })}
+      <HiddenTasksToggle />
     </nav>
   );
 }

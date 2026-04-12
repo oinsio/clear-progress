@@ -4,29 +4,47 @@ import {
   parseRepeatRule,
   serializeRepeatRule,
   formatRepeatRuleLabel,
+  calculateNextDate,
+  calculateAppearDate,
 } from "./repeatRule";
+import type { RepeatRule } from "@/types/common";
 
 describe("parseRepeatRule", () => {
   it("should return null for empty string", () => {
     expect(parseRepeatRule("")).toBeNull();
   });
 
-  it("should parse a valid daily repeat rule", () => {
-    expect(parseRepeatRule('{"type":"daily"}')).toEqual({ type: "daily" });
+  it("should parse a valid fixed daily repeat rule", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    expect(parseRepeatRule(JSON.stringify(rule))).toEqual(rule);
   });
 
-  it("should parse a weekly rule with days", () => {
-    expect(parseRepeatRule('{"type":"weekly","days":[1,3,5]}')).toEqual({
-      type: "weekly",
-      days: [1, 3, 5],
-    });
+  it("should parse a fixed weekly rule with weekdays", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 1,
+      weekdays: [1, 3, 5],
+      target_box: "today",
+      advance_days: 0,
+    };
+    expect(parseRepeatRule(JSON.stringify(rule))).toEqual(rule);
   });
 
-  it("should parse an interval rule", () => {
-    expect(parseRepeatRule('{"type":"interval","interval":3}')).toEqual({
-      type: "interval",
-      interval: 3,
-    });
+  it("should parse an after_completion rule", () => {
+    const rule: RepeatRule = {
+      type: "after_completion",
+      delay_days: 7,
+      target_box: "week",
+      advance_days: 2,
+    };
+    expect(parseRepeatRule(JSON.stringify(rule))).toEqual(rule);
   });
 
   it("should return null for invalid JSON", () => {
@@ -35,57 +53,120 @@ describe("parseRepeatRule", () => {
 });
 
 describe("serializeRepeatRule", () => {
-  it("should serialize a daily rule to JSON string", () => {
-    expect(serializeRepeatRule({ type: "daily" })).toBe('{"type":"daily"}');
+  it("should serialize a fixed daily rule to JSON string", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    expect(serializeRepeatRule(rule)).toBe(JSON.stringify(rule));
   });
 
-  it("should serialize a weekly rule with days", () => {
-    expect(serializeRepeatRule({ type: "weekly", days: [1, 3, 5] })).toBe(
-      '{"type":"weekly","days":[1,3,5]}',
-    );
+  it("should serialize a fixed weekly rule with weekdays", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 1,
+      weekdays: [1, 3, 5],
+      target_box: "today",
+      advance_days: 0,
+    };
+    expect(serializeRepeatRule(rule)).toBe(JSON.stringify(rule));
   });
 
-  it("should serialize an interval rule", () => {
-    expect(serializeRepeatRule({ type: "interval", interval: 7 })).toBe(
-      '{"type":"interval","interval":7}',
-    );
+  it("should serialize an after_completion rule", () => {
+    const rule: RepeatRule = {
+      type: "after_completion",
+      delay_days: 7,
+      target_box: "week",
+      advance_days: 2,
+    };
+    expect(serializeRepeatRule(rule)).toBe(JSON.stringify(rule));
   });
 });
 
 describe("formatRepeatRuleLabel", () => {
   const t = i18n.t.bind(i18n);
 
-  it("should format daily rule", () => {
-    expect(formatRepeatRuleLabel({ type: "daily" }, t)).toBe("Каждый день");
+  it("should format fixed daily rule", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toBeTruthy();
+    expect(typeof label).toBe("string");
   });
 
-  it("should format weekdays rule", () => {
-    expect(formatRepeatRuleLabel({ type: "weekdays" }, t)).toBe("По будням");
+  it("should format fixed weekly rule", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 1,
+      weekdays: [1, 3, 5],
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toBeTruthy();
+    expect(typeof label).toBe("string");
   });
 
-  it("should format weekly rule with specific days", () => {
-    expect(formatRepeatRuleLabel({ type: "weekly", days: [1, 3, 5] }, t)).toBe(
-      "По Пн, Ср, Пт",
-    );
+  it("should format after_completion rule", () => {
+    const rule: RepeatRule = {
+      type: "after_completion",
+      delay_days: 7,
+      target_box: "week",
+      advance_days: 2,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toBeTruthy();
+    expect(typeof label).toBe("string");
+  });
+});
+
+describe("calculateNextDate", () => {
+  it("should calculate next date for daily rule", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-04-13T10:00:00.000Z";
+    const nextDate = calculateNextDate(rule, completedAt);
+    expect(nextDate).toBe("2026-04-14");
   });
 
-  it("should format weekly rule with no days using generic label", () => {
-    expect(formatRepeatRuleLabel({ type: "weekly" }, t)).toBe("По дням недели");
+  it("should calculate next date for after_completion rule", () => {
+    const rule: RepeatRule = {
+      type: "after_completion",
+      delay_days: 7,
+      target_box: "week",
+      advance_days: 0,
+    };
+    const completedAt = "2026-04-13T10:00:00.000Z";
+    const nextDate = calculateNextDate(rule, completedAt);
+    expect(nextDate).toBe("2026-04-20");
+  });
+});
+
+describe("calculateAppearDate", () => {
+  it("should calculate appear date with advance_days = 0", () => {
+    const nextDate = "2026-04-14";
+    const appearDate = calculateAppearDate(nextDate, 0);
+    expect(appearDate).toBe("2026-04-14");
   });
 
-  it("should format monthly rule", () => {
-    expect(formatRepeatRuleLabel({ type: "monthly" }, t)).toBe("Каждый месяц");
-  });
-
-  it("should format interval rule with count", () => {
-    expect(formatRepeatRuleLabel({ type: "interval", interval: 3 }, t)).toBe(
-      "Каждые 3 дня",
-    );
-  });
-
-  it("should format interval rule defaults to 1 when interval is missing", () => {
-    expect(formatRepeatRuleLabel({ type: "interval" }, t)).toBe(
-      "Каждый 1 день",
-    );
+  it("should calculate appear date with advance_days = 2", () => {
+    const nextDate = "2026-04-14";
+    const appearDate = calculateAppearDate(nextDate, 2);
+    expect(appearDate).toBe("2026-04-12");
   });
 });

@@ -19,6 +19,13 @@ describe("TaskService", () => {
   let mockTaskRepository: TaskRepository;
   let mockChecklistRepository: ChecklistRepository;
 
+  // Shared test helpers
+  const getCreatedTask = () =>
+    (mockTaskRepository.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
+  const getCreatedItem = () =>
+    (mockChecklistRepository.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+
   beforeEach(() => {
     mockTaskRepository = createMockTaskRepository();
     mockChecklistRepository = createMockChecklistRepository();
@@ -208,17 +215,17 @@ describe("TaskService", () => {
   });
 
   describe("complete", () => {
-    const getCreatedTask = () =>
-      (mockTaskRepository.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    const getCreatedItem = () =>
-      (mockChecklistRepository.create as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
-
     const setupRecurringTaskWithItem = async (
       itemOverrides: Partial<ChecklistItem> = {},
     ): Promise<ChecklistItem> => {
       const task = buildTask({
-        repeat_rule: JSON.stringify({ type: "daily" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       const originalItem = buildChecklistItem({
         task_id: task.id,
@@ -279,7 +286,13 @@ describe("TaskService", () => {
 
     it("should return the new recurring task when repeat_rule is set", async () => {
       const task = buildTask({
-        repeat_rule: JSON.stringify({ type: "daily" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -308,7 +321,13 @@ describe("TaskService", () => {
 
     it("should create a recurring copy when repeat_rule is set", async () => {
       const task = buildTask({
-        repeat_rule: JSON.stringify({ type: "daily" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -325,7 +344,13 @@ describe("TaskService", () => {
       const task = buildTask({
         name: "Daily standup",
         box: "today",
-        repeat_rule: JSON.stringify({ type: "daily" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -342,7 +367,14 @@ describe("TaskService", () => {
 
     it("should create recurring copy with reset completion state", async () => {
       const task = buildTask({
-        repeat_rule: JSON.stringify({ type: "weekly" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "weekly",
+          interval: 1,
+          weekdays: [1],
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -359,7 +391,13 @@ describe("TaskService", () => {
 
     it("should create recurring copy with a new unique id", async () => {
       const task = buildTask({
-        repeat_rule: JSON.stringify({ type: "daily" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -392,7 +430,13 @@ describe("TaskService", () => {
     it("should create recurring copy with version 1", async () => {
       const task = buildTask({
         version: 5,
-        repeat_rule: JSON.stringify({ type: "daily" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -407,7 +451,13 @@ describe("TaskService", () => {
     });
 
     it("should preserve repeat_rule in the recurring copy", async () => {
-      const repeatRule = JSON.stringify({ type: "daily" });
+      const repeatRule = JSON.stringify({
+        type: "fixed",
+        frequency: "daily",
+        interval: 1,
+        target_box: "today",
+        advance_days: 0,
+      });
       const task = buildTask({ repeat_rule: repeatRule });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -423,7 +473,13 @@ describe("TaskService", () => {
 
     it("should copy checklist items to the recurring copy", async () => {
       const task = buildTask({
-        repeat_rule: JSON.stringify({ type: "daily" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       const checklistItems = [
         buildChecklistItem({ task_id: task.id }),
@@ -488,7 +544,13 @@ describe("TaskService", () => {
 
     it("should NOT copy checklist items when task has no checklist items", async () => {
       const task = buildTask({
-        repeat_rule: JSON.stringify({ type: "daily" }),
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
       });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -1090,12 +1152,6 @@ describe("TaskService", () => {
   });
 
   describe("duplicate", () => {
-    const getCreatedTask = () =>
-      (mockTaskRepository.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    const getCreatedItem = () =>
-      (mockChecklistRepository.create as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
-
     const setupDuplicateTest = async (
       taskOverrides: Partial<Task> = {},
       checklistItems: ChecklistItem[] = [],

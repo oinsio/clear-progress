@@ -44,7 +44,7 @@ export const PROPERTY_KEYS = {
 export const GOOGLE_TOKENINFO_URL = 'https://www.googleapis.com/oauth2/v3/tokeninfo';
 
 export const SHEET_HEADERS: Record<string, string[]> = {
-  [SHEET_NAMES.TASKS]: ['id', 'name', 'description', 'box', 'goal_id', 'context_id', 'category_id', 'is_completed', 'completed_at', 'repeat_rule', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
+  [SHEET_NAMES.TASKS]: ['id', 'name', 'description', 'box', 'goal_id', 'context_id', 'category_id', 'is_completed', 'completed_at', 'repeat_rule', 'is_hidden', 'next_date', 'appear_date', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.GOALS]: ['id', 'name', 'description', 'cover_file_id', 'status', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.CONTEXTS]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],
   [SHEET_NAMES.CATEGORIES]: ['id', 'name', 'sort_order', 'is_deleted', 'created_at', 'updated_at', 'version', 'revision'],

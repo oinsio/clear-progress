@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
   Check,
+  EyeOff,
   FileText,
   GripVertical,
   ListChecks,
@@ -167,6 +168,7 @@ export function TaskItem({
               ? "border-l-accent"
               : "border-l-transparent",
           isSelected && "bg-accent/5",
+          task.is_hidden && "opacity-50",
         )}
       >
         {/* Swipe-to-complete background */}
@@ -256,9 +258,20 @@ export function TaskItem({
                   {formatCompletedAt(task.completed_at)}
                 </span>
               )}
+              {task.is_hidden && task.appear_date && (
+                <span
+                  data-testid="task-item-appear-date"
+                  className="text-xs text-gray-500 mt-0.5"
+                >
+                  {t("repeat.appearDate", {
+                    date: new Date(task.appear_date).toLocaleDateString(),
+                  })}
+                </span>
+              )}
               {((task.description && !task.is_completed) ||
                 checklistProgress.total > 0 ||
-                task.repeat_rule) && (
+                task.repeat_rule ||
+                task.is_hidden) && (
                 <span className="flex items-center gap-2 mt-0.5">
                   {task.description && !task.is_completed && (
                     <FileText
@@ -280,6 +293,13 @@ export function TaskItem({
                   {task.repeat_rule && (
                     <RotateCcw
                       data-testid="repeat-rule-indicator"
+                      size={10}
+                      className="text-gray-400 flex-shrink-0"
+                    />
+                  )}
+                  {task.is_hidden && (
+                    <EyeOff
+                      data-testid="hidden-task-indicator"
                       size={10}
                       className="text-gray-400 flex-shrink-0"
                     />

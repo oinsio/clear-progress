@@ -3,7 +3,6 @@ import type {
   BoxFilter,
   AccentColor,
   PanelSide,
-  RepeatRuleType,
   ColorScheme,
   FilterBarPosition,
   InterfaceScale,
@@ -131,7 +130,7 @@ export const MENU_ORDER_CHANGED_EVENT = "menu_order_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
 
 export const DB_NAME = "clear-progress";
-export const DB_VERSION = 5;
+export const DB_VERSION = 6;
 export const LOCAL_COVER_ID_PREFIX = "local:";
 
 export const SYNC_META_KEYS = {
@@ -159,6 +158,7 @@ export const STORAGE_KEYS = {
   BACKEND_CONNECTED: "backend_connected",
   ACCESS_TOKEN: "access_token",
   ACCESS_TOKEN_EXPIRES_AT: "access_token_expires_at",
+  SHOW_HIDDEN_TASKS: "show_hidden_tasks",
 } as const;
 
 export const GOOGLE_USERINFO_URL =
@@ -202,14 +202,6 @@ export const TASK_COMPLETE_ANIMATION_DELAY_MS = 300;
 
 export const LONG_PRESS_THRESHOLD_MS = 500;
 export const LONG_PRESS_MOVE_THRESHOLD_PX = 10;
-
-export const REPEAT_RULE_TYPE = {
-  DAILY: "daily",
-  WEEKDAYS: "weekdays",
-  WEEKLY: "weekly",
-  MONTHLY: "monthly",
-  INTERVAL: "interval",
-} as const satisfies Record<string, RepeatRuleType>;
 
 export const GOAL_STATUS_SORT_ORDER: Record<
   import("@/types/common").GoalStatus,

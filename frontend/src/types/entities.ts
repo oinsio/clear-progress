@@ -11,6 +11,9 @@ export interface Task {
   is_completed: boolean;
   completed_at: string;
   repeat_rule: string;
+  is_hidden: boolean;
+  next_date: string;
+  appear_date: string;
   sort_order: number;
   is_deleted: boolean;
   created_at: string;

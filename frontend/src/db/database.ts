@@ -70,6 +70,26 @@ export class ClearProgressDatabase extends Dexie {
           .toCollection()
           .modify({ _dirty: true, revision: 0 });
       });
+    this.version(6)
+      .stores(DB_SCHEMA_V4)
+      .upgrade(async (tx) => {
+        const tasks = await tx.table("tasks").toArray();
+        for (const task of tasks) {
+          const updates: Partial<Task> = {
+            is_hidden: false,
+            next_date: "",
+            appear_date: "",
+          };
+          // Сбросить старые правила повторения (несовместимый формат)
+          if (task.repeat_rule) {
+            updates.repeat_rule = "";
+            console.log(
+              `Reset repeat_rule for task ${task.id} due to format change`
+            );
+          }
+          await tx.table("tasks").update(task.id, updates);
+        }
+      });
   }
 }
 

@@ -104,6 +104,9 @@ export class SyncService {
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
       pullResponse.current_revision,
     );
+
+    // Уведомить о завершении синхронизации
+    window.dispatchEvent(new CustomEvent("sync_complete"));
   }
 
   private async _push(force = false): Promise<void> {

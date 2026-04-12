@@ -31,6 +31,9 @@ export interface Task extends SortableEntity {
   is_completed: boolean;
   completed_at: string;
   repeat_rule: string;
+  is_hidden: boolean;
+  next_date: string;
+  appear_date: string;
 }
 
 export interface Goal extends SortableEntity {

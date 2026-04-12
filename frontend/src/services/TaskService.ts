@@ -3,6 +3,11 @@ import type { Box } from "@/types/common";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { hasEntityChanged } from "@/utils/deepEqual";
+import {
+  parseRepeatRule,
+  calculateNextDate,
+  calculateAppearDate,
+} from "@/utils/repeatRule";
 
 export class TaskService {
   constructor(
@@ -36,6 +41,9 @@ export class TaskService {
       is_completed: false,
       completed_at: "",
       repeat_rule: "",
+      is_hidden: false,
+      next_date: "",
+      appear_date: "",
       sort_order: existingTasks.length,
       ...partialTask,
       id: crypto.randomUUID(),
@@ -87,18 +95,48 @@ export class TaskService {
     if (!existingTask) {
       throw new Error(`Task not found: ${id}`);
     }
+
+    const now = new Date().toISOString();
     const completedTask = await this.update(id, {
       is_completed: true,
-      completed_at: new Date().toISOString(),
+      completed_at: now,
     });
+
     let recurringTask: Task | null = null;
+
     if (existingTask.repeat_rule) {
-      recurringTask = await this.createRecurringCopy(existingTask);
+      try {
+        const rule = parseRepeatRule(existingTask.repeat_rule);
+        if (rule) {
+          // Вычислить next_date и appear_date
+          const nextDate = calculateNextDate(
+            rule,
+            now,
+            existingTask.next_date || undefined,
+          );
+          const appearDate = calculateAppearDate(nextDate, rule.advance_days);
+
+          // Создать скрытый клон
+          recurringTask = await this.createRecurringCopy(existingTask, {
+            is_hidden: true,
+            next_date: nextDate,
+            appear_date: appearDate,
+            box: rule.target_box,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to create recurring task:", error);
+        // Не прерываем завершение задачи, если не удалось создать клон
+      }
     }
+
     return { completed: completedTask, recurring: recurringTask };
   }
 
-  private async createRecurringCopy(task: Task): Promise<Task> {
+  private async createRecurringCopy(
+    task: Task,
+    overrides: Partial<Task>,
+  ): Promise<Task> {
     const {
       id: _id,
       version: _version,
@@ -114,11 +152,14 @@ export class TaskService {
     void _updated_at;
     void _is_completed;
     void _completed_at;
+
     const newTask = await this.create({
       ...taskProps,
+      ...overrides,
       is_completed: false,
       completed_at: "",
     });
+
     await this.copyChecklistItems(task.id, newTask.id);
     return newTask;
   }

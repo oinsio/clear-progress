@@ -167,7 +167,13 @@ describe("useTasks", () => {
   it("should return recurring task id when task has repeat_rule", async () => {
     const { result, task } = await setupHookWithOneTask({
       is_completed: false,
-      repeat_rule: "daily",
+      repeat_rule: JSON.stringify({
+        type: "fixed",
+        frequency: "daily",
+        interval: 1,
+        target_box: "today",
+        advance_days: 0,
+      }),
     });
 
     let recurringId: string | null = null;

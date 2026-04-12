@@ -8,14 +8,16 @@ export class TaskRepository {
   }
 
   async getActive(): Promise<Task[]> {
-    return db.tasks.filter((task) => !task.is_deleted).toArray();
+    return db.tasks
+      .filter((task) => !task.is_deleted && !task.is_hidden)
+      .toArray();
   }
 
   async getByBox(box: Box): Promise<Task[]> {
     return db.tasks
       .where("box")
       .equals(box)
-      .filter((task) => !task.is_deleted)
+      .filter((task) => !task.is_deleted && !task.is_hidden)
       .toArray();
   }
 
@@ -27,13 +29,13 @@ export class TaskRepository {
     return db.tasks
       .where("goal_id")
       .equals(goalId)
-      .filter((task) => !task.is_deleted)
+      .filter((task) => !task.is_deleted && !task.is_hidden)
       .toArray();
   }
 
   async getActiveIncomplete(): Promise<Task[]> {
     return db.tasks
-      .filter((task) => !task.is_deleted && !task.is_completed)
+      .filter((task) => !task.is_deleted && !task.is_completed && !task.is_hidden)
       .toArray();
   }
 
@@ -41,7 +43,7 @@ export class TaskRepository {
     return db.tasks
       .where("category_id")
       .equals(categoryId)
-      .filter((task) => !task.is_deleted && !task.is_completed)
+      .filter((task) => !task.is_deleted && !task.is_completed && !task.is_hidden)
       .toArray();
   }
 
@@ -49,7 +51,7 @@ export class TaskRepository {
     return db.tasks
       .where("context_id")
       .equals(contextId)
-      .filter((task) => !task.is_deleted && !task.is_completed)
+      .filter((task) => !task.is_deleted && !task.is_completed && !task.is_hidden)
       .toArray();
   }
 
@@ -71,7 +73,7 @@ export class TaskRepository {
 
   async getCompleted(): Promise<Task[]> {
     return db.tasks
-      .filter((task) => !task.is_deleted && task.is_completed)
+      .filter((task) => !task.is_deleted && task.is_completed && !task.is_hidden)
       .toArray();
   }
 
@@ -81,6 +83,14 @@ export class TaskRepository {
 
   async getDirty(): Promise<Task[]> {
     return db.tasks.filter((task) => task._dirty).toArray();
+  }
+
+  async getTasksToReveal(currentDate: string): Promise<Task[]> {
+    return db.tasks
+      .where("is_hidden")
+      .equals(1)
+      .filter((task) => task.appear_date !== "" && task.appear_date <= currentDate)
+      .toArray();
   }
 
   async applyServerRecords(records: Task[]): Promise<void> {

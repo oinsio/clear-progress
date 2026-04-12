@@ -18,7 +18,6 @@ import {
   SETTING_KEYS,
   MAX_COVER_SIZE_BYTES,
   PUSH_RESULT_STATUS,
-  REPEAT_RULE_TYPE,
   DEFAULT_PANEL_SIDE,
   PANEL_SIDES,
 } from "./index";
@@ -227,8 +226,8 @@ describe("DB_NAME", () => {
 });
 
 describe("DB_VERSION", () => {
-  it("should be 5", () => {
-    expect(DB_VERSION).toBe(5);
+  it("should be 6", () => {
+    expect(DB_VERSION).toBe(6);
   });
 });
 
@@ -288,28 +287,6 @@ describe("PUSH_RESULT_STATUS", () => {
 
   it("should define REJECTED status", () => {
     expect(PUSH_RESULT_STATUS.REJECTED).toBe("rejected");
-  });
-});
-
-describe("REPEAT_RULE_TYPE", () => {
-  it("should define DAILY as 'daily'", () => {
-    expect(REPEAT_RULE_TYPE.DAILY).toBe("daily");
-  });
-
-  it("should define WEEKDAYS as 'weekdays'", () => {
-    expect(REPEAT_RULE_TYPE.WEEKDAYS).toBe("weekdays");
-  });
-
-  it("should define WEEKLY as 'weekly'", () => {
-    expect(REPEAT_RULE_TYPE.WEEKLY).toBe("weekly");
-  });
-
-  it("should define MONTHLY as 'monthly'", () => {
-    expect(REPEAT_RULE_TYPE.MONTHLY).toBe("monthly");
-  });
-
-  it("should define INTERVAL as 'interval'", () => {
-    expect(REPEAT_RULE_TYPE.INTERVAL).toBe("interval");
   });
 });
 
