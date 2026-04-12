@@ -21,6 +21,7 @@ info:
     - All responses return HTTP 200; operation status is determined by the `ok` field
     - All IDs are UUID v4
     - All dates are ISO 8601 UTC (`2026-03-04T12:00:00.000Z`)
+    - Date-only fields: `next_date`, `appear_date` use ISO 8601 date format (`2026-04-20`)
     - Optional string fields use `""` instead of `null`
     - `version` is an integer starting at 1, incremented by 1 on every client change
     - `revision` is a server-side monotonic counter assigned during push
@@ -244,6 +245,20 @@ paths:
            - `task_id` (ChecklistItem) — required; must be a valid UUID v4, empty string is not allowed.
              Rejected with `reason: "task_id is required and must be a valid UUID v4"`.
            - `cover_file_id` (Goal) — Google Drive file ID, not validated as UUID.
+
+        5. **`repeat_rule`** (Task only) — if not empty, must be valid JSON matching the structure:
+           - `type` must be "fixed" or "after_completion"
+           - `target_box` must be "today", "week", or "later"
+           - `advance_days` must be >= 0
+           - For `type: "fixed"`:
+             - `frequency` required: "daily", "weekly", "monthly", or "yearly"
+             - `interval` optional, >= 1, <= 365
+             - For `frequency: "weekly"`: `weekdays` required, non-empty array
+             - For `frequency: "monthly"`: `day_of_month` required, 1-31
+             - For `frequency: "yearly"`: `month_and_day` required
+           - For `type: "after_completion"`:
+             - `delay_days` required, >= 1
+           - Rejected with `reason: "Invalid repeat_rule format"` or specific validation message.
       requestBody:
         required: true
         content:
@@ -268,6 +283,9 @@ paths:
                         is_completed: false
                         completed_at: ""
                         repeat_rule: ""
+                        is_hidden: false
+                        next_date: ""
+                        appear_date: ""
                         sort_order: 4000
                         is_deleted: false
                         created_at: "2026-03-04T13:00:00.000Z"
@@ -295,11 +313,74 @@ paths:
                         is_completed: false
                         completed_at: ""
                         repeat_rule: ""
+                        is_hidden: false
+                        next_date: ""
+                        appear_date: ""
                         sort_order: 3000
                         is_deleted: true
                         created_at: "2026-03-04T07:00:00.000Z"
                         updated_at: "2026-03-04T16:00:00.000Z"
                         version: 4
+                    goals: []
+                    contexts: []
+                    categories: []
+                    checklist_items: []
+                    settings: []
+              recurring_task:
+                summary: Create a recurring task
+                value:
+                  action: push
+                  access_token: ya29.a0AfH6SMBx...
+                  changes:
+                    tasks:
+                      - id: c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f
+                        title: Daily review
+                        notes: Review tasks and plan the day
+                        box: today
+                        goal_id: ""
+                        context_id: ""
+                        category_id: ""
+                        is_completed: false
+                        completed_at: ""
+                        repeat_rule: '{"type":"fixed","frequency":"daily","interval":1,"target_box":"today","advance_days":0}'
+                        is_hidden: false
+                        next_date: "2026-04-14"
+                        appear_date: "2026-04-14"
+                        sort_order: 1000
+                        is_deleted: false
+                        created_at: "2026-04-13T10:00:00.000Z"
+                        updated_at: "2026-04-13T10:00:00.000Z"
+                        version: 1
+                    goals: []
+                    contexts: []
+                    categories: []
+                    checklist_items: []
+                    settings: []
+              hidden_recurring_clone:
+                summary: Hidden recurring task clone
+                value:
+                  action: push
+                  access_token: ya29.a0AfH6SMBx...
+                  changes:
+                    tasks:
+                      - id: d6e7f8a9-b0c1-4d2e-3f4a-5b6c7d8e9f0a
+                        title: Water plants
+                        notes: ""
+                        box: today
+                        goal_id: ""
+                        context_id: ""
+                        category_id: ""
+                        is_completed: false
+                        completed_at: ""
+                        repeat_rule: '{"type":"after_completion","delay_days":4,"target_box":"today","advance_days":0}'
+                        is_hidden: true
+                        next_date: "2026-04-17"
+                        appear_date: "2026-04-17"
+                        sort_order: 2000
+                        is_deleted: false
+                        created_at: "2026-04-13T14:30:00.000Z"
+                        updated_at: "2026-04-13T14:30:00.000Z"
+                        version: 1
                     goals: []
                     contexts: []
                     categories: []
@@ -349,6 +430,9 @@ paths:
                             is_completed: true
                             completed_at: "2026-03-04T14:30:00.000Z"
                             repeat_rule: ""
+                            is_hidden: false
+                            next_date: ""
+                            appear_date: ""
                             sort_order: 1000
                             is_deleted: false
                             created_at: "2026-03-04T08:30:00.000Z"
@@ -460,6 +544,21 @@ paths:
                         - id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
                           status: rejected
                           reason: "box must be one of: inbox, today, week, later"
+                      goals: []
+                      contexts: []
+                      categories: []
+                      checklist_items: []
+                      settings: []
+                    server_time: "2026-03-04T13:00:02.000Z"
+                rejected_invalid_repeat_rule:
+                  summary: Rejected — task has invalid repeat_rule
+                  value:
+                    ok: true
+                    results:
+                      tasks:
+                        - id: e7f8a9b0-c1d2-4e3f-4a5b-6c7d8e9f0a1b
+                          status: rejected
+                          reason: Invalid repeat_rule format
                       goals: []
                       contexts: []
                       categories: []
@@ -731,7 +830,7 @@ paths:
     post:
       operationId: purge
       tags: [Maintenance]
-      summary: Hard-delete soft-deleted records (v2.0)
+      summary: Hard-delete soft-deleted records
       description: |
         Permanently deletes all records with `is_deleted: true` from all Google Sheets
         and unused cover files from Google Drive.
@@ -823,6 +922,9 @@ components:
         - is_completed
         - completed_at
         - repeat_rule
+        - is_hidden
+        - next_date
+        - appear_date
         - sort_order
         - is_deleted
         - created_at
@@ -870,14 +972,54 @@ components:
         repeat_rule:
           type: string
           description: |
-            Repeat rule (v1.1). Formats:
-            - `daily` — every day
-            - `weekly` — every week
-            - `monthly` — every month
-            - `weekdays:1,2,3,4,5` — on specific weekdays (1=Mon)
-            - `custom:N` — every N days
-            - `""` — no repeat
-          example: ""
+            Repeat rule. JSON string with structure:
+            ```json
+            {
+              "type": "fixed" | "after_completion",
+              "frequency": "daily" | "weekly" | "monthly" | "yearly",  // for fixed only
+              "interval": 1,                    // >= 1, default 1
+              "weekdays": [1, 3, 5],            // for weekly: 1=Mon, 7=Sun
+              "day_of_month": 15,               // for monthly: 1-31
+              "month_and_day": {"month": 3, "day": 15},  // for yearly
+              "delay_days": 7,                  // for after_completion: >= 1
+              "target_box": "today" | "week" | "later",
+              "advance_days": 0                 // >= 0, how many days before next_date to reveal
+            }
+            ```
+            Empty string `""` means no repeat.
+
+            **Validation rules:**
+            - `type` must be "fixed" or "after_completion"
+            - `target_box` must be "today", "week", or "later"
+            - `advance_days` must be >= 0
+            - For `type: "fixed"`:
+              - `frequency` required: "daily", "weekly", "monthly", or "yearly"
+              - `interval` optional, >= 1, <= 365
+              - For `frequency: "weekly"`: `weekdays` required, non-empty array
+              - For `frequency: "monthly"`: `day_of_month` required, 1-31
+              - For `frequency: "yearly"`: `month_and_day` required
+            - For `type: "after_completion"`:
+              - `delay_days` required, >= 1
+          example: '{"type":"fixed","frequency":"daily","interval":1,"target_box":"today","advance_days":0}'
+        is_hidden:
+          type: boolean
+          description: |
+            Hidden task flag. When true, the task is a recurring clone waiting for its appear_date.
+            Hidden tasks are filtered out by default in client queries.
+          example: false
+        next_date:
+          type: string
+          description: |
+            Next occurrence date. ISO 8601 date only (YYYY-MM-DD).
+            Calculated based on repeat_rule. Empty string if no repeat_rule.
+          example: "2026-04-20"
+        appear_date:
+          type: string
+          description: |
+            Appearance date. ISO 8601 date only (YYYY-MM-DD).
+            Calculated as next_date - advance_days. Task becomes visible when current date >= appear_date.
+            Empty string if no repeat_rule.
+          example: "2026-04-20"
         sort_order:
           type: integer
           description: Sort position within the box. Lower = higher in list
@@ -1090,12 +1232,12 @@ components:
             Setting key:
             - `default_box` — default box for new tasks (`inbox`, `today`, `week`, `later`)
             - `accent_color` — UI accent color (`green`, `orange`, `purple`, `yellow`, `crimson`, `#RRGGBB`)
-            - `creation_fields` (v1.1) — JSON array of fields shown in the task creation form
-            - `quick_property` (v1.1) — quick-access property (`goal`, `context`, `category`)
-            - `menu_always_visible` (v1.1) — `true`/`false`
-            - `menu_items` (v1.1) — JSON array of visible sidebar items
-            - `inbox_fields` (v1.1) — JSON array of fields shown during inbox processing
-            - `focus_entity` (v1.1) — `goal:{uuid}`, `context:{uuid}`, or `""` (disabled)
+            - `creation_fields` — JSON array of fields shown in the task creation form
+            - `quick_property` — quick-access property (`goal`, `context`, `category`)
+            - `menu_always_visible` — `true`/`false`
+            - `menu_items` — JSON array of visible sidebar items
+            - `inbox_fields` — JSON array of fields shown during inbox processing
+            - `focus_entity` — `goal:{uuid}`, `context:{uuid}`, or `""` (disabled)
           example: default_box
         value:
           type: string
