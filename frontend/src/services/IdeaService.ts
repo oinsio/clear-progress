@@ -1,5 +1,6 @@
 import type { Idea } from "@/types/entities";
 import { IdeaRepository } from "@/db/repositories/IdeaRepository";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class IdeaService {
   constructor(private readonly ideaRepository: IdeaRepository) {}
@@ -37,14 +38,27 @@ export class IdeaService {
     if (!existingIdea) {
       throw new Error(`Idea not found: ${id}`);
     }
-    const updatedIdea: Idea = {
+
+    // Создаем обновленную версию без изменения метаданных
+    const candidateIdea: Idea = {
       ...existingIdea,
       ...changes,
       id,
-      updated_at: new Date().toISOString(),
-      version: existingIdea.version + 1,
-      _dirty: true,
     };
+
+    // Проверяем, действительно ли что-то изменилось
+    const hasChanged = hasEntityChanged(existingIdea, candidateIdea);
+
+    // Применяем метаданные только если есть изменения
+    const updatedIdea: Idea = {
+      ...candidateIdea,
+      updated_at: hasChanged
+        ? new Date().toISOString()
+        : existingIdea.updated_at,
+      version: hasChanged ? existingIdea.version + 1 : existingIdea.version,
+      _dirty: hasChanged,
+    };
+
     await this.ideaRepository.update(updatedIdea);
     return updatedIdea;
   }
@@ -71,14 +85,26 @@ export class IdeaService {
 
   async reorderIdeas(orderedIdeas: Idea[]): Promise<void> {
     if (orderedIdeas.length === 0) return;
+
+    // Проверяем, изменился ли хотя бы один sort_order
+    const hasAnyOrderChanged = orderedIdeas.some(
+      (idea, index) => idea.sort_order !== index,
+    );
+    if (!hasAnyOrderChanged) {
+      return; // Ничего не изменилось, не синхронизируем
+    }
+
     const now = new Date().toISOString();
-    const updatedIdeas = orderedIdeas.map((idea, index) => ({
-      ...idea,
-      sort_order: index,
-      updated_at: now,
-      version: idea.version + 1,
-      _dirty: true,
-    }));
+    const updatedIdeas = orderedIdeas.map((idea, index) => {
+      const orderChanged = idea.sort_order !== index;
+      return {
+        ...idea,
+        sort_order: index,
+        updated_at: orderChanged ? now : idea.updated_at,
+        version: orderChanged ? idea.version + 1 : idea.version,
+        _dirty: orderChanged,
+      };
+    });
     await this.ideaRepository.bulkUpsert(updatedIdeas);
   }
 }

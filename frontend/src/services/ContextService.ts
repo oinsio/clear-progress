@@ -1,5 +1,6 @@
 import type { Context } from "@/types/entities";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class ContextService {
   constructor(private readonly contextRepository: ContextRepository) {}
@@ -47,14 +48,26 @@ export class ContextService {
 
   async reorderContexts(orderedContexts: Context[]): Promise<void> {
     if (orderedContexts.length === 0) return;
+
+    // Проверяем, изменился ли хотя бы один sort_order
+    const hasAnyOrderChanged = orderedContexts.some(
+      (context, index) => context.sort_order !== index,
+    );
+    if (!hasAnyOrderChanged) {
+      return; // Ничего не изменилось, не синхронизируем
+    }
+
     const now = new Date().toISOString();
-    const updated = orderedContexts.map((context, index) => ({
-      ...context,
-      sort_order: index,
-      updated_at: now,
-      version: context.version + 1,
-      _dirty: true,
-    }));
+    const updated = orderedContexts.map((context, index) => {
+      const orderChanged = context.sort_order !== index;
+      return {
+        ...context,
+        sort_order: index,
+        updated_at: orderChanged ? now : context.updated_at,
+        version: orderChanged ? context.version + 1 : context.version,
+        _dirty: orderChanged,
+      };
+    });
     await this.contextRepository.bulkUpsert(updated);
   }
 
@@ -66,14 +79,29 @@ export class ContextService {
     if (!existingContext) {
       throw new Error(`Context not found: ${id}`);
     }
-    const updatedContext: Context = {
+
+    // Создаем обновленную версию без изменения метаданных
+    const candidateContext: Context = {
       ...existingContext,
       ...changes,
       id,
-      updated_at: new Date().toISOString(),
-      version: existingContext.version + 1,
-      _dirty: true,
     };
+
+    // Проверяем, действительно ли что-то изменилось
+    const hasChanged = hasEntityChanged(existingContext, candidateContext);
+
+    // Применяем метаданные только если есть изменения
+    const updatedContext: Context = {
+      ...candidateContext,
+      updated_at: hasChanged
+        ? new Date().toISOString()
+        : existingContext.updated_at,
+      version: hasChanged
+        ? existingContext.version + 1
+        : existingContext.version,
+      _dirty: hasChanged,
+    };
+
     await this.contextRepository.update(updatedContext);
     return updatedContext;
   }

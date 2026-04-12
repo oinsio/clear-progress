@@ -16,6 +16,13 @@ export class SettingsRepository {
   }
 
   async set(key: string, value: string): Promise<void> {
+    const existing = await this.getByKey(key);
+
+    // Если значение не изменилось, ничего не делаем
+    if (existing && existing.value === value) {
+      return;
+    }
+
     const updatedAt = new Date().toISOString();
     await db.settings.put({ key, value, updated_at: updatedAt, _dirty: true });
   }

@@ -45,6 +45,7 @@ interface NamedEntity {
   version: number;
   revision: number;
   _dirty: boolean;
+  [key: string]: unknown;
 }
 
 export type Context = NamedEntity;

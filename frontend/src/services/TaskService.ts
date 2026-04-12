@@ -2,6 +2,7 @@ import type { Task, ChecklistItem } from "@/types/entities";
 import type { Box } from "@/types/common";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class TaskService {
   constructor(
@@ -54,14 +55,27 @@ export class TaskService {
     if (!existingTask) {
       throw new Error(`Task not found: ${id}`);
     }
-    const updatedTask: Task = {
+
+    // Создаем обновленную версию без изменения метаданных
+    const candidateTask: Task = {
       ...existingTask,
       ...changes,
       id,
-      updated_at: new Date().toISOString(),
-      version: existingTask.version + 1,
-      _dirty: true,
     };
+
+    // Проверяем, действительно ли что-то изменилось
+    const hasChanged = hasEntityChanged(existingTask, candidateTask);
+
+    // Применяем метаданные только если есть изменения
+    const updatedTask: Task = {
+      ...candidateTask,
+      updated_at: hasChanged
+        ? new Date().toISOString()
+        : existingTask.updated_at,
+      version: hasChanged ? existingTask.version + 1 : existingTask.version,
+      _dirty: hasChanged,
+    };
+
     await this.taskRepository.update(updatedTask);
     return updatedTask;
   }
@@ -168,14 +182,26 @@ export class TaskService {
 
   async reorderTasks(orderedTasks: Task[]): Promise<void> {
     if (orderedTasks.length === 0) return;
+
+    // Проверяем, изменился ли хотя бы один sort_order
+    const hasAnyOrderChanged = orderedTasks.some(
+      (task, index) => task.sort_order !== index,
+    );
+    if (!hasAnyOrderChanged) {
+      return; // Ничего не изменилось, не синхронизируем
+    }
+
     const now = new Date().toISOString();
-    const updatedTasks = orderedTasks.map((task, index) => ({
-      ...task,
-      sort_order: index,
-      updated_at: now,
-      version: task.version + 1,
-      _dirty: true,
-    }));
+    const updatedTasks = orderedTasks.map((task, index) => {
+      const orderChanged = task.sort_order !== index;
+      return {
+        ...task,
+        sort_order: index,
+        updated_at: orderChanged ? now : task.updated_at,
+        version: orderChanged ? task.version + 1 : task.version,
+        _dirty: orderChanged,
+      };
+    });
     await this.taskRepository.bulkUpsert(updatedTasks);
   }
 

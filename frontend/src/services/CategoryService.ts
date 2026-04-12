@@ -1,5 +1,6 @@
 import type { Category } from "@/types/entities";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class CategoryService {
   constructor(private readonly categoryRepository: CategoryRepository) {}
@@ -47,14 +48,26 @@ export class CategoryService {
 
   async reorderCategories(orderedCategories: Category[]): Promise<void> {
     if (orderedCategories.length === 0) return;
+
+    // Проверяем, изменился ли хотя бы один sort_order
+    const hasAnyOrderChanged = orderedCategories.some(
+      (category, index) => category.sort_order !== index,
+    );
+    if (!hasAnyOrderChanged) {
+      return; // Ничего не изменилось, не синхронизируем
+    }
+
     const now = new Date().toISOString();
-    const updated = orderedCategories.map((category, index) => ({
-      ...category,
-      sort_order: index,
-      updated_at: now,
-      version: category.version + 1,
-      _dirty: true,
-    }));
+    const updated = orderedCategories.map((category, index) => {
+      const orderChanged = category.sort_order !== index;
+      return {
+        ...category,
+        sort_order: index,
+        updated_at: orderChanged ? now : category.updated_at,
+        version: orderChanged ? category.version + 1 : category.version,
+        _dirty: orderChanged,
+      };
+    });
     await this.categoryRepository.bulkUpsert(updated);
   }
 
@@ -66,14 +79,29 @@ export class CategoryService {
     if (!existingCategory) {
       throw new Error(`Category not found: ${id}`);
     }
-    const updatedCategory: Category = {
+
+    // Создаем обновленную версию без изменения метаданных
+    const candidateCategory: Category = {
       ...existingCategory,
       ...changes,
       id,
-      updated_at: new Date().toISOString(),
-      version: existingCategory.version + 1,
-      _dirty: true,
     };
+
+    // Проверяем, действительно ли что-то изменилось
+    const hasChanged = hasEntityChanged(existingCategory, candidateCategory);
+
+    // Применяем метаданные только если есть изменения
+    const updatedCategory: Category = {
+      ...candidateCategory,
+      updated_at: hasChanged
+        ? new Date().toISOString()
+        : existingCategory.updated_at,
+      version: hasChanged
+        ? existingCategory.version + 1
+        : existingCategory.version,
+      _dirty: hasChanged,
+    };
+
     await this.categoryRepository.update(updatedCategory);
     return updatedCategory;
   }

@@ -2,6 +2,7 @@ import type { Goal } from "@/types/entities";
 import type { GoalStatus } from "@/types/common";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { GOAL_STATUS_SORT_ORDER } from "@/constants";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class GoalService {
   constructor(private readonly goalRepository: GoalRepository) {}
@@ -15,9 +16,7 @@ export class GoalService {
     return this.goalRepository.getById(id);
   }
 
-  async create(
-    partialGoal: Pick<Goal, "name"> & Partial<Goal>,
-  ): Promise<Goal> {
+  async create(partialGoal: Pick<Goal, "name"> & Partial<Goal>): Promise<Goal> {
     const existingGoals = await this.goalRepository.getActive();
     const now = new Date().toISOString();
     const goal: Goal = {
@@ -43,14 +42,27 @@ export class GoalService {
     if (!existingGoal) {
       throw new Error(`Goal not found: ${id}`);
     }
-    const updatedGoal: Goal = {
+
+    // Создаем обновленную версию без изменения метаданных
+    const candidateGoal: Goal = {
       ...existingGoal,
       ...changes,
       id,
-      updated_at: new Date().toISOString(),
-      version: existingGoal.version + 1,
-      _dirty: true,
     };
+
+    // Проверяем, действительно ли что-то изменилось
+    const hasChanged = hasEntityChanged(existingGoal, candidateGoal);
+
+    // Применяем метаданные только если есть изменения
+    const updatedGoal: Goal = {
+      ...candidateGoal,
+      updated_at: hasChanged
+        ? new Date().toISOString()
+        : existingGoal.updated_at,
+      version: hasChanged ? existingGoal.version + 1 : existingGoal.version,
+      _dirty: hasChanged,
+    };
+
     await this.goalRepository.update(updatedGoal);
     return updatedGoal;
   }
@@ -89,14 +101,26 @@ export class GoalService {
 
   async reorderGoals(orderedGoals: Goal[]): Promise<void> {
     if (orderedGoals.length === 0) return;
+
+    // Проверяем, изменился ли хотя бы один sort_order
+    const hasAnyOrderChanged = orderedGoals.some(
+      (goal, index) => goal.sort_order !== index,
+    );
+    if (!hasAnyOrderChanged) {
+      return; // Ничего не изменилось, не синхронизируем
+    }
+
     const now = new Date().toISOString();
-    const updatedGoals = orderedGoals.map((goal, index) => ({
-      ...goal,
-      sort_order: index,
-      updated_at: now,
-      version: goal.version + 1,
-      _dirty: true,
-    }));
+    const updatedGoals = orderedGoals.map((goal, index) => {
+      const orderChanged = goal.sort_order !== index;
+      return {
+        ...goal,
+        sort_order: index,
+        updated_at: orderChanged ? now : goal.updated_at,
+        version: orderChanged ? goal.version + 1 : goal.version,
+        _dirty: orderChanged,
+      };
+    });
     await this.goalRepository.bulkUpsert(updatedGoals);
   }
 }
