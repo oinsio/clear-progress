@@ -5,7 +5,7 @@ import { AddTaskInput } from "./AddTaskInput";
 function renderInput(
   overrides: {
     targetBox?: string;
-    onAdd?: (title: string) => Promise<void>;
+    onAdd?: (name: string) => Promise<void>;
     onCancel?: () => void;
   } = {},
 ) {

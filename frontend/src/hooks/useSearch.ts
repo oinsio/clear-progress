@@ -39,9 +39,9 @@ export function useSearch(
       setIsSearching(true);
       try {
         const [foundTasks, foundGoals, foundIdeas] = await Promise.all([
-          taskService.searchByTitle(query),
-          goalService.searchByTitle(query),
-          ideaService.searchByTitle(query),
+          taskService.searchByName(query),
+          goalService.searchByName(query),
+          ideaService.searchByName(query),
         ]);
         setTasks(foundTasks);
         setGoals(foundGoals);

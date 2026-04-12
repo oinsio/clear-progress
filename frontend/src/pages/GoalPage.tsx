@@ -161,7 +161,7 @@ export default function GoalPage({
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-800">
-            {t("goal.editTitle")}
+            {t("goal.editName")}
           </h2>
           <button
             type="button"
@@ -174,7 +174,7 @@ export default function GoalPage({
         </div>
 
         <div className="px-4 py-4 flex flex-col gap-4">
-          {/* Cover + Title row */}
+          {/* Cover + Name row */}
           <div className="flex items-center gap-3">
             <GoalCoverPicker
               previewSrc={coverPreviewSrc}
@@ -182,11 +182,11 @@ export default function GoalPage({
               onRemove={handleCoverRemove}
             />
             <div className="flex-1">
-              <label htmlFor="goal-edit-title" className="sr-only">
+              <label htmlFor="goal-edit-name" className="sr-only">
                 {t("goal.nameLabel")}
               </label>
               <input
-                id="goal-edit-title"
+                id="goal-edit-name"
                 type="text"
                 value={currentName}
                 onChange={(event) => setName(event.target.value)}
@@ -294,7 +294,7 @@ export default function GoalPage({
             className="absolute inset-0 bg-white/95 rounded-t-2xl flex flex-col items-center justify-center gap-4 px-6"
           >
             <p className="text-base font-medium text-gray-800 text-center">
-              {t("goal.deleteConfirmTitle")}
+              {t("goal.deleteConfirmName")}
             </p>
             <p className="text-sm text-gray-500 text-center">{currentName}</p>
             <div className="flex gap-3 w-full">

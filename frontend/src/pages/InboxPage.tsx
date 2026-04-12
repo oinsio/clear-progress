@@ -355,7 +355,7 @@ export default function InboxPage() {
   }, []);
 
   const handleAddTaskSubmit = useCallback(
-    async (title: string) => {
+    async (name: string) => {
       const targetBox =
         filterMode === "inbox"
           ? BOX.INBOX
@@ -368,7 +368,7 @@ export default function InboxPage() {
         [BOX.WEEK]: createWeekTask,
         [BOX.LATER]: createLaterTask,
       };
-      await createFunctions[targetBox](title);
+      await createFunctions[targetBox](name);
       setIsAddingTask(false);
     },
     [

@@ -323,13 +323,13 @@ describe("IdeaService", () => {
     });
   });
 
-  describe("searchByTitle", () => {
+  describe("searchByName", () => {
     it("should return empty array when no ideas match the query", async () => {
       mockIdeaRepository = createMockIdeaRepository({
         getActive: vi.fn().mockResolvedValue([buildIdea({ name: "Buy milk" })]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("piano");
+      const results = await ideaService.searchByName("piano");
       expect(results).toEqual([]);
     });
 
@@ -340,7 +340,7 @@ describe("IdeaService", () => {
         getActive: vi.fn().mockResolvedValue([matchingIdea, nonMatchingIdea]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("piano");
+      const results = await ideaService.searchByName("piano");
       expect(results).toEqual([matchingIdea]);
     });
 
@@ -357,7 +357,7 @@ describe("IdeaService", () => {
         getActive: vi.fn().mockResolvedValue([matchingIdea, nonMatchingIdea]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("piano");
+      const results = await ideaService.searchByName("piano");
       expect(results).toEqual([matchingIdea]);
     });
 
@@ -377,7 +377,7 @@ describe("IdeaService", () => {
           .mockResolvedValue([matchInName, matchInDescription, noMatch]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("piano");
+      const results = await ideaService.searchByName("piano");
       expect(results).toHaveLength(2);
       expect(results).toContain(matchInName);
       expect(results).toContain(matchInDescription);
@@ -389,7 +389,7 @@ describe("IdeaService", () => {
         getActive: vi.fn().mockResolvedValue([idea]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("piano");
+      const results = await ideaService.searchByName("piano");
       expect(results).toHaveLength(1);
     });
 
@@ -402,7 +402,7 @@ describe("IdeaService", () => {
         getActive: vi.fn().mockResolvedValue([idea]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("piano");
+      const results = await ideaService.searchByName("piano");
       expect(results).toHaveLength(1);
     });
 
@@ -412,7 +412,7 @@ describe("IdeaService", () => {
         getActive: vi.fn().mockResolvedValue([idea]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("pod");
+      const results = await ideaService.searchByName("pod");
       expect(results).toHaveLength(1);
     });
 
@@ -424,13 +424,13 @@ describe("IdeaService", () => {
         getActive: vi.fn().mockResolvedValue([ideaA, ideaB, ideaC]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("travel");
+      const results = await ideaService.searchByName("travel");
       expect(results).toHaveLength(2);
     });
 
     it("should call repository.getActive", async () => {
       const ideaService = new IdeaService(mockIdeaRepository);
-      await ideaService.searchByTitle("test");
+      await ideaService.searchByName("test");
       expect(mockIdeaRepository.getActive).toHaveBeenCalled();
     });
 
@@ -453,7 +453,7 @@ describe("IdeaService", () => {
         getActive: vi.fn().mockResolvedValue(ideas),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("idea");
+      const results = await ideaService.searchByName("idea");
       expect(results[0].updated_at).toBe("2025-01-03T10:00:00.000Z");
       expect(results[1].updated_at).toBe("2025-01-02T10:00:00.000Z");
       expect(results[2].updated_at).toBe("2025-01-01T10:00:00.000Z");
@@ -472,7 +472,7 @@ describe("IdeaService", () => {
         getActive: vi.fn().mockResolvedValue([oldIdea, newIdea]),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
-      const results = await ideaService.searchByTitle("idea");
+      const results = await ideaService.searchByName("idea");
       expect(results[0].name).toBe("New idea");
       expect(results[1].name).toBe("Old idea");
     });

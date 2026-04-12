@@ -66,10 +66,10 @@ describe("GoalPage", () => {
   });
 
   it("should show goal name in input", () => {
-    const goal = buildGoal({ name: "My Goal Title" });
+    const goal = buildGoal({ name: "My Goal Name" });
     mockUseGoal.mockReturnValue(buildGoalHook({ goal }));
     renderGoalPage();
-    expect(screen.getByTestId("goal-name-input")).toHaveValue("My Goal Title");
+    expect(screen.getByTestId("goal-name-input")).toHaveValue("My Goal Name");
   });
 
   it("should show goal description in textarea", () => {
@@ -83,18 +83,18 @@ describe("GoalPage", () => {
 
   it("should call updateGoal with new name on save", async () => {
     const updateGoal = vi.fn().mockResolvedValue(undefined);
-    const goal = buildGoal({ name: "Old Title" });
+    const goal = buildGoal({ name: "Old Name" });
     mockUseGoal.mockReturnValue(buildGoalHook({ goal, updateGoal }));
     renderGoalPage();
 
     fireEvent.change(screen.getByTestId("goal-name-input"), {
-      target: { value: "New Title" },
+      target: { value: "New Name" },
     });
     fireEvent.click(screen.getByTestId("goal-save-button"));
 
     await waitFor(() => {
       expect(updateGoal).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "New Title" }),
+        expect.objectContaining({ name: "New Name" }),
       );
     });
   });

@@ -11,14 +11,14 @@ describe("GoalService", () => {
     mockGoalRepository = createMockGoalRepository();
   });
 
-  describe("searchByTitle", () => {
+  describe("searchByName", () => {
     it("should return empty array when no goals match", async () => {
       const goals = [buildGoal({ name: "Learn piano" })];
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(goals),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("nonexistent");
+      const results = await goalService.searchByName("nonexistent");
       expect(results).toEqual([]);
     });
 
@@ -32,7 +32,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue(goals),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("learn");
+      const results = await goalService.searchByName("learn");
       expect(results).toHaveLength(2);
     });
 
@@ -42,7 +42,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([goal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("import");
+      const results = await goalService.searchByName("import");
       expect(results).toEqual([goal]);
     });
 
@@ -59,7 +59,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([matchingGoal, nonMatchingGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("programming");
+      const results = await goalService.searchByName("programming");
       expect(results).toEqual([matchingGoal]);
     });
 
@@ -79,7 +79,7 @@ describe("GoalService", () => {
           .mockResolvedValue([matchInName, matchInDescription, noMatch]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("programming");
+      const results = await goalService.searchByName("programming");
       expect(results).toHaveLength(2);
       expect(results).toContain(matchInName);
       expect(results).toContain(matchInDescription);
@@ -94,19 +94,19 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([goal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("programming");
+      const results = await goalService.searchByName("programming");
       expect(results).toHaveLength(1);
     });
 
     it("should call getActive on repository", async () => {
       const goalService = new GoalService(mockGoalRepository);
-      await goalService.searchByTitle("query");
+      await goalService.searchByName("query");
       expect(mockGoalRepository.getActive).toHaveBeenCalled();
     });
 
     it("should return empty array when repository returns no goals", async () => {
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("anything");
+      const results = await goalService.searchByName("anything");
       expect(results).toEqual([]);
     });
   });
@@ -460,14 +460,14 @@ describe("GoalService", () => {
     });
   });
 
-  describe("searchByTitle - edge cases", () => {
+  describe("searchByName - edge cases", () => {
     it("should return empty array when query is empty string", async () => {
       const goals = [buildGoal({ name: "Test" })];
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(goals),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("");
+      const results = await goalService.searchByName("");
       expect(results).toEqual(goals);
     });
 
@@ -481,7 +481,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([completedGoal, activeGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("learn");
+      const results = await goalService.searchByName("learn");
       expect(results[0].id).toBe(activeGoal.id);
       expect(results[1].id).toBe(completedGoal.id);
     });
@@ -496,7 +496,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([cancelledGoal, activeGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("learn");
+      const results = await goalService.searchByName("learn");
       expect(results[0].id).toBe(activeGoal.id);
       expect(results[1].id).toBe(cancelledGoal.id);
     });
@@ -514,7 +514,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([completedGoal, cancelledGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("learn");
+      const results = await goalService.searchByName("learn");
       expect(results).toHaveLength(2);
     });
 
@@ -528,7 +528,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([planningGoal, activeGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("learn");
+      const results = await goalService.searchByName("learn");
       expect(results).toHaveLength(2);
     });
 
@@ -544,7 +544,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue(goals),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("goal");
+      const results = await goalService.searchByName("goal");
       expect(results[0].status).toBe("in_progress");
       expect(results[1].status).toBe("planning");
       expect(results[2].status).toBe("paused");
@@ -574,7 +574,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue(goals),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("goal");
+      const results = await goalService.searchByName("goal");
       expect(results[0].updated_at).toBe("2025-01-03T10:00:00.000Z");
       expect(results[1].updated_at).toBe("2025-01-02T10:00:00.000Z");
       expect(results[2].updated_at).toBe("2025-01-01T10:00:00.000Z");
@@ -595,7 +595,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([planningGoal, inProgressGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("goal");
+      const results = await goalService.searchByName("goal");
       expect(results[0].status).toBe("in_progress");
       expect(results[1].status).toBe("planning");
     });
@@ -607,7 +607,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([pausedGoal, planningGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("goal");
+      const results = await goalService.searchByName("goal");
       expect(results[0].status).toBe("planning");
       expect(results[1].status).toBe("paused");
     });
@@ -619,7 +619,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([completedGoal, pausedGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("goal");
+      const results = await goalService.searchByName("goal");
       expect(results[0].status).toBe("paused");
       expect(results[1].status).toBe("completed");
     });
@@ -631,7 +631,7 @@ describe("GoalService", () => {
         getActive: vi.fn().mockResolvedValue([cancelledGoal, completedGoal]),
       });
       const goalService = new GoalService(mockGoalRepository);
-      const results = await goalService.searchByTitle("goal");
+      const results = await goalService.searchByName("goal");
       expect(results[0].status).toBe("completed");
       expect(results[1].status).toBe("cancelled");
     });

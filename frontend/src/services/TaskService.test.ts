@@ -964,7 +964,7 @@ describe("TaskService", () => {
     });
   });
 
-  describe("searchByTitle", () => {
+  describe("searchByName", () => {
     const setupSearchTest = async (
       tasks: Task[],
       query: string,
@@ -976,7 +976,7 @@ describe("TaskService", () => {
         mockTaskRepository,
         mockChecklistRepository,
       );
-      return await taskService.searchByTitle(query);
+      return await taskService.searchByName(query);
     };
 
     it("should return empty array when no tasks match", async () => {
@@ -1012,22 +1012,22 @@ describe("TaskService", () => {
     });
 
     it("should return tasks matching in either name or description", async () => {
-      const matchInTitle = buildTask({
+      const matchInName = buildTask({
         name: "Budget review",
         description: "Quarterly report",
       });
-      const matchInNotes = buildTask({
+      const matchInDescription = buildTask({
         name: "Team meeting",
         description: "Review budget proposals",
       });
       const noMatch = buildTask({ name: "Lunch", description: "Restaurant" });
       const results = await setupSearchTest(
-        [matchInTitle, matchInNotes, noMatch],
+        [matchInName, matchInDescription, noMatch],
         "budget",
       );
       expect(results).toHaveLength(2);
-      expect(results).toContain(matchInTitle);
-      expect(results).toContain(matchInNotes);
+      expect(results).toContain(matchInName);
+      expect(results).toContain(matchInDescription);
     });
 
     it("should match case-insensitively in description", async () => {

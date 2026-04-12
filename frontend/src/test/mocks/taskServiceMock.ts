@@ -24,7 +24,7 @@ export function createMockTaskService(
       getByCategoryId: vi.fn().mockResolvedValue([]),
       getContextTaskCounts: vi.fn().mockResolvedValue({}),
       getByContextId: vi.fn().mockResolvedValue([]),
-      searchByTitle: vi.fn().mockResolvedValue([]),
+      searchByName: vi.fn().mockResolvedValue([]),
       getGoalTaskCounts: vi.fn().mockResolvedValue({}),
     },
     overrides,

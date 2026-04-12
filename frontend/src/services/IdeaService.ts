@@ -57,7 +57,7 @@ export class IdeaService {
     return this.update(id, { is_deleted: false });
   }
 
-  async searchByTitle(query: string): Promise<Idea[]> {
+  async searchByName(query: string): Promise<Idea[]> {
     const allIdeas = await this.ideaRepository.getActive();
     const lowerQuery = query.toLowerCase();
     return allIdeas

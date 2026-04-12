@@ -15,7 +15,7 @@ export interface DeletedEntities {
   contexts: Context[];
   categories: Category[];
   checklistItems: ChecklistItem[];
-  taskTitleMap: Map<string, string>;
+  taskNameMap: Map<string, string>;
   isLoading: boolean;
   reload: () => Promise<void>;
 }
@@ -26,7 +26,7 @@ export function useDeletedEntities(): DeletedEntities {
   const [contexts, setContexts] = useState<Context[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
-  const [taskTitleMap, setTaskTitleMap] = useState<Map<string, string>>(
+  const [taskNameMap, setTaskNameMap] = useState<Map<string, string>>(
     new Map(),
   );
   const [isLoading, setIsLoading] = useState(true);
@@ -90,10 +90,10 @@ export function useDeletedEntities(): DeletedEntities {
 
     const allTasksSubscription = liveQuery(() => db.tasks.toArray()).subscribe({
       next: (allTasks) => {
-        const newTaskTitleMap = new Map<string, string>(
+        const newTaskNameMap = new Map<string, string>(
           allTasks.map((task) => [task.id, task.name]),
         );
-        setTaskTitleMap(newTaskTitleMap);
+        setTaskNameMap(newTaskNameMap);
         checkAllLoaded();
       },
     });
@@ -118,7 +118,7 @@ export function useDeletedEntities(): DeletedEntities {
     contexts,
     categories,
     checklistItems,
-    taskTitleMap,
+    taskNameMap,
     isLoading,
     reload: noopReload,
   };

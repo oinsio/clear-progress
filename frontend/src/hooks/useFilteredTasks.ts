@@ -8,7 +8,7 @@ import { useTaskMutations } from "./useTaskMutations";
 export interface UseFilteredTasksReturn {
   tasks: Task[];
   isLoading: boolean;
-  createTask: (title: string, box: Box, notes?: string) => Promise<void>;
+  createTask: (name: string, box: Box, description?: string) => Promise<void>;
   completeTask: (id: string) => Promise<string | null>;
   updateTask: (id: string, changes: Partial<Task>) => Promise<void>;
   moveTask: (id: string, box: Box) => Promise<void>;

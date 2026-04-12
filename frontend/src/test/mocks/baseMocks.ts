@@ -10,6 +10,6 @@ export function createBaseCrudMocks() {
     create: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockResolvedValue(undefined),
     softDelete: vi.fn().mockResolvedValue(undefined),
-    searchByTitle: vi.fn().mockResolvedValue([]),
+    searchByName: vi.fn().mockResolvedValue([]),
   };
 }

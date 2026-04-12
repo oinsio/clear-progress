@@ -45,7 +45,7 @@ export interface EntityDetailLayoutProps {
   i18nKeys: EntityDetailLayoutI18nKeys;
   onSaveEntity: (name: string) => Promise<void>;
   onDeleteEntity: () => Promise<void>;
-  onCreateTask: (title: string, box: Box, notes: string) => Promise<void>;
+  onCreateTask: (name: string, box: Box, description: string) => Promise<void>;
   onCompleteTask: (id: string) => void;
   onUpdateTask: (id: string, changes: Partial<Task>) => Promise<void>;
   onMoveTask: (id: string, box: Box) => Promise<void>;
@@ -274,8 +274,8 @@ export function EntityDetailLayout({
             {isAddingTask && (
               <AddTaskInput
                 targetBox={t(`box.${defaultBox}`)}
-                onAdd={async (title) => {
-                  await onCreateTask(title, defaultBox, "");
+                onAdd={async (name) => {
+                  await onCreateTask(name, defaultBox, "");
                   setIsAddingTask(false);
                 }}
                 onCancel={() => setIsAddingTask(false)}

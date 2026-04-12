@@ -63,7 +63,7 @@ export function GoalItem({
           />
         </div>
 
-        {/* Title + task count */}
+        {/* Name + task count */}
         <div className="flex-1 min-w-0">
           <p className="text-sm text-gray-800 font-medium leading-snug break-words">
             {goal.name}

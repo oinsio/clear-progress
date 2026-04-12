@@ -106,7 +106,7 @@ export function ConfirmFullSyncDialog({
           data-testid="full-sync-dialog-name"
           className="text-base font-semibold text-gray-900 mb-2"
         >
-          {t("settings.fullSyncConfirmTitle")}
+          {t("settings.fullSyncConfirmName")}
         </h2>
 
         {currentStep === "idle" && (

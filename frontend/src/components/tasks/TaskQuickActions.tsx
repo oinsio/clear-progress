@@ -10,7 +10,7 @@ import * as React from "react";
 
 type QuickActionMode =
   | "none"
-  | "notes"
+  | "description"
   | "goal"
   | "box"
   | "context"
@@ -49,36 +49,36 @@ export function TaskQuickActions({
 }: TaskQuickActionsProps) {
   const { t } = useTranslation();
   const [activeMode, setActiveMode] = useState<QuickActionMode>("none");
-  const [notesValue, setNotesValue] = useState(task.description);
+  const [descriptionValue, setDescriptionValue] = useState(task.description);
 
   const handleModeToggle = useCallback((mode: QuickActionMode) => {
     setActiveMode((current) => (current === mode ? "none" : mode));
   }, []);
 
-  const handleNotesSave = useCallback(async () => {
-    await onUpdate(task.id, { description: notesValue });
+  const handleDescriptionSave = useCallback(async () => {
+    await onUpdate(task.id, { description: descriptionValue });
     setActiveMode("none");
-  }, [task.id, notesValue, onUpdate]);
+  }, [task.id, descriptionValue, onUpdate]);
 
-  const handleNotesToggle = useCallback(async () => {
-    if (activeMode === "notes") {
-      await handleNotesSave();
+  const handleDescriptionToggle = useCallback(async () => {
+    if (activeMode === "description") {
+      await handleDescriptionSave();
     } else {
-      setNotesValue(task.description);
-      setActiveMode("notes");
+      setDescriptionValue(task.description);
+      setActiveMode("description");
     }
-  }, [activeMode, task.description, handleNotesSave]);
+  }, [activeMode, task.description, handleDescriptionSave]);
 
-  const handleNotesKeyDown = useCallback(
+  const handleDescriptionKeyDown = useCallback(
     async (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
-        await handleNotesSave();
+        await handleDescriptionSave();
       } else if (event.key === "Escape") {
         setActiveMode("none");
       }
     },
-    [handleNotesSave],
+    [handleDescriptionSave],
   );
 
   const handleGoalSelect = useCallback(
@@ -113,9 +113,9 @@ export function TaskQuickActions({
     [task.id, onMove],
   );
 
-  const notesButtonClass = cn(
+  const descriptionButtonClass = cn(
     "flex items-center justify-center w-9 h-9 rounded-lg transition-colors",
-    activeMode === "notes"
+    activeMode === "description"
       ? "bg-accent/15 text-accent"
       : task.description
         ? "text-accent hover:bg-accent/10"
@@ -158,10 +158,10 @@ export function TaskQuickActions({
       <div className="flex items-center gap-1 px-3 py-1.5">
         <button
           type="button"
-          aria-label={t("task.editNotes")}
-          aria-pressed={activeMode === "notes"}
-          onClick={handleNotesToggle}
-          className={notesButtonClass}
+          aria-label={t("task.editDescription")}
+          aria-pressed={activeMode === "description"}
+          onClick={handleDescriptionToggle}
+          className={descriptionButtonClass}
         >
           <FileText size={17} />
         </button>
@@ -219,16 +219,16 @@ export function TaskQuickActions({
         </button>
       </div>
 
-      {/* Notes panel */}
-      {activeMode === "notes" && (
+      {/* Description panel */}
+      {activeMode === "description" && (
         <div className="px-3 pb-2">
           <textarea
             data-testid="quick-description-input"
-            value={notesValue}
-            onChange={(event) => setNotesValue(event.target.value)}
-            onKeyDown={handleNotesKeyDown}
-            onBlur={() => void handleNotesSave()}
-            placeholder={t("taskEdit.notesPlaceholder")}
+            value={descriptionValue}
+            onChange={(event) => setDescriptionValue(event.target.value)}
+            onKeyDown={handleDescriptionKeyDown}
+            onBlur={() => void handleDescriptionSave()}
+            placeholder={t("taskEdit.descriptionPlaceholder")}
             rows={3}
             autoFocus
             className="w-full text-sm text-gray-700 placeholder:text-gray-400 bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none"

@@ -72,7 +72,7 @@ describe("ConfirmFullSyncDialog", () => {
   it("should show confirmation name initially", () => {
     renderDialog();
     expect(screen.getByTestId("full-sync-dialog-name")).toHaveTextContent(
-      "settings.fullSyncConfirmTitle",
+      "settings.fullSyncConfirmName",
     );
   });
 

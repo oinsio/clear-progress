@@ -908,7 +908,7 @@ describe("SyncService", () => {
           expect.objectContaining({ revision: 5, _dirty: false }),
         );
         expect(taskRepository.update).not.toHaveBeenCalledWith(
-          expect.objectContaining({ title: "Server Version" }),
+          expect.objectContaining({ name: "Server Version" }),
         );
       });
     });

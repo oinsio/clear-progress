@@ -106,7 +106,7 @@ export default function GoalDetailPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // edit form state
-  const [editTitle, setEditTitle] = useState("");
+  const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null);
   const [isCoverRemoved, setIsCoverRemoved] = useState(false);
@@ -120,7 +120,7 @@ export default function GoalDetailPage() {
     existingCoverUrl,
   });
 
-  const editTitleTextareaRef = useAutoResizeTextarea(editTitle);
+  const editNameTextareaRef = useAutoResizeTextarea(editName);
   const editDescriptionTextareaRef = useAutoResizeTextarea(editDescription);
 
   const hasLoadedRef = useRef(false);
@@ -190,7 +190,7 @@ export default function GoalDetailPage() {
   );
 
   const handleStartEdit = useCallback(() => {
-    setEditTitle(goal?.name ?? "");
+    setEditName(goal?.name ?? "");
     setEditDescription(goal?.description ?? "");
     setPendingCoverFile(null);
     setIsCoverRemoved(false);
@@ -215,7 +215,7 @@ export default function GoalDetailPage() {
     setIsCoverRemoved(true);
   }, []);
 
-  const canSave = editTitle.trim().length > 0 && !isSaving;
+  const canSave = editName.trim().length > 0 && !isSaving;
 
   const handleSave = useCallback(async () => {
     if (!canSave || !id) return;
@@ -242,7 +242,7 @@ export default function GoalDetailPage() {
       }
 
       await updateGoal({
-        name: editTitle.trim(),
+        name: editName.trim(),
         description: editDescription.trim(),
         cover_file_id: newCoverFileId,
       });
@@ -260,7 +260,7 @@ export default function GoalDetailPage() {
     pendingCoverFile,
     isCoverRemoved,
     updateGoal,
-    editTitle,
+    editName,
     editDescription,
     reloadGoal,
     t,
@@ -354,7 +354,7 @@ export default function GoalDetailPage() {
                 {isEditing ? (
                   /* Edit mode */
                   <div className="px-4 pt-4 flex flex-col gap-4">
-                    {/* Cover + Title row */}
+                    {/* Cover + Name row */}
                     <div className="flex items-center gap-3">
                       <GoalCoverPicker
                         previewSrc={coverPreviewSrc}
@@ -362,16 +362,16 @@ export default function GoalDetailPage() {
                         onRemove={handleCoverRemove}
                       />
                       <div className="flex-1">
-                        <label htmlFor="goal-edit-title" className="sr-only">
+                        <label htmlFor="goal-edit-name" className="sr-only">
                           {t("goal.nameLabel")}
                         </label>
                         <textarea
-                          ref={editTitleTextareaRef}
-                          id="goal-edit-title"
+                          ref={editNameTextareaRef}
+                          id="goal-edit-name"
                           autoFocus
                           rows={1}
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
                           placeholder={t("goal.namePlaceholder")}
                           className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
                           data-testid="goal-name-input"
@@ -479,10 +479,10 @@ export default function GoalDetailPage() {
                         className="absolute inset-0 bg-white/95 rounded-b-none flex flex-col items-center justify-center gap-4 px-6 z-10"
                       >
                         <p className="text-base font-medium text-gray-800 text-center">
-                          {t("goal.deleteConfirmTitle")}
+                          {t("goal.deleteConfirmName")}
                         </p>
                         <p className="text-sm text-gray-500 text-center">
-                          {editTitle}
+                          {editName}
                         </p>
                         <div className="flex gap-3 w-full">
                           <button
@@ -520,7 +520,7 @@ export default function GoalDetailPage() {
                       />
                     </div>
 
-                    {/* Title + description + status */}
+                    {/* Name + description + status */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800 font-medium leading-snug">
                         {goal.name}
@@ -560,7 +560,7 @@ export default function GoalDetailPage() {
                       {/* Edit goal button */}
                       <button
                         type="button"
-                        aria-label={t("goal.editTitle")}
+                        aria-label={t("goal.editName")}
                         data-testid="edit-goal-button"
                         onClick={handleStartEdit}
                         className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"

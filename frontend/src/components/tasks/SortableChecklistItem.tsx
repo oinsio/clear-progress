@@ -13,7 +13,7 @@ import * as React from "react";
 export interface SortableChecklistItemProps {
   item: ChecklistItem;
   isEditing: boolean;
-  editingTitle: string;
+  editingName: string;
   lastSyncedAt: string | null;
   variant: ChecklistItemVariant;
   toggleAriaLabel: string;
@@ -29,7 +29,7 @@ export interface SortableChecklistItemProps {
 export function SortableChecklistItem({
   item,
   isEditing,
-  editingTitle,
+  editingName,
   lastSyncedAt,
   variant,
   toggleAriaLabel,
@@ -43,7 +43,7 @@ export function SortableChecklistItem({
 }: SortableChecklistItemProps) {
   const { t } = useTranslation();
   const isCompleted = variant === CHECKLIST_ITEM_VARIANT.COMPLETED;
-  const editingTextareaRef = useAutoResizeTextarea(editingTitle);
+  const editingTextareaRef = useAutoResizeTextarea(editingName);
   const {
     attributes,
     listeners,
@@ -118,7 +118,7 @@ export function SortableChecklistItem({
           ref={editingTextareaRef}
           rows={1}
           data-testid={`checklist-item-edit-input-${item.id}`}
-          value={editingTitle}
+          value={editingName}
           onChange={(event) => onEditChange(event.target.value)}
           onBlur={onEditBlur}
           onKeyDown={onEditKeyDown}
@@ -130,7 +130,7 @@ export function SortableChecklistItem({
         />
       ) : (
         <span
-          data-testid={`checklist-item-title-${item.id}`}
+          data-testid={`checklist-item-name-${item.id}`}
           onClick={onStartEdit}
           className={cn(
             "flex-1 text-sm cursor-text",

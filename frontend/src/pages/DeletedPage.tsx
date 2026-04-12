@@ -19,14 +19,14 @@ const SECTION_KEY_CHECKLISTS = "deleted-checklists";
 
 interface CollapsibleSectionProps {
   sectionKey: string;
-  title: string;
+  name: string;
   count: number;
   children: React.ReactNode;
 }
 
 function CollapsibleSection({
   sectionKey,
-  title,
+  name,
   count,
   children,
 }: CollapsibleSectionProps) {
@@ -41,7 +41,7 @@ function CollapsibleSection({
         className="w-full flex items-center justify-between px-4 py-2 bg-white border-b border-gray-100 sticky top-0 z-10"
       >
         <h2 className="text-sm font-semibold text-accent">
-          {title}
+          {name}
           {count > 0 && <span className="ml-2 text-accent/50">({count})</span>}
         </h2>
         <ChevronDown
@@ -59,14 +59,14 @@ function CollapsibleSection({
 
 interface DeletedSectionProps<T extends { id: string }> {
   sectionKey: string;
-  title: string;
+  name: string;
   items: T[];
   renderItem: (item: T) => React.ReactNode;
 }
 
 function DeletedSection<T extends { id: string }>({
   sectionKey,
-  title,
+  name,
   items,
   renderItem,
 }: DeletedSectionProps<T>) {
@@ -75,7 +75,7 @@ function DeletedSection<T extends { id: string }>({
   return (
     <CollapsibleSection
       sectionKey={sectionKey}
-      title={title}
+      name={name}
       count={items.length}
     >
       {items.length === 0 ? (
@@ -108,7 +108,7 @@ export default function DeletedPage() {
     contexts,
     categories,
     checklistItems,
-    taskTitleMap,
+    taskNameMap,
     isLoading,
   } = useDeletedEntities();
   const {
@@ -159,7 +159,7 @@ export default function DeletedPage() {
               aria-hidden="true"
             />
             <h1 className="text-lg font-semibold text-accent">
-              {t("deleted.pageTitle")}
+              {t("deleted.pageName")}
             </h1>
           </div>
           <button
@@ -191,7 +191,7 @@ export default function DeletedPage() {
               <>
                 <DeletedSection
                   sectionKey={SECTION_KEY_TASKS}
-                  title={t("deleted.tasks")}
+                  name={t("deleted.tasks")}
                   items={tasks}
                   renderItem={(task) => (
                     <div className="flex items-center justify-between gap-2">
@@ -202,7 +202,7 @@ export default function DeletedPage() {
                         type="button"
                         onClick={() => void restoreTask(task.id)}
                         aria-label={t("deleted.restoreAriaLabel", {
-                          title: task.name,
+                          name: task.name,
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
@@ -214,20 +214,20 @@ export default function DeletedPage() {
 
                 <DeletedSection
                   sectionKey={SECTION_KEY_CHECKLISTS}
-                  title={t("deleted.checklists")}
+                  name={t("deleted.checklists")}
                   items={checklistItems}
                   renderItem={(item) => {
-                    const parentTaskTitle = taskTitleMap.get(item.task_id);
+                    const parentTaskName = taskNameMap.get(item.task_id);
                     return (
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <span className="text-sm text-gray-400 line-through">
                             {item.name}
                           </span>
-                          {parentTaskTitle !== undefined && (
+                          {parentTaskName !== undefined && (
                             <p className="text-xs text-gray-300 mt-0.5">
                               {t("deleted.checklistParent", {
-                                task: parentTaskTitle,
+                                task: parentTaskName,
                               })}
                             </p>
                           )}
@@ -236,7 +236,7 @@ export default function DeletedPage() {
                           type="button"
                           onClick={() => void restoreChecklistItem(item.id)}
                           aria-label={t("deleted.restoreAriaLabel", {
-                            title: item.name,
+                            name: item.name,
                           })}
                           className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                         >
@@ -249,7 +249,7 @@ export default function DeletedPage() {
 
                 <DeletedSection
                   sectionKey={SECTION_KEY_GOALS}
-                  title={t("deleted.goals")}
+                  name={t("deleted.goals")}
                   items={goals}
                   renderItem={(goal) => (
                     <div className="flex items-center justify-between gap-2">
@@ -260,7 +260,7 @@ export default function DeletedPage() {
                         type="button"
                         onClick={() => void restoreGoal(goal.id)}
                         aria-label={t("deleted.restoreAriaLabel", {
-                          title: goal.name,
+                          name: goal.name,
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
@@ -272,7 +272,7 @@ export default function DeletedPage() {
 
                 <DeletedSection
                   sectionKey={SECTION_KEY_CONTEXTS}
-                  title={t("deleted.contexts")}
+                  name={t("deleted.contexts")}
                   items={contexts}
                   renderItem={(context) => (
                     <div className="flex items-center justify-between gap-2">
@@ -283,7 +283,7 @@ export default function DeletedPage() {
                         type="button"
                         onClick={() => void restoreContext(context.id)}
                         aria-label={t("deleted.restoreAriaLabel", {
-                          title: context.name,
+                          name: context.name,
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
@@ -295,7 +295,7 @@ export default function DeletedPage() {
 
                 <DeletedSection
                   sectionKey={SECTION_KEY_CATEGORIES}
-                  title={t("deleted.categories")}
+                  name={t("deleted.categories")}
                   items={categories}
                   renderItem={(category) => (
                     <div className="flex items-center justify-between gap-2">
@@ -306,7 +306,7 @@ export default function DeletedPage() {
                         type="button"
                         onClick={() => void restoreCategory(category.id)}
                         aria-label={t("deleted.restoreAriaLabel", {
-                          title: category.name,
+                          name: category.name,
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
@@ -333,7 +333,7 @@ export default function DeletedPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              {t("deleted.purgeConfirmTitle")}
+              {t("deleted.purgeConfirmName")}
             </h2>
             <p className="text-sm text-gray-600 mb-4">
               {t("deleted.purgeConfirmMessage")}

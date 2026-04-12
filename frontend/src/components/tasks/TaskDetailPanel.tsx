@@ -191,7 +191,7 @@ function ChecklistSection({
                 key={item.id}
                 item={item}
                 isEditing={editingItemId === item.id}
-                editingTitle={editingItemName}
+                editingName={editingItemName}
                 lastSyncedAt={lastSyncedAt}
                 variant={variant}
                 toggleAriaLabel={getToggleAriaLabel(item)}
@@ -243,10 +243,10 @@ export function TaskDetailPanel({
   const [activeTab, setActiveTab] = useState<ActiveTab>(ACTIVE_TAB.DETAILS);
   const [openSelector, setOpenSelector] = useState<SelectorType | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const [newItemTitle, setNewItemTitle] = useState("");
+  const [newItemName, setNewItemName] = useState("");
 
-  const titleTextareaRef = useAutoResizeTextarea(name);
-  const notesTextareaRef = useAutoResizeTextarea(description);
+  const nameTextareaRef = useAutoResizeTextarea(name);
+  const descriptionTextareaRef = useAutoResizeTextarea(description);
 
   const {
     items,
@@ -279,7 +279,7 @@ export function TaskDetailPanel({
     setActiveTab(ACTIVE_TAB.DETAILS);
     setOpenSelector(null);
     setIsConfirmingDelete(false);
-    setNewItemTitle("");
+    setNewItemName("");
   }, [
     task.id,
     task.name,
@@ -376,20 +376,20 @@ export function TaskDetailPanel({
 
   const handleNewItemKeyDown = useCallback(
     async (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter" && newItemTitle.trim()) {
-        await rawCreateItem(newItemTitle.trim());
-        setNewItemTitle("");
+      if (event.key === "Enter" && newItemName.trim()) {
+        await rawCreateItem(newItemName.trim());
+        setNewItemName("");
       }
     },
-    [newItemTitle, rawCreateItem],
+    [newItemName, rawCreateItem],
   );
 
   const handleNewItemBlur = useCallback(async () => {
-    if (newItemTitle.trim()) {
-      await rawCreateItem(newItemTitle.trim());
-      setNewItemTitle("");
+    if (newItemName.trim()) {
+      await rawCreateItem(newItemName.trim());
+      setNewItemName("");
     }
-  }, [newItemTitle, rawCreateItem]);
+  }, [newItemName, rawCreateItem]);
 
   const activeItems = items.filter((item) => !item.is_completed);
   const completedItems = items.filter((item) => item.is_completed);
@@ -465,13 +465,13 @@ export function TaskDetailPanel({
         </button>
       </div>
 
-      {/* Title field — always visible */}
+      {/* Name field — always visible */}
       <div className="px-4 pt-3 pb-2 flex-shrink-0">
         <label className="text-xs font-medium text-gray-500 mb-1 block">
-          {t("taskEdit.fieldTitle")}
+          {t("taskEdit.fieldName")}
         </label>
         <textarea
-          ref={titleTextareaRef}
+          ref={nameTextareaRef}
           rows={1}
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -515,17 +515,17 @@ export function TaskDetailPanel({
         {/* Details tab */}
         {activeTab === ACTIVE_TAB.DETAILS && openSelector === null && (
           <div className="px-4 py-4 flex flex-col gap-4">
-            {/* Notes */}
+            {/* Description */}
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                {t("taskEdit.fieldNotes")}
+                {t("taskEdit.fieldDescription")}
               </label>
               <textarea
-                ref={notesTextareaRef}
+                ref={descriptionTextareaRef}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 onBlur={() => void handleDescriptionBlur()}
-                placeholder={t("taskEdit.notesPlaceholder")}
+                placeholder={t("taskEdit.descriptionPlaceholder")}
                 className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px]"
                 data-testid="task-detail-description"
               />
@@ -688,10 +688,10 @@ export function TaskDetailPanel({
               }
               onDelete={(id) => void deleteItem(id)}
               getToggleAriaLabel={(item) =>
-                t("taskEdit.checkItemMark", { title: item.name })
+                t("taskEdit.checkItemMark", { name: item.name })
               }
               getDeleteAriaLabel={(item) =>
-                t("taskEdit.checkItemDelete", { title: item.name })
+                t("taskEdit.checkItemDelete", { name: item.name })
               }
             />
 
@@ -705,8 +705,8 @@ export function TaskDetailPanel({
               <input
                 ref={newItemInputRef}
                 type="text"
-                value={newItemTitle}
-                onChange={(event) => setNewItemTitle(event.target.value)}
+                value={newItemName}
+                onChange={(event) => setNewItemName(event.target.value)}
                 onKeyDown={(event) => void handleNewItemKeyDown(event)}
                 onBlur={() => void handleNewItemBlur()}
                 placeholder={t("taskEdit.newChecklistItemPlaceholder")}
@@ -736,10 +736,10 @@ export function TaskDetailPanel({
                 }
                 onDelete={(id) => void deleteItem(id)}
                 getToggleAriaLabel={(item) =>
-                  t("taskEdit.checkItemUnmark", { title: item.name })
+                  t("taskEdit.checkItemUnmark", { name: item.name })
                 }
                 getDeleteAriaLabel={(item) =>
-                  t("taskEdit.checkItemDelete", { title: item.name })
+                  t("taskEdit.checkItemDelete", { name: item.name })
                 }
               />
             )}
@@ -751,7 +751,7 @@ export function TaskDetailPanel({
       {isConfirmingDelete && (
         <div className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center gap-4 px-6">
           <p className="text-base font-medium text-gray-800 text-center">
-            {t("taskEdit.deleteConfirmTitle")}
+            {t("taskEdit.deleteConfirmName")}
           </p>
           <p className="text-sm text-gray-500 text-center">{task.name}</p>
           <div className="flex gap-3 w-full">

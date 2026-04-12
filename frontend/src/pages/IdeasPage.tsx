@@ -106,14 +106,14 @@ export default function IdeasPage() {
   const {
     isAdding: isAddingTask,
     setIsAdding: setIsAddingTask,
-    value: newTaskTitle,
-    setValue: setNewTaskTitle,
+    value: newTaskName,
+    setValue: setNewTaskName,
     handleKeyDown: handleAddTaskKeyDown,
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
 
   const newIdeaTextareaRef = useAutoResizeTextarea(newIdeaName);
-  const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
+  const newTaskTextareaRef = useAutoResizeTextarea(newTaskName);
 
   const activeIdeas = ideas.filter((idea) => !idea.is_deleted);
 
@@ -212,7 +212,7 @@ export default function IdeasPage() {
           {/* Header */}
           <header className="px-4 py-3 border-b border-gray-100">
             <h1 className="text-lg font-semibold text-accent">
-              {t("idea.pageTitle")}
+              {t("idea.pageName")}
             </h1>
           </header>
 
@@ -262,7 +262,7 @@ export default function IdeasPage() {
                     onChange={(event) => setNewIdeaName(event.target.value)}
                     onKeyDown={handleAddIdeaKeyDown}
                     onBlur={handleAddIdeaBlur}
-                    placeholder={t("idea.titlePlaceholder")}
+                    placeholder={t("idea.namePlaceholder")}
                     className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
                     data-testid="add-idea-input"
                   />
@@ -276,8 +276,8 @@ export default function IdeasPage() {
                     ref={newTaskTextareaRef}
                     rows={1}
                     autoFocus
-                    value={newTaskTitle}
-                    onChange={(event) => setNewTaskTitle(event.target.value)}
+                    value={newTaskName}
+                    onChange={(event) => setNewTaskName(event.target.value)}
                     onKeyDown={handleAddTaskKeyDown}
                     onBlur={handleAddTaskBlur}
                     placeholder={t("idea.taskPlaceholder")}

@@ -129,14 +129,14 @@ export default function CategoriesPage() {
   const {
     isAdding: isAddingTask,
     setIsAdding: setIsAddingTask,
-    value: newTaskTitle,
-    setValue: setNewTaskTitle,
+    value: newTaskName,
+    setValue: setNewTaskName,
     handleKeyDown: handleAddTaskKeyDown,
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
 
   const newCategoryTextareaRef = useAutoResizeTextarea(newCategoryName);
-  const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
+  const newTaskTextareaRef = useAutoResizeTextarea(newTaskName);
 
   const activeCategories = categories.filter(
     (category) => !category.is_deleted,
@@ -278,8 +278,8 @@ export default function CategoriesPage() {
                 ref={newTaskTextareaRef}
                 rows={1}
                 autoFocus
-                value={newTaskTitle}
-                onChange={(event) => setNewTaskTitle(event.target.value)}
+                value={newTaskName}
+                onChange={(event) => setNewTaskName(event.target.value)}
                 onKeyDown={handleAddTaskKeyDown}
                 onBlur={handleAddTaskBlur}
                 placeholder={t("category.taskPlaceholder")}

@@ -105,7 +105,7 @@ export function IdeaDetailPanel({
               value={name}
               onChange={(event) => setName(event.target.value)}
               onBlur={() => void handleNameBlur()}
-              placeholder={t("idea.titlePlaceholder")}
+              placeholder={t("idea.namePlaceholder")}
               className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
               data-testid="idea-detail-name"
             />
@@ -136,7 +136,7 @@ export function IdeaDetailPanel({
           className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center gap-4 px-6"
         >
           <p className="text-base font-medium text-gray-800 text-center">
-            {t("idea.deleteConfirmTitle")}
+            {t("idea.deleteConfirmName")}
           </p>
           <p className="text-sm text-gray-500 text-center">{idea.name}</p>
           <div className="flex gap-3 w-full">

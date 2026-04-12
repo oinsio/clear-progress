@@ -128,14 +128,14 @@ export default function ContextsPage() {
   const {
     isAdding: isAddingTask,
     setIsAdding: setIsAddingTask,
-    value: newTaskTitle,
-    setValue: setNewTaskTitle,
+    value: newTaskName,
+    setValue: setNewTaskName,
     handleKeyDown: handleAddTaskKeyDown,
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
 
   const newContextTextareaRef = useAutoResizeTextarea(newContextName);
-  const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
+  const newTaskTextareaRef = useAutoResizeTextarea(newTaskName);
 
   const activeContexts = contexts.filter((context) => !context.is_deleted);
 
@@ -280,8 +280,8 @@ export default function ContextsPage() {
                 ref={newTaskTextareaRef}
                 rows={1}
                 autoFocus
-                value={newTaskTitle}
-                onChange={(event) => setNewTaskTitle(event.target.value)}
+                value={newTaskName}
+                onChange={(event) => setNewTaskName(event.target.value)}
                 onKeyDown={handleAddTaskKeyDown}
                 onBlur={handleAddTaskBlur}
                 placeholder={t("context.taskPlaceholder")}

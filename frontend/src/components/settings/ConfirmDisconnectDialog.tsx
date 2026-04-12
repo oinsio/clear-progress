@@ -30,7 +30,7 @@ export function ConfirmDisconnectDialog({
           data-testid="disconnect-dialog-name"
           className="text-base font-semibold text-gray-900 mb-2"
         >
-          {t("settings.disconnectConfirmTitle")}
+          {t("settings.disconnectConfirmName")}
         </h2>
         <p
           data-testid="disconnect-dialog-description"

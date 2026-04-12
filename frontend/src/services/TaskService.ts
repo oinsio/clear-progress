@@ -223,7 +223,7 @@ export class TaskService {
     return this.sortBySortOrder(tasks);
   }
 
-  async searchByTitle(query: string): Promise<Task[]> {
+  async searchByName(query: string): Promise<Task[]> {
     const allTasks = await this.taskRepository.getActive();
     const lowerQuery = query.toLowerCase();
     const matchingTasks = allTasks.filter(

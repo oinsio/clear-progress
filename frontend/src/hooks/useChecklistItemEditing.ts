@@ -17,9 +17,9 @@ export function useChecklistItemEditing(
 
   const commitItemEdit = useCallback(
     async (id: string) => {
-      const trimmedTitle = editingItemName.trim();
-      if (trimmedTitle) {
-        await updateItem(id, trimmedTitle);
+      const trimmedName = editingItemName.trim();
+      if (trimmedName) {
+        await updateItem(id, trimmedName);
       }
       setEditingItemId(null);
       setEditingItemName("");

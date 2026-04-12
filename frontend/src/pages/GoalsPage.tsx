@@ -102,8 +102,8 @@ export default function GoalsPage() {
   const {
     isAdding: isAddingTask,
     setIsAdding: setIsAddingTask,
-    value: newTaskTitle,
-    setValue: setNewTaskTitle,
+    value: newTaskName,
+    setValue: setNewTaskName,
     handleKeyDown: handleAddTaskKeyDown,
     handleBlur: handleAddTaskBlur,
   } = useInlineAdd(createTask);
@@ -111,14 +111,14 @@ export default function GoalsPage() {
   const {
     isAdding: isAddingGoal,
     setIsAdding: setIsAddingGoal,
-    value: newGoalTitle,
-    setValue: setNewGoalTitle,
+    value: newGoalName,
+    setValue: setNewGoalName,
     handleKeyDown: handleAddGoalKeyDown,
     handleBlur: handleAddGoalBlur,
   } = useInlineAdd((name) => createGoal({ name }));
 
-  const newGoalTextareaRef = useAutoResizeTextarea(newGoalTitle);
-  const newTaskTextareaRef = useAutoResizeTextarea(newTaskTitle);
+  const newGoalTextareaRef = useAutoResizeTextarea(newGoalName);
+  const newTaskTextareaRef = useAutoResizeTextarea(newTaskName);
 
   const activeGoals = goals.filter((goal) => !goal.is_deleted);
 
@@ -190,7 +190,7 @@ export default function GoalsPage() {
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
           <h1 className="text-lg font-semibold text-accent">
-            {t("goal.pageTitle")}
+            {t("goal.pageName")}
           </h1>
         </header>
 
@@ -237,8 +237,8 @@ export default function GoalsPage() {
                   ref={newGoalTextareaRef}
                   rows={1}
                   autoFocus
-                  value={newGoalTitle}
-                  onChange={(event) => setNewGoalTitle(event.target.value)}
+                  value={newGoalName}
+                  onChange={(event) => setNewGoalName(event.target.value)}
                   onKeyDown={handleAddGoalKeyDown}
                   onBlur={handleAddGoalBlur}
                   placeholder={t("goal.namePlaceholder")}
@@ -255,8 +255,8 @@ export default function GoalsPage() {
                   ref={newTaskTextareaRef}
                   rows={1}
                   autoFocus
-                  value={newTaskTitle}
-                  onChange={(event) => setNewTaskTitle(event.target.value)}
+                  value={newTaskName}
+                  onChange={(event) => setNewTaskName(event.target.value)}
                   onKeyDown={handleAddTaskKeyDown}
                   onBlur={handleAddTaskBlur}
                   placeholder={t("goal.taskPlaceholder")}

@@ -46,7 +46,7 @@ describe("useSearch", () => {
   it("should return matching tasks when search is called with a query", async () => {
     const tasks = [buildTask({ name: "Buy groceries" })];
     mockTaskService = createMockTaskService({
-      searchByTitle: vi.fn().mockResolvedValue(tasks),
+      searchByName: vi.fn().mockResolvedValue(tasks),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -62,7 +62,7 @@ describe("useSearch", () => {
   it("should return matching goals when search is called with a query", async () => {
     const goals = [buildGoal({ name: "Learn piano" })];
     mockGoalService = createMockGoalService({
-      searchByTitle: vi.fn().mockResolvedValue(goals),
+      searchByName: vi.fn().mockResolvedValue(goals),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -79,10 +79,10 @@ describe("useSearch", () => {
     const tasks = [buildTask({ name: "Buy groceries" })];
     const goals = [buildGoal({ name: "Buy a house" })];
     mockTaskService = createMockTaskService({
-      searchByTitle: vi.fn().mockResolvedValue(tasks),
+      searchByName: vi.fn().mockResolvedValue(tasks),
     });
     mockGoalService = createMockGoalService({
-      searchByTitle: vi.fn().mockResolvedValue(goals),
+      searchByName: vi.fn().mockResolvedValue(goals),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -96,7 +96,7 @@ describe("useSearch", () => {
     expect(result.current.goals).toEqual(goals);
   });
 
-  it("should call taskService.searchByTitle with the query", async () => {
+  it("should call taskService.searchByName with the query", async () => {
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
     );
@@ -105,10 +105,10 @@ describe("useSearch", () => {
       await result.current.search("meeting");
     });
 
-    expect(mockTaskService.searchByTitle).toHaveBeenCalledWith("meeting");
+    expect(mockTaskService.searchByName).toHaveBeenCalledWith("meeting");
   });
 
-  it("should call goalService.searchByTitle with the query", async () => {
+  it("should call goalService.searchByName with the query", async () => {
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
     );
@@ -117,7 +117,7 @@ describe("useSearch", () => {
       await result.current.search("meeting");
     });
 
-    expect(mockGoalService.searchByTitle).toHaveBeenCalledWith("meeting");
+    expect(mockGoalService.searchByName).toHaveBeenCalledWith("meeting");
   });
 
   it("should return empty tasks and goals when query is empty string", async () => {
@@ -131,8 +131,8 @@ describe("useSearch", () => {
 
     expect(result.current.tasks).toEqual([]);
     expect(result.current.goals).toEqual([]);
-    expect(mockTaskService.searchByTitle).not.toHaveBeenCalled();
-    expect(mockGoalService.searchByTitle).not.toHaveBeenCalled();
+    expect(mockTaskService.searchByName).not.toHaveBeenCalled();
+    expect(mockGoalService.searchByName).not.toHaveBeenCalled();
   });
 
   it("should set isSearching to false after search completes", async () => {
@@ -151,10 +151,10 @@ describe("useSearch", () => {
     const tasks = [buildTask()];
     const goals = [buildGoal()];
     mockTaskService = createMockTaskService({
-      searchByTitle: vi.fn().mockResolvedValue(tasks),
+      searchByName: vi.fn().mockResolvedValue(tasks),
     });
     mockGoalService = createMockGoalService({
-      searchByTitle: vi.fn().mockResolvedValue(goals),
+      searchByName: vi.fn().mockResolvedValue(goals),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -176,7 +176,7 @@ describe("useSearch", () => {
 
   it("should set isSearching to false and clear results when search throws", async () => {
     mockGoalService = createMockGoalService({
-      searchByTitle: vi.fn().mockRejectedValue(new Error("Search failed")),
+      searchByName: vi.fn().mockRejectedValue(new Error("Search failed")),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -197,12 +197,12 @@ describe("useSearch", () => {
       buildTask({ name: "Second task A" }),
       buildTask({ name: "Second task B" }),
     ];
-    const mockSearchByTitle = vi
+    const mockSearchByName = vi
       .fn()
       .mockResolvedValueOnce(firstTasks)
       .mockResolvedValueOnce(secondTasks);
     mockTaskService = createMockTaskService({
-      searchByTitle: mockSearchByTitle,
+      searchByName: mockSearchByName,
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -229,7 +229,7 @@ describe("useSearch", () => {
   it("should return matching ideas when search is called with a query", async () => {
     const ideas = [buildIdea({ name: "Learn piano" })];
     mockIdeaService = createMockIdeaService({
-      searchByTitle: vi.fn().mockResolvedValue(ideas),
+      searchByName: vi.fn().mockResolvedValue(ideas),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -247,13 +247,13 @@ describe("useSearch", () => {
     const goals = [buildGoal({ name: "Buy a house" })];
     const ideas = [buildIdea({ name: "Buy a car" })];
     mockTaskService = createMockTaskService({
-      searchByTitle: vi.fn().mockResolvedValue(tasks),
+      searchByName: vi.fn().mockResolvedValue(tasks),
     });
     mockGoalService = createMockGoalService({
-      searchByTitle: vi.fn().mockResolvedValue(goals),
+      searchByName: vi.fn().mockResolvedValue(goals),
     });
     mockIdeaService = createMockIdeaService({
-      searchByTitle: vi.fn().mockResolvedValue(ideas),
+      searchByName: vi.fn().mockResolvedValue(ideas),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -268,7 +268,7 @@ describe("useSearch", () => {
     expect(result.current.ideas).toEqual(ideas);
   });
 
-  it("should call ideaService.searchByTitle with the query", async () => {
+  it("should call ideaService.searchByName with the query", async () => {
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
     );
@@ -277,10 +277,10 @@ describe("useSearch", () => {
       await result.current.search("meeting");
     });
 
-    expect(mockIdeaService.searchByTitle).toHaveBeenCalledWith("meeting");
+    expect(mockIdeaService.searchByName).toHaveBeenCalledWith("meeting");
   });
 
-  it("should not call ideaService.searchByTitle when query is empty", async () => {
+  it("should not call ideaService.searchByName when query is empty", async () => {
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
     );
@@ -289,13 +289,13 @@ describe("useSearch", () => {
       await result.current.search("");
     });
 
-    expect(mockIdeaService.searchByTitle).not.toHaveBeenCalled();
+    expect(mockIdeaService.searchByName).not.toHaveBeenCalled();
   });
 
   it("should clear ideas when clear is called", async () => {
     const ideas = [buildIdea()];
     mockIdeaService = createMockIdeaService({
-      searchByTitle: vi.fn().mockResolvedValue(ideas),
+      searchByName: vi.fn().mockResolvedValue(ideas),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),
@@ -315,7 +315,7 @@ describe("useSearch", () => {
 
   it("should clear ideas when search throws", async () => {
     mockIdeaService = createMockIdeaService({
-      searchByTitle: vi.fn().mockRejectedValue(new Error("Search failed")),
+      searchByName: vi.fn().mockRejectedValue(new Error("Search failed")),
     });
     const { result } = renderHook(() =>
       useSearch(mockTaskService, mockGoalService, mockIdeaService),

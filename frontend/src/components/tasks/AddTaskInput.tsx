@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 export interface AddTaskInputProps {
   targetBox: string;
-  onAdd: (title: string) => Promise<void>;
+  onAdd: (name: string) => Promise<void>;
   onCancel: () => void;
 }
 
