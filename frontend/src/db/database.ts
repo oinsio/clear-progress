@@ -90,6 +90,14 @@ export class ClearProgressDatabase extends Dexie {
           await tx.table("tasks").update(task.id, updates);
         }
       });
+    this.version(7)
+      .stores(DB_SCHEMA_V4)
+      .upgrade(async (tx) => {
+        await tx
+          .table("tasks")
+          .toCollection()
+          .modify({ original_task_id: "" });
+      });
   }
 }
 

@@ -103,4 +103,25 @@ export class TaskRepository {
       }
     });
   }
+
+  async findHiddenRecurringTask(
+    originalTaskId: string,
+  ): Promise<Task | undefined> {
+    const hiddenTasks = await db.tasks
+      .where("original_task_id")
+      .equals(originalTaskId)
+      .filter(
+        (task) =>
+          task.is_hidden && !task.is_deleted && !task.is_completed,
+      )
+      .toArray();
+    return hiddenTasks[0];
+  }
+
+  async findByOriginalTaskId(originalTaskId: string): Promise<Task[]> {
+    return db.tasks
+      .where("original_task_id")
+      .equals(originalTaskId)
+      .toArray();
+  }
 }

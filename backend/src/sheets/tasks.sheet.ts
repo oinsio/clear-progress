@@ -19,6 +19,7 @@ function rowToTask(row: unknown[]): Task {
     is_hidden: coerceSheetBool(row[COLS.is_hidden]),
     next_date: String(row[COLS.next_date] ?? ''),
     appear_date: String(row[COLS.appear_date] ?? ''),
+    original_task_id: String(row[COLS.original_task_id] ?? ''),
     sort_order: Number(row[COLS.sort_order] ?? 0),
     is_deleted: coerceSheetBool(row[COLS.is_deleted]),
     created_at: String(row[COLS.created_at] ?? ''),

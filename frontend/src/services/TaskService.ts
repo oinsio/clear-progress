@@ -44,6 +44,7 @@ export class TaskService {
       is_hidden: false,
       next_date: "",
       appear_date: "",
+      original_task_id: "",
       sort_order: existingTasks.length,
       ...partialTask,
       id: crypto.randomUUID(),
@@ -116,13 +117,35 @@ export class TaskService {
           );
           const appearDate = calculateAppearDate(nextDate, rule.advance_days);
 
-          // Создать скрытый клон
-          recurringTask = await this.createRecurringCopy(existingTask, {
-            is_hidden: true,
-            next_date: nextDate,
-            appear_date: appearDate,
-            box: rule.target_box,
-          });
+          // Определяем original_task_id для поиска
+          const searchId = existingTask.original_task_id || existingTask.id;
+
+          // Проверить, существует ли уже такая скрытая задача
+          const existingHiddenTask =
+            await this.taskRepository.findHiddenRecurringTask(searchId);
+
+          if (existingHiddenTask) {
+            // Обновляем существующую копию со всеми актуальными полями
+            recurringTask = await this.update(existingHiddenTask.id, {
+              name: existingTask.name,
+              description: existingTask.description,
+              goal_id: existingTask.goal_id,
+              context_id: existingTask.context_id,
+              category_id: existingTask.category_id,
+              repeat_rule: existingTask.repeat_rule,
+              next_date: nextDate,
+              appear_date: appearDate,
+              box: rule.target_box,
+            });
+          } else {
+            // Создать скрытый клон только если его ещё нет
+            recurringTask = await this.createRecurringCopy(existingTask, {
+              is_hidden: true,
+              next_date: nextDate,
+              appear_date: appearDate,
+              box: rule.target_box,
+            });
+          }
         }
       } catch (error) {
         console.error("Failed to create recurring task:", error);
@@ -158,6 +181,7 @@ export class TaskService {
       ...overrides,
       is_completed: false,
       completed_at: "",
+      original_task_id: task.original_task_id || task.id,
     });
 
     await this.copyChecklistItems(task.id, newTask.id);
@@ -200,6 +224,27 @@ export class TaskService {
   }
 
   async softDelete(id: string): Promise<Task> {
+    // Найти все копии этой задачи
+    const copies = await this.taskRepository.findByOriginalTaskId(id);
+
+    if (copies.length > 0) {
+      // Найти первую активную копию (не удалённую)
+      const newOriginal = copies.find((copy) => !copy.is_deleted);
+
+      if (newOriginal) {
+        // Переназначить все остальные копии на новый оригинал
+        for (const copy of copies) {
+          if (copy.id !== newOriginal.id) {
+            await this.update(copy.id, { original_task_id: newOriginal.id });
+          }
+        }
+
+        // Очистить original_task_id у нового оригинала
+        await this.update(newOriginal.id, { original_task_id: "" });
+      }
+    }
+
+    // Удалить исходную задачу
     return this.update(id, { is_deleted: true });
   }
 

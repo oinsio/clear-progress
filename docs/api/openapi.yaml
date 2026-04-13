@@ -925,6 +925,7 @@ components:
         - is_hidden
         - next_date
         - appear_date
+        - original_task_id
         - sort_order
         - is_deleted
         - created_at
@@ -1020,6 +1021,12 @@ components:
             Calculated as next_date - advance_days. Task becomes visible when current date >= appear_date.
             Empty string if no repeat_rule.
           example: "2026-04-20"
+        original_task_id:
+          type: string
+          description: |
+            ID of the original task for hidden recurring copies. Empty string for regular tasks.
+            Used to link recurring task copies to their original task and prevent duplicates.
+          example: ""
         sort_order:
           type: integer
           description: Sort position within the box. Lower = higher in list

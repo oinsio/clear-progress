@@ -92,7 +92,7 @@ export function useLongPress({
   );
 
   const handleTouchCancel = useCallback(
-    (_event: React.TouchEvent) => {
+    () => {
       clearTimer();
       startPositionRef.current = null;
       longPressTriggeredRef.current = false;
@@ -101,7 +101,7 @@ export function useLongPress({
   );
 
   const handleClick = useCallback(
-    (_event: React.MouseEvent) => {
+    () => {
       if (onClick) {
         onClick();
       }

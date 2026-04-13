@@ -14,6 +14,7 @@ export interface Task {
   is_hidden: boolean;
   next_date: string;
   appear_date: string;
+  original_task_id: string;
   sort_order: number;
   is_deleted: boolean;
   created_at: string;

@@ -19,6 +19,7 @@ export function buildTask(overrides: Partial<Task> = {}): Task {
     is_hidden: false,
     next_date: "",
     appear_date: "",
+    original_task_id: "",
     sort_order: taskCounter,
     is_deleted: false,
     created_at: now,
