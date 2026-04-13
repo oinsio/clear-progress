@@ -22,6 +22,13 @@ vi.mock("@/app/providers/SyncProvider", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useShowHidden", () => ({
+  useShowHidden: () => ({
+    showHidden: false,
+    toggleShowHidden: vi.fn(),
+  }),
+}));
+
 const taskService = new TaskService(
   new TaskRepository(),
   new ChecklistRepository(),

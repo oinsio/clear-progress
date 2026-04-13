@@ -17,7 +17,7 @@ export class TaskRepository {
     return db.tasks
       .where("box")
       .equals(box)
-      .filter((task) => !task.is_deleted && !task.is_hidden)
+      .filter((task) => !task.is_deleted)
       .toArray();
   }
 

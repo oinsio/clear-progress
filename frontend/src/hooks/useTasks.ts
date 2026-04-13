@@ -5,7 +5,7 @@ import type { Box } from "@/types/common";
 import { TaskService } from "@/services/TaskService";
 import { defaultTaskService } from "@/services/defaultServices";
 import { useSync } from "@/app/providers/SyncProvider";
-import { STORAGE_KEYS } from "@/constants";
+import { useShowHidden } from "@/hooks/useShowHidden";
 
 export interface UseTasksReturn {
   tasks: Task[];
@@ -26,9 +26,7 @@ export function useTasks(
 ): UseTasksReturn {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showHidden, setShowHidden] = useState(() => {
-    return localStorage.getItem(STORAGE_KEYS.SHOW_HIDDEN_TASKS) === "true";
-  });
+  const { showHidden } = useShowHidden();
   const { schedulePush } = useSync();
 
   useEffect(() => {
@@ -44,18 +42,6 @@ export function useTasks(
     });
     return () => subscription.unsubscribe();
   }, [box, taskService, showHidden]);
-
-  useEffect(() => {
-    const handleToggle = (event: Event) => {
-      const customEvent = event as CustomEvent<boolean>;
-      setShowHidden(customEvent.detail);
-    };
-
-    window.addEventListener("hidden_tasks_toggle", handleToggle);
-    return () => {
-      window.removeEventListener("hidden_tasks_toggle", handleToggle);
-    };
-  }, []);
 
   const createTask = useCallback(
     async (name: string) => {

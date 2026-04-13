@@ -28,6 +28,12 @@ vi.mock("@/hooks/useSearch");
 vi.mock("@/hooks/useContexts");
 vi.mock("@/hooks/useCategories");
 vi.mock("@/hooks/useCompletedTasks");
+vi.mock("@/hooks/useShowHidden", () => ({
+  useShowHidden: () => ({
+    showHidden: false,
+    toggleShowHidden: vi.fn(),
+  }),
+}));
 
 import { useTasks } from "@/hooks/useTasks";
 import { useGoals } from "@/hooks/useGoals";

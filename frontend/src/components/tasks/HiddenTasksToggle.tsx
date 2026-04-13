@@ -1,28 +1,16 @@
-import { useState, useCallback } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { STORAGE_KEYS } from "@/constants";
 import { cn } from "@/shared/lib/cn";
+import { useShowHidden } from "@/hooks/useShowHidden";
 
 export function HiddenTasksToggle() {
   const { t } = useTranslation();
-  const [showHidden, setShowHidden] = useState(() => {
-    return localStorage.getItem(STORAGE_KEYS.SHOW_HIDDEN_TASKS) === "true";
-  });
-
-  const handleToggle = useCallback(() => {
-    const newValue = !showHidden;
-    setShowHidden(newValue);
-    localStorage.setItem(STORAGE_KEYS.SHOW_HIDDEN_TASKS, String(newValue));
-    window.dispatchEvent(
-      new CustomEvent("hidden_tasks_toggle", { detail: newValue }),
-    );
-  }, [showHidden]);
+  const { showHidden, toggleShowHidden } = useShowHidden();
 
   return (
     <button
       type="button"
-      onClick={handleToggle}
+      onClick={toggleShowHidden}
       aria-label={t("filter.showHidden")}
       aria-pressed={showHidden}
       data-testid="hidden-tasks-toggle"

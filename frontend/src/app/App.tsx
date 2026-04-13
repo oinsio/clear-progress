@@ -1,6 +1,7 @@
 import { RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { SyncProvider } from "./providers/SyncProvider";
+import { ShowHiddenProvider } from "./providers/ShowHiddenProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
 import { AuthProvider } from "./providers/AuthProvider";
 import { PanelSettingsProvider } from "./providers/PanelSettingsProvider";
@@ -18,14 +19,16 @@ export default function App() {
     <AuthProvider>
       <LanguageProvider>
         <SyncProvider>
-          <ThemeProvider>
-            <InterfaceScaleProvider>
-              <PanelSettingsProvider>
-                <UpdateNotification />
-                <RouterProvider router={router} />
-              </PanelSettingsProvider>
-            </InterfaceScaleProvider>
-          </ThemeProvider>
+          <ShowHiddenProvider>
+            <ThemeProvider>
+              <InterfaceScaleProvider>
+                <PanelSettingsProvider>
+                  <UpdateNotification />
+                  <RouterProvider router={router} />
+                </PanelSettingsProvider>
+              </InterfaceScaleProvider>
+            </ThemeProvider>
+          </ShowHiddenProvider>
         </SyncProvider>
       </LanguageProvider>
     </AuthProvider>
