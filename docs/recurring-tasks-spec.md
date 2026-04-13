@@ -61,13 +61,14 @@ interface RepeatRule {
 | `is_hidden` | boolean | `true` = задача-клон ожидает наступления `appear_date` |
 | `next_date` | string (ISO 8601, date only) | Расчётная дата следующего срабатывания |
 | `appear_date` | string (ISO 8601, date only) | Дата появления = `next_date` − `advance_days` |
+| `original_task_id` | string | ID оригинальной задачи для скрытых копий. Пустая строка для обычных задач |
 
 ### 3.3. Обновлённая структура Tasks
 
 ```
 id, title, notes, box, goal_id, context_id, category_id,
 is_completed, completed_at, repeat_rule, is_hidden, next_date, appear_date,
-sort_order, is_deleted, created_at, updated_at, version
+original_task_id, sort_order, is_deleted, created_at, updated_at, version
 ```
 
 ---
@@ -81,18 +82,37 @@ sort_order, is_deleted, created_at, updated_at, version
 1. Текущая задача помечается `is_completed: true`, `completed_at: <now>`.
 2. Вычисляется `next_date` для следующего экземпляра (см. раздел 5).
 3. Вычисляется `appear_date = next_date − advance_days`.
-4. Создаётся **задача-клон** с:
-   - Новый `id` (UUID v4).
-   - `title`, `notes`, `goal_id`, `context_id`, `category_id` — копируются из оригинала.
-   - `repeat_rule` — копируется из оригинала.
-   - `box: target_box` из `repeat_rule`.
-   - `is_completed: false`.
-   - `is_hidden: true`.
-   - `next_date`, `appear_date` — вычисленные значения.
-   - `sort_order: 0` (будет в начале списка при появлении).
-   - `is_deleted: false`.
-   - `created_at: <now>`, `updated_at: <now>`, `version: 1`.
+4. **Проверка на существующую скрытую копию:**
+   - Определяется `searchId = task.original_task_id || task.id`
+   - Ищется существующая скрытая копия по `original_task_id = searchId`
+   - Если найдена — обновляется (см. 4.1.1)
+   - Если не найдена — создаётся новая (см. 4.1.2)
 5. Если у задачи есть **чеклист** — пункты чеклиста копируются с `is_completed: false`.
+
+#### 4.1.1. Обновление существующей скрытой копии
+
+Если скрытая копия уже существует (задача была возвращена в незавершённое состояние), она обновляется:
+- `name`, `description`, `goal_id`, `context_id`, `category_id` — актуальные значения из завершаемой задачи
+- `repeat_rule` — актуальное правило
+- `next_date`, `appear_date` — пересчитанные значения
+- `box: target_box` из `repeat_rule`
+- `original_task_id` — **НЕ меняется**
+- `updated_at: <now>`, `version += 1`
+
+#### 4.1.2. Создание новой скрытой копии
+
+Если скрытой копии не существует, создаётся **задача-клон** с:
+- Новый `id` (UUID v4)
+- `title`, `notes`, `goal_id`, `context_id`, `category_id` — копируются из оригинала
+- `repeat_rule` — копируется из оригинала
+- `box: target_box` из `repeat_rule`
+- `is_completed: false`
+- `is_hidden: true`
+- `next_date`, `appear_date` — вычисленные значения
+- `original_task_id: task.original_task_id || task.id` — наследуется или устанавливается
+- `sort_order: 0` (будет в начале списка при появлении)
+- `is_deleted: false`
+- `created_at: <now>`, `updated_at: <now>`, `version: 1`
 
 ### 4.2. Раскрытие скрытых задач
 
@@ -103,9 +123,12 @@ sort_order, is_deleted, created_at, updated_at, version
   Если текущая_дата >= appear_date:
     is_hidden = false
     box = target_box (из repeat_rule)
+    original_task_id — НЕ меняется (остаётся как есть)
     updated_at = <now>
     version += 1
 ```
+
+**Важно:** При раскрытии задачи поле `original_task_id` сохраняет своё значение. Это обеспечивает связь всех копий в цепочке повторений.
 
 ### 4.3. Незавершённая задача с фиксированным расписанием
 
@@ -353,15 +376,39 @@ next_date = completed_at (дата) + delay_days дней
 
 ### 9.4. Удаление повторяющейся задачи
 
-- **Удаление текущего экземпляра** (soft delete): удаляется только текущая видимая задача. Скрытый клон (если существует) остаётся.
+- **Удаление текущего экземпляра** (soft delete):
+  - Если у задачи есть копии (по `original_task_id`), они переназначаются на новый оригинал
+  - Первая активная копия становится новым корнем цепочки
+  - Все остальные копии обновляют `original_task_id` на ID нового корня
+  - Исходная задача помечается `is_deleted: true`
 - **Удаление правила повторения**: пользователь снимает `repeat_rule` с задачи. Если есть скрытый клон — он тоже помечается `is_deleted: true`.
 - **Удаление скрытого клона**: при включённом toggle пользователь может удалить ожидающий клон.
+
+#### Пример переназначения при удалении:
+
+**До удаления:**
+- task-1: `original_task_id: ""`
+- task-2: `original_task_id: "task-1"` (скрытая копия)
+- task-3: `original_task_id: "task-1"` (скрытая копия)
+
+**Пользователь удаляет task-1:**
+
+**После удаления:**
+- task-1: `is_deleted: true`
+- task-2: `original_task_id: ""` ← новый оригинал
+- task-3: `original_task_id: "task-2"` ← переназначена
+
+**Результат:** Цепочка повторений сохраняется, task-2 становится новым корнем.
 
 ### 9.5. Редактирование повторяющейся задачи
 
 При редактировании задачи с `repeat_rule`:
-- Изменения **title, notes, goal, context, category** применяются только к текущему экземпляру. Скрытый клон уже создан с предыдущими значениями.
-- Изменение **repeat_rule** — обновляет правило и пересоздаёт скрытый клон (удалить старый, создать новый с новыми параметрами).
+- Изменения **title, notes, goal, context, category** применяются к текущему экземпляру
+- При следующем завершении эти изменения автоматически переносятся в скрытую копию (если она существует) или в новую копию
+- Изменение **repeat_rule** — обновляет правило и пересоздаёт скрытый клон (удалить старый, создать новый с новыми параметрами)
+
+**Механизм синхронизации изменений:**
+Благодаря полю `original_task_id`, при завершении задачи система находит существующую скрытую копию и обновляет в ней все актуальные поля (name, description, goal_id, context_id, category_id, repeat_rule). Это гарантирует, что изменения не теряются.
 
 ### 9.6. Завершение скрытого клона
 
@@ -389,7 +436,8 @@ next_date = completed_at (дата) + delay_days дней
 
 - Клон создаётся на клиенте при завершении задачи.
 - При push клон отправляется как новая запись (статус `created`).
-- При конфликте (два устройства завершили одну задачу) — last-write-wins по `updated_at`, дубликаты клонов возможны. Пользователь удалит лишний вручную.
+- **Предотвращение дубликатов:** благодаря полю `original_task_id`, при завершении задачи система проверяет наличие существующей скрытой копии. Если копия найдена — она обновляется, а не создаётся новая.
+- При конфликте (два устройства завершили одну задачу одновременно) — last-write-wins по `updated_at`. Возможны дубликаты только при race condition, но они минимизированы благодаря проверке по `original_task_id`.
 
 ### 10.3. Раскрытие скрытых задач
 
@@ -427,3 +475,73 @@ next_date = completed_at (дата) + delay_days дней
 ```
 
 Пустая строка `""` = задача не повторяется.
+
+---
+
+## 12. Предотвращение дубликатов повторяющихся задач
+
+### 12.1. Проблема
+
+Если пользователь завершает повторяющуюся задачу, затем возвращает её в незавершённое состояние и завершает снова — без специальной логики создастся дубликат скрытой копии.
+
+### 12.2. Решение: поле `original_task_id`
+
+Все копии одной повторяющейся задачи связаны через поле `original_task_id`:
+
+**Правила заполнения:**
+1. **Обычные задачи:** `original_task_id = ""`
+2. **Скрытые копии:** `original_task_id = task.original_task_id || task.id`
+   - Если завершаем скрытую копию — наследуем её `original_task_id`
+   - Если завершаем обычную задачу — берём её `id`
+3. **При раскрытии:** `original_task_id` НЕ меняется
+
+### 12.3. Алгоритм при завершении
+
+```typescript
+// 1. Определяем ID для поиска
+const searchId = task.original_task_id || task.id;
+
+// 2. Ищем существующую скрытую копию
+const existingHiddenTask = findHiddenRecurringTask(searchId);
+
+// 3. Если найдена — обновляем, иначе создаём новую
+if (existingHiddenTask) {
+  updateTask(existingHiddenTask.id, {
+    name: task.name,
+    description: task.description,
+    goal_id: task.goal_id,
+    context_id: task.context_id,
+    category_id: task.category_id,
+    repeat_rule: task.repeat_rule,
+    next_date: calculatedNextDate,
+    appear_date: calculatedAppearDate,
+    box: rule.target_box,
+  });
+} else {
+  createRecurringCopy(task, {
+    original_task_id: searchId,
+    is_hidden: true,
+    next_date: calculatedNextDate,
+    appear_date: calculatedAppearDate,
+    box: rule.target_box,
+  });
+}
+```
+
+### 12.4. Цепочка повторений
+
+**Пример цепочки:**
+- task-1: `original_task_id: ""` (оригинал)
+- task-2: `original_task_id: "task-1"` (скрытая копия)
+- task-2 раскрывается: `original_task_id: "task-1"` (не меняется)
+- task-2 завершается → создаётся task-3: `original_task_id: "task-1"`
+
+Все копии связаны с одним оригиналом через `original_task_id`.
+
+### 12.5. Преимущества
+
+✅ Невозможно создать дубликаты при возврате задачи в незавершённое состояние
+✅ Изменения в имени, описании, связях автоматически переносятся в скрытую копию
+✅ Работает для всех типов `repeat_rule` (fixed и after_completion)
+✅ Легко найти все копии одной задачи для отладки
+✅ При удалении оригинала цепочка сохраняется (копии переназначаются на новый корень)
