@@ -10,6 +10,7 @@ import {
   LaterBoxIcon,
   AllBoxesIcon,
 } from "./BoxIcons";
+import { HiddenTasksToggle } from "@/components/tasks/HiddenTasksToggle";
 import * as React from "react";
 
 type TaskBoxFilter = Exclude<BoxFilter, "inbox">;
@@ -128,12 +129,16 @@ export function BoxFilterBar({
         )}
       </div>
 
+      <div className="ml-auto mr-2">
+        <HiddenTasksToggle />
+      </div>
+
       <button
         type="button"
         aria-label={t("task.add")}
         data-testid="add-task-button"
         onClick={onAddTask}
-        className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
+        className="flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
       >
         <Plus className="w-5 h-5" aria-hidden="true" />
       </button>

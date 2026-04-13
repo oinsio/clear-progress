@@ -304,7 +304,7 @@ export function RightFilterPanel({
             </nav>
 
             {/* Bottom actions: Search */}
-            <div className="px-2 py-2 border-t border-white/25">
+            <div className="px-2 py-2 border-t border-white/25 flex flex-col gap-1">
               <button
                 type="button"
                 aria-label={t("filter.search")}
@@ -431,7 +431,7 @@ export function RightFilterPanel({
           </nav>
 
           {/* Bottom: search */}
-          <div className="flex flex-col items-center py-2 border-t border-white/25">
+          <div className="flex flex-col items-center py-2 border-t border-white/25 gap-1">
             <button
               type="button"
               aria-label={t("filter.search")}

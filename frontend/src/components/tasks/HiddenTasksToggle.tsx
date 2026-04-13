@@ -27,7 +27,7 @@ export function HiddenTasksToggle() {
       aria-pressed={showHidden}
       data-testid="hidden-tasks-toggle"
       className={cn(
-        "p-2 rounded-lg transition-colors",
+        "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
         showHidden
           ? "bg-accent/10 text-accent"
           : "text-gray-400 hover:bg-gray-100",
