@@ -233,9 +233,9 @@ describe("hasEntityChanged", () => {
         custom_field: "new",
       };
 
-      expect(hasEntityChanged(existing, updated, ["id", "version", "custom_field"])).toBe(
-        false,
-      );
+      expect(
+        hasEntityChanged(existing, updated, ["id", "version", "custom_field"]),
+      ).toBe(false);
     });
 
     it("should detect changes in non-excluded fields", () => {
@@ -252,9 +252,9 @@ describe("hasEntityChanged", () => {
         custom_field: "new",
       };
 
-      expect(hasEntityChanged(existing, updated, ["id", "version", "custom_field"])).toBe(
-        true,
-      );
+      expect(
+        hasEntityChanged(existing, updated, ["id", "version", "custom_field"]),
+      ).toBe(true);
     });
   });
 });

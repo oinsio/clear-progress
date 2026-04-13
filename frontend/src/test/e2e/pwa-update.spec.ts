@@ -45,9 +45,7 @@ test.describe("PWA Update Notification", () => {
               registration
                 .update()
                 .then(() => {
-                  console.log(
-                    "[Test] Service worker update check triggered",
-                  );
+                  console.log("[Test] Service worker update check triggered");
                   resolve(true);
                 })
                 .catch((err) => {
@@ -127,7 +125,10 @@ test.describe("PWA Update Notification", () => {
       .locator('[data-test-id="update-notification"]')
       .count();
 
-    console.log("Update notification component exists:", notificationExists > 0);
+    console.log(
+      "Update notification component exists:",
+      notificationExists > 0,
+    );
 
     // If notification is visible, check the text
     if (notificationExists > 0) {

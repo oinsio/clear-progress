@@ -160,15 +160,11 @@ describe("RepeatRuleSelector", () => {
       await user.click(screen.getByTestId("repeat-type-fixed"));
 
       expect(screen.getByTestId("repeat-frequency-daily")).toBeInTheDocument();
-      expect(
-        screen.getByTestId("repeat-frequency-weekly"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("repeat-frequency-weekly")).toBeInTheDocument();
       expect(
         screen.getByTestId("repeat-frequency-monthly"),
       ).toBeInTheDocument();
-      expect(
-        screen.getByTestId("repeat-frequency-yearly"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("repeat-frequency-yearly")).toBeInTheDocument();
     });
 
     it("should render interval input", async () => {
@@ -201,9 +197,7 @@ describe("RepeatRuleSelector", () => {
       await user.click(screen.getByTestId("repeat-frequency-weekly"));
 
       for (let day = 1; day <= 7; day++) {
-        expect(
-          screen.getByTestId(`repeat-weekday-${day}`),
-        ).toBeInTheDocument();
+        expect(screen.getByTestId(`repeat-weekday-${day}`)).toBeInTheDocument();
       }
     });
 
@@ -405,9 +399,7 @@ describe("RepeatRuleSelector", () => {
 
       await user.click(screen.getByTestId("repeat-type-after-completion"));
 
-      expect(
-        screen.getByTestId("repeat-delay-days-input"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("repeat-delay-days-input")).toBeInTheDocument();
     });
 
     it("should navigate to placement step when next button is clicked", async () => {
@@ -485,13 +477,9 @@ describe("RepeatRuleSelector", () => {
       await user.click(screen.getByTestId("repeat-frequency-daily"));
       await user.click(screen.getByTestId("repeat-fixed-next"));
 
-      expect(
-        screen.getByTestId("repeat-target-box-today"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("repeat-target-box-today")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-target-box-week")).toBeInTheDocument();
-      expect(
-        screen.getByTestId("repeat-target-box-later"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("repeat-target-box-later")).toBeInTheDocument();
     });
 
     it("should render advance_days input", async () => {

@@ -173,9 +173,7 @@ function ChecklistSection({
   const sensors = useDndSensors();
   return (
     <div>
-      <p className="text-center text-sm font-medium text-accent mb-2">
-        {name}
-      </p>
+      <p className="text-center text-sm font-medium text-accent mb-2">{name}</p>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -371,8 +369,7 @@ export function TaskDetailPanel({
 
   const handleDuplicateTask = useCallback(async () => {
     await onDuplicate(task.id);
-    onClose();
-  }, [task.id, onDuplicate, onClose]);
+  }, [task.id, onDuplicate]);
 
   const handleNewItemKeyDown = useCallback(
     async (event: React.KeyboardEvent<HTMLInputElement>) => {

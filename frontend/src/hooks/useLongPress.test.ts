@@ -117,9 +117,7 @@ describe("useLongPress", () => {
     );
 
     result.current.onTouchStart(touchStartEvent);
-    result.current.onTouchMove(
-      touchMoveEvent as unknown as React.TouchEvent,
-    );
+    result.current.onTouchMove(touchMoveEvent as unknown as React.TouchEvent);
 
     vi.advanceTimersByTime(LONG_PRESS_THRESHOLD_MS);
 
@@ -138,14 +136,15 @@ describe("useLongPress", () => {
     const touchStartEvent = createTouchEvent("touchstart", 100, 100);
     const touchMoveEvent = new TouchEvent("touchmove", {
       touches: [
-        { clientX: 100 + LONG_PRESS_MOVE_THRESHOLD_PX - 2, clientY: 100 } as Touch,
+        {
+          clientX: 100 + LONG_PRESS_MOVE_THRESHOLD_PX - 2,
+          clientY: 100,
+        } as Touch,
       ],
     });
 
     result.current.onTouchStart(touchStartEvent);
-    result.current.onTouchMove(
-      touchMoveEvent as unknown as React.TouchEvent,
-    );
+    result.current.onTouchMove(touchMoveEvent as unknown as React.TouchEvent);
 
     vi.advanceTimersByTime(LONG_PRESS_THRESHOLD_MS);
 
@@ -219,13 +218,13 @@ describe("useLongPress", () => {
 
     const touchStartEvent = createTouchEvent("touchstart", 100, 100);
     const touchMoveEvent = new TouchEvent("touchmove", {
-      touches: [{ clientX: 100 + customMoveThreshold - 2, clientY: 100 } as Touch],
+      touches: [
+        { clientX: 100 + customMoveThreshold - 2, clientY: 100 } as Touch,
+      ],
     });
 
     result.current.onTouchStart(touchStartEvent);
-    result.current.onTouchMove(
-      touchMoveEvent as unknown as React.TouchEvent,
-    );
+    result.current.onTouchMove(touchMoveEvent as unknown as React.TouchEvent);
 
     vi.advanceTimersByTime(LONG_PRESS_THRESHOLD_MS);
 

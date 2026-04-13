@@ -43,9 +43,7 @@ export function hasEntityChanged<T extends object>(
       continue;
     }
 
-    const existingValue = normalizeValue(
-      existing[key as keyof T] as unknown,
-    );
+    const existingValue = normalizeValue(existing[key as keyof T] as unknown);
     const updatedValue = normalizeValue(updated[key as keyof T] as unknown);
 
     // Сравниваем нормализованные значения

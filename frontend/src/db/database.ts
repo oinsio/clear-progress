@@ -84,7 +84,7 @@ export class ClearProgressDatabase extends Dexie {
           if (task.repeat_rule) {
             updates.repeat_rule = "";
             console.log(
-              `Reset repeat_rule for task ${task.id} due to format change`
+              `Reset repeat_rule for task ${task.id} due to format change`,
             );
           }
           await tx.table("tasks").update(task.id, updates);
@@ -93,10 +93,7 @@ export class ClearProgressDatabase extends Dexie {
     this.version(7)
       .stores(DB_SCHEMA_V4)
       .upgrade(async (tx) => {
-        await tx
-          .table("tasks")
-          .toCollection()
-          .modify({ original_task_id: "" });
+        await tx.table("tasks").toCollection().modify({ original_task_id: "" });
       });
   }
 }

@@ -16,7 +16,7 @@ export function serializeRepeatRule(rule: RepeatRule): string {
 
 function calculateNextDateDaily(
   interval: number,
-  previousNextDate: string
+  previousNextDate: string,
 ): string {
   const prev = new Date(previousNextDate);
   const next = new Date(prev);
@@ -27,7 +27,7 @@ function calculateNextDateDaily(
   today.setHours(0, 0, 0, 0);
   if (next < today) {
     const daysSincePrev = Math.floor(
-      (today.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24)
+      (today.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24),
     );
     const periodsToSkip = Math.ceil(daysSincePrev / interval);
     next.setDate(prev.getDate() + periodsToSkip * interval);
@@ -39,7 +39,7 @@ function calculateNextDateDaily(
 function findNextWeekday(
   startDate: Date,
   weekdays: number[],
-  interval: number
+  interval: number,
 ): string {
   // weekdays: 1=Пн, 2=Вт, ..., 7=Вс
   // startDate.getDay(): 0=Вс, 1=Пн, ..., 6=Сб
@@ -63,7 +63,7 @@ function findNextWeekday(
 function calculateNextDateWeekly(
   interval: number,
   weekdays: number[],
-  previousNextDate?: string
+  previousNextDate?: string,
 ): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -85,7 +85,7 @@ function calculateNextDateWeekly(
 function calculateNextDateMonthly(
   interval: number,
   dayOfMonth: number,
-  previousNextDate: string
+  previousNextDate: string,
 ): string {
   const prev = new Date(previousNextDate);
   let year = prev.getFullYear();
@@ -108,7 +108,7 @@ function calculateNextDateMonthly(
 function calculateNextDateYearly(
   interval: number,
   monthAndDay: { month: number; day: number },
-  previousNextDate: string
+  previousNextDate: string,
 ): string {
   const prev = new Date(previousNextDate);
   const year = prev.getFullYear() + interval;
@@ -117,8 +117,7 @@ function calculateNextDateYearly(
   // Обработка 29 февраля в невисокосный год
   let day = monthAndDay.day;
   if (month === 1 && day === 29) {
-    const isLeapYear =
-      (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
     if (!isLeapYear) {
       day = 28;
     }
@@ -130,7 +129,7 @@ function calculateNextDateYearly(
 
 function calculateNextDateAfterCompletion(
   delayDays: number,
-  completedAt: string
+  completedAt: string,
 ): string {
   const completed = new Date(completedAt);
   const next = new Date(completed);
@@ -141,7 +140,7 @@ function calculateNextDateAfterCompletion(
 export function calculateNextDate(
   rule: RepeatRule,
   completedAt: string,
-  previousNextDate?: string
+  previousNextDate?: string,
 ): string {
   if (rule.type === "after_completion") {
     if (!rule.delay_days)
@@ -172,7 +171,7 @@ export function calculateNextDate(
       return calculateNextDateMonthly(
         interval,
         rule.day_of_month,
-        previousNextDate
+        previousNextDate,
       );
     case "yearly":
       if (!rule.month_and_day)
@@ -180,7 +179,7 @@ export function calculateNextDate(
       return calculateNextDateYearly(
         interval,
         rule.month_and_day,
-        previousNextDate
+        previousNextDate,
       );
     default:
       throw new Error(`Unknown frequency: ${rule.frequency}`);
@@ -189,7 +188,7 @@ export function calculateNextDate(
 
 export function calculateAppearDate(
   nextDate: string,
-  advanceDays: number
+  advanceDays: number,
 ): string {
   const next = new Date(nextDate);
   next.setDate(next.getDate() - advanceDays);

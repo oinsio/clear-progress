@@ -11,7 +11,12 @@ interface ConfirmFullSyncDialogProps {
 }
 
 const PROGRESS_STEPS: Array<{
-  key: "reupload_covers" | "upload_covers" | "push" | "pull" | "download_covers";
+  key:
+    | "reupload_covers"
+    | "upload_covers"
+    | "push"
+    | "pull"
+    | "download_covers";
   labelKey: string;
   testId: string;
 }> = [
@@ -52,7 +57,12 @@ const STEP_ORDER: FullSyncStep[] = [
 
 function isStepDone(
   currentStep: FullSyncStep,
-  stepKey: "reupload_covers" | "upload_covers" | "push" | "pull" | "download_covers",
+  stepKey:
+    | "reupload_covers"
+    | "upload_covers"
+    | "push"
+    | "pull"
+    | "download_covers",
 ): boolean {
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const stepIndex = STEP_ORDER.indexOf(stepKey);

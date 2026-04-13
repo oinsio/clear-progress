@@ -57,9 +57,7 @@ function SortableCategoryItem({
   const { panelSide } = usePanelSide();
 
   const style = {
-    transform: transform
-      ? `translate3d(0, ${transform.y}px, 0)`
-      : undefined,
+    transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
     transition,
     opacity: isDragging ? 0.4 : 1,
   };
@@ -218,76 +216,78 @@ export default function CategoriesPage() {
         {/* Scrollable category list */}
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
-            {!isLoading && activeCategories.length === 0 && !isAddingCategory ? (
-            <button
-              type="button"
-              onClick={() => setIsAddingCategory(true)}
-              className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
-              data-testid="empty-categories-message"
-            >
-              <p className="text-sm">{t("category.empty")}</p>
-            </button>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={activeCategories.map((c) => c.id)}
-                strategy={verticalListSortingStrategy}
+            {!isLoading &&
+            activeCategories.length === 0 &&
+            !isAddingCategory ? (
+              <button
+                type="button"
+                onClick={() => setIsAddingCategory(true)}
+                className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
+                data-testid="empty-categories-message"
               >
-                <ul>
-                  {activeCategories.map((category) => (
-                    <SortableCategoryItem
-                      key={category.id}
-                      category={category}
-                      taskCount={categoryTaskCounts[category.id] ?? 0}
-                      onNavigate={(id) => navigate(`/categories/${id}`)}
-                    />
-                  ))}
-
-                  {/* Inline add category input */}
-                  {isAddingCategory && (
-                    <li className="px-4 py-3 border-b border-gray-100">
-                      <textarea
-                        ref={newCategoryTextareaRef}
-                        rows={1}
-                        autoFocus
-                        value={newCategoryName}
-                        onChange={(event) =>
-                          setNewCategoryName(event.target.value)
-                        }
-                        onKeyDown={handleAddCategoryKeyDown}
-                        onBlur={handleAddCategoryBlur}
-                        placeholder={t("category.namePlaceholder")}
-                        className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                        data-testid="add-category-input"
+                <p className="text-sm">{t("category.empty")}</p>
+              </button>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={activeCategories.map((c) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul>
+                    {activeCategories.map((category) => (
+                      <SortableCategoryItem
+                        key={category.id}
+                        category={category}
+                        taskCount={categoryTaskCounts[category.id] ?? 0}
+                        onNavigate={(id) => navigate(`/categories/${id}`)}
                       />
-                    </li>
-                  )}
-                </ul>
-              </SortableContext>
-            </DndContext>
-          )}
+                    ))}
 
-          {/* Inline add task input */}
-          {isAddingTask && (
-            <div className="px-4 py-3 border-b border-gray-100">
-              <textarea
-                ref={newTaskTextareaRef}
-                rows={1}
-                autoFocus
-                value={newTaskName}
-                onChange={(event) => setNewTaskName(event.target.value)}
-                onKeyDown={handleAddTaskKeyDown}
-                onBlur={handleAddTaskBlur}
-                placeholder={t("category.taskPlaceholder")}
-                className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                data-testid="add-task-input"
-              />
-            </div>
-          )}
+                    {/* Inline add category input */}
+                    {isAddingCategory && (
+                      <li className="px-4 py-3 border-b border-gray-100">
+                        <textarea
+                          ref={newCategoryTextareaRef}
+                          rows={1}
+                          autoFocus
+                          value={newCategoryName}
+                          onChange={(event) =>
+                            setNewCategoryName(event.target.value)
+                          }
+                          onKeyDown={handleAddCategoryKeyDown}
+                          onBlur={handleAddCategoryBlur}
+                          placeholder={t("category.namePlaceholder")}
+                          className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
+                          data-testid="add-category-input"
+                        />
+                      </li>
+                    )}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+
+            {/* Inline add task input */}
+            {isAddingTask && (
+              <div className="px-4 py-3 border-b border-gray-100">
+                <textarea
+                  ref={newTaskTextareaRef}
+                  rows={1}
+                  autoFocus
+                  value={newTaskName}
+                  onChange={(event) => setNewTaskName(event.target.value)}
+                  onKeyDown={handleAddTaskKeyDown}
+                  onBlur={handleAddTaskBlur}
+                  placeholder={t("category.taskPlaceholder")}
+                  className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
+                  data-testid="add-task-input"
+                />
+              </div>
+            )}
           </div>
         </main>
 

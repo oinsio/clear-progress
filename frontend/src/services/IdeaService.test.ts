@@ -370,7 +370,10 @@ describe("IdeaService", () => {
         name: "Music",
         description: "Learn piano basics",
       });
-      const noMatch = buildIdea({ name: "Cooking", description: "Try recipes" });
+      const noMatch = buildIdea({
+        name: "Cooking",
+        description: "Try recipes",
+      });
       mockIdeaRepository = createMockIdeaRepository({
         getActive: vi
           .fn()

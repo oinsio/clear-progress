@@ -28,7 +28,10 @@ export function useChecklistItemEditing(
   );
 
   const handleItemEditKeyDown = useCallback(
-    async (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>, id: string) => {
+    async (
+      event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+      id: string,
+    ) => {
       if (event.key === "Enter") {
         await commitItemEdit(id);
       }

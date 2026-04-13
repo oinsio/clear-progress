@@ -80,7 +80,11 @@ export function useLongPress({
     (event: React.TouchEvent) => {
       clearTimer();
 
-      if (!longPressTriggeredRef.current && onClick && startPositionRef.current) {
+      if (
+        !longPressTriggeredRef.current &&
+        onClick &&
+        startPositionRef.current
+      ) {
         event.preventDefault();
         onClick();
       }
@@ -91,23 +95,17 @@ export function useLongPress({
     [onClick, clearTimer],
   );
 
-  const handleTouchCancel = useCallback(
-    () => {
-      clearTimer();
-      startPositionRef.current = null;
-      longPressTriggeredRef.current = false;
-    },
-    [clearTimer],
-  );
+  const handleTouchCancel = useCallback(() => {
+    clearTimer();
+    startPositionRef.current = null;
+    longPressTriggeredRef.current = false;
+  }, [clearTimer]);
 
-  const handleClick = useCallback(
-    () => {
-      if (onClick) {
-        onClick();
-      }
-    },
-    [onClick],
-  );
+  const handleClick = useCallback(() => {
+    if (onClick) {
+      onClick();
+    }
+  }, [onClick]);
 
   return {
     onTouchStart: handleTouchStart,

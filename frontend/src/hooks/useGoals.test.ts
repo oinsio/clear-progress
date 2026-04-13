@@ -94,9 +94,7 @@ describe("useGoals", () => {
       await result.current.updateGoal(goal.id, { name: "New name" });
     });
 
-    await waitFor(() =>
-      expect(result.current.goals[0].name).toBe("New name"),
-    );
+    await waitFor(() => expect(result.current.goals[0].name).toBe("New name"));
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
   });
 

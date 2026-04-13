@@ -221,7 +221,10 @@ export default function SettingsPage() {
             </section>
 
             {/* Interface scale section */}
-            <section data-testid="settings-interface-scale" className="space-y-3">
+            <section
+              data-testid="settings-interface-scale"
+              className="space-y-3"
+            >
               <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 {t("settings.interfaceScale")}
               </h2>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Plus, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +22,7 @@ import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { defaultTaskService } from "@/services/defaultServices";
 import type { BoxFilter, Box } from "@/types/common";
 import type { Task } from "@/types/entities";
 import { BOX_FILTER_ALL, BOX } from "@/constants";
@@ -294,7 +295,9 @@ export default function InboxPage() {
         [BOX.WEEK]: duplicateWeek,
         [BOX.LATER]: duplicateLater,
       };
-      await duplicateByBox[task.box](id);
+      const newTask = await duplicateByBox[task.box](id);
+      setSelectedTaskId(newTask.id);
+      setSelectedTask(newTask);
     },
     [
       inboxTasks,
@@ -476,8 +479,15 @@ export default function InboxPage() {
     earlierTasks: earlierCompletedTasks,
   } = useMemo(() => groupCompletedTasks(completedTasks), [completedTasks]);
 
-  const selectedTask = useMemo(() => {
-    if (!selectedTaskId) return null;
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  useEffect(() => {
+    if (!selectedTaskId) {
+      setSelectedTask(null);
+      return;
+    }
+
+    // Сначала ищем в массивах (быстро)
     const allTasks = [
       ...inboxTasks,
       ...todayTasks,
@@ -485,7 +495,17 @@ export default function InboxPage() {
       ...laterTasks,
       ...completedTasks,
     ];
-    return allTasks.find((task) => task.id === selectedTaskId) ?? null;
+    const found = allTasks.find((task) => task.id === selectedTaskId);
+
+    if (found) {
+      setSelectedTask(found);
+    } else {
+      // Если не нашли — запрашиваем из БД (для только что созданных задач)
+      void (async () => {
+        const task = await defaultTaskService.getById(selectedTaskId);
+        if (task) setSelectedTask(task);
+      })();
+    }
   }, [
     selectedTaskId,
     inboxTasks,

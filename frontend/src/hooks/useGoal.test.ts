@@ -111,17 +111,13 @@ describe("useGoal", () => {
     const { result } = renderHook(() =>
       useGoal(goal.id, goalService, taskService),
     );
-    await waitFor(() =>
-      expect(result.current.goal?.name).toBe("Initial name"),
-    );
+    await waitFor(() => expect(result.current.goal?.name).toBe("Initial name"));
 
     await act(async () => {
       await db.goals.put({ ...goal, name: "Updated name" });
     });
 
-    await waitFor(() =>
-      expect(result.current.goal?.name).toBe("Updated name"),
-    );
+    await waitFor(() => expect(result.current.goal?.name).toBe("Updated name"));
   });
 
   it("should reactively update when task linked to goal is added externally", async () => {

@@ -57,9 +57,7 @@ function SortableContextItem({
   const { panelSide } = usePanelSide();
 
   const style = {
-    transform: transform
-      ? `translate3d(0, ${transform.y}px, 0)`
-      : undefined,
+    transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
     transition,
     opacity: isDragging ? 0.4 : 1,
   };
@@ -221,75 +219,75 @@ export default function ContextsPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
             {!isLoading && activeContexts.length === 0 && !isAddingContext ? (
-            <button
-              type="button"
-              onClick={() => setIsAddingContext(true)}
-              className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
-              data-testid="empty-contexts-message"
-            >
-              <p className="text-sm">{t("context.empty")}</p>
-            </button>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={activeContexts.map((c) => c.id)}
-                strategy={verticalListSortingStrategy}
+              <button
+                type="button"
+                onClick={() => setIsAddingContext(true)}
+                className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
+                data-testid="empty-contexts-message"
               >
-                <ul>
-                  {activeContexts.map((context) => (
-                    <SortableContextItem
-                      key={context.id}
-                      context={context}
-                      taskCount={contextTaskCounts[context.id] ?? 0}
-                      onNavigate={(id) => navigate(`/contexts/${id}`)}
-                    />
-                  ))}
-
-                  {/* Inline add context input */}
-                  {isAddingContext && (
-                    <li className="px-4 py-3 border-b border-gray-100">
-                      <textarea
-                        ref={newContextTextareaRef}
-                        rows={1}
-                        autoFocus
-                        value={newContextName}
-                        onChange={(event) =>
-                          setNewContextName(event.target.value)
-                        }
-                        onKeyDown={handleAddContextKeyDown}
-                        onBlur={handleAddContextBlur}
-                        placeholder={t("context.namePlaceholder")}
-                        className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                        data-testid="add-context-input"
+                <p className="text-sm">{t("context.empty")}</p>
+              </button>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={activeContexts.map((c) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul>
+                    {activeContexts.map((context) => (
+                      <SortableContextItem
+                        key={context.id}
+                        context={context}
+                        taskCount={contextTaskCounts[context.id] ?? 0}
+                        onNavigate={(id) => navigate(`/contexts/${id}`)}
                       />
-                    </li>
-                  )}
-                </ul>
-              </SortableContext>
-            </DndContext>
-          )}
+                    ))}
 
-          {/* Inline add task input */}
-          {isAddingTask && (
-            <div className="px-4 py-3 border-b border-gray-100">
-              <textarea
-                ref={newTaskTextareaRef}
-                rows={1}
-                autoFocus
-                value={newTaskName}
-                onChange={(event) => setNewTaskName(event.target.value)}
-                onKeyDown={handleAddTaskKeyDown}
-                onBlur={handleAddTaskBlur}
-                placeholder={t("context.taskPlaceholder")}
-                className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                data-testid="add-task-input"
-              />
-            </div>
-          )}
+                    {/* Inline add context input */}
+                    {isAddingContext && (
+                      <li className="px-4 py-3 border-b border-gray-100">
+                        <textarea
+                          ref={newContextTextareaRef}
+                          rows={1}
+                          autoFocus
+                          value={newContextName}
+                          onChange={(event) =>
+                            setNewContextName(event.target.value)
+                          }
+                          onKeyDown={handleAddContextKeyDown}
+                          onBlur={handleAddContextBlur}
+                          placeholder={t("context.namePlaceholder")}
+                          className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
+                          data-testid="add-context-input"
+                        />
+                      </li>
+                    )}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+            )}
+
+            {/* Inline add task input */}
+            {isAddingTask && (
+              <div className="px-4 py-3 border-b border-gray-100">
+                <textarea
+                  ref={newTaskTextareaRef}
+                  rows={1}
+                  autoFocus
+                  value={newTaskName}
+                  onChange={(event) => setNewTaskName(event.target.value)}
+                  onKeyDown={handleAddTaskKeyDown}
+                  onBlur={handleAddTaskBlur}
+                  placeholder={t("context.taskPlaceholder")}
+                  className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
+                  data-testid="add-task-input"
+                />
+              </div>
+            )}
           </div>
         </main>
 

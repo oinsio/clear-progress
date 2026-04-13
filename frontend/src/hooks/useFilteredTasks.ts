@@ -41,7 +41,12 @@ export function useFilteredTasks(
 
   const createTask = useCallback(
     async (name: string, box: Box, description = "") => {
-      await taskService.create({ name, box, description, ...config.createTaskData });
+      await taskService.create({
+        name,
+        box,
+        description,
+        ...config.createTaskData,
+      });
     },
     [taskService, config.createTaskData],
   );

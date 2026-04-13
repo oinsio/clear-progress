@@ -35,7 +35,9 @@ export class TaskRepository {
 
   async getActiveIncomplete(): Promise<Task[]> {
     return db.tasks
-      .filter((task) => !task.is_deleted && !task.is_completed && !task.is_hidden)
+      .filter(
+        (task) => !task.is_deleted && !task.is_completed && !task.is_hidden,
+      )
       .toArray();
   }
 
@@ -43,7 +45,9 @@ export class TaskRepository {
     return db.tasks
       .where("category_id")
       .equals(categoryId)
-      .filter((task) => !task.is_deleted && !task.is_completed && !task.is_hidden)
+      .filter(
+        (task) => !task.is_deleted && !task.is_completed && !task.is_hidden,
+      )
       .toArray();
   }
 
@@ -51,7 +55,9 @@ export class TaskRepository {
     return db.tasks
       .where("context_id")
       .equals(contextId)
-      .filter((task) => !task.is_deleted && !task.is_completed && !task.is_hidden)
+      .filter(
+        (task) => !task.is_deleted && !task.is_completed && !task.is_hidden,
+      )
       .toArray();
   }
 
@@ -73,7 +79,9 @@ export class TaskRepository {
 
   async getCompleted(): Promise<Task[]> {
     return db.tasks
-      .filter((task) => !task.is_deleted && task.is_completed && !task.is_hidden)
+      .filter(
+        (task) => !task.is_deleted && task.is_completed && !task.is_hidden,
+      )
       .toArray();
   }
 
@@ -89,7 +97,9 @@ export class TaskRepository {
     return db.tasks
       .where("is_hidden")
       .equals(1)
-      .filter((task) => task.appear_date !== "" && task.appear_date <= currentDate)
+      .filter(
+        (task) => task.appear_date !== "" && task.appear_date <= currentDate,
+      )
       .toArray();
   }
 
@@ -111,17 +121,13 @@ export class TaskRepository {
       .where("original_task_id")
       .equals(originalTaskId)
       .filter(
-        (task) =>
-          task.is_hidden && !task.is_deleted && !task.is_completed,
+        (task) => task.is_hidden && !task.is_deleted && !task.is_completed,
       )
       .toArray();
     return hiddenTasks[0];
   }
 
   async findByOriginalTaskId(originalTaskId: string): Promise<Task[]> {
-    return db.tasks
-      .where("original_task_id")
-      .equals(originalTaskId)
-      .toArray();
+    return db.tasks.where("original_task_id").equals(originalTaskId).toArray();
   }
 }

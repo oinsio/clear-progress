@@ -60,7 +60,8 @@ export function useTasks(
         await taskService.noncomplete(id);
       } else {
         const { recurring } = await taskService.complete(id);
-        recurringId = recurring?.id ?? null;
+        // Возвращаем ID только если копия НЕ скрыта
+        recurringId = recurring && !recurring.is_hidden ? recurring.id : null;
       }
       schedulePush();
       return recurringId;

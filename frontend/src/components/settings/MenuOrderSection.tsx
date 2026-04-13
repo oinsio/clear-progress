@@ -36,9 +36,7 @@ function SortableMenuOrderItem({
   } = useSortable({ id: config.mode });
 
   const dragStyle = {
-    transform: transform
-      ? `translate3d(0, ${transform.y}px, 0)`
-      : undefined,
+    transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
     transition,
   };
 

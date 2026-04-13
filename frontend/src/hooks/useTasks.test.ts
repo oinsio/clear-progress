@@ -171,7 +171,7 @@ describe("useTasks", () => {
     expect(recurringId).toBeNull();
   });
 
-  it("should return recurring task id when task has repeat_rule", async () => {
+  it("should not return recurring task id when task creates hidden copy", async () => {
     const { result, task } = await setupHookWithOneTask({
       is_completed: false,
       repeat_rule: JSON.stringify({
@@ -188,7 +188,8 @@ describe("useTasks", () => {
       recurringId = await result.current.completeTask(task.id);
     });
 
-    expect(recurringId).not.toBeNull();
+    // Скрытая копия создаётся, но её ID не возвращается
+    expect(recurringId).toBeNull();
   });
 
   it("should return null when completeTask called for nonexistent task", async () => {
@@ -262,16 +263,16 @@ describe("useTasks", () => {
       await result.current.updateTask(task.id, { name: "New name" });
     });
 
-    await waitFor(() =>
-      expect(result.current.tasks[0].name).toBe("New name"),
-    );
+    await waitFor(() => expect(result.current.tasks[0].name).toBe("New name"));
   });
 
   it("should schedule push when updateTask is called", async () => {
     const { result, task } = await setupHookWithOneTask();
 
     await act(async () => {
-      await result.current.updateTask(task.id, { description: "updated description" });
+      await result.current.updateTask(task.id, {
+        description: "updated description",
+      });
     });
 
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);

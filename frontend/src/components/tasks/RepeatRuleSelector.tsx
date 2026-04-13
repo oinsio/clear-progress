@@ -185,10 +185,7 @@ export function RepeatRuleSelector({
       if (!isNaN(parsed)) {
         setState((prev) => ({
           ...prev,
-          delayDays: Math.min(
-            MAX_DELAY_DAYS,
-            Math.max(MIN_DELAY_DAYS, parsed),
-          ),
+          delayDays: Math.min(MAX_DELAY_DAYS, Math.max(MIN_DELAY_DAYS, parsed)),
         }));
       }
     },

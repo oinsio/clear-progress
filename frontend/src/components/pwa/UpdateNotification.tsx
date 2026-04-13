@@ -12,7 +12,10 @@ export function UpdateNotification() {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(_swUrl: string, registration: ServiceWorkerRegistration | undefined) {
+    onRegisteredSW(
+      _swUrl: string,
+      registration: ServiceWorkerRegistration | undefined,
+    ) {
       if (registration) {
         setInterval(() => {
           void registration.update();

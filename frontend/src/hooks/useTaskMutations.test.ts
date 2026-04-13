@@ -207,7 +207,9 @@ describe("useTaskMutations", () => {
       );
 
       await act(async () => {
-        await result.current.updateTask("task-1", { description: "new description" });
+        await result.current.updateTask("task-1", {
+          description: "new description",
+        });
       });
 
       expect(onReload).toHaveBeenCalledOnce();
@@ -321,11 +323,31 @@ describe("useTaskMutations", () => {
   });
 
   describe("callback updates when dependencies change", () => {
-    it("should call updated onReload in completeTask after onReload changes", async () => {
-      const task = buildTask({ is_completed: false });
-      mockTaskService = createMockTaskService({
-        getById: vi.fn().mockResolvedValue(task),
-      });
+    it.each([
+      {
+        method: "completeTask" as const,
+        setup: (): string => {
+          const task = buildTask({ is_completed: false });
+          mockTaskService = createMockTaskService({
+            getById: vi.fn().mockResolvedValue(task),
+          });
+          return task.id;
+        },
+      },
+      {
+        method: "updateTask" as const,
+        setup: (): string => "task-1",
+      },
+      {
+        method: "moveTask" as const,
+        setup: (): string => "task-1",
+      },
+      {
+        method: "deleteTask" as const,
+        setup: (): string => "task-1",
+      },
+    ])("should call updated onReload in $method after onReload changes", async ({ method, setup }) => {
+      const taskId = setup();
       const firstOnReload = vi.fn().mockResolvedValue(undefined);
       const secondOnReload = vi.fn().mockResolvedValue(undefined);
 
@@ -338,67 +360,15 @@ describe("useTaskMutations", () => {
       rerender({ reload: secondOnReload });
 
       await act(async () => {
-        await result.current.completeTask(task.id);
-      });
-
-      expect(secondOnReload).toHaveBeenCalledOnce();
-      expect(firstOnReload).not.toHaveBeenCalled();
-    });
-
-    it("should call updated onReload in updateTask after onReload changes", async () => {
-      const firstOnReload = vi.fn().mockResolvedValue(undefined);
-      const secondOnReload = vi.fn().mockResolvedValue(undefined);
-
-      const { result, rerender } = renderHook(
-        ({ reload }: { reload: () => Promise<void> }) =>
-          useTaskMutations(mockTaskService, reload),
-        { initialProps: { reload: firstOnReload } },
-      );
-
-      rerender({ reload: secondOnReload });
-
-      await act(async () => {
-        await result.current.updateTask("task-1", { description: "Updated" });
-      });
-
-      expect(secondOnReload).toHaveBeenCalledOnce();
-      expect(firstOnReload).not.toHaveBeenCalled();
-    });
-
-    it("should call updated onReload in moveTask after onReload changes", async () => {
-      const firstOnReload = vi.fn().mockResolvedValue(undefined);
-      const secondOnReload = vi.fn().mockResolvedValue(undefined);
-
-      const { result, rerender } = renderHook(
-        ({ reload }: { reload: () => Promise<void> }) =>
-          useTaskMutations(mockTaskService, reload),
-        { initialProps: { reload: firstOnReload } },
-      );
-
-      rerender({ reload: secondOnReload });
-
-      await act(async () => {
-        await result.current.moveTask("task-1", BOX.TODAY);
-      });
-
-      expect(secondOnReload).toHaveBeenCalledOnce();
-      expect(firstOnReload).not.toHaveBeenCalled();
-    });
-
-    it("should call updated onReload in deleteTask after onReload changes", async () => {
-      const firstOnReload = vi.fn().mockResolvedValue(undefined);
-      const secondOnReload = vi.fn().mockResolvedValue(undefined);
-
-      const { result, rerender } = renderHook(
-        ({ reload }: { reload: () => Promise<void> }) =>
-          useTaskMutations(mockTaskService, reload),
-        { initialProps: { reload: firstOnReload } },
-      );
-
-      rerender({ reload: secondOnReload });
-
-      await act(async () => {
-        await result.current.deleteTask("task-1");
+        if (method === "completeTask") {
+          await result.current.completeTask(taskId);
+        } else if (method === "updateTask") {
+          await result.current.updateTask(taskId, { description: "Updated" });
+        } else if (method === "moveTask") {
+          await result.current.moveTask(taskId, BOX.TODAY);
+        } else if (method === "deleteTask") {
+          await result.current.deleteTask(taskId);
+        }
       });
 
       expect(secondOnReload).toHaveBeenCalledOnce();

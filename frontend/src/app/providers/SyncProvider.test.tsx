@@ -834,7 +834,14 @@ describe("SyncProvider — triggerFullSync", () => {
     await setupAndTriggerFullSync((step) => {
       steps.push(step);
     });
-    expect(steps).toEqual(["reupload_covers", "upload_covers", "push", "pull", "download_covers", "done"]);
+    expect(steps).toEqual([
+      "reupload_covers",
+      "upload_covers",
+      "push",
+      "pull",
+      "download_covers",
+      "done",
+    ]);
   });
 
   it("should report error step when resetAndPull fails during full sync", async () => {

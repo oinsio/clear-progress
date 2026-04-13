@@ -57,14 +57,12 @@ const setupUpdateTaskCapture = (
   mockTaskRepository.getById = vi
     .fn()
     .mockImplementation(async (id) => tasksById[id]);
-  mockTaskRepository.update = vi
-    .fn()
-    .mockImplementation(async (task) => {
-      if (task.id === existingHiddenCopy?.id) {
-        updatedCopyTask = task;
-      }
-      return task;
-    });
+  mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
+    if (task.id === existingHiddenCopy?.id) {
+      updatedCopyTask = task;
+    }
+    return task;
+  });
   mockTaskRepository.create = vi.fn();
   mockTaskRepository.findHiddenRecurringTask = vi
     .fn()
@@ -84,7 +82,6 @@ describe("TaskService - Recurring Tasks Integration", () => {
     taskService = new TaskService(mockTaskRepository, mockChecklistRepository);
     vi.clearAllMocks();
   });
-
 
   describe("Creating recurring task", () => {
     it("should create task with repeat_rule", async () => {
@@ -118,7 +115,6 @@ describe("TaskService - Recurring Tasks Integration", () => {
       expect(task.repeat_rule).toBe(JSON.stringify(repeatRule));
     });
   });
-
 
   describe("Completing recurring task", () => {
     it("should create hidden clone when completing task with repeat_rule", async () => {
@@ -272,9 +268,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       mockTaskRepository.create = vi
         .fn()
         .mockRejectedValue(new Error("DB error"));
-      mockChecklistRepository.getByTaskId = vi
-        .fn()
-        .mockResolvedValue([]);
+      mockChecklistRepository.getByTaskId = vi.fn().mockResolvedValue([]);
 
       const result = await taskService.complete("task-1");
 
@@ -284,7 +278,6 @@ describe("TaskService - Recurring Tasks Integration", () => {
       expect(result.recurring).toBeNull();
     });
   });
-
 
   describe("Completing hidden clone", () => {
     it("should create new hidden clone when completing a hidden task", async () => {
@@ -605,23 +598,19 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const updates: Record<string, ReturnType<typeof buildTask>> = {};
 
-      mockTaskRepository.getById = vi
-        .fn()
-        .mockImplementation(async (id) => {
-          if (id === "task-1") return originalTask;
-          if (id === "task-2") return copy1;
-          if (id === "task-3") return copy2;
-          return undefined;
-        });
+      mockTaskRepository.getById = vi.fn().mockImplementation(async (id) => {
+        if (id === "task-1") return originalTask;
+        if (id === "task-2") return copy1;
+        if (id === "task-3") return copy2;
+        return undefined;
+      });
       mockTaskRepository.findByOriginalTaskId = vi
         .fn()
         .mockResolvedValue([copy1, copy2]);
-      mockTaskRepository.update = vi
-        .fn()
-        .mockImplementation(async (task) => {
-          updates[task.id] = task;
-          return task;
-        });
+      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
+        updates[task.id] = task;
+        return task;
+      });
 
       await taskService.softDelete("task-1");
 
@@ -677,23 +666,19 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const updates: Record<string, ReturnType<typeof buildTask>> = {};
 
-      mockTaskRepository.getById = vi
-        .fn()
-        .mockImplementation(async (id) => {
-          if (id === "task-1") return originalTask;
-          if (id === "task-2") return deletedCopy;
-          if (id === "task-3") return activeCopy;
-          return undefined;
-        });
+      mockTaskRepository.getById = vi.fn().mockImplementation(async (id) => {
+        if (id === "task-1") return originalTask;
+        if (id === "task-2") return deletedCopy;
+        if (id === "task-3") return activeCopy;
+        return undefined;
+      });
       mockTaskRepository.findByOriginalTaskId = vi
         .fn()
         .mockResolvedValue([deletedCopy, activeCopy]);
-      mockTaskRepository.update = vi
-        .fn()
-        .mockImplementation(async (task) => {
-          updates[task.id] = task;
-          return task;
-        });
+      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
+        updates[task.id] = task;
+        return task;
+      });
 
       await taskService.softDelete("task-1");
 

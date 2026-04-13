@@ -69,7 +69,9 @@ describe("TaskQuickActions", () => {
     await userEvent.click(
       screen.getByRole("button", { name: /редактировать заметку/i }),
     );
-    expect(screen.queryByTestId("quick-description-input")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("quick-description-input"),
+    ).not.toBeInTheDocument();
   });
 
   it("should prefill description textarea with task description", async () => {
@@ -94,7 +96,9 @@ describe("TaskQuickActions", () => {
     await userEvent.clear(textarea);
     await userEvent.type(textarea, "new description");
     await userEvent.keyboard("{Enter}");
-    expect(onUpdate).toHaveBeenCalledWith(task.id, { description: "new description" });
+    expect(onUpdate).toHaveBeenCalledWith(task.id, {
+      description: "new description",
+    });
   });
 
   it("should save description when description textarea loses focus", async () => {

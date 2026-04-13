@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Plus, Pencil, Check, Trash2 } from "lucide-react";
@@ -10,6 +10,8 @@ import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useSettings } from "@/hooks/useSettings";
+import { useTasksByBox } from "@/hooks/useTasksByBox";
+import { defaultTaskService } from "@/services/defaultServices";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
@@ -17,7 +19,6 @@ import {
   RightFilterPanel,
   type RightPanelMode,
 } from "@/components/tasks/RightFilterPanel";
-import { BOX } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import type { Task, Goal, Context, Category } from "@/types/entities";
 import type { Box } from "@/types/common";
@@ -97,26 +98,27 @@ export function EntityDetailLayout({
   const [isAddingTask, setIsAddingTask] = useState(false);
   const { defaultBox } = useSettings();
 
-  const tasksByBox = useMemo(() => {
-    const grouped: Record<Box, Task[]> = {
-      [BOX.INBOX]: [],
-      [BOX.TODAY]: [],
-      [BOX.WEEK]: [],
-      [BOX.LATER]: [],
-    };
-    for (const task of tasks) {
-      grouped[task.box].push(task);
-    }
-    return grouped;
-  }, [tasks]);
+  const tasksByBox = useTasksByBox(tasks);
 
-  const selectedTask = useMemo(
-    () =>
-      selectedTaskId
-        ? (tasks.find((task) => task.id === selectedTaskId) ?? null)
-        : null,
-    [selectedTaskId, tasks],
-  );
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  useEffect(() => {
+    if (!selectedTaskId) {
+      setSelectedTask(null);
+      return;
+    }
+
+    const found = tasks.find((task) => task.id === selectedTaskId);
+
+    if (found) {
+      setSelectedTask(found);
+    } else {
+      void (async () => {
+        const task = await defaultTaskService.getById(selectedTaskId);
+        if (task) setSelectedTask(task);
+      })();
+    }
+  }, [selectedTaskId, tasks]);
 
   const handleTaskSelect = useCallback((taskId: string) => {
     setSelectedTaskId((previous) => (previous === taskId ? null : taskId));
@@ -202,101 +204,101 @@ export function EntityDetailLayout({
             <div className="xl:max-w-3xl xl:mx-auto">
               {/* Entity card */}
               {entity && (
-              <div
-                data-testid={`${testIdPrefix}-card`}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-4 border-b border-gray-100 border-l-2 transition-colors",
-                  isUnsynced ? "border-l-amber-400" : "border-l-transparent",
-                )}
-              >
-                {isEditing && (
-                  <button
-                    type="button"
-                    aria-label={t(i18nKeys.deleteLabel)}
-                    onClick={() => setIsDeleteConfirmOpen(true)}
-                    className="w-8 h-8 flex items-center justify-center rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    data-testid={`${testIdPrefix}-delete-btn`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
+                <div
+                  data-testid={`${testIdPrefix}-card`}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-4 border-b border-gray-100 border-l-2 transition-colors",
+                    isUnsynced ? "border-l-amber-400" : "border-l-transparent",
+                  )}
+                >
+                  {isEditing && (
+                    <button
+                      type="button"
+                      aria-label={t(i18nKeys.deleteLabel)}
+                      onClick={() => setIsDeleteConfirmOpen(true)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      data-testid={`${testIdPrefix}-delete-btn`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
 
-                <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-5 h-5 text-accent" />
+                  <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-5 h-5 text-accent" />
+                  </div>
+
+                  {isEditing ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") void handleConfirmEdit();
+                        if (e.key === "Escape") handleCancelEdit();
+                      }}
+                      onBlur={() => void handleConfirmEdit()}
+                      className="flex-1 text-gray-800 font-medium text-sm border-b border-accent outline-none bg-transparent"
+                      data-testid={`${testIdPrefix}-name-input`}
+                    />
+                  ) : (
+                    <span className="flex-1 text-gray-800 font-medium">
+                      {entity.name}
+                    </span>
+                  )}
+
+                  {isEditing ? (
+                    <button
+                      type="button"
+                      aria-label={t(i18nKeys.saveName)}
+                      onClick={() => void handleConfirmEdit()}
+                      disabled={!editName.trim()}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-accent hover:bg-accent/10 transition-colors disabled:opacity-40"
+                      data-testid={`${testIdPrefix}-save-btn`}
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={t(i18nKeys.editName)}
+                      onClick={handleStartEdit}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      data-testid={`${testIdPrefix}-edit-btn`}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
+              )}
 
-                {isEditing ? (
-                  <input
-                    autoFocus
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") void handleConfirmEdit();
-                      if (e.key === "Escape") handleCancelEdit();
-                    }}
-                    onBlur={() => void handleConfirmEdit()}
-                    className="flex-1 text-gray-800 font-medium text-sm border-b border-accent outline-none bg-transparent"
-                    data-testid={`${testIdPrefix}-name-input`}
-                  />
-                ) : (
-                  <span className="flex-1 text-gray-800 font-medium">
-                    {entity.name}
-                  </span>
-                )}
+              {/* Inline task creation input */}
+              {isAddingTask && (
+                <AddTaskInput
+                  targetBox={t(`box.${defaultBox}`)}
+                  onAdd={async (name) => {
+                    await onCreateTask(name, defaultBox, "");
+                    setIsAddingTask(false);
+                  }}
+                  onCancel={() => setIsAddingTask(false)}
+                />
+              )}
 
-                {isEditing ? (
-                  <button
-                    type="button"
-                    aria-label={t(i18nKeys.saveName)}
-                    onClick={() => void handleConfirmEdit()}
-                    disabled={!editName.trim()}
-                    className="w-8 h-8 flex items-center justify-center rounded-full text-accent hover:bg-accent/10 transition-colors disabled:opacity-40"
-                    data-testid={`${testIdPrefix}-save-btn`}
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    aria-label={t(i18nKeys.editName)}
-                    onClick={handleStartEdit}
-                    className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                    data-testid={`${testIdPrefix}-edit-btn`}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Inline task creation input */}
-            {isAddingTask && (
-              <AddTaskInput
-                targetBox={t(`box.${defaultBox}`)}
-                onAdd={async (name) => {
-                  await onCreateTask(name, defaultBox, "");
-                  setIsAddingTask(false);
-                }}
-                onCancel={() => setIsAddingTask(false)}
+              {/* Task content */}
+              <BoxSectionList
+                isLoading={isLoading}
+                tasksByBox={tasksByBox}
+                goals={goals}
+                contexts={contexts}
+                categories={categories}
+                onAddPromptClick={() => setIsAddingTask(true)}
+                onComplete={onCompleteTask}
+                onUpdate={onUpdateTask}
+                onMove={onMoveTask}
+                onDelete={onDeleteTask}
+                onSelect={handleTaskSelect}
+                selectedTaskId={selectedTaskId}
               />
-            )}
-
-            {/* Task content */}
-            <BoxSectionList
-              isLoading={isLoading}
-              tasksByBox={tasksByBox}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onAddPromptClick={() => setIsAddingTask(true)}
-              onComplete={onCompleteTask}
-              onUpdate={onUpdateTask}
-              onMove={onMoveTask}
-              onDelete={onDeleteTask}
-              onSelect={handleTaskSelect}
-              selectedTaskId={selectedTaskId}
-            />
             </div>
           </main>
 
@@ -371,7 +373,9 @@ export function EntityDetailLayout({
               void onDeleteTask(taskId);
             }}
             onDuplicate={async (taskId) => {
-              await onDuplicateTask(taskId);
+              const newTask = await onDuplicateTask(taskId);
+              setSelectedTaskId(newTask.id);
+              setSelectedTask(newTask);
             }}
             onClose={handleDetailPanelClose}
             style={

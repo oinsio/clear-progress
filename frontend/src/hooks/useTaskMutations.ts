@@ -1,8 +1,8 @@
-import { useCallback } from "react";
+import { useMemo } from "react";
 import type { Task } from "@/types/entities";
 import type { Box } from "@/types/common";
 import { TaskService } from "@/services/TaskService";
-import { useSync } from "@/app/providers/SyncProvider";
+import { useSyncWrapper } from "./useMutationHelpers";
 
 export interface UseTaskMutationsReturn {
   completeTask: (id: string) => Promise<string | null>;
@@ -16,62 +16,39 @@ export function useTaskMutations(
   taskService: TaskService,
   onReload: () => Promise<void>,
 ): UseTaskMutationsReturn {
-  const { schedulePush } = useSync();
+  const withSync = useSyncWrapper(onReload);
 
-  const completeTask = useCallback(
-    async (id: string): Promise<string | null> => {
-      const task = await taskService.getById(id);
-      if (!task) return null;
-      let recurringId: string | null = null;
-      if (task.is_completed) {
-        await taskService.noncomplete(id);
-      } else {
-        const { recurring } = await taskService.complete(id);
-        recurringId = recurring?.id ?? null;
-      }
-      await onReload();
-      schedulePush();
-      return recurringId;
-    },
-    [taskService, onReload, schedulePush],
+  return useMemo(
+    () => ({
+      completeTask: async (id: string): Promise<string | null> => {
+        const task = await taskService.getById(id);
+        if (!task) return null;
+
+        return withSync(async () => {
+          let recurringId: string | null = null;
+          if (task.is_completed) {
+            await taskService.noncomplete(id);
+          } else {
+            const { recurring } = await taskService.complete(id);
+            // Возвращаем ID только если копия НЕ скрыта
+            recurringId = recurring && !recurring.is_hidden ? recurring.id : null;
+          }
+          return recurringId;
+        });
+      },
+      updateTask: async (id: string, changes: Partial<Task>) => {
+        await withSync(() => taskService.update(id, changes));
+      },
+      moveTask: async (id: string, box: Box) => {
+        await withSync(() => taskService.moveToBox(id, box));
+      },
+      deleteTask: async (id: string) => {
+        await withSync(() => taskService.softDelete(id));
+      },
+      duplicateTask: async (id: string): Promise<Task> => {
+        return withSync(() => taskService.duplicate(id), false);
+      },
+    }),
+    [taskService, withSync],
   );
-
-  const updateTask = useCallback(
-    async (id: string, changes: Partial<Task>) => {
-      await taskService.update(id, changes);
-      await onReload();
-      schedulePush();
-    },
-    [taskService, onReload, schedulePush],
-  );
-
-  const moveTask = useCallback(
-    async (id: string, box: Box) => {
-      await taskService.moveToBox(id, box);
-      await onReload();
-      schedulePush();
-    },
-    [taskService, onReload, schedulePush],
-  );
-
-  const deleteTask = useCallback(
-    async (id: string) => {
-      await taskService.softDelete(id);
-      await onReload();
-      schedulePush();
-    },
-    [taskService, onReload, schedulePush],
-  );
-
-  const duplicateTask = useCallback(
-    async (id: string): Promise<Task> => {
-      const newTask = await taskService.duplicate(id);
-      await onReload();
-      schedulePush();
-      return newTask;
-    },
-    [taskService, onReload, schedulePush],
-  );
-
-  return { completeTask, updateTask, moveTask, deleteTask, duplicateTask };
 }

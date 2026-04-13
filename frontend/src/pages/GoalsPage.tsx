@@ -48,9 +48,7 @@ function SortableGoalItem({
   } = useSortable({ id: goal.id });
 
   const style = {
-    transform: transform
-      ? `translate3d(0, ${transform.y}px, 0)`
-      : undefined,
+    transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
     transition,
     opacity: isDragging ? 0.4 : 1,
   };
