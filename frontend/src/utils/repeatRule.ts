@@ -197,42 +197,31 @@ export function calculateAppearDate(
 
 export function formatRepeatRuleLabel(rule: RepeatRule, t: TFunction): string {
   if (rule.type === "after_completion") {
-    return t("repeat.afterCompletion", { days: rule.delay_days ?? 1 });
+    return t("repeat.afterCompletion", { count: rule.delay_days ?? 1 });
   }
 
   // type === 'fixed'
   const interval = rule.interval ?? 1;
   switch (rule.frequency) {
     case "daily":
-      return interval === 1
-        ? t("repeat.daily")
-        : t("repeat.everyNDays", { count: interval });
+      return t("repeat.everyNDays", { count: interval });
     case "weekly": {
       if (rule.weekdays && rule.weekdays.length > 0) {
         const dayLabels = rule.weekdays
           .map((day) => t(`repeat.weekday${day}`))
           .join(", ");
-        return interval === 1
-          ? t("repeat.weeklyDays", { days: dayLabels })
-          : t("repeat.everyNWeeks", { count: interval, days: dayLabels });
+        return t("repeat.everyNWeeks", { count: interval, days: dayLabels });
       }
       return t("repeat.weekly");
     }
     case "monthly":
-      return interval === 1
-        ? t("repeat.monthly", { day: rule.day_of_month })
-        : t("repeat.everyNMonths", { count: interval, day: rule.day_of_month });
+      return t("repeat.everyNMonths", { count: interval, day: rule.day_of_month });
     case "yearly":
-      return interval === 1
-        ? t("repeat.yearly", {
-            month: rule.month_and_day?.month,
-            day: rule.month_and_day?.day,
-          })
-        : t("repeat.everyNYears", {
-            count: interval,
-            month: rule.month_and_day?.month,
-            day: rule.month_and_day?.day,
-          });
+      return t("repeat.everyNYears", {
+        count: interval,
+        month: rule.month_and_day?.month,
+        day: rule.month_and_day?.day,
+      });
     default:
       return t("repeat.none");
   }
