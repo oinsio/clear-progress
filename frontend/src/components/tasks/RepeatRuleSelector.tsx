@@ -432,7 +432,7 @@ export function RepeatRuleSelector({
                 htmlFor="repeat-day-of-month"
                 className="text-sm text-gray-600"
               >
-                {t("repeat.dayOfMonthLabel", { count: state.dayOfMonth })}
+                {t("repeat.dayOfMonthLabel", { count: state.dayOfMonth, ordinal: true })}
               </label>
               <input
                 id="repeat-day-of-month"

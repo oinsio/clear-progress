@@ -231,6 +231,7 @@
     "weekly": "По дням недели",
     "weeklyDays": "По {{days}}",
     "monthly": "Каждый месяц",
+    "dayOfMonthLabel_ordinal_other": "Каждое {{count}}-е число месяца",
     "interval_one": "Каждый {{count}} день",
     "interval_few": "Каждые {{count}} дня",
     "interval_many": "Каждые {{count}} дней",

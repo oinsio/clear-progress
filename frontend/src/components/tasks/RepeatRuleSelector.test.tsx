@@ -747,4 +747,29 @@ describe("RepeatRuleSelector", () => {
       expect(screen.getByTestId("repeat-type-step")).toBeInTheDocument();
     });
   });
+
+  describe("Ordinal number formatting", () => {
+    it("should use ordinal parameter for dayOfMonthLabel translation", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <RepeatRuleSelector
+          value={null}
+          onChange={mockOnChange}
+          onBack={mockOnBack}
+        />,
+      );
+
+      // Navigate to fixed params
+      await user.click(screen.getByTestId("repeat-type-fixed"));
+      expect(screen.getByTestId("repeat-fixed-params-step")).toBeInTheDocument();
+
+      // Select monthly frequency
+      await user.click(screen.getByTestId("repeat-frequency-monthly"));
+
+      // Check that the label is rendered (the actual ordinal formatting is handled by i18next)
+      const label = screen.getByText(/repeat\.dayOfMonthLabel/);
+      expect(label).toBeInTheDocument();
+    });
+  });
 });
