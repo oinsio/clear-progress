@@ -7,8 +7,8 @@ import type { RepeatRule } from "@/types/common";
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
-      if (key === "repeat.afterCompletion" && params?.days) {
-        return `After ${params.days} days`;
+      if (key === "repeat.afterCompletion" && params?.count) {
+        return `After ${params.count} days`;
       }
       return key;
     },

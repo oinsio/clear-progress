@@ -313,7 +313,7 @@ export function RepeatRuleSelector({
             onClick={() => handleTypeSelect("after_completion")}
             className="text-left text-sm px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
-            {t("repeat.afterCompletion", { days: state.delayDays })}
+            {t("repeat.afterCompletion", { count: state.delayDays })}
           </button>
           {value && (
             <button
@@ -376,7 +376,10 @@ export function RepeatRuleSelector({
                 htmlFor="repeat-interval"
                 className="text-sm text-gray-600"
               >
-                {t("repeat.interval")}
+                {state.frequency === "daily" && t("repeat.intervalDays", { count: state.interval })}
+                {state.frequency === "weekly" && t("repeat.intervalWeeks", { count: state.interval })}
+                {state.frequency === "monthly" && t("repeat.intervalMonths", { count: state.interval })}
+                {state.frequency === "yearly" && t("repeat.intervalYears", { count: state.interval })}
               </label>
               <input
                 id="repeat-interval"
@@ -429,7 +432,7 @@ export function RepeatRuleSelector({
                 htmlFor="repeat-day-of-month"
                 className="text-sm text-gray-600"
               >
-                {t("repeat.dayOfMonth")}
+                {t("repeat.dayOfMonthLabel", { count: state.dayOfMonth })}
               </label>
               <input
                 id="repeat-day-of-month"
@@ -511,7 +514,7 @@ export function RepeatRuleSelector({
             <ArrowLeft size={18} />
           </button>
           <h2 className="text-base font-semibold text-gray-800">
-            {t("repeat.afterCompletion", { days: state.delayDays })}
+            {t("repeat.afterCompletion", { count: state.delayDays })}
           </h2>
         </div>
         <div className="px-4 py-4 flex flex-col gap-4">
@@ -591,7 +594,7 @@ export function RepeatRuleSelector({
               htmlFor="repeat-advance-days"
               className="text-sm text-gray-600"
             >
-              {t("repeat.advanceDays")}
+              {t("repeat.advanceDays", { count: state.advanceDays })}
             </label>
             <input
               id="repeat-advance-days"
