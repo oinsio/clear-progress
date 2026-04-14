@@ -21,7 +21,7 @@ export function createMockTaskRepository(
       bulkUpsert: vi.fn().mockResolvedValue(undefined),
       getByMinVersion: vi.fn().mockResolvedValue([]),
       getChangedSince: vi.fn().mockResolvedValue([]),
-      getDirty: vi.fn().mockResolvedValue([]),
+      getNeedingSync: vi.fn().mockResolvedValue([]),
       getTasksToReveal: vi.fn().mockResolvedValue([]),
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
       findHiddenRecurringTask: vi.fn().mockResolvedValue(undefined),
