@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { FileText, Target, Pencil, Inbox, MapPin, Tag } from "lucide-react";
+import { FileText, Target, Pencil, Inbox, MapPin, Tag, Repeat } from "lucide-react";
 import type { Task, Goal, Context, Category } from "@/types/entities";
-import type { Box } from "@/types/common";
+import type { Box, RepeatRule } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
 import { BOX, BOX_FILTER_LABELS } from "@/constants";
 import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon } from "./BoxIcons";
+import { RepeatRuleSelector } from "./RepeatRuleSelector";
 import * as React from "react";
 
 type QuickActionMode =
@@ -14,7 +15,8 @@ type QuickActionMode =
   | "goal"
   | "box"
   | "context"
-  | "category";
+  | "category"
+  | "repeat";
 
 interface TaskQuickActionsProps {
   task: Task;
@@ -149,6 +151,27 @@ export function TaskQuickActions({
         : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
   );
 
+  const repeatButtonClass = cn(
+    "flex items-center justify-center w-9 h-9 rounded-lg transition-colors",
+    activeMode === "repeat"
+      ? "bg-accent/15 text-accent"
+      : task.repeat_rule
+        ? "text-accent hover:bg-accent/10"
+        : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+  );
+
+  const handleRepeatChange = useCallback(
+    async (rule: RepeatRule | null) => {
+      await onUpdate(task.id, { repeat_rule: rule ? JSON.stringify(rule) : "" });
+      setActiveMode("none");
+    },
+    [task.id, onUpdate],
+  );
+
+  const handleRepeatBack = useCallback(() => {
+    setActiveMode("none");
+  }, []);
+
   return (
     <div
       data-testid="task-quick-actions"
@@ -205,6 +228,15 @@ export function TaskQuickActions({
           className={categoryButtonClass}
         >
           <Tag size={17} />
+        </button>
+        <button
+          type="button"
+          aria-label={t("task.selectRepeat")}
+          aria-pressed={activeMode === "repeat"}
+          onClick={() => handleModeToggle("repeat")}
+          className={repeatButtonClass}
+        >
+          <Repeat size={17} />
         </button>
         <button
           type="button"
@@ -364,6 +396,17 @@ export function TaskQuickActions({
               );
             },
           )}
+        </div>
+      )}
+
+      {/* Repeat rule selector */}
+      {activeMode === "repeat" && (
+        <div className="pb-2">
+          <RepeatRuleSelector
+            value={task.repeat_rule ? JSON.parse(task.repeat_rule) : null}
+            onChange={handleRepeatChange}
+            onBack={handleRepeatBack}
+          />
         </div>
       )}
     </div>

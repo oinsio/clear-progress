@@ -325,4 +325,45 @@ describe("TaskQuickActions", () => {
     );
     expect(onUpdate).toHaveBeenCalledWith(task.id, { category_id: "" });
   });
+
+  it("should render repeat button", () => {
+    renderQuickActions();
+    expect(
+      screen.getByRole("button", { name: /настроить повтор/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("should show repeat selector when repeat button is clicked", async () => {
+    renderQuickActions();
+    await userEvent.click(
+      screen.getByRole("button", { name: /настроить повтор/i }),
+    );
+    expect(screen.getByTestId("repeat-type-step")).toBeInTheDocument();
+  });
+
+  it("should hide repeat selector when back button is clicked", async () => {
+    renderQuickActions();
+    await userEvent.click(
+      screen.getByRole("button", { name: /настроить повтор/i }),
+    );
+    await userEvent.click(screen.getByTestId("repeat-back"));
+    expect(screen.queryByTestId("repeat-type-step")).not.toBeInTheDocument();
+  });
+
+  it("should call onUpdate with repeat_rule when repeat configured", async () => {
+    const task = buildTask({ repeat_rule: "" });
+    const onUpdate = vi.fn().mockResolvedValue(undefined);
+    renderQuickActions({ task, onUpdate });
+    await userEvent.click(
+      screen.getByRole("button", { name: /настроить повтор/i }),
+    );
+    await userEvent.click(screen.getByTestId("repeat-type-fixed"));
+    await userEvent.click(screen.getByTestId("repeat-frequency-daily"));
+    await userEvent.click(screen.getByTestId("repeat-fixed-next"));
+    await userEvent.click(screen.getByTestId("repeat-target-box-today"));
+    await userEvent.click(screen.getByTestId("repeat-apply"));
+    expect(onUpdate).toHaveBeenCalledWith(task.id, {
+      repeat_rule: expect.stringContaining('"type":"fixed"'),
+    });
+  });
 });
