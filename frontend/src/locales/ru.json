@@ -317,7 +317,20 @@
     "month9": "Сентябрь",
     "month10": "Октябрь",
     "month11": "Ноябрь",
-    "month12": "Декабрь"
+    "month12": "Декабрь",
+    "monthGenitive1": "января",
+    "monthGenitive2": "февраля",
+    "monthGenitive3": "марта",
+    "monthGenitive4": "апреля",
+    "monthGenitive5": "мая",
+    "monthGenitive6": "июня",
+    "monthGenitive7": "июля",
+    "monthGenitive8": "августа",
+    "monthGenitive9": "сентября",
+    "monthGenitive10": "октября",
+    "monthGenitive11": "ноября",
+    "monthGenitive12": "декабря",
+    "monthAndDayWithValue": "Дата: {{count}} {{month}}"
   },
   "taskEdit": {
     "name": "Редактировать задачу",

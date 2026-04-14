@@ -18,20 +18,71 @@ vi.mock("react-i18next", () => ({
 describe("RepeatRuleSelector", () => {
   const mockOnChange = vi.fn();
   const mockOnBack = vi.fn();
+  let user: ReturnType<typeof userEvent.setup>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    user = userEvent.setup();
   });
+
+  // Helper: render component with default props
+  const renderComponent = (value: RepeatRule | null = null) => {
+    return render(
+      <RepeatRuleSelector
+        value={value}
+        onChange={mockOnChange}
+        onBack={mockOnBack}
+      />,
+    );
+  };
+
+  // Helper: navigate to fixed params step
+  const navigateToFixedParams = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByTestId("repeat-type-fixed"));
+  };
+
+  // Helper: navigate to after completion params step
+  const navigateToAfterCompletionParams = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByTestId("repeat-type-after-completion"));
+  };
+
+  // Helper: navigate to placement step via fixed frequency
+  const navigateToPlacementViaFixed = async (user: ReturnType<typeof userEvent.setup>) => {
+    await navigateToFixedParams(user);
+    await user.click(screen.getByTestId("repeat-frequency-daily"));
+    await user.click(screen.getByTestId("repeat-fixed-next"));
+  };
+
+  // Helper: navigate to placement step via after completion
+  const navigateToPlacementViaAfterCompletion = async (user: ReturnType<typeof userEvent.setup>) => {
+    await navigateToAfterCompletionParams(user);
+    await user.click(screen.getByTestId("repeat-after-completion-next"));
+  };
+
+  // Helper: create fixed daily RepeatRule
+  const createFixedDailyRule = (): RepeatRule => ({
+    type: "fixed",
+    frequency: "daily",
+    interval: 1,
+    target_box: "today",
+    advance_days: 0,
+  });
+
+  // Helper: setup yearly frequency and return day input
+  const setupYearlyFrequency = async (user: ReturnType<typeof userEvent.setup>) => {
+    await navigateToFixedParams(user);
+    await user.click(screen.getByTestId("repeat-frequency-yearly"));
+    return screen.getByTestId("repeat-day-input") as HTMLInputElement;
+  };
+
+  // Helper: select month in yearly frequency
+  const selectMonth = async (user: ReturnType<typeof userEvent.setup>, monthNumber: number) => {
+    await user.click(screen.getByTestId(`repeat-month-${monthNumber}`));
+  };
 
   describe("Step 1: Type selection", () => {
     it("should render type selection step initially", () => {
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
       expect(screen.getByTestId("repeat-type-step")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-type-fixed")).toBeInTheDocument();
@@ -41,46 +92,19 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should not show remove button when value is null", () => {
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
       expect(screen.queryByTestId("repeat-remove")).not.toBeInTheDocument();
     });
 
     it("should show remove button when value is provided", () => {
-      const value: RepeatRule = {
-        type: "fixed",
-        frequency: "daily",
-        interval: 1,
-        target_box: "today",
-        advance_days: 0,
-      };
-
-      render(
-        <RepeatRuleSelector
-          value={value}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent(createFixedDailyRule());
 
       expect(screen.getByTestId("repeat-remove")).toBeInTheDocument();
     });
 
     it("should call onBack when back button is clicked on type step", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
       await user.click(screen.getByTestId("repeat-back"));
 
@@ -88,22 +112,7 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should call onChange(null) and onBack when remove button is clicked", async () => {
-      const user = userEvent.setup();
-      const value: RepeatRule = {
-        type: "fixed",
-        frequency: "daily",
-        interval: 1,
-        target_box: "today",
-        advance_days: 0,
-      };
-
-      render(
-        <RepeatRuleSelector
-          value={value}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent(createFixedDailyRule());
 
       await user.click(screen.getByTestId("repeat-remove"));
 
@@ -112,16 +121,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should navigate to fixed_params step when fixed type is selected", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
 
       expect(
         screen.getByTestId("repeat-fixed-params-step"),
@@ -129,16 +131,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should navigate to after_completion_params step when after_completion type is selected", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-after-completion"));
+      await navigateToAfterCompletionParams(user);
 
       expect(
         screen.getByTestId("repeat-after-completion-params-step"),
@@ -148,16 +143,9 @@ describe("RepeatRuleSelector", () => {
 
   describe("Step 2a: Fixed params", () => {
     it("should render frequency buttons", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
 
       expect(screen.getByTestId("repeat-frequency-daily")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-frequency-weekly")).toBeInTheDocument();
@@ -168,32 +156,18 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should render interval input", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-daily"));
 
       expect(screen.getByTestId("repeat-interval-input")).toBeInTheDocument();
     });
 
     it("should show weekday buttons when weekly frequency is selected", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-weekly"));
 
       for (let day = 1; day <= 7; day++) {
@@ -202,16 +176,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should toggle weekday selection", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-weekly"));
 
       const mondayButton = screen.getByTestId("repeat-weekday-1");
@@ -225,16 +192,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should show day_of_month input when monthly frequency is selected", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-monthly"));
 
       expect(
@@ -243,16 +203,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should show month and day inputs when yearly frequency is selected", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-yearly"));
 
       expect(screen.getByTestId("repeat-month-1")).toBeInTheDocument();
@@ -261,16 +214,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should disable next button when weekly frequency is selected but no weekdays are chosen", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-weekly"));
 
       const nextButton = screen.getByTestId("repeat-fixed-next");
@@ -278,16 +224,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should enable next button when weekly frequency is selected and at least one weekday is chosen", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-weekly"));
       await user.click(screen.getByTestId("repeat-weekday-1"));
 
@@ -296,49 +235,26 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should navigate to placement step when next button is clicked", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
-      await user.click(screen.getByTestId("repeat-frequency-daily"));
-      await user.click(screen.getByTestId("repeat-fixed-next"));
+      await navigateToPlacementViaFixed(user);
 
       expect(screen.getByTestId("repeat-placement-step")).toBeInTheDocument();
     });
 
     it("should navigate back to type step when back button is clicked", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-back"));
 
       expect(screen.getByTestId("repeat-type-step")).toBeInTheDocument();
     });
 
     it("should clamp interval value to min/max range", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-daily"));
 
       const intervalInput = screen.getByTestId(
@@ -359,16 +275,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should clamp day_of_month value to 1-31 range", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-monthly"));
 
       const dayInput = screen.getByTestId(
@@ -385,67 +294,120 @@ describe("RepeatRuleSelector", () => {
       await user.type(dayInput, "0");
       expect(parseInt(dayInput.value, 10)).toBeGreaterThanOrEqual(1);
     });
+
+    it("should allow entering 29 for February in yearly repeat", async () => {
+      renderComponent();
+      const dayInput = await setupYearlyFrequency(user);
+      await selectMonth(user, 2); // February
+
+      await user.clear(dayInput);
+      await user.type(dayInput, "29");
+      expect(dayInput.value).toBe("29");
+    });
+
+    it("should clamp day to 29 when entering 30 in February for yearly repeat", async () => {
+      renderComponent();
+      const dayInput = await setupYearlyFrequency(user);
+      await selectMonth(user, 2); // February
+
+      await user.clear(dayInput);
+      await user.type(dayInput, "30");
+      expect(dayInput.value).toBe("29");
+    });
+
+    it("should adjust day to 28 when switching from January 31 to February", async () => {
+      renderComponent();
+      const dayInput = await setupYearlyFrequency(user);
+      await selectMonth(user, 1); // January
+
+      await user.clear(dayInput);
+      await user.type(dayInput, "31");
+      expect(dayInput.value).toBe("31");
+
+      await selectMonth(user, 2); // Switch to February
+      expect(dayInput.value).toBe("28");
+    });
+
+    it("should adjust day to 28 when switching from April 30 to February", async () => {
+      renderComponent();
+      const dayInput = await setupYearlyFrequency(user);
+      await selectMonth(user, 4); // April
+
+      await user.clear(dayInput);
+      await user.type(dayInput, "30");
+      expect(dayInput.value).toBe("30");
+
+      await selectMonth(user, 2); // Switch to February
+      expect(dayInput.value).toBe("28");
+    });
+
+    it("should keep day 30 when switching from April to May", async () => {
+      renderComponent();
+      const dayInput = await setupYearlyFrequency(user);
+      await selectMonth(user, 4); // April
+
+      await user.clear(dayInput);
+      await user.type(dayInput, "30");
+      expect(dayInput.value).toBe("30");
+
+      await selectMonth(user, 5); // Switch to May (31 days)
+      expect(dayInput.value).toBe("30");
+    });
+
+    it("should clamp day to 30 when entering 31 in April for yearly repeat", async () => {
+      renderComponent();
+      const dayInput = await setupYearlyFrequency(user);
+      await selectMonth(user, 4); // April
+
+      await user.clear(dayInput);
+      await user.type(dayInput, "31");
+      expect(dayInput.value).toBe("30");
+    });
+
+    it("should adjust day to 30 when switching from January 31 to April", async () => {
+      renderComponent();
+      const dayInput = await setupYearlyFrequency(user);
+      await selectMonth(user, 1); // January
+
+      await user.clear(dayInput);
+      await user.type(dayInput, "31");
+      expect(dayInput.value).toBe("31");
+
+      await selectMonth(user, 4); // Switch to April (30 days)
+      expect(dayInput.value).toBe("30");
+    });
   });
 
   describe("Step 2b: After completion params", () => {
     it("should render delay_days input", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-after-completion"));
+      await navigateToAfterCompletionParams(user);
 
       expect(screen.getByTestId("repeat-delay-days-input")).toBeInTheDocument();
     });
 
     it("should navigate to placement step when next button is clicked", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-after-completion"));
-      await user.click(screen.getByTestId("repeat-after-completion-next"));
+      await navigateToPlacementViaAfterCompletion(user);
 
       expect(screen.getByTestId("repeat-placement-step")).toBeInTheDocument();
     });
 
     it("should navigate back to type step when back button is clicked", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-after-completion"));
+      await navigateToAfterCompletionParams(user);
       await user.click(screen.getByTestId("repeat-back"));
 
       expect(screen.getByTestId("repeat-type-step")).toBeInTheDocument();
     });
 
     it("should clamp delay_days value to 1-365 range", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-after-completion"));
+      await navigateToAfterCompletionParams(user);
 
       const delayInput = screen.getByTestId(
         "repeat-delay-days-input",
@@ -465,18 +427,9 @@ describe("RepeatRuleSelector", () => {
 
   describe("Step 3: Placement", () => {
     it("should render target_box buttons", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
-      await user.click(screen.getByTestId("repeat-frequency-daily"));
-      await user.click(screen.getByTestId("repeat-fixed-next"));
+      await navigateToPlacementViaFixed(user);
 
       expect(screen.getByTestId("repeat-target-box-today")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-target-box-week")).toBeInTheDocument();
@@ -484,18 +437,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should render advance_days input", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
-      await user.click(screen.getByTestId("repeat-frequency-daily"));
-      await user.click(screen.getByTestId("repeat-fixed-next"));
+      await navigateToPlacementViaFixed(user);
 
       expect(
         screen.getByTestId("repeat-advance-days-input"),
@@ -503,18 +447,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should navigate back to fixed_params step when back button is clicked", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
-      await user.click(screen.getByTestId("repeat-frequency-daily"));
-      await user.click(screen.getByTestId("repeat-fixed-next"));
+      await navigateToPlacementViaFixed(user);
       await user.click(screen.getByTestId("repeat-back"));
 
       expect(
@@ -523,17 +458,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should navigate back to after_completion_params step when back button is clicked", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-after-completion"));
-      await user.click(screen.getByTestId("repeat-after-completion-next"));
+      await navigateToPlacementViaAfterCompletion(user);
       await user.click(screen.getByTestId("repeat-back"));
 
       expect(
@@ -542,18 +469,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should clamp advance_days value to 0-90 range", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
-      await user.click(screen.getByTestId("repeat-frequency-daily"));
-      await user.click(screen.getByTestId("repeat-fixed-next"));
+      await navigateToPlacementViaFixed(user);
 
       const advanceInput = screen.getByTestId(
         "repeat-advance-days-input",
@@ -574,18 +492,9 @@ describe("RepeatRuleSelector", () => {
 
   describe("Apply and create RepeatRule", () => {
     it("should create fixed daily rule and call onChange", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
-      await user.click(screen.getByTestId("repeat-frequency-daily"));
-      await user.click(screen.getByTestId("repeat-fixed-next"));
+      await navigateToPlacementViaFixed(user);
       await user.click(screen.getByTestId("repeat-apply"));
 
       expect(mockOnChange).toHaveBeenCalledWith({
@@ -599,16 +508,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should create fixed weekly rule with weekdays", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-weekly"));
       await user.click(screen.getByTestId("repeat-weekday-1")); // Monday
       await user.click(screen.getByTestId("repeat-weekday-3")); // Wednesday
@@ -626,16 +528,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should create fixed monthly rule with day_of_month", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-monthly"));
 
       await user.click(screen.getByTestId("repeat-fixed-next"));
@@ -653,16 +548,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should create fixed yearly rule with month_and_day", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-yearly"));
 
       await user.click(screen.getByTestId("repeat-fixed-next"));
@@ -680,16 +568,9 @@ describe("RepeatRuleSelector", () => {
     });
 
     it("should create after_completion rule", async () => {
-      const user = userEvent.setup();
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
-      await user.click(screen.getByTestId("repeat-type-after-completion"));
+      await navigateToAfterCompletionParams(user);
 
       await user.click(screen.getByTestId("repeat-after-completion-next"));
 
@@ -718,13 +599,7 @@ describe("RepeatRuleSelector", () => {
         advance_days: 5,
       };
 
-      render(
-        <RepeatRuleSelector
-          value={value}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent(value);
 
       expect(screen.getByTestId("repeat-type-step")).toBeInTheDocument();
     });
@@ -737,13 +612,7 @@ describe("RepeatRuleSelector", () => {
         advance_days: 3,
       };
 
-      render(
-        <RepeatRuleSelector
-          value={value}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent(value);
 
       expect(screen.getByTestId("repeat-type-step")).toBeInTheDocument();
     });
@@ -753,16 +622,10 @@ describe("RepeatRuleSelector", () => {
     it("should use ordinal parameter for dayOfMonthLabel translation", async () => {
       const user = userEvent.setup();
 
-      render(
-        <RepeatRuleSelector
-          value={null}
-          onChange={mockOnChange}
-          onBack={mockOnBack}
-        />,
-      );
+      renderComponent();
 
       // Navigate to fixed params
-      await user.click(screen.getByTestId("repeat-type-fixed"));
+      await navigateToFixedParams(user);
       expect(screen.getByTestId("repeat-fixed-params-step")).toBeInTheDocument();
 
       // Select monthly frequency

@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { RepeatRule } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
+import { getDaysInMonth } from "@/utils/dateHelpers";
 
 interface RepeatRuleSelectorProps {
   value: RepeatRule | null;
@@ -36,8 +37,6 @@ const MIN_ADVANCE_DAYS = 0;
 const MAX_ADVANCE_DAYS = 90;
 const MIN_DAY_OF_MONTH = 1;
 const MAX_DAY_OF_MONTH = 31;
-const MIN_MONTH = 1;
-const MAX_MONTH = 12;
 
 const ALL_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
@@ -149,26 +148,43 @@ export function RepeatRuleSelector({
   );
 
   const handleMonthSelect = useCallback((month: number) => {
-    setState((prev) => ({
-      ...prev,
-      monthAndDay: {
-        ...prev.monthAndDay,
-        month,
-      },
-    }));
+    setState((prev) => {
+      const maxDaysInNewMonth = getDaysInMonth(month);
+      let newDay = prev.monthAndDay.day;
+
+      // Если текущий день 30 или 31, а новый месяц — февраль, устанавливаем 28
+      if ((prev.monthAndDay.day === 30 || prev.monthAndDay.day === 31) && month === 2) {
+        newDay = 28;
+      }
+      // Если текущий день 31, а новый месяц имеет только 30 дней, устанавливаем 30
+      else if (prev.monthAndDay.day === 31 && maxDaysInNewMonth === 30) {
+        newDay = 30;
+      }
+
+      return {
+        ...prev,
+        monthAndDay: {
+          month,
+          day: newDay,
+        },
+      };
+    });
   }, []);
 
   const handleDayChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const parsed = parseInt(event.target.value, 10);
       if (!isNaN(parsed)) {
-        setState((prev) => ({
-          ...prev,
-          monthAndDay: {
-            ...prev.monthAndDay,
-            day: Math.min(MAX_DAY_OF_MONTH, Math.max(MIN_DAY_OF_MONTH, parsed)),
-          },
-        }));
+        setState((prev) => {
+          const maxDaysInMonth = getDaysInMonth(prev.monthAndDay.month);
+          return {
+            ...prev,
+            monthAndDay: {
+              ...prev.monthAndDay,
+              day: Math.min(maxDaysInMonth, Math.max(MIN_DAY_OF_MONTH, parsed)),
+            },
+          };
+        });
       }
     },
     [],
@@ -446,7 +462,11 @@ export function RepeatRuleSelector({
           {state.frequency === "yearly" && (
             <div className="flex flex-col gap-2">
               <label className="text-sm text-gray-600">
-                {t("repeat.monthAndDay")}
+                {t("repeat.monthAndDayWithValue", {
+                  count: state.monthAndDay.day,
+                  month: t(`repeat.monthGenitive${state.monthAndDay.month}`),
+                  ordinal: true
+                })}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {ALL_MONTHS.map((month) => {
