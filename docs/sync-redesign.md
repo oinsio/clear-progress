@@ -10,7 +10,7 @@
 
 - **`version`** (клиентский) — инкрементируется клиентом при каждом локальном изменении. Используется для определения "менялась ли запись" и для conflict detection (сравнение `updated_at` при push). Не участвует в pull-фильтрации.
 - **`revision`** (серверный) — глобальный монотонный счётчик. Назначается **только сервером**: один revision на весь push-запрос (все принятые записи в одном push получают одинаковый revision). Клиент при pull отправляет `since_revision` — одно число. Сервер возвращает все записи с `revision > since_revision`. Revision должен быть монотонным между push-запросами, но не обязан быть уникальным между записями внутри одного запроса.
-- **`_dirty`** (клиентский, только IndexedDB) — boolean-флаг, отмечающий записи, изменённые локально и ещё не подтверждённые сервером. Не передаётся на сервер.
+- **`needsSync`** (клиентский, только IndexedDB) — boolean-флаг, отмечающий записи, изменённые локально и ещё не подтверждённые сервером. Не передаётся на сервер.
 
 ---
 
@@ -41,7 +41,7 @@
 #### Новые поля в каждой таблице сущностей
 
 - `revision` (number) — серверный revision. `0` означает "запись ещё не была на сервере".
-- `_dirty` (boolean) — `true` = запись изменена локально и ожидает push.
+- `needsSync` (boolean) — `true` = запись изменена локально и ожидает push.
 
 #### Новая таблица `sync_meta`
 
@@ -58,11 +58,11 @@ interface SyncMeta {
 
 Bump `DB_VERSION`. В upgrade-функции:
 
-1. Добавить `revision` и `_dirty` в индексы всех таблиц сущностей.
-2. Пройти по всем существующим записям: проставить `_dirty = true`, `revision = 0`.
+1. Добавить `revision` и `needsSync` в индексы всех таблиц сущностей.
+2. Пройти по всем существующим записям: проставить `needsSync = true`, `revision = 0`.
 3. Создать таблицу `sync_meta`.
 
-Это критически важно: без миграции существующие записи не будут ни пушиться (нет `_dirty`), ни корректно обрабатываться при pull (нет `revision`).
+Это критически важно: без миграции существующие записи не будут ни пушиться (нет `needsSync`), ни корректно обрабатываться при pull (нет `revision`).
 
 ---
 
@@ -182,7 +182,7 @@ interface PullResponse {
 #### Push
 
 ```
-1. Собрать все записи с _dirty === true из всех таблиц
+1. Собрать все записи с needsSync === true из всех таблиц
 2. Если пусто — выход
 3. Запомнить version каждой отправляемой записи (sentVersions map: id → version)
 4. Отправить push({ action: 'push', changes })
@@ -226,9 +226,9 @@ class SyncService {
 
 ```
 1. Найти локальную запись по id
-2. Если нет локальной записи → put с _dirty = false
-3. Если есть и _dirty === false → перезаписать серверной версией, _dirty = false
-4. Если есть и _dirty === true → ПРОПУСТИТЬ (локальная версия уйдёт при push)
+2. Если нет локальной записи → put с needsSync = false
+3. Если есть и needsSync === false → перезаписать серверной версией, needsSync = false
+4. Если есть и needsSync === true → ПРОПУСТИТЬ (локальная версия уйдёт при push)
 ```
 
 #### applyPushResults
@@ -243,15 +243,15 @@ status === 'created' или 'accepted':
   2. Сравнить текущий version с sentVersion (version на момент отправки push)
   3. Если version === sentVersion:
      → Запись не менялась пока шёл push
-     → Обновить: _dirty = false, revision = pushRevision
+     → Обновить: needsSync = false, revision = pushRevision
   4. Если version > sentVersion:
      → Запись менялась во время push
-     → Обновить: revision = pushRevision (но _dirty ОСТАВИТЬ true)
+     → Обновить: revision = pushRevision (но needsSync ОСТАВИТЬ true)
      → Запись уйдёт на сервер повторно при следующем push
 
 status === 'conflict':
   1. Перезаписать локальную запись серверной (server_record)
-  2. Установить _dirty = false
+  2. Установить needsSync = false
   3. Логировать конфликт для отладки
 ```
 
@@ -265,7 +265,7 @@ status === 'conflict':
 // Создание
 await db.tasks.add({
   ...task,
-  _dirty: true,
+  needsSync: true,
   revision: 0,
 });
 
@@ -275,7 +275,7 @@ await db.tasks.update(id, {
   ...updates,
   version: existing.version + 1,
   updated_at: new Date().toISOString(),
-  _dirty: true,
+  needsSync: true,
 });
 
 // Soft delete
@@ -284,7 +284,7 @@ await db.tasks.update(id, {
   is_deleted: true,
   version: existing.version + 1,
   updated_at: new Date().toISOString(),
-  _dirty: true,
+  needsSync: true,
 });
 ```
 
@@ -294,7 +294,7 @@ await db.tasks.update(id, {
 
 ```
 1. Установить sync_meta.last_known_revision = 0
-2. Пометить все локальные записи _dirty = true
+2. Пометить все локальные записи needsSync = true
 3. Выполнить обычный pull → push цикл
 ```
 
@@ -315,7 +315,7 @@ await db.tasks.update(id, {
 1. sync_meta не содержит last_known_revision → default 0
 2. pull({ since_revision: 0 }) → сервер возвращает ВСЁ
 3. Применяются записи с сервера
-4. Все ранее созданные офлайн-записи имеют _dirty = true (из миграции)
+4. Все ранее созданные офлайн-записи имеют needsSync = true (из миграции)
 5. push отправляет их → сервер назначает revision
 6. Обновляем last_known_revision
 ```
@@ -324,20 +324,20 @@ await db.tasks.update(id, {
 
 ```
 1. Открытие приложения → pull
-2. Пользователь работает → изменения в IndexedDB (_dirty = true)
-3. Debounce 5–10с → push dirty записей
+2. Пользователь работает → изменения в IndexedDB (needsSync = true)
+3. Debounce 5–10с → push needsSync записей
 4. Каждые 5 минут → pull
-5. Закрытие/сворачивание → push оставшихся dirty (если есть)
+5. Закрытие/сворачивание → push оставшихся needsSync (если есть)
 ```
 
 ### Offline → Online
 
 ```
-1. Offline: все изменения в IndexedDB, _dirty = true
+1. Offline: все изменения в IndexedDB, needsSync = true
 2. navigator.onLine = true / fetch success
-3. push всех dirty записей
+3. push всех needsSync записей
 4. pull с last_known_revision
-5. Dirty записи не перезаписываются pull (ждут свой push)
+5. needsSync записи не перезаписываются pull (ждут свой push)
 ```
 
 ---
@@ -372,15 +372,15 @@ function processPush(payload) {
 
 ### 3. sentVersions при push (фронтенд)
 
-**Угроза:** пользователь редактирует запись, пока push в полёте. applyPushResults ставит `_dirty = false`, изменение теряется.
+**Угроза:** пользователь редактирует запись, пока push в полёте. applyPushResults ставит `needsSync = false`, изменение теряется.
 
-**Решение:** перед отправкой push сохранять `Map<id, version>` для каждой записи. В applyPushResults сравнивать текущий version в IndexedDB с sentVersion. Если version вырос — не снимать _dirty.
+**Решение:** перед отправкой push сохранять `Map<id, version>` для каждой записи. В applyPushResults сравнивать текущий version в IndexedDB с sentVersion. Если version вырос — не снимать needsSync.
 
 ### 4. Dexie schema migration (фронтенд)
 
-**Угроза:** после обновления кода существующие записи не имеют `_dirty` и `revision`. Они не пушатся и некорректно обрабатываются при pull.
+**Угроза:** после обновления кода существующие записи не имеют `needsSync` и `revision`. Они не пушатся и некорректно обрабатываются при pull.
 
-**Решение:** в Dexie upgrade-функции пройти по всем записям, проставить `_dirty = true`, `revision = 0`. Создать таблицу `sync_meta`.
+**Решение:** в Dexie upgrade-функции пройти по всем записям, проставить `needsSync = true`, `revision = 0`. Создать таблицу `sync_meta`.
 
 ---
 
@@ -388,7 +388,7 @@ function processPush(payload) {
 
 ### Потеря ответа push (сценарий 2)
 
-Если ответ push потерялся — записи остаются `_dirty = true`, повторно пушатся. Сервер назначит новые revision, старые "осиротеют". Данные не теряются. Лишние revision безвредны.
+Если ответ push потерялся — записи остаются `needsSync = true`, повторно пушатся. Сервер назначит новые revision, старые "осиротеют". Данные не теряются. Лишние revision безвредны.
 
 ### Soft-delete + edit на разных устройствах (сценарий 5)
 
@@ -396,7 +396,7 @@ function processPush(payload) {
 
 ### Большой первый push (сценарий 7)
 
-При первом подключении бэкенда после долгой офлайн-работы — push может содержать тысячи записей. GAS имеет лимит 6 минут на execution. Рекомендация: если количество dirty записей > 200, разбивать push на chunk-и по 200 записей. Реализация: SyncService отправляет несколько последовательных push-запросов.
+При первом подключении бэкенда после долгой офлайн-работы — push может содержать тысячи записей. GAS имеет лимит 6 минут на execution. Рекомендация: если количество needsSync записей > 200, разбивать push на chunk-и по 200 записей. Реализация: SyncService отправляет несколько последовательных push-запросов.
 
 ---
 
@@ -430,20 +430,20 @@ function processPush(payload) {
 
 ### Frontend
 
-- [ ] Dexie: bump DB_VERSION, добавить `revision` и `_dirty` в схемы таблиц
+- [ ] Dexie: bump DB_VERSION, добавить `revision` и `needsSync` в схемы таблиц
 - [ ] Dexie: добавить таблицу `sync_meta`
-- [ ] Dexie: написать upgrade-функцию (проставить _dirty=true, revision=0 всем записям)
+- [ ] Dexie: написать upgrade-функцию (проставить needsSync=true, revision=0 всем записям)
 - [ ] Repositories: убрать `getMaxVersion()` из всех репозиториев
 - [ ] SyncService: убрать `getLocalVersions()` и `FULL_SYNC_ZERO_VERSIONS`
 - [ ] SyncService: добавить мьютекс (withLock)
 - [ ] SyncService: pull → читать `last_known_revision` из sync_meta, отправлять `since_revision`
-- [ ] SyncService: pull → applyPullResults с проверкой `_dirty`
+- [ ] SyncService: pull → applyPullResults с проверкой `needsSync`
 - [ ] SyncService: pull → сохранять `current_revision` в sync_meta
-- [ ] SyncService: push → собирать записи с `_dirty === true`
+- [ ] SyncService: push → собирать записи с `needsSync === true`
 - [ ] SyncService: push → сохранять sentVersions (Map<id, version>) перед отправкой
 - [ ] SyncService: push → applyPushResults с проверкой sentVersion vs текущий version
-- [ ] SyncService: Full Sync → `last_known_revision = 0` + все записи `_dirty = true`
-- [ ] Все create/update/delete операции → ставить `_dirty = true`
+- [ ] SyncService: Full Sync → `last_known_revision = 0` + все записи `needsSync = true`
+- [ ] Все create/update/delete операции → ставить `needsSync = true`
 - [ ] При chunked push (>200 записей): разбивать на последовательные запросы
 
 ### Типы (shared)
@@ -459,10 +459,10 @@ function processPush(payload) {
 - [ ] Unit: push назначает один revision всем принятым записям в одном запросе
 - [ ] Unit: push не инкрементирует next_revision, если все записи conflict
 - [ ] Unit: pull фильтрует по revision > since_revision
-- [ ] Unit: applyPullResults пропускает _dirty записи
-- [ ] Unit: applyPushResults не снимает _dirty, если version вырос
-- [ ] Unit: Dexie migration проставляет _dirty=true, revision=0
+- [ ] Unit: applyPullResults пропускает needsSync записи
+- [ ] Unit: applyPushResults не снимает needsSync, если version вырос
+- [ ] Unit: Dexie migration проставляет needsSync=true, revision=0
 - [ ] Integration: два клиента — запись созданная на A появляется на B после pull
-- [ ] Integration: offline→online — dirty записи пушатся и получают revision
+- [ ] Integration: offline→online — needsSync записи пушатся и получают revision
 - [ ] Integration: concurrent edit — last-write-wins, conflict логируется
 - [ ] Integration: full sync — since_revision=0 возвращает все записи

@@ -55,9 +55,9 @@ export class ClearProgressDatabase extends Dexie {
           await tx
             .table(tableName)
             .toCollection()
-            .modify({ _dirty: true, revision: 0 });
+            .modify({ needsSync: true, revision: 0 });
         }
-        await tx.table("settings").toCollection().modify({ _dirty: true });
+        await tx.table("settings").toCollection().modify({ needsSync: true });
         await tx
           .table("sync_meta")
           .put({ key: SYNC_META_KEYS.LAST_KNOWN_REVISION, value: 0 });
@@ -68,7 +68,7 @@ export class ClearProgressDatabase extends Dexie {
         await tx
           .table("ideas")
           .toCollection()
-          .modify({ _dirty: true, revision: 0 });
+          .modify({ needsSync: true, revision: 0 });
       });
     this.version(6)
       .stores(DB_SCHEMA_V4)
@@ -94,6 +94,29 @@ export class ClearProgressDatabase extends Dexie {
       .stores(DB_SCHEMA_V4)
       .upgrade(async (tx) => {
         await tx.table("tasks").toCollection().modify({ original_task_id: "" });
+      });
+    this.version(8)
+      .stores(DB_SCHEMA_V4)
+      .upgrade(async (tx) => {
+        // Переименовать поле _dirty → needsSync во всех таблицах
+        const tables = [
+          "tasks",
+          "goals",
+          "contexts",
+          "categories",
+          "checklist_items",
+          "ideas",
+          "settings",
+        ];
+        for (const tableName of tables) {
+          await tx
+            .table(tableName)
+            .toCollection()
+            .modify((record: any) => {
+              record.needsSync = record._dirty ?? false;
+              delete record._dirty;
+            });
+        }
       });
   }
 }

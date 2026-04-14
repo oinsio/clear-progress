@@ -19,7 +19,7 @@ const mockIdea: Idea = {
   updated_at: "2024-01-01T00:00:00.000Z",
   version: 1,
   revision: 0,
-  _dirty: false,
+  needsSync: false,
 };
 
 describe("IdeaDetailPanel", () => {

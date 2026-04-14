@@ -30,16 +30,16 @@ export class ContextRepository {
     return db.contexts.where("updated_at").above(since).toArray();
   }
 
-  async getDirty(): Promise<Context[]> {
-    return db.contexts.filter((context) => context._dirty).toArray();
+  async getNeedingSync(): Promise<Context[]> {
+    return db.contexts.filter((context) => context.needsSync).toArray();
   }
 
   async applyServerRecords(records: Context[]): Promise<void> {
     await db.transaction("rw", db.contexts, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.contexts.get(serverRecord.id);
-        if (!localRecord || !localRecord._dirty) {
-          await db.contexts.put({ ...serverRecord, _dirty: false });
+        if (!localRecord || !localRecord.needsSync) {
+          await db.contexts.put({ ...serverRecord, needsSync: false });
         }
       }
     });

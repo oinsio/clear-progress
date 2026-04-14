@@ -28,7 +28,7 @@ export class ContextService {
       updated_at: now,
       version: 1,
       revision: 0,
-      _dirty: true,
+      needsSync: true,
     };
     await this.contextRepository.create(context);
     return context;
@@ -65,7 +65,7 @@ export class ContextService {
         sort_order: index,
         updated_at: orderChanged ? now : context.updated_at,
         version: orderChanged ? context.version + 1 : context.version,
-        _dirty: orderChanged,
+        needsSync: orderChanged,
       };
     });
     await this.contextRepository.bulkUpsert(updated);
@@ -99,7 +99,7 @@ export class ContextService {
       version: hasChanged
         ? existingContext.version + 1
         : existingContext.version,
-      _dirty: hasChanged,
+      needsSync: hasChanged,
     };
 
     await this.contextRepository.update(updatedContext);

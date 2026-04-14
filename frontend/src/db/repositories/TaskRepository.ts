@@ -89,8 +89,8 @@ export class TaskRepository {
     return db.tasks.where("updated_at").above(since).toArray();
   }
 
-  async getDirty(): Promise<Task[]> {
-    return db.tasks.filter((task) => task._dirty).toArray();
+  async getNeedingSync(): Promise<Task[]> {
+    return db.tasks.filter((task) => task.needsSync).toArray();
   }
 
   async getTasksToReveal(currentDate: string): Promise<Task[]> {
@@ -107,8 +107,8 @@ export class TaskRepository {
     await db.transaction("rw", db.tasks, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.tasks.get(serverRecord.id);
-        if (!localRecord || !localRecord._dirty) {
-          await db.tasks.put({ ...serverRecord, _dirty: false });
+        if (!localRecord || !localRecord.needsSync) {
+          await db.tasks.put({ ...serverRecord, needsSync: false });
         }
       }
     });

@@ -28,7 +28,7 @@ export class CategoryService {
       updated_at: now,
       version: 1,
       revision: 0,
-      _dirty: true,
+      needsSync: true,
     };
     await this.categoryRepository.create(category);
     return category;
@@ -65,7 +65,7 @@ export class CategoryService {
         sort_order: index,
         updated_at: orderChanged ? now : category.updated_at,
         version: orderChanged ? category.version + 1 : category.version,
-        _dirty: orderChanged,
+        needsSync: orderChanged,
       };
     });
     await this.categoryRepository.bulkUpsert(updated);
@@ -99,7 +99,7 @@ export class CategoryService {
       version: hasChanged
         ? existingCategory.version + 1
         : existingCategory.version,
-      _dirty: hasChanged,
+      needsSync: hasChanged,
     };
 
     await this.categoryRepository.update(updatedCategory);

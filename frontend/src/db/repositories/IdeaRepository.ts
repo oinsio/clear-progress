@@ -30,16 +30,16 @@ export class IdeaRepository {
     return db.ideas.where("updated_at").above(since).toArray();
   }
 
-  async getDirty(): Promise<Idea[]> {
-    return db.ideas.filter((idea) => idea._dirty).toArray();
+  async getNeedingSync(): Promise<Idea[]> {
+    return db.ideas.filter((idea) => idea.needsSync).toArray();
   }
 
   async applyServerRecords(records: Idea[]): Promise<void> {
     await db.transaction("rw", db.ideas, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.ideas.get(serverRecord.id);
-        if (!localRecord || !localRecord._dirty) {
-          await db.ideas.put({ ...serverRecord, _dirty: false });
+        if (!localRecord || !localRecord.needsSync) {
+          await db.ideas.put({ ...serverRecord, needsSync: false });
         }
       }
     });

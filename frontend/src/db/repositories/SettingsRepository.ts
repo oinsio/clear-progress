@@ -24,19 +24,19 @@ export class SettingsRepository {
     }
 
     const updatedAt = new Date().toISOString();
-    await db.settings.put({ key, value, updated_at: updatedAt, _dirty: true });
+    await db.settings.put({ key, value, updated_at: updatedAt, needsSync: true });
   }
 
   async getChangedSince(since: string): Promise<Setting[]> {
     return db.settings.where("updated_at").above(since).toArray();
   }
 
-  async getDirty(): Promise<Setting[]> {
-    return db.settings.filter((setting) => setting._dirty).toArray();
+  async getNeedingSync(): Promise<Setting[]> {
+    return db.settings.filter((setting) => setting.needsSync).toArray();
   }
 
-  async clearDirtyByKey(keys: string[]): Promise<void> {
-    await db.settings.where("key").anyOf(keys).modify({ _dirty: false });
+  async clearNeedsSyncByKey(keys: string[]): Promise<void> {
+    await db.settings.where("key").anyOf(keys).modify({ needsSync: false });
   }
 
   async bulkUpsert(settings: Setting[]): Promise<void> {
@@ -47,13 +47,13 @@ export class SettingsRepository {
 
     const settingsToUpsert = settings.filter((incoming) => {
       const existing = existingByKey.get(incoming.key);
-      if (existing?._dirty) return false;
+      if (existing?.needsSync) return false;
       return !existing || incoming.updated_at > existing.updated_at;
     });
 
     if (settingsToUpsert.length > 0) {
       await db.settings.bulkPut(
-        settingsToUpsert.map((s) => ({ ...s, _dirty: false })),
+        settingsToUpsert.map((s) => ({ ...s, needsSync: false })),
       );
     }
   }

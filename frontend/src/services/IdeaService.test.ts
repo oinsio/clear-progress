@@ -99,8 +99,8 @@ describe("IdeaService", () => {
       expect(createdIdea.sort_order).toBe(0);
     });
 
-    it("should create idea with _dirty true", () => {
-      expect(createdIdea._dirty).toBe(true);
+    it("should create idea with needsSync true", () => {
+      expect(createdIdea.needsSync).toBe(true);
     });
 
     it("should create idea with revision 0", () => {
@@ -158,14 +158,14 @@ describe("IdeaService", () => {
       expect(updated.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should set _dirty to true", async () => {
-      const idea = buildIdea({ _dirty: false });
+    it("should set needsSync to true", async () => {
+      const idea = buildIdea({ needsSync: false });
       mockIdeaRepository = createMockIdeaRepository({
         getById: vi.fn().mockResolvedValue(idea),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
       const updated = await ideaService.update(idea.id, { name: "X" });
-      expect(updated._dirty).toBe(true);
+      expect(updated.needsSync).toBe(true);
     });
 
     it("should throw when idea not found", async () => {
@@ -289,12 +289,12 @@ describe("IdeaService", () => {
       expect(upserted[0].updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should set _dirty to true for each reordered idea", async () => {
-      const ideaA = buildIdea({ _dirty: false });
+    it("should set needsSync to true for each reordered idea", async () => {
+      const ideaA = buildIdea({ needsSync: false });
       const ideaService = new IdeaService(mockIdeaRepository);
       await ideaService.reorderIdeas([ideaA]);
       const upserted = getUpsertedIdeas();
-      expect(upserted[0]._dirty).toBe(true);
+      expect(upserted[0].needsSync).toBe(true);
     });
 
     it("should preserve idea ids after reorder", async () => {

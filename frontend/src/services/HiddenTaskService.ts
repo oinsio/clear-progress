@@ -22,7 +22,7 @@ export class HiddenTaskService {
         is_hidden: false,
         updated_at: now,
         version: task.version + 1,
-        _dirty: true,
+        needsSync: true,
       };
 
       await this.taskRepository.update(updatedTask);

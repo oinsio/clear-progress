@@ -10,7 +10,7 @@ describe("hasEntityChanged", () => {
         description: "Old description",
         version: 1,
         updated_at: "2024-01-01T00:00:00.000Z",
-        _dirty: false,
+        needsSync: false,
       };
 
       const updated = {
@@ -28,7 +28,7 @@ describe("hasEntityChanged", () => {
         description: "Description",
         version: 1,
         updated_at: "2024-01-01T00:00:00.000Z",
-        _dirty: false,
+        needsSync: false,
       };
 
       const updated = {
@@ -45,7 +45,7 @@ describe("hasEntityChanged", () => {
         description: "Description",
         version: 1,
         updated_at: "2024-01-01T00:00:00.000Z",
-        _dirty: false,
+        needsSync: false,
         revision: 0,
       };
 
@@ -53,7 +53,7 @@ describe("hasEntityChanged", () => {
         ...existing,
         version: 2,
         updated_at: "2024-01-02T00:00:00.000Z",
-        _dirty: true,
+        needsSync: true,
         revision: 1,
       };
 

@@ -27,7 +27,7 @@ export class IdeaService {
       updated_at: now,
       version: 1,
       revision: 0,
-      _dirty: true,
+      needsSync: true,
     };
     await this.ideaRepository.create(idea);
     return idea;
@@ -56,7 +56,7 @@ export class IdeaService {
         ? new Date().toISOString()
         : existingIdea.updated_at,
       version: hasChanged ? existingIdea.version + 1 : existingIdea.version,
-      _dirty: hasChanged,
+      needsSync: hasChanged,
     };
 
     await this.ideaRepository.update(updatedIdea);
@@ -102,7 +102,7 @@ export class IdeaService {
         sort_order: index,
         updated_at: orderChanged ? now : idea.updated_at,
         version: orderChanged ? idea.version + 1 : idea.version,
-        _dirty: orderChanged,
+        needsSync: orderChanged,
       };
     });
     await this.ideaRepository.bulkUpsert(updatedIdeas);

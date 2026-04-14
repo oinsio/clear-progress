@@ -18,7 +18,7 @@ export function buildChecklistItem(
     updated_at: now,
     version: 1,
     revision: 0,
-    _dirty: false,
+    needsSync: false,
     ...overrides,
   };
 }

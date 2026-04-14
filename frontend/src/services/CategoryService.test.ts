@@ -95,8 +95,8 @@ describe("CategoryService", () => {
       expect(createdCategory.sort_order).toBe(0);
     });
 
-    it("should create category with _dirty true", () => {
-      expect(createdCategory._dirty).toBe(true);
+    it("should create category with needsSync true", () => {
+      expect(createdCategory.needsSync).toBe(true);
     });
 
     it("should create category with revision 0", () => {
@@ -143,14 +143,14 @@ describe("CategoryService", () => {
       expect(updated.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should set _dirty to true", async () => {
-      const category = buildCategory({ _dirty: false });
+    it("should set needsSync to true", async () => {
+      const category = buildCategory({ needsSync: false });
       mockCategoryRepository = createMockCategoryRepository({
         getById: vi.fn().mockResolvedValue(category),
       });
       const categoryService = new CategoryService(mockCategoryRepository);
       const updated = await categoryService.update(category.id, "X");
-      expect(updated._dirty).toBe(true);
+      expect(updated.needsSync).toBe(true);
     });
 
     it("should throw when category not found", async () => {
@@ -280,12 +280,12 @@ describe("CategoryService", () => {
       expect(upserted[0].updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should set _dirty to true for each reordered category", async () => {
-      const categoryA = buildCategory({ _dirty: false });
+    it("should set needsSync to true for each reordered category", async () => {
+      const categoryA = buildCategory({ needsSync: false });
       const categoryService = new CategoryService(mockCategoryRepository);
       await categoryService.reorderCategories([categoryA]);
       const upserted = getUpsertedCategories();
-      expect(upserted[0]._dirty).toBe(true);
+      expect(upserted[0].needsSync).toBe(true);
     });
 
     it("should preserve category ids after reorder", async () => {

@@ -401,7 +401,7 @@ describe("CoverSyncService", () => {
       expect(mockGoalRepository.update).not.toHaveBeenCalled();
     });
 
-    it("should mark goal as _dirty after updating cover_file_id", async () => {
+    it("should mark goal as needsSync after updating cover_file_id", async () => {
       const pendingCover = createPendingCover();
       const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
       const matchingGoal = {
@@ -415,7 +415,7 @@ describe("CoverSyncService", () => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         version: 1,
-        _dirty: false,
+        needsSync: false,
       };
       mockPendingCoverRepository = createMockPendingCoverRepository({
         getAll: vi.fn().mockResolvedValue([pendingCover]),
@@ -428,7 +428,7 @@ describe("CoverSyncService", () => {
       await service.sync();
 
       expect(mockGoalRepository.update).toHaveBeenCalledWith(
-        expect.objectContaining({ _dirty: true }),
+        expect.objectContaining({ needsSync: true }),
       );
     });
 
@@ -889,8 +889,8 @@ describe("CoverSyncService", () => {
         );
       });
 
-      it("should mark goal as _dirty after updating cover_file_id", async () => {
-        const goalWithCleanDirty = createGoalWithServerCover({ _dirty: false });
+      it("should mark goal as needsSync after updating cover_file_id", async () => {
+        const goalWithCleanDirty = createGoalWithServerCover({ needsSync: false });
         mockGoalRepository = createMockGoalRepository({
           getActive: vi.fn().mockResolvedValue([goalWithCleanDirty]),
         });
@@ -899,7 +899,7 @@ describe("CoverSyncService", () => {
         await service.reuploadLocalCovers();
 
         expect(mockGoalRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ _dirty: true }),
+          expect.objectContaining({ needsSync: true }),
         );
       });
 

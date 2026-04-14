@@ -129,13 +129,13 @@ export class SyncService {
           this.settingsRepository.getAll(),
         ])
       : await Promise.all([
-          this.taskRepository.getDirty(),
-          this.goalRepository.getDirty(),
-          this.contextRepository.getDirty(),
-          this.categoryRepository.getDirty(),
-          this.checklistRepository.getDirty(),
-          this.ideaRepository.getDirty(),
-          this.settingsRepository.getDirty(),
+          this.taskRepository.getNeedingSync(),
+          this.goalRepository.getNeedingSync(),
+          this.contextRepository.getNeedingSync(),
+          this.categoryRepository.getNeedingSync(),
+          this.checklistRepository.getNeedingSync(),
+          this.ideaRepository.getNeedingSync(),
+          this.settingsRepository.getNeedingSync(),
         ]);
 
     if (!force) {
@@ -166,11 +166,11 @@ export class SyncService {
       ...ideas.map((idea) => [idea.id, idea.version] as [string, number]),
     ]);
 
-    const stripDirty = <T extends { _dirty?: boolean }>(
+    const stripDirty = <T extends { needsSync?: boolean }>(
       records: T[],
-    ): Omit<T, "_dirty">[] =>
+    ): Omit<T, "needsSync">[] =>
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      records.map(({ _dirty: _, ...rest }) => rest as Omit<T, "_dirty">);
+      records.map(({ needsSync: _, ...rest }) => rest as Omit<T, "needsSync">);
 
     const goalsForPush = goals.map((goal) =>
       goal.cover_file_id.startsWith(LOCAL_COVER_ID_PREFIX)
@@ -268,14 +268,14 @@ export class SyncService {
       .map((result) => result.id);
 
     if (acceptedKeys.length > 0) {
-      await this.settingsRepository.clearDirtyByKey(acceptedKeys);
+      await this.settingsRepository.clearNeedsSyncByKey(acceptedKeys);
     }
   }
 
   private async _applyEntityPushResults<
     T extends {
       id: string;
-      _dirty: boolean;
+      needsSync: boolean;
       version: number;
       revision: number;
     },
@@ -297,7 +297,7 @@ export class SyncService {
       ) {
         await repository.update({
           ...(result.server_record as unknown as T),
-          _dirty: false,
+          needsSync: false,
         });
         continue;
       }
@@ -315,7 +315,7 @@ export class SyncService {
         await repository.update({
           ...currentRecord,
           revision: pushRevision ?? currentRecord.revision,
-          _dirty: !versionUnchanged,
+          needsSync: !versionUnchanged,
         });
       }
     }
@@ -328,14 +328,14 @@ export class SyncService {
       0,
     );
 
-    // 2. Пометить все записи как не-dirty (чтобы pull перезаписал их)
-    await db.tasks.toCollection().modify({ _dirty: false });
-    await db.goals.toCollection().modify({ _dirty: false });
-    await db.contexts.toCollection().modify({ _dirty: false });
-    await db.categories.toCollection().modify({ _dirty: false });
-    await db.checklist_items.toCollection().modify({ _dirty: false });
-    await db.ideas.toCollection().modify({ _dirty: false });
-    await db.settings.toCollection().modify({ _dirty: false });
+    // 2. Пометить все записи как не-needsSync (чтобы pull перезаписал их)
+    await db.tasks.toCollection().modify({ needsSync: false });
+    await db.goals.toCollection().modify({ needsSync: false });
+    await db.contexts.toCollection().modify({ needsSync: false });
+    await db.categories.toCollection().modify({ needsSync: false });
+    await db.checklist_items.toCollection().modify({ needsSync: false });
+    await db.ideas.toCollection().modify({ needsSync: false });
+    await db.settings.toCollection().modify({ needsSync: false });
 
     // 3. Получить полное состояние с сервера
     await this.pull();

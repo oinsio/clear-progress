@@ -345,42 +345,42 @@ describe("TaskRepository", () => {
     });
   });
 
-  describe("getDirty", () => {
-    it("should return only dirty tasks", async () => {
-      const dirtyTask = buildTask({ _dirty: true });
-      const cleanTask = buildTask({ _dirty: false });
-      await db.tasks.bulkAdd([dirtyTask, cleanTask]);
+  describe("getNeedingSync", () => {
+    it("should return only needsSync tasks", async () => {
+      const needsSyncTask = buildTask({ needsSync: true });
+      const cleanTask = buildTask({ needsSync: false });
+      await db.tasks.bulkAdd([needsSyncTask, cleanTask]);
 
-      const dirtyTasks = await taskRepository.getDirty();
-      expect(dirtyTasks).toHaveLength(1);
-      expect(dirtyTasks[0].id).toBe(dirtyTask.id);
+      const needsSyncTasks = await taskRepository.getNeedingSync();
+      expect(needsSyncTasks).toHaveLength(1);
+      expect(needsSyncTasks[0].id).toBe(needsSyncTask.id);
     });
 
-    it("should return empty array when no dirty tasks exist", async () => {
-      const cleanTask = buildTask({ _dirty: false });
+    it("should return empty array when no needsSync tasks exist", async () => {
+      const cleanTask = buildTask({ needsSync: false });
       await db.tasks.add(cleanTask);
 
-      const dirtyTasks = await taskRepository.getDirty();
-      expect(dirtyTasks).toEqual([]);
+      const needsSyncTasks = await taskRepository.getNeedingSync();
+      expect(needsSyncTasks).toEqual([]);
     });
   });
 
   describe("applyServerRecords", () => {
-    it("should insert new records with _dirty = false", async () => {
-      const serverTask = buildTask({ _dirty: false, revision: 5 });
+    it("should insert new records with needsSync = false", async () => {
+      const serverTask = buildTask({ needsSync: false, revision: 5 });
 
       await taskRepository.applyServerRecords([serverTask]);
 
       const saved = await db.tasks.get(serverTask.id);
       expect(saved).toBeDefined();
-      expect(saved!._dirty).toBe(false);
+      expect(saved!.needsSync).toBe(false);
       expect(saved!.revision).toBe(5);
     });
 
     it("should overwrite clean local records with server version", async () => {
       const localTask = buildTask({
         name: "local",
-        _dirty: false,
+        needsSync: false,
         revision: 1,
       });
       await db.tasks.add(localTask);
@@ -390,13 +390,13 @@ describe("TaskRepository", () => {
 
       const saved = await db.tasks.get(localTask.id);
       expect(saved!.name).toBe("server");
-      expect(saved!._dirty).toBe(false);
+      expect(saved!.needsSync).toBe(false);
     });
 
-    it("should skip dirty local records", async () => {
+    it("should skip needsSync local records", async () => {
       const localTask = buildTask({
-        name: "local dirty",
-        _dirty: true,
+        name: "local needsSync",
+        needsSync: true,
         revision: 1,
       });
       await db.tasks.add(localTask);
@@ -405,8 +405,8 @@ describe("TaskRepository", () => {
       await taskRepository.applyServerRecords([serverTask]);
 
       const saved = await db.tasks.get(localTask.id);
-      expect(saved!.name).toBe("local dirty");
-      expect(saved!._dirty).toBe(true);
+      expect(saved!.name).toBe("local needsSync");
+      expect(saved!.needsSync).toBe(true);
     });
   });
 

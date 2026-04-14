@@ -11,7 +11,7 @@ function normalizeValue(value: unknown): unknown {
 
 /**
  * Проверяет, изменились ли значимые поля сущности.
- * Игнорирует служебные поля (id, version, updated_at, created_at, _dirty, revision).
+ * Игнорирует служебные поля (id, version, updated_at, created_at, needsSync, revision).
  * Нормализует пустые значения ("" и undefined считаются одинаковыми).
  *
  * @param existing - Существующая сущность
@@ -27,7 +27,7 @@ export function hasEntityChanged<T extends object>(
     "version",
     "updated_at",
     "created_at",
-    "_dirty",
+    "needsSync",
     "revision",
   ],
 ): boolean {

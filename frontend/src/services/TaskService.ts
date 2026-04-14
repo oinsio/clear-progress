@@ -53,7 +53,7 @@ export class TaskService {
       updated_at: now,
       version: 1,
       revision: 0,
-      _dirty: true,
+      needsSync: true,
     };
     await this.taskRepository.create(task);
     return task;
@@ -82,7 +82,7 @@ export class TaskService {
         ? new Date().toISOString()
         : existingTask.updated_at,
       version: hasChanged ? existingTask.version + 1 : existingTask.version,
-      _dirty: hasChanged,
+      needsSync: hasChanged,
     };
 
     await this.taskRepository.update(updatedTask);
@@ -206,7 +206,7 @@ export class TaskService {
         updated_at: now,
         version: 1,
         revision: 0,
-        _dirty: true,
+        needsSync: true,
       };
       await this.checklistRepository.create(copiedItem);
     }
@@ -285,7 +285,7 @@ export class TaskService {
         sort_order: index,
         updated_at: orderChanged ? now : task.updated_at,
         version: orderChanged ? task.version + 1 : task.version,
-        _dirty: orderChanged,
+        needsSync: orderChanged,
       };
     });
     await this.taskRepository.bulkUpsert(updatedTasks);

@@ -86,7 +86,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     updated_at: new Date().toISOString(),
     version: 1,
     revision: 0,
-    _dirty: true,
+    needsSync: true,
     ...overrides,
   };
 }
@@ -104,7 +104,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
     updated_at: new Date().toISOString(),
     version: 1,
     revision: 0,
-    _dirty: true,
+    needsSync: true,
     ...overrides,
   };
 }
@@ -124,53 +124,53 @@ describe("SyncService", () => {
     mockApiClient = createMockApiClient();
 
     taskRepository = {
-      getDirty: vi.fn().mockResolvedValue([]),
+      getNeedingSync: vi.fn().mockResolvedValue([]),
       getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as TaskRepository;
 
     goalRepository = {
-      getDirty: vi.fn().mockResolvedValue([]),
+      getNeedingSync: vi.fn().mockResolvedValue([]),
       getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as GoalRepository;
 
     contextRepository = {
-      getDirty: vi.fn().mockResolvedValue([]),
+      getNeedingSync: vi.fn().mockResolvedValue([]),
       getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as ContextRepository;
 
     categoryRepository = {
-      getDirty: vi.fn().mockResolvedValue([]),
+      getNeedingSync: vi.fn().mockResolvedValue([]),
       getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as CategoryRepository;
 
     checklistRepository = {
-      getDirty: vi.fn().mockResolvedValue([]),
+      getNeedingSync: vi.fn().mockResolvedValue([]),
       getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as ChecklistRepository;
 
     ideaRepository = {
-      getDirty: vi.fn().mockResolvedValue([]),
+      getNeedingSync: vi.fn().mockResolvedValue([]),
       getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
     } as unknown as IdeaRepository;
 
     settingsRepository = {
-      getDirty: vi.fn().mockResolvedValue([]),
+      getNeedingSync: vi.fn().mockResolvedValue([]),
       getById: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       bulkUpsert: vi.fn().mockResolvedValue(undefined),
-      clearDirtyByKey: vi.fn().mockResolvedValue(undefined),
+      clearNeedsSyncByKey: vi.fn().mockResolvedValue(undefined),
     } as unknown as SettingsRepository;
 
     syncMetaRepository = {
@@ -219,7 +219,7 @@ describe("SyncService", () => {
     });
 
     it("should call applyServerRecords on all entity repositories", async () => {
-      const serverTasks = [makeTask({ _dirty: false })];
+      const serverTasks = [makeTask({ needsSync: false })];
       mockApiClient = createMockApiClient({
         pull: vi.fn().mockResolvedValue(
           makePullResponse({
@@ -255,7 +255,7 @@ describe("SyncService", () => {
           key: "default_box",
           value: "inbox",
           updated_at: "2026-03-04T10:00:00.000Z",
-          _dirty: false,
+          needsSync: false,
         },
       ];
       mockApiClient = createMockApiClient({
@@ -301,27 +301,27 @@ describe("SyncService", () => {
   });
 
   describe("push", () => {
-    it("should call getDirty on all repositories", async () => {
-      const dirtyTask = makeTask();
-      (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([
-        dirtyTask,
+    it("should call getNeedingSync on all repositories", async () => {
+      const needsSyncTask = makeTask();
+      (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue([
+        needsSyncTask,
       ]);
       (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
-        dirtyTask,
+        needsSyncTask,
       );
       const service = createService();
 
       await service.push();
 
-      expect(taskRepository.getDirty).toHaveBeenCalledOnce();
-      expect(goalRepository.getDirty).toHaveBeenCalledOnce();
-      expect(contextRepository.getDirty).toHaveBeenCalledOnce();
-      expect(categoryRepository.getDirty).toHaveBeenCalledOnce();
-      expect(checklistRepository.getDirty).toHaveBeenCalledOnce();
-      expect(settingsRepository.getDirty).toHaveBeenCalledOnce();
+      expect(taskRepository.getNeedingSync).toHaveBeenCalledOnce();
+      expect(goalRepository.getNeedingSync).toHaveBeenCalledOnce();
+      expect(contextRepository.getNeedingSync).toHaveBeenCalledOnce();
+      expect(categoryRepository.getNeedingSync).toHaveBeenCalledOnce();
+      expect(checklistRepository.getNeedingSync).toHaveBeenCalledOnce();
+      expect(settingsRepository.getNeedingSync).toHaveBeenCalledOnce();
     });
 
-    it("should not call apiClient.push when no dirty records exist", async () => {
+    it("should not call apiClient.push when no needsSync records exist", async () => {
       const service = createService();
 
       await service.push();
@@ -329,13 +329,13 @@ describe("SyncService", () => {
       expect(mockApiClient.push).not.toHaveBeenCalled();
     });
 
-    it("should strip _dirty from records before sending to apiClient", async () => {
-      const dirtyTask = makeTask({ _dirty: true });
-      (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([
-        dirtyTask,
+    it("should strip needsSync from records before sending to apiClient", async () => {
+      const needsSyncTask = makeTask({ needsSync: true });
+      (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue([
+        needsSyncTask,
       ]);
       (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
-        dirtyTask,
+        needsSyncTask,
       );
       const service = createService();
 
@@ -343,7 +343,7 @@ describe("SyncService", () => {
 
       const pushCall = (mockApiClient.push as ReturnType<typeof vi.fn>).mock
         .calls[0][0];
-      expect(pushCall.changes.tasks[0]._dirty).toBeUndefined();
+      expect(pushCall.changes.tasks[0].needsSync).toBeUndefined();
     });
 
     it.each([
@@ -352,12 +352,12 @@ describe("SyncService", () => {
     ])(
       "should %s before sending goal to server",
       async (_, cover_file_id, expected) => {
-        const dirtyGoal = makeGoal({ cover_file_id, _dirty: true });
-        (goalRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [dirtyGoal],
+        const needsSyncGoal = makeGoal({ cover_file_id, needsSync: true });
+        (goalRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
+          [needsSyncGoal],
         );
         (goalRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
-          dirtyGoal,
+          needsSyncGoal,
         );
         const service = createService();
 
@@ -369,7 +369,7 @@ describe("SyncService", () => {
       },
     );
 
-    it("should send push when only contexts are dirty", async () => {
+    it("should send push when only contexts are needsSync", async () => {
       const context = {
         id: "ctx1",
         name: "Home",
@@ -379,10 +379,10 @@ describe("SyncService", () => {
         updated_at: "",
         version: 2,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       };
       (
-        contextRepository.getDirty as ReturnType<typeof vi.fn>
+        contextRepository.getNeedingSync as ReturnType<typeof vi.fn>
       ).mockResolvedValue([context]);
       const service = createService();
 
@@ -391,7 +391,7 @@ describe("SyncService", () => {
       expect(mockApiClient.push).toHaveBeenCalled();
     });
 
-    it("should send push when only categories are dirty", async () => {
+    it("should send push when only categories are needsSync", async () => {
       const category = {
         id: "cat1",
         name: "Work",
@@ -401,10 +401,10 @@ describe("SyncService", () => {
         updated_at: "",
         version: 2,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       };
       (
-        categoryRepository.getDirty as ReturnType<typeof vi.fn>
+        categoryRepository.getNeedingSync as ReturnType<typeof vi.fn>
       ).mockResolvedValue([category]);
       const service = createService();
 
@@ -413,7 +413,7 @@ describe("SyncService", () => {
       expect(mockApiClient.push).toHaveBeenCalled();
     });
 
-    it("should send push when only checklist_items are dirty", async () => {
+    it("should send push when only checklist_items are needsSync", async () => {
       const item = {
         id: "ci1",
         task_id: "t1",
@@ -425,10 +425,10 @@ describe("SyncService", () => {
         updated_at: "",
         version: 2,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       };
       (
-        checklistRepository.getDirty as ReturnType<typeof vi.fn>
+        checklistRepository.getNeedingSync as ReturnType<typeof vi.fn>
       ).mockResolvedValue([item]);
       const service = createService();
 
@@ -437,15 +437,15 @@ describe("SyncService", () => {
       expect(mockApiClient.push).toHaveBeenCalled();
     });
 
-    it("should send push when only settings are dirty", async () => {
+    it("should send push when only settings are needsSync", async () => {
       const setting = {
         key: "accent_color",
         value: "green",
         updated_at: "",
-        _dirty: true,
+        needsSync: true,
       };
       (
-        settingsRepository.getDirty as ReturnType<typeof vi.fn>
+        settingsRepository.getNeedingSync as ReturnType<typeof vi.fn>
       ).mockResolvedValue([setting]);
       const service = createService();
 
@@ -455,15 +455,15 @@ describe("SyncService", () => {
     });
 
     describe("applyPushResults — settings", () => {
-      it("should clear _dirty on settings after accepted push response", async () => {
+      it("should clear needsSync on settings after accepted push response", async () => {
         const setting = {
           key: "accent_color",
           value: "green",
           updated_at: "",
-          _dirty: true,
+          needsSync: true,
         };
         (
-          settingsRepository.getDirty as ReturnType<typeof vi.fn>
+          settingsRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([setting]);
         mockApiClient = createMockApiClient({
           push: vi
@@ -479,20 +479,20 @@ describe("SyncService", () => {
 
         await service.push();
 
-        expect(settingsRepository.clearDirtyByKey).toHaveBeenCalledWith([
+        expect(settingsRepository.clearNeedsSyncByKey).toHaveBeenCalledWith([
           "accent_color",
         ]);
       });
 
-      it("should clear _dirty on settings after created push response", async () => {
+      it("should clear needsSync on settings after created push response", async () => {
         const setting = {
           key: "default_box",
           value: "inbox",
           updated_at: "",
-          _dirty: true,
+          needsSync: true,
         };
         (
-          settingsRepository.getDirty as ReturnType<typeof vi.fn>
+          settingsRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([setting]);
         mockApiClient = createMockApiClient({
           push: vi
@@ -508,20 +508,20 @@ describe("SyncService", () => {
 
         await service.push();
 
-        expect(settingsRepository.clearDirtyByKey).toHaveBeenCalledWith([
+        expect(settingsRepository.clearNeedsSyncByKey).toHaveBeenCalledWith([
           "default_box",
         ]);
       });
 
-      it("should NOT clear _dirty on settings with conflict status", async () => {
+      it("should NOT clear needsSync on settings with conflict status", async () => {
         const setting = {
           key: "accent_color",
           value: "green",
           updated_at: "",
-          _dirty: true,
+          needsSync: true,
         };
         (
-          settingsRepository.getDirty as ReturnType<typeof vi.fn>
+          settingsRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([setting]);
         mockApiClient = createMockApiClient({
           push: vi.fn().mockResolvedValue(
@@ -534,13 +534,13 @@ describe("SyncService", () => {
 
         await service.push();
 
-        expect(settingsRepository.clearDirtyByKey).not.toHaveBeenCalled();
+        expect(settingsRepository.clearNeedsSyncByKey).not.toHaveBeenCalled();
       });
 
       it("should not call apiClient.push when settings were cleared after previous sync", async () => {
-        // Simulates the next push after settings were already synced (_dirty: false)
+        // Simulates the next push after settings were already synced (needsSync: false)
         (
-          settingsRepository.getDirty as ReturnType<typeof vi.fn>
+          settingsRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([]);
         const service = createService();
 
@@ -550,7 +550,7 @@ describe("SyncService", () => {
       });
     });
 
-    it("should clear _dirty for accepted context using pushRevision from response", async () => {
+    it("should clear needsSync for accepted context using pushRevision from response", async () => {
       const context = {
         id: "ctx1",
         name: "Home",
@@ -560,10 +560,10 @@ describe("SyncService", () => {
         updated_at: "",
         version: 2,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       };
       (
-        contextRepository.getDirty as ReturnType<typeof vi.fn>
+        contextRepository.getNeedingSync as ReturnType<typeof vi.fn>
       ).mockResolvedValue([context]);
       (contextRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
         { ...context },
@@ -583,11 +583,11 @@ describe("SyncService", () => {
       await service.push();
 
       expect(contextRepository.update).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "ctx1", _dirty: false, revision: 7 }),
+        expect.objectContaining({ id: "ctx1", needsSync: false, revision: 7 }),
       );
     });
 
-    it("should clear _dirty for accepted category using pushRevision from response", async () => {
+    it("should clear needsSync for accepted category using pushRevision from response", async () => {
       const category = {
         id: "cat1",
         name: "Work",
@@ -597,10 +597,10 @@ describe("SyncService", () => {
         updated_at: "",
         version: 2,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       };
       (
-        categoryRepository.getDirty as ReturnType<typeof vi.fn>
+        categoryRepository.getNeedingSync as ReturnType<typeof vi.fn>
       ).mockResolvedValue([category]);
       (
         categoryRepository.getById as ReturnType<typeof vi.fn>
@@ -620,11 +620,11 @@ describe("SyncService", () => {
       await service.push();
 
       expect(categoryRepository.update).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "cat1", _dirty: false, revision: 8 }),
+        expect.objectContaining({ id: "cat1", needsSync: false, revision: 8 }),
       );
     });
 
-    it("should clear _dirty for accepted checklist_item using pushRevision from response", async () => {
+    it("should clear needsSync for accepted checklist_item using pushRevision from response", async () => {
       const item = {
         id: "ci1",
         task_id: "t1",
@@ -636,10 +636,10 @@ describe("SyncService", () => {
         updated_at: "",
         version: 2,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       };
       (
-        checklistRepository.getDirty as ReturnType<typeof vi.fn>
+        checklistRepository.getNeedingSync as ReturnType<typeof vi.fn>
       ).mockResolvedValue([item]);
       (
         checklistRepository.getById as ReturnType<typeof vi.fn>
@@ -659,14 +659,14 @@ describe("SyncService", () => {
       await service.push();
 
       expect(checklistRepository.update).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "ci1", _dirty: false, revision: 9 }),
+        expect.objectContaining({ id: "ci1", needsSync: false, revision: 9 }),
       );
     });
 
     it("should throw if push response is not ok", async () => {
-      const dirtyTask = makeTask();
-      (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue([
-        dirtyTask,
+      const needsSyncTask = makeTask();
+      (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue([
+        needsSyncTask,
       ]);
       mockApiClient = createMockApiClient({
         push: vi.fn().mockResolvedValue({ ok: false, results: {} }),
@@ -677,9 +677,9 @@ describe("SyncService", () => {
     });
 
     describe("applyPushResults — created/accepted", () => {
-      it("should clear _dirty and set revision when version is unchanged", async () => {
-        const task = makeTask({ id: "t1", version: 3, _dirty: true });
-        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
+      it("should clear needsSync and set revision when version is unchanged", async () => {
+        const task = makeTask({ id: "t1", version: 3, needsSync: true });
+        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
           [task],
         );
         // version same as when sent
@@ -699,13 +699,13 @@ describe("SyncService", () => {
         await service.push();
 
         expect(taskRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ id: "t1", _dirty: false, revision: 7 }),
+          expect.objectContaining({ id: "t1", needsSync: false, revision: 7 }),
         );
       });
 
-      it("should keep _dirty and set revision when version changed during push", async () => {
-        const task = makeTask({ id: "t1", version: 3, _dirty: true });
-        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
+      it("should keep needsSync and set revision when version changed during push", async () => {
+        const task = makeTask({ id: "t1", version: 3, needsSync: true });
+        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
           [task],
         );
         // version has bumped since sending
@@ -728,21 +728,21 @@ describe("SyncService", () => {
         await service.push();
 
         expect(taskRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ id: "t1", _dirty: true, revision: 8 }),
+          expect.objectContaining({ id: "t1", needsSync: true, revision: 8 }),
         );
       });
     });
 
     describe("applyPushResults — conflict", () => {
-      it("should overwrite local record with server_record and clear _dirty", async () => {
-        const task = makeTask({ id: "t1", _dirty: true });
+      it("should overwrite local record with server_record and clear needsSync", async () => {
+        const task = makeTask({ id: "t1", needsSync: true });
         const serverTask = makeTask({
           id: "t1",
           name: "Server version",
           revision: 9,
-          _dirty: false,
+          needsSync: false,
         });
-        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
+        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
           [task],
         );
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
@@ -765,20 +765,20 @@ describe("SyncService", () => {
           expect.objectContaining({
             id: "t1",
             name: "Server version",
-            _dirty: false,
+            needsSync: false,
           }),
         );
       });
 
       it("should apply goal conflict server_record", async () => {
-        const goal = makeGoal({ id: "g1", _dirty: true });
+        const goal = makeGoal({ id: "g1", needsSync: true });
         const serverGoal = makeGoal({
           id: "g1",
           name: "Server Goal",
           revision: 3,
-          _dirty: false,
+          needsSync: false,
         });
-        (goalRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
+        (goalRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
           [goal],
         );
         (goalRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
@@ -801,7 +801,7 @@ describe("SyncService", () => {
           expect.objectContaining({
             id: "g1",
             name: "Server Goal",
-            _dirty: false,
+            needsSync: false,
           }),
         );
       });
@@ -810,7 +810,7 @@ describe("SyncService", () => {
     describe("last_known_revision update after push", () => {
       it("should update last_known_revision using response.revision (top-level)", async () => {
         const task = makeTask({ id: "t1" });
-        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
+        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
           [task],
         );
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
@@ -838,7 +838,7 @@ describe("SyncService", () => {
 
       it("should not update last_known_revision if push response has no top-level revision (all conflict)", async () => {
         const task = makeTask({ id: "t1" });
-        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
+        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
           [task],
         );
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
@@ -861,8 +861,8 @@ describe("SyncService", () => {
 
     describe("applyPushResults — edge cases", () => {
       it("should skip update when getById returns undefined for created/accepted record", async () => {
-        const task = makeTask({ id: "t1", _dirty: true });
-        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
+        const task = makeTask({ id: "t1", needsSync: true });
+        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
           [task],
         );
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
@@ -883,9 +883,9 @@ describe("SyncService", () => {
       });
 
       it("should not enter conflict branch for created record even if server_record is present", async () => {
-        const task = makeTask({ id: "t1", version: 3, _dirty: true });
+        const task = makeTask({ id: "t1", version: 3, needsSync: true });
         const serverTask = makeTask({ id: "t1", name: "Server Version" });
-        (taskRepository.getDirty as ReturnType<typeof vi.fn>).mockResolvedValue(
+        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
           [task],
         );
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -909,7 +909,7 @@ describe("SyncService", () => {
         await service.push();
 
         expect(taskRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ revision: 5, _dirty: false }),
+          expect.objectContaining({ revision: 5, needsSync: false }),
         );
         expect(taskRepository.update).not.toHaveBeenCalledWith(
           expect.objectContaining({ name: "Server Version" }),
@@ -938,7 +938,7 @@ describe("SyncService", () => {
       expect(mockApiClient.pull).toHaveBeenCalled();
     });
 
-    it("should mark all tasks as _dirty: false in db", async () => {
+    it("should mark all tasks as needsSync: false in db", async () => {
       const taskId = crypto.randomUUID();
       await db.tasks.put({
         id: taskId,
@@ -961,17 +961,17 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       });
       const service = createService();
 
       await service.resetAndPull();
 
       const task = await db.tasks.get(taskId);
-      expect(task!._dirty).toBe(false);
+      expect(task!.needsSync).toBe(false);
     });
 
-    it("should mark all goals as _dirty: false in db", async () => {
+    it("should mark all goals as needsSync: false in db", async () => {
       const goalId = crypto.randomUUID();
       await db.goals.put({
         id: goalId,
@@ -985,17 +985,17 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       });
       const service = createService();
 
       await service.resetAndPull();
 
       const goal = await db.goals.get(goalId);
-      expect(goal!._dirty).toBe(false);
+      expect(goal!.needsSync).toBe(false);
     });
 
-    it("should mark all contexts as _dirty: false in db", async () => {
+    it("should mark all contexts as needsSync: false in db", async () => {
       const contextId = crypto.randomUUID();
       await db.contexts.put({
         id: contextId,
@@ -1006,17 +1006,17 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       });
       const service = createService();
 
       await service.resetAndPull();
 
       const context = await db.contexts.get(contextId);
-      expect(context!._dirty).toBe(false);
+      expect(context!.needsSync).toBe(false);
     });
 
-    it("should mark all categories as _dirty: false in db", async () => {
+    it("should mark all categories as needsSync: false in db", async () => {
       const categoryId = crypto.randomUUID();
       await db.categories.put({
         id: categoryId,
@@ -1027,17 +1027,17 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       });
       const service = createService();
 
       await service.resetAndPull();
 
       const category = await db.categories.get(categoryId);
-      expect(category!._dirty).toBe(false);
+      expect(category!.needsSync).toBe(false);
     });
 
-    it("should mark all checklist_items as _dirty: false in db", async () => {
+    it("should mark all checklist_items as needsSync: false in db", async () => {
       const itemId = crypto.randomUUID();
       const taskId = crypto.randomUUID();
       await db.checklist_items.put({
@@ -1051,29 +1051,29 @@ describe("SyncService", () => {
         updated_at: "",
         version: 1,
         revision: 1,
-        _dirty: true,
+        needsSync: true,
       });
       const service = createService();
 
       await service.resetAndPull();
 
       const item = await db.checklist_items.get(itemId);
-      expect(item!._dirty).toBe(false);
+      expect(item!.needsSync).toBe(false);
     });
 
-    it("should mark all settings as _dirty: false in db", async () => {
+    it("should mark all settings as needsSync: false in db", async () => {
       await db.settings.put({
         key: "accent_color",
         value: "green",
         updated_at: "",
-        _dirty: true,
+        needsSync: true,
       });
       const service = createService();
 
       await service.resetAndPull();
 
       const setting = await db.settings.get("accent_color");
-      expect(setting!._dirty).toBe(false);
+      expect(setting!.needsSync).toBe(false);
     });
   });
 

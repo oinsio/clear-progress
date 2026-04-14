@@ -30,16 +30,16 @@ export class GoalRepository {
     return db.goals.where("updated_at").above(since).toArray();
   }
 
-  async getDirty(): Promise<Goal[]> {
-    return db.goals.filter((goal) => goal._dirty).toArray();
+  async getNeedingSync(): Promise<Goal[]> {
+    return db.goals.filter((goal) => goal.needsSync).toArray();
   }
 
   async applyServerRecords(records: Goal[]): Promise<void> {
     await db.transaction("rw", db.goals, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.goals.get(serverRecord.id);
-        if (!localRecord || !localRecord._dirty) {
-          await db.goals.put({ ...serverRecord, _dirty: false });
+        if (!localRecord || !localRecord.needsSync) {
+          await db.goals.put({ ...serverRecord, needsSync: false });
         }
       }
     });

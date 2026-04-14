@@ -34,16 +34,16 @@ export class ChecklistRepository {
     return db.checklist_items.where("updated_at").above(since).toArray();
   }
 
-  async getDirty(): Promise<ChecklistItem[]> {
-    return db.checklist_items.filter((item) => item._dirty).toArray();
+  async getNeedingSync(): Promise<ChecklistItem[]> {
+    return db.checklist_items.filter((item) => item.needsSync).toArray();
   }
 
   async applyServerRecords(records: ChecklistItem[]): Promise<void> {
     await db.transaction("rw", db.checklist_items, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.checklist_items.get(serverRecord.id);
-        if (!localRecord || !localRecord._dirty) {
-          await db.checklist_items.put({ ...serverRecord, _dirty: false });
+        if (!localRecord || !localRecord.needsSync) {
+          await db.checklist_items.put({ ...serverRecord, needsSync: false });
         }
       }
     });

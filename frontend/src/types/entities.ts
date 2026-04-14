@@ -21,7 +21,7 @@ export interface Task {
   updated_at: string;
   version: number;
   revision: number;
-  _dirty: boolean;
+  needsSync: boolean;
 }
 
 export interface Goal {
@@ -36,7 +36,7 @@ export interface Goal {
   updated_at: string;
   version: number;
   revision: number;
-  _dirty: boolean;
+  needsSync: boolean;
 }
 
 interface NamedEntity {
@@ -48,7 +48,7 @@ interface NamedEntity {
   updated_at: string;
   version: number;
   revision: number;
-  _dirty: boolean;
+  needsSync: boolean;
   [key: string]: unknown;
 }
 
@@ -71,7 +71,7 @@ export interface ChecklistItem {
   updated_at: string;
   version: number;
   revision: number;
-  _dirty: boolean;
+  needsSync: boolean;
 }
 
 export interface SyncMeta {
@@ -83,7 +83,7 @@ export interface Setting {
   key: string;
   value: string;
   updated_at: string;
-  _dirty: boolean;
+  needsSync: boolean;
 }
 
 export interface CoverRecord {

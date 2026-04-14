@@ -233,8 +233,8 @@ describe("GoalService", () => {
       expect(createdGoal.sort_order).toBe(0);
     });
 
-    it("should create goal with _dirty true", () => {
-      expect(createdGoal._dirty).toBe(true);
+    it("should create goal with needsSync true", () => {
+      expect(createdGoal.needsSync).toBe(true);
     });
 
     it("should create goal with revision 0", () => {
@@ -295,14 +295,14 @@ describe("GoalService", () => {
       expect(updated.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should set _dirty to true", async () => {
-      const goal = buildGoal({ _dirty: false });
+    it("should set needsSync to true", async () => {
+      const goal = buildGoal({ needsSync: false });
       mockGoalRepository = createMockGoalRepository({
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
       const updated = await goalService.update(goal.id, { name: "X" });
-      expect(updated._dirty).toBe(true);
+      expect(updated.needsSync).toBe(true);
     });
 
     it("should throw when goal not found", async () => {
@@ -426,12 +426,12 @@ describe("GoalService", () => {
       expect(upserted[0].updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should set _dirty to true for each reordered goal", async () => {
-      const goalA = buildGoal({ _dirty: false });
+    it("should set needsSync to true for each reordered goal", async () => {
+      const goalA = buildGoal({ needsSync: false });
       const goalService = new GoalService(mockGoalRepository);
       await goalService.reorderGoals([goalA]);
       const upserted = getUpsertedGoals();
-      expect(upserted[0]._dirty).toBe(true);
+      expect(upserted[0].needsSync).toBe(true);
     });
 
     it("should preserve goal ids after reorder", async () => {

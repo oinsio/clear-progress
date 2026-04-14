@@ -30,16 +30,16 @@ export class CategoryRepository {
     return db.categories.where("updated_at").above(since).toArray();
   }
 
-  async getDirty(): Promise<Category[]> {
-    return db.categories.filter((category) => category._dirty).toArray();
+  async getNeedingSync(): Promise<Category[]> {
+    return db.categories.filter((category) => category.needsSync).toArray();
   }
 
   async applyServerRecords(records: Category[]): Promise<void> {
     await db.transaction("rw", db.categories, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.categories.get(serverRecord.id);
-        if (!localRecord || !localRecord._dirty) {
-          await db.categories.put({ ...serverRecord, _dirty: false });
+        if (!localRecord || !localRecord.needsSync) {
+          await db.categories.put({ ...serverRecord, needsSync: false });
         }
       }
     });

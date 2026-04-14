@@ -95,8 +95,8 @@ describe("ContextService", () => {
       expect(createdContext.sort_order).toBe(0);
     });
 
-    it("should create context with _dirty true", () => {
-      expect(createdContext._dirty).toBe(true);
+    it("should create context with needsSync true", () => {
+      expect(createdContext.needsSync).toBe(true);
     });
 
     it("should create context with revision 0", () => {
@@ -139,14 +139,14 @@ describe("ContextService", () => {
       expect(updated.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should set _dirty to true", async () => {
-      const context = buildContext({ _dirty: false });
+    it("should set needsSync to true", async () => {
+      const context = buildContext({ needsSync: false });
       mockContextRepository = createMockContextRepository({
         getById: vi.fn().mockResolvedValue(context),
       });
       const contextService = new ContextService(mockContextRepository);
       const updated = await contextService.update(context.id, "X");
-      expect(updated._dirty).toBe(true);
+      expect(updated.needsSync).toBe(true);
     });
 
     it("should throw when context not found", async () => {
@@ -270,12 +270,12 @@ describe("ContextService", () => {
       expect(upserted[0].updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should set _dirty to true for each reordered context", async () => {
-      const contextA = buildContext({ _dirty: false });
+    it("should set needsSync to true for each reordered context", async () => {
+      const contextA = buildContext({ needsSync: false });
       const contextService = new ContextService(mockContextRepository);
       await contextService.reorderContexts([contextA]);
       const upserted = getUpsertedContexts();
-      expect(upserted[0]._dirty).toBe(true);
+      expect(upserted[0].needsSync).toBe(true);
     });
 
     it("should preserve context ids after reorder", async () => {
