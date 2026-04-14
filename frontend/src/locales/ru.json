@@ -293,6 +293,7 @@
     "fieldDescription": "Заметки",
     "fieldBox": "Коробочка",
     "fieldRepeat": "Повтор",
+    "selectRepeatType": "Выбрать способ повторения",
     "descriptionPlaceholder": "Добавить заметку...",
     "dragChecklist": "Перетащить пункт",
     "newChecklistItemPlaceholder": "Введите новый пункт...",

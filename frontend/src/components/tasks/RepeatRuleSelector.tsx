@@ -295,7 +295,7 @@ export function RepeatRuleSelector({
             <ArrowLeft size={18} />
           </button>
           <h2 className="text-base font-semibold text-gray-800">
-            {t("taskEdit.fieldRepeat")}
+            {t("taskEdit.selectRepeatType")}
           </h2>
         </div>
         <div className="px-4 py-3 flex flex-col gap-2">

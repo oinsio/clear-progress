@@ -293,6 +293,7 @@
     "fieldDescription": "Description",
     "fieldBox": "Box",
     "fieldRepeat": "Repeat",
+    "selectRepeatType": "Select repeat type",
     "descriptionPlaceholder": "Add a note...",
     "dragChecklist": "Drag item",
     "newChecklistItemPlaceholder": "Enter new item...",
