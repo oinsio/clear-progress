@@ -255,7 +255,8 @@ describe("RepeatRuleSelector", () => {
       await user.click(screen.getByTestId("repeat-type-fixed"));
       await user.click(screen.getByTestId("repeat-frequency-yearly"));
 
-      expect(screen.getByTestId("repeat-month-input")).toBeInTheDocument();
+      expect(screen.getByTestId("repeat-month-1")).toBeInTheDocument();
+      expect(screen.getByTestId("repeat-month-12")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-day-input")).toBeInTheDocument();
     });
 

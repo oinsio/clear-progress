@@ -40,6 +40,7 @@ const MIN_MONTH = 1;
 const MAX_MONTH = 12;
 
 const ALL_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
+const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
 export function RepeatRuleSelector({
   value,
@@ -147,21 +148,15 @@ export function RepeatRuleSelector({
     [],
   );
 
-  const handleMonthChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const parsed = parseInt(event.target.value, 10);
-      if (!isNaN(parsed)) {
-        setState((prev) => ({
-          ...prev,
-          monthAndDay: {
-            ...prev.monthAndDay,
-            month: Math.min(MAX_MONTH, Math.max(MIN_MONTH, parsed)),
-          },
-        }));
-      }
-    },
-    [],
-  );
+  const handleMonthSelect = useCallback((month: number) => {
+    setState((prev) => ({
+      ...prev,
+      monthAndDay: {
+        ...prev.monthAndDay,
+        month,
+      },
+    }));
+  }, []);
 
   const handleDayChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -447,37 +442,49 @@ export function RepeatRuleSelector({
             </div>
           )}
 
-          {/* Для Yearly: два пикера (месяц 1-12, день 1-31) */}
+          {/* Для Yearly: выбор месяца (кнопки) + числовой ввод дня */}
           {state.frequency === "yearly" && (
             <div className="flex flex-col gap-2">
               <label className="text-sm text-gray-600">
                 {t("repeat.monthAndDay")}
               </label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <input
-                    type="number"
-                    data-testid="repeat-month-input"
-                    value={state.monthAndDay.month}
-                    min={MIN_MONTH}
-                    max={MAX_MONTH}
-                    onChange={handleMonthChange}
-                    placeholder={t("repeat.monthAndDay")}
-                    className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
-                  />
-                </div>
-                <div className="flex-1">
-                  <input
-                    type="number"
-                    data-testid="repeat-day-input"
-                    value={state.monthAndDay.day}
-                    min={MIN_DAY_OF_MONTH}
-                    max={MAX_DAY_OF_MONTH}
-                    onChange={handleDayChange}
-                    placeholder={t("repeat.dayOfMonth")}
-                    className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
-                  />
-                </div>
+              <div className="grid grid-cols-3 gap-2">
+                {ALL_MONTHS.map((month) => {
+                  const isSelected = state.monthAndDay.month === month;
+                  return (
+                    <button
+                      key={month}
+                      type="button"
+                      data-testid={`repeat-month-${month}`}
+                      aria-pressed={isSelected}
+                      onClick={() => handleMonthSelect(month)}
+                      className={cn(
+                        "py-2 px-3 rounded-lg text-sm font-medium transition-colors",
+                        isSelected
+                          ? "bg-accent text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                      )}
+                    >
+                      {t(`repeat.month${month}`)}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="repeat-day-input" className="text-sm text-gray-600">
+                  {t("repeat.dayOfMonth")}
+                </label>
+                <input
+                  id="repeat-day-input"
+                  type="number"
+                  data-testid="repeat-day-input"
+                  value={state.monthAndDay.day}
+                  min={MIN_DAY_OF_MONTH}
+                  max={MAX_DAY_OF_MONTH}
+                  onChange={handleDayChange}
+                  placeholder={t("repeat.dayOfMonth")}
+                  className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
+                />
               </div>
             </div>
           )}
