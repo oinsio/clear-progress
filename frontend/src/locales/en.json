@@ -46,7 +46,12 @@
     "newName": "New task",
     "namePlaceholder": "Task name...",
     "create": "Create",
-    "createLabel": "Create task"
+    "createLabel": "Create task",
+    "completedToday": "Completed: Today {{time}}",
+    "completedYesterday": "Completed: Yesterday {{time}}",
+    "completedDate": "Completed: {{date}} {{time}}",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "section": {
     "inbox": "Inbox",

@@ -1,4 +1,5 @@
 import type { Task } from "@/types/entities";
+import i18next from "i18next";
 
 export interface GroupedCompletedTasks {
   todayTasks: Task[];
@@ -49,11 +50,12 @@ export function groupCompletedTasks(tasks: Task[]): GroupedCompletedTasks {
   return { todayTasks, yesterdayTasks, weekTasks, monthTasks, earlierTasks };
 }
 
-export function formatCompletedAt(isoString: string): string {
-  if (!isoString) return "";
-  const completedDate = new Date(isoString);
-  const now = new Date();
+interface DayBoundaries {
+  startOfToday: Date;
+  startOfYesterday: Date;
+}
 
+function getDayBoundaries(now: Date = new Date()): DayBoundaries {
   const startOfToday = new Date(
     now.getFullYear(),
     now.getMonth(),
@@ -62,53 +64,53 @@ export function formatCompletedAt(isoString: string): string {
   const startOfYesterday = new Date(
     startOfToday.getTime() - 24 * 60 * 60 * 1000,
   );
+  return { startOfToday, startOfYesterday };
+}
 
-  const timeString = completedDate.toLocaleTimeString("ru-RU", {
+export function formatCompletedAt(isoString: string): string {
+  if (!isoString) return "";
+  const completedDate = new Date(isoString);
+  const { startOfToday, startOfYesterday } = getDayBoundaries();
+
+  const locale = i18next.language || "en";
+  const timeString = completedDate.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   });
 
   if (completedDate >= startOfToday) {
-    return `Завершено: Сегодня ${timeString}`;
+    return i18next.t("task.completedToday", { time: timeString });
   }
   if (completedDate >= startOfYesterday) {
-    return `Завершено: Вчера ${timeString}`;
+    return i18next.t("task.completedYesterday", { time: timeString });
   }
 
-  const dateString = completedDate.toLocaleDateString("ru-RU", {
+  const dateString = completedDate.toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
   });
-  return `Завершено: ${dateString} ${timeString}`;
+  return i18next.t("task.completedDate", { date: dateString, time: timeString });
 }
 
 export function formatShortDateTime(isoString: string): string {
   if (!isoString) return "";
   const date = new Date(isoString);
-  const now = new Date();
+  const { startOfToday, startOfYesterday } = getDayBoundaries();
 
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
-  const startOfYesterday = new Date(
-    startOfToday.getTime() - 24 * 60 * 60 * 1000,
-  );
-
-  const timeString = date.toLocaleTimeString("ru-RU", {
+  const locale = i18next.language || "en";
+  const timeString = date.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   });
 
   if (date >= startOfToday) {
-    return `Сегодня ${timeString}`;
+    return `${i18next.t("task.today")} ${timeString}`;
   }
   if (date >= startOfYesterday) {
-    return `Вчера ${timeString}`;
+    return `${i18next.t("task.yesterday")} ${timeString}`;
   }
 
-  const dateString = date.toLocaleDateString("ru-RU", {
+  const dateString = date.toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
   });

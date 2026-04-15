@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { formatCompletedAt, groupCompletedTasks } from "./utils";
 import { buildTask } from "@/test/factories/taskFactory";
+import i18next from "i18next";
 
 function buildISOForTodayAt(hours: number, minutes: number): string {
   const date = new Date();
@@ -27,17 +28,22 @@ function buildISOForDaysAgoAt(
 }
 
 describe("formatCompletedAt", () => {
+  beforeEach(() => {
+    // Устанавливаем русский язык для тестов
+    i18next.changeLanguage("ru");
+  });
+
   it("should return empty string for empty input", () => {
     expect(formatCompletedAt("")).toBe("");
   });
 
-  it("should show 'Сегодня' with time for today's completion", () => {
+  it("should show 'Завершено: Сегодня' with time for today's completion", () => {
     const todayISO = buildISOForTodayAt(21, 58);
     const result = formatCompletedAt(todayISO);
     expect(result).toMatch(/^Завершено: Сегодня \d{2}:\d{2}$/);
   });
 
-  it("should show 'Вчера' with time for yesterday's completion", () => {
+  it("should show 'Завершено: Вчера' with time for yesterday's completion", () => {
     const yesterdayISO = buildISOForYesterdayAt(14, 30);
     const result = formatCompletedAt(yesterdayISO);
     expect(result).toMatch(/^Завершено: Вчера \d{2}:\d{2}$/);
@@ -49,6 +55,13 @@ describe("formatCompletedAt", () => {
     expect(result).toMatch(/^Завершено: .+ \d{2}:\d{2}$/);
     expect(result).not.toContain("Сегодня");
     expect(result).not.toContain("Вчера");
+  });
+
+  it("should show English text when language is set to English", () => {
+    i18next.changeLanguage("en");
+    const todayISO = buildISOForTodayAt(21, 58);
+    const result = formatCompletedAt(todayISO);
+    expect(result).toMatch(/^Completed: Today \d{1,2}:\d{2}(\s?[AP]M)?$/);
   });
 });
 

@@ -46,7 +46,12 @@
     "newName": "Новая задача",
     "namePlaceholder": "Название задачи...",
     "create": "Создать",
-    "createLabel": "Создать задачу"
+    "createLabel": "Создать задачу",
+    "completedToday": "Завершено: Сегодня {{time}}",
+    "completedYesterday": "Завершено: Вчера {{time}}",
+    "completedDate": "Завершено: {{date}} {{time}}",
+    "today": "Сегодня",
+    "yesterday": "Вчера"
   },
   "section": {
     "inbox": "Входящие",
