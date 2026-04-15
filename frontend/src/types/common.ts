@@ -76,6 +76,6 @@ export interface RepeatRule {
   // Для after_completion
   delay_days?: number; // >= 1
   // Общее
-  target_box: "today" | "week" | "later";
+  target_box: Box;
   advance_days: number; // >= 0
 }

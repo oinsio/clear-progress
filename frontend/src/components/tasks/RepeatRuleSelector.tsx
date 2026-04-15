@@ -1,9 +1,19 @@
 import React, { useState, useCallback } from "react";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, Inbox } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { RepeatRule } from "@/types/common";
+import type { RepeatRule, Box } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
 import { getDaysInMonth } from "@/utils/dateHelpers";
+import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon } from "./BoxIcons";
+
+const TARGET_BOX_ICONS: Record<Box, React.FC<{ className?: string }>> = {
+  inbox: ({ className }: { className?: string }) => <Inbox className={className} />,
+  today: TodayBoxIcon,
+  week: WeekBoxIcon,
+  later: LaterBoxIcon,
+};
+
+const TARGET_BOX_ORDER: Box[] = ["inbox", "today", "week", "later"];
 
 interface RepeatRuleSelectorProps {
   value: RepeatRule | null;
@@ -25,7 +35,7 @@ interface State {
   // Для after_completion
   delayDays: number;
   // Общее
-  targetBox: "today" | "week" | "later";
+  targetBox: Box;
   advanceDays: number;
 }
 
@@ -206,7 +216,7 @@ export function RepeatRuleSelector({
   );
 
   const handleTargetBoxSelect = useCallback(
-    (targetBox: "today" | "week" | "later") => {
+    (targetBox: Box) => {
       setState((prev) => ({ ...prev, targetBox }));
     },
     [],
@@ -630,24 +640,30 @@ export function RepeatRuleSelector({
           </h2>
         </div>
         <div className="px-4 py-4 flex flex-col gap-4">
-          {/* Сегментированный control: Today / Week / Later */}
-          <div className="flex gap-2">
-            {(["today", "week", "later"] as const).map((box) => (
-              <button
-                key={box}
-                type="button"
-                data-testid={`repeat-target-box-${box}`}
-                onClick={() => handleTargetBoxSelect(box)}
-                className={cn(
-                  "flex-1 py-2 text-xs font-medium rounded-lg transition-colors",
-                  state.targetBox === box
-                    ? "bg-accent text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-                )}
-              >
-                {t(`box.${box}`)}
-              </button>
-            ))}
+          {/* Сегментированный control: Inbox / Today / Week / Later */}
+          <div className="flex gap-1">
+            {TARGET_BOX_ORDER.map((box) => {
+              const Icon = TARGET_BOX_ICONS[box];
+              const isActive = state.targetBox === box;
+              return (
+                <button
+                  key={box}
+                  type="button"
+                  data-testid={`repeat-target-box-${box}`}
+                  aria-label={t(`box.${box}`)}
+                  aria-pressed={isActive}
+                  onClick={() => handleTargetBoxSelect(box)}
+                  className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-full transition-colors",
+                    isActive
+                      ? "text-accent"
+                      : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                  )}
+                >
+                  <Icon className="w-7 h-7" />
+                </button>
+              );
+            })}
           </div>
 
           {/* Числовой ввод: "Показать за ___ дней до даты" */}

@@ -437,11 +437,12 @@ describe("RepeatRuleSelector", () => {
   });
 
   describe("Step 3: Placement", () => {
-    it("should render target_box buttons", async () => {
+    it("should render all target_box buttons including inbox", async () => {
       renderComponent();
 
       await navigateToPlacementViaFixed(user);
 
+      expect(screen.getByTestId("repeat-target-box-inbox")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-target-box-today")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-target-box-week")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-target-box-later")).toBeInTheDocument();
@@ -498,6 +499,16 @@ describe("RepeatRuleSelector", () => {
       await user.type(advanceInput, "-1");
       // Negative values should be clamped to 0
       expect(parseInt(advanceInput.value, 10)).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should allow selecting inbox as target box", async () => {
+      renderComponent();
+
+      await navigateToPlacementViaFixed(user);
+      await user.click(screen.getByTestId("repeat-target-box-inbox"));
+
+      const inboxButton = screen.getByTestId("repeat-target-box-inbox");
+      expect(inboxButton).toHaveAttribute("aria-pressed", "true");
     });
   });
 
@@ -594,6 +605,40 @@ describe("RepeatRuleSelector", () => {
         type: "after_completion",
         delay_days: 1,
         target_box: "week",
+        advance_days: 0,
+      });
+      expect(mockOnBack).toHaveBeenCalledTimes(1);
+    });
+
+    it("should create after_completion rule with inbox target box", async () => {
+      renderComponent();
+
+      await navigateToAfterCompletionParams(user);
+      await user.click(screen.getByTestId("repeat-after-completion-next"));
+      await user.click(screen.getByTestId("repeat-target-box-inbox"));
+      await user.click(screen.getByTestId("repeat-apply"));
+
+      expect(mockOnChange).toHaveBeenCalledWith({
+        type: "after_completion",
+        delay_days: 1,
+        target_box: "inbox",
+        advance_days: 0,
+      });
+      expect(mockOnBack).toHaveBeenCalledTimes(1);
+    });
+
+    it("should create fixed daily rule with inbox target box", async () => {
+      renderComponent();
+
+      await navigateToPlacementViaFixed(user);
+      await user.click(screen.getByTestId("repeat-target-box-inbox"));
+      await user.click(screen.getByTestId("repeat-apply"));
+
+      expect(mockOnChange).toHaveBeenCalledWith({
+        type: "fixed",
+        frequency: "daily",
+        interval: 1,
+        target_box: "inbox",
         advance_days: 0,
       });
       expect(mockOnBack).toHaveBeenCalledTimes(1);
