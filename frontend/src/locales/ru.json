@@ -307,9 +307,9 @@
     "everyNMonths_one": "Каждый {{count}} месяц ({{day}}-е число)",
     "everyNMonths_few": "Каждые {{count}} месяца ({{day}}-е число)",
     "everyNMonths_many": "Каждые {{count}} месяцев ({{day}}-е число)",
-    "everyNYears_one": "Каждый {{count}} год ({{day}}.{{month}})",
-    "everyNYears_few": "Каждые {{count}} года ({{day}}.{{month}})",
-    "everyNYears_many": "Каждые {{count}} лет ({{day}}.{{month}})",
+    "everyNYears_one": "Каждый {{count}} год ({{date}})",
+    "everyNYears_few": "Каждые {{count}} года ({{date}})",
+    "everyNYears_many": "Каждые {{count}} лет ({{date}})",
     "weeklyDays": "По {{days}}",
     "next": "Далее",
     "apply": "Применить",
@@ -337,7 +337,8 @@
     "monthGenitive10": "октября",
     "monthGenitive11": "ноября",
     "monthGenitive12": "декабря",
-    "monthAndDayWithValue": "Дата: {{count}} {{month}}"
+    "monthAndDayWithValue": "Дата: {{count}} {{month}}",
+    "yearlyDate": "{{count}} {{month}}"
   },
   "taskEdit": {
     "name": "Редактировать задачу",

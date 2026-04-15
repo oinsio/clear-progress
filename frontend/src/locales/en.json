@@ -301,8 +301,8 @@
     "everyNWeeks_other": "Every {{count}} weeks ({{days}})",
     "everyNMonths_one": "Every {{count}} month (day {{day}})",
     "everyNMonths_other": "Every {{count}} months (day {{day}})",
-    "everyNYears_one": "Every {{count}} year ({{day}}.{{month}})",
-    "everyNYears_other": "Every {{count}} years ({{day}}.{{month}})",
+    "everyNYears_one": "Every {{count}} year ({{date}})",
+    "everyNYears_other": "Every {{count}} years ({{date}})",
     "weeklyDays": "On {{days}}",
     "next": "Next",
     "apply": "Apply",
@@ -334,7 +334,11 @@
     "monthAndDayWithValue_ordinal_one": "Date: {{month}} {{count}}st",
     "monthAndDayWithValue_ordinal_two": "Date: {{month}} {{count}}nd",
     "monthAndDayWithValue_ordinal_few": "Date: {{month}} {{count}}rd",
-    "monthAndDayWithValue_ordinal_other": "Date: {{month}} {{count}}th"
+    "monthAndDayWithValue_ordinal_other": "Date: {{month}} {{count}}th",
+    "yearlyDate_ordinal_one": "{{month}} {{count}}st",
+    "yearlyDate_ordinal_two": "{{month}} {{count}}nd",
+    "yearlyDate_ordinal_few": "{{month}} {{count}}rd",
+    "yearlyDate_ordinal_other": "{{month}} {{count}}th"
   },
   "taskEdit": {
     "name": "Edit task",

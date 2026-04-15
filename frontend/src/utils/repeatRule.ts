@@ -216,12 +216,21 @@ export function formatRepeatRuleLabel(rule: RepeatRule, t: TFunction): string {
     }
     case "monthly":
       return t("repeat.everyNMonths", { count: interval, day: rule.day_of_month });
-    case "yearly":
+    case "yearly": {
+      if (!rule.month_and_day) return t("repeat.none");
+
+      const monthName = t(`repeat.monthGenitive${rule.month_and_day.month}`);
+      const formattedDate = t("repeat.yearlyDate", {
+        count: rule.month_and_day.day,
+        month: monthName,
+        ordinal: true,
+      });
+
       return t("repeat.everyNYears", {
         count: interval,
-        month: rule.month_and_day?.month,
-        day: rule.month_and_day?.day,
+        date: formattedDate,
       });
+    }
     default:
       return t("repeat.none");
   }

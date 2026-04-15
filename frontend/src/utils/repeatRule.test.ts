@@ -128,6 +128,90 @@ describe("formatRepeatRuleLabel", () => {
     expect(label).toBeTruthy();
     expect(typeof label).toBe("string");
   });
+
+  it("should format yearly rule in Russian", async () => {
+    await i18n.changeLanguage("ru");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      month_and_day: { month: 2, day: 28 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toContain("28 февраля");
+  });
+
+  it("should format yearly rule in English", async () => {
+    await i18n.changeLanguage("en");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      month_and_day: { month: 2, day: 28 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toContain("February 28th");
+  });
+
+  it("should format yearly rule with ordinal 1st", async () => {
+    await i18n.changeLanguage("en");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      month_and_day: { month: 1, day: 1 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toContain("January 1st");
+  });
+
+  it("should format yearly rule with ordinal 2nd", async () => {
+    await i18n.changeLanguage("en");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      month_and_day: { month: 3, day: 2 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toContain("March 2nd");
+  });
+
+  it("should format yearly rule with ordinal 3rd", async () => {
+    await i18n.changeLanguage("en");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      month_and_day: { month: 5, day: 3 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toContain("May 3rd");
+  });
+
+  it("should format yearly rule with ordinal 31st", async () => {
+    await i18n.changeLanguage("en");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      month_and_day: { month: 12, day: 31 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toContain("December 31st");
+  });
 });
 
 describe("calculateNextDate", () => {
