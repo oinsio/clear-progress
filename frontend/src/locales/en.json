@@ -288,6 +288,7 @@
     "dayOfMonthLabel_ordinal_few": "Day {{count}}rd of every month",
     "dayOfMonthLabel_ordinal_other": "Day {{count}}th of every month",
     "monthAndDay": "Date",
+    "month": "Month",
     "delayDays": "Days after",
     "targetBox": "Put to",
     "advanceDays_one": "Show {{count}} day in advance",

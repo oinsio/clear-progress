@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { RepeatRule } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
@@ -47,6 +47,7 @@ export function RepeatRuleSelector({
   onBack,
 }: RepeatRuleSelectorProps) {
   const { t } = useTranslation();
+  const [isMonthPanelOpen, setMonthPanelOpen] = useState(false);
 
   const [state, setState] = useState<State>(() => {
     if (!value) {
@@ -169,6 +170,7 @@ export function RepeatRuleSelector({
         },
       };
     });
+    setMonthPanelOpen(false);
   }, []);
 
   const handleDayChange = useCallback(
@@ -458,7 +460,7 @@ export function RepeatRuleSelector({
             </div>
           )}
 
-          {/* Для Yearly: выбор месяца (кнопки) + числовой ввод дня */}
+          {/* Для Yearly: выбор месяца (выпадающий список) + числовой ввод дня */}
           {state.frequency === "yearly" && (
             <div className="flex flex-col gap-2">
               <label className="text-sm text-gray-600">
@@ -468,43 +470,76 @@ export function RepeatRuleSelector({
                   ordinal: true
                 })}
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {ALL_MONTHS.map((month) => {
-                  const isSelected = state.monthAndDay.month === month;
-                  return (
-                    <button
-                      key={month}
-                      type="button"
-                      data-testid={`repeat-month-${month}`}
-                      aria-pressed={isSelected}
-                      onClick={() => handleMonthSelect(month)}
+
+              {/* Адаптивный контейнер: вертикально на узких экранах, горизонтально на широких */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+                {/* Поле выбора месяца */}
+                <div className="flex flex-col gap-2 sm:flex-1">
+                  <label htmlFor="repeat-month-trigger" className="text-sm text-gray-600">
+                    {t("repeat.month")}
+                  </label>
+                  {/* Триггер выбора месяца */}
+                  <button
+                    id="repeat-month-trigger"
+                    type="button"
+                    data-testid="repeat-month-trigger"
+                    onClick={() => setMonthPanelOpen(!isMonthPanelOpen)}
+                    className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors w-full"
+                  >
+                    <span className="text-sm font-medium text-gray-800">
+                      {t(`repeat.month${state.monthAndDay.month}`)}
+                    </span>
+                    <ChevronDown
+                      size={16}
                       className={cn(
-                        "py-2 px-3 rounded-lg text-sm font-medium transition-colors",
-                        isSelected
-                          ? "bg-accent text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                        "ml-auto transition-transform text-gray-400",
+                        isMonthPanelOpen && "rotate-180"
                       )}
-                    >
-                      {t(`repeat.month${month}`)}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex flex-col gap-2">
-                <label htmlFor="repeat-day-input" className="text-sm text-gray-600">
-                  {t("repeat.dayOfMonth")}
-                </label>
-                <input
-                  id="repeat-day-input"
-                  type="number"
-                  data-testid="repeat-day-input"
-                  value={state.monthAndDay.day}
-                  min={MIN_DAY_OF_MONTH}
-                  max={MAX_DAY_OF_MONTH}
-                  onChange={handleDayChange}
-                  placeholder={t("repeat.dayOfMonth")}
-                  className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
-                />
+                    />
+                  </button>
+
+                  {/* Inline-панель со списком месяцев */}
+                  {isMonthPanelOpen && (
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="flex flex-col gap-0.5 p-2 max-h-60 overflow-y-auto">
+                        {ALL_MONTHS.map((month) => (
+                          <button
+                            key={month}
+                            type="button"
+                            data-testid={`repeat-month-option-${month}`}
+                            onClick={() => handleMonthSelect(month)}
+                            className={cn(
+                              "text-left text-sm px-3 py-2 rounded-lg transition-colors",
+                              state.monthAndDay.month === month
+                                ? "bg-accent/10 text-accent font-medium"
+                                : "text-gray-700 hover:bg-gray-100"
+                            )}
+                          >
+                            {t(`repeat.month${month}`)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Поле ввода дня */}
+                <div className="flex flex-col gap-2 sm:flex-1">
+                  <label htmlFor="repeat-day-input" className="text-sm text-gray-600">
+                    {t("repeat.dayOfMonth")}
+                  </label>
+                  <input
+                    id="repeat-day-input"
+                    type="number"
+                    data-testid="repeat-day-input"
+                    value={state.monthAndDay.day}
+                    min={MIN_DAY_OF_MONTH}
+                    max={MAX_DAY_OF_MONTH}
+                    onChange={handleDayChange}
+                    placeholder={t("repeat.dayOfMonth")}
+                    className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent"
+                  />
+                </div>
               </div>
             </div>
           )}

@@ -77,7 +77,13 @@ describe("RepeatRuleSelector", () => {
 
   // Helper: select month in yearly frequency
   const selectMonth = async (user: ReturnType<typeof userEvent.setup>, monthNumber: number) => {
-    await user.click(screen.getByTestId(`repeat-month-${monthNumber}`));
+    // Открыть панель выбора месяца, если она закрыта
+    const trigger = screen.queryByTestId("repeat-month-trigger");
+    if (trigger) {
+      await user.click(trigger);
+    }
+    // Кликнуть на опцию месяца
+    await user.click(screen.getByTestId(`repeat-month-option-${monthNumber}`));
   };
 
   describe("Step 1: Type selection", () => {
@@ -208,9 +214,14 @@ describe("RepeatRuleSelector", () => {
       await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-yearly"));
 
-      expect(screen.getByTestId("repeat-month-1")).toBeInTheDocument();
-      expect(screen.getByTestId("repeat-month-12")).toBeInTheDocument();
+      // Проверяем наличие триггера выбора месяца
+      expect(screen.getByTestId("repeat-month-trigger")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-day-input")).toBeInTheDocument();
+
+      // Открываем панель и проверяем наличие опций месяцев
+      await user.click(screen.getByTestId("repeat-month-trigger"));
+      expect(screen.getByTestId("repeat-month-option-1")).toBeInTheDocument();
+      expect(screen.getByTestId("repeat-month-option-12")).toBeInTheDocument();
     });
 
     it("should disable next button when weekly frequency is selected but no weekdays are chosen", async () => {

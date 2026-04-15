@@ -290,6 +290,7 @@
     "dayOfMonth": "Число месяца",
     "dayOfMonthLabel_ordinal_other": "Каждое {{count}}-е число месяца",
     "monthAndDay": "Дата",
+    "month": "Месяц",
     "delayDays": "Через дней",
     "targetBox": "Добавлять в",
     "advanceDays_one": "Показать заранее за {{count}} день",
