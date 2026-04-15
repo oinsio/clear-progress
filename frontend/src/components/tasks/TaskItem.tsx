@@ -12,7 +12,7 @@ import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import type { Task, Goal, Context, Category } from "@/types/entities";
 import type { Box } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
-import { formatCompletedAt } from "@/shared/lib/utils";
+import { formatCompletedAt, formatAppearDate } from "@/shared/lib/utils";
 import { TaskQuickActions } from "./TaskQuickActions";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
@@ -264,7 +264,7 @@ export function TaskItem({
                   className="text-xs text-gray-500 mt-0.5"
                 >
                   {t("repeat.appearDate", {
-                    date: new Date(task.appear_date).toLocaleDateString(),
+                    date: formatAppearDate(task.appear_date),
                   })}
                 </span>
               )}

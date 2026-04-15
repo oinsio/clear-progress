@@ -296,6 +296,7 @@
     "advanceDays_few": "Показать заранее за {{count}} дня",
     "advanceDays_many": "Показать заранее за {{count}} дней",
     "appearDate": "Появится {{date}}",
+    "appearDateFormatted_ordinal_other": "{{count}} {{month}} {{year}}",
     "weekday1": "Пн",
     "weekday2": "Вт",
     "weekday3": "Ср",

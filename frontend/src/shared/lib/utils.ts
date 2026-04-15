@@ -116,3 +116,21 @@ export function formatShortDateTime(isoString: string): string {
   });
   return `${dateString} ${timeString}`;
 }
+
+export function formatAppearDate(isoString: string): string {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+
+  const day = date.getDate();
+  const month = date.getMonth() + 1; // 1-12
+  const year = date.getFullYear();
+
+  const monthName = i18next.t(`repeat.monthGenitive${month}`);
+
+  return i18next.t("repeat.appearDateFormatted", {
+    count: day,
+    month: monthName,
+    year: year,
+    ordinal: true,
+  });
+}
