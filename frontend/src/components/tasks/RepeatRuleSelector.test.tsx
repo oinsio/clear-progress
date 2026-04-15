@@ -38,12 +38,13 @@ describe("RepeatRuleSelector", () => {
   });
 
   // Helper: render component with default props
-  const renderComponent = (value: RepeatRule | null = null) => {
+  const renderComponent = (value: RepeatRule | null = null, defaultBox?: "inbox" | "today" | "week" | "later") => {
     return render(
       <RepeatRuleSelector
         value={value}
         onChange={mockOnChange}
         onBack={mockOnBack}
+        defaultBox={defaultBox}
       />,
     );
   };
@@ -549,6 +550,33 @@ describe("RepeatRuleSelector", () => {
 
       const inboxButton = screen.getByTestId("repeat-target-box-inbox");
       expect(inboxButton).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should use defaultBox prop as initial target box", async () => {
+      renderComponent(null, "week");
+
+      await navigateToPlacementViaFixed(user);
+
+      const weekButton = screen.getByTestId("repeat-target-box-week");
+      expect(weekButton).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should fallback to 'today' when defaultBox is not provided", async () => {
+      renderComponent();
+
+      await navigateToPlacementViaFixed(user);
+
+      const todayButton = screen.getByTestId("repeat-target-box-today");
+      expect(todayButton).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should use defaultBox for after_completion type as well", async () => {
+      renderComponent(null, "later");
+
+      await navigateToPlacementViaAfterCompletion(user);
+
+      const laterButton = screen.getByTestId("repeat-target-box-later");
+      expect(laterButton).toHaveAttribute("aria-pressed", "true");
     });
   });
 

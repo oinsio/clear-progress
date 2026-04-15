@@ -19,6 +19,7 @@ interface RepeatRuleSelectorProps {
   value: RepeatRule | null;
   onChange: (rule: RepeatRule | null) => void;
   onBack: () => void;
+  defaultBox?: Box;
 }
 
 type Step = "type" | "fixed_params" | "after_completion_params" | "placement";
@@ -55,6 +56,7 @@ export function RepeatRuleSelector({
   value,
   onChange,
   onBack,
+  defaultBox = "today",
 }: RepeatRuleSelectorProps) {
   const { t } = useTranslation();
   const [isMonthPanelOpen, setMonthPanelOpen] = useState(false);
@@ -72,7 +74,7 @@ export function RepeatRuleSelector({
         dayOfMonth: currentDate.dayOfMonth,
         monthAndDay: { month: currentDate.month, day: currentDate.day },
         delayDays: 1,
-        targetBox: "today",
+        targetBox: defaultBox,
         advanceDays: 0,
       };
     }

@@ -28,6 +28,7 @@ import { useChecklistItemEditing } from "@/hooks/useChecklistItemEditing";
 import { useTaskEditLabels } from "@/hooks/useTaskEditLabels";
 import { useTaskFormState } from "@/hooks/useTaskFormState";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { useSettings } from "@/hooks/useSettings";
 import { RepeatRuleSelector } from "./RepeatRuleSelector";
 import {
   ACTIVE_TAB,
@@ -222,6 +223,7 @@ export function TaskDetailPanel({
   style,
 }: TaskDetailPanelProps) {
   const { t } = useTranslation();
+  const { defaultBox } = useSettings();
   const {
     name,
     setName,
@@ -632,6 +634,7 @@ export function TaskDetailPanel({
                   value={selectedRepeatRule}
                   onChange={(rule) => void handleRepeatChange(rule)}
                   onBack={() => setOpenSelector(null)}
+                  defaultBox={defaultBox}
                 />
               ) : (
                 <>
