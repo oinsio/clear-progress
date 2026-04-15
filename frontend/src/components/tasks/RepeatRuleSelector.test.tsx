@@ -15,6 +15,18 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("@/utils/dateHelpers", async () => {
+  const actual = await vi.importActual("@/utils/dateHelpers");
+  return {
+    ...actual,
+    getCurrentDateDefaults: vi.fn(() => ({
+      dayOfMonth: 15,
+      month: 4,
+      day: 15,
+    })),
+  };
+});
+
 describe("RepeatRuleSelector", () => {
   const mockOnChange = vi.fn();
   const mockOnBack = vi.fn();
@@ -222,6 +234,34 @@ describe("RepeatRuleSelector", () => {
       await user.click(screen.getByTestId("repeat-month-trigger"));
       expect(screen.getByTestId("repeat-month-option-1")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-month-option-12")).toBeInTheDocument();
+    });
+
+    it("should use current date as default for monthly frequency", async () => {
+      renderComponent();
+
+      await navigateToFixedParams(user);
+      await user.click(screen.getByTestId("repeat-frequency-monthly"));
+
+      const dayOfMonthInput = screen.getByTestId("repeat-day-of-month-input") as HTMLInputElement;
+      expect(dayOfMonthInput.value).toBe("15");
+    });
+
+    it("should use current date as default for yearly frequency", async () => {
+      renderComponent();
+
+      await navigateToFixedParams(user);
+      await user.click(screen.getByTestId("repeat-frequency-yearly"));
+
+      const dayInput = screen.getByTestId("repeat-day-input") as HTMLInputElement;
+      expect(dayInput.value).toBe("15");
+
+      // Проверяем, что выбран апрель (месяц 4)
+      // Открываем панель месяцев
+      await user.click(screen.getByTestId("repeat-month-trigger"));
+
+      // Проверяем, что апрель (месяц 4) имеет активный стиль
+      const aprilOption = screen.getByTestId("repeat-month-option-4");
+      expect(aprilOption).toHaveClass("bg-accent/10");
     });
 
     it("should disable next button when weekly frequency is selected but no weekdays are chosen", async () => {
@@ -558,12 +598,12 @@ describe("RepeatRuleSelector", () => {
       await user.click(screen.getByTestId("repeat-fixed-next"));
       await user.click(screen.getByTestId("repeat-apply"));
 
-      // Should use default day_of_month = 1
+      // Should use current date as default (mocked to 15)
       expect(mockOnChange).toHaveBeenCalledWith({
         type: "fixed",
         frequency: "monthly",
         interval: 1,
-        day_of_month: 1,
+        day_of_month: 15,
         target_box: "today",
         advance_days: 0,
       });
@@ -578,12 +618,12 @@ describe("RepeatRuleSelector", () => {
       await user.click(screen.getByTestId("repeat-fixed-next"));
       await user.click(screen.getByTestId("repeat-apply"));
 
-      // Should use default month_and_day = { month: 1, day: 1 }
+      // Should use current date as default (mocked to April 15)
       expect(mockOnChange).toHaveBeenCalledWith({
         type: "fixed",
         frequency: "yearly",
         interval: 1,
-        month_and_day: { month: 1, day: 1 },
+        month_and_day: { month: 4, day: 15 },
         target_box: "today",
         advance_days: 0,
       });

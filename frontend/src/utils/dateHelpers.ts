@@ -23,3 +23,25 @@ export function getDaysInMonth(month: number): number {
 
   return DAYS_IN_MONTH[month] ?? 31;
 }
+
+/**
+ * Возвращает текущую дату для использования в качестве значений по умолчанию
+ * при настройке повторяющихся задач.
+ *
+ * @returns Объект с текущим днём месяца и месяцем
+ */
+export function getCurrentDateDefaults(): {
+  dayOfMonth: number;
+  month: number;
+  day: number;
+} {
+  const now = new Date();
+  const day = now.getDate(); // 1-31
+  const month = now.getMonth() + 1; // 1-12 (getMonth() возвращает 0-11)
+
+  return {
+    dayOfMonth: day,
+    month,
+    day,
+  };
+}

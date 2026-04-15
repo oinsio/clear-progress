@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronDown, Inbox } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { RepeatRule, Box } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
-import { getDaysInMonth } from "@/utils/dateHelpers";
+import { getDaysInMonth, getCurrentDateDefaults } from "@/utils/dateHelpers";
 import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon } from "./BoxIcons";
 
 const TARGET_BOX_ICONS: Record<Box, React.FC<{ className?: string }>> = {
@@ -60,6 +60,8 @@ export function RepeatRuleSelector({
   const [isMonthPanelOpen, setMonthPanelOpen] = useState(false);
 
   const [state, setState] = useState<State>(() => {
+    const currentDate = getCurrentDateDefaults();
+
     if (!value) {
       return {
         step: "type",
@@ -67,8 +69,8 @@ export function RepeatRuleSelector({
         frequency: null,
         interval: 1,
         weekdays: [],
-        dayOfMonth: 1,
-        monthAndDay: { month: 1, day: 1 },
+        dayOfMonth: currentDate.dayOfMonth,
+        monthAndDay: { month: currentDate.month, day: currentDate.day },
         delayDays: 1,
         targetBox: "today",
         advanceDays: 0,
