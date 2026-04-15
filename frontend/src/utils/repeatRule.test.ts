@@ -223,9 +223,16 @@ describe("calculateNextDate", () => {
       target_box: "today",
       advance_days: 0,
     };
+    // Используем вчерашнюю дату как previousNextDate, чтобы получить сегодня
+    const yesterday = new Date();
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const previousNextDate = yesterday.toISOString().split("T")[0];
     const completedAt = "2026-04-13T10:00:00.000Z";
-    const nextDate = calculateNextDate(rule, completedAt);
-    expect(nextDate).toBe("2026-04-14");
+    const nextDate = calculateNextDate(rule, completedAt, previousNextDate);
+
+    const today = new Date();
+    const expectedDate = today.toISOString().split("T")[0];
+    expect(nextDate).toBe(expectedDate);
   });
 
   it("should calculate next date for after_completion rule", () => {
@@ -238,6 +245,48 @@ describe("calculateNextDate", () => {
     const completedAt = "2026-04-13T10:00:00.000Z";
     const nextDate = calculateNextDate(rule, completedAt);
     expect(nextDate).toBe("2026-04-20");
+  });
+
+  it("should calculate next date for monthly rule without timezone shift", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "monthly",
+      interval: 1,
+      day_of_month: 7,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-04-15T10:00:00.000Z";
+    const previousNextDate = "2026-04-07";
+    const nextDate = calculateNextDate(rule, completedAt, previousNextDate);
+    expect(nextDate).toBe("2026-05-07");
+  });
+
+  it("should calculate next date for yearly rule without timezone shift", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      month_and_day: { month: 5, day: 7 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-04-15T10:00:00.000Z";
+    const previousNextDate = "2025-05-07";
+    const nextDate = calculateNextDate(rule, completedAt, previousNextDate);
+    expect(nextDate).toBe("2026-05-07");
+  });
+
+  it("should calculate next date for after_completion without timezone shift", () => {
+    const rule: RepeatRule = {
+      type: "after_completion",
+      delay_days: 7,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-04-07T10:00:00.000Z";
+    const nextDate = calculateNextDate(rule, completedAt);
+    expect(nextDate).toBe("2026-04-14");
   });
 });
 

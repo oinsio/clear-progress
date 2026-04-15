@@ -20,17 +20,17 @@ function calculateNextDateDaily(
 ): string {
   const prev = new Date(previousNextDate);
   const next = new Date(prev);
-  next.setDate(prev.getDate() + interval);
+  next.setUTCDate(prev.getUTCDate() + interval);
 
   // Если previousNextDate в прошлом, вычислить ближайшую будущую дату
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   if (next < today) {
     const daysSincePrev = Math.floor(
       (today.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24),
     );
     const periodsToSkip = Math.ceil(daysSincePrev / interval);
-    next.setDate(prev.getDate() + periodsToSkip * interval);
+    next.setUTCDate(prev.getUTCDate() + periodsToSkip * interval);
   }
 
   return next.toISOString().split("T")[0]; // YYYY-MM-DD
@@ -42,19 +42,19 @@ function findNextWeekday(
   interval: number,
 ): string {
   // weekdays: 1=Пн, 2=Вт, ..., 7=Вс
-  // startDate.getDay(): 0=Вс, 1=Пн, ..., 6=Сб
+  // startDate.getUTCDay(): 0=Вс, 1=Пн, ..., 6=Сб
   const sortedWeekdays = [...weekdays].sort((a, b) => a - b);
   const current = new Date(startDate);
 
   for (let i = 0; i < 7 * interval; i++) {
-    const jsDay = current.getDay();
+    const jsDay = current.getUTCDay();
     const isoDay = jsDay === 0 ? 7 : jsDay;
 
     if (sortedWeekdays.includes(isoDay)) {
       return current.toISOString().split("T")[0];
     }
 
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
 
   return current.toISOString().split("T")[0];
@@ -101,7 +101,7 @@ function calculateNextDateMonthly(
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const actualDay = Math.min(dayOfMonth, daysInMonth);
 
-  const next = new Date(year, month, actualDay);
+  const next = new Date(Date.UTC(year, month, actualDay));
   return next.toISOString().split("T")[0];
 }
 
@@ -123,7 +123,7 @@ function calculateNextDateYearly(
     }
   }
 
-  const next = new Date(year, month, day);
+  const next = new Date(Date.UTC(year, month, day));
   return next.toISOString().split("T")[0];
 }
 
@@ -133,7 +133,7 @@ function calculateNextDateAfterCompletion(
 ): string {
   const completed = new Date(completedAt);
   const next = new Date(completed);
-  next.setDate(completed.getDate() + delayDays);
+  next.setUTCDate(completed.getUTCDate() + delayDays);
   return next.toISOString().split("T")[0];
 }
 
