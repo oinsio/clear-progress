@@ -1,7 +1,7 @@
-import { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Monitor, Sun, Moon, PanelLeft, PanelRight } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -19,6 +19,7 @@ import {
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
+import { BOX_ICONS } from "@/components/tasks/taskEditShared";
 import { locales, getLocaleByCode } from "@/services/localeRegistry";
 import {
   BOX_ORDER,
@@ -42,6 +43,17 @@ import type {
   FilterBarPosition,
 } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
+
+const THEME_ICONS: Record<ColorScheme, React.FC<{ className?: string }>> = {
+  system: ({ className }) => <Monitor className={className} />,
+  light: ({ className }) => <Sun className={className} />,
+  dark: ({ className }) => <Moon className={className} />,
+};
+
+const PANEL_SIDE_ICONS: Record<PanelSide, React.FC<{ className?: string }>> = {
+  left: ({ className }) => <PanelLeft className={className} />,
+  right: ({ className }) => <PanelRight className={className} />,
+};
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -156,23 +168,28 @@ export default function SettingsPage() {
               <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 {t("settings.defaultBox")}
               </h2>
-              <div className="flex flex-wrap gap-2">
-                {BOX_ORDER.map((box) => (
-                  <button
-                    key={box}
-                    data-testid={`settings-box-option-${box}`}
-                    aria-pressed={defaultBox === box}
-                    onClick={() => handleBoxSelect(box)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
-                      defaultBox === box
-                        ? "bg-accent border-accent text-white"
-                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
-                    )}
-                  >
-                    {t(`box.${box}`)}
-                  </button>
-                ))}
+              <div className="flex gap-4">
+                {BOX_ORDER.map((box) => {
+                  const BoxIcon = BOX_ICONS[box];
+                  const isSelected = defaultBox === box;
+                  return (
+                    <button
+                      key={box}
+                      data-testid={`settings-box-option-${box}`}
+                      aria-label={t(`box.${box}`)}
+                      aria-pressed={isSelected}
+                      onClick={() => handleBoxSelect(box)}
+                      className={cn(
+                        "flex items-center justify-center w-11 h-11 rounded-full transition-colors",
+                        isSelected
+                          ? "text-accent"
+                          : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                      )}
+                    >
+                      <BoxIcon className="w-6 h-6" />
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
@@ -216,23 +233,28 @@ export default function SettingsPage() {
               <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 {t("settings.theme")}
               </h2>
-              <div className="flex flex-wrap gap-2">
-                {COLOR_SCHEMES.map((scheme) => (
-                  <button
-                    key={scheme}
-                    data-testid={`settings-theme-option-${scheme}`}
-                    aria-pressed={colorScheme === scheme}
-                    onClick={() => handleColorSchemeSelect(scheme)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
-                      colorScheme === scheme
-                        ? "bg-accent border-accent text-white"
-                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
-                    )}
-                  >
-                    {t(`theme.${scheme}`)}
-                  </button>
-                ))}
+              <div className="flex gap-4">
+                {COLOR_SCHEMES.map((scheme) => {
+                  const ThemeIcon = THEME_ICONS[scheme];
+                  const isSelected = colorScheme === scheme;
+                  return (
+                    <button
+                      key={scheme}
+                      data-testid={`settings-theme-option-${scheme}`}
+                      aria-label={t(`theme.${scheme}`)}
+                      aria-pressed={isSelected}
+                      onClick={() => handleColorSchemeSelect(scheme)}
+                      className={cn(
+                        "flex items-center justify-center w-11 h-11 rounded-full transition-colors",
+                        isSelected
+                          ? "text-accent"
+                          : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                      )}
+                    >
+                      <ThemeIcon className="w-6 h-6" />
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
@@ -358,25 +380,28 @@ export default function SettingsPage() {
               <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 {t("settings.panelSide")}
               </h2>
-              <div className="flex flex-wrap gap-2">
-                {PANEL_SIDES.map((side) => (
-                  <button
-                    key={side}
-                    data-testid={`settings-panel-side-option-${side}`}
-                    aria-pressed={panelSide === side}
-                    onClick={() => handlePanelSideSelect(side)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
-                      panelSide === side
-                        ? "bg-accent border-accent text-white"
-                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
-                    )}
-                  >
-                    {side === "left"
-                      ? t("settings.panelLeft")
-                      : t("settings.panelRight")}
-                  </button>
-                ))}
+              <div className="flex gap-4">
+                {PANEL_SIDES.map((side) => {
+                  const PanelIcon = PANEL_SIDE_ICONS[side];
+                  const isSelected = panelSide === side;
+                  return (
+                    <button
+                      key={side}
+                      data-testid={`settings-panel-side-option-${side}`}
+                      aria-label={side === "left" ? t("settings.panelLeft") : t("settings.panelRight")}
+                      aria-pressed={isSelected}
+                      onClick={() => handlePanelSideSelect(side)}
+                      className={cn(
+                        "flex items-center justify-center w-11 h-11 rounded-full transition-colors",
+                        isSelected
+                          ? "text-accent"
+                          : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                      )}
+                    >
+                      <PanelIcon className="w-6 h-6" />
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
