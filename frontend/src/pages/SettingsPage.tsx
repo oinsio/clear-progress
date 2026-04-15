@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ChevronDown } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -18,6 +19,7 @@ import {
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
+import { locales, getLocaleByCode } from "@/services/localeRegistry";
 import {
   BOX_ORDER,
   ACCENT_COLORS,
@@ -29,8 +31,8 @@ import {
   INTERFACE_SCALES,
   ROUTES,
   STORAGE_KEYS,
-  SUPPORTED_LANGUAGES,
   BACKEND_CONNECTION_EVENT,
+  LANGUAGE_SEARCH_THRESHOLD,
 } from "@/constants";
 import type {
   Box,
@@ -39,7 +41,6 @@ import type {
   PanelSide,
   FilterBarPosition,
 } from "@/types/common";
-import type { Language } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 
 export default function SettingsPage() {
@@ -48,6 +49,8 @@ export default function SettingsPage() {
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const [isFullSyncDialogOpen, setIsFullSyncDialogOpen] = useState(false);
   const { triggerFullSync } = useSync();
+  const [isLanguagePanelOpen, setLanguagePanelOpen] = useState(false);
+  const [languageSearchQuery, setLanguageSearchQuery] = useState("");
 
   const navigate = useNavigate();
   const { defaultBox, setDefaultBox } = useSettings();
@@ -58,6 +61,19 @@ export default function SettingsPage() {
   const { isPanelAlwaysOpen, setPanelAlwaysOpen } = usePanelAlwaysOpen();
   const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
   const { interfaceScale, setInterfaceScale } = useInterfaceScale();
+
+  const currentLocale = getLocaleByCode(language);
+
+  const filteredLocales = useMemo(() => {
+    if (!languageSearchQuery) return locales;
+    const query = languageSearchQuery.toLowerCase();
+    return locales.filter(
+      (locale) =>
+        locale.nativeName.toLowerCase().includes(query) ||
+        locale.name.toLowerCase().includes(query) ||
+        locale.code.toLowerCase().includes(query)
+    );
+  }, [languageSearchQuery]);
 
   const handlePanelToggle = togglePanelOpen;
 
@@ -92,7 +108,7 @@ export default function SettingsPage() {
     setFilterBarPosition(position);
   };
 
-  const handleLanguageSelect = (lang: Language): void => {
+  const handleLanguageSelect = (lang: string): void => {
     setLanguage(lang);
   };
 
@@ -271,24 +287,70 @@ export default function SettingsPage() {
               <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 {t("settings.language")}
               </h2>
-              <div className="flex flex-wrap gap-2">
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <button
-                    key={lang}
-                    data-testid={`settings-language-option-${lang}`}
-                    aria-pressed={language === lang}
-                    onClick={() => handleLanguageSelect(lang)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
-                      language === lang
-                        ? "bg-accent border-accent text-white"
-                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
-                    )}
-                  >
-                    {t(`lang.${lang}`)}
-                  </button>
-                ))}
-              </div>
+
+              {/* Триггер */}
+              <button
+                type="button"
+                data-testid="settings-language-trigger"
+                onClick={() => setLanguagePanelOpen(!isLanguagePanelOpen)}
+                className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors w-full max-w-xs"
+              >
+                <span>{currentLocale?.emoji}</span>
+                <span className="text-sm font-medium">
+                  {currentLocale?.nativeName}
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={cn(
+                    "ml-auto transition-transform",
+                    isLanguagePanelOpen && "rotate-180"
+                  )}
+                />
+              </button>
+
+              {/* Inline-панель со списком языков */}
+              {isLanguagePanelOpen && (
+                <div className="border border-gray-200 rounded-lg overflow-hidden max-w-xs">
+                  {/* Поиск (если языков >= 10) */}
+                  {locales.length >= LANGUAGE_SEARCH_THRESHOLD && (
+                    <div className="border-b border-gray-100 p-2">
+                      <input
+                        type="text"
+                        data-testid="settings-language-search"
+                        placeholder={t("search.placeholder")}
+                        value={languageSearchQuery}
+                        onChange={(e) => setLanguageSearchQuery(e.target.value)}
+                        className="w-full text-sm px-3 py-1.5 border border-gray-200 rounded-lg outline-none focus:border-accent"
+                      />
+                    </div>
+                  )}
+
+                  {/* Список языков */}
+                  <div className="flex flex-col gap-0.5 p-2 max-h-60 overflow-y-auto">
+                    {filteredLocales.map((locale) => (
+                      <button
+                        key={locale.code}
+                        type="button"
+                        data-testid={`settings-language-option-${locale.code}`}
+                        onClick={() => {
+                          handleLanguageSelect(locale.code);
+                          setLanguagePanelOpen(false);
+                          setLanguageSearchQuery("");
+                        }}
+                        className={cn(
+                          "flex items-center gap-2 text-left text-sm px-3 py-1.5 rounded-lg transition-colors",
+                          language === locale.code
+                            ? "bg-accent/10 text-accent font-medium"
+                            : "text-gray-700 hover:bg-gray-100"
+                        )}
+                      >
+                        <span>{locale.emoji}</span>
+                        <span>{locale.nativeName}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* Panel side section */}

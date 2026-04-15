@@ -2,11 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LanguageProvider, useLanguage } from "./LanguageProvider";
-import {
-  DEFAULT_LANGUAGE,
-  STORAGE_KEYS,
-  SUPPORTED_LANGUAGES,
-} from "@/constants";
+import { DEFAULT_LANGUAGE, STORAGE_KEYS } from "@/constants";
 
 vi.mock("@/i18n", () => ({
   default: {
@@ -14,6 +10,23 @@ vi.mock("@/i18n", () => ({
     changeLanguage: vi.fn().mockResolvedValue(undefined),
   },
 }));
+
+vi.mock("@/services/localeRegistry", () => {
+  const mockLocales = [
+    { code: "en", name: "English", nativeName: "English", baseLanguage: "en", emoji: "🇬🇧" },
+    { code: "ru", name: "Russian", nativeName: "Русский", baseLanguage: "ru", emoji: "🇷🇺" },
+    { code: "house", name: "Dr. House", nativeName: "Доктор Хаус", baseLanguage: "ru", emoji: "🏥" },
+  ];
+
+  return {
+    locales: mockLocales,
+    localeResources: {},
+    // @ts-ignore - используются внутри LanguageProvider
+    isValidLocaleCode: (code: string) => mockLocales.some(l => l.code === code),
+    // @ts-ignore - используются внутри LanguageProvider
+    getBaseLanguageCodes: () => Array.from(new Set(mockLocales.map(l => l.baseLanguage))),
+  };
+});
 
 import i18n from "@/i18n";
 
@@ -37,10 +50,11 @@ vi.stubGlobal("localStorage", localStorageMock);
 
 function TestConsumer() {
   const { language, setLanguage } = useLanguage();
+  const testLanguages = ["en", "ru", "house"];
   return (
     <div>
       <span data-testid="current-lang">{language}</span>
-      {SUPPORTED_LANGUAGES.map((lang) => (
+      {testLanguages.map((lang) => (
         <button key={lang} onClick={() => setLanguage(lang)}>
           {lang}
         </button>

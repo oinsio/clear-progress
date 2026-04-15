@@ -1,4 +1,11 @@
 {
+  "_meta": {
+    "code": "ru",
+    "name": "Russian",
+    "nativeName": "Русский",
+    "baseLanguage": "ru",
+    "emoji": "🇷🇺"
+  },
   "nav": {
     "inbox": "Входящие",
     "today": "Сегодня",
@@ -372,11 +379,6 @@
     "blue": "Синий",
     "indigo": "Индиго",
     "purple": "Фиолетовый"
-  },
-  "lang": {
-    "ru": "Русский",
-    "en": "English",
-    "house": "Доктор Хаус"
   },
   "theme": {
     "system": "Системная",

@@ -1,4 +1,11 @@
 {
+  "_meta": {
+    "code": "house",
+    "name": "Dr. House",
+    "nativeName": "Доктор Хаус",
+    "baseLanguage": "ru",
+    "emoji": "🏥"
+  },
   "nav": {
     "inbox": "Симптомы",
     "today": "Острое",
@@ -285,11 +292,6 @@
     "blue": "Синий",
     "indigo": "Индиго",
     "purple": "Фиолетовый"
-  },
-  "lang": {
-    "ru": "Русский",
-    "en": "English",
-    "house": "Доктор Хаус"
   },
   "theme": {
     "system": "Как прикажет система",

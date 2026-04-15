@@ -47,11 +47,10 @@ global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
 global.URL.revokeObjectURL = vi.fn();
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import ru from "@/locales/ru.json";
-import en from "@/locales/en.json";
+import { localeResources } from "@/services/localeRegistry";
 
 void i18n.use(initReactI18next).init({
-  resources: { ru: { translation: ru }, en: { translation: en } },
+  resources: localeResources,
   lng: "ru",
   fallbackLng: "ru",
   interpolation: { escapeValue: false },

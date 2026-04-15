@@ -4,7 +4,6 @@ import { MemoryRouter } from "react-router-dom";
 import SettingsPage from "./SettingsPage";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
 import type { AccentColor } from "@/types/common";
-import type { Language } from "@/constants";
 
 vi.mock("@/hooks/useSettings");
 vi.mock("@/app/providers/ThemeProvider");
@@ -79,7 +78,7 @@ function buildThemeHook(
 
 function buildLanguageHook(
   overrides: {
-    language?: Language;
+    language?: string;
     setLanguage?: ReturnType<typeof vi.fn>;
   } = {},
 ): ReturnType<typeof useLanguage> {
@@ -236,9 +235,34 @@ describe("SettingsPage", () => {
     expect(setAccentColor).toHaveBeenCalledWith("teal");
   });
 
-  it("should render the language section with three buttons", () => {
+  it("should render the language section with trigger button", () => {
     renderPage();
     expect(screen.getByTestId("settings-language")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("settings-language-trigger"),
+    ).toBeInTheDocument();
+  });
+
+  it("should show current language in trigger button", () => {
+    mockUseLanguage.mockReturnValue(buildLanguageHook({ language: "en" }));
+    renderPage();
+    const trigger = screen.getByTestId("settings-language-trigger");
+    expect(trigger).toHaveTextContent("English");
+  });
+
+  it("should open language panel when trigger is clicked", () => {
+    renderPage();
+    const trigger = screen.getByTestId("settings-language-trigger");
+
+    // Панель закрыта изначально
+    expect(
+      screen.queryByTestId("settings-language-option-ru"),
+    ).not.toBeInTheDocument();
+
+    // Открываем панель
+    fireEvent.click(trigger);
+
+    // Панель открыта, языки видны
     expect(
       screen.getByTestId("settings-language-option-ru"),
     ).toBeInTheDocument();
@@ -250,25 +274,24 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("should mark the current language as active", () => {
-    mockUseLanguage.mockReturnValue(buildLanguageHook({ language: "en" }));
-    renderPage();
-    expect(screen.getByTestId("settings-language-option-en")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(screen.getByTestId("settings-language-option-ru")).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
-  });
-
-  it("should call setLanguage when a language option is clicked", () => {
+  it("should call setLanguage and close panel when a language option is clicked", () => {
     const setLanguage = vi.fn();
     mockUseLanguage.mockReturnValue(buildLanguageHook({ setLanguage }));
     renderPage();
+
+    // Открываем панель
+    fireEvent.click(screen.getByTestId("settings-language-trigger"));
+
+    // Кликаем на язык
     fireEvent.click(screen.getByTestId("settings-language-option-en"));
+
+    // Проверяем вызов setLanguage
     expect(setLanguage).toHaveBeenCalledWith("en");
+
+    // Панель закрылась
+    expect(
+      screen.queryByTestId("settings-language-option-ru"),
+    ).not.toBeInTheDocument();
   });
 
   describe("sync section", () => {

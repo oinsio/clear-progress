@@ -7,38 +7,40 @@ import {
 } from "react";
 import * as React from "react";
 import i18n from "@/i18n";
-import type { Language } from "@/constants";
 import {
-  DEFAULT_LANGUAGE,
-  SUPPORTED_LANGUAGES,
-  STORAGE_KEYS,
-} from "@/constants";
+  isValidLocaleCode,
+  getBaseLanguageCodes,
+} from "@/services/localeRegistry";
+import { DEFAULT_LANGUAGE, STORAGE_KEYS } from "@/constants";
 
 interface LanguageContextValue {
-  language: Language;
-  setLanguage: (lang: Language) => void;
+  language: string;
+  setLanguage: (lang: string) => void;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-function detectBrowserLanguage(): Language | null {
+function detectBrowserLanguage(): string | null {
   const browserLanguages = navigator.languages?.length
     ? navigator.languages
     : [navigator.language];
+
+  const baseLanguageCodes = getBaseLanguageCodes();
+
   for (const browserLang of browserLanguages) {
-    const langCode = browserLang.split("-")[0] as Language;
-    if (SUPPORTED_LANGUAGES.includes(langCode)) {
+    const langCode = browserLang.split("-")[0];
+    if (baseLanguageCodes.includes(langCode)) {
       return langCode;
     }
   }
   return null;
 }
 
-function getInitialLanguage(): Language {
+function getInitialLanguage(): string {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
-    if (stored && SUPPORTED_LANGUAGES.includes(stored as Language)) {
-      return stored as Language;
+    if (stored && isValidLocaleCode(stored)) {
+      return stored;
     }
     const detectedLanguage = detectBrowserLanguage() ?? DEFAULT_LANGUAGE;
     localStorage.setItem(STORAGE_KEYS.LANGUAGE, detectedLanguage);
@@ -50,7 +52,7 @@ function getInitialLanguage(): Language {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
+  const [language, setLanguageState] = useState<string>(getInitialLanguage);
 
   // i18next инициализируется до React (при импорте модуля), поэтому синхронизируем
   // определённый язык с i18next при монтировании компонента
@@ -58,7 +60,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     void i18n.changeLanguage(language);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const setLanguage = useCallback((lang: Language) => {
+  const setLanguage = useCallback((lang: string) => {
     setLanguageState(lang);
     localStorage.setItem(STORAGE_KEYS.LANGUAGE, lang);
     void i18n.changeLanguage(lang);

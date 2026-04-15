@@ -168,9 +168,8 @@ export const PANEL_SPLIT_DEFAULT_RATIO = 0.5;
 export const PANEL_SPLIT_MIN_RATIO = 0.2;
 export const PANEL_SPLIT_MAX_RATIO = 0.8;
 
-export const SUPPORTED_LANGUAGES = ["ru", "en", "house"] as const;
-export type Language = (typeof SUPPORTED_LANGUAGES)[number];
-export const DEFAULT_LANGUAGE: Language = "en";
+export const DEFAULT_LANGUAGE = "en";
+export const LANGUAGE_SEARCH_THRESHOLD = 10;
 
 export const SETTING_KEYS = {
   DEFAULT_BOX: "default_box",

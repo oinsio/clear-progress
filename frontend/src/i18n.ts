@@ -1,21 +1,24 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import ru from "@/locales/ru.json";
-import en from "@/locales/en.json";
-import house from "@/locales/house.json";
+import {
+  localeResources,
+  getLocaleByCode,
+} from "@/services/localeRegistry";
 import { DEFAULT_LANGUAGE, STORAGE_KEYS } from "@/constants";
 
 void i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources: {
-      ru: { translation: ru },
-      en: { translation: en },
-      house: { translation: house },
+    resources: localeResources,
+    fallbackLng: (code) => {
+      const locale = getLocaleByCode(code);
+      if (locale?.baseLanguage && locale.baseLanguage !== code) {
+        return [locale.baseLanguage, DEFAULT_LANGUAGE];
+      }
+      return [DEFAULT_LANGUAGE];
     },
-    fallbackLng: DEFAULT_LANGUAGE,
     detection: {
       order: ["localStorage", "navigator"],
       lookupLocalStorage: STORAGE_KEYS.LANGUAGE,

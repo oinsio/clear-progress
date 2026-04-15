@@ -1,4 +1,11 @@
 {
+  "_meta": {
+    "code": "en",
+    "name": "English",
+    "nativeName": "English",
+    "baseLanguage": "en",
+    "emoji": "🇺🇸"
+  },
   "nav": {
     "inbox": "Inbox",
     "today": "Today",
@@ -369,11 +376,6 @@
     "blue": "Blue",
     "indigo": "Indigo",
     "purple": "Purple"
-  },
-  "lang": {
-    "ru": "Русский",
-    "en": "English",
-    "house": "Dr. House"
   },
   "theme": {
     "system": "System",
