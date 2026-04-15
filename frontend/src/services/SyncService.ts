@@ -21,6 +21,7 @@ import {
   PUSH_RESULT_STATUS,
   LOCAL_COVER_ID_PREFIX,
   SYNC_META_KEYS,
+  STORAGE_KEYS,
 } from "@/constants";
 import { db } from "@/db/database";
 
@@ -65,9 +66,12 @@ export class SyncService {
     const sinceRevision = await this.syncMetaRepository.getValue(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
     );
+    const settingsUpdatedAt =
+      localStorage.getItem(STORAGE_KEYS.SETTINGS_UPDATED_AT) ?? undefined;
 
     const pullResponse = await this.apiClient.pull({
       since_revision: sinceRevision,
+      settings_updated_at: settingsUpdatedAt,
     });
 
     if (!pullResponse.ok) {
@@ -99,6 +103,16 @@ export class SyncService {
       this.ideaRepository.applyServerRecords(pullResponse.data.ideas),
       this.settingsRepository.bulkUpsert(pullResponse.settings),
     ]);
+
+    // Обновить settings_updated_at
+    if (pullResponse.settings.length > 0) {
+      const maxUpdatedAt = pullResponse.settings.reduce(
+        (max, setting) =>
+          setting.updated_at > max ? setting.updated_at : max,
+        settingsUpdatedAt ?? "",
+      );
+      localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
+    }
 
     await this.syncMetaRepository.setValue(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
@@ -327,6 +341,9 @@ export class SyncService {
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
       0,
     );
+
+    // Сбросить settings_updated_at для полного pull settings
+    localStorage.removeItem(STORAGE_KEYS.SETTINGS_UPDATED_AT);
 
     // 2. Пометить все записи как не-needsSync (чтобы pull перезаписал их)
     await db.tasks.toCollection().modify({ needsSync: false });

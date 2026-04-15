@@ -12,6 +12,7 @@ import type { PushResultStatus } from "./common";
 export interface PullRequest {
   action: "pull";
   since_revision: number;
+  settings_updated_at?: string;
 }
 
 export interface PullResponseData {

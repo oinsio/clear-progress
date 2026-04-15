@@ -174,10 +174,14 @@ interface PullResponse {
 
 ```
 1. Прочитать last_known_revision из sync_meta (default: 0)
-2. Отправить pull({ action: 'pull', since_revision })
-3. Применить результаты (applyPullResults — описано ниже)
-4. Сохранить response.current_revision в sync_meta.last_known_revision
+2. Прочитать settings_updated_at из localStorage (optional)
+3. Отправить pull({ action: 'pull', since_revision, settings_updated_at })
+4. Применить результаты (applyPullResults — описано ниже)
+5. Если получены settings: обновить settings_updated_at = max(setting.updated_at)
+6. Сохранить response.current_revision в sync_meta.last_known_revision
 ```
+
+**Settings оптимизация**: Settings не участвуют в revision-механизме. Вместо этого используется фильтрация по `updated_at`. Клиент отправляет `settings_updated_at` (максимальный `updated_at` среди полученных ранее settings), сервер возвращает только settings с `updated_at > settings_updated_at`. Это экономит трафик, т.к. settings меняются редко.
 
 #### Push
 

@@ -298,6 +298,109 @@ describe("SyncService", () => {
 
       await expect(service.pull()).rejects.toThrow("Pull failed");
     });
+
+    it("should send settings_updated_at from localStorage to apiClient.pull", async () => {
+      localStorage.setItem("settings_updated_at", "2026-04-15T10:00:00.000Z");
+      const service = createService();
+
+      await service.pull();
+
+      expect(mockApiClient.pull).toHaveBeenCalledWith({
+        since_revision: 0,
+        settings_updated_at: "2026-04-15T10:00:00.000Z",
+      });
+    });
+
+    it("should not send settings_updated_at when localStorage is empty", async () => {
+      localStorage.removeItem("settings_updated_at");
+      const service = createService();
+
+      await service.pull();
+
+      expect(mockApiClient.pull).toHaveBeenCalledWith({
+        since_revision: 0,
+      });
+    });
+
+    it("should update settings_updated_at in localStorage after receiving settings", async () => {
+      localStorage.removeItem("settings_updated_at");
+      const serverSettings = [
+        {
+          key: "default_box",
+          value: "inbox",
+          updated_at: "2026-04-10T00:00:00.000Z",
+          needsSync: false,
+        },
+        {
+          key: "accent_color",
+          value: "green",
+          updated_at: "2026-04-16T00:00:00.000Z",
+          needsSync: false,
+        },
+      ];
+      mockApiClient = createMockApiClient({
+        pull: vi.fn().mockResolvedValue(
+          makePullResponse({ settings: serverSettings }),
+        ),
+      });
+      const service = createService();
+
+      await service.pull();
+
+      expect(localStorage.getItem("settings_updated_at")).toBe(
+        "2026-04-16T00:00:00.000Z",
+      );
+    });
+
+    it("should not update settings_updated_at when settings array is empty", async () => {
+      localStorage.setItem("settings_updated_at", "2026-04-15T10:00:00.000Z");
+      mockApiClient = createMockApiClient({
+        pull: vi.fn().mockResolvedValue(makePullResponse({ settings: [] })),
+      });
+      const service = createService();
+
+      await service.pull();
+
+      expect(localStorage.getItem("settings_updated_at")).toBe(
+        "2026-04-15T10:00:00.000Z",
+      );
+    });
+
+    it("should update settings_updated_at to max updated_at from received settings", async () => {
+      localStorage.setItem("settings_updated_at", "2026-04-10T00:00:00.000Z");
+      const serverSettings = [
+        {
+          key: "setting1",
+          value: "value1",
+          updated_at: "2026-04-12T00:00:00.000Z",
+          needsSync: false,
+        },
+        {
+          key: "setting2",
+          value: "value2",
+          updated_at: "2026-04-17T00:00:00.000Z",
+          needsSync: false,
+        },
+        {
+          key: "setting3",
+          value: "value3",
+          updated_at: "2026-04-14T00:00:00.000Z",
+          needsSync: false,
+        },
+      ];
+      mockApiClient = createMockApiClient({
+        pull: vi.fn().mockResolvedValue(
+          makePullResponse({ settings: serverSettings }),
+        ),
+      });
+      const service = createService();
+
+      await service.pull();
+
+      expect(localStorage.getItem("settings_updated_at")).toBe(
+        "2026-04-17T00:00:00.000Z",
+      );
+    });
   });
 
   describe("push", () => {
@@ -936,6 +1039,15 @@ describe("SyncService", () => {
       await service.resetAndPull();
 
       expect(mockApiClient.pull).toHaveBeenCalled();
+    });
+
+    it("should remove settings_updated_at from localStorage", async () => {
+      localStorage.setItem("settings_updated_at", "2026-04-15T10:00:00.000Z");
+      const service = createService();
+
+      await service.resetAndPull();
+
+      expect(localStorage.getItem("settings_updated_at")).toBeNull();
     });
 
     it("should mark all tasks as needsSync: false in db", async () => {

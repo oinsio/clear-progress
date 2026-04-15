@@ -23,6 +23,12 @@ export function getAllSettings(): Setting[] {
   }));
 }
 
+export function getSettingsChangedSince(since: string): Setting[] {
+  return getAllSettings().filter(
+    (setting) => setting.updated_at > since
+  );
+}
+
 export function upsertSetting(setting: Setting): void {
   const sheet = getSheet(SHEET_NAMES.SETTINGS);
   const data = sheet.getDataRange().getValues();

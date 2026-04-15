@@ -5,10 +5,13 @@ import { getContextsByRevision } from '../sheets/contexts.sheet';
 import { getCategoriesByRevision } from '../sheets/categories.sheet';
 import { getChecklistItemsByRevision } from '../sheets/checklists.sheet';
 import { getIdeasByRevision } from '../sheets/ideas.sheet';
-import { getAllSettings } from '../sheets/settings.sheet';
+import { getAllSettings, getSettingsChangedSince } from '../sheets/settings.sheet';
 import { readNextRevision, readPurgeRevision } from '../sheets/meta.sheet';
 
-export function pull({ since_revision }: { since_revision?: number }): GoogleAppsScript.Content.TextOutput {
+export function pull({ since_revision, settings_updated_at }: {
+  since_revision?: number;
+  settings_updated_at?: string;
+}): GoogleAppsScript.Content.TextOutput {
   const sinceRevision = since_revision ?? 0;
   try {
     const currentRevision = readNextRevision() - 1;
@@ -23,7 +26,9 @@ export function pull({ since_revision }: { since_revision?: number }): GoogleApp
         checklist_items: getChecklistItemsByRevision(sinceRevision),
         ideas: getIdeasByRevision(sinceRevision),
       },
-      settings: getAllSettings(),
+      settings: settings_updated_at
+        ? getSettingsChangedSince(settings_updated_at)
+        : getAllSettings(),
       current_revision: currentRevision,
       purge_revision: purgeRevision,
       server_time: new Date().toISOString(),

@@ -159,6 +159,7 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN: "access_token",
   ACCESS_TOKEN_EXPIRES_AT: "access_token_expires_at",
   SHOW_HIDDEN_TASKS: "show_hidden_tasks",
+  SETTINGS_UPDATED_AT: "settings_updated_at",
 } as const;
 
 export const GOOGLE_USERINFO_URL =

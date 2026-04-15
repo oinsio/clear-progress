@@ -91,3 +91,58 @@ await taskService.update(taskId, {});
 await taskService.reorderTasks([task1, task2, task3]);
 // ✅ Если sort_order не изменился — выход без изменений
 ```
+
+---
+
+## Оптимизация синхронизации Settings
+
+### Проблема
+
+При каждом `pull` сервер возвращал **все** настройки (`getAllSettings()`), даже если ничего не изменилось. Остальные сущности (tasks, goals и т.д.) фильтруются по `since_revision`, а settings — нет.
+
+### Решение
+
+Клиент отправляет в pull-запросе параметр `settings_updated_at` — максимальный `updated_at` среди настроек, полученных ранее с сервера. Сервер возвращает только те settings, у которых `updated_at > settings_updated_at`.
+
+### Реализация
+
+#### Бэкенд
+
+**Файл:** `backend/src/sheets/settings.sheet.ts`
+
+Добавлена функция `getSettingsChangedSince(since: string)`, которая фильтрует настройки по дате обновления.
+
+**Файл:** `backend/src/actions/pull.ts`
+
+Pull action теперь принимает опциональный параметр `settings_updated_at` и использует его для фильтрации:
+```typescript
+settings: settings_updated_at
+  ? getSettingsChangedSince(settings_updated_at)
+  : getAllSettings()
+```
+
+#### Фронтенд
+
+**Файл:** `frontend/src/services/SyncService.ts`
+
+Метод `_pull()`:
+1. Читает `settings_updated_at` из localStorage перед pull
+2. Передаёт параметр в `apiClient.pull()`
+3. После получения settings обновляет `settings_updated_at` до максимального `updated_at`
+
+Метод `resetAndPull()`:
+- Сбрасывает `settings_updated_at` из localStorage для полного pull settings
+
+**Место хранения:** `localStorage` с ключом `STORAGE_KEYS.SETTINGS_UPDATED_AT`
+
+### Обратная совместимость
+
+- Если клиент **не отправляет** `settings_updated_at` → сервер возвращает все settings (текущее поведение)
+- Старые клиенты продолжают работать без изменений
+- Новые клиенты начинают экономить трафик сразу после первого pull
+
+### Ожидаемый эффект
+
+- Уменьшение размера pull-ответа на 1-2 KB при отсутствии изменений в settings
+- Экономия трафика при частых pull-запросах (каждые 5 минут)
+- Меньшая нагрузка на Google Sheets API

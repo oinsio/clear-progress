@@ -167,7 +167,7 @@ Routing via `action` field in request body. Format: JSON.
 
 ### Pull Request
 
-Client sends max known `version` per entity type:
+Client sends max known `version` per entity type and optionally `settings_updated_at`:
 
 ```json
 {
@@ -180,11 +180,14 @@ Client sends max known `version` per entity type:
     "categories": 3,
     "checklist_items": 20,
     "settings": 1
-  }
+  },
+  "settings_updated_at": "2026-04-15T10:30:00.000Z"
 }
 ```
 
 Server returns all records with `version > client_version` for each entity.
+
+**Settings optimization**: Settings are filtered by `updated_at` instead of `version`. When `settings_updated_at` is provided, server returns only settings with `updated_at > settings_updated_at`. When omitted, all settings are returned (backward compatibility).
 
 ### Push Request
 
