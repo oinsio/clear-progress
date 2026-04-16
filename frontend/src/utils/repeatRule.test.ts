@@ -227,7 +227,12 @@ describe("calculateNextDate", () => {
     };
     const previousNextDate = "2026-04-15"; // вчера
     const completedAt = "2026-04-13T10:00:00.000Z";
-    const nextDate = calculateNextDate(rule, completedAt, previousNextDate, clock);
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
 
     expect(nextDate).toBe("2026-04-16"); // сегодня
   });
@@ -332,5 +337,137 @@ describe("calculateAppearDate", () => {
     const nextDate = "2026-04-14";
     const appearDate = calculateAppearDate(nextDate, 2);
     expect(appearDate).toBe("2026-04-12");
+  });
+});
+
+describe("calculateNextDate with timezone changes", () => {
+  it("should calculate daily task next_date in new timezone", () => {
+    // Создаём задачу в UTC+5 (Asia/Almaty)
+    const clockAlmaty = fakeClock("2026-04-16T03:00:00Z", "Asia/Almaty");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-04-16T03:00:00.000Z"; // 08:00 по Алматы
+    const previousNextDate = "2026-04-16";
+
+    const nextDateAlmaty = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clockAlmaty,
+    );
+    expect(nextDateAlmaty).toBe("2026-04-17"); // завтра по Алматы
+
+    // Пользователь переехал в UTC-5 (America/New_York)
+    const clockNY = fakeClock("2026-04-17T14:00:00Z", "America/New_York");
+    const nextDateNY = calculateNextDate(
+      rule,
+      "2026-04-17T14:00:00.000Z",
+      nextDateAlmaty,
+      clockNY,
+    );
+    expect(nextDateNY).toBe("2026-04-18"); // завтра по Нью-Йорку
+  });
+
+  it("should calculate weekly task next_date in new timezone", () => {
+    // Weekly задача: каждый понедельник и среду
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 1,
+      weekdays: [1, 3], // Пн, Ср
+      target_box: "today",
+      advance_days: 0,
+    };
+
+    // Завершили в понедельник 14 апреля в UTC
+    const clockUTC = fakeClock("2026-04-14T10:00:00Z", "UTC");
+    const completedAt = "2026-04-14T10:00:00.000Z";
+    const previousNextDate = "2026-04-14";
+
+    const nextDateUTC = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clockUTC,
+    );
+    expect(nextDateUTC).toBe("2026-04-15"); // среда
+
+    // Переехали в UTC+10 (Australia/Sydney)
+    const clockSydney = fakeClock("2026-04-15T20:00:00Z", "Australia/Sydney");
+    const nextDateSydney = calculateNextDate(
+      rule,
+      "2026-04-15T20:00:00.000Z",
+      nextDateUTC,
+      clockSydney,
+    );
+    expect(nextDateSydney).toBe("2026-04-20"); // следующий понедельник
+  });
+
+  it("should calculate after_completion task in new timezone", () => {
+    const rule: RepeatRule = {
+      type: "after_completion",
+      delay_days: 7,
+      target_box: "week",
+      advance_days: 0,
+    };
+
+    // Завершили в UTC+0 (Europe/London)
+    const completedAt = "2026-04-10T14:00:00.000Z"; // 14:00 по Лондону = 2026-04-10
+    const clockLondon = fakeClock("2026-04-10T14:00:00Z", "Europe/London");
+    const nextDateLondon = calculateNextDate(
+      rule,
+      completedAt,
+      undefined,
+      clockLondon,
+    );
+    expect(nextDateLondon).toBe("2026-04-17"); // +7 дней от 2026-04-10
+
+    // Переехали в UTC+10 (Australia/Sydney)
+    // Тот же completedAt в Сиднее = 2026-04-11 00:00 (следующий день из-за UTC+10)
+    const clockSydney = fakeClock("2026-04-11T00:00:00Z", "Australia/Sydney");
+    const nextDateSydney = calculateNextDate(
+      rule,
+      completedAt,
+      undefined,
+      clockSydney,
+    );
+    expect(nextDateSydney).toBe("2026-04-18"); // +7 дней от 2026-04-11 (дата в Sydney TZ)
+  });
+
+  it("should handle timezone change across midnight boundary", () => {
+    // Завершили задачу в 23:50 по Токио (UTC+9)
+    const completedAt = "2026-04-10T14:50:00.000Z"; // 23:50 по Токио = 2026-04-10
+    const clockTokyo = fakeClock("2026-04-10T14:50:00Z", "Asia/Tokyo");
+
+    const rule: RepeatRule = {
+      type: "after_completion",
+      delay_days: 3,
+      target_box: "today",
+      advance_days: 0,
+    };
+
+    const nextDateTokyo = calculateNextDate(
+      rule,
+      completedAt,
+      undefined,
+      clockTokyo,
+    );
+    expect(nextDateTokyo).toBe("2026-04-13"); // +3 дня от 2026-04-10
+
+    // Переехали в UTC+0 (Europe/London)
+    // Тот же completedAt в Лондоне = 2026-04-10 14:50 (тот же день)
+    const clockLondon = fakeClock("2026-04-10T14:50:00Z", "Europe/London");
+    const nextDateLondon = calculateNextDate(
+      rule,
+      completedAt,
+      undefined,
+      clockLondon,
+    );
+    expect(nextDateLondon).toBe("2026-04-13"); // +3 дня от 2026-04-10
   });
 });
