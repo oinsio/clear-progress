@@ -8,5 +8,7 @@ export function resolveConflict(
   clientUpdatedAt: string,
   serverUpdatedAt: string
 ): ConflictResult {
-  return clientUpdatedAt >= serverUpdatedAt ? CONFLICT_RESOLUTION.ACCEPT : CONFLICT_RESOLUTION.CONFLICT;
+  return new Date(clientUpdatedAt).getTime() >= new Date(serverUpdatedAt).getTime()
+    ? CONFLICT_RESOLUTION.ACCEPT
+    : CONFLICT_RESOLUTION.CONFLICT;
 }

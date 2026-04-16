@@ -25,4 +25,11 @@ describe('resolveConflict', () => {
     expect(resolveConflict('2025-01-01T12:00:00.000Z', '2025-01-01T11:59:59.999Z')).toBe(CONFLICT_RESOLUTION.ACCEPT);
     expect(resolveConflict('2025-01-01T11:59:59.999Z', '2025-01-01T12:00:00.000Z')).toBe(CONFLICT_RESOLUTION.CONFLICT);
   });
+
+  it('should handle timestamps with timezone offset (not just Z)', () => {
+    // 2025-01-01T10:00:00+05:00 = 2025-01-01T05:00:00Z
+    // 2025-01-01T06:00:00Z is newer
+    expect(resolveConflict('2025-01-01T06:00:00Z', '2025-01-01T10:00:00+05:00')).toBe(CONFLICT_RESOLUTION.ACCEPT);
+    expect(resolveConflict('2025-01-01T10:00:00+05:00', '2025-01-01T06:00:00Z')).toBe(CONFLICT_RESOLUTION.CONFLICT);
+  });
 });
