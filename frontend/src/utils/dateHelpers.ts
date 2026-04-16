@@ -23,12 +23,15 @@ export function toISOTimestamp(
 /**
  * Преобразует строку формата YYYY-MM-DD в ISODate (branded type).
  * Если dateString не передан, используется текущая дата.
+ * Valid формат через Temporal.PlainDate.from().
  *
  * @param dateString - Строка даты в формате YYYY-MM-DD
  * @returns ISO 8601 date string с branded type
+ * @throws {RangeError} Если dateString не соответствует формату YYYY-MM-DD
  */
 export function toISODate(dateString?: string): ISODate {
   const value = dateString ?? Temporal.Now.plainDateISO().toString();
+  Temporal.PlainDate.from(value); // throws if invalid
   return value as ISODate;
 }
 

@@ -3,6 +3,7 @@ import {
   getDaysInMonth,
   getCurrentDateDefaults,
   toISOTimestamp,
+  toISODate,
 } from "./dateHelpers";
 import { Temporal, fakeClock } from "@/lib/temporal";
 
@@ -134,5 +135,45 @@ describe("getCurrentDateDefaults", () => {
       month: 2,
       day: 29,
     });
+  });
+});
+
+describe("toISODate", () => {
+  it("should return branded ISODate for valid date string", () => {
+    const result = toISODate("2026-04-16");
+
+    expect(result).toBe("2026-04-16");
+    expect(typeof result).toBe("string");
+  });
+
+  it("should return current date when called without arguments", () => {
+    const result = toISODate();
+
+    expect(typeof result).toBe("string");
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("should throw error when timestamp is passed instead of date", () => {
+    expect(() => toISODate("2026-04-16T10:30:00Z")).toThrow();
+  });
+
+  it("should throw error for invalid date string", () => {
+    expect(() => toISODate("invalid")).toThrow();
+  });
+
+  it("should throw error for empty string", () => {
+    expect(() => toISODate("")).toThrow();
+  });
+
+  it("should accept valid date with leading zeros", () => {
+    const result = toISODate("2026-01-01");
+
+    expect(result).toBe("2026-01-01");
+  });
+
+  it("should accept leap year date", () => {
+    const result = toISODate("2024-02-29");
+
+    expect(result).toBe("2024-02-29");
   });
 });
