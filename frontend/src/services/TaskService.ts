@@ -8,6 +8,7 @@ import {
   calculateNextDate,
   calculateAppearDate,
 } from "@/utils/repeatRule";
+import { toISOTimestamp, toISODate } from "@/utils/dateHelpers";
 
 export class TaskService {
   constructor(
@@ -32,7 +33,7 @@ export class TaskService {
     partialTask: Pick<Task, "name" | "box"> & Partial<Task>,
   ): Promise<Task> {
     const existingTasks = await this.taskRepository.getByBox(partialTask.box);
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const task: Task = {
       description: "",
       goal_id: "",
@@ -79,7 +80,7 @@ export class TaskService {
     const updatedTask: Task = {
       ...candidateTask,
       updated_at: hasChanged
-        ? new Date().toISOString()
+        ? toISOTimestamp()
         : existingTask.updated_at,
       version: hasChanged ? existingTask.version + 1 : existingTask.version,
       needsSync: hasChanged,
@@ -97,7 +98,7 @@ export class TaskService {
       throw new Error(`Task not found: ${id}`);
     }
 
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const completedTask = await this.update(id, {
       is_completed: true,
       completed_at: now,
@@ -133,16 +134,16 @@ export class TaskService {
               context_id: existingTask.context_id,
               category_id: existingTask.category_id,
               repeat_rule: existingTask.repeat_rule,
-              next_date: nextDate,
-              appear_date: appearDate,
+              next_date: toISODate(nextDate),
+              appear_date: toISODate(appearDate),
               box: rule.target_box,
             });
           } else {
             // Создать скрытый клон только если его ещё нет
             recurringTask = await this.createRecurringCopy(existingTask, {
               is_hidden: true,
-              next_date: nextDate,
-              appear_date: appearDate,
+              next_date: toISODate(nextDate),
+              appear_date: toISODate(appearDate),
               box: rule.target_box,
             });
           }
@@ -195,7 +196,7 @@ export class TaskService {
     const checklistItems =
       await this.checklistRepository.getByTaskId(sourceTaskId);
     if (checklistItems.length === 0) return;
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     for (const item of checklistItems) {
       const copiedItem: ChecklistItem = {
         ...item,
@@ -277,7 +278,7 @@ export class TaskService {
       return; // Ничего не изменилось, не синхронизируем
     }
 
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const updatedTasks = orderedTasks.map((task, index) => {
       const orderChanged = task.sort_order !== index;
       return {

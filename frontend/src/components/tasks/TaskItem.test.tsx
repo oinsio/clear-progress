@@ -5,6 +5,7 @@ import { useState } from "react";
 import { TaskItem } from "./TaskItem";
 import { buildTask } from "@/test/factories/taskFactory";
 import { buildGoal } from "@/test/factories/goalFactory";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 vi.mock("@/hooks/useChecklist", () => ({
   useChecklist: vi.fn().mockReturnValue({
@@ -203,7 +204,7 @@ describe("TaskItem", () => {
     renderTaskItem({
       task: buildTask({
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       }),
     });
     expect(screen.getByTestId("task-item-completed-at")).toBeInTheDocument();

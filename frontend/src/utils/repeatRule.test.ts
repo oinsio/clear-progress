@@ -8,6 +8,7 @@ import {
   calculateAppearDate,
 } from "./repeatRule";
 import type { RepeatRule } from "@/types/common";
+import { fakeClock } from "@/lib/temporal";
 
 describe("parseRepeatRule", () => {
   it("should return null for empty string", () => {
@@ -216,6 +217,7 @@ describe("formatRepeatRuleLabel", () => {
 
 describe("calculateNextDate", () => {
   it("should calculate next date for daily rule", () => {
+    const clock = fakeClock("2026-04-16T10:00:00Z");
     const rule: RepeatRule = {
       type: "fixed",
       frequency: "daily",
@@ -223,16 +225,11 @@ describe("calculateNextDate", () => {
       target_box: "today",
       advance_days: 0,
     };
-    // Используем вчерашнюю дату как previousNextDate, чтобы получить сегодня
-    const yesterday = new Date();
-    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-    const previousNextDate = yesterday.toISOString().split("T")[0];
+    const previousNextDate = "2026-04-15"; // вчера
     const completedAt = "2026-04-13T10:00:00.000Z";
-    const nextDate = calculateNextDate(rule, completedAt, previousNextDate);
+    const nextDate = calculateNextDate(rule, completedAt, previousNextDate, clock);
 
-    const today = new Date();
-    const expectedDate = today.toISOString().split("T")[0];
-    expect(nextDate).toBe(expectedDate);
+    expect(nextDate).toBe("2026-04-16"); // сегодня
   });
 
   it("should calculate next date for after_completion rule", () => {

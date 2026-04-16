@@ -1,10 +1,11 @@
 import type { Task } from "@/types/entities";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 let taskCounter = 0;
 
 export function buildTask(overrides: Partial<Task> = {}): Task {
   taskCounter += 1;
-  const now = new Date().toISOString();
+  const now = toISOTimestamp();
   return {
     id: crypto.randomUUID(),
     name: `Task ${taskCounter}`,

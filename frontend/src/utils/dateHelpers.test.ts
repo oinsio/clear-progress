@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { getDaysInMonth, getCurrentDateDefaults } from "./dateHelpers";
+import { fakeClock } from "@/lib/temporal";
 
 describe("getDaysInMonth", () => {
   it("should return 31 for January", () => {
@@ -64,32 +65,20 @@ describe("getDaysInMonth", () => {
 });
 
 describe("getCurrentDateDefaults", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("should return current date defaults", () => {
-    // Устанавливаем фиксированную дату: 15 апреля 2026
-    vi.setSystemTime(new Date(2026, 3, 15)); // месяц 3 = апрель (0-based)
-
-    const result = getCurrentDateDefaults();
+    const clock = fakeClock("2026-04-15T00:00:00Z");
+    const result = getCurrentDateDefaults(clock);
 
     expect(result).toEqual({
       dayOfMonth: 15,
-      month: 4, // 1-based
+      month: 4,
       day: 15,
     });
   });
 
   it("should return correct values for first day of month", () => {
-    // 1 января 2026
-    vi.setSystemTime(new Date(2026, 0, 1));
-
-    const result = getCurrentDateDefaults();
+    const clock = fakeClock("2026-01-01T00:00:00Z");
+    const result = getCurrentDateDefaults(clock);
 
     expect(result).toEqual({
       dayOfMonth: 1,
@@ -99,10 +88,8 @@ describe("getCurrentDateDefaults", () => {
   });
 
   it("should return correct values for last day of month", () => {
-    // 31 декабря 2026
-    vi.setSystemTime(new Date(2026, 11, 31));
-
-    const result = getCurrentDateDefaults();
+    const clock = fakeClock("2026-12-31T00:00:00Z");
+    const result = getCurrentDateDefaults(clock);
 
     expect(result).toEqual({
       dayOfMonth: 31,
@@ -112,10 +99,8 @@ describe("getCurrentDateDefaults", () => {
   });
 
   it("should return correct values for February 29 in leap year", () => {
-    // 29 февраля 2024 (високосный год)
-    vi.setSystemTime(new Date(2024, 1, 29));
-
-    const result = getCurrentDateDefaults();
+    const clock = fakeClock("2024-02-29T00:00:00Z");
+    const result = getCurrentDateDefaults(clock);
 
     expect(result).toEqual({
       dayOfMonth: 29,

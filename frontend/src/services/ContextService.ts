@@ -1,6 +1,7 @@
 import type { Context } from "@/types/entities";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { hasEntityChanged } from "@/utils/deepEqual";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 export class ContextService {
   constructor(private readonly contextRepository: ContextRepository) {}
@@ -18,7 +19,7 @@ export class ContextService {
 
   async create(name: string): Promise<Context> {
     const existingContexts = await this.contextRepository.getActive();
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const context: Context = {
       id: crypto.randomUUID(),
       name,
@@ -57,7 +58,7 @@ export class ContextService {
       return; // Ничего не изменилось, не синхронизируем
     }
 
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const updated = orderedContexts.map((context, index) => {
       const orderChanged = context.sort_order !== index;
       return {
@@ -94,7 +95,7 @@ export class ContextService {
     const updatedContext: Context = {
       ...candidateContext,
       updated_at: hasChanged
-        ? new Date().toISOString()
+        ? toISOTimestamp()
         : existingContext.updated_at,
       version: hasChanged
         ? existingContext.version + 1

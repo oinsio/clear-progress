@@ -1,10 +1,11 @@
 import type { Category } from "@/types/entities";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 let categoryCounter = 0;
 
 export function buildCategory(overrides: Partial<Category> = {}): Category {
   categoryCounter += 1;
-  const now = new Date().toISOString();
+  const now = toISOTimestamp();
   return {
     id: crypto.randomUUID(),
     name: `Category ${categoryCounter}`,

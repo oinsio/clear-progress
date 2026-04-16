@@ -1,10 +1,11 @@
 import type { Idea } from "@/types/entities";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 let ideaCounter = 0;
 
 export function buildIdea(overrides: Partial<Idea> = {}): Idea {
   ideaCounter += 1;
-  const now = new Date().toISOString();
+  const now = toISOTimestamp();
   return {
     id: crypto.randomUUID(),
     name: `Idea ${ideaCounter}`,

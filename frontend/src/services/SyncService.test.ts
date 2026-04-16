@@ -9,10 +9,11 @@ import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
-import type { Task, Goal } from "@/types/entities";
+import type { Task, Goal, ISOTimestamp } from "@/types/entities";
 import type { PullResponse, PushResponse, PushResponseData } from "@/types/api";
 import { LOCAL_COVER_ID_PREFIX, SYNC_META_KEYS } from "@/constants";
 import { db } from "@/db/database";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 function makePullResponse(overrides: Partial<PullResponse> = {}): PullResponse {
   return {
@@ -82,8 +83,8 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     original_task_id: "",
     sort_order: 0,
     is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: toISOTimestamp(),
+    updated_at: toISOTimestamp(),
     version: 1,
     revision: 0,
     needsSync: true,
@@ -100,8 +101,8 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
     status: "in_progress",
     sort_order: 0,
     is_deleted: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: toISOTimestamp(),
+    updated_at: toISOTimestamp(),
     version: 1,
     revision: 0,
     needsSync: true,
@@ -254,7 +255,7 @@ describe("SyncService", () => {
         {
           key: "default_box",
           value: "inbox",
-          updated_at: "2026-03-04T10:00:00.000Z",
+          updated_at: toISOTimestamp(),
           needsSync: false,
         },
       ];
@@ -328,13 +329,13 @@ describe("SyncService", () => {
         {
           key: "default_box",
           value: "inbox",
-          updated_at: "2026-04-10T00:00:00.000Z",
+          updated_at: "2026-04-10T00:00:00.000Z" as ISOTimestamp,
           needsSync: false,
         },
         {
           key: "accent_color",
           value: "green",
-          updated_at: "2026-04-16T00:00:00.000Z",
+          updated_at: "2026-04-16T00:00:00.000Z" as ISOTimestamp,
           needsSync: false,
         },
       ];
@@ -372,19 +373,19 @@ describe("SyncService", () => {
         {
           key: "setting1",
           value: "value1",
-          updated_at: "2026-04-12T00:00:00.000Z",
+          updated_at: "2026-04-12T00:00:00.000Z" as ISOTimestamp,
           needsSync: false,
         },
         {
           key: "setting2",
           value: "value2",
-          updated_at: "2026-04-17T00:00:00.000Z",
+          updated_at: "2026-04-17T00:00:00.000Z" as ISOTimestamp,
           needsSync: false,
         },
         {
           key: "setting3",
           value: "value3",
-          updated_at: "2026-04-14T00:00:00.000Z",
+          updated_at: "2026-04-14T00:00:00.000Z" as ISOTimestamp,
           needsSync: false,
         },
       ];
@@ -478,8 +479,8 @@ describe("SyncService", () => {
         name: "Home",
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 2,
         revision: 1,
         needsSync: true,
@@ -500,8 +501,8 @@ describe("SyncService", () => {
         name: "Work",
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 2,
         revision: 1,
         needsSync: true,
@@ -524,8 +525,8 @@ describe("SyncService", () => {
         is_completed: false,
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 2,
         revision: 1,
         needsSync: true,
@@ -544,7 +545,7 @@ describe("SyncService", () => {
       const setting = {
         key: "accent_color",
         value: "green",
-        updated_at: "",
+        updated_at: toISOTimestamp(),
         needsSync: true,
       };
       (
@@ -659,8 +660,8 @@ describe("SyncService", () => {
         name: "Home",
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 2,
         revision: 1,
         needsSync: true,
@@ -696,8 +697,8 @@ describe("SyncService", () => {
         name: "Work",
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 2,
         revision: 1,
         needsSync: true,
@@ -735,8 +736,8 @@ describe("SyncService", () => {
         is_completed: false,
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 2,
         revision: 1,
         needsSync: true,
@@ -1069,8 +1070,8 @@ describe("SyncService", () => {
         original_task_id: "",
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
         revision: 1,
         needsSync: true,
@@ -1093,8 +1094,8 @@ describe("SyncService", () => {
         status: "planning",
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
         revision: 1,
         needsSync: true,
@@ -1114,8 +1115,8 @@ describe("SyncService", () => {
         name: "Home",
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
         revision: 1,
         needsSync: true,
@@ -1135,8 +1136,8 @@ describe("SyncService", () => {
         name: "Work",
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
         revision: 1,
         needsSync: true,
@@ -1159,8 +1160,8 @@ describe("SyncService", () => {
         is_completed: false,
         sort_order: 0,
         is_deleted: false,
-        created_at: "",
-        updated_at: "",
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
         revision: 1,
         needsSync: true,
@@ -1177,7 +1178,7 @@ describe("SyncService", () => {
       await db.settings.put({
         key: "accent_color",
         value: "green",
-        updated_at: "",
+        updated_at: toISOTimestamp(),
         needsSync: true,
       });
       const service = createService();

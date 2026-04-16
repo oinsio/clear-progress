@@ -1,10 +1,11 @@
 import type { Context } from "@/types/entities";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 let contextCounter = 0;
 
 export function buildContext(overrides: Partial<Context> = {}): Context {
   contextCounter += 1;
-  const now = new Date().toISOString();
+  const now = toISOTimestamp();
   return {
     id: crypto.randomUUID(),
     name: `@Context ${contextCounter}`,

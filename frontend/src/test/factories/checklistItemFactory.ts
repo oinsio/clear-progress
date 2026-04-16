@@ -1,4 +1,5 @@
 import type { ChecklistItem } from "@/types/entities";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 let checklistItemCounter = 0;
 
@@ -6,7 +7,7 @@ export function buildChecklistItem(
   overrides: Partial<ChecklistItem> = {},
 ): ChecklistItem {
   checklistItemCounter += 1;
-  const now = new Date().toISOString();
+  const now = toISOTimestamp();
   return {
     id: crypto.randomUUID(),
     task_id: crypto.randomUUID(),

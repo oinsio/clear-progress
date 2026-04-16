@@ -3,6 +3,8 @@ import { IdeaService } from "./IdeaService";
 import type { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { buildIdea } from "@/test/factories/ideaFactory";
 import { createMockIdeaRepository } from "@/test/mocks/ideaRepositoryMock";
+import { toISOTimestamp } from "@/utils/dateHelpers";
+import { Temporal } from "@/lib/temporal";
 
 describe("IdeaService", () => {
   let mockIdeaRepository: IdeaRepository;
@@ -149,13 +151,13 @@ describe("IdeaService", () => {
     });
 
     it("should update updated_at timestamp", async () => {
-      const idea = buildIdea({ updated_at: "2025-01-01T00:00:00.000Z" });
+      const idea = buildIdea({ updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")) });
       mockIdeaRepository = createMockIdeaRepository({
         getById: vi.fn().mockResolvedValue(idea),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
       const updated = await ideaService.update(idea.id, { name: "X" });
-      expect(updated.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
+      expect(updated.updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
     });
 
     it("should set needsSync to true", async () => {
@@ -282,11 +284,11 @@ describe("IdeaService", () => {
     });
 
     it("should update updated_at for each reordered idea", async () => {
-      const ideaA = buildIdea({ updated_at: "2025-01-01T00:00:00.000Z" });
+      const ideaA = buildIdea({ updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")) });
       const ideaService = new IdeaService(mockIdeaRepository);
       await ideaService.reorderIdeas([ideaA]);
       const upserted = getUpsertedIdeas();
-      expect(upserted[0].updated_at).not.toBe("2025-01-01T00:00:00.000Z");
+      expect(upserted[0].updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
     });
 
     it("should set needsSync to true for each reordered idea", async () => {
@@ -438,18 +440,21 @@ describe("IdeaService", () => {
     });
 
     it("should sort ideas by updated_at descending", async () => {
+      const timestamp1 = toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z"));
+      const timestamp2 = toISOTimestamp(Temporal.Instant.from("2025-01-02T10:00:00.000Z"));
+      const timestamp3 = toISOTimestamp(Temporal.Instant.from("2025-01-03T10:00:00.000Z"));
       const ideas = [
         buildIdea({
           name: "Idea A",
-          updated_at: "2025-01-01T10:00:00.000Z",
+          updated_at: timestamp1,
         }),
         buildIdea({
           name: "Idea B",
-          updated_at: "2025-01-03T10:00:00.000Z",
+          updated_at: timestamp3,
         }),
         buildIdea({
           name: "Idea C",
-          updated_at: "2025-01-02T10:00:00.000Z",
+          updated_at: timestamp2,
         }),
       ];
       mockIdeaRepository = createMockIdeaRepository({
@@ -457,19 +462,19 @@ describe("IdeaService", () => {
       });
       const ideaService = new IdeaService(mockIdeaRepository);
       const results = await ideaService.searchByName("idea");
-      expect(results[0].updated_at).toBe("2025-01-03T10:00:00.000Z");
-      expect(results[1].updated_at).toBe("2025-01-02T10:00:00.000Z");
-      expect(results[2].updated_at).toBe("2025-01-01T10:00:00.000Z");
+      expect(results[0].updated_at).toBe(timestamp3);
+      expect(results[1].updated_at).toBe(timestamp2);
+      expect(results[2].updated_at).toBe(timestamp1);
     });
 
     it("should place most recently updated idea first", async () => {
       const oldIdea = buildIdea({
         name: "Old idea",
-        updated_at: "2025-01-01T10:00:00.000Z",
+        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z")),
       });
       const newIdea = buildIdea({
         name: "New idea",
-        updated_at: "2025-01-05T10:00:00.000Z",
+        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-05T10:00:00.000Z")),
       });
       mockIdeaRepository = createMockIdeaRepository({
         getActive: vi.fn().mockResolvedValue([oldIdea, newIdea]),

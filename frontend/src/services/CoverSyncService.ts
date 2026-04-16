@@ -10,6 +10,7 @@ import {
   FALLBACK_COVER_MIME_TYPE,
   MAX_COVER_BATCH_SIZE,
 } from "@/constants";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 import {
   arrayBufferToBase64,
   buildCoverFilename,
@@ -160,7 +161,7 @@ export class CoverSyncService {
         const entry = entryByGoalId.get(result.goal_id);
         if (!entry || result.file_id === entry.goal.cover_file_id) continue;
 
-        const now = new Date().toISOString();
+        const now = toISOTimestamp();
         await this.goalRepository.update({
           ...entry.goal,
           cover_file_id: result.file_id,
@@ -361,7 +362,7 @@ export class CoverSyncService {
     const matchingGoals = allGoals.filter(
       (goal) => goal.cover_file_id === localFileId,
     );
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     for (const goal of matchingGoals) {
       await this.goalRepository.update({
         ...goal,

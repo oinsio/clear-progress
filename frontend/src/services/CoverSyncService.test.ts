@@ -11,6 +11,7 @@ import {
   FALLBACK_COVER_MIME_TYPE,
   MAX_COVER_BATCH_SIZE,
 } from "@/constants";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 // jsdom does not implement Blob.prototype.arrayBuffer — polyfill for tests
 Object.defineProperty(Blob.prototype, "arrayBuffer", {
@@ -129,7 +130,7 @@ function createPendingCover(
     filename: "cover.jpg",
     mime_type: "image/jpeg",
     data_hash: "test-hash-abc123",
-    created_at: new Date().toISOString(),
+    created_at: toISOTimestamp(),
     ...overrides,
   };
 }
@@ -216,8 +217,8 @@ describe("CoverSyncService", () => {
         status: "in_progress" as const,
         sort_order: 0,
         is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
       };
       mockPendingCoverRepository = createMockPendingCoverRepository({
@@ -384,8 +385,8 @@ describe("CoverSyncService", () => {
         status: "in_progress" as const,
         sort_order: 0,
         is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 2,
       };
       mockPendingCoverRepository = createMockPendingCoverRepository({
@@ -412,8 +413,8 @@ describe("CoverSyncService", () => {
         status: "in_progress" as const,
         sort_order: 0,
         is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
         needsSync: false,
       };
@@ -442,8 +443,8 @@ describe("CoverSyncService", () => {
         status: "in_progress" as const,
         sort_order: 0,
         is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
       };
       const goal1 = {
@@ -503,8 +504,8 @@ describe("CoverSyncService", () => {
         status: "in_progress" as const,
         sort_order: 0,
         is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 3,
         ...overrides,
       };
@@ -928,8 +929,8 @@ describe("CoverSyncService", () => {
         status: "in_progress" as const,
         sort_order: 0,
         is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
         version: 1,
       };
     }

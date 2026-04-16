@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import type { RepeatRule } from "@/types/common";
+import { Temporal, type Clock, systemClock } from "@/lib/temporal";
 
 export function parseRepeatRule(json: string): RepeatRule | null {
   if (!json) return null;
@@ -17,68 +18,56 @@ export function serializeRepeatRule(rule: RepeatRule): string {
 function calculateNextDateDaily(
   interval: number,
   previousNextDate: string,
+  clock: Clock = systemClock,
 ): string {
-  const prev = new Date(previousNextDate);
-  const next = new Date(prev);
-  next.setUTCDate(prev.getUTCDate() + interval);
+  const prev = Temporal.PlainDate.from(previousNextDate);
+  let next = prev.add({ days: interval });
 
-  // Если previousNextDate в прошлом, вычислить ближайшую будущую дату
-  const now = new Date();
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  if (next < today) {
-    const daysSincePrev = Math.floor(
-      (today.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    const periodsToSkip = Math.ceil(daysSincePrev / interval);
-    next.setUTCDate(prev.getUTCDate() + periodsToSkip * interval);
+  const today = clock.plainDateISO();
+  if (Temporal.PlainDate.compare(next, today) < 0) {
+    const totalDays = prev.until(today, { largestUnit: "days" }).days;
+    const periodsToSkip = Math.ceil(totalDays / interval);
+    next = prev.add({ days: periodsToSkip * interval });
   }
 
-  return next.toISOString().split("T")[0]; // YYYY-MM-DD
+  return next.toString();
 }
 
 function findNextWeekday(
-  startDate: Date,
+  startDate: Temporal.PlainDate,
   weekdays: number[],
   interval: number,
 ): string {
-  // weekdays: 1=Пн, 2=Вт, ..., 7=Вс
-  // startDate.getUTCDay(): 0=Вс, 1=Пн, ..., 6=Сб
+  // weekdays: 1=Пн, 2=Вт, ..., 7=Вс (ISO 8601)
   const sortedWeekdays = [...weekdays].sort((a, b) => a - b);
-  const current = new Date(startDate);
+  let current = startDate;
 
   for (let i = 0; i < 7 * interval; i++) {
-    const jsDay = current.getUTCDay();
-    const isoDay = jsDay === 0 ? 7 : jsDay;
+    const isoDay = current.dayOfWeek; // 1=Mon ... 7=Sun
 
     if (sortedWeekdays.includes(isoDay)) {
-      return current.toISOString().split("T")[0];
+      return current.toString();
     }
 
-    current.setUTCDate(current.getUTCDate() + 1);
+    current = current.add({ days: 1 });
   }
 
-  return current.toISOString().split("T")[0];
+  return current.toString();
 }
 
 function calculateNextDateWeekly(
   interval: number,
   weekdays: number[],
-  previousNextDate?: string,
+  previousNextDate: string | undefined,
+  clock: Clock = systemClock,
 ): string {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   if (!previousNextDate) {
     // Первое создание: ближайший день из weekdays[], начиная с завтра
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    const tomorrow = clock.plainDateISO().add({ days: 1 });
     return findNextWeekday(tomorrow, weekdays, interval);
   }
 
-  const prev = new Date(previousNextDate);
-  const nextDay = new Date(prev);
-  nextDay.setDate(prev.getDate() + 1);
-
+  const nextDay = Temporal.PlainDate.from(previousNextDate).add({ days: 1 });
   return findNextWeekday(nextDay, weekdays, interval);
 }
 
@@ -87,22 +76,10 @@ function calculateNextDateMonthly(
   dayOfMonth: number,
   previousNextDate: string,
 ): string {
-  const prev = new Date(previousNextDate);
-  let year = prev.getFullYear();
-  let month = prev.getMonth() + interval; // 0-based
-
-  // Нормализация месяца и года
-  while (month > 11) {
-    month -= 12;
-    year++;
-  }
-
-  // Обработка месяцев с разным количеством дней
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const actualDay = Math.min(dayOfMonth, daysInMonth);
-
-  const next = new Date(Date.UTC(year, month, actualDay));
-  return next.toISOString().split("T")[0];
+  const prev = Temporal.PlainDate.from(previousNextDate);
+  const targetYearMonth = prev.toPlainYearMonth().add({ months: interval });
+  const actualDay = Math.min(dayOfMonth, targetYearMonth.daysInMonth);
+  return targetYearMonth.toPlainDate({ day: actualDay }).toString();
 }
 
 function calculateNextDateYearly(
@@ -110,37 +87,35 @@ function calculateNextDateYearly(
   monthAndDay: { month: number; day: number },
   previousNextDate: string,
 ): string {
-  const prev = new Date(previousNextDate);
-  const year = prev.getFullYear() + interval;
-  const month = monthAndDay.month - 1; // 0-based
-
-  // Обработка 29 февраля в невисокосный год
-  let day = monthAndDay.day;
-  if (month === 1 && day === 29) {
-    const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-    if (!isLeapYear) {
-      day = 28;
-    }
-  }
-
-  const next = new Date(Date.UTC(year, month, day));
-  return next.toISOString().split("T")[0];
+  const prev = Temporal.PlainDate.from(previousNextDate);
+  const targetYear = prev.year + interval;
+  const targetYearMonth = Temporal.PlainYearMonth.from({
+    year: targetYear,
+    month: monthAndDay.month,
+  });
+  const actualDay = Math.min(monthAndDay.day, targetYearMonth.daysInMonth);
+  return Temporal.PlainDate.from({
+    year: targetYear,
+    month: monthAndDay.month,
+    day: actualDay,
+  }).toString();
 }
 
 function calculateNextDateAfterCompletion(
   delayDays: number,
   completedAt: string,
 ): string {
-  const completed = new Date(completedAt);
-  const next = new Date(completed);
-  next.setUTCDate(completed.getUTCDate() + delayDays);
-  return next.toISOString().split("T")[0];
+  const completedInstant = Temporal.Instant.from(completedAt);
+  const timeZone = Temporal.Now.timeZoneId();
+  const completedDate = completedInstant.toZonedDateTimeISO(timeZone).toPlainDate();
+  return completedDate.add({ days: delayDays }).toString();
 }
 
 export function calculateNextDate(
   rule: RepeatRule,
   completedAt: string,
   previousNextDate?: string,
+  clock: Clock = systemClock,
 ): string {
   if (rule.type === "after_completion") {
     if (!rule.delay_days)
@@ -159,12 +134,12 @@ export function calculateNextDate(
 
   switch (rule.frequency) {
     case "daily":
-      return calculateNextDateDaily(interval, previousNextDate);
+      return calculateNextDateDaily(interval, previousNextDate, clock);
     case "weekly":
       if (!rule.weekdays || rule.weekdays.length === 0) {
         throw new Error("weekdays required for weekly");
       }
-      return calculateNextDateWeekly(interval, rule.weekdays, previousNextDate);
+      return calculateNextDateWeekly(interval, rule.weekdays, previousNextDate, clock);
     case "monthly":
       if (!rule.day_of_month)
         throw new Error("day_of_month required for monthly");
@@ -190,9 +165,9 @@ export function calculateAppearDate(
   nextDate: string,
   advanceDays: number,
 ): string {
-  const next = new Date(nextDate);
-  next.setDate(next.getDate() - advanceDays);
-  return next.toISOString().split("T")[0];
+  return Temporal.PlainDate.from(nextDate)
+    .subtract({ days: advanceDays })
+    .toString();
 }
 
 export function formatRepeatRuleLabel(rule: RepeatRule, t: TFunction): string {

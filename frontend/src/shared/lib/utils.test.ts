@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   formatCompletedAt,
   groupCompletedTasks,
@@ -6,32 +6,40 @@ import {
 } from "./utils";
 import { buildTask } from "@/test/factories/taskFactory";
 import i18next from "i18next";
+import { Temporal, fakeClock } from "@/lib/temporal";
 
-function buildISOForTodayAt(hours: number, minutes: number): string {
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-  return date.toISOString();
+function buildISOForTodayAt(hours: number, minutes: number, referenceDate: string): string {
+  const date = Temporal.PlainDate.from(referenceDate);
+  return date
+    .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: hours, minute: minutes } })
+    .toInstant()
+    .toString();
 }
 
-function buildISOForYesterdayAt(hours: number, minutes: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-  date.setHours(hours, minutes, 0, 0);
-  return date.toISOString();
+function buildISOForYesterdayAt(hours: number, minutes: number, referenceDate: string): string {
+  const date = Temporal.PlainDate.from(referenceDate).subtract({ days: 1 });
+  return date
+    .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: hours, minute: minutes } })
+    .toInstant()
+    .toString();
 }
 
 function buildISOForDaysAgoAt(
   daysAgo: number,
   hours: number,
   minutes: number,
+  referenceDate: string,
 ): string {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  date.setHours(hours, minutes, 0, 0);
-  return date.toISOString();
+  const date = Temporal.PlainDate.from(referenceDate).subtract({ days: daysAgo });
+  return date
+    .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: hours, minute: minutes } })
+    .toInstant()
+    .toString();
 }
 
 describe("formatCompletedAt", () => {
+  const REFERENCE_DATE = "2026-04-16";
+
   beforeEach(() => {
     // Устанавливаем русский язык для тестов
     i18next.changeLanguage("ru");
@@ -42,19 +50,19 @@ describe("formatCompletedAt", () => {
   });
 
   it("should show 'Завершено: Сегодня' with time for today's completion", () => {
-    const todayISO = buildISOForTodayAt(21, 58);
+    const todayISO = buildISOForTodayAt(21, 58, REFERENCE_DATE);
     const result = formatCompletedAt(todayISO);
     expect(result).toMatch(/^Завершено: Сегодня \d{2}:\d{2}$/);
   });
 
   it("should show 'Завершено: Вчера' with time for yesterday's completion", () => {
-    const yesterdayISO = buildISOForYesterdayAt(14, 30);
+    const yesterdayISO = buildISOForYesterdayAt(14, 30, REFERENCE_DATE);
     const result = formatCompletedAt(yesterdayISO);
     expect(result).toMatch(/^Завершено: Вчера \d{2}:\d{2}$/);
   });
 
   it("should show date and time for older completions", () => {
-    const olderISO = buildISOForDaysAgoAt(5, 9, 0);
+    const olderISO = buildISOForDaysAgoAt(5, 9, 0, REFERENCE_DATE);
     const result = formatCompletedAt(olderISO);
     expect(result).toMatch(/^Завершено: .+ \d{2}:\d{2}$/);
     expect(result).not.toContain("Сегодня");
@@ -63,32 +71,19 @@ describe("formatCompletedAt", () => {
 
   it("should show English text when language is set to English", () => {
     i18next.changeLanguage("en");
-    const todayISO = buildISOForTodayAt(21, 58);
+    const todayISO = buildISOForTodayAt(21, 58, REFERENCE_DATE);
     const result = formatCompletedAt(todayISO);
     expect(result).toMatch(/^Completed: Today \d{1,2}:\d{2}(\s?[AP]M)?$/);
   });
 });
 
 describe("groupCompletedTasks", () => {
-  // Fixed reference: 2025-03-19 15:00:00 local time
-  const FIXED_NOW = new Date(2025, 2, 19, 15, 0, 0, 0);
-  // Boundary helpers relative to FIXED_NOW
-  const startOfToday = new Date(2025, 2, 19, 0, 0, 0, 0);
-  const startOfYesterday = new Date(2025, 2, 18, 0, 0, 0, 0);
-  const startOf7DaysAgo = new Date(2025, 2, 12, 0, 0, 0, 0);
-  const startOf30DaysAgo = new Date(2025, 1, 17, 0, 0, 0, 0);
-
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(FIXED_NOW);
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  // Use current date for tests (2026-04-16)
+  const REFERENCE_DATE = "2026-04-16";
+  const clock = fakeClock("2026-04-16T12:00:00Z");
 
   it("should return all empty arrays when no tasks are provided", () => {
-    const result = groupCompletedTasks([]);
+    const result = groupCompletedTasks([], clock);
     expect(result.todayTasks).toEqual([]);
     expect(result.yesterdayTasks).toEqual([]);
     expect(result.weekTasks).toEqual([]);
@@ -99,9 +94,12 @@ describe("groupCompletedTasks", () => {
   it("should place task completed today into todayTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 19, 10, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 10, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.todayTasks).toContain(task);
     expect(result.yesterdayTasks).toHaveLength(0);
     expect(result.weekTasks).toHaveLength(0);
@@ -112,18 +110,25 @@ describe("groupCompletedTasks", () => {
   it("should place task completed at midnight today into todayTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: startOfToday.toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .toZonedDateTime({ timeZone: "UTC", plainTime: "00:00" })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.todayTasks).toContain(task);
   });
 
   it("should place task completed yesterday into yesterdayTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 18, 14, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 1 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 14, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.yesterdayTasks).toContain(task);
     expect(result.todayTasks).toHaveLength(0);
     expect(result.weekTasks).toHaveLength(0);
@@ -134,18 +139,26 @@ describe("groupCompletedTasks", () => {
   it("should place task completed at midnight yesterday into yesterdayTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: startOfYesterday.toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 1 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: "00:00" })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.yesterdayTasks).toContain(task);
   });
 
   it("should place task completed 2 days ago into weekTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 17, 10, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 2 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 10, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.weekTasks).toContain(task);
     expect(result.todayTasks).toHaveLength(0);
     expect(result.yesterdayTasks).toHaveLength(0);
@@ -156,18 +169,26 @@ describe("groupCompletedTasks", () => {
   it("should place task completed exactly 7 days ago (at midnight) into weekTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: startOf7DaysAgo.toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 7 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: "00:00" })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.weekTasks).toContain(task);
   });
 
   it("should place task completed 8 days ago into monthTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 11, 23, 59, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 8 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 23, minute: 59 } })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.monthTasks).toContain(task);
     expect(result.todayTasks).toHaveLength(0);
     expect(result.yesterdayTasks).toHaveLength(0);
@@ -178,9 +199,13 @@ describe("groupCompletedTasks", () => {
   it("should place task completed exactly 30 days ago (at midnight) into monthTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: startOf30DaysAgo.toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 30 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: "00:00" })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.monthTasks).toContain(task);
     expect(result.earlierTasks).toHaveLength(0);
   });
@@ -188,9 +213,13 @@ describe("groupCompletedTasks", () => {
   it("should place task completed more than 30 days ago into earlierTasks", () => {
     const task = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 1, 16, 23, 59, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 31 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 23, minute: 59 } })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.earlierTasks).toContain(task);
     expect(result.todayTasks).toHaveLength(0);
     expect(result.yesterdayTasks).toHaveLength(0);
@@ -200,30 +229,49 @@ describe("groupCompletedTasks", () => {
 
   it("should place task with empty completed_at into earlierTasks", () => {
     const task = buildTask({ is_completed: true, completed_at: "" });
-    const result = groupCompletedTasks([task]);
+    const result = groupCompletedTasks([task], clock);
     expect(result.earlierTasks).toContain(task);
   });
 
   it("should distribute tasks correctly across all five groups", () => {
     const todayTask = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 19, 8, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
     const yesterdayTask = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 18, 8, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 1 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
     const weekTask = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 15, 8, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 4 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
     const monthTask = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 10, 8, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 9 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
     const earlierTask = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 1, 10, 8, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 37 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
     const result = groupCompletedTasks([
       todayTask,
@@ -231,7 +279,7 @@ describe("groupCompletedTasks", () => {
       weekTask,
       monthTask,
       earlierTask,
-    ]);
+    ], clock);
     expect(result.todayTasks).toEqual([todayTask]);
     expect(result.yesterdayTasks).toEqual([yesterdayTask]);
     expect(result.weekTasks).toEqual([weekTask]);
@@ -242,9 +290,13 @@ describe("groupCompletedTasks", () => {
   it("should not include yesterday task in weekTasks", () => {
     const yesterdayTask = buildTask({
       is_completed: true,
-      completed_at: new Date(2025, 2, 18, 20, 0, 0).toISOString(),
+      completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+        .subtract({ days: 1 })
+        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 20, minute: 0 } })
+        .toInstant()
+        .toString() as any,
     });
-    const result = groupCompletedTasks([yesterdayTask]);
+    const result = groupCompletedTasks([yesterdayTask], clock);
     expect(result.weekTasks).toHaveLength(0);
     expect(result.yesterdayTasks).toContain(yesterdayTask);
   });

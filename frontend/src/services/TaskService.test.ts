@@ -8,6 +8,8 @@ import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { BOX } from "@/constants";
 import { createMockTaskRepository } from "@/test/mocks/taskRepositoryMock";
 import { createMockChecklistRepository } from "@/test/factories/checklistRepositoryFactory";
+import { toISOTimestamp } from "@/utils/dateHelpers";
+import { Temporal } from "@/lib/temporal";
 
 function expectSortedAscendingByOrder(tasks: Task[]) {
   expect(tasks[0].sort_order).toBe(1);
@@ -584,7 +586,7 @@ describe("TaskService", () => {
     it("should clear completed_at to empty string", async () => {
       const task = buildTask({
         is_completed: true,
-        completed_at: "2025-01-01T10:00:00.000Z",
+        completed_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z")),
       });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
@@ -726,14 +728,14 @@ describe("TaskService", () => {
     });
 
     it("should update updated_at for each reordered task", async () => {
-      const taskA = buildTask({ updated_at: "2025-01-01T00:00:00.000Z" });
+      const taskA = buildTask({ updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")) });
       const taskService = new TaskService(
         mockTaskRepository,
         mockChecklistRepository,
       );
       await taskService.reorderTasks([taskA]);
       const upserted = getUpsertedTasks();
-      expect(upserted[0].updated_at).not.toBe("2025-01-01T00:00:00.000Z");
+      expect(upserted[0].updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
     });
 
     it("should preserve task ids after reorder", async () => {
@@ -770,18 +772,21 @@ describe("TaskService", () => {
     });
 
     it("should sort completed tasks by completed_at descending", async () => {
+      const timestamp1 = toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z"));
+      const timestamp2 = toISOTimestamp(Temporal.Instant.from("2025-01-02T10:00:00.000Z"));
+      const timestamp3 = toISOTimestamp(Temporal.Instant.from("2025-01-03T10:00:00.000Z"));
       const completedTasks = [
         buildTask({
           is_completed: true,
-          completed_at: "2025-01-01T10:00:00.000Z",
+          completed_at: timestamp1,
         }),
         buildTask({
           is_completed: true,
-          completed_at: "2025-01-03T10:00:00.000Z",
+          completed_at: timestamp3,
         }),
         buildTask({
           is_completed: true,
-          completed_at: "2025-01-02T10:00:00.000Z",
+          completed_at: timestamp2,
         }),
       ];
       mockTaskRepository = createMockTaskRepository({
@@ -792,9 +797,9 @@ describe("TaskService", () => {
         mockChecklistRepository,
       );
       const tasks = await taskService.getCompleted();
-      expect(tasks[0].completed_at).toBe("2025-01-03T10:00:00.000Z");
-      expect(tasks[1].completed_at).toBe("2025-01-02T10:00:00.000Z");
-      expect(tasks[2].completed_at).toBe("2025-01-01T10:00:00.000Z");
+      expect(tasks[0].completed_at).toBe(timestamp3);
+      expect(tasks[1].completed_at).toBe(timestamp2);
+      expect(tasks[2].completed_at).toBe(timestamp1);
     });
 
     it("should sort by sort_order descending when completed_at is empty", async () => {
@@ -819,7 +824,7 @@ describe("TaskService", () => {
     it("should sort by sort_order when only one task has completed_at", async () => {
       const taskWithDate = buildTask({
         is_completed: true,
-        completed_at: "2025-01-01T10:00:00.000Z",
+        completed_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z")),
         sort_order: 1,
       });
       const taskWithoutDate = buildTask({
@@ -1107,27 +1112,30 @@ describe("TaskService", () => {
     ])(
       "should sort $label tasks by updated_at descending",
       async ({ isCompleted }) => {
+        const timestamp1 = toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z"));
+        const timestamp2 = toISOTimestamp(Temporal.Instant.from("2025-01-02T10:00:00.000Z"));
+        const timestamp3 = toISOTimestamp(Temporal.Instant.from("2025-01-03T10:00:00.000Z"));
         const tasks = [
           buildTask({
             name: "Task A",
             is_completed: isCompleted,
-            updated_at: "2025-01-01T10:00:00.000Z",
+            updated_at: timestamp1,
           }),
           buildTask({
             name: "Task B",
             is_completed: isCompleted,
-            updated_at: "2025-01-03T10:00:00.000Z",
+            updated_at: timestamp3,
           }),
           buildTask({
             name: "Task C",
             is_completed: isCompleted,
-            updated_at: "2025-01-02T10:00:00.000Z",
+            updated_at: timestamp2,
           }),
         ];
         const results = await setupSearchTest(tasks, "task");
-        expect(results[0].updated_at).toBe("2025-01-03T10:00:00.000Z");
-        expect(results[1].updated_at).toBe("2025-01-02T10:00:00.000Z");
-        expect(results[2].updated_at).toBe("2025-01-01T10:00:00.000Z");
+        expect(results[0].updated_at).toBe(timestamp3);
+        expect(results[1].updated_at).toBe(timestamp2);
+        expect(results[2].updated_at).toBe(timestamp1);
       },
     );
 
@@ -1135,12 +1143,12 @@ describe("TaskService", () => {
       const completedTask = buildTask({
         name: "Task A",
         is_completed: true,
-        updated_at: "2025-01-03T10:00:00.000Z",
+        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-03T10:00:00.000Z")),
       });
       const incompleteTask = buildTask({
         name: "Task B",
         is_completed: false,
-        updated_at: "2025-01-01T10:00:00.000Z",
+        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z")),
       });
       const results = await setupSearchTest(
         [completedTask, incompleteTask],

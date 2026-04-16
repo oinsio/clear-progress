@@ -9,6 +9,7 @@ import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import { MAX_COVER_SIZE_BYTES } from "@/constants";
 import { localCoverCache } from "./LocalCoverCache";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 const FAKE_ARRAY_BUFFER = new TextEncoder().encode("fake image content")
   .buffer as ArrayBuffer;
@@ -340,7 +341,7 @@ describe("CoverService", () => {
           filename: "cover.jpg",
           mime_type: "image/jpeg",
           data_hash: "some-hash",
-          created_at: new Date().toISOString(),
+          created_at: toISOTimestamp(),
         }),
       });
       const service = new CoverService(

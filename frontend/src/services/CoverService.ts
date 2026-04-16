@@ -8,6 +8,7 @@ import type { ApiClient } from "./ApiClient";
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import { localCoverCache } from "./LocalCoverCache";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 const COVER_ERROR = {
   INVALID_TYPE: "INVALID_TYPE",
@@ -118,7 +119,7 @@ export class CoverService {
         filename: file.name,
         mime_type: file.type,
         data_hash: dataHash,
-        created_at: new Date().toISOString(),
+        created_at: toISOTimestamp(),
       });
 
       const objectUrl = URL.createObjectURL(blob);

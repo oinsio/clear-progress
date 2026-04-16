@@ -7,6 +7,7 @@ import { buildTask } from "@/test/factories/taskFactory";
 import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { createMockTaskRepository } from "@/test/mocks/taskRepositoryMock";
 import { createMockChecklistRepository } from "@/test/factories/checklistRepositoryFactory";
+import { toISOTimestamp, toISODate } from "@/utils/dateHelpers";
 
 const setupCompletionMocks = (
   mockTaskRepository: TaskRepository,
@@ -131,22 +132,22 @@ describe("TaskService - Recurring Tasks Integration", () => {
         name: "Daily review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: false,
-        next_date: "2026-04-13",
-        appear_date: "2026-04-13",
+        next_date: toISODate("2026-04-13"),
+        appear_date: toISODate("2026-04-13"),
       });
 
       const completedTask = buildTask({
         ...existingTask,
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       });
 
       const recurringTask = buildTask({
         name: "Daily review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: true,
-        next_date: "2026-04-14",
-        appear_date: "2026-04-14",
+        next_date: toISODate("2026-04-14"),
+        appear_date: toISODate("2026-04-14"),
         box: "today",
       });
 
@@ -181,7 +182,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       const completedTask = buildTask({
         ...existingTask,
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       });
 
       mockTaskRepository.getById = vi.fn().mockResolvedValue(existingTask);
@@ -214,7 +215,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       const completedTask = buildTask({
         ...existingTask,
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       });
 
       const recurringTask = buildTask({
@@ -253,14 +254,14 @@ describe("TaskService - Recurring Tasks Integration", () => {
         name: "Daily review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: false,
-        next_date: "2026-04-13",
-        appear_date: "2026-04-13",
+        next_date: toISODate("2026-04-13"),
+        appear_date: toISODate("2026-04-13"),
       });
 
       const completedTask = buildTask({
         ...existingTask,
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       });
 
       mockTaskRepository.getById = vi.fn().mockResolvedValue(existingTask);
@@ -295,14 +296,14 @@ describe("TaskService - Recurring Tasks Integration", () => {
         name: "Weekly review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: true,
-        next_date: "2026-04-14",
-        appear_date: "2026-04-14",
+        next_date: toISODate("2026-04-14"),
+        appear_date: toISODate("2026-04-14"),
       });
 
       const completedTask = buildTask({
         ...hiddenTask,
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       });
 
       const newRecurringTask = buildTask({
@@ -343,8 +344,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         name: "Daily review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: false,
-        next_date: "2026-04-13",
-        appear_date: "2026-04-13",
+        next_date: toISODate("2026-04-13"),
+        appear_date: toISODate("2026-04-13"),
       });
 
       const checklistItems = [
@@ -359,7 +360,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       const completedTask = buildTask({
         ...existingTask,
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       });
 
       const recurringTask = buildTask({
@@ -408,14 +409,14 @@ describe("TaskService - Recurring Tasks Integration", () => {
         repeat_rule: JSON.stringify(repeatRule),
         original_task_id: "",
         is_hidden: false,
-        next_date: "2026-04-13",
-        appear_date: "2026-04-13",
+        next_date: toISODate("2026-04-13"),
+        appear_date: toISODate("2026-04-13"),
       });
 
       const completedTask = buildTask({
         ...existingTask,
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       });
 
       const getCreatedTask = setupCreateTaskCapture(
@@ -447,14 +448,14 @@ describe("TaskService - Recurring Tasks Integration", () => {
         repeat_rule: JSON.stringify(repeatRule),
         original_task_id: "task-1",
         is_hidden: false,
-        next_date: "2026-04-14",
-        appear_date: "2026-04-14",
+        next_date: toISODate("2026-04-14"),
+        appear_date: toISODate("2026-04-14"),
       });
 
       const completedCopy = buildTask({
         ...hiddenCopy,
         is_completed: true,
-        completed_at: new Date().toISOString(),
+        completed_at: toISOTimestamp(),
       });
 
       const getCreatedTask = setupCreateTaskCapture(
@@ -487,8 +488,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         repeat_rule: JSON.stringify(repeatRule),
         original_task_id: "",
         is_hidden: false,
-        next_date: "2026-04-13",
-        appear_date: "2026-04-13",
+        next_date: toISODate("2026-04-13"),
+        appear_date: toISODate("2026-04-13"),
       });
 
       const existingHiddenCopy = buildTask({
@@ -498,8 +499,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         repeat_rule: JSON.stringify(repeatRule),
         original_task_id: "task-1",
         is_hidden: true,
-        next_date: "2026-04-14",
-        appear_date: "2026-04-14",
+        next_date: toISODate("2026-04-14"),
+        appear_date: toISODate("2026-04-14"),
       });
 
       const getUpdatedCopyTask = setupUpdateTaskCapture(
@@ -537,8 +538,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         repeat_rule: JSON.stringify(repeatRule),
         original_task_id: "",
         is_hidden: false,
-        next_date: "2026-04-13",
-        appear_date: "2026-04-13",
+        next_date: toISODate("2026-04-13"),
+        appear_date: toISODate("2026-04-13"),
       });
 
       const existingHiddenCopy = buildTask({
@@ -551,8 +552,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         repeat_rule: JSON.stringify(repeatRule),
         original_task_id: "task-1",
         is_hidden: true,
-        next_date: "2026-04-14",
-        appear_date: "2026-04-14",
+        next_date: toISODate("2026-04-14"),
+        appear_date: toISODate("2026-04-14"),
       });
 
       const getUpdatedCopyTask = setupUpdateTaskCapture(

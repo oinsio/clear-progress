@@ -1,6 +1,7 @@
 import type { ChecklistItem } from "@/types/entities";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { hasEntityChanged } from "@/utils/deepEqual";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 export interface ChecklistProgress {
   completed: number;
@@ -21,7 +22,7 @@ export class ChecklistService {
 
   async create(taskId: string, name: string): Promise<ChecklistItem> {
     const existingItems = await this.checklistRepository.getByTaskId(taskId);
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const item: ChecklistItem = {
       id: crypto.randomUUID(),
       task_id: taskId,
@@ -73,7 +74,7 @@ export class ChecklistService {
       return; // Ничего не изменилось, не синхронизируем
     }
 
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const updatedItems = items.map((item, index) => {
       const orderChanged = item.sort_order !== index;
       return {
@@ -118,7 +119,7 @@ export class ChecklistService {
     const updatedItem: ChecklistItem = {
       ...candidateItem,
       updated_at: hasChanged
-        ? new Date().toISOString()
+        ? toISOTimestamp()
         : existingItem.updated_at,
       version: hasChanged ? existingItem.version + 1 : existingItem.version,
       needsSync: hasChanged,

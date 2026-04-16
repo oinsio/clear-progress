@@ -1,5 +1,17 @@
 import type { Box, GoalStatus } from "./common";
 
+/**
+ * Branded type for ISO 8601 timestamps with timezone (e.g., "2026-04-16T14:30:00.000Z").
+ * Used for created_at, updated_at, completed_at fields.
+ */
+export type ISOTimestamp = string & { readonly __brand: "ISOTimestamp" };
+
+/**
+ * Branded type for ISO 8601 date-only strings (e.g., "2026-04-16").
+ * Used for next_date, appear_date fields.
+ */
+export type ISODate = string & { readonly __brand: "ISODate" };
+
 export interface Task {
   id: string;
   name: string;
@@ -9,16 +21,16 @@ export interface Task {
   context_id: string;
   category_id: string;
   is_completed: boolean;
-  completed_at: string;
+  completed_at: ISOTimestamp | "";
   repeat_rule: string;
   is_hidden: boolean;
-  next_date: string;
-  appear_date: string;
+  next_date: ISODate | "";
+  appear_date: ISODate | "";
   original_task_id: string;
   sort_order: number;
   is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
   version: number;
   revision: number;
   needsSync: boolean;
@@ -32,8 +44,8 @@ export interface Goal {
   status: GoalStatus;
   sort_order: number;
   is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
   version: number;
   revision: number;
   needsSync: boolean;
@@ -44,8 +56,8 @@ interface NamedEntity {
   name: string;
   sort_order: number;
   is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
   version: number;
   revision: number;
   needsSync: boolean;
@@ -67,8 +79,8 @@ export interface ChecklistItem {
   is_completed: boolean;
   sort_order: number;
   is_deleted: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: ISOTimestamp;
+  updated_at: ISOTimestamp;
   version: number;
   revision: number;
   needsSync: boolean;
@@ -82,7 +94,7 @@ export interface SyncMeta {
 export interface Setting {
   key: string;
   value: string;
-  updated_at: string;
+  updated_at: ISOTimestamp;
   needsSync: boolean;
 }
 
@@ -99,5 +111,5 @@ export interface PendingCoverRecord {
   filename: string;
   mime_type: string;
   data_hash: string;
-  created_at: string;
+  created_at: ISOTimestamp;
 }

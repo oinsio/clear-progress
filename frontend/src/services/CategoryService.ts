@@ -1,6 +1,7 @@
 import type { Category } from "@/types/entities";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { hasEntityChanged } from "@/utils/deepEqual";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 export class CategoryService {
   constructor(private readonly categoryRepository: CategoryRepository) {}
@@ -18,7 +19,7 @@ export class CategoryService {
 
   async create(name: string): Promise<Category> {
     const existingCategories = await this.categoryRepository.getActive();
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const category: Category = {
       id: crypto.randomUUID(),
       name,
@@ -57,7 +58,7 @@ export class CategoryService {
       return; // Ничего не изменилось, не синхронизируем
     }
 
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const updated = orderedCategories.map((category, index) => {
       const orderChanged = category.sort_order !== index;
       return {
@@ -94,7 +95,7 @@ export class CategoryService {
     const updatedCategory: Category = {
       ...candidateCategory,
       updated_at: hasChanged
-        ? new Date().toISOString()
+        ? toISOTimestamp()
         : existingCategory.updated_at,
       version: hasChanged
         ? existingCategory.version + 1

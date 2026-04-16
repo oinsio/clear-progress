@@ -3,6 +3,7 @@ import type { GoalStatus } from "@/types/common";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { GOAL_STATUS_SORT_ORDER } from "@/constants";
 import { hasEntityChanged } from "@/utils/deepEqual";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 export class GoalService {
   constructor(private readonly goalRepository: GoalRepository) {}
@@ -18,7 +19,7 @@ export class GoalService {
 
   async create(partialGoal: Pick<Goal, "name"> & Partial<Goal>): Promise<Goal> {
     const existingGoals = await this.goalRepository.getActive();
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const goal: Goal = {
       description: "",
       cover_file_id: "",
@@ -57,7 +58,7 @@ export class GoalService {
     const updatedGoal: Goal = {
       ...candidateGoal,
       updated_at: hasChanged
-        ? new Date().toISOString()
+        ? toISOTimestamp()
         : existingGoal.updated_at,
       version: hasChanged ? existingGoal.version + 1 : existingGoal.version,
       needsSync: hasChanged,
@@ -110,7 +111,7 @@ export class GoalService {
       return; // Ничего не изменилось, не синхронизируем
     }
 
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const updatedGoals = orderedGoals.map((goal, index) => {
       const orderChanged = goal.sort_order !== index;
       return {

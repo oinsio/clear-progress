@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { IdeaDetailPanel } from "./IdeaDetailPanel";
 import type { Idea } from "@/types/entities";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -15,8 +16,8 @@ const mockIdea: Idea = {
   description: "Test Description",
   sort_order: 0,
   is_deleted: false,
-  created_at: "2024-01-01T00:00:00.000Z",
-  updated_at: "2024-01-01T00:00:00.000Z",
+  created_at: toISOTimestamp(),
+  updated_at: toISOTimestamp(),
   version: 1,
   revision: 0,
   needsSync: false,

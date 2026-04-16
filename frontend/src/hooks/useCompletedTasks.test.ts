@@ -6,6 +6,8 @@ import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
+import { toISOTimestamp } from "@/utils/dateHelpers";
+import { Temporal } from "@/lib/temporal";
 
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
@@ -47,7 +49,7 @@ describe("useCompletedTasks", () => {
   it("should return completed tasks after loading", async () => {
     const completedTask = buildTask({
       is_completed: true,
-      completed_at: "2025-01-01T10:00:00.000Z",
+      completed_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z")),
     });
     const activeTask = buildTask({ is_completed: false });
     await db.tasks.bulkAdd([completedTask, activeTask]);
@@ -82,7 +84,7 @@ describe("useCompletedTasks", () => {
       await db.tasks.add(
         buildTask({
           is_completed: true,
-          completed_at: "2025-01-01T10:00:00.000Z",
+          completed_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z")),
         }),
       );
     });

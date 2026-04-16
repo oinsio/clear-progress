@@ -1,6 +1,7 @@
 import type { Idea } from "@/types/entities";
 import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { hasEntityChanged } from "@/utils/deepEqual";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 export class IdeaService {
   constructor(private readonly ideaRepository: IdeaRepository) {}
@@ -16,7 +17,7 @@ export class IdeaService {
 
   async create(partialIdea: Pick<Idea, "name"> & Partial<Idea>): Promise<Idea> {
     const existingIdeas = await this.ideaRepository.getActive();
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const idea: Idea = {
       sort_order: existingIdeas.length,
       ...partialIdea,
@@ -53,7 +54,7 @@ export class IdeaService {
     const updatedIdea: Idea = {
       ...candidateIdea,
       updated_at: hasChanged
-        ? new Date().toISOString()
+        ? toISOTimestamp()
         : existingIdea.updated_at,
       version: hasChanged ? existingIdea.version + 1 : existingIdea.version,
       needsSync: hasChanged,
@@ -94,7 +95,7 @@ export class IdeaService {
       return; // Ничего не изменилось, не синхронизируем
     }
 
-    const now = new Date().toISOString();
+    const now = toISOTimestamp();
     const updatedIdeas = orderedIdeas.map((idea, index) => {
       const orderChanged = idea.sort_order !== index;
       return {

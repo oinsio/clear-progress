@@ -3,6 +3,8 @@ import { CategoryService } from "./CategoryService";
 import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { buildCategory } from "@/test/factories/categoryFactory";
 import { createMockCategoryRepository } from "@/test/mocks/categoryRepositoryMock";
+import { toISOTimestamp } from "@/utils/dateHelpers";
+import { Temporal } from "@/lib/temporal";
 
 describe("CategoryService", () => {
   let mockCategoryRepository: CategoryRepository;
@@ -133,14 +135,14 @@ describe("CategoryService", () => {
 
     it("should update updated_at timestamp", async () => {
       const category = buildCategory({
-        updated_at: "2025-01-01T00:00:00.000Z",
+        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
       });
       mockCategoryRepository = createMockCategoryRepository({
         getById: vi.fn().mockResolvedValue(category),
       });
       const categoryService = new CategoryService(mockCategoryRepository);
       const updated = await categoryService.update(category.id, "X");
-      expect(updated.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
+      expect(updated.updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
     });
 
     it("should set needsSync to true", async () => {
@@ -272,12 +274,12 @@ describe("CategoryService", () => {
 
     it("should update updated_at for each reordered category", async () => {
       const categoryA = buildCategory({
-        updated_at: "2025-01-01T00:00:00.000Z",
+        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
       });
       const categoryService = new CategoryService(mockCategoryRepository);
       await categoryService.reorderCategories([categoryA]);
       const upserted = getUpsertedCategories();
-      expect(upserted[0].updated_at).not.toBe("2025-01-01T00:00:00.000Z");
+      expect(upserted[0].updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
     });
 
     it("should set needsSync to true for each reordered category", async () => {
