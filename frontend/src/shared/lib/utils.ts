@@ -56,9 +56,9 @@ interface DayBoundaries {
   startOfYesterday: Temporal.Instant;
 }
 
-function getDayBoundaries(now: Temporal.Instant = Temporal.Now.instant()): DayBoundaries {
-  const timeZone = Temporal.Now.timeZoneId();
-  const today = now.toZonedDateTimeISO(timeZone).toPlainDate();
+function getDayBoundaries(clock: Clock = systemClock): DayBoundaries {
+  const timeZone = clock.timeZoneId();
+  const today = clock.plainDateISO();
   const yesterday = today.subtract({ days: 1 });
 
   return {
@@ -67,13 +67,13 @@ function getDayBoundaries(now: Temporal.Instant = Temporal.Now.instant()): DayBo
   };
 }
 
-export function formatCompletedAt(isoString: string): string {
+export function formatCompletedAt(isoString: string, clock: Clock = systemClock): string {
   if (!isoString) return "";
   const completedInstant = Temporal.Instant.from(isoString);
-  const { startOfToday, startOfYesterday } = getDayBoundaries();
+  const { startOfToday, startOfYesterday } = getDayBoundaries(clock);
 
   const locale = i18next.language || "en";
-  const timeZone = Temporal.Now.timeZoneId();
+  const timeZone = clock.timeZoneId();
   const formatter = new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
@@ -97,13 +97,13 @@ export function formatCompletedAt(isoString: string): string {
   return i18next.t("task.completedDate", { date: dateString, time: timeString });
 }
 
-export function formatShortDateTime(isoString: string): string {
+export function formatShortDateTime(isoString: string, clock: Clock = systemClock): string {
   if (!isoString) return "";
   const instant = Temporal.Instant.from(isoString);
-  const { startOfToday, startOfYesterday } = getDayBoundaries();
+  const { startOfToday, startOfYesterday } = getDayBoundaries(clock);
 
   const locale = i18next.language || "en";
-  const timeZone = Temporal.Now.timeZoneId();
+  const timeZone = clock.timeZoneId();
   const timeFormatter = new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
