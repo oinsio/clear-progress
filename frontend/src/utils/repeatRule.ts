@@ -65,23 +65,49 @@ function calculateNextDateWeekly(
   previousNextDate: string | undefined,
   clock: Clock = systemClock,
 ): string {
+  const today = clock.plainDateISO();
+
   if (!previousNextDate) {
     // Первое создание: ближайший день из weekdays[], начиная с завтра
-    const tomorrow = clock.plainDateISO().add({ days: 1 });
+    const tomorrow = today.add({ days: 1 });
     return findNextWeekday(tomorrow, weekdays, interval);
   }
 
   const nextDay = Temporal.PlainDate.from(previousNextDate).add({ days: 1 });
-  return findNextWeekday(nextDay, weekdays, interval);
+  const candidate = findNextWeekday(nextDay, weekdays, interval);
+  const candidateDate = Temporal.PlainDate.from(candidate);
+
+  // Skip logic: если дата в прошлом, ищем от завтра
+  // Это предотвращает создание множества пропущенных копий при длительной не активности
+  if (Temporal.PlainDate.compare(candidateDate, today) < 0) {
+    const tomorrow = today.add({ days: 1 });
+    return findNextWeekday(tomorrow, weekdays, interval);
+  }
+
+  return candidate;
 }
 
 function calculateNextDateMonthly(
   interval: number,
   dayOfMonth: number,
   previousNextDate: string,
+  clock: Clock = systemClock,
 ): string {
   const prev = Temporal.PlainDate.from(previousNextDate);
-  const targetYearMonth = prev.toPlainYearMonth().add({ months: interval });
+  const today = clock.plainDateISO();
+  let targetYearMonth = prev.toPlainYearMonth().add({ months: interval });
+
+  // Skip logic: если целевой месяц в прошлом, перепрыгнуть к текущему/следующему
+  // Это предотвращает создание множества пропущенных копий при длительной не активности
+  const todayYearMonth = today.toPlainYearMonth();
+  if (Temporal.PlainYearMonth.compare(targetYearMonth, todayYearMonth) < 0) {
+    targetYearMonth = todayYearMonth;
+    // Если день уже прошёл или сегодня в текущем месяце, перейти к следующему
+    if (today.day >= dayOfMonth) {
+      targetYearMonth = targetYearMonth.add({ months: 1 });
+    }
+  }
+
   const actualDay = Math.min(dayOfMonth, targetYearMonth.daysInMonth);
   return targetYearMonth.toPlainDate({ day: actualDay }).toString();
 }
@@ -90,19 +116,46 @@ function calculateNextDateYearly(
   interval: number,
   monthAndDay: { month: number; day: number },
   previousNextDate: string,
+  clock: Clock = systemClock,
 ): string {
   const prev = Temporal.PlainDate.from(previousNextDate);
-  const targetYear = prev.year + interval;
+  const today = clock.plainDateISO();
+  let targetYear = prev.year + interval;
+
+  // Skip logic: если целевой год в прошлом, перепрыгнуть к текущему/следующему
+  // Это предотвращает создание множества пропущенных копий при длительной не активности
+  if (targetYear < today.year) {
+    targetYear = today.year;
+  }
+
+  // Создаём кандидата для текущего целевого года
   const targetYearMonth = Temporal.PlainYearMonth.from({
     year: targetYear,
     month: monthAndDay.month,
   });
   const actualDay = Math.min(monthAndDay.day, targetYearMonth.daysInMonth);
-  return Temporal.PlainDate.from({
+  const candidate = Temporal.PlainDate.from({
     year: targetYear,
     month: monthAndDay.month,
     day: actualDay,
-  }).toString();
+  });
+
+  // Если дата уже прошла в текущем году, перейти к следующему году
+  if (Temporal.PlainDate.compare(candidate, today) < 0) {
+    const nextYear = targetYear + 1;
+    const nextYearMonth = Temporal.PlainYearMonth.from({
+      year: nextYear,
+      month: monthAndDay.month,
+    });
+    const nextActualDay = Math.min(monthAndDay.day, nextYearMonth.daysInMonth);
+    return Temporal.PlainDate.from({
+      year: nextYear,
+      month: monthAndDay.month,
+      day: nextActualDay,
+    }).toString();
+  }
+
+  return candidate.toString();
 }
 
 function calculateNextDateAfterCompletion(
@@ -156,6 +209,7 @@ export function calculateNextDate(
         interval,
         rule.day_of_month,
         previousNextDate,
+        clock,
       );
     case "yearly":
       if (!rule.month_and_day)
@@ -164,6 +218,7 @@ export function calculateNextDate(
         interval,
         rule.month_and_day,
         previousNextDate,
+        clock,
       );
     default:
       throw new Error(`Unknown frequency: ${rule.frequency}`);
