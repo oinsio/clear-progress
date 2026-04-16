@@ -17,7 +17,7 @@ import {
   AUTH_REQUIRED_EVENT,
   API_AUTH_ERROR_NAME,
 } from "@/constants";
-import { Temporal } from "@/lib/temporal";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 import { SyncService } from "@/services/SyncService";
 import { ApiClient } from "@/services/ApiClient";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -97,7 +97,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applySyncResult = useCallback(async (): Promise<void> => {
-    const syncTimestamp = Temporal.Now.instant().toString();
+    const syncTimestamp = toISOTimestamp();
     await syncService.push();
     await syncService.pull();
     // Cover sync runs after entities — errors are caught separately so they don't
@@ -180,7 +180,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         onProgress("download_covers");
         await defaultCoverSyncService.ensureServerCoversAreCached();
 
-        const syncTimestamp = Temporal.Now.instant().toString();
+        const syncTimestamp = toISOTimestamp();
         persistLastSync(syncTimestamp);
         setLastSyncedAt(syncTimestamp);
         setSyncVersion((version) => version + 1);

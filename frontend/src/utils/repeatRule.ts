@@ -144,16 +144,29 @@ function calculateNextDateMonthly(
 ): string {
   const prev = Temporal.PlainDate.from(previousNextDate);
   const today = clock.plainDateISO();
-  let targetYearMonth = prev.toPlainYearMonth().add({ months: interval });
+  const prevYearMonth = prev.toPlainYearMonth();
+  let targetYearMonth = prevYearMonth.add({ months: interval });
 
-  // Skip logic: если целевой месяц в прошлом, перепрыгнуть к текущему/следующему
-  // Это предотвращает создание множества пропущенных копий при длительной не активности
+  // Skip logic: если целевой месяц в прошлом, перепрыгнуть к ближайшему
+  // месяцу, выровненному по интервалу (аналогично daily skip logic).
+  // Это предотвращает создание множества пропущенных копий при длительной не активности.
   const todayYearMonth = today.toPlainYearMonth();
   if (Temporal.PlainYearMonth.compare(targetYearMonth, todayYearMonth) < 0) {
-    targetYearMonth = todayYearMonth;
-    // Если день уже прошёл или сегодня в текущем месяце, перейти к следующему
-    if (today.day >= dayOfMonth) {
-      targetYearMonth = targetYearMonth.add({ months: 1 });
+    const monthsElapsed = prevYearMonth.until(todayYearMonth, {
+      largestUnit: "months",
+    }).months;
+    const periodsToSkip = Math.ceil(monthsElapsed / interval);
+    targetYearMonth = prevYearMonth.add({ months: periodsToSkip * interval });
+
+    // Если дата уже прошла или наступила сегодня в целевом месяце, добавить interval
+    const actualDay = Math.min(dayOfMonth, targetYearMonth.daysInMonth);
+    if (
+      Temporal.PlainDate.compare(
+        targetYearMonth.toPlainDate({ day: actualDay }),
+        today,
+      ) <= 0
+    ) {
+      targetYearMonth = targetYearMonth.add({ months: interval });
     }
   }
 
@@ -171,10 +184,13 @@ function calculateNextDateYearly(
   const today = clock.plainDateISO();
   let targetYear = prev.year + interval;
 
-  // Skip logic: если целевой год в прошлом, перепрыгнуть к текущему/следующему
-  // Это предотвращает создание множества пропущенных копий при длительной не активности
+  // Skip logic: если целевой год в прошлом, перепрыгнуть к ближайшему
+  // году, выровненному по интервалу (аналогично daily skip logic).
+  // Это предотвращает создание множества пропущенных копий при длительной не активности.
   if (targetYear < today.year) {
-    targetYear = today.year;
+    const yearsElapsed = today.year - prev.year;
+    const periodsToSkip = Math.ceil(yearsElapsed / interval);
+    targetYear = prev.year + periodsToSkip * interval;
   }
 
   // Создаём кандидата для текущего целевого года
@@ -189,9 +205,9 @@ function calculateNextDateYearly(
     day: actualDay,
   });
 
-  // Если дата уже прошла в текущем году, перейти к следующему году
+  // Если дата уже прошла в целевом году, перейти к следующему выровненному году
   if (Temporal.PlainDate.compare(candidate, today) < 0) {
-    const nextYear = targetYear + 1;
+    const nextYear = targetYear + interval;
     const nextYearMonth = Temporal.PlainYearMonth.from({
       year: nextYear,
       month: monthAndDay.month,

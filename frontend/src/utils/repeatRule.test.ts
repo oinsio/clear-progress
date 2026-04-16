@@ -913,6 +913,137 @@ describe("calculateNextDate with timezone changes", () => {
     expect(nextDateSydney).toBe("2026-04-18"); // +7 дней от 2026-04-11 (дата в Sydney TZ)
   });
 
+  it("should preserve monthly interval alignment when user was inactive (non-divisible gap)", () => {
+    // Задача "каждые 3 месяца 15-го числа", каденция: Янв→Апр→Июл→Окт
+    // previousNextDate = Янв 15, пользователь не заходил до 10 мая
+    const clock = fakeClock("2026-05-10T10:00:00Z"); // 10 мая
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "monthly",
+      interval: 3,
+      day_of_month: 15,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-01-15";
+    const completedAt = "2026-05-10T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Каденция: Янв 15 → Апр 15 → Июл 15. Апрель уже прошёл → Июл 15
+    expect(nextDate).toBe("2026-07-15");
+  });
+
+  it("should preserve monthly interval alignment when day already passed (non-divisible gap)", () => {
+    // Каждые 2 месяца 5-го числа, каденция: Янв→Мар→Май→Июл
+    // previousNextDate = Янв 5, сегодня 10 мая → Май 5 уже прошло → Июл 5
+    const clock = fakeClock("2026-05-10T10:00:00Z");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "monthly",
+      interval: 2,
+      day_of_month: 5,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-01-05";
+    const completedAt = "2026-05-10T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Каденция: Янв 5 → Мар 5 → Май 5 → Июл 5. Май 5 прошло → Июл 5
+    expect(nextDate).toBe("2026-07-05");
+  });
+
+  it("should preserve yearly interval alignment when user was inactive (off-cadence year)", () => {
+    // Задача "каждые 2 года 15 июня", каденция: 2024→2026→2028
+    // previousNextDate = 15 июня 2024, сегодня 1 июля 2026
+    const clock = fakeClock("2026-07-01T10:00:00Z");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 2,
+      month_and_day: { month: 6, day: 15 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2024-06-15";
+    const completedAt = "2026-07-01T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Каденция: 2024 → 2026 → 2028. Июнь 2026 прошёл → 2028-06-15
+    expect(nextDate).toBe("2028-06-15");
+  });
+
+  it("should preserve yearly interval alignment when target year has not passed yet", () => {
+    // Каждые 3 года 20 декабря, каденция: 2023→2026→2029
+    // previousNextDate = 20 дек 2023, сегодня 1 марта 2026 → 20 дек 2026 ещё не прошло
+    const clock = fakeClock("2026-03-01T10:00:00Z");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 3,
+      month_and_day: { month: 12, day: 20 },
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2023-12-20";
+    const completedAt = "2026-03-01T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Каденция: 2023 → 2026 → 2029. Дек 2026 ещё впереди → 2026-12-20
+    expect(nextDate).toBe("2026-12-20");
+  });
+
+  it("should preserve weekly interval alignment when user was inactive", () => {
+    // Каждые 2 недели в понедельник
+    // previousNextDate = Пн 6 апреля, сегодня суббота 25 апреля
+    // Каденция: 6 апр → 20 апр → 4 мая. 20 апр прошло → 4 мая
+    const clock = fakeClock("2026-04-25T10:00:00Z"); // суббота
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 2,
+      weekdays: [1], // понедельник
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-04-06"; // понедельник
+    const completedAt = "2026-04-25T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Каденция: 6 апр → 20 апр → 4 мая. 20 апр прошло → 4 мая
+    expect(nextDate).toBe("2026-05-04");
+  });
+
   it("should handle timezone change across midnight boundary", () => {
     // Завершили задачу в 23:50 по Токио (UTC+9)
     const completedAt = "2026-04-10T14:50:00.000Z"; // 23:50 по Токио = 2026-04-10
