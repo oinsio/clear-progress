@@ -104,9 +104,10 @@ function calculateNextDateYearly(
 function calculateNextDateAfterCompletion(
   delayDays: number,
   completedAt: string,
+  clock: Clock = systemClock,
 ): string {
   const completedInstant = Temporal.Instant.from(completedAt);
-  const timeZone = Temporal.Now.timeZoneId();
+  const timeZone = clock.timeZoneId();
   const completedDate = completedInstant.toZonedDateTimeISO(timeZone).toPlainDate();
   return completedDate.add({ days: delayDays }).toString();
 }
@@ -120,14 +121,18 @@ export function calculateNextDate(
   if (rule.type === "after_completion") {
     if (!rule.delay_days)
       throw new Error("delay_days required for after_completion");
-    return calculateNextDateAfterCompletion(rule.delay_days, completedAt);
+    return calculateNextDateAfterCompletion(rule.delay_days, completedAt, clock);
   }
 
   // type === 'fixed'
   if (!rule.frequency) throw new Error("frequency required for fixed");
   if (!previousNextDate) {
     // Первое создание: используем completedAt как базу
-    previousNextDate = completedAt.split("T")[0];
+    const completedInstant = Temporal.Instant.from(completedAt);
+    previousNextDate = completedInstant
+      .toZonedDateTimeISO(clock.timeZoneId())
+      .toPlainDate()
+      .toString();
   }
 
   const interval = rule.interval ?? 1;

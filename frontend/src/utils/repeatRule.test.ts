@@ -285,6 +285,40 @@ describe("calculateNextDate", () => {
     const nextDate = calculateNextDate(rule, completedAt);
     expect(nextDate).toBe("2026-04-14");
   });
+
+  it("should use clock timezone for after_completion date extraction", () => {
+    // completedAt is 2026-04-16T23:00:00Z — in UTC it's still April 16
+    // but in UTC+5 (Asia/Almaty) it's already April 17 04:00
+    const clock = fakeClock("2026-04-17T04:00:00Z", "Asia/Almaty");
+    const rule: RepeatRule = {
+      type: "after_completion",
+      delay_days: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-04-16T23:00:00.000Z";
+    const nextDate = calculateNextDate(rule, completedAt, undefined, clock);
+    // In Asia/Almaty, completedAt is April 17 → next = April 18
+    expect(nextDate).toBe("2026-04-18");
+  });
+
+  it("should use clock timezone for fixed rule without previousNextDate", () => {
+    // completedAt is 2026-04-16T23:00:00Z — UTC says April 16
+    // but in UTC+5 it's April 17
+    const clock = fakeClock("2026-04-17T04:00:00Z", "Asia/Almaty");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-04-16T23:00:00.000Z";
+    // No previousNextDate → completedAt date is used as base
+    // In Asia/Almaty, completedAt is April 17 → next daily = April 18
+    const nextDate = calculateNextDate(rule, completedAt, undefined, clock);
+    expect(nextDate).toBe("2026-04-18");
+  });
 });
 
 describe("calculateAppearDate", () => {
