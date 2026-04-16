@@ -1,11 +1,57 @@
 import type { TFunction } from "i18next";
 import type { RepeatRule } from "@/types/common";
 import { Temporal, type Clock, systemClock } from "@/lib/temporal";
+import {
+  MIN_ISO_WEEKDAY,
+  MAX_ISO_WEEKDAY,
+  MIN_DAY_OF_MONTH,
+  MAX_DAY_OF_MONTH,
+  MIN_MONTH,
+  MAX_MONTH,
+} from "@/constants";
+
+function isValidInteger(value: number): boolean {
+  return Number.isInteger(value);
+}
+
+function isInRange(value: number, min: number, max: number): boolean {
+  return value >= min && value <= max;
+}
+
+function validateRepeatRule(rule: RepeatRule): boolean {
+  if (rule.weekdays !== undefined) {
+    if (rule.weekdays.length === 0) return false;
+    for (const day of rule.weekdays) {
+      if (!isValidInteger(day) || !isInRange(day, MIN_ISO_WEEKDAY, MAX_ISO_WEEKDAY)) {
+        return false;
+      }
+    }
+  }
+
+  if (rule.day_of_month !== undefined) {
+    if (!isInRange(rule.day_of_month, MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH)) {
+      return false;
+    }
+  }
+
+  if (rule.month_and_day !== undefined) {
+    if (!isInRange(rule.month_and_day.month, MIN_MONTH, MAX_MONTH)) {
+      return false;
+    }
+    if (!isInRange(rule.month_and_day.day, MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH)) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 export function parseRepeatRule(json: string): RepeatRule | null {
   if (!json) return null;
   try {
-    return JSON.parse(json) as RepeatRule;
+    const rule = JSON.parse(json) as RepeatRule;
+    if (!validateRepeatRule(rule)) return null;
+    return rule;
   } catch {
     return null;
   }
@@ -56,7 +102,9 @@ function findNextWeekday(
     current = current.add({ days: 1 });
   }
 
-  return current.toString();
+  throw new Error(
+    `No matching weekday found in ${7 * interval} days for weekdays: [${weekdays}]`,
+  );
 }
 
 function calculateNextDateWeekly(

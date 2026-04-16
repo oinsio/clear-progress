@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { RepeatRule, Box } from "@/types/common";
 import { cn } from "@/shared/lib/cn";
 import { getDaysInMonth, getCurrentDateDefaults } from "@/utils/dateHelpers";
+import { MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH } from "@/constants";
 import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon } from "./BoxIcons";
 
 const TARGET_BOX_ICONS: Record<Box, React.FC<{ className?: string }>> = {
@@ -46,8 +47,6 @@ const MIN_DELAY_DAYS = 1;
 const MAX_DELAY_DAYS = 365;
 const MIN_ADVANCE_DAYS = 0;
 const MAX_ADVANCE_DAYS = 90;
-const MIN_DAY_OF_MONTH = 1;
-const MAX_DAY_OF_MONTH = 31;
 
 const ALL_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
