@@ -24,6 +24,7 @@ clasp deploy       # Create new GAS deployment
 
 - **Frontend**: React 18+ / TypeScript 5+ / Vite 5+ / Tailwind CSS 3.4+ / shadcn/ui / React Router 6+
 - **i18n**: i18next 23+ / react-i18next / i18next-browser-languagedetector; languages: `ru`, `en` (default)
+- **Date/Time**: Temporal API via `temporal-polyfill` (single import point: `src/lib/temporal.ts`)
 - **Offline DB**: Dexie.js 3+ (IndexedDB wrapper)
 - **PWA**: vite-plugin-pwa (Workbox)
 - **Backend**: Google Apps Script (TypeScript via clasp), deployed as Web App
@@ -144,7 +145,11 @@ v1.1 keys: `creation_fields`, `quick_property`, `menu_always_visible`, `menu_ite
 - **IDs**: UUID v4 generated client-side via `crypto.randomUUID()`
 - **Soft delete**: set `is_deleted = true`, never remove rows
 - **Versioning**: increment `version` field (+1) on every change — used for sync
-- **Dates**: ISO 8601 UTC strings (e.g., `"2025-01-15T10:30:00.000Z"`)
+- **Dates and timestamps**:
+  - **Timestamps** (created_at, updated_at, completed_at): ISO 8601 with Z suffix (e.g., `"2025-01-15T10:30:00.000Z"`) — use `Temporal.Now.instant().toString()`
+  - **Date-only** (next_date, appear_date): ISO 8601 date format (e.g., `"2025-01-15"`) — use `Temporal.PlainDate` and `.toString()`
+  - **NEVER use `new Date()`** for date/time operations — always use Temporal API via `@/lib/temporal`
+  - See `.claude/docs/temporal-guide.md` for detailed usage patterns
 - **Empty optional fields**: use `""` (empty string), never `null` or `undefined`
 - **sort_order**: integer, used for manual ordering within lists
 
@@ -418,6 +423,21 @@ it("should call setLanguage on click", () => {
 
 Use Pattern A for navigation/layout components where the translated text is what the user sees.
 Use Pattern B for logic-heavy components (settings, forms) where you're testing behavior.
+
+## Temporal API Usage
+
+All date and time operations in the frontend use Temporal API via `temporal-polyfill`. See `.claude/docs/temporal-guide.md` for:
+- Import patterns and Clock abstraction
+- Timestamp vs date-only types (branded types: `ISOTimestamp`, `ISODate`)
+- Common operations (current time, date arithmetic, formatting)
+- Testing with `fakeClock`
+- Serialization boundaries (Dexie, API, localStorage)
+
+**Critical rules:**
+- NEVER use `new Date()` in production code
+- NEVER use `Date.now()` except for token expiry checks in `ApiClient.ts` and `AuthProvider.tsx`
+- Always import `Temporal` from `@/lib/temporal`, never from `temporal-polyfill` directly
+- Backend (GAS) continues using `Date` — it doesn't support Temporal
 
 ## Post-Edit Workflow
 

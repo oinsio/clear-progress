@@ -137,7 +137,8 @@ clear-progress/
 │       ├── lib/
 │       │   ├── utils.ts                 # cn(), форматирование дат и т.д.
 │       │   ├── uuid.ts                  # обёртка crypto.randomUUID()
-│       │   └── date.ts                  # ISO helpers
+│       │   ├── temporal.ts              # Temporal API: единая точка импорта + Clock abstraction
+│       │   └── date.ts                  # ISO helpers (deprecated, мигрировать на temporal.ts)
 │       │
 │       ├── styles/
 │       │   ├── globals.css              # Tailwind directives + CSS variables (accent)
@@ -197,6 +198,13 @@ clear-progress/
 ### `BoxPage`
 
 Один компонент для today/week/later, параметризуется через React Router. Inbox отдельный, т.к. у него своя логика обработки.
+
+### `lib/temporal.ts`
+
+Единая точка импорта Temporal API и Clock abstraction для тестируемости. Все модули импортируют `Temporal` отсюда, а не из `temporal-polyfill` напрямую. Содержит:
+- Реэкспорт `Temporal` из `temporal-polyfill`
+- `Clock` interface и `systemClock` для production
+- `fakeClock` для тестов
 
 ### Backend `actions/`
 

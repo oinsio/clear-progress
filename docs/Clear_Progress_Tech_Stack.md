@@ -48,6 +48,7 @@
 | Tailwind CSS | 3.4+ | Утилитарный CSS-фреймворк |
 | shadcn/ui | latest | UI-компоненты (копируются в проект, полный контроль) |
 | React Router | 6+ | Маршрутизация SPA |
+| temporal-polyfill | latest | Temporal API для работы с датами и временем |
 | Dexie.js | 3+ | Обёртка над IndexedDB |
 | vite-plugin-pwa | latest | Service Worker, манифест, кэширование |
 | Vitest | 3+ | Unit-тестирование |
@@ -64,7 +65,30 @@
 
 Cloudflare Pages (основной вариант) или GitHub Pages (альтернатива). Оба бесплатны для статических сайтов, поддерживают HTTPS и кастомные домены. Cloudflare предпочтительнее за счёт встроенного CDN и автодеплоя из Git.
 
-### 3.4. Тестирование
+### 3.4. Работа с датами и временем
+
+Проект использует **Temporal API** через `temporal-polyfill` для всех операций с датами и временем во frontend.
+
+**Почему Temporal, а не Date:**
+- `Date` не различает момент времени (timestamp) и календарную дату
+- `Date` смешивает UTC и локальный часовой пояс, что приводит к багам
+- `Temporal.PlainDate` — тип «только дата» без часового пояса
+- `Temporal.Instant` — точный момент времени
+
+**Ключевые правила:**
+- Все импорты через `@/lib/temporal`, никогда напрямую из `temporal-polyfill`
+- Timestamps (`created_at`, `updated_at`) → `Temporal.Instant`
+- Date-only (`next_date`, `appear_date`) → `Temporal.PlainDate`
+- Branded types: `ISOTimestamp` и `ISODate` для различения на уровне типов
+- Clock abstraction для тестируемости (`systemClock` / `fakeClock`)
+
+**Исключения:**
+- `Date.now()` остаётся для проверки истечения токенов в `ApiClient.ts` и `AuthProvider.tsx`
+- Backend (GAS) продолжает использовать `Date` — не поддерживает Temporal
+
+Подробное руководство: `.claude/docs/temporal-guide.md`
+
+### 3.5. Тестирование
 
 Vitest — основной фреймворк для unit-тестирования. Нативно интегрируется с Vite и переиспользует конфигурацию проекта (`vite.config.ts`), что обеспечивает нулевую настройку для TypeScript, path aliases и других параметров сборки.
 
@@ -74,6 +98,7 @@ Vitest — основной фреймворк для unit-тестирован�
 - Data-driven тесты (`it.each`) для параметризованных сценариев
 - Watch-режим с горячей перезагрузкой при изменении кода
 - Покрытие кода через `@vitest/coverage-v8`
+- Мокирование времени через `fakeClock` (Temporal API)
 
 Область покрытия: бизнес-логика, утилиты, сервисы синхронизации, преобразования данных. Тестирование UI-компонентов (React Testing Library, jsdom) — при необходимости в будущем.
 
@@ -158,4 +183,4 @@ Google Sheets (аккаунт пользователя)
 
 ---
 
-*Документ создан: 4 марта 2026 | Обновлён: 5 марта 2026 | Clear Progress — Стек технологий v1.2*
+*Документ создан: 4 марта 2026 | Обновлён: 16 апреля 2026 | Clear Progress — Стек технологий v1.3*

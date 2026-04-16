@@ -56,6 +56,7 @@ When asked to set up or install something — just do it directly.
 - Always show test run output at each phase transition (red → green)
 - One assertion per test when possible
 - Mock external dependencies (Google API, IndexedDB/Dexie) with `vi.fn()`, `vi.spyOn()`, `vi.mock()`
+- Mock current time with `fakeClock` from `@/lib/temporal`, never use `vi.setSystemTime()` or `vi.useFakeTimers()`
 - Use `it.each` for parameterized / data-driven tests
 - When modifying existing code: verify a test exists first; if not, write a characterization test before changing anything
 - If asked to add a feature, start by listing behaviors and asking for confirmation
