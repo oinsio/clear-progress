@@ -1,6 +1,7 @@
 import type { Task } from "@/types/entities";
 import type { Box } from "@/types/common";
 import { db } from "../database";
+import { Temporal } from "@/lib/temporal";
 
 export class TaskRepository {
   async getAll(): Promise<Task[]> {
@@ -98,7 +99,12 @@ export class TaskRepository {
       .where("is_hidden")
       .equals(1)
       .filter(
-        (task) => task.appear_date !== "" && task.appear_date <= currentDate,
+        (task) =>
+          task.appear_date !== "" &&
+          Temporal.PlainDate.compare(
+            Temporal.PlainDate.from(task.appear_date),
+            Temporal.PlainDate.from(currentDate),
+          ) <= 0,
       )
       .toArray();
   }
