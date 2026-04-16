@@ -241,9 +241,15 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     const handleOffline = () => {
       setSyncStatus("offline");
     };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void sync();
+      }
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -251,6 +257,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       stopPingInterval();
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [accessToken, sync, performPing, stopPingInterval]);
 

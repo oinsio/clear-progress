@@ -1120,3 +1120,71 @@ describe("SyncProvider — AUTH_REQUIRED_EVENT", () => {
     window.removeEventListener(AUTH_REQUIRED_EVENT, handler);
   });
 });
+
+describe("SyncProvider — visibilitychange", () => {
+  it("should trigger sync when page becomes visible", async () => {
+    renderProvider();
+    await act(async () => {});
+
+    vi.clearAllMocks();
+    mockPush.mockResolvedValue(undefined);
+    mockPull.mockResolvedValue(undefined);
+    mockCoverSync.mockResolvedValue(undefined);
+
+    await act(async () => {
+      Object.defineProperty(document, "visibilityState", {
+        value: "visible",
+        writable: true,
+        configurable: true,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    expect(mockPull).toHaveBeenCalledTimes(1);
+  });
+
+  it("should NOT trigger sync when page becomes hidden", async () => {
+    renderProvider();
+    await act(async () => {});
+
+    vi.clearAllMocks();
+    mockPush.mockResolvedValue(undefined);
+    mockPull.mockResolvedValue(undefined);
+
+    await act(async () => {
+      Object.defineProperty(document, "visibilityState", {
+        value: "hidden",
+        writable: true,
+        configurable: true,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockPull).not.toHaveBeenCalled();
+  });
+
+  it("should remove visibilitychange listener on unmount", async () => {
+    const { unmount } = renderProvider();
+    await act(async () => {});
+
+    vi.clearAllMocks();
+    mockPush.mockResolvedValue(undefined);
+    mockPull.mockResolvedValue(undefined);
+
+    unmount();
+
+    await act(async () => {
+      Object.defineProperty(document, "visibilityState", {
+        value: "visible",
+        writable: true,
+        configurable: true,
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockPull).not.toHaveBeenCalled();
+  });
+});

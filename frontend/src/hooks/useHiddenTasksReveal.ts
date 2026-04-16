@@ -27,10 +27,19 @@ export function useHiddenTasksReveal() {
       void revealTasks();
     };
 
+    // Раскрыть при возврате из фона (visibilitychange)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void revealTasks();
+      }
+    };
+
     window.addEventListener("sync_complete", handleSyncComplete);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("sync_complete", handleSyncComplete);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 }
