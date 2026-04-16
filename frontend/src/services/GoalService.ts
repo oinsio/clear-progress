@@ -96,7 +96,7 @@ export class GoalService {
         return priorityA - priorityB;
       }
 
-      return goalB.updated_at.localeCompare(goalA.updated_at);
+      return goalB.updated_at > goalA.updated_at ? 1 : -1;
     });
   }
 

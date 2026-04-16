@@ -261,7 +261,7 @@ export class TaskService {
     const tasks = await this.taskRepository.getCompleted();
     return tasks.sort((taskA, taskB) => {
       if (taskA.completed_at && taskB.completed_at) {
-        return taskB.completed_at.localeCompare(taskA.completed_at);
+        return taskB.completed_at > taskA.completed_at ? 1 : -1;
       }
       return taskB.sort_order - taskA.sort_order;
     });
@@ -348,7 +348,7 @@ export class TaskService {
       if (taskA.is_completed !== taskB.is_completed) {
         return taskA.is_completed ? 1 : -1;
       }
-      return taskB.updated_at.localeCompare(taskA.updated_at);
+      return taskB.updated_at > taskA.updated_at ? 1 : -1;
     });
   }
 

@@ -81,7 +81,7 @@ export class IdeaService {
           idea.name.toLowerCase().includes(lowerQuery) ||
           idea.description.toLowerCase().includes(lowerQuery),
       )
-      .sort((ideaA, ideaB) => ideaB.updated_at.localeCompare(ideaA.updated_at));
+      .sort((ideaA, ideaB) => ideaB.updated_at > ideaA.updated_at ? 1 : -1);
   }
 
   async reorderIdeas(orderedIdeas: Idea[]): Promise<void> {

@@ -50,7 +50,7 @@ export function useGoalTasks(
             .filter((task) => task.is_completed)
             .sort((taskA, taskB) => {
               if (taskA.completed_at && taskB.completed_at) {
-                return taskB.completed_at.localeCompare(taskA.completed_at);
+                return taskB.completed_at > taskA.completed_at ? 1 : -1;
               }
               return taskB.sort_order - taskA.sort_order;
             }),
