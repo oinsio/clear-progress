@@ -2,15 +2,22 @@ import { Temporal, type Clock, systemClock } from "@/lib/temporal";
 import type { ISOTimestamp, ISODate } from "@/types/entities";
 
 /**
- * Преобразует Temporal.Instant в ISOTimestamp (branded type).
- * Если instant не передан, используется текущее время.
+ * Преобразует Clock или Temporal.Instant в ISOTimestamp (branded type).
+ * Без аргументов возвращает текущее время через systemClock.
  *
- * @param instant - Temporal.Instant для преобразования
+ * @param clockOrInstant - Clock для получения текущего времени, или Temporal.Instant для обёртки
  * @returns ISO 8601 timestamp string с branded type
  */
-export function toISOTimestamp(instant?: Temporal.Instant): ISOTimestamp {
-  const value = instant ?? Temporal.Now.instant();
-  return value.toString() as ISOTimestamp;
+export function toISOTimestamp(
+  clockOrInstant?: Clock | Temporal.Instant,
+): ISOTimestamp {
+  if (!clockOrInstant) {
+    return systemClock.instant().toString() as ISOTimestamp;
+  }
+  if (clockOrInstant instanceof Temporal.Instant) {
+    return clockOrInstant.toString() as ISOTimestamp;
+  }
+  return clockOrInstant.instant().toString() as ISOTimestamp;
 }
 
 /**

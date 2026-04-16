@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { getDaysInMonth, getCurrentDateDefaults } from "./dateHelpers";
-import { fakeClock } from "@/lib/temporal";
+import {
+  getDaysInMonth,
+  getCurrentDateDefaults,
+  toISOTimestamp,
+} from "./dateHelpers";
+import { Temporal, fakeClock } from "@/lib/temporal";
 
 describe("getDaysInMonth", () => {
   it("should return 31 for January", () => {
@@ -61,6 +65,29 @@ describe("getDaysInMonth", () => {
 
   it("should return 31 for invalid month number (-1)", () => {
     expect(getDaysInMonth(-1)).toBe(31);
+  });
+});
+
+describe("toISOTimestamp", () => {
+  it("should return timestamp from clock when clock is provided", () => {
+    const clock = fakeClock("2026-04-16T10:30:00Z");
+    const result = toISOTimestamp(clock);
+
+    expect(result).toBe("2026-04-16T10:30:00Z");
+  });
+
+  it("should return timestamp from Temporal.Instant when instant is provided", () => {
+    const instant = Temporal.Instant.from("2025-01-01T00:00:00Z");
+    const result = toISOTimestamp(instant);
+
+    expect(result).toBe("2025-01-01T00:00:00Z");
+  });
+
+  it("should return current timestamp when called without arguments", () => {
+    const result = toISOTimestamp();
+
+    expect(typeof result).toBe("string");
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
 });
 
