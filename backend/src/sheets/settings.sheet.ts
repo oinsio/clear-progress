@@ -27,8 +27,14 @@ export function getAllSettings(): Setting[] {
 }
 
 export function getSettingsChangedSince(since: string): Setting[] {
+  // Пустая строка — вернуть все settings (обратная совместимость)
+  if (!since) return getAllSettings();
+  // Используем числовое сравнение через Date.getTime() вместо строкового,
+  // т.к. Temporal.Instant.toString() и Date.toISOString() могут давать
+  // разное количество десятичных знаков (0 vs 3), что ломает лексикографическое сравнение.
+  const sinceMs = new Date(since).getTime();
   return getAllSettings().filter(
-    (setting) => setting.updated_at > since
+    (setting) => new Date(setting.updated_at).getTime() > sinceMs
   );
 }
 

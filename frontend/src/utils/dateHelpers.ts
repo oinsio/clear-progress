@@ -11,13 +11,19 @@ import type { ISOTimestamp, ISODate } from "@/types/entities";
 export function toISOTimestamp(
   clockOrInstant?: Clock | Temporal.Instant,
 ): ISOTimestamp {
+  let instant: Temporal.Instant;
   if (!clockOrInstant) {
-    return systemClock.instant().toString() as ISOTimestamp;
+    instant = systemClock.instant();
+  } else if (clockOrInstant instanceof Temporal.Instant) {
+    instant = clockOrInstant;
+  } else {
+    instant = clockOrInstant.instant();
   }
-  if (clockOrInstant instanceof Temporal.Instant) {
-    return clockOrInstant.toString() as ISOTimestamp;
-  }
-  return clockOrInstant.instant().toString() as ISOTimestamp;
+  // Нормализация: всегда 3 десятичных знака для безопасного строкового сравнения
+  // Temporal.Instant.toString() может опустить дробную часть на границе секунды
+  // (например "2026-04-16T10:30:00Z"), что ломает лексикографическое сравнение
+  // с Date.toISOString() (всегда "2026-04-16T10:30:00.000Z").
+  return instant.toString({ fractionalSecondDigits: 3 }) as ISOTimestamp;
 }
 
 /**

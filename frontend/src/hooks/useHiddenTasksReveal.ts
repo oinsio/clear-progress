@@ -52,9 +52,15 @@ export function useHiddenTasksReveal() {
     };
 
     // Раскрыть при возврате из фона (visibilitychange)
+    // и перепланировать midnight timer с актуальным часовым поясом
+    // (пользователь мог сменить TZ во время не активности)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         void revealTasks();
+        if (midnightTimeoutRef.current) {
+          clearTimeout(midnightTimeoutRef.current);
+        }
+        midnightTimeoutRef.current = scheduleNextDayReveal();
       }
     };
 

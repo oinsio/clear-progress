@@ -74,14 +74,14 @@ describe("toISOTimestamp", () => {
     const clock = fakeClock("2026-04-16T10:30:00Z");
     const result = toISOTimestamp(clock);
 
-    expect(result).toBe("2026-04-16T10:30:00Z");
+    expect(result).toBe("2026-04-16T10:30:00.000Z");
   });
 
   it("should return timestamp from Temporal.Instant when instant is provided", () => {
     const instant = Temporal.Instant.from("2025-01-01T00:00:00Z");
     const result = toISOTimestamp(instant);
 
-    expect(result).toBe("2025-01-01T00:00:00Z");
+    expect(result).toBe("2025-01-01T00:00:00.000Z");
   });
 
   it("should return current timestamp when called without arguments", () => {

@@ -590,8 +590,8 @@ describe("calculateNextDate skip logic", () => {
       clock,
     );
 
-    // Должен вернуть ближайший будущий понедельник с учётом interval=2
-    expect(nextDate).toBe("2026-05-11"); // следующий понедельник
+    // Skip logic: tomorrow=2026-05-11 (пн), interval=2 → skip 7 days → 2026-05-18 (пн)
+    expect(nextDate).toBe("2026-05-18");
   });
 
   it("should skip past dates for monthly recurrence when user was inactive", () => {

@@ -90,9 +90,10 @@ function findNextWeekday(
 ): string {
   // weekdays: 1=Пн, 2=Вт, ..., 7=Вс (ISO 8601)
   const sortedWeekdays = [...weekdays].sort((a, b) => a - b);
-  let current = startDate;
+  // Пропустить (interval - 1) полных недель перед началом поиска
+  let current = startDate.add({ days: 7 * (interval - 1) });
 
-  for (let i = 0; i < 7 * interval; i++) {
+  for (let i = 0; i < 7; i++) {
     const isoDay = current.dayOfWeek; // 1=Mon ... 7=Sun
 
     if (sortedWeekdays.includes(isoDay)) {
@@ -103,7 +104,7 @@ function findNextWeekday(
   }
 
   throw new Error(
-    `No matching weekday found in ${7 * interval} days for weekdays: [${weekdays}]`,
+    `No matching weekday found in 7 days for weekdays: [${weekdays}]`,
   );
 }
 

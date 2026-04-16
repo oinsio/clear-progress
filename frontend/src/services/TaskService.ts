@@ -350,7 +350,10 @@ export class TaskService {
       if (taskA.is_completed !== taskB.is_completed) {
         return taskA.is_completed ? 1 : -1;
       }
-      return taskB.updated_at > taskA.updated_at ? 1 : -1;
+      return Temporal.Instant.compare(
+        Temporal.Instant.from(taskB.updated_at),
+        Temporal.Instant.from(taskA.updated_at),
+      );
     });
   }
 

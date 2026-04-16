@@ -139,7 +139,7 @@ export function push(changes: {
       const settingsToUpsert: typeof changes.settings = [];
       results.settings = changes.settings.map(clientSetting => {
         const serverSetting = serverByKey.get(clientSetting.key);
-        const isClientNewer = !serverSetting || clientSetting.updated_at >= serverSetting.updated_at;
+        const isClientNewer = !serverSetting || new Date(clientSetting.updated_at).getTime() >= new Date(serverSetting.updated_at).getTime();
         if (isClientNewer) {
           settingsToUpsert.push(clientSetting);
           return { id: clientSetting.key, status: PUSH_STATUSES.ACCEPTED };

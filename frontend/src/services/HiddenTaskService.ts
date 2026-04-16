@@ -18,7 +18,7 @@ export class HiddenTaskService {
       return [];
     }
 
-    const now = toISOTimestamp();
+    const now = toISOTimestamp(this.clock);
     const revealedTasks: Task[] = [];
 
     for (const task of tasksToReveal) {

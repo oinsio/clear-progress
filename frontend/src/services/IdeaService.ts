@@ -2,6 +2,7 @@ import type { Idea } from "@/types/entities";
 import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { hasEntityChanged } from "@/utils/deepEqual";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { Temporal } from "@/lib/temporal";
 
 export class IdeaService {
   constructor(private readonly ideaRepository: IdeaRepository) {}
@@ -81,7 +82,12 @@ export class IdeaService {
           idea.name.toLowerCase().includes(lowerQuery) ||
           idea.description.toLowerCase().includes(lowerQuery),
       )
-      .sort((ideaA, ideaB) => ideaB.updated_at > ideaA.updated_at ? 1 : -1);
+      .sort((ideaA, ideaB) =>
+        Temporal.Instant.compare(
+          Temporal.Instant.from(ideaB.updated_at),
+          Temporal.Instant.from(ideaA.updated_at),
+        ),
+      );
   }
 
   async reorderIdeas(orderedIdeas: Idea[]): Promise<void> {
