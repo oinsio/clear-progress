@@ -9,6 +9,7 @@ import {
   calculateAppearDate,
 } from "@/utils/repeatRule";
 import { toISOTimestamp, toISODate } from "@/utils/dateHelpers";
+import { Temporal } from "@/lib/temporal";
 
 export class TaskService {
   constructor(
@@ -79,9 +80,7 @@ export class TaskService {
     // Применяем метаданные только если есть изменения
     const updatedTask: Task = {
       ...candidateTask,
-      updated_at: hasChanged
-        ? toISOTimestamp()
-        : existingTask.updated_at,
+      updated_at: hasChanged ? toISOTimestamp() : existingTask.updated_at,
       version: hasChanged ? existingTask.version + 1 : existingTask.version,
       needsSync: hasChanged,
     };
@@ -261,7 +260,10 @@ export class TaskService {
     const tasks = await this.taskRepository.getCompleted();
     return tasks.sort((taskA, taskB) => {
       if (taskA.completed_at && taskB.completed_at) {
-        return taskB.completed_at > taskA.completed_at ? 1 : -1;
+        return Temporal.Instant.compare(
+          Temporal.Instant.from(taskB.completed_at),
+          Temporal.Instant.from(taskA.completed_at),
+        );
       }
       return taskB.sort_order - taskA.sort_order;
     });
