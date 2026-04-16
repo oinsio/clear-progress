@@ -156,6 +156,9 @@ export function push(changes: {
     return jsonOk({
       ...(hasAcceptedOrCreated ? { revision: pushRevision } : {}),
       results,
+      // Backend uses Date because GAS doesn't support Temporal API.
+      // This is safe: new Date().toISOString() returns valid ISO 8601 with Z suffix.
+      // Server time is controlled by Google infrastructure (reliable).
       server_time: new Date().toISOString(),
     });
   } catch (e) {

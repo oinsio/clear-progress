@@ -19,6 +19,7 @@ import {
   TOKEN_EXPIRY_BUFFER_S,
   API_AUTH_ERROR_NAME,
 } from "@/constants";
+import { Temporal } from "@/lib/temporal";
 
 // Module-level shared state — all ApiClient instances use the same token
 let sharedAccessToken: string | null = null;
@@ -31,7 +32,7 @@ const _storedExpiresAt = localStorage.getItem(
 );
 if (_storedToken && _storedExpiresAt) {
   const expiresAt = Number(_storedExpiresAt);
-  if (Date.now() < expiresAt) {
+  if (Temporal.Now.instant().epochMilliseconds < expiresAt) {
     sharedAccessToken = _storedToken;
     sharedTokenExpiresAt = expiresAt;
   } else {
@@ -44,7 +45,7 @@ export function setAccessToken(token: string | null, expiresIn?: number): void {
   sharedAccessToken = token;
   sharedTokenExpiresAt =
     token && expiresIn !== undefined
-      ? Date.now() + (expiresIn - TOKEN_EXPIRY_BUFFER_S) * 1000
+      ? Temporal.Now.instant().epochMilliseconds + (expiresIn - TOKEN_EXPIRY_BUFFER_S) * 1000
       : null;
 
   if (token && sharedTokenExpiresAt !== null) {
@@ -72,7 +73,7 @@ export class ApiClient {
   }
 
   private async request<TResponse>(body: object): Promise<TResponse> {
-    if (sharedTokenExpiresAt !== null && Date.now() > sharedTokenExpiresAt) {
+    if (sharedTokenExpiresAt !== null && Temporal.Now.instant().epochMilliseconds > sharedTokenExpiresAt) {
       throw new ApiAuthError();
     }
 

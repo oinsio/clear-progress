@@ -31,6 +31,9 @@ export function pull({ since_revision, settings_updated_at }: {
         : getAllSettings(),
       current_revision: currentRevision,
       purge_revision: purgeRevision,
+      // Backend uses Date because GAS doesn't support Temporal API.
+      // This is safe: new Date().toISOString() returns valid ISO 8601 with Z suffix.
+      // Server time is controlled by Google infrastructure (reliable).
       server_time: new Date().toISOString(),
     });
   } catch (e) {

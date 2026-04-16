@@ -4,6 +4,9 @@ import type { Setting } from '../types';
 
 const SET_COLS = colMap(SHEET_NAMES.SETTINGS);
 
+// Backend uses Date because GAS doesn't support Temporal API.
+// This is safe: new Date().toISOString() returns valid ISO 8601 with Z suffix.
+// Server time is controlled by Google infrastructure (reliable).
 const DEFAULTS: Setting[] = [
   { ...DEFAULT_SETTINGS.DEFAULT_BOX, updated_at: new Date().toISOString() },
   { ...DEFAULT_SETTINGS.ACCENT_COLOR, updated_at: new Date().toISOString() },

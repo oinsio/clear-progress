@@ -8,7 +8,16 @@ export function resolveConflict(
   clientUpdatedAt: string,
   serverUpdatedAt: string
 ): ConflictResult {
-  return new Date(clientUpdatedAt).getTime() >= new Date(serverUpdatedAt).getTime()
+  const clientTime = new Date(clientUpdatedAt).getTime();
+  const serverTime = new Date(serverUpdatedAt).getTime();
+
+  if (isNaN(clientTime) || isNaN(serverTime)) {
+    throw new Error(
+      `Invalid timestamp format: client=${clientUpdatedAt}, server=${serverUpdatedAt}`
+    );
+  }
+
+  return clientTime >= serverTime
     ? CONFLICT_RESOLUTION.ACCEPT
     : CONFLICT_RESOLUTION.CONFLICT;
 }

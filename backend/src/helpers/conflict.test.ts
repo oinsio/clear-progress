@@ -32,4 +32,34 @@ describe('resolveConflict', () => {
     expect(resolveConflict('2025-01-01T06:00:00Z', '2025-01-01T10:00:00+05:00')).toBe(CONFLICT_RESOLUTION.ACCEPT);
     expect(resolveConflict('2025-01-01T10:00:00+05:00', '2025-01-01T06:00:00Z')).toBe(CONFLICT_RESOLUTION.CONFLICT);
   });
+
+  it('should throw error when client timestamp is invalid', () => {
+    expect(() => resolveConflict('invalid-date', '2025-01-01T00:00:00.000Z')).toThrow(
+      'Invalid timestamp format: client=invalid-date, server=2025-01-01T00:00:00.000Z'
+    );
+  });
+
+  it('should throw error when server timestamp is invalid', () => {
+    expect(() => resolveConflict('2025-01-01T00:00:00.000Z', 'not-a-date')).toThrow(
+      'Invalid timestamp format: client=2025-01-01T00:00:00.000Z, server=not-a-date'
+    );
+  });
+
+  it('should throw error when both timestamps are invalid', () => {
+    expect(() => resolveConflict('bad-client', 'bad-server')).toThrow(
+      'Invalid timestamp format: client=bad-client, server=bad-server'
+    );
+  });
+
+  it('should throw error when client timestamp is empty string', () => {
+    expect(() => resolveConflict('', '2025-01-01T00:00:00.000Z')).toThrow(
+      'Invalid timestamp format'
+    );
+  });
+
+  it('should throw error when server timestamp is empty string', () => {
+    expect(() => resolveConflict('2025-01-01T00:00:00.000Z', '')).toThrow(
+      'Invalid timestamp format'
+    );
+  });
 });

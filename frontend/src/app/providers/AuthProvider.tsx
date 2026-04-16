@@ -12,6 +12,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { setAccessToken } from "@/services/ApiClient";
 import { GOOGLE_CLIENT_ID_CHANGED_EVENT, STORAGE_KEYS } from "@/constants";
 import { GoogleAuthSync } from "./GoogleAuthSync";
+import { Temporal } from "@/lib/temporal";
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (
       storedToken &&
       storedExpiresAt &&
-      Date.now() < Number(storedExpiresAt)
+      Temporal.Now.instant().epochMilliseconds < Number(storedExpiresAt)
     ) {
       return storedToken;
     }
