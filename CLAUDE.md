@@ -150,6 +150,8 @@ v1.1 keys: `creation_fields`, `quick_property`, `menu_always_visible`, `menu_ite
   - **Date-only** (next_date, appear_date): ISO 8601 date format (e.g., `"2025-01-15"`) — use `Temporal.PlainDate` and `.toString()`
   - **NEVER use `new Date()`** for date/time operations — always use Temporal API via `@/lib/temporal`
   - See `.claude/docs/temporal-guide.md` for detailed usage patterns
+- **Recurring tasks skip logic**: при длительной неактивности пользователя не создаются пропущенные копии повторяющихся задач — вычисляется только ближайшая будущая дата. См. `.claude/docs/architecture/recurring-tasks-skip-logic.md`
+- **Часовые пояса для повторяющихся задач**: используется текущий системный часовой пояс (`Temporal.Now.timeZoneId()`), а не часовой пояс создания задачи. Это осознанное архитектурное решение для GTD-приложения. См. `.claude/docs/architecture/recurring-tasks-timezone-policy.md`
 - **Empty optional fields**: use `""` (empty string), never `null` or `undefined`
 - **sort_order**: integer, used for manual ordering within lists
 
