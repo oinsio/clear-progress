@@ -147,10 +147,24 @@ describe("toISODate", () => {
   });
 
   it("should return current date when called without arguments", () => {
-    const result = toISODate();
+    const clock = fakeClock("2026-04-16T10:30:00Z");
+    const result = toISODate(undefined, clock);
 
-    expect(typeof result).toBe("string");
-    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(result).toBe("2026-04-16");
+  });
+
+  it("should use provided clock when dateString is not provided", () => {
+    const clock = fakeClock("2026-04-16T10:30:00Z");
+    const result = toISODate(undefined, clock);
+
+    expect(result).toBe("2026-04-16");
+  });
+
+  it("should ignore clock when dateString is provided", () => {
+    const clock = fakeClock("2026-04-16T10:30:00Z");
+    const result = toISODate("2025-01-01", clock);
+
+    expect(result).toBe("2025-01-01");
   });
 
   it("should throw error when timestamp is passed instead of date", () => {

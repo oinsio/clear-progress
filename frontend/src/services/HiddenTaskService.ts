@@ -1,13 +1,16 @@
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import type { Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import { Temporal } from "@/lib/temporal";
+import { type Clock, systemClock } from "@/lib/temporal";
 
 export class HiddenTaskService {
-  constructor(private readonly taskRepository: TaskRepository) {}
+  constructor(
+    private readonly taskRepository: TaskRepository,
+    private readonly clock: Clock = systemClock,
+  ) {}
 
   async revealHiddenTasks(): Promise<Task[]> {
-    const currentDate = Temporal.Now.plainDateISO().toString();
+    const currentDate = this.clock.plainDateISO().toString();
     const tasksToReveal =
       await this.taskRepository.getTasksToReveal(currentDate);
 
