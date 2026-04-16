@@ -122,15 +122,31 @@ function calculateNextDateWeekly(
     return findNextWeekday(tomorrow, weekdays, interval);
   }
 
-  const nextDay = Temporal.PlainDate.from(previousNextDate).add({ days: 1 });
+  const prev = Temporal.PlainDate.from(previousNextDate);
+  const nextDay = prev.add({ days: 1 });
   const candidate = findNextWeekday(nextDay, weekdays, interval);
   const candidateDate = Temporal.PlainDate.from(candidate);
 
-  // Skip logic: если дата в прошлом, ищем от завтра
-  // Это предотвращает создание множества пропущенных копий при длительной не активности
+  // Skip logic: если дата в прошлом, перепрыгнуть к ближайшему
+  // периоду, выровненному по интервалу (аналогично daily/monthly/yearly skip logic).
+  // Это предотвращает создание множества пропущенных копий при длительной не активности.
   if (Temporal.PlainDate.compare(candidateDate, today) < 0) {
-    const tomorrow = today.add({ days: 1 });
-    return findNextWeekday(tomorrow, weekdays, interval);
+    const periodDays = 7 * interval;
+    const daysElapsed = nextDay.until(today, { largestUnit: "days" }).days;
+    const periodsToSkip = Math.floor(daysElapsed / periodDays);
+    const alignedStart = nextDay.add({ days: periodsToSkip * periodDays });
+    const alignedCandidate = findNextWeekday(alignedStart, weekdays, interval);
+    const alignedCandidateDate = Temporal.PlainDate.from(alignedCandidate);
+
+    // Если выровненный кандидат тоже в прошлом, перейти к следующему периоду
+    if (Temporal.PlainDate.compare(alignedCandidateDate, today) <= 0) {
+      return findNextWeekday(
+        alignedStart.add({ days: periodDays }),
+        weekdays,
+        interval,
+      );
+    }
+    return alignedCandidate;
   }
 
   return candidate;

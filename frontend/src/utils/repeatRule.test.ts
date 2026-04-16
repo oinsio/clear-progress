@@ -1044,6 +1044,36 @@ describe("calculateNextDate with timezone changes", () => {
     expect(nextDate).toBe("2026-05-04");
   });
 
+  it("should preserve weekly interval alignment with interval=3 (non-divisible gap)", () => {
+    // Каждые 3 недели в понедельник
+    // previousNextDate = Пн 6 апреля
+    // Каденция: findNextWeekday(Apr7, [1], 3) = Apr 27
+    //           findNextWeekday(Apr28, [1], 3) = May 18
+    //           findNextWeekday(May19, [1], 3) = Jun 8
+    // Сегодня четверг 7 мая → Apr 27 прошёл → следующая каденция May 18
+    const clock = fakeClock("2026-05-07T10:00:00Z"); // четверг
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 3,
+      weekdays: [1], // понедельник
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-04-06"; // понедельник
+    const completedAt = "2026-05-07T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Каденция: Apr 27 → May 18 → Jun 8. Apr 27 прошёл, May 18 впереди → May 18
+    expect(nextDate).toBe("2026-05-18");
+  });
+
   it("should handle timezone change across midnight boundary", () => {
     // Завершили задачу в 23:50 по Токио (UTC+9)
     const completedAt = "2026-04-10T14:50:00.000Z"; // 23:50 по Токио = 2026-04-10

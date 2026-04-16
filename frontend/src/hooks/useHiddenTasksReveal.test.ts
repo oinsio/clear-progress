@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { Temporal } from "@/lib/temporal";
+import { Temporal, type Clock } from "@/lib/temporal";
 
 const { mockRevealHiddenTasks } = vi.hoisted(() => ({
   mockRevealHiddenTasks: vi.fn(),
@@ -34,13 +34,20 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function mockTemporalNow(instant: Temporal.Instant, timeZone: string) {
-  const instantSpy = vi.spyOn(Temporal.Now, "instant").mockReturnValue(instant);
-  const plainDateSpy = vi.spyOn(Temporal.Now, "plainDateISO").mockReturnValue(
-    instant.toZonedDateTimeISO(timeZone).toPlainDate(),
-  );
-  const timeZoneSpy = vi.spyOn(Temporal.Now, "timeZoneId").mockReturnValue(timeZone);
-  return { instantSpy, plainDateSpy, timeZoneSpy };
+function createMutableClock(
+  isoTimestamp: string,
+  timeZone: string,
+): Clock & { setInstant(iso: string): void } {
+  let instant = Temporal.Instant.from(isoTimestamp);
+  return {
+    instant: () => instant,
+    plainDateISO: () =>
+      instant.toZonedDateTimeISO(timeZone).toPlainDate(),
+    timeZoneId: () => timeZone,
+    setInstant(iso: string) {
+      instant = Temporal.Instant.from(iso);
+    },
+  };
 }
 
 describe("useHiddenTasksReveal", () => {
@@ -122,12 +129,9 @@ describe("useHiddenTasksReveal", () => {
 
   it("should schedule midnight reveal on mount", async () => {
     vi.useFakeTimers();
-    const now = Temporal.Instant.from("2026-04-16T22:00:00Z");
-    const timeZone = "UTC";
+    const clock = createMutableClock("2026-04-16T22:00:00Z", "UTC");
 
-    mockTemporalNow(now, timeZone);
-
-    renderHook(() => useHiddenTasksReveal());
+    renderHook(() => useHiddenTasksReveal(clock));
     await act(async () => {});
 
     // Очистить вызов при монтировании
@@ -146,12 +150,9 @@ describe("useHiddenTasksReveal", () => {
 
   it("should reschedule midnight reveal after first trigger", async () => {
     vi.useFakeTimers();
-    const now = Temporal.Instant.from("2026-04-16T23:00:00Z");
-    const timeZone = "UTC";
+    const clock = createMutableClock("2026-04-16T23:00:00Z", "UTC");
 
-    const { instantSpy, plainDateSpy } = mockTemporalNow(now, timeZone);
-
-    renderHook(() => useHiddenTasksReveal());
+    renderHook(() => useHiddenTasksReveal(clock));
     await act(async () => {});
 
     mockRevealHiddenTasks.mockClear();
@@ -163,12 +164,8 @@ describe("useHiddenTasksReveal", () => {
 
     expect(mockRevealHiddenTasks).toHaveBeenCalledTimes(1);
 
-    // Обновить mocks для следующего дня
-    const nextDay = Temporal.Instant.from("2026-04-17T00:00:01Z");
-    instantSpy.mockReturnValue(nextDay);
-    plainDateSpy.mockReturnValue(
-      nextDay.toZonedDateTimeISO(timeZone).toPlainDate(),
-    );
+    // Обновить clock для следующего дня
+    clock.setInstant("2026-04-17T00:00:01Z");
 
     mockRevealHiddenTasks.mockClear();
 
@@ -184,12 +181,9 @@ describe("useHiddenTasksReveal", () => {
 
   it("should clear midnight timeout on unmount", async () => {
     vi.useFakeTimers();
-    const now = Temporal.Instant.from("2026-04-16T23:00:00Z");
-    const timeZone = "UTC";
+    const clock = createMutableClock("2026-04-16T23:00:00Z", "UTC");
 
-    mockTemporalNow(now, timeZone);
-
-    const { unmount } = renderHook(() => useHiddenTasksReveal());
+    const { unmount } = renderHook(() => useHiddenTasksReveal(clock));
     await act(async () => {});
 
     mockRevealHiddenTasks.mockClear();
@@ -210,12 +204,9 @@ describe("useHiddenTasksReveal", () => {
   it("should handle timezone correctly when scheduling midnight", async () => {
     vi.useFakeTimers();
     // 2026-04-16 20:00 UTC = 2026-04-16 23:00 Europe/Moscow (UTC+3)
-    const now = Temporal.Instant.from("2026-04-16T20:00:00Z");
-    const timeZone = "Europe/Moscow";
+    const clock = createMutableClock("2026-04-16T20:00:00Z", "Europe/Moscow");
 
-    mockTemporalNow(now, timeZone);
-
-    renderHook(() => useHiddenTasksReveal());
+    renderHook(() => useHiddenTasksReveal(clock));
     await act(async () => {});
 
     mockRevealHiddenTasks.mockClear();
@@ -228,5 +219,14 @@ describe("useHiddenTasksReveal", () => {
     expect(mockRevealHiddenTasks).toHaveBeenCalledTimes(1);
 
     vi.useRealTimers();
+  });
+
+  it("should pass clock to HiddenTaskService", async () => {
+    const clock = createMutableClock("2026-04-16T10:00:00Z", "Asia/Tokyo");
+
+    renderHook(() => useHiddenTasksReveal(clock));
+    await act(async () => {});
+
+    expect(HiddenTaskService).toHaveBeenCalledWith(expect.anything(), clock);
   });
 });

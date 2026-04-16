@@ -1,15 +1,17 @@
 import { useEffect, useRef } from "react";
 import { HiddenTaskService } from "@/services/HiddenTaskService";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { Temporal } from "@/lib/temporal";
+import { type Clock, systemClock } from "@/lib/temporal";
+
+const MIDNIGHT_BUFFER_MS = 1000;
 
 const taskRepository = new TaskRepository();
 
-export function useHiddenTasksReveal() {
+export function useHiddenTasksReveal(clock: Clock = systemClock) {
   const midnightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const hiddenTaskService = new HiddenTaskService(taskRepository);
+    const hiddenTaskService = new HiddenTaskService(taskRepository, clock);
 
     const revealTasks = async () => {
       try {
@@ -23,9 +25,9 @@ export function useHiddenTasksReveal() {
     };
 
     const scheduleNextDayReveal = (): ReturnType<typeof setTimeout> => {
-      const now = Temporal.Now.instant();
-      const timeZone = Temporal.Now.timeZoneId();
-      const tomorrow = Temporal.Now.plainDateISO().add({ days: 1 });
+      const now = clock.instant();
+      const timeZone = clock.timeZoneId();
+      const tomorrow = clock.plainDateISO().add({ days: 1 });
       const midnight = tomorrow
         .toZonedDateTime({ timeZone, plainTime: "00:00" })
         .toInstant();
@@ -37,7 +39,7 @@ export function useHiddenTasksReveal() {
         void revealTasks();
         // Перепланировать на следующую полночь
         midnightTimeoutRef.current = scheduleNextDayReveal();
-      }, msUntilMidnight + 1000); // +1 секунда буфера
+      }, msUntilMidnight + MIDNIGHT_BUFFER_MS);
     };
 
     // Раскрыть при монтировании
@@ -74,5 +76,5 @@ export function useHiddenTasksReveal() {
         clearTimeout(midnightTimeoutRef.current);
       }
     };
-  }, []);
+  }, [clock]);
 }

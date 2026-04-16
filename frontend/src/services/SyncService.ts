@@ -24,6 +24,7 @@ import {
   STORAGE_KEYS,
 } from "@/constants";
 import { db } from "@/db/database";
+import { Temporal } from "@/lib/temporal";
 
 export class SyncService {
   private syncMutex: Promise<void> = Promise.resolve();
@@ -105,10 +106,20 @@ export class SyncService {
     ]);
 
     // Обновить settings_updated_at
+    // Используем числовое сравнение через Temporal.Instant.compare вместо
+    // лексикографического, т.к. ISO 8601 строки могут иметь разное количество
+    // десятичных знаков (0 vs 3), что ломает строковое сравнение.
     if (pullResponse.settings.length > 0) {
       const maxUpdatedAt = pullResponse.settings.reduce(
-        (max, setting) =>
-          setting.updated_at > max ? setting.updated_at : max,
+        (max, setting) => {
+          if (!max) return setting.updated_at;
+          return Temporal.Instant.compare(
+            Temporal.Instant.from(setting.updated_at),
+            Temporal.Instant.from(max),
+          ) > 0
+            ? setting.updated_at
+            : max;
+        },
         settingsUpdatedAt ?? "",
       );
       localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
