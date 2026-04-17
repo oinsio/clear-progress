@@ -206,40 +206,42 @@ export function TaskItem({
         >
           {/* Main task row */}
           <div className="flex items-center gap-3 px-4 py-3">
-            <button
-              type="button"
-              aria-label={
-                task.is_completed ? t("task.noncomplete") : t("task.complete")
-              }
-              onClick={handleCompleteClick}
-              className={cn(
-                "w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors self-start mt-0.5",
-                "flex items-center justify-center",
-                task.is_completed || isCompleting
-                  ? "bg-accent/20 border-accent"
-                  : "border-gray-300 hover:border-accent",
-              )}
-            >
-              {(task.is_completed || isCompleting) && (
-                <svg
-                  width="10"
-                  height="8"
-                  viewBox="0 0 10 8"
-                  fill="none"
-                  className="text-accent"
-                >
-                  <path
-                    d="M1 4L3.5 6.5L9 1"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="animate-draw-check"
-                    style={{ strokeDasharray: 20 }}
-                  />
-                </svg>
-              )}
-            </button>
+            {isDesktop && (
+              <button
+                type="button"
+                aria-label={
+                  task.is_completed ? t("task.noncomplete") : t("task.complete")
+                }
+                onClick={handleCompleteClick}
+                className={cn(
+                  "w-5 h-5 rounded-full border-2 flex-shrink-0 transition-colors self-start mt-0.5",
+                  "flex items-center justify-center",
+                  task.is_completed || isCompleting
+                    ? "bg-accent/20 border-accent"
+                    : "border-gray-300 hover:border-accent",
+                )}
+              >
+                {(task.is_completed || isCompleting) && (
+                  <svg
+                    width="10"
+                    height="8"
+                    viewBox="0 0 10 8"
+                    fill="none"
+                    className="text-accent"
+                  >
+                    <path
+                      d="M1 4L3.5 6.5L9 1"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="animate-draw-check"
+                      style={{ strokeDasharray: 20 }}
+                    />
+                  </svg>
+                )}
+              </button>
+            )}
             <button
               type="button"
               data-testid="task-item-body"
