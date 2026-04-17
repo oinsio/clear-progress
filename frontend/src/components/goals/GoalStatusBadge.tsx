@@ -19,7 +19,7 @@ export function GoalStatusBadge({ status }: GoalStatusBadgeProps) {
   return (
     <span
       data-testid="goal-status-badge"
-      className={cn("text-xs font-medium", GOAL_STATUS_CLASSES[status])}
+      className={cn("text-xs font-medium block", GOAL_STATUS_CLASSES[status])}
     >
       {t(`goal.status.${status}`)}
     </span>

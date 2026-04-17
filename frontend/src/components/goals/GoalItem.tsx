@@ -63,11 +63,14 @@ export function GoalItem({
           />
         </div>
 
-        {/* Name + task count */}
-        <div className="flex-1 min-w-0">
+        {/* Name + status + task count */}
+        <div className="flex-1">
           <p className="text-sm text-gray-800 font-medium leading-snug break-words">
             {goal.name}
           </p>
+          <div className="mt-1">
+            <GoalStatusBadge status={goal.status} />
+          </div>
           {taskCount > 0 && (
             <span
               data-testid="goal-task-count"
@@ -84,11 +87,6 @@ export function GoalItem({
               {formatShortDateTime(goal.updated_at)}
             </span>
           )}
-        </div>
-
-        {/* Status badge — right side, inside clickable area */}
-        <div className="flex-shrink-0 pl-2">
-          <GoalStatusBadge status={goal.status} />
         </div>
       </button>
 

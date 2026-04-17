@@ -63,4 +63,26 @@ describe("GoalItem", () => {
     renderGoalItem({ goal });
     expect(screen.getByTestId("goal-cover-placeholder")).toBeInTheDocument();
   });
+
+  it("should render elements in correct order: name → status → count", () => {
+    const goal = buildGoal({ name: "Test Goal", status: "in_progress" });
+    renderGoalItem({ goal, taskCount: 5 });
+
+    const container = screen.getByTestId("goal-item");
+    const name = screen.getByText("Test Goal");
+    const status = screen.getByTestId("goal-status-badge");
+    const count = screen.getByTestId("goal-task-count");
+
+    expect(container).toContainElement(name);
+    expect(container).toContainElement(status);
+    expect(container).toContainElement(count);
+
+    const allElements = Array.from(container.querySelectorAll("*"));
+    const nameIndex = allElements.indexOf(name);
+    const statusIndex = allElements.indexOf(status);
+    const countIndex = allElements.indexOf(count);
+
+    expect(statusIndex).toBeGreaterThan(nameIndex);
+    expect(countIndex).toBeGreaterThan(statusIndex);
+  });
 });
