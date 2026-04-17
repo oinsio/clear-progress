@@ -17,6 +17,7 @@ import { TaskQuickActions } from "./TaskQuickActions";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { useHasTouchPointer } from "@/hooks/useHasTouchPointer";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSwipeAction } from "@/hooks/useSwipeAction";
 import { useLongPress } from "@/hooks/useLongPress";
@@ -71,6 +72,7 @@ export function TaskItem({
   const isTaskUnsynced = useIsUnsynced(task);
   const isUnsynced = isTaskUnsynced || hasUnsyncedItems;
   const isDesktop = useIsDesktop();
+  const hasTouchPointer = useHasTouchPointer();
   const { panelSide } = usePanelSide();
   const [isConfirmingRestore, setIsConfirmingRestore] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -206,7 +208,7 @@ export function TaskItem({
         >
           {/* Main task row */}
           <div className="flex items-center gap-3 px-4 py-3">
-            {isDesktop && (
+            {(isDesktop || !hasTouchPointer) && (
               <button
                 type="button"
                 aria-label={

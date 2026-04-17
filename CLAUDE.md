@@ -296,7 +296,7 @@ Before creating files, consult `project-structure.md`.
 
 - Task boxes: inbox, today, week, later
 - Task CRUD: create, read, update, delete (soft)
-- Complete task: swipe right
+- Complete task: swipe right (mobile, `pointer: coarse`) or checkbox (tablet/desktop, `pointer: fine`)
 - Move tasks between boxes
 - Goals with statuses (not_started, in_progress, paused, completed, cancelled) and cover images
 - Contexts and Categories CRUD

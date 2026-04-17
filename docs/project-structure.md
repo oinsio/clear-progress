@@ -74,7 +74,8 @@ clear-progress/
 │       │   ├── useChecklists.ts
 │       │   ├── useSettings.ts
 │       │   ├── useSync.ts              # статус синхронизации, online/offline
-│       │   └── useSwipeAction.ts       # жест свайпа
+│       │   ├── useSwipeAction.ts       # жест свайпа
+│       │   └── useHasTouchPointer.ts  # определение тач-устройства (pointer: coarse)
 │       │
 │       ├── components/
 │       │   ├── ui/                      # shadcn/ui компоненты (button, input, sheet...)
