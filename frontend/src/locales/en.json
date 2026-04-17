@@ -386,10 +386,10 @@
     "orange": "Orange",
     "yellow": "Yellow",
     "green": "Green",
-    "teal": "Teal",
     "blue": "Blue",
     "indigo": "Indigo",
-    "purple": "Purple"
+    "purple": "Purple",
+    "custom": "Custom"
   },
   "theme": {
     "system": "System",

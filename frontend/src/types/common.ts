@@ -12,10 +12,10 @@ export type AccentColor =
   | "orange"
   | "yellow"
   | "green"
-  | "teal"
   | "blue"
   | "indigo"
-  | "purple";
+  | "purple"
+  | "custom";
 
 export type SyncStatus =
   | "idle"

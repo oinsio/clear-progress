@@ -78,10 +78,10 @@ export const ACCENT_COLORS: AccentColor[] = [
   "orange",
   "yellow",
   "green",
-  "teal",
   "blue",
   "indigo",
   "purple",
+  "custom",
 ];
 
 export const ACCENT_COLOR_VALUES: Record<AccentColor, string> = {
@@ -89,10 +89,10 @@ export const ACCENT_COLOR_VALUES: Record<AccentColor, string> = {
   orange: "#f57c00",
   yellow: "#f4c943",
   green: "#69b23e",
-  teal: "#0d9488",
   blue: "#2563eb",
   indigo: "#4f46e5",
   purple: "#a855f7",
+  custom: "#888888",
 };
 
 export const ACCENT_COLOR_VALUES_DARK: Record<AccentColor, string> = {
@@ -100,10 +100,10 @@ export const ACCENT_COLOR_VALUES_DARK: Record<AccentColor, string> = {
   orange: "#c55a00",
   yellow: "#ca9a04",
   green: "#4d7c0f",
-  teal: "#0f766e",
   blue: "#3b82f6",
   indigo: "#6366f1",
   purple: "#7c3aed",
+  custom: "#666666",
 };
 
 export const API_ACTIONS = {
@@ -143,6 +143,8 @@ export const STORAGE_KEYS = {
   GOOGLE_CLIENT_ID: "google_client_id",
   LAST_SYNC: "last_sync",
   ACCENT_COLOR: "accent_color",
+  CUSTOM_ACCENT_LIGHT: "custom_accent_light",
+  CUSTOM_ACCENT_DARK: "custom_accent_dark",
   DEFAULT_BOX: "default_box",
   PANEL_SIDE: "panel_side",
   PANEL_OPEN: "panel_open",
@@ -175,6 +177,8 @@ export const LANGUAGE_SEARCH_THRESHOLD = 10;
 export const SETTING_KEYS = {
   DEFAULT_BOX: "default_box",
   ACCENT_COLOR: "accent_color",
+  CUSTOM_ACCENT_LIGHT: "custom_accent_light",
+  CUSTOM_ACCENT_DARK: "custom_accent_dark",
 } as const;
 
 export const MAX_COVER_SIZE_BYTES = 2 * 1024 * 1024;

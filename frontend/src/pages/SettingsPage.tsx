@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, Monitor, Sun, Moon, PanelLeft, PanelRight } from "lucide-react";
+import { ChevronDown, Monitor, Sun, Moon, PanelLeft, PanelRight, Plus } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -66,13 +66,23 @@ export default function SettingsPage() {
 
   const navigate = useNavigate();
   const { defaultBox, setDefaultBox } = useSettings();
-  const { accentColor, setAccentColor, colorScheme, setColorScheme } =
-    useTheme();
+  const {
+    accentColor,
+    setAccentColor,
+    colorScheme,
+    setColorScheme,
+    customAccentLight,
+    customAccentDark,
+    setCustomAccentColors,
+  } = useTheme();
   const { panelSide, setPanelSide } = usePanelSide();
   const { language, setLanguage } = useLanguage();
   const { isPanelAlwaysOpen, setPanelAlwaysOpen } = usePanelAlwaysOpen();
   const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
   const { interfaceScale, setInterfaceScale } = useInterfaceScale();
+
+  const [customLightInput, setCustomLightInput] = useState(customAccentLight);
+  const [customDarkInput, setCustomDarkInput] = useState(customAccentDark);
 
   const currentLocale = getLocaleByCode(language);
 
@@ -107,6 +117,15 @@ export default function SettingsPage() {
   const handleColorSelect = (color: AccentColor): void => {
     void setAccentColor(color);
   };
+
+  const handleCustomColorChange = useCallback(
+    (lightHex: string, darkHex: string) => {
+      setCustomLightInput(lightHex);
+      setCustomDarkInput(darkHex);
+      void setCustomAccentColors(lightHex, darkHex);
+    },
+    [setCustomAccentColors]
+  );
 
   const handleColorSchemeSelect = (scheme: ColorScheme): void => {
     setColorScheme(scheme);
@@ -156,7 +175,7 @@ export default function SettingsPage() {
       className="relative flex flex-1 overflow-hidden bg-white"
     >
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-4 py-6 space-y-8">
             <h1 className="text-xl font-semibold text-gray-900">
@@ -200,6 +219,47 @@ export default function SettingsPage() {
               </h2>
               <div className="flex gap-4">
                 {ACCENT_COLORS.map((color) => {
+                  if (color === "custom") {
+                    const isSelected = accentColor === "custom";
+                    return (
+                      <button
+                        key="custom"
+                        data-testid="settings-color-option-custom"
+                        aria-pressed={isSelected}
+                        aria-label={t("color.custom")}
+                        onClick={() => handleColorSelect("custom")}
+                        className={cn(
+                          "w-9 h-9 rounded-full transition-all overflow-hidden",
+                          isSelected &&
+                            "ring-2 ring-offset-2 ring-gray-400 scale-110",
+                        )}
+                      >
+                        {isSelected ? (
+                          <div className="flex h-full">
+                            <div
+                              className="w-1/2 h-full"
+                              style={{ backgroundColor: customLightInput }}
+                            />
+                            <div
+                              className="w-1/2 h-full"
+                              style={{ backgroundColor: customDarkInput }}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className="w-full h-full flex items-center justify-center"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #fb7185 0%, #f57c00 14%, #f4c943 28%, #69b23e 42%, #2563eb 57%, #4f46e5 71%, #a855f7 85%, #fb7185 100%)",
+                            }}
+                          >
+                            <Plus className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  }
+
                   const isSelected = accentColor === color;
                   const isDarkTheme =
                     colorScheme === "dark" ||
@@ -227,6 +287,67 @@ export default function SettingsPage() {
                   );
                 })}
               </div>
+
+              {/* Custom color picker - показывается только когда выбран custom */}
+              {accentColor === "custom" && (
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  {/* Light theme color */}
+                  <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+                    <Sun className="w-4 h-4 text-gray-500" />
+                    <input
+                      type="color"
+                      value={customLightInput}
+                      onChange={(e) => handleCustomColorChange(e.target.value, customDarkInput)}
+                      className="w-8 h-8 border-0 cursor-pointer"
+                      data-testid="settings-custom-light-picker"
+                    />
+                    <input
+                      type="text"
+                      value={customLightInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
+                          setCustomLightInput(value);
+                          if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                            handleCustomColorChange(value, customDarkInput);
+                          }
+                        }
+                      }}
+                      className="w-20 text-sm border border-gray-200 rounded px-2 py-1"
+                      placeholder="#000000"
+                      data-testid="settings-custom-light-input"
+                    />
+                  </div>
+
+                  {/* Dark theme color */}
+                  <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+                    <Moon className="w-4 h-4 text-gray-500" />
+                    <input
+                      type="color"
+                      value={customDarkInput}
+                      onChange={(e) => handleCustomColorChange(customLightInput, e.target.value)}
+                      className="w-8 h-8 border-0 cursor-pointer"
+                      data-testid="settings-custom-dark-picker"
+                    />
+                    <input
+                      type="text"
+                      value={customDarkInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
+                          setCustomDarkInput(value);
+                          if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                            handleCustomColorChange(customLightInput, value);
+                          }
+                        }
+                      }}
+                      className="w-20 text-sm border border-gray-200 rounded px-2 py-1"
+                      placeholder="#000000"
+                      data-testid="settings-custom-dark-input"
+                    />
+                  </div>
+                </div>
+              )}
             </section>
             {/* Theme section */}
             <section data-testid="settings-theme" className="space-y-3">

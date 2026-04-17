@@ -12,13 +12,20 @@ import {
 } from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { useSync } from "@/app/providers/SyncProvider";
+import { hexToRgb } from "@/utils/colorHelpers";
 import * as React from "react";
+
+const DEFAULT_CUSTOM_LIGHT = "#888888";
+const DEFAULT_CUSTOM_DARK = "#666666";
 
 interface ThemeContextValue {
   accentColor: AccentColor;
   setAccentColor: (color: AccentColor) => Promise<void>;
   colorScheme: ColorScheme;
   setColorScheme: (scheme: ColorScheme) => void;
+  customAccentLight: string;
+  customAccentDark: string;
+  setCustomAccentColors: (lightHex: string, darkHex: string) => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -69,6 +76,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(
     getInitialColorScheme,
   );
+  const [customAccentLight, setCustomAccentLight] = useState<string>(
+    () => localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT) || DEFAULT_CUSTOM_LIGHT
+  );
+  const [customAccentDark, setCustomAccentDark] = useState<string>(
+    () => localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK) || DEFAULT_CUSTOM_DARK
+  );
   const { syncVersion } = useSync();
 
   useEffect(() => {
@@ -77,28 +90,55 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    settingsRepository
-      .getValue(SETTING_KEYS.ACCENT_COLOR)
-      .then((storedColor) => {
+    const loadSettings = async () => {
+      try {
+        const storedColor = await settingsRepository.getValue(SETTING_KEYS.ACCENT_COLOR);
+
+        // Валидация цвета
         if (storedColor && ACCENT_COLORS.includes(storedColor as AccentColor)) {
           const color = storedColor as AccentColor;
-          applyAccentColor(color);
+          let lightHex: string | undefined;
+          let darkHex: string | undefined;
+
+          // Если custom, загрузить пользовательские цвета
+          if (color === "custom") {
+            lightHex = await settingsRepository.getValue(SETTING_KEYS.CUSTOM_ACCENT_LIGHT);
+            darkHex = await settingsRepository.getValue(SETTING_KEYS.CUSTOM_ACCENT_DARK);
+
+            if (lightHex) {
+              setCustomAccentLight(lightHex);
+              localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
+            }
+            if (darkHex) {
+              setCustomAccentDark(darkHex);
+              localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK, darkHex);
+            }
+          }
+
+          applyAccentColor(color, lightHex, darkHex);
           setAccentColorState(color);
           localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, color);
+        } else if (storedColor) {
+          // Невалидный цвет — установить дефолтный и синхронизировать
+          await settingsRepository.set(SETTING_KEYS.ACCENT_COLOR, DEFAULT_ACCENT_COLOR);
+          applyAccentColor(DEFAULT_ACCENT_COLOR);
+          setAccentColorState(DEFAULT_ACCENT_COLOR);
+          localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, DEFAULT_ACCENT_COLOR);
         }
-      })
-      .catch(console.error);
+      } catch (error) {
+        console.error("Failed to load accent color settings:", error);
+      }
+    };
+
+    void loadSettings();
   }, [syncVersion]);
 
   useEffect(() => {
-    const initialScheme = getInitialColorScheme();
-    applyColorScheme(initialScheme);
-
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleSystemThemeChange = (): void => {
       if (colorScheme === "system") {
         applyColorScheme("system");
-        applyAccentColor(accentColor);
+        applyAccentColor(accentColor, customAccentLight, customAccentDark);
       }
     };
 
@@ -106,40 +146,84 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mediaQuery.removeEventListener("change", handleSystemThemeChange);
     };
-  }, [colorScheme]);
+  }, [colorScheme, accentColor, customAccentLight, customAccentDark]);
 
   const setAccentColor = async (color: AccentColor): Promise<void> => {
-    applyAccentColor(color);
+    applyAccentColor(color, customAccentLight, customAccentDark);
     setAccentColorState(color);
     localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, color);
     await settingsRepository.set(SETTING_KEYS.ACCENT_COLOR, color);
+  };
+
+  const setCustomAccentColors = async (lightHex: string, darkHex: string): Promise<void> => {
+    setCustomAccentLight(lightHex);
+    setCustomAccentDark(darkHex);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK, darkHex);
+    await settingsRepository.set(SETTING_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
+    await settingsRepository.set(SETTING_KEYS.CUSTOM_ACCENT_DARK, darkHex);
+    if (accentColor === "custom") {
+      applyAccentColor("custom", lightHex, darkHex);
+    }
   };
 
   const setColorScheme = (scheme: ColorScheme): void => {
     applyColorScheme(scheme);
     setColorSchemeState(scheme);
     localStorage.setItem(STORAGE_KEYS.COLOR_SCHEME, scheme);
-    applyAccentColor(accentColor);
+    applyAccentColor(accentColor, customAccentLight, customAccentDark);
   };
 
   return (
     <ThemeContext.Provider
-      value={{ accentColor, setAccentColor, colorScheme, setColorScheme }}
+      value={{
+        accentColor,
+        setAccentColor,
+        colorScheme,
+        setColorScheme,
+        customAccentLight,
+        customAccentDark,
+        setCustomAccentColors,
+      }}
     >
       {children}
     </ThemeContext.Provider>
   );
 }
 
-function applyAccentColor(color: AccentColor): void {
+function applyAccentColor(color: AccentColor, customLight?: string, customDark?: string): void {
   document.documentElement.setAttribute("data-accent", color);
-  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-  if (metaThemeColor) {
+
+  if (color === "custom") {
     const isDark = document.documentElement.classList.contains("dark");
-    const colorValue = isDark
-      ? ACCENT_COLOR_VALUES_DARK[color]
-      : ACCENT_COLOR_VALUES[color];
-    metaThemeColor.setAttribute("content", colorValue);
+    const hex = isDark
+      ? (customDark || DEFAULT_CUSTOM_DARK)
+      : (customLight || DEFAULT_CUSTOM_LIGHT);
+
+    try {
+      const rgb = hexToRgb(hex);
+      document.documentElement.style.setProperty("--color-accent", rgb);
+
+      // Update meta theme-color
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", hex);
+      }
+    } catch (error) {
+      console.error("Failed to apply custom accent color:", error);
+    }
+  } else {
+    // Clear custom property for predefined colors
+    document.documentElement.style.removeProperty("--color-accent");
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      const isDark = document.documentElement.classList.contains("dark");
+      const colorValue = isDark
+        ? ACCENT_COLOR_VALUES_DARK[color]
+        : ACCENT_COLOR_VALUES[color];
+      metaThemeColor.setAttribute("content", colorValue);
+    }
   }
 }
 
