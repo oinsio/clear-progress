@@ -38,6 +38,8 @@ import { TaskList } from "@/components/tasks/TaskList";
 import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
 import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
+import { EditableDescription } from "@/components/ui/EditableDescription";
+import { LinkedText } from "@/components/ui/LinkedText";
 import {
   defaultCoverService,
   defaultTaskService,
@@ -125,7 +127,6 @@ export default function GoalDetailPage() {
   });
 
   const editNameTextareaRef = useAutoResizeTextarea(editName);
-  const editDescriptionTextareaRef = useAutoResizeTextarea(editDescription);
 
   const hasLoadedRef = useRef(false);
   const isLoading = isGoalLoading || isTasksLoading;
@@ -392,14 +393,11 @@ export default function GoalDetailPage() {
                         >
                           {t("goal.descriptionLabel")}
                         </label>
-                        <textarea
-                          ref={editDescriptionTextareaRef}
-                          id="goal-edit-description"
+                        <EditableDescription
                           value={editDescription}
-                          onChange={(e) => setEditDescription(e.target.value)}
+                          onChange={setEditDescription}
                           placeholder={t("goal.descriptionPlaceholder")}
-                          className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px]"
-                          data-testid="goal-description-input"
+                          data-test-id="goal-description-input"
                         />
                       </div>
 
@@ -533,9 +531,10 @@ export default function GoalDetailPage() {
                           {goal.name}
                         </p>
                         {goal.description && (
-                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-snug">
-                            {goal.description}
-                          </p>
+                          <LinkedText
+                            text={goal.description}
+                            className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-snug"
+                          />
                         )}
                         <div className="mt-1">
                           <GoalStatusBadge status={goal.status} />

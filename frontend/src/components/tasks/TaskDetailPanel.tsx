@@ -30,6 +30,7 @@ import { useTaskFormState } from "@/hooks/useTaskFormState";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useSettings } from "@/hooks/useSettings";
 import { RepeatRuleSelector } from "./RepeatRuleSelector";
+import { EditableDescription } from "@/components/ui/EditableDescription";
 import {
   ACTIVE_TAB,
   type ActiveTab,
@@ -246,7 +247,6 @@ export function TaskDetailPanel({
   const [newItemName, setNewItemName] = useState("");
 
   const nameTextareaRef = useAutoResizeTextarea(name);
-  const descriptionTextareaRef = useAutoResizeTextarea(description);
 
   const {
     items,
@@ -519,14 +519,12 @@ export function TaskDetailPanel({
               <label className="text-xs font-medium text-gray-500 mb-1 block">
                 {t("taskEdit.fieldDescription")}
               </label>
-              <textarea
-                ref={descriptionTextareaRef}
+              <EditableDescription
                 value={description}
-                onChange={(event) => setDescription(event.target.value)}
+                onChange={setDescription}
                 onBlur={() => void handleDescriptionBlur()}
                 placeholder={t("taskEdit.descriptionPlaceholder")}
-                className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px]"
-                data-testid="task-detail-description"
+                data-test-id="task-detail-description"
               />
             </div>
 

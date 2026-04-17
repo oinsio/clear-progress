@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { Idea } from "@/types/entities";
 import { cn } from "@/shared/lib/cn";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { EditableDescription } from "@/components/ui/EditableDescription";
 
 interface IdeaDetailPanelProps {
   idea: Idea;
@@ -28,7 +29,6 @@ export function IdeaDetailPanel({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const nameTextareaRef = useAutoResizeTextarea(name);
-  const descriptionTextareaRef = useAutoResizeTextarea(description);
 
   useEffect(() => {
     setName(idea.name);
@@ -116,14 +116,12 @@ export function IdeaDetailPanel({
             <label className="text-xs font-medium text-gray-500 mb-1 block">
               {t("idea.descriptionLabel")}
             </label>
-            <textarea
-              ref={descriptionTextareaRef}
+            <EditableDescription
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={setDescription}
               onBlur={() => void handleDescriptionBlur()}
               placeholder={t("idea.descriptionPlaceholder")}
-              className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px]"
-              data-testid="idea-detail-description"
+              data-test-id="idea-detail-description"
             />
           </div>
         </div>

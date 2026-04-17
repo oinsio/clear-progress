@@ -8,6 +8,7 @@ import { useCoverPreview } from "@/hooks/useCoverPreview";
 import { cn } from "@/shared/lib/cn";
 import type { GoalStatus } from "@/types/common";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
+import { EditableDescription } from "@/components/ui/EditableDescription";
 import type { CoverService } from "@/services/CoverService";
 import { defaultCoverService } from "@/services/defaultServices";
 
@@ -205,14 +206,11 @@ export default function GoalPage({
             >
               {t("goal.descriptionLabel")}
             </label>
-            <textarea
-              id="goal-edit-description"
+            <EditableDescription
               value={currentDescription}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={setDescription}
               placeholder={t("goal.descriptionPlaceholder")}
-              rows={3}
-              className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none"
-              data-testid="goal-description-input"
+              data-test-id="goal-description-input"
             />
           </div>
 

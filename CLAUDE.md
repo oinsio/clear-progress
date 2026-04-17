@@ -37,7 +37,9 @@ clasp deploy       # Create new GAS deployment
 ```
 src/
 ├── components/       # Reusable React components
-│   ├── ui/           # shadcn/ui primitives
+│   ├── ui/           # shadcn/ui primitives + custom UI components
+│   │   ├── LinkedText.tsx           # Renders text with clickable links
+│   │   └── EditableDescription.tsx  # View/edit hybrid for description fields
 │   ├── tasks/        # Task-related components
 │   ├── goals/        # Goal-related components
 │   ├── ideas/        # Idea-related components
@@ -101,11 +103,40 @@ tests/
 - UI: Tailwind + shadcn/ui, do not write custom CSS without strong reason
 - Memoize with `useMemo`/`useCallback` only when there's a measured perf issue
 
+#### Description fields with clickable links
+
+Use `EditableDescription` for all description fields (tasks, goals, ideas):
+- View mode: displays text with clickable shortened URLs via `LinkedText`
+- Edit mode: full textarea with complete URLs
+- Click on text (not link) switches to edit mode
+- Blur saves and returns to view mode
+
+Example:
+```tsx
+<EditableDescription
+  value={description}
+  onChange={setDescription}
+  onBlur={handleSave}
+  placeholder={t("task.descriptionPlaceholder")}
+  data-test-id="task-description"
+/>
+```
+
 ### Error Handling
 
 - API calls: always try/catch, surface errors to user via toast/notification
 - Sync errors: queue for retry, never lose local data
 - Dexie operations: wrap in try/catch, log errors
+
+### URL handling in descriptions
+
+- All description fields use `EditableDescription` component
+- URLs are automatically detected and rendered as clickable links
+- URL detection: `/(https?:\/\/[^\s<>"'\]]+)/g`
+- Trailing punctuation (`,`, `.`, `)`, etc.) is stripped from URLs
+- Links open in new tab with `target="_blank"` and `rel="noopener noreferrer"`
+- Shortened display format: `domain/first/…/last` (query params hidden)
+- Full URL shown in tooltip on hover
 
 ## Data Model
 
