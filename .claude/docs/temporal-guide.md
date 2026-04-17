@@ -74,6 +74,10 @@ if (Temporal.Instant.compare(instant1, instant2) > 0) {
 }
 ```
 
+> **Важно:** Date-only поля могут содержать некорректные форматы из-за конвертации Google Sheets Date объектов.
+> При чтении `next_date` / `appear_date` из IndexedDB всегда используйте `sanitizeDateOnly()` перед `Temporal.PlainDate.from()`.
+> Подробности: [Date Sanitization](./architecture/date-sanitization.md)
+
 ### Temporal.PlainDate — календарные даты
 
 Используется для date-only полей (`next_date`, `appear_date`):

@@ -190,6 +190,26 @@ export function toISOStringValue(value: unknown): string {
   );
 }
 
+/**
+ * Safely converts a Google Sheets cell value to an ISO 8601 date-only string (YYYY-MM-DD).
+ * Google Sheets getValues() returns Date objects for date cells;
+ * Date.toISOString() produces "2026-04-19T19:00:00.000Z" but date-only fields
+ * (next_date, appear_date) must be stored as "2026-04-19".
+ */
+export function toISODateValue(value: unknown): string {
+  if (value instanceof Date) return value.toISOString().substring(0, 10);
+  const str = String(value ?? '');
+  if (!str) return str;
+  // If already ISO date (YYYY-MM-DD), return as-is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // If ISO timestamp, extract date part
+  if (str.includes('T')) return str.substring(0, 10);
+  // Fallback: try parsing as Date
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) return parsed.toISOString().substring(0, 10);
+  return '';
+}
+
 export function isBlankString(value: string): boolean {
   return value.trim().length === 0;
 }

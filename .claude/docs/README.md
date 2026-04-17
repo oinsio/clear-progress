@@ -38,6 +38,21 @@
 
 ---
 
+### 🏗️ Архитектурные решения
+
+#### [Recurring Tasks Skip Logic](./architecture/recurring-tasks-skip-logic.md)
+Логика пропуска пропущенных повторяющихся задач при длительной неактивности.
+
+#### [Recurring Tasks Timezone Policy](./architecture/recurring-tasks-timezone-policy.md)
+Политика использования часовых поясов для повторяющихся задач.
+
+#### [Date Sanitization](./architecture/date-sanitization.md)
+Двухуровневая санитизация дат при передаче из Google Sheets (Date объекты) в Temporal API (date-only строки).
+
+**Когда читать:** при работе с date-only полями (`next_date`, `appear_date`), при добавлении новых date-only полей, при изменении backend pull/push логики.
+
+---
+
 ## Для AI-ассистентов
 
 При работе с проектом:
@@ -65,7 +80,11 @@
 │   ├── temporal-index.md                  # обзор Temporal документации
 │   ├── temporal-guide.md                  # полное руководство по Temporal
 │   ├── temporal-migration-checklist.md    # чеклист миграции на Temporal
-│   └── temporal-quick-reference.md        # шпаргалка по Temporal
+│   ├── temporal-quick-reference.md        # шпаргалка по Temporal
+│   └── architecture/
+│       ├── recurring-tasks-skip-logic.md  # логика пропуска повторяющихся задач
+│       ├── recurring-tasks-timezone-policy.md # политика часовых поясов
+│       └── date-sanitization.md           # санитизация дат Google Sheets → Temporal
 └── rules/
     ├── code-style.md                      # правила стиля кода
     └── naming.md                          # правила именования

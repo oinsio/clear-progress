@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import { ROUTES } from "@/constants";
 import { AppShell } from "@/components/layout/AppShell";
+import { RouteErrorFallback } from "@/components/RouteErrorFallback";
 import { PageShell } from "@/components/layout/PageShell";
 import InboxPage from "@/pages/InboxPage";
 import TodayPage from "@/pages/TodayPage";
@@ -44,6 +45,7 @@ export const router = createBrowserRouter(
     },
     {
       element: <AppLayout />,
+      errorElement: <RouteErrorFallback />,
       children: [
         { path: ROUTES.SETUP, element: <SetupPage /> },
         { path: ROUTES.INBOX, element: <InboxPage /> },

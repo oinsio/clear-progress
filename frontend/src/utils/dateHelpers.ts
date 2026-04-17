@@ -26,6 +26,38 @@ export function toISOTimestamp(
   return instant.toString({ fractionalSecondDigits: 3 }) as ISOTimestamp;
 }
 
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Sanityze строку даты из произвольного формата в ISO date (YYYY-MM-DD).
+ * Обрабатывает:
+ * - ISO date: "2026-04-19" → as-is
+ * - ISO timestamp: "2026-04-19T19:00:00.000Z" → "2026-04-19"
+ * - Date.toString(): "Sun Apr 19 2026 19:00:00 GMT+0000 (...)" → "2026-04-19"
+ * - Пустая строка: "" → ""
+ *
+ * @returns Строка в формате YYYY-MM-DD или пустая строка
+ */
+export function sanitizeDateOnly(value: string): string {
+  if (!value) return "";
+  if (ISO_DATE_REGEX.test(value)) return value;
+
+  // ISO timestamp — извлекаем дату до "T"
+  const timestampIndex = value.indexOf("T");
+  if (timestampIndex > 0) {
+    const datePart = value.substring(0, timestampIndex);
+    if (ISO_DATE_REGEX.test(datePart)) return datePart;
+  }
+
+  // Fallback: Date.toString() и другие форматы — parse через Date
+  const parsed = new Date(value);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().substring(0, 10);
+  }
+
+  return "";
+}
+
 /**
  * Преобразует строку формата YYYY-MM-DD в ISODate (branded type).
  * Если dateString не передан, используется текущая дата.

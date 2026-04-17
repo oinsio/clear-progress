@@ -1,6 +1,7 @@
 import type { Task } from "@/types/entities";
 import i18next from "i18next";
 import { Temporal, type Clock, systemClock } from "@/lib/temporal";
+import { sanitizeDateOnly } from "@/utils/dateHelpers";
 
 export interface GroupedCompletedTasks {
   todayTasks: Task[];
@@ -129,7 +130,9 @@ export function formatShortDateTime(isoString: string, clock: Clock = systemCloc
 
 export function formatAppearDate(isoString: string): string {
   if (!isoString) return "";
-  const date = Temporal.PlainDate.from(isoString);
+  const sanitized = sanitizeDateOnly(isoString);
+  if (!sanitized) return "";
+  const date = Temporal.PlainDate.from(sanitized);
 
   const monthName = i18next.t(`repeat.monthGenitive${date.month}`);
 

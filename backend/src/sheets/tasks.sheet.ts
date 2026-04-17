@@ -1,4 +1,4 @@
-import { SHEET_NAMES, coerceSheetBool, coerceSheetBox, colMap, toISOStringValue } from '../helpers/constants';
+import { SHEET_NAMES, coerceSheetBool, coerceSheetBox, colMap, toISOStringValue, toISODateValue } from '../helpers/constants';
 import { getAllRecords, upsertRecords, deleteRecordsByIds } from './base';
 import type { Task } from '../types';
 
@@ -17,8 +17,8 @@ function rowToTask(row: unknown[]): Task {
     completed_at: toISOStringValue(row[COLS.completed_at]),
     repeat_rule: String(row[COLS.repeat_rule] ?? ''),
     is_hidden: coerceSheetBool(row[COLS.is_hidden]),
-    next_date: toISOStringValue(row[COLS.next_date]),
-    appear_date: toISOStringValue(row[COLS.appear_date]),
+    next_date: toISODateValue(row[COLS.next_date]),
+    appear_date: toISODateValue(row[COLS.appear_date]),
     original_task_id: String(row[COLS.original_task_id] ?? ''),
     sort_order: Number(row[COLS.sort_order] ?? 0),
     is_deleted: coerceSheetBool(row[COLS.is_deleted]),

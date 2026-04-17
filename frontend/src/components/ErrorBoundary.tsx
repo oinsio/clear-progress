@@ -1,7 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { withTranslation, type WithTranslation } from "react-i18next";
+import { ErrorFallback } from "./ErrorFallback";
 
-interface ErrorBoundaryProps extends WithTranslation {
+interface ErrorBoundaryProps {
   children: ReactNode;
 }
 
@@ -9,7 +9,7 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundaryClass extends Component<
+export class ErrorBoundary extends Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {
@@ -26,33 +26,11 @@ class ErrorBoundaryClass extends Component<
     console.error("[ErrorBoundary]", error, errorInfo);
   }
 
-  handleReload = (): void => {
-    window.location.reload();
-  };
-
   render(): ReactNode {
-    if (!this.state.hasError) {
-      return this.props.children;
+    if (this.state.hasError) {
+      return <ErrorFallback />;
     }
 
-    const { t } = this.props;
-
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-        <h1 className="text-xl font-semibold">{t("error.title")}</h1>
-        <p className="text-muted-foreground max-w-sm text-sm">
-          {t("error.description")}
-        </p>
-        <button
-          type="button"
-          onClick={this.handleReload}
-          className="bg-primary text-primary-foreground rounded-lg px-6 py-3 text-sm font-medium"
-        >
-          {t("error.reload")}
-        </button>
-      </div>
-    );
+    return this.props.children;
   }
 }
-
-export const ErrorBoundary = withTranslation()(ErrorBoundaryClass);

@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import type { RepeatRule } from "@/types/common";
 import { Temporal, type Clock, systemClock } from "@/lib/temporal";
+import { sanitizeDateOnly } from "@/utils/dateHelpers";
 import {
   MIN_ISO_WEEKDAY,
   MAX_ISO_WEEKDAY,
@@ -284,6 +285,8 @@ export function calculateNextDate(
       .toZonedDateTimeISO(timeZone)
       .toPlainDate()
       .toString();
+  } else {
+    previousNextDate = sanitizeDateOnly(previousNextDate) || previousNextDate;
   }
 
   const interval = rule.interval ?? 1;
@@ -323,7 +326,8 @@ export function calculateAppearDate(
   nextDate: string,
   advanceDays: number,
 ): string {
-  return Temporal.PlainDate.from(nextDate)
+  const sanitized = sanitizeDateOnly(nextDate) || nextDate;
+  return Temporal.PlainDate.from(sanitized)
     .subtract({ days: advanceDays })
     .toString();
 }
