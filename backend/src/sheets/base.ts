@@ -1,4 +1,4 @@
-import { SHEET_HEADERS, coerceSheetBool } from '../helpers/constants';
+import { SHEET_HEADERS, coerceSheetBool, toISOStringValue } from '../helpers/constants';
 import { getSheet } from './client';
 
 export type NamedEntity = {
@@ -18,8 +18,8 @@ export function rowToNamedEntity(row: unknown[], cols: Record<string, number>): 
     name: String(row[cols.name] ?? ''),
     sort_order: Number(row[cols.sort_order] ?? 0),
     is_deleted: coerceSheetBool(row[cols.is_deleted]),
-    created_at: String(row[cols.created_at] ?? ''),
-    updated_at: String(row[cols.updated_at] ?? ''),
+    created_at: toISOStringValue(row[cols.created_at]),
+    updated_at: toISOStringValue(row[cols.updated_at]),
     version: Number(row[cols.version] ?? 1),
     revision: Number(row[cols.revision] ?? 0),
   };

@@ -441,6 +441,11 @@
     "accountSection": "Account",
     "signInRequired": "Sign in with Google to initialize storage."
   },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Try reloading the app.",
+    "reload": "Reload"
+  },
   "pwa": {
     "appUpdated": "App updated",
     "newVersionAvailable": "New version available",

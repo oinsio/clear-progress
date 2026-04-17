@@ -165,6 +165,31 @@ export const ERROR_MESSAGES = {
   INVALID_BOX: 'box must be one of: inbox, today, week, later',
 } as const;
 
+/**
+ * Safely converts a Google Sheets cell value to an ISO 8601 string.
+ * Google Sheets getValues() returns Date objects for date/time cells;
+ * String(date) produces "Sun Apr 19 2026 19:00:00 GMT+0000 (...)" which
+ * Temporal API cannot parse. This helper calls .toISOString() on Date objects.
+ *
+ * For timestamp strings, normalizes to always have exactly 3 fractional digits (.000Z)
+ * so that string comparison between Temporal (.toString() → no ms) and Date (.toISOString() → .000Z)
+ * is consistent.
+ */
+export function toISOStringValue(value: unknown): string {
+  if (value instanceof Date) return value.toISOString();
+  const str = String(value ?? '');
+  if (!str) return str;
+  // Normalize fractional seconds to exactly 3 digits:
+  // "...T19:00:00Z"     → "...T19:00:00.000Z"  (no fraction)
+  // "...T19:00:00.1Z"   → "...T19:00:00.100Z"  (1 digit)
+  // "...T19:00:00.12Z"  → "...T19:00:00.120Z"  (2 digits)
+  // "...T19:00:00.123Z" → unchanged             (already 3 digits)
+  return str.replace(
+    /(\d{2}:\d{2}:\d{2})(?:\.(\d{1,3}))?Z$/,
+    (_, time: string, frac?: string) => `${time}.${(frac ?? '').padEnd(3, '0')}Z`,
+  );
+}
+
 export function isBlankString(value: string): boolean {
   return value.trim().length === 0;
 }

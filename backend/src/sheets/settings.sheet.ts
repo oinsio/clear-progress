@@ -1,4 +1,4 @@
-import { SHEET_NAMES, SHEET_HEADERS, colMap, DEFAULT_SETTINGS } from '../helpers/constants';
+import { SHEET_NAMES, SHEET_HEADERS, colMap, DEFAULT_SETTINGS, toISOStringValue } from '../helpers/constants';
 import { getSheet } from './client';
 import type { Setting } from '../types';
 
@@ -22,7 +22,7 @@ export function getAllSettings(): Setting[] {
   return data.slice(1).filter((row: unknown[]) => row[0]).map((row: unknown[]) => ({
     key: String(row[SET_COLS.key]),
     value: String(row[SET_COLS.value] ?? ''),
-    updated_at: String(row[SET_COLS.updated_at] ?? ''),
+    updated_at: toISOStringValue(row[SET_COLS.updated_at]),
   }));
 }
 

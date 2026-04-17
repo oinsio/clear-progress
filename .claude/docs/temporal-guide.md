@@ -316,6 +316,31 @@ if (Date.now() >= tokenExpiresAt) {
 
 Весь backend продолжает использовать `Date` — Google Apps Script не поддерживает Temporal API.
 
+### Сериализация дат из Google Sheets (toISOStringValue)
+
+Google Sheets `getValues()` возвращает объекты `Date` для ячеек с датами. `String(date)` даёт формат `Date.toString()` (`"Sun Apr 19 2026 19:00:00 GMT+0000 (...)"`), который Temporal API не может распарсить.
+
+Все `rowTo*` функции в бэкенде используют `toISOStringValue()` вместо `String()` для полей с датами:
+
+```ts
+import { toISOStringValue } from '../helpers/constants';
+
+// ✅ Правильно
+created_at: toISOStringValue(row[cols.created_at]),
+
+// ❌ Неправильно — Date объект может преобразоваться в непарсимый формат
+created_at: String(row[cols.created_at] ?? ''),
+```
+
+`toISOStringValue` гарантирует:
+- `Date` объект → `.toISOString()` → `"2026-04-19T19:00:00.000Z"`
+- Строка без дробной части → дополняет до 3 знаков: `"...T19:00:00Z"` → `"...T19:00:00.000Z"`
+- Строка с 1-2 знаками → дополняет: `"...T19:00:00.1Z"` → `"...T19:00:00.100Z"`
+- Строка с 3+ знаками → без изменений
+- Пустая строка / не-таймстамп → без изменений
+
+**Правило:** при добавлении нового поля с датой в бэкенде всегда использовать `toISOStringValue()`, никогда `String()`.
+
 ## Тестирование
 
 ### Мокирование текущего времени

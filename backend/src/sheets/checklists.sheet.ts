@@ -1,4 +1,4 @@
-import { SHEET_NAMES, coerceSheetBool, colMap } from '../helpers/constants';
+import { SHEET_NAMES, coerceSheetBool, colMap, toISOStringValue } from '../helpers/constants';
 import { getAllRecords, upsertRecords, deleteRecordsByIds } from './base';
 import type { ChecklistItem } from '../types';
 
@@ -12,8 +12,8 @@ function rowToItem(row: unknown[]): ChecklistItem {
     is_completed: coerceSheetBool(row[COLS.is_completed]),
     sort_order: Number(row[COLS.sort_order] ?? 0),
     is_deleted: coerceSheetBool(row[COLS.is_deleted]),
-    created_at: String(row[COLS.created_at] ?? ''),
-    updated_at: String(row[COLS.updated_at] ?? ''),
+    created_at: toISOStringValue(row[COLS.created_at]),
+    updated_at: toISOStringValue(row[COLS.updated_at]),
     version: Number(row[COLS.version] ?? 1),
     revision: Number(row[COLS.revision] ?? 0),
   };

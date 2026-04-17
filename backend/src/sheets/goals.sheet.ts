@@ -1,4 +1,4 @@
-import { SHEET_NAMES, coerceSheetBool, coerceSheetGoalStatus, colMap } from '../helpers/constants';
+import { SHEET_NAMES, coerceSheetBool, coerceSheetGoalStatus, colMap, toISOStringValue } from '../helpers/constants';
 import { getAllRecords, upsertRecords, deleteRecordsByIds } from './base';
 import type { Goal } from '../types';
 
@@ -13,8 +13,8 @@ function rowToGoal(row: unknown[]): Goal {
     status: coerceSheetGoalStatus(row[COLS.status]),
     sort_order: Number(row[COLS.sort_order] ?? 0),
     is_deleted: coerceSheetBool(row[COLS.is_deleted]),
-    created_at: String(row[COLS.created_at] ?? ''),
-    updated_at: String(row[COLS.updated_at] ?? ''),
+    created_at: toISOStringValue(row[COLS.created_at]),
+    updated_at: toISOStringValue(row[COLS.updated_at]),
     version: Number(row[COLS.version] ?? 1),
     revision: Number(row[COLS.revision] ?? 0),
   };
