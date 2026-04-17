@@ -19,13 +19,3 @@ export function hexToRgb(hex: string): string {
 
   return `${r} ${g} ${b}`;
 }
-
-/**
- * Validates if a string is a valid hex color
- * @param hex - String to validate
- * @returns true if valid hex color
- */
-export function isValidHex(hex: string): boolean {
-  const cleanHex = hex.replace(/^#/, "");
-  return /^[0-9A-Fa-f]{6}$/.test(cleanHex);
-}

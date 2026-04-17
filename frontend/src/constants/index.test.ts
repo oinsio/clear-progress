@@ -156,7 +156,6 @@ describe("ACCENT_COLORS", () => {
     expect(ACCENT_COLORS).toContain("orange");
     expect(ACCENT_COLORS).toContain("yellow");
     expect(ACCENT_COLORS).toContain("green");
-    expect(ACCENT_COLORS).toContain("teal");
     expect(ACCENT_COLORS).toContain("blue");
     expect(ACCENT_COLORS).toContain("indigo");
     expect(ACCENT_COLORS).toContain("purple");

@@ -92,7 +92,7 @@ export const ACCENT_COLOR_VALUES: Record<AccentColor, string> = {
   blue: "#2563eb",
   indigo: "#4f46e5",
   purple: "#a855f7",
-  custom: "#888888",
+  custom: "#fcd34d",
 };
 
 export const ACCENT_COLOR_VALUES_DARK: Record<AccentColor, string> = {
@@ -103,7 +103,7 @@ export const ACCENT_COLOR_VALUES_DARK: Record<AccentColor, string> = {
   blue: "#3b82f6",
   indigo: "#6366f1",
   purple: "#7c3aed",
-  custom: "#666666",
+  custom: "#14b8a6",
 };
 
 export const API_ACTIONS = {

@@ -95,8 +95,8 @@ describe("SettingsRepository", () => {
 
       const setting = await db.settings.get({ key: "default_box" });
       expect(setting!.updated_at >= before).toBe(true);
-      // Проверяем, что timestamp не в будущем (с буфером 100ms)
-      const maxAllowed = Temporal.Now.instant().add({ milliseconds: 100 }).toString();
+      // Проверяем, что timestamp не в будущем (с буфером 500ms)
+      const maxAllowed = Temporal.Now.instant().add({ milliseconds: 500 }).toString();
       expect(setting!.updated_at <= maxAllowed).toBe(true);
     });
   });

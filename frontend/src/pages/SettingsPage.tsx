@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, Monitor, Sun, Moon, PanelLeft, PanelRight, Plus } from "lucide-react";
+import { ChevronDown, Monitor, Sun, Moon, PanelLeft, PanelRight } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -234,28 +234,16 @@ export default function SettingsPage() {
                             "ring-2 ring-offset-2 ring-gray-400 scale-110",
                         )}
                       >
-                        {isSelected ? (
-                          <div className="flex h-full">
-                            <div
-                              className="w-1/2 h-full"
-                              style={{ backgroundColor: customLightInput }}
-                            />
-                            <div
-                              className="w-1/2 h-full"
-                              style={{ backgroundColor: customDarkInput }}
-                            />
-                          </div>
-                        ) : (
+                        <div className="flex h-full">
                           <div
-                            className="w-full h-full flex items-center justify-center"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #fb7185 0%, #f57c00 14%, #f4c943 28%, #69b23e 42%, #2563eb 57%, #4f46e5 71%, #a855f7 85%, #fb7185 100%)",
-                            }}
-                          >
-                            <Plus className="w-5 h-5 text-white" />
-                          </div>
-                        )}
+                            className="w-1/2 h-full"
+                            style={{ backgroundColor: customLightInput }}
+                          />
+                          <div
+                            className="w-1/2 h-full"
+                            style={{ backgroundColor: customDarkInput }}
+                          />
+                        </div>
                       </button>
                     );
                   }

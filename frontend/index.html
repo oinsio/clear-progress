@@ -15,7 +15,7 @@
       // https://github.com/rafgraph/spa-github-pages
       (function (location) {
         if (location.search[1] === "/") {
-          var decoded = location.search
+          let decoded = location.search
             .slice(1)
             .split("&")
             .map(function (s) {
@@ -37,13 +37,13 @@
       try {
         // Helper function to convert hex to RGB
         function hexToRgb(hex) {
-          var cleanHex = hex.replace(/^#/, "");
+          let cleanHex = hex.replace(/^#/, "");
           if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
             return null;
           }
-          var r = parseInt(cleanHex.substring(0, 2), 16);
-          var g = parseInt(cleanHex.substring(2, 4), 16);
-          var b = parseInt(cleanHex.substring(4, 6), 16);
+          let r = parseInt(cleanHex.substring(0, 2), 16);
+          let g = parseInt(cleanHex.substring(2, 4), 16);
+          let b = parseInt(cleanHex.substring(4, 6), 16);
           return r + " " + g + " " + b;
         }
 
@@ -60,17 +60,17 @@
 
         if (accentColor === "custom") {
           // Handle custom color
-          var isDark = document.documentElement.classList.contains("dark");
-          var customLight = localStorage.getItem("custom_accent_light");
-          var customDark = localStorage.getItem("custom_accent_dark");
-          var hex = isDark ? customDark : customLight;
+          let isDark = document.documentElement.classList.contains("dark");
+          let customLight = localStorage.getItem("custom_accent_light");
+          let customDark = localStorage.getItem("custom_accent_dark");
+          let hex = isDark ? customDark : customLight;
 
           if (hex) {
-            var rgb = hexToRgb(hex);
+            let rgb = hexToRgb(hex);
             if (rgb) {
               document.documentElement.setAttribute("data-accent", "custom");
               document.documentElement.style.setProperty("--color-accent", rgb);
-              var metaThemeColor = document.querySelector(
+              let metaThemeColor = document.querySelector(
                 'meta[name="theme-color"]',
               );
               if (metaThemeColor) {
@@ -81,7 +81,7 @@
         } else if (accentColor && accentColorValues[accentColor]) {
           // Handle predefined colors
           document.documentElement.setAttribute("data-accent", accentColor);
-          var metaThemeColor = document.querySelector(
+          let metaThemeColor = document.querySelector(
             'meta[name="theme-color"]',
           );
           if (metaThemeColor) {

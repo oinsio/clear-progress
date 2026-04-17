@@ -15,8 +15,8 @@ import { useSync } from "@/app/providers/SyncProvider";
 import { hexToRgb } from "@/utils/colorHelpers";
 import * as React from "react";
 
-const DEFAULT_CUSTOM_LIGHT = "#888888";
-const DEFAULT_CUSTOM_DARK = "#666666";
+const DEFAULT_CUSTOM_LIGHT = "#fcd34d";
+const DEFAULT_CUSTOM_DARK = "#14b8a6";
 
 interface ThemeContextValue {
   accentColor: AccentColor;

@@ -72,6 +72,9 @@ function buildThemeHook(
     setAccentColor: vi.fn().mockResolvedValue(undefined),
     colorScheme: "system",
     setColorScheme: vi.fn(),
+    customAccentLight: "#fcd34d",
+    customAccentDark: "#14b8a6",
+    setCustomAccentColors: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -201,9 +204,6 @@ describe("SettingsPage", () => {
       screen.getByTestId("settings-color-option-green"),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId("settings-color-option-teal"),
-    ).toBeInTheDocument();
-    expect(
       screen.getByTestId("settings-color-option-blue"),
     ).toBeInTheDocument();
     expect(
@@ -231,8 +231,8 @@ describe("SettingsPage", () => {
     const setAccentColor = vi.fn().mockResolvedValue(undefined);
     mockUseTheme.mockReturnValue(buildThemeHook({ setAccentColor }));
     renderPage();
-    fireEvent.click(screen.getByTestId("settings-color-option-teal"));
-    expect(setAccentColor).toHaveBeenCalledWith("teal");
+    fireEvent.click(screen.getByTestId("settings-color-option-indigo"));
+    expect(setAccentColor).toHaveBeenCalledWith("indigo");
   });
 
   it("should render the language section with trigger button", () => {
