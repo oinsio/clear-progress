@@ -12,6 +12,8 @@ import {
   LOCK_TIMEOUT_MS,
   coerceSheetGoalStatus,
   isValidUuid,
+  toISODateValue,
+  toSheetDateValue,
 } from './constants';
 
 describe('APP_NAME', () => {
@@ -130,5 +132,54 @@ describe('isValidUuid', () => {
 
   it('should return false for an empty string', () => {
     expect(isValidUuid('')).toBe(false);
+  });
+});
+
+describe('toSheetDateValue', () => {
+  it('should add leading apostrophe to ISO date string', () => {
+    expect(toSheetDateValue('2026-04-20')).toBe("'2026-04-20");
+  });
+
+  it('should return empty string for empty input', () => {
+    expect(toSheetDateValue('')).toBe('');
+  });
+
+  it('should add apostrophe to any non-empty string', () => {
+    expect(toSheetDateValue('2026-12-31')).toBe("'2026-12-31");
+  });
+});
+
+describe('toISODateValue', () => {
+  it('should extract date from Date object', () => {
+    const date = new Date('2026-04-20T10:30:00.000Z');
+    expect(toISODateValue(date)).toBe('2026-04-20');
+  });
+
+  it('should return ISO date string as-is', () => {
+    expect(toISODateValue('2026-04-20')).toBe('2026-04-20');
+  });
+
+  it('should extract date from ISO timestamp', () => {
+    expect(toISODateValue('2026-04-20T10:30:00.000Z')).toBe('2026-04-20');
+  });
+
+  it('should remove leading apostrophe from string', () => {
+    expect(toISODateValue("'2026-04-20")).toBe('2026-04-20');
+  });
+
+  it('should handle apostrophe-prefixed ISO timestamp', () => {
+    expect(toISODateValue("'2026-04-20T10:30:00.000Z")).toBe('2026-04-20');
+  });
+
+  it('should return empty string for empty input', () => {
+    expect(toISODateValue('')).toBe('');
+  });
+
+  it('should return empty string for null', () => {
+    expect(toISODateValue(null)).toBe('');
+  });
+
+  it('should return empty string for undefined', () => {
+    expect(toISODateValue(undefined)).toBe('');
   });
 });

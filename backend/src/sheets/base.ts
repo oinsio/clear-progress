@@ -1,4 +1,4 @@
-import { SHEET_HEADERS, coerceSheetBool, toISOStringValue } from '../helpers/constants';
+import { SHEET_HEADERS, coerceSheetBool, toISOStringValue, toSheetDateValue } from '../helpers/constants';
 import { getSheet } from './client';
 
 export type NamedEntity = {
@@ -26,7 +26,14 @@ export function rowToNamedEntity(row: unknown[], cols: Record<string, number>): 
 }
 
 export function recordToRow<T>(sheetName: string, record: T): unknown[] {
-  return SHEET_HEADERS[sheetName].map(col => (record as Record<string, unknown>)[col]);
+  return SHEET_HEADERS[sheetName].map(col => {
+    const value = (record as Record<string, unknown>)[col];
+    // For date-only fields, use toSheetDateValue to prevent Google Sheets auto-conversion
+    if ((col === 'next_date' || col === 'appear_date') && typeof value === 'string') {
+      return toSheetDateValue(value);
+    }
+    return value;
+  });
 }
 
 export function getAllRecords<T>(sheetName: string, rowMapper: (row: unknown[]) => T): T[] {

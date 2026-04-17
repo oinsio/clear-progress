@@ -200,14 +200,30 @@ export function toISODateValue(value: unknown): string {
   if (value instanceof Date) return value.toISOString().substring(0, 10);
   const str = String(value ?? '');
   if (!str) return str;
+  // Remove leading apostrophe if present (from toSheetDateValue)
+  const cleaned = str.startsWith("'") ? str.substring(1) : str;
   // If already ISO date (YYYY-MM-DD), return as-is
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned;
   // If ISO timestamp, extract date part
-  if (str.includes('T')) return str.substring(0, 10);
+  if (cleaned.includes('T')) return cleaned.substring(0, 10);
   // Fallback: try parsing as Date
-  const parsed = new Date(str);
+  const parsed = new Date(cleaned);
   if (!isNaN(parsed.getTime())) return parsed.toISOString().substring(0, 10);
   return '';
+}
+
+/**
+ * Converts an ISO 8601 date-only string to a format that Google Sheets will store as text.
+ * Adds a leading apostrophe to prevent Google Sheets from auto-converting to Date object.
+ * This prevents timezone-related date shifts when reading/writing date-only fields.
+ *
+ * @param value - ISO 8601 date string (YYYY-MM-DD)
+ * @returns String with leading apostrophe for Google Sheets text storage
+ */
+export function toSheetDateValue(value: string): string {
+  if (!value) return '';
+  // Prefix with apostrophe to force Google Sheets to store as text, not Date
+  return `'${value}`;
 }
 
 export function isBlankString(value: string): boolean {
