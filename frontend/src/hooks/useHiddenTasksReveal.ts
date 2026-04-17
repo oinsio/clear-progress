@@ -66,11 +66,23 @@ export function useHiddenTasksReveal(clock: Clock = systemClock) {
       }
     };
 
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        void revealTasks();
+        if (midnightTimeoutRef.current) {
+          clearTimeout(midnightTimeoutRef.current);
+        }
+        midnightTimeoutRef.current = scheduleNextDayReveal();
+      }
+    };
+
     window.addEventListener("sync_complete", handleSyncComplete);
+    window.addEventListener("pageshow", handlePageShow);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("sync_complete", handleSyncComplete);
+      window.removeEventListener("pageshow", handlePageShow);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (midnightTimeoutRef.current) {
         clearTimeout(midnightTimeoutRef.current);

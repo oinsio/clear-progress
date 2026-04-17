@@ -437,7 +437,7 @@ All date and time operations in the frontend use Temporal API via `temporal-poly
 
 **Critical rules:**
 - NEVER use `new Date()` in production code
-- NEVER use `Date.now()` except for token expiry checks in `ApiClient.ts` and `AuthProvider.tsx`
+- NEVER use `Date.now()` — use `Temporal.Now.instant().epochMilliseconds` instead
 - Always import `Temporal` from `@/lib/temporal`, never from `temporal-polyfill` directly
 - Backend (GAS) continues using `Date` — it doesn't support Temporal
 

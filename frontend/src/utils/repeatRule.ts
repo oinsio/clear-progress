@@ -245,7 +245,13 @@ function calculateNextDateAfterCompletion(
   clock: Clock = systemClock,
 ): string {
   const completedInstant = Temporal.Instant.from(completedAt);
-  const timeZone = clock.timeZoneId();
+  let timeZone: string;
+  try {
+    timeZone = clock.timeZoneId();
+  } catch (error) {
+    console.error("Invalid timezone from system, falling back to UTC:", error);
+    timeZone = "UTC";
+  }
   const completedDate = completedInstant.toZonedDateTimeISO(timeZone).toPlainDate();
   return completedDate.add({ days: delayDays }).toString();
 }
@@ -267,8 +273,15 @@ export function calculateNextDate(
   if (!previousNextDate) {
     // Первое создание: используем completedAt как базу
     const completedInstant = Temporal.Instant.from(completedAt);
+    let timeZone: string;
+    try {
+      timeZone = clock.timeZoneId();
+    } catch (error) {
+      console.error("Invalid timezone from system, falling back to UTC:", error);
+      timeZone = "UTC";
+    }
     previousNextDate = completedInstant
-      .toZonedDateTimeISO(clock.timeZoneId())
+      .toZonedDateTimeISO(timeZone)
       .toPlainDate()
       .toString();
   }
