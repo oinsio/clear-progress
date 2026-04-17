@@ -40,22 +40,38 @@ const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
  */
 export function sanitizeDateOnly(value: string): string {
   if (!value) return "";
-  if (ISO_DATE_REGEX.test(value)) return value;
+
+  // ISO date формат — проверяем regex и валидность через Temporal
+  if (ISO_DATE_REGEX.test(value)) {
+    try {
+      Temporal.PlainDate.from(value);
+      return value;
+    } catch {
+      return "";
+    }
+  }
 
   // ISO timestamp — извлекаем дату до "T"
   const timestampIndex = value.indexOf("T");
   if (timestampIndex > 0) {
     const datePart = value.substring(0, timestampIndex);
-    if (ISO_DATE_REGEX.test(datePart)) return datePart;
+    if (ISO_DATE_REGEX.test(datePart)) {
+      try {
+        Temporal.PlainDate.from(datePart);
+        return datePart;
+      } catch {
+        return "";
+      }
+    }
   }
 
-  // Fallback: Date.toString() и другие форматы — parse через Date
-  const parsed = new Date(value);
-  if (!isNaN(parsed.getTime())) {
-    return parsed.toISOString().substring(0, 10);
+  // Fallback: попытка parse через Temporal.PlainDate
+  try {
+    const plainDate = Temporal.PlainDate.from(value);
+    return plainDate.toString();
+  } catch {
+    return "";
   }
-
-  return "";
 }
 
 /**
