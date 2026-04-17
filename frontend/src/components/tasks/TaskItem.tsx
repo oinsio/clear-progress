@@ -18,7 +18,7 @@ import { useChecklist } from "@/hooks/useChecklist";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSwipeToComplete } from "@/hooks/useSwipeToComplete";
+import { useSwipeAction } from "@/hooks/useSwipeAction";
 import { useLongPress } from "@/hooks/useLongPress";
 import {
   SWIPE_SNAP_BACK_DURATION_MS,
@@ -145,8 +145,8 @@ export function TaskItem({
     }
   }, [isExpanded, isConfirmingRestore]);
 
-  const isSwipeEnabled = !isDesktop && !task.is_completed;
-  const { translateX, isThresholdReached } = useSwipeToComplete(
+  const isSwipeEnabled = !isDesktop;
+  const { translateX, isThresholdReached } = useSwipeAction(
     containerRef,
     () => onComplete(task.id),
     isSwipeEnabled,
@@ -171,13 +171,14 @@ export function TaskItem({
           task.is_hidden && "opacity-50",
         )}
       >
-        {/* Swipe-to-complete background */}
+        {/* Swipe action background */}
         {isSwipeEnabled && (
           <div
             aria-hidden="true"
             data-testid="swipe-background"
             className={cn(
-              "absolute inset-0 bg-green-500 flex items-center pl-4 transition-opacity",
+              "absolute inset-0 flex items-center pl-4 transition-opacity",
+              task.is_completed ? "bg-amber-500" : "bg-green-500",
               translateX === 0
                 ? "opacity-0"
                 : isThresholdReached
@@ -185,7 +186,11 @@ export function TaskItem({
                   : "opacity-70",
             )}
           >
-            <Check size={20} className="text-white" />
+            {task.is_completed ? (
+              <RotateCcw size={20} className="text-white" />
+            ) : (
+              <Check size={20} className="text-white" />
+            )}
           </div>
         )}
 

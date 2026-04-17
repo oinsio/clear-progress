@@ -1,7 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import React, { createRef } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { useSwipeToComplete } from "./useSwipeToComplete";
+import { useSwipeAction } from "./useSwipeAction";
 import { SWIPE_COMPLETE_THRESHOLD_PERCENT } from "@/constants";
 
 function createElementRef() {
@@ -54,7 +54,7 @@ function fireTouchEnd(el: HTMLElement) {
   el.dispatchEvent(event);
 }
 
-describe("useSwipeToComplete", () => {
+describe("useSwipeAction", () => {
   let element: HTMLElement;
   let ref: React.RefObject<HTMLDivElement>;
   let threshold: number;
@@ -79,19 +79,19 @@ describe("useSwipeToComplete", () => {
 
   // Initial state
   it("should return translateX 0 initially", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     expect(result.current.translateX).toBe(0);
   });
 
   it("should return isThresholdReached false initially", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     expect(result.current.isThresholdReached).toBe(false);
   });
 
   // When disabled
   it("should not change translateX when isEnabled is false", () => {
     const { result } = renderHook(() =>
-      useSwipeToComplete(ref, vi.fn(), false),
+      useSwipeAction(ref, vi.fn(), false),
     );
     act(() => {
       fireTouchStart(element, 0, 0);
@@ -101,19 +101,19 @@ describe("useSwipeToComplete", () => {
   });
 
   it("should not call onComplete when isEnabled is false", () => {
-    const onComplete = vi.fn();
-    renderHook(() => useSwipeToComplete(ref, onComplete, false));
+    const onAction = vi.fn();
+    renderHook(() => useSwipeAction(ref, onAction, false));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, threshold + 10, 0);
       fireTouchEnd(element);
     });
-    expect(onComplete).not.toHaveBeenCalled();
+    expect(onAction).not.toHaveBeenCalled();
   });
 
   // Right swipe below threshold
   it("should update translateX during right swipe", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, 40, 0);
@@ -122,7 +122,7 @@ describe("useSwipeToComplete", () => {
   });
 
   it("should not set isThresholdReached when swipe is below threshold", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, threshold - 1, 0);
@@ -131,7 +131,7 @@ describe("useSwipeToComplete", () => {
   });
 
   it("should reset translateX to 0 on touchend below threshold", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, 40, 0);
@@ -141,19 +141,19 @@ describe("useSwipeToComplete", () => {
   });
 
   it("should not call onComplete on touchend below threshold", () => {
-    const onComplete = vi.fn();
-    renderHook(() => useSwipeToComplete(ref, onComplete, true));
+    const onAction = vi.fn();
+    renderHook(() => useSwipeAction(ref, onAction, true));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, threshold - 1, 0);
       fireTouchEnd(element);
     });
-    expect(onComplete).not.toHaveBeenCalled();
+    expect(onAction).not.toHaveBeenCalled();
   });
 
   // Right swipe at/above threshold
   it("should set isThresholdReached when swipe reaches threshold", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, threshold, 0);
@@ -162,18 +162,18 @@ describe("useSwipeToComplete", () => {
   });
 
   it("should call onComplete on touchend when threshold is reached", () => {
-    const onComplete = vi.fn();
-    renderHook(() => useSwipeToComplete(ref, onComplete, true));
+    const onAction = vi.fn();
+    renderHook(() => useSwipeAction(ref, onAction, true));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, threshold + 10, 0);
       fireTouchEnd(element);
     });
-    expect(onComplete).toHaveBeenCalledOnce();
+    expect(onAction).toHaveBeenCalledOnce();
   });
 
   it("should reset translateX and isThresholdReached on touchend after threshold", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, threshold + 10, 0);
@@ -185,7 +185,7 @@ describe("useSwipeToComplete", () => {
 
   // Left swipe
   it("should not update translateX on left swipe", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 100, 0);
       fireTouchMove(element, 50, 0);
@@ -194,19 +194,19 @@ describe("useSwipeToComplete", () => {
   });
 
   it("should not call onComplete on left swipe touchend", () => {
-    const onComplete = vi.fn();
-    renderHook(() => useSwipeToComplete(ref, onComplete, true));
+    const onAction = vi.fn();
+    renderHook(() => useSwipeAction(ref, onAction, true));
     act(() => {
       fireTouchStart(element, 200, 0);
       fireTouchMove(element, 50, 0);
       fireTouchEnd(element);
     });
-    expect(onComplete).not.toHaveBeenCalled();
+    expect(onAction).not.toHaveBeenCalled();
   });
 
   // Rubber-band clamping
   it("should clamp translateX at 1.5x threshold", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, threshold * 3, 0);
@@ -218,7 +218,7 @@ describe("useSwipeToComplete", () => {
   it("should remove event listeners on unmount", () => {
     const removeEventListenerSpy = vi.spyOn(element, "removeEventListener");
     const { unmount } = renderHook(() =>
-      useSwipeToComplete(ref, vi.fn(), true),
+      useSwipeAction(ref, vi.fn(), true),
     );
     unmount();
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
@@ -241,7 +241,7 @@ describe("useSwipeToComplete", () => {
     noSwipeChild.setAttribute("data-no-swipe", "true");
     element.appendChild(noSwipeChild);
 
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     act(() => {
       fireTouchStart(element, 0, 0, noSwipeChild);
       fireTouchMove(element, threshold + 10, 0);
@@ -251,7 +251,7 @@ describe("useSwipeToComplete", () => {
 
   // Window resize
   it("should recalculate threshold on window resize", () => {
-    const { result } = renderHook(() => useSwipeToComplete(ref, vi.fn(), true));
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
 
     // Change window width
     act(() => {
@@ -279,19 +279,19 @@ describe("useSwipeToComplete", () => {
     ["threshold", 0, true],
     ["threshold + 1", 1, true],
   ] as const)(
-    "onComplete called=%s when swipe is %s relative to threshold",
+    "onAction called=%s when swipe is %s relative to threshold",
     (_label, offset, shouldCall) => {
-      const onComplete = vi.fn();
-      renderHook(() => useSwipeToComplete(ref, onComplete, true));
+      const onAction = vi.fn();
+      renderHook(() => useSwipeAction(ref, onAction, true));
       act(() => {
         fireTouchStart(element, 0, 0);
         fireTouchMove(element, threshold + offset, 0);
         fireTouchEnd(element);
       });
       if (shouldCall) {
-        expect(onComplete).toHaveBeenCalledOnce();
+        expect(onAction).toHaveBeenCalledOnce();
       } else {
-        expect(onComplete).not.toHaveBeenCalled();
+        expect(onAction).not.toHaveBeenCalled();
       }
     },
   );

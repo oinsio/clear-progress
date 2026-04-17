@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { SWIPE_COMPLETE_THRESHOLD_PERCENT } from "@/constants";
 
-export function useSwipeToComplete(
+export function useSwipeAction(
   ref: React.RefObject<HTMLDivElement | null>,
-  onComplete: () => void,
+  onAction: () => void,
   isEnabled: boolean,
 ): { translateX: number; isThresholdReached: boolean } {
   const [translateX, setTranslateX] = useState(0);
@@ -17,10 +17,10 @@ export function useSwipeToComplete(
     isEnabledRef.current = isEnabled;
   }, [isEnabled]);
 
-  const onCompleteRef = useRef(onComplete);
+  const onActionRef = useRef(onAction);
   useEffect(() => {
-    onCompleteRef.current = onComplete;
-  }, [onComplete]);
+    onActionRef.current = onAction;
+  }, [onAction]);
 
   const touchStartXRef = useRef(0);
   const touchStartYRef = useRef(0);
@@ -116,7 +116,7 @@ export function useSwipeToComplete(
       )
         return;
       if (translateXRef.current >= thresholdRef.current) {
-        onCompleteRef.current();
+        onActionRef.current();
       }
       translateXRef.current = 0;
       setTranslateX(0);
