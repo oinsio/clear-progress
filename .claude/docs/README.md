@@ -13,6 +13,13 @@
 
 ---
 
+### 🎨 [UI Components Guide](./ui-components.md)
+Документация custom UI-компонентов: `LinkedText`, `EditableDescription`.
+
+**Когда использовать:** при работе с полями описания, отображении текста с URL.
+
+---
+
 ### 📅 Temporal API Documentation
 
 Полная документация по работе с датами и временем через Temporal API.
