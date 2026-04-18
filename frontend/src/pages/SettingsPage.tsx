@@ -576,11 +576,7 @@ export default function SettingsPage() {
                 </span>
               </button>
               {isFocusMode && (
-                <div className="mt-3 space-y-2" data-testid="settings-focus-opacity">
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{t("settings.focusWeaker")}</span>
-                    <span>{t("settings.focusStronger")}</span>
-                  </div>
+                <div className="mt-3" data-testid="settings-focus-opacity">
                   <OpacityBars
                     value={focusOpacity}
                     onChange={setFocusOpacity}

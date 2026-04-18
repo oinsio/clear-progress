@@ -32,7 +32,7 @@ describe("OpacityBars", () => {
     expect(selectedBar).toHaveClass("bg-accent");
 
     const unselectedBar = screen.getByTestId("opacity-bar-50");
-    expect(unselectedBar).toHaveClass("bg-gray-300");
+    expect(unselectedBar).toHaveClass("bg-gray-900");
     expect(unselectedBar).not.toHaveClass("bg-accent");
   });
 

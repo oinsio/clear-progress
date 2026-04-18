@@ -13,7 +13,7 @@ export function OpacityBars({
   levels = FOCUS_OPACITY_LEVELS,
 }: OpacityBarsProps) {
   return (
-    <div className="flex gap-1 items-center justify-center">
+    <div className="flex gap-1 items-center">
       {levels.map((level) => {
         const isSelected = value === level;
         return (
@@ -26,8 +26,8 @@ export function OpacityBars({
             aria-pressed={isSelected}
             onClick={() => onChange(level)}
             className={cn(
-              "w-11 h-2.5 rounded-full cursor-pointer transition-all",
-              isSelected ? "bg-accent" : "bg-gray-300",
+              "w-20 h-2.5 rounded-full cursor-pointer transition-all border border-gray-900 dark:border-gray-100",
+              isSelected ? "bg-accent" : "bg-gray-900 dark:bg-gray-100",
               "hover:scale-y-[1.3] active:scale-y-[0.8]",
             )}
             style={{ opacity: level / 100 }}
