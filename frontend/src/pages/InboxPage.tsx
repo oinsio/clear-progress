@@ -423,60 +423,88 @@ export default function InboxPage() {
   const handleCompleteTodayAndReload = useCallback(
     async (id: string) => {
       const recurringId = await completeToday(id);
-      if (recurringId) setSelectedTaskId(recurringId);
+      if (recurringId) {
+        setSelectedTaskId(recurringId);
+      } else if (selectedTaskId === id) {
+        setSelectedTaskId(null);
+      }
       await reloadCompleted();
     },
-    [completeToday, reloadCompleted],
+    [completeToday, reloadCompleted, selectedTaskId],
   );
 
   const handleCompleteWeekAndReload = useCallback(
     async (id: string) => {
       const recurringId = await completeWeek(id);
-      if (recurringId) setSelectedTaskId(recurringId);
+      if (recurringId) {
+        setSelectedTaskId(recurringId);
+      } else if (selectedTaskId === id) {
+        setSelectedTaskId(null);
+      }
       await reloadCompleted();
     },
-    [completeWeek, reloadCompleted],
+    [completeWeek, reloadCompleted, selectedTaskId],
   );
 
   const handleCompleteLaterAndReload = useCallback(
     async (id: string) => {
       const recurringId = await completeLater(id);
-      if (recurringId) setSelectedTaskId(recurringId);
+      if (recurringId) {
+        setSelectedTaskId(recurringId);
+      } else if (selectedTaskId === id) {
+        setSelectedTaskId(null);
+      }
       await reloadCompleted();
     },
-    [completeLater, reloadCompleted],
+    [completeLater, reloadCompleted, selectedTaskId],
   );
 
   const handleCompleteInbox = useCallback(
     async (id: string) => {
       const recurringId = await completeInbox(id);
-      if (recurringId) setSelectedTaskId(recurringId);
+      if (recurringId) {
+        setSelectedTaskId(recurringId);
+      } else if (selectedTaskId === id) {
+        setSelectedTaskId(null);
+      }
     },
-    [completeInbox],
+    [completeInbox, selectedTaskId],
   );
 
   const handleCompleteToday = useCallback(
     async (id: string) => {
       const recurringId = await completeToday(id);
-      if (recurringId) setSelectedTaskId(recurringId);
+      if (recurringId) {
+        setSelectedTaskId(recurringId);
+      } else if (selectedTaskId === id) {
+        setSelectedTaskId(null);
+      }
     },
-    [completeToday],
+    [completeToday, selectedTaskId],
   );
 
   const handleCompleteWeek = useCallback(
     async (id: string) => {
       const recurringId = await completeWeek(id);
-      if (recurringId) setSelectedTaskId(recurringId);
+      if (recurringId) {
+        setSelectedTaskId(recurringId);
+      } else if (selectedTaskId === id) {
+        setSelectedTaskId(null);
+      }
     },
-    [completeWeek],
+    [completeWeek, selectedTaskId],
   );
 
   const handleCompleteLater = useCallback(
     async (id: string) => {
       const recurringId = await completeLater(id);
-      if (recurringId) setSelectedTaskId(recurringId);
+      if (recurringId) {
+        setSelectedTaskId(recurringId);
+      } else if (selectedTaskId === id) {
+        setSelectedTaskId(null);
+      }
     },
-    [completeLater],
+    [completeLater, selectedTaskId],
   );
 
   const {
