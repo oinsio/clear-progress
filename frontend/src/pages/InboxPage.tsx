@@ -439,9 +439,12 @@ export default function InboxPage() {
       } else if (selectedTaskId === id) {
         setSelectedTaskId(null);
       }
+      if (expandedTaskId === id) {
+        setExpandedTaskId(null);
+      }
       await reloadCompleted();
     },
-    [completeToday, reloadCompleted, selectedTaskId],
+    [completeToday, reloadCompleted, selectedTaskId, expandedTaskId],
   );
 
   const handleCompleteWeekAndReload = useCallback(
@@ -452,9 +455,12 @@ export default function InboxPage() {
       } else if (selectedTaskId === id) {
         setSelectedTaskId(null);
       }
+      if (expandedTaskId === id) {
+        setExpandedTaskId(null);
+      }
       await reloadCompleted();
     },
-    [completeWeek, reloadCompleted, selectedTaskId],
+    [completeWeek, reloadCompleted, selectedTaskId, expandedTaskId],
   );
 
   const handleCompleteLaterAndReload = useCallback(
@@ -465,9 +471,12 @@ export default function InboxPage() {
       } else if (selectedTaskId === id) {
         setSelectedTaskId(null);
       }
+      if (expandedTaskId === id) {
+        setExpandedTaskId(null);
+      }
       await reloadCompleted();
     },
-    [completeLater, reloadCompleted, selectedTaskId],
+    [completeLater, reloadCompleted, selectedTaskId, expandedTaskId],
   );
 
   const handleCompleteInbox = useCallback(
@@ -478,8 +487,11 @@ export default function InboxPage() {
       } else if (selectedTaskId === id) {
         setSelectedTaskId(null);
       }
+      if (expandedTaskId === id) {
+        setExpandedTaskId(null);
+      }
     },
-    [completeInbox, selectedTaskId],
+    [completeInbox, selectedTaskId, expandedTaskId],
   );
 
   const handleCompleteToday = useCallback(
@@ -490,8 +502,11 @@ export default function InboxPage() {
       } else if (selectedTaskId === id) {
         setSelectedTaskId(null);
       }
+      if (expandedTaskId === id) {
+        setExpandedTaskId(null);
+      }
     },
-    [completeToday, selectedTaskId],
+    [completeToday, selectedTaskId, expandedTaskId],
   );
 
   const handleCompleteWeek = useCallback(
@@ -502,8 +517,11 @@ export default function InboxPage() {
       } else if (selectedTaskId === id) {
         setSelectedTaskId(null);
       }
+      if (expandedTaskId === id) {
+        setExpandedTaskId(null);
+      }
     },
-    [completeWeek, selectedTaskId],
+    [completeWeek, selectedTaskId, expandedTaskId],
   );
 
   const handleCompleteLater = useCallback(
@@ -514,8 +532,11 @@ export default function InboxPage() {
       } else if (selectedTaskId === id) {
         setSelectedTaskId(null);
       }
+      if (expandedTaskId === id) {
+        setExpandedTaskId(null);
+      }
     },
-    [completeLater, selectedTaskId],
+    [completeLater, selectedTaskId, expandedTaskId],
   );
 
   const {
