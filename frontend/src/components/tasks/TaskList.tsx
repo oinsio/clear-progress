@@ -115,6 +115,8 @@ interface TaskListProps {
   selectedTaskId?: string | null;
   isFocusMode?: boolean;
   focusDimmedOpacity?: number;
+  expandedTaskId?: string | null;
+  onExpand?: (id: string | null) => void;
 }
 
 export function TaskList({
@@ -133,9 +135,19 @@ export function TaskList({
   selectedTaskId,
   isFocusMode = false,
   focusDimmedOpacity,
+  expandedTaskId: controlledExpandedTaskId,
+  onExpand: controlledOnExpand,
 }: TaskListProps) {
   const { t } = useTranslation();
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [localExpandedTaskId, setLocalExpandedTaskId] = useState<string | null>(
+    null,
+  );
+
+  const isControlled = controlledExpandedTaskId !== undefined;
+  const expandedTaskId = isControlled
+    ? controlledExpandedTaskId
+    : localExpandedTaskId;
+  const setExpandedTaskId = controlledOnExpand ?? setLocalExpandedTaskId;
 
   // Reset expandedTaskId when the expanded task is no longer in the list
   // (e.g., after completing a task in focus mode)
@@ -143,7 +155,7 @@ export function TaskList({
     if (expandedTaskId && !tasks.some((task) => task.id === expandedTaskId)) {
       setExpandedTaskId(null);
     }
-  }, [expandedTaskId, tasks]);
+  }, [expandedTaskId, tasks, setExpandedTaskId]);
 
   const hasFocusedTask =
     isFocusMode && (selectedTaskId != null || expandedTaskId != null);

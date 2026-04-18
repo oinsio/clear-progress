@@ -52,6 +52,8 @@ function TaskSection({
   selectedTaskId,
   isFocusMode,
   focusDimmedOpacity,
+  expandedTaskId,
+  onExpand,
 }: {
   sectionKey: string;
   label: string;
@@ -71,6 +73,8 @@ function TaskSection({
   selectedTaskId?: string | null;
   isFocusMode?: boolean;
   focusDimmedOpacity?: number;
+  expandedTaskId?: string | null;
+  onExpand?: (id: string | null) => void;
 }) {
   const { isCollapsed, toggleCollapse } = useSectionCollapse(sectionKey);
   return (
@@ -104,6 +108,8 @@ function TaskSection({
           selectedTaskId={selectedTaskId}
           isFocusMode={isFocusMode}
           focusDimmedOpacity={focusDimmedOpacity}
+          expandedTaskId={expandedTaskId}
+          onExpand={onExpand}
         />
       )}
     </section>
@@ -130,6 +136,7 @@ export default function InboxPage() {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const isDesktop = useIsDesktop();
   const {
     ratio,
@@ -321,6 +328,10 @@ export default function InboxPage() {
 
   const handleTaskSelect = useCallback((id: string) => {
     setSelectedTaskId((previous) => (previous === id ? null : id));
+  }, []);
+
+  const handleTaskExpand = useCallback((id: string | null) => {
+    setExpandedTaskId(id);
   }, []);
 
   const handleDetailPanelClose = useCallback(() => {
@@ -561,6 +572,8 @@ export default function InboxPage() {
     selectedTaskId,
     isFocusMode,
     focusDimmedOpacity: focusOpacity,
+    expandedTaskId,
+    onExpand: handleTaskExpand,
   };
 
   const renderContent = () => {
