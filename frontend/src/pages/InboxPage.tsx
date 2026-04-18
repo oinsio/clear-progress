@@ -535,6 +535,10 @@ export default function InboxPage() {
 
     if (found) {
       setSelectedTask(found);
+      // В режиме фокуса: если выделенная задача завершена, сбросить выделение
+      if (isFocusMode && found.is_completed) {
+        setSelectedTaskId(null);
+      }
     } else {
       // Если не нашли — запрашиваем из БД (для только что созданных задач)
       void (async () => {
@@ -549,6 +553,7 @@ export default function InboxPage() {
     weekTasks,
     laterTasks,
     completedTasks,
+    isFocusMode,
   ]);
 
   const sharedSelectProps = {
