@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   DndContext,
@@ -136,6 +136,15 @@ export function TaskList({
 }: TaskListProps) {
   const { t } = useTranslation();
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+
+  // Reset expandedTaskId when the expanded task is no longer in the list
+  // (e.g., after completing a task in focus mode)
+  useEffect(() => {
+    if (expandedTaskId && !tasks.some((task) => task.id === expandedTaskId)) {
+      setExpandedTaskId(null);
+    }
+  }, [expandedTaskId, tasks]);
+
   const hasFocusedTask =
     isFocusMode && (selectedTaskId != null || expandedTaskId != null);
 
