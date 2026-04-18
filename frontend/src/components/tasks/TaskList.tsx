@@ -152,10 +152,11 @@ export function TaskList({
   // Reset expandedTaskId when the expanded task is no longer in the list
   // (e.g., after completing a task in focus mode)
   useEffect(() => {
+    if (isControlled) return;
     if (expandedTaskId && !tasks.some((task) => task.id === expandedTaskId)) {
       setExpandedTaskId(null);
     }
-  }, [expandedTaskId, tasks, setExpandedTaskId]);
+  }, [isControlled, expandedTaskId, tasks, setExpandedTaskId]);
 
   const hasFocusedTask =
     isFocusMode && (selectedTaskId != null || expandedTaskId != null);
