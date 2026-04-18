@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useShowCheckbox } from "@/hooks/useShowCheckbox";
 
 export interface AddTaskInputProps {
   targetBox: string;
@@ -15,6 +16,7 @@ export function AddTaskInput({
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const showCheckbox = useShowCheckbox();
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -51,7 +53,9 @@ export function AddTaskInput({
 
   return (
     <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
-      <div className="w-5 h-5 rounded-full border-2 border-accent flex-shrink-0" />
+      {showCheckbox && (
+        <div className="w-5 h-5 rounded-full border-2 border-accent flex-shrink-0" />
+      )}
       <textarea
         ref={textareaRef}
         rows={1}
