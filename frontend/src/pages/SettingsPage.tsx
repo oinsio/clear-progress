@@ -20,6 +20,7 @@ import {
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
+import { OpacityBars } from "@/components/ui/OpacityBars";
 import { BOX_ICONS } from "@/components/tasks/taskEditShared";
 import { locales, getLocaleByCode } from "@/services/localeRegistry";
 import {
@@ -580,22 +581,10 @@ export default function SettingsPage() {
                     <span>{t("settings.focusWeaker")}</span>
                     <span>{t("settings.focusStronger")}</span>
                   </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={FOCUS_OPACITY_LEVELS.length - 1}
-                    step={1}
-                    value={String(
-                      (FOCUS_OPACITY_LEVELS as readonly number[]).indexOf(
-                        focusOpacity
-                      )
-                    )}
-                    onChange={(e) => {
-                      const index = Number(e.target.value);
-                      setFocusOpacity(FOCUS_OPACITY_LEVELS[index]);
-                    }}
-                    className="w-full accent-accent"
-                    data-testid="settings-focus-opacity-slider"
+                  <OpacityBars
+                    value={focusOpacity}
+                    onChange={setFocusOpacity}
+                    levels={FOCUS_OPACITY_LEVELS}
                   />
                 </div>
               )}

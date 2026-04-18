@@ -11,6 +11,7 @@ vi.mock("@/hooks/useLanguage");
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/usePanelAlwaysOpen");
+vi.mock("@/hooks/useFocusMode");
 vi.mock("@/hooks/useConnectionStatus");
 vi.mock("@/hooks/useFilterBarPosition");
 vi.mock("@/app/providers/InterfaceScaleProvider");
@@ -30,6 +31,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
+import { useFocusMode } from "@/hooks/useFocusMode";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useSync } from "@/app/providers/SyncProvider";
@@ -42,6 +44,7 @@ const mockUseLanguage = vi.mocked(useLanguage);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelAlwaysOpen = vi.mocked(usePanelAlwaysOpen);
+const mockUseFocusMode = vi.mocked(useFocusMode);
 const mockUseFilterBarPosition = vi.mocked(useFilterBarPosition);
 const mockUseInterfaceScale = vi.mocked(useInterfaceScale);
 const mockUseSync = vi.mocked(useSync);
@@ -117,6 +120,12 @@ describe("SettingsPage", () => {
     mockUsePanelAlwaysOpen.mockReturnValue({
       isPanelAlwaysOpen: false,
       setPanelAlwaysOpen: vi.fn(),
+    });
+    mockUseFocusMode.mockReturnValue({
+      isFocusMode: false,
+      setFocusMode: vi.fn(),
+      focusOpacity: 30,
+      setFocusOpacity: vi.fn(),
     });
     mockUseFilterBarPosition.mockReturnValue({
       filterBarPosition: "bottom",
@@ -377,6 +386,81 @@ describe("SettingsPage", () => {
         expect.objectContaining({ onSync: triggerFullSync }),
         expect.anything(),
       );
+    });
+  });
+
+  describe("focus mode section", () => {
+    it("should render focus mode toggle", () => {
+      renderPage();
+      expect(screen.getByTestId("settings-focus-mode")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("settings-focus-mode-toggle"),
+      ).toBeInTheDocument();
+    });
+
+    it("should not show opacity bars when focus mode is disabled", () => {
+      mockUseFocusMode.mockReturnValue({
+        isFocusMode: false,
+        setFocusMode: vi.fn(),
+        focusOpacity: 30,
+        setFocusOpacity: vi.fn(),
+      });
+      renderPage();
+      expect(
+        screen.queryByTestId("settings-focus-opacity"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show opacity bars when focus mode is enabled", () => {
+      mockUseFocusMode.mockReturnValue({
+        isFocusMode: true,
+        setFocusMode: vi.fn(),
+        focusOpacity: 30,
+        setFocusOpacity: vi.fn(),
+      });
+      renderPage();
+      expect(
+        screen.getByTestId("settings-focus-opacity"),
+      ).toBeInTheDocument();
+    });
+
+    it("should call setFocusMode when toggle is clicked", () => {
+      const setFocusMode = vi.fn();
+      mockUseFocusMode.mockReturnValue({
+        isFocusMode: false,
+        setFocusMode,
+        focusOpacity: 30,
+        setFocusOpacity: vi.fn(),
+      });
+      renderPage();
+      fireEvent.click(screen.getByTestId("settings-focus-mode-toggle"));
+      expect(setFocusMode).toHaveBeenCalledWith(true);
+    });
+
+    it("should render opacity bars with correct selected value", () => {
+      mockUseFocusMode.mockReturnValue({
+        isFocusMode: true,
+        setFocusMode: vi.fn(),
+        focusOpacity: 20,
+        setFocusOpacity: vi.fn(),
+      });
+      renderPage();
+      const selectedBar = screen.getByTestId("opacity-bar-20");
+      expect(selectedBar).toHaveAttribute("aria-pressed", "true");
+    });
+
+    it("should call setFocusOpacity when opacity bar is clicked", () => {
+      const setFocusOpacity = vi.fn();
+      mockUseFocusMode.mockReturnValue({
+        isFocusMode: true,
+        setFocusMode: vi.fn(),
+        focusOpacity: 30,
+        setFocusOpacity,
+      });
+      renderPage();
+      const bar50 = screen.getByTestId("opacity-bar-50");
+      fireEvent.click(bar50);
+      expect(setFocusOpacity).toHaveBeenCalledWith(50);
     });
   });
 });
