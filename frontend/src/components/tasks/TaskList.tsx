@@ -36,6 +36,8 @@ interface SortableTaskItemProps {
   selectedTaskId?: string | null;
   expandedTaskId?: string | null;
   onExpand?: (id: string | null) => void;
+  isFocusDimmed?: boolean;
+  focusDimmedOpacity?: number;
 }
 
 function SortableTaskItem({
@@ -51,6 +53,8 @@ function SortableTaskItem({
   selectedTaskId,
   expandedTaskId,
   onExpand,
+  isFocusDimmed = false,
+  focusDimmedOpacity,
 }: SortableTaskItemProps) {
   const {
     attributes,
@@ -88,6 +92,8 @@ function SortableTaskItem({
         isSelected={selectedTaskId === task.id}
         isExpanded={expandedTaskId === task.id}
         onExpand={onExpand}
+        isFocusDimmed={isFocusDimmed}
+        focusDimmedOpacity={focusDimmedOpacity}
       />
     </li>
   );
@@ -107,6 +113,8 @@ interface TaskListProps {
   onEmptyClick?: () => void;
   onSelect?: (id: string) => void;
   selectedTaskId?: string | null;
+  isFocusMode?: boolean;
+  focusDimmedOpacity?: number;
 }
 
 export function TaskList({
@@ -123,9 +131,13 @@ export function TaskList({
   onEmptyClick,
   onSelect,
   selectedTaskId,
+  isFocusMode = false,
+  focusDimmedOpacity,
 }: TaskListProps) {
   const { t } = useTranslation();
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const hasFocusedTask =
+    isFocusMode && (selectedTaskId != null || expandedTaskId != null);
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE_PX },
@@ -188,6 +200,12 @@ export function TaskList({
               isSelected={selectedTaskId === task.id}
               isExpanded={expandedTaskId === task.id}
               onExpand={setExpandedTaskId}
+              isFocusDimmed={
+                hasFocusedTask &&
+                selectedTaskId !== task.id &&
+                expandedTaskId !== task.id
+              }
+              focusDimmedOpacity={focusDimmedOpacity}
             />
           </li>
         ))}
@@ -221,6 +239,12 @@ export function TaskList({
               selectedTaskId={selectedTaskId}
               expandedTaskId={expandedTaskId}
               onExpand={setExpandedTaskId}
+              isFocusDimmed={
+                hasFocusedTask &&
+                selectedTaskId !== task.id &&
+                expandedTaskId !== task.id
+              }
+              focusDimmedOpacity={focusDimmedOpacity}
             />
           ))}
         </ul>

@@ -24,6 +24,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { useFocusMode } from "@/hooks/useFocusMode";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
@@ -94,6 +95,7 @@ export default function GoalDetailPage() {
   const { categories } = useCategories();
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const { isFocusMode, focusOpacity } = useFocusMode();
   const { filterBarPosition } = useFilterBarPosition();
   const isDesktop = useIsDesktop();
   const {
@@ -606,6 +608,8 @@ export default function GoalDetailPage() {
                 onReorder={handleReorderTasks}
                 onSelect={handleTaskSelect}
                 selectedTaskId={selectedTaskId}
+                isFocusMode={isFocusMode}
+                focusDimmedOpacity={focusOpacity}
               />
 
               {/* Completed tasks section */}
@@ -627,6 +631,8 @@ export default function GoalDetailPage() {
                     onDelete={deleteTask}
                     onSelect={handleTaskSelect}
                     selectedTaskId={selectedTaskId}
+                    isFocusMode={isFocusMode}
+                focusDimmedOpacity={focusOpacity}
                   />
                 </section>
               )}

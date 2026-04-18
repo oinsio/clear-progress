@@ -35,6 +35,8 @@ interface BoxSectionProps {
   onReorder?: (tasks: Task[]) => Promise<void>;
   onSelect?: (id: string) => void;
   selectedTaskId?: string | null;
+  isFocusMode?: boolean;
+  focusDimmedOpacity?: number;
 }
 
 function BoxSection({
@@ -50,6 +52,8 @@ function BoxSection({
   onReorder,
   onSelect,
   selectedTaskId,
+  isFocusMode,
+  focusDimmedOpacity,
 }: BoxSectionProps) {
   const { isCollapsed, toggleCollapse } = useSectionCollapse(
     BOX_SECTION_KEYS[box],
@@ -81,6 +85,8 @@ function BoxSection({
           onReorder={onReorder}
           onSelect={onSelect}
           selectedTaskId={selectedTaskId}
+          isFocusMode={isFocusMode}
+          focusDimmedOpacity={focusDimmedOpacity}
         />
       )}
     </section>
@@ -101,6 +107,8 @@ interface BoxSectionListProps {
   onReorder?: (box: Box, tasks: Task[]) => Promise<void>;
   onSelect?: (id: string) => void;
   selectedTaskId?: string | null;
+  isFocusMode?: boolean;
+  focusDimmedOpacity?: number;
 }
 
 export function BoxSectionList({
@@ -117,6 +125,8 @@ export function BoxSectionList({
   onReorder,
   onSelect,
   selectedTaskId,
+  isFocusMode,
+  focusDimmedOpacity,
 }: BoxSectionListProps) {
   const { t } = useTranslation();
   const hasAnyTasks = BOX_SECTION_ORDER.some(
@@ -156,6 +166,8 @@ export function BoxSectionList({
             onReorder={onReorder ? (tasks) => onReorder(box, tasks) : undefined}
             onSelect={onSelect}
             selectedTaskId={selectedTaskId}
+            isFocusMode={isFocusMode}
+            focusDimmedOpacity={focusDimmedOpacity}
           />
         );
       })}

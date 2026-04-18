@@ -8,6 +8,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
+import { useFocusMode } from "@/hooks/useFocusMode";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useSync } from "@/app/providers/SyncProvider";
@@ -34,6 +35,7 @@ import {
   STORAGE_KEYS,
   BACKEND_CONNECTION_EVENT,
   LANGUAGE_SEARCH_THRESHOLD,
+  FOCUS_OPACITY_LEVELS,
 } from "@/constants";
 import type {
   Box,
@@ -78,6 +80,8 @@ export default function SettingsPage() {
   const { panelSide, setPanelSide } = usePanelSide();
   const { language, setLanguage } = useLanguage();
   const { isPanelAlwaysOpen, setPanelAlwaysOpen } = usePanelAlwaysOpen();
+  const { isFocusMode, setFocusMode, focusOpacity, setFocusOpacity } =
+    useFocusMode();
   const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
   const { interfaceScale, setInterfaceScale } = useInterfaceScale();
 
@@ -541,6 +545,60 @@ export default function SettingsPage() {
                   {t("settings.panelAlwaysOpen")}
                 </span>
               </button>
+            </section>
+
+            {/* Focus mode section */}
+            <section data-testid="settings-focus-mode">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isFocusMode}
+                data-testid="settings-focus-mode-toggle"
+                onClick={() => setFocusMode(!isFocusMode)}
+                className="flex items-center gap-3"
+              >
+                <span
+                  className={cn(
+                    "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
+                    isFocusMode ? "bg-accent" : "bg-gray-200",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200",
+                      isFocusMode ? "translate-x-5" : "translate-x-0",
+                    )}
+                  />
+                </span>
+                <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                  {t("settings.focusMode")}
+                </span>
+              </button>
+              {isFocusMode && (
+                <div className="mt-3 space-y-2" data-testid="settings-focus-opacity">
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{t("settings.focusWeaker")}</span>
+                    <span>{t("settings.focusStronger")}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={FOCUS_OPACITY_LEVELS.length - 1}
+                    step={1}
+                    value={String(
+                      (FOCUS_OPACITY_LEVELS as readonly number[]).indexOf(
+                        focusOpacity
+                      )
+                    )}
+                    onChange={(e) => {
+                      const index = Number(e.target.value);
+                      setFocusOpacity(FOCUS_OPACITY_LEVELS[index]);
+                    }}
+                    className="w-full accent-accent"
+                    data-testid="settings-focus-opacity-slider"
+                  />
+                </div>
+              )}
             </section>
 
             {/* Filter bar position section */}

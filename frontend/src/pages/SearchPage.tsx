@@ -17,6 +17,7 @@ import { useContexts } from "@/hooks/useContexts";
 import { useCategories } from "@/hooks/useCategories";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { useFocusMode } from "@/hooks/useFocusMode";
 import {
   defaultTaskService,
   defaultIdeaService,
@@ -39,6 +40,7 @@ export default function SearchPage() {
   const { categories } = useCategories();
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const { isFocusMode, focusOpacity } = useFocusMode();
   const navigate = useNavigate();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -233,6 +235,8 @@ export default function SearchPage() {
                   onDelete={handleTaskDelete}
                   onSelect={handleTaskSelect}
                   selectedTaskId={selectedTaskId}
+                  isFocusMode={isFocusMode}
+                  focusDimmedOpacity={focusOpacity}
                 />
               </section>
             )}

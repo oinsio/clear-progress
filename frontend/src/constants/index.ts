@@ -162,7 +162,12 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN_EXPIRES_AT: "access_token_expires_at",
   SHOW_HIDDEN_TASKS: "show_hidden_tasks",
   SETTINGS_UPDATED_AT: "settings_updated_at",
+  FOCUS_MODE: "focus_mode",
+  FOCUS_OPACITY: "focus_opacity",
 } as const;
+
+export const DEFAULT_FOCUS_OPACITY = 30;
+export const FOCUS_OPACITY_LEVELS = [50, 40, 30, 20, 10] as const;
 
 export const GOOGLE_USERINFO_URL =
   "https://www.googleapis.com/oauth2/v3/userinfo";

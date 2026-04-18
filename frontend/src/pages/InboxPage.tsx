@@ -22,6 +22,7 @@ import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { useFocusMode } from "@/hooks/useFocusMode";
 import { defaultTaskService } from "@/services/defaultServices";
 import type { BoxFilter, Box } from "@/types/common";
 import type { Task } from "@/types/entities";
@@ -49,6 +50,8 @@ function TaskSection({
   onEmptyClick,
   onSelect,
   selectedTaskId,
+  isFocusMode,
+  focusDimmedOpacity,
 }: {
   sectionKey: string;
   label: string;
@@ -66,6 +69,8 @@ function TaskSection({
   onEmptyClick?: () => void;
   onSelect?: (id: string) => void;
   selectedTaskId?: string | null;
+  isFocusMode?: boolean;
+  focusDimmedOpacity?: number;
 }) {
   const { isCollapsed, toggleCollapse } = useSectionCollapse(sectionKey);
   return (
@@ -97,6 +102,8 @@ function TaskSection({
           onEmptyClick={onEmptyClick}
           onSelect={onSelect}
           selectedTaskId={selectedTaskId}
+          isFocusMode={isFocusMode}
+          focusDimmedOpacity={focusDimmedOpacity}
         />
       )}
     </section>
@@ -185,6 +192,7 @@ export default function InboxPage() {
     clear: clearSearch,
   } = useSearch();
   const { panelSide } = usePanelSide();
+  const { isFocusMode, focusOpacity } = useFocusMode();
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -518,6 +526,8 @@ export default function InboxPage() {
   const sharedSelectProps = {
     onSelect: handleTaskSelect,
     selectedTaskId,
+    isFocusMode,
+    focusDimmedOpacity: focusOpacity,
   };
 
   const renderContent = () => {

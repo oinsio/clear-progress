@@ -49,6 +49,8 @@ interface TaskItemProps {
   isSelected?: boolean;
   isExpanded?: boolean;
   onExpand?: (id: string | null) => void;
+  isFocusDimmed?: boolean;
+  focusDimmedOpacity?: number;
 }
 
 export function TaskItem({
@@ -64,6 +66,8 @@ export function TaskItem({
   isSelected,
   isExpanded = false,
   onExpand,
+  isFocusDimmed = false,
+  focusDimmedOpacity,
 }: TaskItemProps) {
   const { t } = useTranslation();
   const { progress: checklistProgress, hasUnsyncedItems } = useChecklist(
@@ -170,8 +174,14 @@ export function TaskItem({
               ? "border-l-accent"
               : "border-l-transparent",
           isSelected && "bg-accent/5",
+          isFocusDimmed && !task.is_hidden && "transition-opacity",
           task.is_hidden && "opacity-50",
         )}
+        style={
+          isFocusDimmed && !task.is_hidden && focusDimmedOpacity !== undefined
+            ? { opacity: focusDimmedOpacity / 100 }
+            : undefined
+        }
       >
         {/* Swipe action background */}
         {isSwipeEnabled && (
