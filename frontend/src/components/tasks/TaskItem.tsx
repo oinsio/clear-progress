@@ -151,7 +151,7 @@ export function TaskItem({
     }
   }, [isExpanded, isConfirmingRestore]);
 
-  const isSwipeEnabled = !isDesktop;
+  const isSwipeEnabled = hasTouchPointer;
   const { translateX, isThresholdReached } = useSwipeAction(
     containerRef,
     () => onComplete(task.id),
