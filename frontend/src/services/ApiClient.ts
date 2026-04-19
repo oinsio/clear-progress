@@ -20,6 +20,7 @@ import {
   API_AUTH_ERROR_NAME,
 } from "@/constants";
 import { Temporal } from "@/lib/temporal";
+import { getConnectionConfig } from "@/services/connectionService";
 
 // Module-level shared state — all ApiClient instances use the same token
 let sharedAccessToken: string | null = null;
@@ -68,8 +69,12 @@ export class ApiAuthError extends Error {
 }
 
 export class ApiClient {
-  private getUrl(): string {
-    return localStorage.getItem(STORAGE_KEYS.GAS_URL) ?? "";
+  private getUrl(): string | null {
+    const config = getConnectionConfig();
+    if (config?.type === "gas") {
+      return config.url;
+    }
+    return null;
   }
 
   private async request<TResponse>(body: object): Promise<TResponse> {
@@ -79,7 +84,7 @@ export class ApiClient {
 
     const url = this.getUrl();
     if (!url) {
-      throw new Error("GAS URL is not configured");
+      throw new Error("Backend URL is not configured");
     }
 
     const requestBody =
@@ -106,12 +111,16 @@ export class ApiClient {
   }
 
   async ping(): Promise<PingResponse> {
-    return this.pingUrl(this.getUrl());
+    const url = this.getUrl();
+    if (!url) {
+      throw new Error("Backend URL is not configured");
+    }
+    return this.pingUrl(url);
   }
 
   async pingUrl(url: string): Promise<PingResponse> {
     if (!url) {
-      throw new Error("GAS URL is not configured");
+      throw new Error("Backend URL is not configured");
     }
     const response = await fetch(`${url}?action=ping`, { redirect: "follow" });
     if (!response.ok) {

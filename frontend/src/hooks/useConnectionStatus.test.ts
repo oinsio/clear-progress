@@ -1,11 +1,11 @@
 import { renderHook } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockUseAuth, mockUseSync, mockUseBackendConnected } = vi.hoisted(
+const { mockUseAuth, mockUseSync, mockUseConnectionConfig } = vi.hoisted(
   () => ({
     mockUseAuth: vi.fn(),
     mockUseSync: vi.fn(),
-    mockUseBackendConnected: vi.fn(),
+    mockUseConnectionConfig: vi.fn(),
   }),
 );
 
@@ -17,8 +17,8 @@ vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: mockUseSync,
 }));
 
-vi.mock("@/hooks/useBackendConnected", () => ({
-  useBackendConnected: mockUseBackendConnected,
+vi.mock("@/hooks/useConnectionConfig", () => ({
+  useConnectionConfig: mockUseConnectionConfig,
 }));
 
 import { useConnectionStatus } from "./useConnectionStatus";
@@ -27,24 +27,27 @@ describe("useConnectionStatus", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: connected, authenticated, synced
-    mockUseBackendConnected.mockReturnValue(true);
+    mockUseConnectionConfig.mockReturnValue({ type: "gas", url: "https://test.example.com" });
     mockUseAuth.mockReturnValue({ accessToken: "token-123" });
     mockUseSync.mockReturnValue({ syncStatus: "idle" });
   });
 
   it("should return not_configured when backend is not connected", () => {
-    mockUseBackendConnected.mockReturnValue(false);
+    mockUseConnectionConfig.mockReturnValue(null);
     const { result } = renderHook(() => useConnectionStatus());
     expect(result.current).toBe("not_configured");
   });
 
-  it("should return no_auth when backend is connected but no accessToken", () => {
+  it("should return no_auth when backend is connected with clientId but no accessToken", () => {
+    mockUseConnectionConfig.mockReturnValue({ type: "gas", url: "https://test.example.com", clientId: "test-client-id" });
     mockUseAuth.mockReturnValue({ accessToken: null });
     const { result } = renderHook(() => useConnectionStatus());
     expect(result.current).toBe("no_auth");
   });
 
-  it("should return synced when connected, authenticated and syncStatus is idle", () => {
+  it("should return synced when connected without clientId", () => {
+    mockUseConnectionConfig.mockReturnValue({ type: "gas", url: "https://test.example.com" });
+    mockUseAuth.mockReturnValue({ accessToken: null });
     const { result } = renderHook(() => useConnectionStatus());
     expect(result.current).toBe("synced");
   });
@@ -74,13 +77,14 @@ describe("useConnectionStatus", () => {
   });
 
   it("should prioritize not_configured over no_auth", () => {
-    mockUseBackendConnected.mockReturnValue(false);
+    mockUseConnectionConfig.mockReturnValue(null);
     mockUseAuth.mockReturnValue({ accessToken: null });
     const { result } = renderHook(() => useConnectionStatus());
     expect(result.current).toBe("not_configured");
   });
 
-  it("should prioritize no_auth over syncStatus", () => {
+  it("should prioritize no_auth over syncStatus when clientId is present", () => {
+    mockUseConnectionConfig.mockReturnValue({ type: "gas", url: "https://test.example.com", clientId: "test-client-id" });
     mockUseAuth.mockReturnValue({ accessToken: null });
     mockUseSync.mockReturnValue({ syncStatus: "error" });
     const { result } = renderHook(() => useConnectionStatus());

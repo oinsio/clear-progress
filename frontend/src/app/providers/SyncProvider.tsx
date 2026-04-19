@@ -30,6 +30,7 @@ import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { defaultCoverSyncService } from "@/services/defaultServices";
+import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 
 interface SyncContextValue {
   syncStatus: SyncStatus;
@@ -69,6 +70,8 @@ function persistLastSync(timestamp: string): void {
 }
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
+  const config = useConnectionConfig();
+  const configRef = useRef(config);
   const { accessToken, signOut, silentRefresh } = useAuth();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncVersion, setSyncVersion] = useState(0);
@@ -88,6 +91,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     lastSyncedAtRef.current = lastSyncedAt;
   }, [lastSyncedAt]);
+
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
 
   const stopPingInterval = useCallback(() => {
     if (pingIntervalRef.current) {
@@ -198,7 +205,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   );
 
   const performPing = useCallback(async (): Promise<void> => {
-    if (!accessToken) return;
+    if (!accessToken || !configRef.current) return;
     pingAttemptsRef.current += 1;
     if (pingAttemptsRef.current > MAX_PING_ATTEMPTS) {
       // Give up pinging — user or network must recover manually
@@ -228,7 +235,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }, [performPing]);
 
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken || !config) return;
 
     void defaultCoverSyncService.initializeLocalCovers();
     void defaultCoverSyncService.sync();
@@ -271,7 +278,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("pageshow", handlePageShow);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [accessToken, sync, performPing, stopPingInterval]);
+  }, [accessToken, config, sync, performPing, stopPingInterval]);
 
   useEffect(() => {
     if (syncStatus === "offline" || syncStatus === "error") {

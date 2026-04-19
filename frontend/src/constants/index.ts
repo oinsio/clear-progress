@@ -139,8 +139,10 @@ export const SYNC_META_KEYS = {
 } as const;
 
 export const STORAGE_KEYS = {
-  GAS_URL: "gas_url",
-  GOOGLE_CLIENT_ID: "google_client_id",
+  CONNECTION_CONFIG: "connection_config",
+  GAS_URL: "gas_url", // @deprecated — use CONNECTION_CONFIG
+  GOOGLE_CLIENT_ID: "google_client_id", // @deprecated — use CONNECTION_CONFIG
+  BACKEND_CONNECTED: "backend_connected", // @deprecated — use CONNECTION_CONFIG
   LAST_SYNC: "last_sync",
   ACCENT_COLOR: "accent_color",
   CUSTOM_ACCENT_LIGHT: "custom_accent_light",
@@ -157,7 +159,6 @@ export const STORAGE_KEYS = {
   SECTION_COLLAPSE: "section_collapse",
   COLOR_SCHEME: "color_scheme",
   USER_PICTURE: "user_picture",
-  BACKEND_CONNECTED: "backend_connected",
   ACCESS_TOKEN: "access_token",
   ACCESS_TOKEN_EXPIRES_AT: "access_token_expires_at",
   SHOW_HIDDEN_TASKS: "show_hidden_tasks",

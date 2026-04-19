@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import SetupPage from "./SetupPage";
-import { STORAGE_KEYS, ROUTES } from "@/constants";
+import { ROUTES } from "@/constants";
 import { localStorageMock } from "@/test/mocks/localStorageMock";
 
 const mockNavigate = vi.fn();
@@ -12,13 +12,22 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-const { mockPingUrl, mockInit } = vi.hoisted(() => ({
+const { mockPingUrl, mockInit, mockConnect, mockDisconnect, mockGetConnectionConfig } = vi.hoisted(() => ({
   mockPingUrl: vi.fn(),
   mockInit: vi.fn(),
+  mockConnect: vi.fn(),
+  mockDisconnect: vi.fn(),
+  mockGetConnectionConfig: vi.fn(),
 }));
 
 vi.mock("@/services/defaultServices", () => ({
   defaultApiClient: { pingUrl: mockPingUrl, init: mockInit },
+}));
+
+vi.mock("@/services/connectionService", () => ({
+  connect: mockConnect,
+  disconnect: mockDisconnect,
+  getConnectionConfig: mockGetConnectionConfig,
 }));
 
 vi.mock("@/hooks/usePanelSide");
@@ -40,6 +49,7 @@ const mockUseAuth = vi.mocked(useAuth);
 
 const TEST_URL = "https://script.google.com/macros/s/abc/exec";
 const TEST_DEPLOYMENT_ID = "AKfycbxTestDeploymentId";
+const TEST_CLIENT_ID = "test-client-id.apps.googleusercontent.com";
 
 function renderPage() {
   return render(
@@ -49,10 +59,28 @@ function renderPage() {
   );
 }
 
+async function enterUrlAndConnect(url: string) {
+  fireEvent.change(screen.getByTestId("setup-url-input"), {
+    target: { value: url },
+  });
+  fireEvent.click(screen.getByTestId("setup-connect-button"));
+}
+
+async function enterUrlClientIdAndConnect(url: string, clientId: string) {
+  fireEvent.change(screen.getByTestId("setup-url-input"), {
+    target: { value: url },
+  });
+  fireEvent.change(screen.getByTestId("setup-client-id-input"), {
+    target: { value: clientId },
+  });
+  fireEvent.click(screen.getByTestId("setup-connect-button"));
+}
+
 describe("SetupPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
+    mockGetConnectionConfig.mockReturnValue(null);
     mockUsePanelOpen.mockReturnValue({
       isPanelOpen: false,
       togglePanelOpen: vi.fn(),
@@ -100,36 +128,29 @@ describe("SetupPage", () => {
     it("should call pingUrl with the entered full URL", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlAndConnect(TEST_URL);
       expect(mockPingUrl).toHaveBeenCalledWith(TEST_URL);
     });
 
     it("should build full URL from deployment ID and call pingUrl with it", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_DEPLOYMENT_ID },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlAndConnect(TEST_DEPLOYMENT_ID);
       expect(mockPingUrl).toHaveBeenCalledWith(
         `https://script.google.com/macros/s/${TEST_DEPLOYMENT_ID}/exec`,
       );
     });
 
-    it("should save full URL to localStorage when deployment ID is entered", async () => {
+    it("should call connect with full URL when deployment ID is entered", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_DEPLOYMENT_ID },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlAndConnect(TEST_DEPLOYMENT_ID);
       await waitFor(() => {
-        expect(localStorage.getItem(STORAGE_KEYS.GAS_URL)).toBe(
-          `https://script.google.com/macros/s/${TEST_DEPLOYMENT_ID}/exec`,
-        );
+        expect(mockConnect).toHaveBeenCalledWith({
+          type: "gas",
+          url: `https://script.google.com/macros/s/${TEST_DEPLOYMENT_ID}/exec`,
+          clientId: undefined,
+        });
       });
     });
 
@@ -145,25 +166,23 @@ describe("SetupPage", () => {
   });
 
   describe("when ping succeeds with initialized: true", () => {
-    it("should save URL to localStorage", async () => {
+    it("should call connect with URL", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
-        expect(localStorage.getItem(STORAGE_KEYS.GAS_URL)).toBe(TEST_URL);
+        expect(mockConnect).toHaveBeenCalledWith({
+          type: "gas",
+          url: TEST_URL,
+          clientId: undefined,
+        });
       });
     });
 
     it("should navigate to inbox", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith(ROUTES.INBOX);
       });
@@ -171,59 +190,50 @@ describe("SetupPage", () => {
   });
 
   describe("when ping succeeds with initialized: false", () => {
-    it("should save URL to localStorage", async () => {
+    it("should call connect with URL and clientId", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlClientIdAndConnect(TEST_URL, TEST_CLIENT_ID);
       await waitFor(() => {
-        expect(localStorage.getItem(STORAGE_KEYS.GAS_URL)).toBe(TEST_URL);
+        expect(mockConnect).toHaveBeenCalledWith({
+          type: "gas",
+          url: TEST_URL,
+          clientId: TEST_CLIENT_ID,
+        });
       });
     });
 
-    it("should show initialize button", async () => {
+    it("should show awaiting sign-in phase when clientId is provided", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlClientIdAndConnect(TEST_URL, TEST_CLIENT_ID);
       await waitFor(() => {
         expect(
-          screen.getByTestId("setup-initialize-button"),
+          screen.getByTestId("setup-awaiting-signin"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should show not_initialized phase when clientId is not provided", async () => {
+      mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
+      renderPage();
+      await enterUrlAndConnect(TEST_URL);
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("setup-back-button"),
         ).toBeInTheDocument();
       });
     });
 
     describe("authentication gate", () => {
-      async function reachNotInitializedPhase() {
+      async function reachAwaitingSigninPhase() {
         mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
         renderPage();
-        fireEvent.change(screen.getByTestId("setup-url-input"), {
-          target: { value: TEST_URL },
-        });
-        fireEvent.click(screen.getByTestId("setup-connect-button"));
-        await waitFor(() => screen.getByTestId("setup-initialize-button"));
+        await enterUrlClientIdAndConnect(TEST_URL, TEST_CLIENT_ID);
+        await waitFor(() => screen.getByTestId("setup-awaiting-signin"));
       }
 
-      it("should enable initialize button when authenticated", async () => {
-        mockUseAuth.mockReturnValue({
-          accessToken: "token",
-          userEmail: null,
-          signIn: vi.fn(),
-          signOut: vi.fn(),
-          silentRefresh: vi.fn(),
-          userPicture: null,
-        });
-        await reachNotInitializedPhase();
-        expect(
-          screen.getByTestId("setup-initialize-button"),
-        ).not.toBeDisabled();
-      });
-
-      it("should disable initialize button when not authenticated", async () => {
+      it("should show sign-in button in awaiting_signin phase", async () => {
         mockUseAuth.mockReturnValue({
           accessToken: null,
           userEmail: null,
@@ -232,41 +242,13 @@ describe("SetupPage", () => {
           silentRefresh: vi.fn(),
           userPicture: null,
         });
-        await reachNotInitializedPhase();
-        expect(screen.getByTestId("setup-initialize-button")).toBeDisabled();
-      });
-
-      it("should show sign-in required message when not authenticated", async () => {
-        mockUseAuth.mockReturnValue({
-          accessToken: null,
-          userEmail: null,
-          signIn: vi.fn(),
-          signOut: vi.fn(),
-          silentRefresh: vi.fn(),
-          userPicture: null,
-        });
-        await reachNotInitializedPhase();
+        await reachAwaitingSigninPhase();
         expect(
-          screen.getByTestId("setup-sign-in-required"),
+          screen.getByTestId("setup-sign-in-btn"),
         ).toBeInTheDocument();
       });
 
-      it("should not show sign-in required when authenticated", async () => {
-        mockUseAuth.mockReturnValue({
-          accessToken: "token",
-          userEmail: null,
-          signIn: vi.fn(),
-          signOut: vi.fn(),
-          silentRefresh: vi.fn(),
-          userPicture: null,
-        });
-        await reachNotInitializedPhase();
-        expect(
-          screen.queryByTestId("setup-sign-in-required"),
-        ).not.toBeInTheDocument();
-      });
-
-      it("should call signIn when sign-in button in not_initialized is clicked", async () => {
+      it("should call signIn when sign-in button is clicked", async () => {
         const signIn = vi.fn();
         mockUseAuth.mockReturnValue({
           accessToken: null,
@@ -276,43 +258,9 @@ describe("SetupPage", () => {
           silentRefresh: vi.fn(),
           userPicture: null,
         });
-        await reachNotInitializedPhase();
+        await reachAwaitingSigninPhase();
         fireEvent.click(screen.getByTestId("setup-sign-in-btn"));
         expect(signIn).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe("when initializing", () => {
-    beforeEach(async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
-      renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
-      await waitFor(() => screen.getByTestId("setup-initialize-button"));
-    });
-
-    it("should call init when initialize button is clicked", () => {
-      mockInit.mockResolvedValue({ ok: true });
-      fireEvent.click(screen.getByTestId("setup-initialize-button"));
-      expect(mockInit).toHaveBeenCalled();
-    });
-
-    it("should navigate to inbox after successful initialization", async () => {
-      mockInit.mockResolvedValue({ ok: true });
-      fireEvent.click(screen.getByTestId("setup-initialize-button"));
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith(ROUTES.INBOX);
-      });
-    });
-
-    it("should show error message when init fails", async () => {
-      mockInit.mockRejectedValue(new Error("init failed"));
-      fireEvent.click(screen.getByTestId("setup-initialize-button"));
-      await waitFor(() => {
-        expect(screen.getByTestId("setup-error")).toBeInTheDocument();
       });
     });
   });
@@ -321,24 +269,18 @@ describe("SetupPage", () => {
     it("should show error message", async () => {
       mockPingUrl.mockRejectedValue(new Error("connection failed"));
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
         expect(screen.getByTestId("setup-error")).toBeInTheDocument();
       });
     });
 
-    it("should not save URL to localStorage", async () => {
+    it("should not call connect when ping fails", async () => {
       mockPingUrl.mockRejectedValue(new Error("connection failed"));
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlAndConnect(TEST_URL);
       await waitFor(() => screen.getByTestId("setup-error"));
-      expect(localStorage.getItem(STORAGE_KEYS.GAS_URL)).toBeNull();
+      expect(mockConnect).not.toHaveBeenCalled();
     });
   });
 
@@ -365,49 +307,16 @@ describe("SetupPage", () => {
     });
   });
 
-  describe("sign-in button in GAS collapsible", () => {
-    it("should show gas sign-in button when not authenticated in input phase", () => {
-      mockUseAuth.mockReturnValue({
-        accessToken: null,
-        userEmail: null,
-        signIn: vi.fn(),
-        signOut: vi.fn(),
-        silentRefresh: vi.fn(),
-        userPicture: null,
-      });
-      renderPage();
-      expect(screen.getByTestId("setup-gas-sign-in-btn")).toBeInTheDocument();
-    });
-
-    it("should not show gas sign-in button when authenticated in input phase", () => {
-      renderPage();
-      expect(
-        screen.queryByTestId("setup-gas-sign-in-btn"),
-      ).not.toBeInTheDocument();
-    });
-
-    it("should call signIn when gas sign-in button is clicked", () => {
-      const signIn = vi.fn();
-      mockUseAuth.mockReturnValue({
-        accessToken: null,
-        userEmail: null,
-        signIn,
-        signOut: vi.fn(),
-        silentRefresh: vi.fn(),
-        userPicture: null,
-      });
-      renderPage();
-      fireEvent.click(screen.getByTestId("setup-gas-sign-in-btn"));
-      expect(signIn).toHaveBeenCalled();
-    });
-  });
-
   describe("when URL is already configured", () => {
     const EXISTING_URL = "https://script.google.com/macros/s/existing/exec";
     const EXISTING_CLIENT_ID = "test-client-id.apps.googleusercontent.com";
 
     beforeEach(() => {
-      localStorage.setItem(STORAGE_KEYS.GAS_URL, EXISTING_URL);
+      mockGetConnectionConfig.mockReturnValue({
+        type: "gas",
+        url: EXISTING_URL,
+        clientId: undefined,
+      });
     });
 
     it("should show current URL", () => {
@@ -420,19 +329,10 @@ describe("SetupPage", () => {
       expect(screen.getByTestId("setup-disconnect-button")).toBeInTheDocument();
     });
 
-    it("should keep GAS URL in localStorage when disconnect is clicked", () => {
+    it("should call disconnect when disconnect button is clicked", () => {
       renderPage();
       fireEvent.click(screen.getByTestId("setup-disconnect-button"));
-      expect(localStorage.getItem(STORAGE_KEYS.GAS_URL)).toBe(EXISTING_URL);
-    });
-
-    it("should keep Google Client ID in localStorage when disconnect is clicked", () => {
-      localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, EXISTING_CLIENT_ID);
-      renderPage();
-      fireEvent.click(screen.getByTestId("setup-disconnect-button"));
-      expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(
-        EXISTING_CLIENT_ID,
-      );
+      expect(mockDisconnect).toHaveBeenCalled();
     });
 
     it("should show input form after disconnecting", () => {
@@ -442,7 +342,11 @@ describe("SetupPage", () => {
     });
 
     it("should navigate to inbox when sign-in completes in connected phase", async () => {
-      localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, EXISTING_CLIENT_ID);
+      mockGetConnectionConfig.mockReturnValue({
+        type: "gas",
+        url: EXISTING_URL,
+        clientId: EXISTING_CLIENT_ID,
+      });
       mockUseAuth.mockReturnValue({
         accessToken: null,
         userEmail: null,
@@ -484,49 +388,42 @@ describe("SetupPage", () => {
       sessionStorage.clear();
     });
 
-    it("should save full client ID to localStorage when short form is entered", async () => {
+    it("should call connect with full client ID when short form is entered", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.change(screen.getByTestId("setup-client-id-input"), {
-        target: { value: SHORT_CLIENT_ID },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlClientIdAndConnect(TEST_URL, SHORT_CLIENT_ID);
       await waitFor(() => {
-        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(
-          FULL_CLIENT_ID,
-        );
+        expect(mockConnect).toHaveBeenCalledWith({
+          type: "gas",
+          url: TEST_URL,
+          clientId: FULL_CLIENT_ID,
+        });
       });
     });
 
-    it("should save full client ID as-is when full form is already entered", async () => {
+    it("should call connect with full client ID when full form is already entered", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.change(screen.getByTestId("setup-client-id-input"), {
-        target: { value: FULL_CLIENT_ID },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlClientIdAndConnect(TEST_URL, FULL_CLIENT_ID);
       await waitFor(() => {
-        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBe(
-          FULL_CLIENT_ID,
-        );
+        expect(mockConnect).toHaveBeenCalledWith({
+          type: "gas",
+          url: TEST_URL,
+          clientId: FULL_CLIENT_ID,
+        });
       });
     });
 
-    it("should not save client ID to localStorage when client ID input is empty", async () => {
+    it("should call connect without clientId when client ID input is empty", async () => {
       mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
-      fireEvent.change(screen.getByTestId("setup-url-input"), {
-        target: { value: TEST_URL },
-      });
-      fireEvent.click(screen.getByTestId("setup-connect-button"));
+      await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
-        expect(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID)).toBeNull();
+        expect(mockConnect).toHaveBeenCalledWith({
+          type: "gas",
+          url: TEST_URL,
+          clientId: undefined,
+        });
       });
     });
   });

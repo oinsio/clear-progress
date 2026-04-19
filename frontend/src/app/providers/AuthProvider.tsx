@@ -13,6 +13,7 @@ import { setAccessToken } from "@/services/ApiClient";
 import { GOOGLE_CLIENT_ID_CHANGED_EVENT, STORAGE_KEYS } from "@/constants";
 import { GoogleAuthSync } from "./GoogleAuthSync";
 import { Temporal } from "@/lib/temporal";
+import { getConnectionConfig } from "@/services/connectionService";
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -28,9 +29,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const noop = () => {};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [googleClientId, setGoogleClientId] = useState<string | null>(() =>
-    localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID),
-  );
+  const [googleClientId, setGoogleClientId] = useState<string | null>(() => {
+    const config = getConnectionConfig();
+    return config?.type === "gas" ? config.clientId ?? null : null;
+  });
   const [accessToken, setAccessTokenState] = useState<string | null>(() => {
     const storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
     const storedExpiresAt = localStorage.getItem(
@@ -57,21 +59,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleChange = () => {
-      setGoogleClientId(localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID));
+      const config = getConnectionConfig();
+      const newClientId = config?.type === "gas" ? config.clientId ?? null : null;
+      setGoogleClientId(newClientId);
     };
     window.addEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
     return () =>
       window.removeEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
   }, []);
-
-  // When Google Client ID is removed, reset auth refs to no-ops
-  useEffect(() => {
-    if (!googleClientId) {
-      signInRef.current = noop;
-      signOutRef.current = noop;
-      silentRefreshRef.current = noop;
-    }
-  }, [googleClientId]);
 
   const handleTokenUpdate = useCallback((token: string, expiresIn: number) => {
     setAccessTokenState(token);
@@ -96,6 +91,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEYS.USER_PICTURE);
     setAccessToken(null);
   }, []);
+
+  // When Google Client ID is removed, reset auth refs to no-ops and clear auth state
+  useEffect(() => {
+    if (!googleClientId) {
+      signInRef.current = noop;
+      signOutRef.current = noop;
+      silentRefreshRef.current = noop;
+      handleClear();
+    }
+  }, [googleClientId, handleClear]);
 
   // Stable context functions — always call through the ref so they never change identity
   const signIn = useCallback(() => signInRef.current(), []);

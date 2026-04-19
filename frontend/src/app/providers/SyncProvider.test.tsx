@@ -188,6 +188,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useFakeTimers();
 
+  // Set up connection config for tests
+  localStorage.setItem(
+    "connection_config",
+    JSON.stringify({ type: "gas", url: "https://test.example.com" }),
+  );
+
   mockPull.mockResolvedValue(undefined);
   mockPush.mockResolvedValue(undefined);
   mockResetAndPull.mockResolvedValue(undefined);
