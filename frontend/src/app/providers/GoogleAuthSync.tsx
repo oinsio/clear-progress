@@ -122,6 +122,7 @@ export function GoogleAuthSync({
 
   const doSignOut = useCallback(() => {
     setAccessToken(null);
+    localStorage.removeItem(STORAGE_KEYS.USER_PICTURE);
     onClear();
   }, [onClear]);
 

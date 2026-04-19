@@ -57,6 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOutRef = useRef<() => void>(noop);
   const silentRefreshRef = useRef<() => void>(noop);
 
+  // Track previous googleClientId to detect real disconnection vs initial mount
+  const prevGoogleClientIdRef = useRef<string | null>(googleClientId);
+
   useEffect(() => {
     const handleChange = () => {
       const config = getConnectionConfig();
@@ -88,17 +91,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessTokenState(null);
     setUserEmail(null);
     setUserPicture(null);
-    localStorage.removeItem(STORAGE_KEYS.USER_PICTURE);
     setAccessToken(null);
   }, []);
 
   // When Google Client ID is removed, reset auth refs to no-ops and clear auth state
   useEffect(() => {
-    if (!googleClientId) {
+    const prevClientId = prevGoogleClientIdRef.current;
+    prevGoogleClientIdRef.current = googleClientId;
+
+    // Clear auth state only when transitioning from clientId to null (real disconnect)
+    if (prevClientId && !googleClientId) {
       signInRef.current = noop;
       signOutRef.current = noop;
       silentRefreshRef.current = noop;
       handleClear();
+    } else if (!googleClientId) {
+      // Initial mount without Client ID — only reset refs, don't clear cached data
+      signInRef.current = noop;
+      signOutRef.current = noop;
+      silentRefreshRef.current = noop;
     }
   }, [googleClientId, handleClear]);
 
