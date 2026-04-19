@@ -149,6 +149,7 @@ export function RightFilterPanel({
           src={userPicture}
           alt={t("settings.avatarAlt")}
           className="w-8 h-8 rounded-full object-cover"
+          referrerPolicy="no-referrer"
         />
       ) : (
         <CircleUser className="w-8 h-8" aria-hidden="true" />
@@ -385,6 +386,7 @@ export function RightFilterPanel({
                   src={userPicture}
                   alt={t("settings.avatarAlt")}
                   className="w-6 h-6 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
                 />
               ) : (
                 <CircleUser className="w-6 h-6" aria-hidden="true" />
