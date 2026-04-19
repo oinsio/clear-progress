@@ -14,6 +14,11 @@ vi.mock("@/services/ApiClient", () => ({
   setAccessToken: vi.fn(),
 }));
 
+const mockGetConnectionConfig = vi.fn();
+vi.mock("@/services/connectionService", () => ({
+  getConnectionConfig: () => mockGetConnectionConfig(),
+}));
+
 import { AuthProvider, useAuth } from "./AuthProvider";
 import { setAccessToken } from "@/services/ApiClient";
 
@@ -40,7 +45,11 @@ import { STORAGE_KEYS } from "@/constants";
 describe("AuthProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.setItem("google_client_id", "test-client-id");
+    mockGetConnectionConfig.mockReturnValue({
+      type: "gas",
+      url: "https://script.google.com/macros/s/test/exec",
+      clientId: "test-client-id",
+    });
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT);
     clearGoogleLoginOptions();
@@ -333,7 +342,11 @@ describe("AuthProvider", () => {
 
     // Simulate clientId change (e.g., user sets a new client ID)
     await act(async () => {
-      localStorage.setItem("google_client_id", "new-client-id");
+      mockGetConnectionConfig.mockReturnValue({
+        type: "gas",
+        url: "https://script.google.com/macros/s/test/exec",
+        clientId: "new-client-id",
+      });
       window.dispatchEvent(new Event("google_client_id_changed"));
     });
 
@@ -342,7 +355,7 @@ describe("AuthProvider", () => {
   });
 
   it("should provide null accessToken when no googleClientId is configured", () => {
-    localStorage.removeItem("google_client_id");
+    mockGetConnectionConfig.mockReturnValue(null);
     render(
       <AuthProvider>
         <TestConsumer />

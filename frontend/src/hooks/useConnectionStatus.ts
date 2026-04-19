@@ -1,6 +1,6 @@
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useSync } from "@/app/providers/SyncProvider";
-import { useBackendConnected } from "@/hooks/useBackendConnected";
+import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 
 export type ConnectionStatus =
   | "not_configured"
@@ -12,12 +12,18 @@ export type ConnectionStatus =
   | "unauthorized";
 
 export function useConnectionStatus(): ConnectionStatus {
-  const isBackendConnected = useBackendConnected();
+  const config = useConnectionConfig();
   const { accessToken } = useAuth();
   const { syncStatus } = useSync();
 
-  if (!isBackendConnected) return "not_configured";
-  if (!accessToken) return "no_auth";
+  if (!config) return "not_configured";
+
+  // Backend-specific auth check
+  if (config.type === "gas" && config.clientId && !accessToken) {
+    return "no_auth";
+  }
+
+  // Common sync statuses
   if (syncStatus === "offline") return "offline";
   if (syncStatus === "error") return "error";
   if (syncStatus === "unauthorized") return "unauthorized";

@@ -1,22 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  ROUTES,
-  STORAGE_KEYS,
-  BACKEND_CONNECTION_EVENT,
-  GOOGLE_CLIENT_ID_CHANGED_EVENT,
-} from "@/constants";
+import { ROUTES } from "@/constants";
 import { parseGasInput } from "@/utils/gasUrl";
 import { parseClientId } from "@/utils/clientId";
 import { defaultApiClient } from "@/services/defaultServices";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import {
-  RightFilterPanel,
-  type RightPanelMode,
-} from "@/components/tasks/RightFilterPanel";
+import { connect, disconnect, getConnectionConfig, getSavedConnectionConfig } from "@/services/connectionService";
 import { cn } from "@/shared/lib/cn";
 
 type SetupPhase =
@@ -31,24 +21,44 @@ type SetupPhase =
 export default function SetupPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [filterMode, setFilterMode] = useState<RightPanelMode>(null);
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const { panelSide } = usePanelSide();
 
   const { accessToken, signIn } = useAuth();
-  const existingUrl = localStorage.getItem(STORAGE_KEYS.GAS_URL) ?? "";
-  const existingClientId =
-    localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID) ?? "";
+  const config = getConnectionConfig(); // активный конфиг (или null)
+  const savedConfig = getSavedConnectionConfig(); // любой конфиг (для предзаполнения)
+  const savedUrl = savedConfig?.type === "gas" ? savedConfig.url : "";
+  const savedClientId = savedConfig?.type === "gas" ? savedConfig.clientId ?? "" : "";
 
-  const [urlInput, setUrlInput] = useState(existingUrl);
-  const [clientIdInput, setClientIdInput] = useState(existingClientId);
+  // Для отображения в секции "connected" используем активный конфиг
+  const existingUrl = config?.type === "gas" ? config.url : "";
+  const existingClientId = config?.type === "gas" ? config.clientId ?? "" : "";
+
+  const [urlInput, setUrlInput] = useState(savedUrl);
+  const [clientIdInput, setClientIdInput] = useState(savedClientId);
   const [phase, setPhase] = useState<SetupPhase>(() =>
-    existingUrl ? "connected" : "input",
+    config ? "connected" : "input",
   );
   const [needsInit, setNeedsInit] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isGasSectionOpen, setIsGasSectionOpen] = useState(true);
   const prevAccessTokenRef = useRef<string | null>(accessToken);
+
+  const handleInit = useCallback(async (): Promise<void> => {
+    setPhase("initializing");
+    setErrorMessage("");
+
+    try {
+      const response = await defaultApiClient.init();
+      if (!response.ok) {
+        setPhase("error");
+        setErrorMessage(t("setup.errorInit"));
+        return;
+      }
+      navigate(ROUTES.INBOX);
+    } catch {
+      setPhase("error");
+      setErrorMessage(t("setup.errorInit"));
+    }
+  }, [t, navigate]);
 
   // After sign-in succeeds: initialize backend if needed, or navigate to app.
   // Using prevAccessTokenRef to detect the null → token transition on this mount
@@ -67,18 +77,7 @@ export default function SetupPage() {
         navigate(ROUTES.INBOX);
       }
     }
-  }, [accessToken, phase, needsInit, navigate]);
-
-  const handleModeChange = useCallback(
-    (newMode: RightPanelMode) => {
-      if (newMode !== null) {
-        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
-      } else {
-        setFilterMode(newMode);
-      }
-    },
-    [navigate],
-  );
+  }, [accessToken, phase, needsInit, navigate, handleInit]);
 
   const handleConnect = async (): Promise<void> => {
     const trimmedInput = urlInput.trim();
@@ -95,19 +94,22 @@ export default function SetupPage() {
         setErrorMessage(t("setup.errorConnection"));
         return;
       }
-      localStorage.setItem(STORAGE_KEYS.GAS_URL, resolvedUrl);
-      localStorage.setItem(STORAGE_KEYS.BACKEND_CONNECTED, "true");
-      window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
 
       const trimmedClientId = clientIdInput.trim();
-      if (trimmedClientId) {
-        const normalizedClientId = parseClientId(trimmedClientId);
-        localStorage.setItem(STORAGE_KEYS.GOOGLE_CLIENT_ID, normalizedClientId);
+      const normalizedClientId = trimmedClientId
+        ? parseClientId(trimmedClientId)
+        : undefined;
+
+      connect({
+        type: "gas",
+        url: resolvedUrl,
+        clientId: normalizedClientId,
+        isActive: true,
+      });
+
+      if (normalizedClientId) {
         setNeedsInit(!response.initialized);
         setPhase("awaiting_signin");
-        // Notify AuthProvider to mount GoogleAuthSync with the new clientId.
-        // The app no longer remounts — SetupPage keeps its state.
-        window.dispatchEvent(new Event(GOOGLE_CLIENT_ID_CHANGED_EVENT));
       } else if (response.initialized) {
         navigate(ROUTES.INBOX);
       } else {
@@ -119,27 +121,16 @@ export default function SetupPage() {
     }
   };
 
-  const handleInit = async (): Promise<void> => {
-    setPhase("initializing");
-    setErrorMessage("");
-
-    try {
-      const response = await defaultApiClient.init();
-      if (!response.ok) {
-        setPhase("error");
-        setErrorMessage(t("setup.errorInit"));
-        return;
-      }
-      navigate(ROUTES.INBOX);
-    } catch {
-      setPhase("error");
-      setErrorMessage(t("setup.errorInit"));
-    }
-  };
-
   const handleDisconnect = (): void => {
+    disconnect();
     setNeedsInit(false);
     setPhase("input");
+    // urlInput и clientIdInput НЕ сбрасываются — сохраняют текущие значения
+  };
+
+  const handleBackToInput = (): void => {
+    setPhase("input");
+    setErrorMessage("");
   };
 
   const isConnected = phase === "connected";
@@ -328,96 +319,52 @@ export default function SetupPage() {
                       {phase === "not_initialized" && (
                         <div className="space-y-3">
                           <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
-                            {t("setup.notInitializedHint")}
+                            {t("setup.notInitializedNeedClientId")}
                           </div>
-                          {!accessToken && (
-                            <div
-                              data-testid="setup-sign-in-required"
-                              className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 space-y-2"
-                            >
-                              <p className="text-sm text-blue-800">
-                                {t("auth.signInRequired")}
-                              </p>
-                              <button
-                                data-testid="setup-sign-in-btn"
-                                onClick={signIn}
-                                className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors"
-                              >
-                                {t("auth.signInButton")}
-                              </button>
-                            </div>
-                          )}
                           <button
-                            data-testid="setup-initialize-button"
-                            onClick={handleInit}
-                            disabled={!accessToken}
-                            className={cn(
-                              "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                              accessToken
-                                ? "bg-accent text-white"
-                                : "cursor-not-allowed bg-gray-100 text-gray-400",
-                            )}
+                            data-testid="setup-back-button"
+                            onClick={handleBackToInput}
+                            className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
                           >
-                            {t("setup.initialize")}
+                            {t("setup.backToInput")}
                           </button>
                         </div>
                       )}
 
-                      {/* Connect button + sign-in button */}
+                      {/* Connect button */}
                       {phase !== "not_initialized" &&
                         phase !== "awaiting_signin" && (
-                          <div className="space-y-3">
-                            <button
-                              data-testid="setup-connect-button"
-                              onClick={handleConnect}
-                              disabled={!urlInput.trim() || isLoading}
-                              className={cn(
-                                "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-                                urlInput.trim() && !isLoading
-                                  ? "bg-accent text-white"
-                                  : "cursor-not-allowed bg-gray-100 text-gray-400",
-                              )}
-                            >
-                              {t("setup.connect")}
-                            </button>
-                            {!accessToken && (
-                              <button
-                                data-testid="setup-gas-sign-in-btn"
-                                onClick={signIn}
-                                className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
-                              >
-                                {t("auth.signInButton")}
-                              </button>
+                          <button
+                            data-testid="setup-connect-button"
+                            onClick={handleConnect}
+                            disabled={!urlInput.trim() || isLoading}
+                            className={cn(
+                              "w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                              urlInput.trim() && !isLoading
+                                ? "bg-accent text-white"
+                                : "cursor-not-allowed bg-gray-100 text-gray-400",
                             )}
-                          </div>
+                          >
+                            {t("setup.connect")}
+                          </button>
                         )}
                     </div>
                   )}
                 </section>
 
-                {/* Skip button — outside collapsible */}
-                {phase !== "not_initialized" && (
-                  <button
-                    data-testid="setup-skip-button"
-                    onClick={() => navigate(ROUTES.INBOX)}
-                    className="w-full text-center text-sm text-gray-500 transition-colors hover:text-gray-700"
-                  >
-                    {t("setup.skip")}
-                  </button>
-                )}
+                {/* Skip button — always visible */}
+                <button
+                  data-testid="setup-skip-button"
+                  onClick={() => navigate(ROUTES.INBOX)}
+                  className="w-full text-center text-sm text-gray-500 transition-colors hover:text-gray-700"
+                >
+                  {t("setup.skip")}
+                </button>
               </>
             )}
           </div>
         </main>
       </div>
-
-      <RightFilterPanel
-        mode={filterMode}
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
-      />
     </div>
   );
 }

@@ -36,7 +36,7 @@ describe("ApiClient.pingUrl", () => {
 
   it("should throw when URL is empty", async () => {
     await expect(apiClient.pingUrl("")).rejects.toThrow(
-      "GAS URL is not configured",
+      "Backend URL is not configured",
     );
   });
 
@@ -171,7 +171,10 @@ describe("ApiClient auth", () => {
 
   beforeEach(() => {
     apiClient = new ApiClient();
-    localStorage.setItem(STORAGE_KEYS.GAS_URL, TEST_URL);
+    localStorage.setItem(
+      STORAGE_KEYS.CONNECTION_CONFIG,
+      JSON.stringify({ type: "gas", url: TEST_URL, isActive: true }),
+    );
     setAccessToken(null);
   });
 
@@ -262,7 +265,10 @@ describe("ApiClient.uploadCovers", () => {
 
   beforeEach(() => {
     apiClient = new ApiClient();
-    localStorage.setItem(STORAGE_KEYS.GAS_URL, TEST_URL);
+    localStorage.setItem(
+      STORAGE_KEYS.CONNECTION_CONFIG,
+      JSON.stringify({ type: "gas", url: TEST_URL, isActive: true }),
+    );
     server.use(http.post(TEST_URL, () => HttpResponse.json(mockResponse)));
   });
 
@@ -350,7 +356,10 @@ describe("ApiClient module initialization — token restoration from localStorag
   async function loadFreshClientAndCaptureInitRequestBody(): Promise<
     Record<string, unknown>
   > {
-    localStorage.setItem(STORAGE_KEYS.GAS_URL, TEST_URL);
+    localStorage.setItem(
+      STORAGE_KEYS.CONNECTION_CONFIG,
+      JSON.stringify({ type: "gas", url: TEST_URL, isActive: true }),
+    );
 
     vi.resetModules();
     const { ApiClient: FreshApiClient } = await import("./ApiClient");

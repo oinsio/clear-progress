@@ -51,6 +51,11 @@
 
 **Когда читать:** при работе с date-only полями (`next_date`, `appear_date`), при добавлении новых date-only полей, при изменении backend pull/push логики.
 
+#### [Connection Config](./architecture/connection-config.md)
+Архитектура подключения к бэкенду: единый объект `ConnectionConfig` вместо россыпи ключей localStorage.
+
+**Когда читать:** при работе с SetupPage, SettingsPage, SyncProvider, AuthProvider, ApiClient; при добавлении нового типа бэкенда.
+
 ---
 
 ## Для AI-ассистентов
@@ -84,7 +89,8 @@
 │   └── architecture/
 │       ├── recurring-tasks-skip-logic.md  # логика пропуска повторяющихся задач
 │       ├── recurring-tasks-timezone-policy.md # политика часовых поясов
-│       └── date-sanitization.md           # санитизация дат Google Sheets → Temporal
+│       ├── date-sanitization.md           # санитизация дат Google Sheets → Temporal
+│       └── connection-config.md          # архитектура подключения к бэкенду
 └── rules/
     ├── code-style.md                      # правила стиля кода
     └── naming.md                          # правила именования
@@ -101,4 +107,4 @@
 
 ---
 
-*Последнее обновление: 16 апреля 2026*
+*Последнее обновление: 19 апреля 2026*

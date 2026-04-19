@@ -201,6 +201,7 @@
     "avatarAlt": "User avatar",
     "syncSection": "Sync",
     "syncConnected": "Connected",
+    "syncNoAuth": "Connected (sign in required)",
     "syncNotConnected": "Not connected",
     "syncConfigure": "Configure",
     "syncConnect": "Connect",
@@ -255,7 +256,10 @@
     "clientIdLabel": "Google OAuth 2.0 Client ID",
     "clientIdPlaceholder": "1234567890-xxx",
     "clientIdDescription": "Create an OAuth 2.0 Client ID in Google Cloud Console. Short form (without .apps.googleusercontent.com) is also accepted.",
-    "awaitingSignin": "Connection established. Sign in with Google to start syncing."
+    "awaitingSignin": "Connection established. Sign in with Google to start syncing.",
+    "notInitializedNeedClientId": "Client ID is required for initialization",
+    "backToInput": "Back",
+    "backendType": "Server type"
   },
   "selector": {
     "goal": "Goal",

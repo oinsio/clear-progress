@@ -23,6 +23,7 @@ import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
 import { OpacityBars } from "@/components/ui/OpacityBars";
 import { BOX_ICONS } from "@/components/tasks/taskEditShared";
 import { locales, getLocaleByCode } from "@/services/localeRegistry";
+import { disconnect } from "@/services/connectionService";
 import {
   BOX_ORDER,
   ACCENT_COLORS,
@@ -33,8 +34,6 @@ import {
   FILTER_BAR_POSITIONS,
   INTERFACE_SCALES,
   ROUTES,
-  STORAGE_KEYS,
-  BACKEND_CONNECTION_EVENT,
   LANGUAGE_SEARCH_THRESHOLD,
   FOCUS_OPACITY_LEVELS,
 } from "@/constants";
@@ -161,8 +160,7 @@ export default function SettingsPage() {
   }, []);
 
   const handleDisconnectConfirm = useCallback((): void => {
-    localStorage.removeItem(STORAGE_KEYS.BACKEND_CONNECTED);
-    window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
+    disconnect();
     setIsDisconnectDialogOpen(false);
   }, []);
 
@@ -664,7 +662,7 @@ export default function SettingsPage() {
                     {connectionStatus === "unauthorized" &&
                       t("sync.unauthorized")}
                     {connectionStatus === "no_auth" &&
-                      t("settings.syncConnected")}
+                      t("settings.syncNoAuth")}
                     {connectionStatus === "not_configured" &&
                       t("settings.syncNotConnected")}
                   </span>

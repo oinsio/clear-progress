@@ -43,7 +43,8 @@ clear-progress/
 │       │   ├── category.ts
 │       │   ├── checklist.ts
 │       │   ├── settings.ts
-│       │   └── sync.ts                  # PullRequest, PushRequest, PushResult и т.д.
+│       │   ├── sync.ts                  # PullRequest, PushRequest, PushResult и т.д.
+│       │   └── connection.ts            # ConnectionConfig, BackendType, GasConnectionConfig
 │       │
 │       ├── db/
 │       │   ├── index.ts                 # Dexie инстанс, схема таблиц
@@ -59,6 +60,7 @@ clear-progress/
 │       ├── services/
 │       │   ├── api.service.ts           # fetch-обёртка для GAS endpoint
 │       │   ├── sync.service.ts          # pull/push логика, debounce, очередь
+│       │   ├── connectionService.ts     # connect/disconnect/getConnectionConfig — единая точка управления подключением
 │       │   ├── task.service.ts          # бизнес-логика задач (CRUD + box moves)
 │       │   ├── goal.service.ts
 │       │   ├── context.service.ts
@@ -74,6 +76,8 @@ clear-progress/
 │       │   ├── useChecklists.ts
 │       │   ├── useSettings.ts
 │       │   ├── useSync.ts              # статус синхронизации, online/offline
+│       │   ├── useConnectionConfig.ts  # реактивный хук ConnectionConfig | null
+│       │   ├── useConnectionStatus.ts  # статус подключения (not_configured, no_auth, synced...)
 │       │   ├── useSwipeAction.ts       # жест свайпа
 │       │   └── useHasTouchPointer.ts  # определение тач-устройства (pointer: coarse)
 │       │

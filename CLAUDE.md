@@ -49,8 +49,10 @@ src/
 ├── services/         # Business logic & data layer
 │   ├── db.ts         # Dexie schema & instance
 │   ├── sync.ts       # Sync engine (pull/push)
-│   └── api.ts        # GAS API client
+│   ├── api.ts        # GAS API client
+│   └── connectionService.ts  # connect/disconnect/getConnectionConfig
 ├── types/            # TypeScript types & interfaces
+│   └── connection.ts # ConnectionConfig, BackendType
 ├── utils/            # Pure utility functions
 ├── contexts/         # React Context providers
 ├── constants/        # App-wide constants & enums
@@ -261,6 +263,20 @@ My Drive/
 ```
 
 OAuth scopes: `drive.file` + `spreadsheets` (minimal).
+
+## Backend Connection Architecture
+
+Connection state is managed via a single `ConnectionConfig` object in localStorage (`STORAGE_KEYS.CONNECTION_CONFIG`), not separate keys.
+
+- **Types**: `src/types/connection.ts` — `ConnectionConfig` discriminated union (currently only `GasConnectionConfig`)
+- **Service**: `src/services/connectionService.ts` — `connect()`, `disconnect()`, `getConnectionConfig()`, `getBackendType()`
+- **Hook**: `src/hooks/useConnectionConfig.ts` — reactive hook returning `ConnectionConfig | null`
+- **Status**: `src/hooks/useConnectionStatus.ts` — derives connection status from config + auth + sync state
+- **Migration**: `migrateLegacyConnection.ts` — one-time migration from old keys (`GAS_URL`, `GOOGLE_CLIENT_ID`, `BACKEND_CONNECTED`)
+
+`disconnect()` clears config + auth tokens + sync keys in one call. `connect()` saves config and dispatches events.
+
+See `.claude/docs/architecture/connection-config.md` for full architecture details.
 
 ## Sync Engine
 

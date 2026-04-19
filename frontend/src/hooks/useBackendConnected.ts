@@ -1,26 +1,10 @@
-import { useState, useEffect } from "react";
-import { STORAGE_KEYS, BACKEND_CONNECTION_EVENT } from "@/constants";
+import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 
-function readIsConnected(): boolean {
-  try {
-    return !!localStorage.getItem(STORAGE_KEYS.BACKEND_CONNECTED);
-  } catch {
-    return false;
-  }
-}
-
+/**
+ * @deprecated Use useConnectionConfig() instead. This hook is kept for backward compatibility.
+ * Returns true if a backend connection is configured, false otherwise.
+ */
 export function useBackendConnected(): boolean {
-  const [isConnected, setIsConnected] = useState(readIsConnected);
-
-  useEffect(() => {
-    const update = () => setIsConnected(readIsConnected());
-    window.addEventListener(BACKEND_CONNECTION_EVENT, update);
-    window.addEventListener("storage", update);
-    return () => {
-      window.removeEventListener(BACKEND_CONNECTION_EVENT, update);
-      window.removeEventListener("storage", update);
-    };
-  }, []);
-
-  return isConnected;
+  const config = useConnectionConfig();
+  return config !== null;
 }
