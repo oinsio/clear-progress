@@ -6,7 +6,7 @@ import { parseGasInput } from "@/utils/gasUrl";
 import { parseClientId } from "@/utils/clientId";
 import { defaultApiClient } from "@/services/defaultServices";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { connect, disconnect, getConnectionConfig } from "@/services/connectionService";
+import { connect, disconnect, getConnectionConfig, getSavedConnectionConfig } from "@/services/connectionService";
 import { cn } from "@/shared/lib/cn";
 
 type SetupPhase =
@@ -23,12 +23,17 @@ export default function SetupPage() {
   const navigate = useNavigate();
 
   const { accessToken, signIn } = useAuth();
-  const config = getConnectionConfig();
+  const config = getConnectionConfig(); // активный конфиг (или null)
+  const savedConfig = getSavedConnectionConfig(); // любой конфиг (для предзаполнения)
+  const savedUrl = savedConfig?.type === "gas" ? savedConfig.url : "";
+  const savedClientId = savedConfig?.type === "gas" ? savedConfig.clientId ?? "" : "";
+
+  // Для отображения в секции "connected" используем активный конфиг
   const existingUrl = config?.type === "gas" ? config.url : "";
   const existingClientId = config?.type === "gas" ? config.clientId ?? "" : "";
 
-  const [urlInput, setUrlInput] = useState(existingUrl);
-  const [clientIdInput, setClientIdInput] = useState(existingClientId);
+  const [urlInput, setUrlInput] = useState(savedUrl);
+  const [clientIdInput, setClientIdInput] = useState(savedClientId);
   const [phase, setPhase] = useState<SetupPhase>(() =>
     config ? "connected" : "input",
   );
@@ -99,6 +104,7 @@ export default function SetupPage() {
         type: "gas",
         url: resolvedUrl,
         clientId: normalizedClientId,
+        isActive: true,
       });
 
       if (normalizedClientId) {
@@ -117,10 +123,9 @@ export default function SetupPage() {
 
   const handleDisconnect = (): void => {
     disconnect();
-    setUrlInput("");
-    setClientIdInput("");
     setNeedsInit(false);
     setPhase("input");
+    // urlInput и clientIdInput НЕ сбрасываются — сохраняют текущие значения
   };
 
   const handleBackToInput = (): void => {

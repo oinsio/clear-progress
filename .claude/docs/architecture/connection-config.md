@@ -19,6 +19,7 @@ type GasConnectionConfig = {
   type: "gas";
   url: string;
   clientId?: string;
+  isActive: boolean;  // true = подключено, false = отключено (но сохранено)
 };
 
 type ConnectionConfig = GasConnectionConfig;
@@ -26,6 +27,14 @@ type ConnectionConfig = GasConnectionConfig;
 ```
 
 **Единый ключ:** `STORAGE_KEYS.CONNECTION_CONFIG` → `JSON.stringify(ConnectionConfig)` или отсутствует.
+
+### Поле `isActive`
+
+Добавлено обязательное поле `isActive: boolean`:
+- `true` — активное подключение (пользователь подключён)
+- `false` — неактивное подключение (пользователь отключился, но URL и clientId сохранены для повторного подключения)
+
+При отключении (`disconnect()`) конфиг не удаляется, а обновляется с `isActive: false`. Это позволяет предзаполнять поля на SetupPage при повторном подключении к тому же серверу.
 
 ### Преимущества
 
@@ -38,9 +47,10 @@ type ConnectionConfig = GasConnectionConfig;
 
 ### `connectionService.ts` — единая точка управления
 
-- `connect(config)` — сохраняет config, диспатчит события
-- `disconnect()` — удаляет config + auth/sync ключи, диспатчит события
-- `getConnectionConfig()` — читает и парсит из localStorage
+- `connect(config)` — сохраняет config с `isActive: true`, диспатчит события
+- `disconnect()` — обновляет config с `isActive: false` (не удаляет), удаляет auth/sync ключи, диспатчит события
+- `getConnectionConfig()` — читает и парсит из localStorage, возвращает `null` для неактивных конфигов (`isActive: false`)
+- `getSavedConnectionConfig()` — читает конфиг независимо от `isActive` (для предзаполнения полей на SetupPage)
 - `getBackendType()` — шорткат для `config?.type`
 
 ### `useConnectionConfig` хук
@@ -60,8 +70,9 @@ type ConnectionConfig = GasConnectionConfig;
 
 Одноразовая миграция при старте приложения (`migrateLegacyConnection.ts`):
 - Читает старые ключи (`gas_url`, `google_client_id`, `backend_connected`)
-- Формирует `ConnectionConfig` и сохраняет в новый ключ
+- Формирует `ConnectionConfig` с `isActive: true` и сохраняет в новый ключ
 - Удаляет старые ключи
+- Если конфиг уже в новом формате, но без `isActive` — добавляет `isActive: true` (миграция для пользователей, обновившихся до промежуточной версии)
 
 ## Удалённые ключи localStorage
 

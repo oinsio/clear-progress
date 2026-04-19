@@ -3,7 +3,8 @@ import type { ConnectionConfig, BackendType } from "@/types/connection";
 
 export function connect(config: ConnectionConfig): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(config));
+    const activeConfig: ConnectionConfig = { ...config, isActive: true };
+    localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(activeConfig));
     window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
 
     if (config.type === "gas" && config.clientId) {
@@ -17,8 +18,13 @@ export function connect(config: ConnectionConfig): void {
 
 export function disconnect(): void {
   try {
-    // Remove connection config
-    localStorage.removeItem(STORAGE_KEYS.CONNECTION_CONFIG);
+    // Update connection config to inactive instead of removing
+    const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
+    if (raw) {
+      const config = JSON.parse(raw) as ConnectionConfig;
+      const deactivatedConfig: ConnectionConfig = { ...config, isActive: false };
+      localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(deactivatedConfig));
+    }
 
     // Remove auth keys
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
@@ -42,9 +48,22 @@ export function getConnectionConfig(): ConnectionConfig | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
     if (!raw) return null;
-    return JSON.parse(raw) as ConnectionConfig;
+    const config = JSON.parse(raw) as ConnectionConfig;
+    if (!config.isActive) return null;
+    return config;
   } catch (error) {
     console.error("Failed to parse connection config:", error);
+    return null;
+  }
+}
+
+export function getSavedConnectionConfig(): ConnectionConfig | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
+    if (!raw) return null;
+    return JSON.parse(raw) as ConnectionConfig;
+  } catch (error) {
+    console.error("Failed to parse saved connection config:", error);
     return null;
   }
 }

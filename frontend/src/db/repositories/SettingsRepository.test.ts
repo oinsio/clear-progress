@@ -90,13 +90,14 @@ describe("SettingsRepository", () => {
     });
 
     it("should set updated_at to current ISO timestamp", async () => {
-      const before = Temporal.Now.instant().toString();
+      const before = toISOTimestamp(Temporal.Now.instant());
       await settingsRepository.set("default_box", "inbox");
 
       const setting = await db.settings.get({ key: "default_box" });
+      expect(setting).toBeDefined();
       expect(setting!.updated_at >= before).toBe(true);
       // Проверяем, что timestamp не в будущем (с буфером 500ms)
-      const maxAllowed = Temporal.Now.instant().add({ milliseconds: 500 }).toString();
+      const maxAllowed = toISOTimestamp(Temporal.Now.instant().add({ milliseconds: 500 }));
       expect(setting!.updated_at <= maxAllowed).toBe(true);
     });
   });

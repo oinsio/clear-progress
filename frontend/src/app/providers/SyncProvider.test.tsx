@@ -191,7 +191,7 @@ beforeEach(() => {
   // Set up connection config for tests
   localStorage.setItem(
     "connection_config",
-    JSON.stringify({ type: "gas", url: "https://test.example.com" }),
+    JSON.stringify({ type: "gas", url: "https://test.example.com", isActive: true }),
   );
 
   mockPull.mockResolvedValue(undefined);

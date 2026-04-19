@@ -173,7 +173,7 @@ describe("ApiClient auth", () => {
     apiClient = new ApiClient();
     localStorage.setItem(
       STORAGE_KEYS.CONNECTION_CONFIG,
-      JSON.stringify({ type: "gas", url: TEST_URL }),
+      JSON.stringify({ type: "gas", url: TEST_URL, isActive: true }),
     );
     setAccessToken(null);
   });
@@ -267,7 +267,7 @@ describe("ApiClient.uploadCovers", () => {
     apiClient = new ApiClient();
     localStorage.setItem(
       STORAGE_KEYS.CONNECTION_CONFIG,
-      JSON.stringify({ type: "gas", url: TEST_URL }),
+      JSON.stringify({ type: "gas", url: TEST_URL, isActive: true }),
     );
     server.use(http.post(TEST_URL, () => HttpResponse.json(mockResponse)));
   });
@@ -358,7 +358,7 @@ describe("ApiClient module initialization — token restoration from localStorag
   > {
     localStorage.setItem(
       STORAGE_KEYS.CONNECTION_CONFIG,
-      JSON.stringify({ type: "gas", url: TEST_URL }),
+      JSON.stringify({ type: "gas", url: TEST_URL, isActive: true }),
     );
 
     vi.resetModules();

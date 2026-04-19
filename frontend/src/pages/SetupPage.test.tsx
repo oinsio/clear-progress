@@ -12,12 +12,13 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-const { mockPingUrl, mockInit, mockConnect, mockDisconnect, mockGetConnectionConfig } = vi.hoisted(() => ({
+const { mockPingUrl, mockInit, mockConnect, mockDisconnect, mockGetConnectionConfig, mockGetSavedConnectionConfig } = vi.hoisted(() => ({
   mockPingUrl: vi.fn(),
   mockInit: vi.fn(),
   mockConnect: vi.fn(),
   mockDisconnect: vi.fn(),
   mockGetConnectionConfig: vi.fn(),
+  mockGetSavedConnectionConfig: vi.fn(),
 }));
 
 vi.mock("@/services/defaultServices", () => ({
@@ -28,6 +29,7 @@ vi.mock("@/services/connectionService", () => ({
   connect: mockConnect,
   disconnect: mockDisconnect,
   getConnectionConfig: mockGetConnectionConfig,
+  getSavedConnectionConfig: mockGetSavedConnectionConfig,
 }));
 
 vi.mock("@/hooks/usePanelSide");
@@ -81,6 +83,7 @@ describe("SetupPage", () => {
     vi.clearAllMocks();
     localStorageMock.clear();
     mockGetConnectionConfig.mockReturnValue(null);
+    mockGetSavedConnectionConfig.mockReturnValue(null);
     mockUsePanelOpen.mockReturnValue({
       isPanelOpen: false,
       togglePanelOpen: vi.fn(),
@@ -150,6 +153,7 @@ describe("SetupPage", () => {
           type: "gas",
           url: `https://script.google.com/macros/s/${TEST_DEPLOYMENT_ID}/exec`,
           clientId: undefined,
+          isActive: true,
         });
       });
     });
@@ -175,6 +179,7 @@ describe("SetupPage", () => {
           type: "gas",
           url: TEST_URL,
           clientId: undefined,
+          isActive: true,
         });
       });
     });
@@ -199,6 +204,7 @@ describe("SetupPage", () => {
           type: "gas",
           url: TEST_URL,
           clientId: TEST_CLIENT_ID,
+          isActive: true,
         });
       });
     });
@@ -316,6 +322,7 @@ describe("SetupPage", () => {
         type: "gas",
         url: EXISTING_URL,
         clientId: undefined,
+        isActive: true,
       });
     });
 
@@ -346,6 +353,7 @@ describe("SetupPage", () => {
         type: "gas",
         url: EXISTING_URL,
         clientId: EXISTING_CLIENT_ID,
+        isActive: true,
       });
       mockUseAuth.mockReturnValue({
         accessToken: null,
@@ -397,6 +405,7 @@ describe("SetupPage", () => {
           type: "gas",
           url: TEST_URL,
           clientId: FULL_CLIENT_ID,
+          isActive: true,
         });
       });
     });
@@ -410,6 +419,7 @@ describe("SetupPage", () => {
           type: "gas",
           url: TEST_URL,
           clientId: FULL_CLIENT_ID,
+          isActive: true,
         });
       });
     });
@@ -423,6 +433,7 @@ describe("SetupPage", () => {
           type: "gas",
           url: TEST_URL,
           clientId: undefined,
+          isActive: true,
         });
       });
     });
