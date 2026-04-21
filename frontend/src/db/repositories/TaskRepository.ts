@@ -97,9 +97,9 @@ export class TaskRepository {
 
   async getTasksToReveal(currentDate: string): Promise<Task[]> {
     return db.tasks
-      .where("is_hidden")
-      .equals(1)
       .filter((task) => {
+        if (!task.is_hidden || task.is_deleted || task.is_completed)
+          return false;
         if (task.appear_date === "") return false;
         const sanitized = sanitizeDateOnly(task.appear_date);
         if (!sanitized) return false;

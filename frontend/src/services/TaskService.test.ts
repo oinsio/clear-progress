@@ -163,10 +163,21 @@ describe("TaskService", () => {
       expect(createdTask.category_id).toBe("");
       expect(createdTask.completed_at).toBe("");
       expect(createdTask.repeat_rule).toBe("");
+      expect(createdTask.next_date).toBe("");
+      expect(createdTask.appear_date).toBe("");
+      expect(createdTask.original_task_id).toBe("");
     });
 
     it("should create task with is_completed false", () => {
       expect(createdTask.is_completed).toBe(false);
+    });
+
+    it("should create task with is_hidden false", () => {
+      expect(createdTask.is_hidden).toBe(false);
+    });
+
+    it("should create task with needsSync true", () => {
+      expect(createdTask.needsSync).toBe(true);
     });
 
     it("should create task with sort_order 0 by default", () => {
@@ -212,6 +223,16 @@ describe("TaskService", () => {
       );
       await expect(taskService.update("nonexistent", {})).rejects.toThrow(
         "Task not found: nonexistent",
+      );
+    });
+
+    it("should throw error message with task id when task not found", async () => {
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await expect(taskService.update("task-123", {})).rejects.toThrow(
+        "task-123",
       );
     });
   });
@@ -275,6 +296,32 @@ describe("TaskService", () => {
 
     it("should return null for recurring when repeat_rule is empty", async () => {
       const task = buildTask({ repeat_rule: "" });
+      mockTaskRepository = createMockTaskRepository({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      const { recurring } = await taskService.complete(task.id);
+      expect(recurring).toBeNull();
+    });
+
+    it("should return null for recurring when repeat_rule is invalid JSON", async () => {
+      const task = buildTask({ repeat_rule: "invalid json" });
+      mockTaskRepository = createMockTaskRepository({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      const { recurring } = await taskService.complete(task.id);
+      expect(recurring).toBeNull();
+    });
+
+    it("should return null for recurring when parseRepeatRule returns null", async () => {
+      const task = buildTask({ repeat_rule: JSON.stringify({ invalid: "rule" }) });
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
       });
@@ -365,6 +412,54 @@ describe("TaskService", () => {
       const createdTask = getCreatedTask();
       expect(createdTask.name).toBe("Daily standup");
       expect(createdTask.box).toBe("today");
+    });
+
+    it("should use task.id as searchId when original_task_id is empty", async () => {
+      const task = buildTask({
+        id: "task-1",
+        original_task_id: "",
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
+      });
+      mockTaskRepository = createMockTaskRepository({
+        getById: vi.fn().mockResolvedValue(task),
+        findHiddenRecurringTask: vi.fn().mockResolvedValue(undefined),
+      });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.complete(task.id);
+      expect(mockTaskRepository.findHiddenRecurringTask).toHaveBeenCalledWith("task-1");
+    });
+
+    it("should use original_task_id as searchId when it is set", async () => {
+      const task = buildTask({
+        id: "task-2",
+        original_task_id: "task-1",
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
+      });
+      mockTaskRepository = createMockTaskRepository({
+        getById: vi.fn().mockResolvedValue(task),
+        findHiddenRecurringTask: vi.fn().mockResolvedValue(undefined),
+      });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.complete(task.id);
+      expect(mockTaskRepository.findHiddenRecurringTask).toHaveBeenCalledWith("task-1");
     });
 
     it("should create recurring copy with reset completion state", async () => {
@@ -501,6 +596,30 @@ describe("TaskService", () => {
       expect(mockChecklistRepository.create).toHaveBeenCalledTimes(2);
     });
 
+    it("should not copy checklist items when task has no checklist", async () => {
+      const task = buildTask({
+        repeat_rule: JSON.stringify({
+          type: "fixed",
+          frequency: "daily",
+          interval: 1,
+          target_box: "today",
+          advance_days: 0,
+        }),
+      });
+      mockTaskRepository = createMockTaskRepository({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+      mockChecklistRepository = createMockChecklistRepository({
+        getByTaskId: vi.fn().mockResolvedValue([]),
+      });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.complete(task.id);
+      expect(mockChecklistRepository.create).not.toHaveBeenCalled();
+    });
+
     it("should copy checklist items with new unique ids", async () => {
       const originalItem = await setupRecurringTaskWithItem();
       const copiedItem = getCreatedItem();
@@ -527,6 +646,12 @@ describe("TaskService", () => {
       expect(copiedItem.sort_order).toBe(3);
     });
 
+    it("should copy checklist items with needsSync true", async () => {
+      await setupRecurringTaskWithItem();
+      const copiedItem = getCreatedItem();
+      expect(copiedItem.needsSync).toBe(true);
+    });
+
     it("should NOT copy checklist items when repeat_rule is empty", async () => {
       const task = buildTask({ repeat_rule: "" });
       const item = buildChecklistItem({ task_id: task.id });
@@ -544,7 +669,7 @@ describe("TaskService", () => {
       expect(mockChecklistRepository.create).not.toHaveBeenCalled();
     });
 
-    it("should NOT copy checklist items when task has no checklist items", async () => {
+    it("should call getByTaskId when completing task with repeat_rule", async () => {
       const task = buildTask({
         repeat_rule: JSON.stringify({
           type: "fixed",
@@ -557,15 +682,12 @@ describe("TaskService", () => {
       mockTaskRepository = createMockTaskRepository({
         getById: vi.fn().mockResolvedValue(task),
       });
-      mockChecklistRepository = createMockChecklistRepository({
-        getByTaskId: vi.fn().mockResolvedValue([]),
-      });
       const taskService = new TaskService(
         mockTaskRepository,
         mockChecklistRepository,
       );
       await taskService.complete(task.id);
-      expect(mockChecklistRepository.create).not.toHaveBeenCalled();
+      expect(mockChecklistRepository.getByTaskId).toHaveBeenCalledWith(task.id);
     });
   });
 
@@ -638,6 +760,20 @@ describe("TaskService", () => {
       );
       const deleted = await taskService.softDelete(task.id);
       expect(deleted.is_deleted).toBe(true);
+    });
+
+    it("should call findByOriginalTaskId when deleting task", async () => {
+      const task = buildTask({ id: "task-1", original_task_id: "" });
+      mockTaskRepository = createMockTaskRepository({
+        getById: vi.fn().mockResolvedValue(task),
+        findByOriginalTaskId: vi.fn().mockResolvedValue([]),
+      });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.softDelete(task.id);
+      expect(mockTaskRepository.findByOriginalTaskId).toHaveBeenCalledWith("task-1");
     });
   });
 
@@ -758,6 +894,45 @@ describe("TaskService", () => {
       );
       await taskService.reorderTasks([]);
       expect(mockTaskRepository.bulkUpsert).not.toHaveBeenCalled();
+    });
+
+    it("should not call bulkUpsert when order has not changed", async () => {
+      const taskA = buildTask({ sort_order: 0 });
+      const taskB = buildTask({ sort_order: 1 });
+      const taskC = buildTask({ sort_order: 2 });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.reorderTasks([taskA, taskB, taskC]);
+      expect(mockTaskRepository.bulkUpsert).not.toHaveBeenCalled();
+    });
+
+    it("should not increment version for tasks that did not change position", async () => {
+      const taskA = buildTask({ sort_order: 0, version: 3 });
+      const taskB = buildTask({ sort_order: 2, version: 5 });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.reorderTasks([taskA, taskB]);
+      const upserted = getUpsertedTasks();
+      expect(upserted[0].version).toBe(3); // не изменился
+      expect(upserted[1].version).toBe(6); // изменился с 2 на 1
+    });
+
+    it("should not update updated_at for tasks that did not change position", async () => {
+      const oldTimestamp = toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z"));
+      const taskA = buildTask({ sort_order: 0, updated_at: oldTimestamp });
+      const taskB = buildTask({ sort_order: 2, updated_at: oldTimestamp });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.reorderTasks([taskA, taskB]);
+      const upserted = getUpsertedTasks();
+      expect(upserted[0].updated_at).toBe(oldTimestamp); // не изменился
+      expect(upserted[1].updated_at).not.toBe(oldTimestamp); // изменился
     });
   });
 

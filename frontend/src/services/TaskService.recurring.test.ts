@@ -124,7 +124,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         frequency: "daily" as const,
         interval: 1,
         target_box: "today" as const,
-        advance_days: 0,
+        advance_days: 10,
       };
 
       const existingTask = buildTask({
@@ -132,8 +132,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         name: "Daily review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: false,
-        next_date: toISODate("2026-04-13"),
-        appear_date: toISODate("2026-04-13"),
+        next_date: toISODate("2026-05-01"),
+        appear_date: toISODate("2026-05-01"),
       });
 
       const completedTask = buildTask({
@@ -146,8 +146,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         name: "Daily review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: true,
-        next_date: toISODate("2026-04-14"),
-        appear_date: toISODate("2026-04-14"),
+        next_date: toISODate("2026-05-02"),
+        appear_date: toISODate("2026-05-02"),
         box: "today",
       });
 
@@ -685,6 +685,198 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       expect(updates["task-3"].original_task_id).toBe("");
       expect(updates["task-2"].original_task_id).toBe("task-3");
+    });
+  });
+
+  describe("Revealing hidden recurring tasks immediately", () => {
+    async function testHiddenFieldAfterComplete(
+      nextDate: string,
+      appearDate: string,
+      advanceDays: number,
+      expectedHidden: boolean,
+    ) {
+      const repeatRule = {
+        type: "fixed" as const,
+        frequency: "daily" as const,
+        interval: 1,
+        target_box: "today" as const,
+        advance_days: advanceDays,
+      };
+
+      const existingTask = buildTask({
+        id: "task-1",
+        name: "Daily task",
+        repeat_rule: JSON.stringify(repeatRule),
+        next_date: toISODate(nextDate),
+        appear_date: toISODate(appearDate),
+      });
+
+      const completedTask = buildTask({
+        ...existingTask,
+        is_completed: true,
+        completed_at: toISOTimestamp(),
+      });
+
+      const getCreatedTask = setupCreateTaskCapture(
+        mockTaskRepository,
+        existingTask,
+        completedTask,
+        mockChecklistRepository,
+      );
+
+      await taskService.complete("task-1");
+
+      const createdTask = getCreatedTask();
+      expect(createdTask).toBeDefined();
+      expect(createdTask!.is_hidden).toBe(expectedHidden);
+    }
+
+    it("should reveal hidden clone immediately when appear_date <= today", async () => {
+      await testHiddenFieldAfterComplete("2026-04-19", "2026-04-19", 2, false);
+    });
+
+    it("should keep hidden clone hidden when appear_date in future", async () => {
+      await testHiddenFieldAfterComplete("2026-04-26", "2026-04-26", 5, true);
+    });
+
+    it("should reveal hidden clone when appear_date equals today", async () => {
+      await testHiddenFieldAfterComplete("2026-04-20", "2026-04-20", 0, false);
+    });
+
+    it("should reveal updated hidden clone when appear_date <= today", async () => {
+      const repeatRule = {
+        type: "fixed" as const,
+        frequency: "daily" as const,
+        interval: 1,
+        target_box: "today" as const,
+        advance_days: 2,
+      };
+
+      const existingTask = buildTask({
+        id: "task-1",
+        name: "Daily task",
+        repeat_rule: JSON.stringify(repeatRule),
+        next_date: toISODate("2026-04-19"),
+        appear_date: toISODate("2026-04-19"),
+      });
+
+      const existingHiddenCopy = buildTask({
+        id: "task-2",
+        name: "Old name",
+        original_task_id: "task-1",
+        is_hidden: true,
+        next_date: toISODate("2026-04-18"),
+        appear_date: toISODate("2026-04-18"),
+      });
+
+      const tasksById: Record<string, ReturnType<typeof buildTask>> = {
+        "task-1": existingTask,
+        "task-2": existingHiddenCopy,
+      };
+
+      const getUpdatedCopy = setupUpdateTaskCapture(
+        mockTaskRepository,
+        tasksById,
+        mockChecklistRepository,
+        existingHiddenCopy,
+      );
+
+      await taskService.complete("task-1");
+
+      const updatedCopy = getUpdatedCopy();
+      expect(updatedCopy).toBeDefined();
+      expect(updatedCopy!.is_hidden).toBe(false);
+    });
+
+    it("should keep updated hidden clone hidden when appear_date in future", async () => {
+      const repeatRule = {
+        type: "fixed" as const,
+        frequency: "daily" as const,
+        interval: 1,
+        target_box: "today" as const,
+        advance_days: 5,
+      };
+
+      const existingTask = buildTask({
+        id: "task-1",
+        name: "Daily task",
+        repeat_rule: JSON.stringify(repeatRule),
+        next_date: toISODate("2026-04-26"),
+        appear_date: toISODate("2026-04-26"),
+      });
+
+      const existingHiddenCopy = buildTask({
+        id: "task-2",
+        name: "Old name",
+        original_task_id: "task-1",
+        is_hidden: true,
+        next_date: toISODate("2026-04-25"),
+        appear_date: toISODate("2026-04-25"),
+      });
+
+      const tasksById: Record<string, ReturnType<typeof buildTask>> = {
+        "task-1": existingTask,
+        "task-2": existingHiddenCopy,
+      };
+
+      const getUpdatedCopy = setupUpdateTaskCapture(
+        mockTaskRepository,
+        tasksById,
+        mockChecklistRepository,
+        existingHiddenCopy,
+      );
+
+      await taskService.complete("task-1");
+
+      const updatedCopy = getUpdatedCopy();
+      expect(updatedCopy).toBeDefined();
+      expect(updatedCopy!.is_hidden).toBe(true);
+    });
+  });
+
+  describe("softDelete with all copies deleted", () => {
+    it("should handle deletion when all copies are deleted", async () => {
+      const originalTask = buildTask({
+        id: "task-1",
+        name: "Original",
+        original_task_id: "",
+      });
+
+      const deletedCopy1 = buildTask({
+        id: "task-2",
+        name: "Deleted Copy 1",
+        original_task_id: "task-1",
+        is_deleted: true,
+      });
+
+      const deletedCopy2 = buildTask({
+        id: "task-3",
+        name: "Deleted Copy 2",
+        original_task_id: "task-1",
+        is_deleted: true,
+      });
+
+      const updates: Record<string, ReturnType<typeof buildTask>> = {};
+
+      mockTaskRepository.getById = vi.fn().mockImplementation(async (id) => {
+        if (id === "task-1") return originalTask;
+        if (id === "task-2") return deletedCopy1;
+        if (id === "task-3") return deletedCopy2;
+        return undefined;
+      });
+      mockTaskRepository.findByOriginalTaskId = vi
+        .fn()
+        .mockResolvedValue([deletedCopy1, deletedCopy2]);
+      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
+        updates[task.id] = task;
+        return task;
+      });
+
+      await taskService.softDelete("task-1");
+
+      expect(updates["task-1"].is_deleted).toBe(true);
+      expect(updates["task-2"]).toBeUndefined();
+      expect(updates["task-3"]).toBeUndefined();
     });
   });
 });

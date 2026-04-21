@@ -8,7 +8,7 @@ import {
   calculateNextDate,
   calculateAppearDate,
 } from "@/utils/repeatRule";
-import { toISOTimestamp, toISODate } from "@/utils/dateHelpers";
+import { toISOTimestamp, toISODate, sanitizeDateOnly } from "@/utils/dateHelpers";
 import { Temporal } from "@/lib/temporal";
 
 export class TaskService {
@@ -124,6 +124,18 @@ export class TaskService {
           const existingHiddenTask =
             await this.taskRepository.findHiddenRecurringTask(searchId);
 
+          // Определяем, нужно ли раскрыть клон сразу
+          const today = Temporal.Now.plainDateISO().toString();
+          const sanitizedAppearDate = sanitizeDateOnly(
+            toISODate(appearDate),
+          );
+          const shouldReveal =
+            sanitizedAppearDate &&
+            Temporal.PlainDate.compare(
+              Temporal.PlainDate.from(sanitizedAppearDate),
+              Temporal.PlainDate.from(today),
+            ) <= 0;
+
           if (existingHiddenTask) {
             // Обновляем существующую копию со всеми актуальными полями
             recurringTask = await this.update(existingHiddenTask.id, {
@@ -136,11 +148,12 @@ export class TaskService {
               next_date: toISODate(nextDate),
               appear_date: toISODate(appearDate),
               box: rule.target_box,
+              is_hidden: !shouldReveal,
             });
           } else {
             // Создать скрытый клон только если его ещё нет
             recurringTask = await this.createRecurringCopy(existingTask, {
-              is_hidden: true,
+              is_hidden: !shouldReveal,
               next_date: toISODate(nextDate),
               appear_date: toISODate(appearDate),
               box: rule.target_box,
