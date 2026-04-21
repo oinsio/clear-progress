@@ -270,7 +270,7 @@ describe('upsertRecords', () => {
     expect(sheetMock.getRange).not.toHaveBeenCalled();
   });
 
-  it('should call setValues once for all existing record updates', () => {
+  it('should call setValues separately for each existing record update', () => {
     const sheetMock = setupSheetWithTasks('task-1', 'task-2', 'task-3');
 
     upsertRecords(SHEET_NAMES.TASKS, [
@@ -279,20 +279,20 @@ describe('upsertRecords', () => {
       { id: 'task-3', title: 'C' },
     ]);
 
-    expect(sheetMock._setValues).toHaveBeenCalledTimes(1);
+    expect(sheetMock._setValues).toHaveBeenCalledTimes(3);
     expect(sheetMock.appendRow).not.toHaveBeenCalled();
   });
 
-  it('should write the full data range including header on update', () => {
-    // 1 header + 2 data rows = 3 total rows
+  it('should write only the updated row, not the full data range', () => {
+    // Row 2 in 1-based indexing (header is row 1, task-1 is row 2)
     const sheetMock = setupSheetWithTasks('task-1', 'task-2');
 
     upsertRecords(SHEET_NAMES.TASKS, [{ id: 'task-1' }]);
 
-    expect(sheetMock.getRange).toHaveBeenCalledWith(1, 1, 3, NUM_TASK_COLS);
+    expect(sheetMock.getRange).toHaveBeenCalledWith(2, 1, 1, NUM_TASK_COLS);
   });
 
-  it('should write updated data into the correct row index', () => {
+  it('should write updated data into the correct row', () => {
     const sheetMock = setupSheet([
       TASK_HEADERS,
       makeTaskRow('task-1', { name: 'Old' }),
@@ -301,9 +301,8 @@ describe('upsertRecords', () => {
 
     upsertRecords(SHEET_NAMES.TASKS, [{ id: 'task-1', name: 'New' }]);
 
-    const writtenMatrix = sheetMock._setValues.mock.calls[0][0] as unknown[][];
-    expect(writtenMatrix[1][TASK_COL.name]).toBe('New');
-    expect(writtenMatrix[2][TASK_COL.name]).toBe('Keep');
+    const writtenRow = sheetMock._setValues.mock.calls[0][0][0] as unknown[];
+    expect(writtenRow[TASK_COL.name]).toBe('New');
   });
 
   it('should handle mixed batch: update existing + append new', () => {
@@ -314,6 +313,7 @@ describe('upsertRecords', () => {
       { id: 'task-new', name: 'Created' },
     ]);
 
+    expect(sheetMock.getRange).toHaveBeenCalledTimes(1);
     expect(sheetMock._setValues).toHaveBeenCalledTimes(1);
     expect(sheetMock.appendRow).toHaveBeenCalledTimes(1);
   });

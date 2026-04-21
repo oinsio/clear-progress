@@ -236,3 +236,66 @@ export function isValidUuid(value: string): boolean {
   return UUID_V4_REGEX.test(value);
 }
 
+/**
+ * Configuration: which columns in which sheets are date-only fields (YYYY-MM-DD).
+ * Date-only fields must be stored as text in Google Sheets to prevent timezone shifts.
+ */
+export const DATE_ONLY_COLUMNS: Record<string, string[]> = {
+  [SHEET_NAMES.TASKS]: ['next_date', 'appear_date'],
+};
+
+/**
+ * Checks if a column in a sheet is a date-only field.
+ */
+export function isDateOnlyColumn(sheetName: string, columnName: string): boolean {
+  const columns = DATE_ONLY_COLUMNS[sheetName];
+  return columns ? columns.includes(columnName) : false;
+}
+
+/**
+ * Universal converter for writing date-only values to Google Sheets.
+ * Accepts any type (Date, string with/without apostrophe, ISO timestamp, empty, undefined, null).
+ * Returns a string with leading apostrophe to force text storage in Google Sheets.
+ *
+ * @param value - Any date-like value or empty/null/undefined
+ * @returns String with leading apostrophe for Google Sheets text storage, or empty string
+ */
+export function normalizeToSheetDate(value: unknown): string {
+  // Handle empty values
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  // Handle Date objects
+  if (value instanceof Date) {
+    if (isNaN(value.getTime())) return '';
+    return `'${value.toISOString().substring(0, 10)}`;
+  }
+
+  const str = String(value);
+
+  // Already prefixed — return as-is
+  if (str.startsWith("'")) {
+    return str;
+  }
+
+  // ISO date format (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return `'${str}`;
+  }
+
+  // ISO timestamp — extract date part
+  if (str.includes('T')) {
+    return `'${str.substring(0, 10)}`;
+  }
+
+  // Try parsing as Date
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return `'${parsed.toISOString().substring(0, 10)}`;
+  }
+
+  // Unparseable — return empty
+  return '';
+}
+

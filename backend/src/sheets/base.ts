@@ -1,4 +1,4 @@
-import { SHEET_HEADERS, coerceSheetBool, toISOStringValue, toSheetDateValue } from '../helpers/constants';
+import { SHEET_HEADERS, coerceSheetBool, toISOStringValue, isDateOnlyColumn, normalizeToSheetDate } from '../helpers/constants';
 import { getSheet } from './client';
 
 export type NamedEntity = {
@@ -28,9 +28,9 @@ export function rowToNamedEntity(row: unknown[], cols: Record<string, number>): 
 export function recordToRow<T>(sheetName: string, record: T): unknown[] {
   return SHEET_HEADERS[sheetName].map(col => {
     const value = (record as Record<string, unknown>)[col];
-    // For date-only fields, use toSheetDateValue to prevent Google Sheets auto-conversion
-    if ((col === 'next_date' || col === 'appear_date') && typeof value === 'string') {
-      return toSheetDateValue(value);
+    // For date-only fields, use normalizeToSheetDate to prevent Google Sheets auto-conversion
+    if (isDateOnlyColumn(sheetName, col)) {
+      return normalizeToSheetDate(value);
     }
     return value;
   });
@@ -71,27 +71,17 @@ export function upsertRecords<T extends { id: string }>(sheetName: string, recor
     if (data[i][0]) idToRowIndex.set(String(data[i][0]), i);
   }
 
-  const updatedRows = data.map(row => [...row] as unknown[]);
-  const newRows: unknown[][] = [];
-  let hasUpdates = false;
-
   for (const record of records) {
     const row = recordToRow(sheetName, record);
     const existingIndex = idToRowIndex.get(record.id);
+
     if (existingIndex !== undefined) {
-      updatedRows[existingIndex] = row;
-      hasUpdates = true;
+      // Update existing row — write only this row, not the entire range
+      sheet.getRange(existingIndex + 1, 1, 1, numCols).setValues([row]);
     } else {
-      newRows.push(row);
+      // New record — append
+      sheet.appendRow(row);
     }
-  }
-
-  if (hasUpdates) {
-    sheet.getRange(1, 1, updatedRows.length, numCols).setValues(updatedRows);
-  }
-
-  for (const newRow of newRows) {
-    sheet.appendRow(newRow);
   }
 }
 
