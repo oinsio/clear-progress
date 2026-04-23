@@ -28,6 +28,8 @@ Implemented keys: `default_box`, `accent_color`, `custom_accent_light`, `custom_
 Fields: `key`, `value`
 Keys: `next_revision` (starts at 1, incremented after each successful push), `purge_revision` (starts at 0, incremented after each purge)
 
+> **Client-only field:** All entities (including Settings) have `needsSync: boolean` in IndexedDB. This field is never sent to the server — it is stripped before push. See "Dirty Flag" section below.
+
 ## Relationships
 
 - `Tasks.goal_id` → `Goals.id` (0..1 : N)
@@ -58,7 +60,7 @@ Routing via `action` field in request body. Format: JSON.
 
 **Pull**: client sends `since_revision` (single number) + optional `settings_updated_at`. Server returns all records with `revision > since_revision`. Response includes `current_revision` (`next_revision - 1` from Meta sheet), `purge_revision`, `server_time`. Settings filtered by `updated_at` when `settings_updated_at` provided. Client compares server's `purge_revision` with its local `last_known_purge_revision` — if server's is higher, client hard-deletes local soft-deleted records.
 
-**Push**: client sends arrays of changed records per entity type. Server reads `next_revision` from Meta sheet, assigns it to all accepted records, then increments it. Response statuses: `created`, `accepted`, `conflict` (includes `server_record`), `rejected`. Response includes `revision`, `server_time`. **Conflict resolution: last-write-wins by `updated_at`.**
+**Push**: client sends only records with `needsSync = true` (arrays per entity type). Server reads `next_revision` from Meta sheet, assigns it to all accepted records, then increments it. Response statuses: `created`, `accepted`, `conflict` (includes `server_record`), `rejected`. Response includes `revision`, `server_time`. **Conflict resolution: last-write-wins by `updated_at`.**
 
 ## Sync Engine
 
@@ -69,6 +71,19 @@ Routing via `action` field in request body. Format: JSON.
 3. **After changes settle**: `push` with debounce (15 seconds)
 4. **Periodic**: `pull` every 5 minutes while app is active
 5. **Reconnect after offline**: `push` queued changes → `pull` to catch up
+
+### Dirty Flag (`needsSync`)
+
+Client-side boolean flag on every entity in IndexedDB. Tracks which records have local changes not yet confirmed by the server.
+
+**Lifecycle:**
+1. **Set `true`** — on create, update, delete (soft), complete/uncomplete. Only if data actually changed (`hasEntityChanged()` from `utils/deepEqual.ts` compares fields, ignoring `id`, `version`, `updated_at`, `created_at`, `needsSync`, `revision`).
+2. **Push** — `getNeedingSync()` in each repository collects records with `needsSync = true`. Field is stripped before sending to API.
+3. **Set `false`** — after server confirms (`created`/`accepted`). On `conflict` — server record overwrites local, `needsSync = false`.
+4. **Pull protection** — server records overwrite local only if local `needsSync = false`. If `needsSync = true`, the local version is preserved (it will be pushed later).
+5. **Full reset** (`resetAndPull`) — all records set to `needsSync = false` before pulling full state.
+
+Details: `docs/SYNC_OPTIMIZATION.md`, `docs/sync-redesign.md`.
 
 ### Revision Tracking
 

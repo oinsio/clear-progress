@@ -62,6 +62,83 @@ Structure: `domain.specificKey` — flat two-level namespacing.
 2. Use existing namespace if the string belongs to that domain; create a new namespace only if it's clearly a new domain
 3. Never add a key to one file only — missing keys fall back to key name, not gracefully
 
+## Pluralization
+
+i18next selects the key suffix based on the `count` value according to language rules ([CLDR plural rules](https://www.unicode.org/cldr/charts/45/supplemental/language_plural_rules.html)).
+
+**Suffixes by language:**
+
+| Suffix   | Russian (count examples) | English (count examples) |
+|----------|--------------------------|--------------------------|
+| `_one`   | 1, 21, 31, 101…          | 1                        |
+| `_few`   | 2–4, 22–24, 32–34…       | —                        |
+| `_many`  | 5–20, 25–30, 100…        | —                        |
+| `_other` | fractional (1.5, 2.3…)   | 0, 2, 3, 4, 5…           |
+
+**Keys in JSON:**
+
+```jsonc
+// ru.json
+"afterCompletion_one": "Через {{count}} день после завершения",
+"afterCompletion_few": "Через {{count}} дня после завершения",
+"afterCompletion_many": "Через {{count}} дней после завершения"
+
+// en.json — only _one and _other are needed
+"afterCompletion_one": "{{count}} day after completion",
+"afterCompletion_other": "{{count}} days after completion"
+```
+
+**Usage:**
+
+```tsx
+t("repeat.afterCompletion", { count: 3 })
+// ru → "Через 3 дня после завершения"
+// en → "3 days after completion"
+```
+
+## Ordinal (ordinal numbers)
+
+For ordinal numbers (1st, 2nd / 1-е, 2-е) pass `ordinal: true` along with `count`. i18next uses `_ordinal_*` suffixes.
+
+**Suffixes by language:**
+
+| Suffix           | Russian            | English             |
+|------------------|--------------------|---------------------|
+| `_ordinal_one`   | —                  | 1, 21, 31… → "st"   |
+| `_ordinal_two`   | —                  | 2, 22, 32… → "nd"   |
+| `_ordinal_few`   | —                  | 3, 23, 33… → "rd"   |
+| `_ordinal_other` | all numbers → "-е" | 4–20, 24–30… → "th" |
+
+**Keys in JSON:**
+
+```jsonc
+// ru.json — single form for all numbers
+"dayOfMonthLabel_ordinal_other": "Каждое {{count}}-е число месяца"
+
+// en.json — four forms
+"dayOfMonthLabel_ordinal_one": "Day {{count}}st of every month",
+"dayOfMonthLabel_ordinal_two": "Day {{count}}nd of every month",
+"dayOfMonthLabel_ordinal_few": "Day {{count}}rd of every month",
+"dayOfMonthLabel_ordinal_other": "Day {{count}}th of every month"
+```
+
+**Usage:**
+
+```tsx
+t("repeat.dayOfMonthLabel", { count: 3, ordinal: true })
+// ru → "Каждое 3-е число месяца"
+// en → "Day 3rd of every month"
+
+t("repeat.dayOfMonthLabel", { count: 15, ordinal: true })
+// ru → "Каждое 15-е число месяца"
+// en → "Day 15th of every month"
+```
+
+**Where it's used:**
+- `RepeatRuleSelector.tsx` — monthly/yearly selector labels
+- `utils/repeatRule.ts` → `formatRepeatRuleLabel()` — yearly rule text description
+- `shared/lib/utils.ts` → `formatAppearDate()` — appear date formatting
+
 ## Testing with i18n
 
 **Pattern A: Real translations** (test the actual rendered text)
