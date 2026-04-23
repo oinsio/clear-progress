@@ -1,91 +1,28 @@
 # Clear Progress
 
-Personal GTD (Getting Things Done) app for task and goal management.  
+Personal GTD (Getting Things Done) app for task and goal management.
 Type: PWA. Architecture: React frontend + Google Apps Script backend + Google Sheets storage.
 
 IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
-## Quick Commands
-
-```bash
-npm run dev        # Vite dev server
-npm run build      # Production build
-npm run preview    # Preview production build
-npm run test       # Vitest (unit + integration)
-npm run test:e2e   # Playwright E2E tests
-npm run lint       # ESLint + Prettier check
-npm run lint:fix   # Auto-fix lint issues
-npm run typecheck  # tsc --noEmit
-clasp push         # Deploy GAS backend
-clasp deploy       # Create new GAS deployment
-```
-
-## Tech Stack
-
-- **Frontend**: React 18+ / TypeScript 5+ / Vite 5+ / Tailwind CSS 3.4+ / shadcn/ui / React Router 6+
-- **i18n**: i18next 23+ / react-i18next / i18next-browser-languagedetector; languages: `ru`, `en` (default)
-- **Date/Time**: Temporal API via `temporal-polyfill` (single import point: `src/lib/temporal.ts`)
-- **Offline DB**: Dexie.js 3+ (IndexedDB wrapper)
-- **PWA**: vite-plugin-pwa (Workbox)
-- **Backend**: Google Apps Script (TypeScript via clasp), deployed as Web App
-- **Storage**: Google Sheets (7 sheets) + IndexedDB (offline cache)
-- **Hosting**: Cloudflare Pages
-- **Testing**: Vitest + React Testing Library + MSW + fake-indexeddb / Playwright (E2E)
-
-## Project Structure
+## Monorepo Structure
 
 ```
-src/
-├── components/       # Reusable React components
-│   ├── ui/           # shadcn/ui primitives + custom UI components
-│   │   ├── LinkedText.tsx           # Renders text with clickable links
-│   │   └── EditableDescription.tsx  # View/edit hybrid for description fields
-│   ├── tasks/        # Task-related components
-│   ├── goals/        # Goal-related components
-│   ├── ideas/        # Idea-related components
-│   └── layout/       # Shell, sidebar, navigation
-├── pages/            # Route-level page components
-├── hooks/            # Custom React hooks (useXxx.ts)
-├── services/         # Business logic & data layer
-│   ├── db.ts         # Dexie schema & instance
-│   ├── sync.ts       # Sync engine (pull/push)
-│   ├── api.ts        # GAS API client
-│   └── connectionService.ts  # connect/disconnect/getConnectionConfig
-├── types/            # TypeScript types & interfaces
-│   └── connection.ts # ConnectionConfig, BackendType
-├── utils/            # Pure utility functions
-├── contexts/         # React Context providers
-├── constants/        # App-wide constants & enums
-├── locales/          # Translation files (ru.json, en.json)
-├── i18n.ts           # i18next initialization (import in main.tsx)
-└── assets/           # Static assets
-
-gas/                  # Google Apps Script backend
-├── src/
-│   ├── main.ts       # doGet/doPost entry points
-│   ├── router.ts     # Action-based routing
-│   ├── sheets.ts     # Google Sheets CRUD operations
-│   ├── drive.ts      # Google Drive (covers)
-│   └── types.ts      # Shared types
-├── .clasp.json
-└── appsscript.json
-
-public/               # Static PWA assets (manifest, icons)
-tests/
-├── unit/             # Vitest unit tests
-├── integration/      # Vitest integration tests (MSW + fake-indexeddb)
-└── e2e/              # Playwright E2E tests
+frontend/          # React PWA (see frontend/CLAUDE.md)
+backend/           # Google Apps Script backend (see backend/CLAUDE.md)
+.claude/           # Claude Code rules, docs, skills
 ```
+
+Each module has its own `CLAUDE.md` with module-specific conventions, tech stack, and commands.
 
 ## Code Conventions
 
-### General
-
 - Language: TypeScript strict mode, no `any` unless absolutely necessary
 - Formatting: Prettier (defaults) + ESLint
-- Imports: absolute paths via `@/` alias → `src/`
 - No default exports except page components and `db.ts`
 - Prefer named exports
+- No hardcoded values — see `.claude/rules/code-style.md`
+- Descriptive naming — see `.claude/rules/naming.md`
 
 ### Naming
 
@@ -94,77 +31,36 @@ tests/
 - Services/utils: `camelCase.ts`
 - Types/interfaces: `PascalCase` (e.g., `Task`, `Goal`, `SyncPayload`)
 - Constants: `UPPER_SNAKE_CASE`
-- CSS classes: Tailwind utilities only, no custom CSS unless absolutely necessary
-- Files in `gas/`: `camelCase.ts`
-
-### React Patterns
-
-- Functional components only, no classes
-- State management: React Context + useReducer for global state, useState for local
-- Side effects: custom hooks, not raw useEffect in components
-- UI: Tailwind + shadcn/ui, do not write custom CSS without strong reason
-- Memoize with `useMemo`/`useCallback` only when there's a measured perf issue
-
-#### Description fields with clickable links
-
-Use `EditableDescription` for all description fields (tasks, goals, ideas):
-- View mode: displays text with clickable shortened URLs via `LinkedText`
-- Edit mode: full textarea with complete URLs
-- Click on text (not link) switches to edit mode
-- Blur saves and returns to view mode
-
-Example:
-```tsx
-<EditableDescription
-  value={description}
-  onChange={setDescription}
-  onBlur={handleSave}
-  placeholder={t("task.descriptionPlaceholder")}
-  data-test-id="task-description"
-/>
-```
-
-### Error Handling
-
-- API calls: always try/catch, surface errors to user via toast/notification
-- Sync errors: queue for retry, never lose local data
-- Dexie operations: wrap in try/catch, log errors
-
-### URL handling in descriptions
-
-- All description fields use `EditableDescription` component
-- URLs are automatically detected and rendered as clickable links
-- URL detection: `/(https?:\/\/[^\s<>"'\]]+)/g`
-- Trailing punctuation (`,`, `.`, `)`, etc.) is stripped from URLs
-- Links open in new tab with `target="_blank"` and `rel="noopener noreferrer"`
-- Shortened display format: `domain/first/…/last` (query params hidden)
-- Full URL shown in tooltip on hover
 
 ## Data Model
 
 ### Entities
 
-**Tasks** — core entity  
-Fields: `id` (UUID v4), `name`, `description`, `box` (inbox | today | week | later), `goal_id?`, `context_id?`, `category_id?`, `is_completed`, `completed_at?`, `repeat_rule?` (v1.1), `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
+**Tasks** — core entity
+Fields: `id` (UUID v4), `name`, `description`, `box` (inbox | today | week | later), `goal_id`, `context_id`, `category_id`, `is_completed`, `completed_at`, `repeat_rule`, `is_hidden`, `next_date`, `appear_date`, `original_task_id`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
 
 **Goals** — objectives
-Fields: `id`, `name`, `description?`, `cover_file_id?` (Google Drive), `status` (not_started | in_progress | paused | completed | cancelled), `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
+Fields: `id`, `name`, `description?`, `cover_file_id?` (Google Drive), `status` (planning | in_progress | paused | completed | cancelled), `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
 
 **Ideas** — user ideas
 Fields: `id`, `name`, `description`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
 
 **Contexts** — GTD contexts (@Home, @Office...)
-Fields: `id`, `name`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
+Fields: `id`, `name`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
 
-**Categories** — life areas (Work, Family...)  
+**Categories** — life areas (Work, Family...)
 Same structure as Contexts.
 
-**Checklist_Items** — subtasks  
-Fields: `id`, `task_id`, `name`, `is_completed`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`
+**Checklist_Items** — subtasks
+Fields: `id`, `task_id`, `name`, `is_completed`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
 
-**Settings** — key-value  
-MVP keys: `default_box`, `accent_color`  
-v1.1 keys: `creation_fields`, `quick_property`, `menu_always_visible`, `menu_items`, `inbox_fields`, `focus_entity`
+**Settings** — key-value
+Fields: `key`, `value`, `updated_at`
+Implemented keys: `default_box`, `accent_color`, `custom_accent_light`, `custom_accent_dark`
+
+**Meta** — sync revision counters (server-side Google Sheet, not a regular entity)
+Fields: `key`, `value`
+Keys: `next_revision` (starts at 1, incremented after each successful push), `purge_revision` (starts at 0, incremented after each purge)
 
 ### Relationships
 
@@ -179,122 +75,56 @@ v1.1 keys: `creation_fields`, `quick_property`, `menu_always_visible`, `menu_ite
 - **Soft delete**: set `is_deleted = true`, never remove rows
 - **Versioning**: increment `version` field (+1) on every change — used for sync
 - **Dates and timestamps**:
-  - **Timestamps** (created_at, updated_at, completed_at): ISO 8601 with Z suffix (e.g., `"2025-01-15T10:30:00.000Z"`) — use `Temporal.Now.instant().toString()`
-  - **Date-only** (next_date, appear_date): ISO 8601 date format (e.g., `"2025-01-15"`) — use `Temporal.PlainDate` and `.toString()`
-  - **NEVER use `new Date()`** for date/time operations — always use Temporal API via `@/lib/temporal`
-  - See `.claude/docs/temporal-guide.md` for detailed usage patterns
-  - **Backend date handling**: Backend uses `normalizeToSheetDate()` to convert date-only fields to text format with leading apostrophe (`'2025-01-15`) to prevent Google Sheets auto-conversion to Date objects. See `backend/src/helpers/constants.ts` for implementation.
-- **Recurring tasks skip logic**: при длительной неактивности пользователя не создаются пропущенные копии повторяющихся задач — вычисляется только ближайшая будущая дата. См. `.claude/docs/architecture/recurring-tasks-skip-logic.md`
-- **Часовые пояса для повторяющихся задач**: используется текущий системный часовой пояс (`Temporal.Now.timeZoneId()`), а не часовой пояс создания задачи. Это осознанное архитектурное решение для GTD-приложения. См. `.claude/docs/architecture/recurring-tasks-timezone-policy.md`
+  - **Timestamps** (created_at, updated_at, completed_at): ISO 8601 with Z suffix (e.g., `"2025-01-15T10:30:00.000Z"`)
+  - **Date-only** (next_date, appear_date): ISO 8601 date format (e.g., `"2025-01-15"`)
+  - Frontend: Temporal API (see `frontend/CLAUDE.md`); Backend (GAS): `Date` object
+- **Recurring tasks skip logic**: when a user is inactive for a long period, missed copies of recurring tasks are not created — only the nearest future date is calculated. See `.claude/docs/architecture/recurring-tasks-skip-logic.md`
+- **Recurring tasks timezone policy**: the current system timezone (`Temporal.Now.timeZoneId()`) is used, not the timezone from when the task was created. This is a deliberate architectural decision for a GTD app. See `.claude/docs/architecture/recurring-tasks-timezone-policy.md`
 - **Empty optional fields**: use `""` (empty string), never `null` or `undefined`
 - **sort_order**: integer, used for manual ordering within lists
 
-## Backend API (Google Apps Script)
+## Backend API
 
-Single endpoint: `https://script.google.com/macros/s/{DEPLOY_ID}/exec`  
+Single endpoint: `https://script.google.com/macros/s/{DEPLOY_ID}/exec`
 Routing via `action` field in request body. Format: JSON.
 
 ### Actions
 
-| Action | Method | Purpose |
-|--------|--------|---------|
-| `ping` | GET | Health check; returns `{ ok: true, initialized: bool }` |
-| `init` | POST | Create Drive folder + Sheets + sheet structure (idempotent) |
-| `pull` | POST | Get changes since client's known versions |
-| `push` | POST | Send local changes to server |
-| `upload_cover` | POST | Upload goal cover image (base64, ≤2MB, SHA-256 dedup) |
-| `delete_cover` | POST | Delete cover (checks ref_count before actual delete) |
-| `purge` | POST | (v2.0) Hard-delete soft-deleted records |
+| Action          | Method | Purpose                                                     |
+|-----------------|--------|-------------------------------------------------------------|
+| `ping`          | GET    | Health check; returns `{ ok: true, initialized: bool }`     |
+| `init`          | POST   | Create Drive folder + Sheets + sheet structure (idempotent) |
+| `pull`          | POST   | Get changes since client's known revision                   |
+| `push`          | POST   | Send local changes to server                                |
+| `upload_cover`  | POST   | Upload goal cover image (base64, ≤2MB, SHA-256 dedup)       |
+| `upload_covers` | POST   | Batch upload covers (up to 10)                              |
+| `get_cover`     | POST   | Download cover images by file_id                            |
+| `delete_cover`  | POST   | Delete cover (checks ref_count before actual delete)        |
+| `purge`         | POST   | Hard-delete soft-deleted records                            |
 
-### Pull Request
+### Pull/Push Protocol
 
-Client sends max known `version` per entity type and optionally `settings_updated_at`:
+**Pull**: client sends `since_revision` (single number) + optional `settings_updated_at`. Server returns all records with `revision > since_revision`. Response includes `current_revision` (`next_revision - 1` from Meta sheet), `purge_revision`, `server_time`. Settings filtered by `updated_at` when `settings_updated_at` provided. Client compares server's `purge_revision` with its local `last_known_purge_revision` — if server's is higher, client hard-deletes local soft-deleted records.
 
-```json
-{
-  "action": "pull",
-  "versions": {
-    "tasks": 42,
-    "goals": 10,
-    "ideas": 5,
-    "contexts": 5,
-    "categories": 3,
-    "checklist_items": 20,
-    "settings": 1
-  },
-  "settings_updated_at": "2026-04-15T10:30:00.000Z"
-}
-```
-
-Server returns all records with `version > client_version` for each entity.
-
-**Settings optimization**: Settings are filtered by `updated_at` instead of `version`. When `settings_updated_at` is provided, server returns only settings with `updated_at > settings_updated_at`. When omitted, all settings are returned (backward compatibility).
-
-### Push Request
-
-Client sends arrays of changed records:
-
-```json
-{
-  "action": "push",
-  "changes": {
-    "tasks": [{ ...task }],
-    "goals": [{ ...goal }],
-    "ideas": [{ ...idea }]
-  }
-}
-```
-
-### Push Response Statuses
-
-Each record in push response has a status:
-- `created` — new record inserted
-- `accepted` — update applied
-- `conflict` — server has newer version; response includes `server_record` for client to overwrite local copy
-
-**Conflict resolution: last-write-wins by `updated_at`.**
-
-### Google Drive Structure
-
-```
-My Drive/
-└── Clear Progress/
-    ├── Clear Progress Data.gsheet   (7 sheets: Tasks, Goals, Ideas, Contexts, Categories, Checklist_Items, Settings)
-    └── Covers/                      (goal cover images)
-```
-
-OAuth scopes: `drive.file` + `spreadsheets` (minimal).
-
-## Backend Connection Architecture
-
-Connection state is managed via a single `ConnectionConfig` object in localStorage (`STORAGE_KEYS.CONNECTION_CONFIG`), not separate keys.
-
-- **Types**: `src/types/connection.ts` — `ConnectionConfig` discriminated union (currently only `GasConnectionConfig`)
-- **Service**: `src/services/connectionService.ts` — `connect()`, `disconnect()`, `getConnectionConfig()`, `getBackendType()`
-- **Hook**: `src/hooks/useConnectionConfig.ts` — reactive hook returning `ConnectionConfig | null`
-- **Status**: `src/hooks/useConnectionStatus.ts` — derives connection status from config + auth + sync state
-- **Migration**: `migrateLegacyConnection.ts` — one-time migration from old keys (`GAS_URL`, `GOOGLE_CLIENT_ID`, `BACKEND_CONNECTED`)
-
-`disconnect()` clears config + auth tokens + sync keys in one call. `connect()` saves config and dispatches events.
-
-See `.claude/docs/architecture/connection-config.md` for full architecture details.
+**Push**: client sends arrays of changed records per entity type. Server reads `next_revision` from Meta sheet, assigns it to all accepted records, then increments it. Response statuses: `created`, `accepted`, `conflict` (includes `server_record`), `rejected`. Response includes `revision`, `server_time`. **Conflict resolution: last-write-wins by `updated_at`.**
 
 ## Sync Engine
 
 ### Flow
 
-1. **App open**: `pull` → update local IndexedDB with server changes
+1. **App open**: `push` queued changes → `pull` → cover sync
 2. **User makes changes**: write to IndexedDB immediately (optimistic UI)
-3. **After changes settle**: `push` with debounce (5–10 seconds)
+3. **After changes settle**: `push` with debounce (15 seconds)
 4. **Periodic**: `pull` every 5 minutes while app is active
 5. **Reconnect after offline**: `push` queued changes → `pull` to catch up
 
-### Offline Behavior
+### Revision Tracking
 
-- All reads/writes go through Dexie (IndexedDB) — app works fully offline
-- Changes accumulate in IndexedDB with incremented `version`
-- On reconnect: push all pending changes, then pull server state
-- Network status detection via `navigator.onLine` + fetch error handling
+Client stores sync state in IndexedDB table `sync_meta` (via `SyncMetaRepository`):
+- `last_known_revision` — highest revision received from server (default 0); sent as `since_revision` in pull requests
+- `last_known_purge_revision` — highest purge_revision received from server (default 0); used to detect when server has purged records
+
+Both values are updated after each successful pull. `last_known_revision` is also updated after a successful push.
 
 ### Sync Rules
 
@@ -303,195 +133,34 @@ See `.claude/docs/architecture/connection-config.md` for full architecture detai
 - Sync should be invisible to user; show subtle indicator only on error
 - All sync operations are non-blocking; UI never freezes waiting for sync
 
-## Frontend
-
-Before creating files, consult `project-structure.md`.
-
 ## Feature Scope
 
-### MVP
+### v1.0
 
 - Task boxes: inbox, today, week, later
 - Task CRUD: create, read, update, delete (soft)
-- Complete task: swipe right (mobile, `pointer: coarse`) or checkbox (tablet/desktop, `pointer: fine`)
+- Complete task: swipe right (mobile) or checkbox (desktop)
 - Move tasks between boxes
-- Goals with statuses (not_started, in_progress, paused, completed, cancelled) and cover images
+- Goals with statuses and cover images
 - Contexts and Categories CRUD
-- Sidebar navigation
-- Goal detail screen (with linked tasks)
-- Search across tasks
-- Swipe actions on task items
-- Default box setting
-- Accent color (green, orange, purple, yellow, crimson)
-- Full sync with GAS backend
-- Backend connection setup flow
-
-### v1.1
-
+- Sidebar navigation, Goal detail screen, Search
+- Default box setting, Accent color
+- Full sync with GAS backend, Backend connection setup flow
 - Checklists (subtasks within a task)
 - Recurring tasks (`repeat_rule`)
-- Focus mode
+- Copy/duplicate task, Configurable creation fields, Menu customization
+- Purge
 - Quick property panel
-- Inbox processing flow
-- Copy/duplicate task
-- Configurable creation fields
-- Quick property shortcut
-- Menu customization
+ - Focus mode (task dimming by goal/context, configurable opacity)
 
 ### v2.0
 
-- Statistics dashboard
-- Sharing
-- Purge (hard delete old soft-deleted records)
+- Statistics dashboard, Sharing
 
 ## Testing Guidelines
 
-### Unit Tests (Vitest)
-
+- **TDD**: Strict Red-Green-Refactor cycle — see `.claude/docs/tdd-workflow.md`
 - Co-locate test files: `Component.test.tsx` next to `Component.tsx`
-- Use `fake-indexeddb` for Dexie operations
-- Use MSW for API mocking — do not mock fetch directly
-- Test business logic in services independently from components
-- Aim for meaningful coverage, not 100%
-- To launch backend unit tests use `backend/` directory
-- To launch frontend unit tests use `frontend/` directory
-
-### Integration Tests (Vitest + RTL)
-
-- Test user flows: create task → see it in list → complete it
-- Mock only the network layer (MSW), use real Dexie with fake-indexeddb
-
-### E2E Tests (Playwright)
-
-- Target: Chromium + Mobile Chrome + Mobile Safari viewports
-- Test critical paths: onboarding, task CRUD, sync, offline→online
-- Use data-testid attributes for selectors, not CSS classes
-
-### TDD Workflow
-
-- Strict Red-Green-Refactor cycle for all changes: @.claude/docs/tdd-workflow.md
-
-## Important Reminders
-
-- This is a mobile-first PWA — always consider touch interactions and small screens
-- Performance matters: keep bundle small, lazy-load routes, avoid unnecessary re-renders
-- The app should feel native: smooth animations, instant feedback, no loading spinners for local data
-- Accessibility: semantic HTML, ARIA labels, keyboard navigation support
-- i18n is implemented — NEVER hardcode user-facing strings; always use `t("namespace.key")`
-
-## Code style: no hardcoded values
-
-- NEVER use magic numbers or string literals in logic — extract them into named constants
-- Statuses, types, roles, states → always use `enum` (TypeScript enum or `as const` object)
-- URLs, API endpoints, Google Sheets sheet names, IndexedDB keys → constants in `src/constants/`
-- Tailwind classes in JSX are an exception — they are NOT hardcoded values
-- Detailed rules and examples: `.claude/rules/code-style.md`
-- Variable and function naming rules: `.claude/rules/naming.md`
-- User-facing strings in JSX/logic → always `t("namespace.key")` via `useTranslation()`; see i18n section
-
-## Internationalization (i18n)
-
-### Setup
-- Library: `i18next` + `react-i18next`; initialized in `src/i18n.ts`, imported in `main.tsx`
-- Languages: `ru` (default), `en`; files in `src/locales/ru.json` and `src/locales/en.json`; Dr.House ru localization in `src/locales/house.json`
-- Language state: `LanguageProvider` (Context) in `src/app/providers/LanguageProvider.tsx`
-- Language switch: `useLanguage()` hook from `src/hooks/useLanguage.ts`
-- Persistence: localStorage key `STORAGE_KEYS.LANGUAGE`
-
-### Usage in components
-
-```tsx
-// ✅ Always: use the t() function
-import { useTranslation } from "react-i18next";
-
-function MyComponent() {
-  const { t } = useTranslation();
-  return <button>{t("goal.create")}</button>;
-}
-
-// ✅ With interpolation
-t("task.addPlaceholder", { box: t("box.today") })  // → "Задача в «Сегодня»"
-
-// ✅ Dynamic keys (when mapping over array)
-{SUPPORTED_LANGUAGES.map(lang => <button>{t(`lang.${lang}`)}</button>)}
-
-// ❌ Never: hardcoded strings in JSX or logic
-return <button>Создать</button>;
-const label = "Входящие";
-```
-
-### Key naming convention
-
-Structure: `domain.specificKey` — flat two-level namespacing.
-
-| Namespace | Content |
-|-----------|---------|
-| `nav.*` | Bottom navigation labels |
-| `box.*` | Box names (inbox, today, week, later) |
-| `task.*` | Task strings (placeholders, aria-labels, empty states) |
-| `section.*` | Section headers in task lists |
-| `goal.*` | Goal form and status labels |
-| `context.*` | Context management strings |
-| `category.*` | Category management strings |
-| `search.*` | Search page |
-| `filter.*` | Filter panel |
-| `settings.*` | Settings page |
-| `selector.*` | Goal/Context/Category dropdowns |
-| `taskEdit.*` | Task edit modal |
-| `color.*` | Color name translations |
-| `lang.*` | Language name translations |
-
-### Adding new strings
-
-1. Add the key to **both** `src/locales/ru.json` and `src/locales/en.json`
-2. Use existing namespace if the string belongs to that domain; create a new namespace only if it's clearly a new domain
-3. Never add a key to one file only — missing keys fall back to key name, not gracefully
-
-### Testing with i18n
-
-Two valid patterns — choose based on what's being tested:
-
-**Pattern A: Real translations** (test the actual rendered text)
-```tsx
-// No mocking needed — i18next is initialized in test/setup.ts
-it("should render inbox link", () => {
-  render(<BottomNav />);
-  expect(screen.getByRole("link", { name: /входящие/i })).toBeInTheDocument();
-});
-```
-
-**Pattern B: Mock translations** (test component logic, not translation content)
-```tsx
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
-
-it("should call setLanguage on click", () => {
-  // test with key names as text, e.g. "settings.language"
-});
-```
-
-Use Pattern A for navigation/layout components where the translated text is what the user sees.
-Use Pattern B for logic-heavy components (settings, forms) where you're testing behavior.
-
-## Temporal API Usage
-
-All date and time operations in the frontend use Temporal API via `temporal-polyfill`. See `.claude/docs/temporal-guide.md` for:
-- Import patterns and Clock abstraction
-- Timestamp vs date-only types (branded types: `ISOTimestamp`, `ISODate`)
-- Common operations (current time, date arithmetic, formatting)
-- Testing with `fakeClock`
-- Serialization boundaries (Dexie, API, localStorage)
-
-**Critical rules:**
-- NEVER use `new Date()` in production code
-- NEVER use `Date.now()` — use `Temporal.Now.instant().epochMilliseconds` instead
-- Always import `Temporal` from `@/lib/temporal`, never from `temporal-polyfill` directly
-- Backend (GAS) continues using `Date` — it doesn't support Temporal
-
-## Post-Edit Workflow
-
-After creating or editing any source file (.ts, .tsx, .json, .js, ):
-1. Call `getDiagnostics` via the webstorm MCP tool for the changed file
-2. If there are errors or warnings — fix them immediately before moving on
-3. Do NOT ask for confirmation to fix IDE diagnostics — just fix them
+- Frontend tests: run from `frontend/` directory
+- Backend tests: run from `backend/` directory
+- See module-level CLAUDE.md files for module-specific testing details
