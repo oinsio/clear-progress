@@ -1,5 +1,5 @@
 {
-  "name": "clear-progress-gtd",
+  "name": "@clear-progress/client",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -12,8 +12,8 @@
     "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
     "test:e2e": "playwright test",
-    "lint": "biome check . --config-path=../biome.json",
-    "lint:fix": "biome check . --write --config-path=../biome.json",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

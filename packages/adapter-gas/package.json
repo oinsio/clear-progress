@@ -1,5 +1,5 @@
 {
-  "name": "clear-progress-gas",
+  "name": "@clear-progress/adapter-gas",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,8 +8,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:mutation": "stryker run",
-    "lint": "biome check . --config-path=../biome.json",
-    "lint:fix": "biome check . --write --config-path=../biome.json"
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

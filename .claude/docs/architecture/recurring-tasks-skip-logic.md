@@ -40,7 +40,7 @@
 
 ### Реализация
 
-Логика реализована в `frontend/src/utils/repeatRule.ts`, функция `calculateNextDateDaily()` (строки 27-30):
+Логика реализована в `packages/client/src/utils/repeatRule.ts`, функция `calculateNextDateDaily()` (строки 27-30):
 
 ```typescript
 if (Temporal.PlainDate.compare(next, today) < 0) {
@@ -241,7 +241,7 @@ if (Temporal.PlainDate.compare(next, today) < 0) {
 - Результат: 2026-05-15 ✅
 ```
 
-**Реализация:** См. `frontend/src/utils/repeatRule.ts`, функции `calculateNextDateMonthly()` (строки 166-186) и `calculateNextDateYearly()` (строки 206-210).
+**Реализация:** См. `packages/client/src/utils/repeatRule.ts`, функции `calculateNextDateMonthly()` (строки 166-186) и `calculateNextDateYearly()` (строки 206-210).
 
 ### 2. After Completion не имеет skip-логики
 
@@ -278,9 +278,9 @@ if (Temporal.PlainDate.compare(next, today) < 0) {
 ## Связанные документы
 
 - `DATE_TIME_AUDIT_REPORT.md` — пункт 11 (исходная проблема)
-- `frontend/src/utils/repeatRule.ts` — реализация skip-логики
-- `frontend/src/services/TaskService.ts` — создание recurring копий
-- `frontend/src/services/HiddenTaskService.ts` — раскрытие скрытых задач
+- `packages/client/src/utils/repeatRule.ts` — реализация skip-логики
+- `packages/client/src/services/TaskService.ts` — создание recurring копий
+- `packages/client/src/services/HiddenTaskService.ts` — раскрытие скрытых задач
 
 ---
 

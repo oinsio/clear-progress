@@ -13,7 +13,7 @@ Google Sheets `getValues()` возвращает `Date` объекты для я
 
 ### 1. Бэкенд: `toISODateValue()` (первичная конвертация)
 
-Файл: `backend/src/helpers/constants.ts`
+Файл: `packages/adapter-gas/src/helpers/constants.ts`
 
 Для date-only полей (`next_date`, `appear_date`) используется `toISODateValue()` вместо `toISOStringValue()`:
 
@@ -30,7 +30,7 @@ Google Sheets `getValues()` возвращает `Date` объекты для я
 
 ### 2. Фронтенд: `sanitizeDateOnly()` (защитный слой)
 
-Файл: `frontend/src/utils/dateHelpers.ts`
+Файл: `packages/client/src/utils/dateHelpers.ts`
 
 Санитизация на фронтенде — это защита от испорченных данных, которые могли попасть в IndexedDB до деплоя бэкенд-фикса. Применяется в:
 

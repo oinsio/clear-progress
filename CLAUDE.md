@@ -6,8 +6,8 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 ## Structure
 
-- `frontend/` — React PWA (see @frontend/CLAUDE.md)
-- `backend/` — Google Apps Script (see @backend/CLAUDE.md)
+- `packages/client/` — React PWA (see @packages/client/CLAUDE.md)
+- `packages/adapter-gas/` — Google Apps Script (see @packages/adapter-gas/CLAUDE.md)
 
 ## Code Style
 
@@ -38,5 +38,5 @@ Entities, relationships, backend API, pull/push protocol, sync engine:
 
 - **TDD**: Red-Green-Refactor cycle — @.claude/docs/tdd-workflow.md
 - Co-locate tests: `Component.test.tsx` next to `Component.tsx`
-- Frontend tests: run from `frontend/`; backend tests: run from `backend/`
+- Frontend tests: run from `packages/client/`; backend tests: run from `packages/adapter-gas/`
 - **Mutation testing**: `npm run test:mutation` — target ≥95% score

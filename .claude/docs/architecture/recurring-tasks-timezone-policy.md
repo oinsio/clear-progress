@@ -43,7 +43,7 @@
 
 **Модель данных:**
 ```typescript
-// frontend/src/types/common.ts
+// packages/client/src/types/common.ts
 export interface RepeatRule {
   type: "fixed" | "after_completion";
   frequency?: "daily" | "weekly" | "monthly" | "yearly";
@@ -54,7 +54,7 @@ export interface RepeatRule {
 
 **Вычисление дат:**
 ```typescript
-// frontend/src/utils/repeatRule.ts
+// packages/client/src/utils/repeatRule.ts
 export function calculateNextDate(
   rule: RepeatRule,
   previousNextDate: string,
@@ -280,8 +280,8 @@ export function calculateNextDate(
 
 - `DATE_TIME_AUDIT_REPORT.md` — пункт 5 (исходная "проблема")
 - `.claude/docs/architecture/recurring-tasks-skip-logic.md` — пункт 4 (упоминание часовых поясов)
-- `frontend/src/utils/repeatRule.ts` — реализация вычисления дат
-- `frontend/src/types/common.ts` — модель данных `RepeatRule`
+- `packages/client/src/utils/repeatRule.ts` — реализация вычисления дат
+- `packages/client/src/types/common.ts` — модель данных `RepeatRule`
 - `.claude/docs/temporal-guide.md` — руководство по использованию Temporal API
 
 ---
