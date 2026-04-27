@@ -20,7 +20,7 @@
 - [ ] `vite.config.ts` с alias и будущим подключением PWA-плагина
 - [ ] `.gitignore` покрывает `node_modules`, `dist`, `.env`
 - [ ] `.env.example` с `VITE_GAS_URL`
-- [ ] Проект запускается через `npm run dev` без ошибок
+- [ ] Проект запускается через `pnpm run dev` без ошибок
 
 **Зависимости:** нет
 

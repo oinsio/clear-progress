@@ -190,7 +190,7 @@ All files use TypeScript with strict mode enabled.
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": "npm run lint:fix && npm run typecheck" }
+          { "type": "command", "command": "pnpm run lint:fix && pnpm run typecheck" }
         ]
       }
     ]

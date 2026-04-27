@@ -9,12 +9,13 @@ import {
   calculateAppearDate,
 } from "@/utils/repeatRule";
 import { toISOTimestamp, toISODate, sanitizeDateOnly } from "@/utils/dateHelpers";
-import { Temporal } from "@/lib/temporal";
+import { Temporal, systemClock, type Clock } from "@/lib/temporal";
 
 export class TaskService {
   constructor(
     private readonly taskRepository: TaskRepository,
     private readonly checklistRepository: ChecklistRepository,
+    private readonly clock: Clock = systemClock,
   ) {}
 
   private sortBySortOrder(tasks: Task[]): Task[] {
@@ -125,7 +126,7 @@ export class TaskService {
             await this.taskRepository.findHiddenRecurringTask(searchId);
 
           // Определяем, нужно ли раскрыть клон сразу
-          const today = Temporal.Now.plainDateISO().toString();
+          const today = this.clock.plainDateISO().toString();
           const sanitizedAppearDate = sanitizeDateOnly(
             toISODate(appearDate),
           );

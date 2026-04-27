@@ -43,7 +43,7 @@ When asked to set up or install something — just do it directly.
 
 ## Step 5 — Mutate (VERIFY)
 
-- Run `npm run test:mutation` on the changed files
+- Run `pnpm run test:mutation` on the changed files
 - Analyze survived mutants — each survivor indicates a missed scenario or a weak assertion
 - Write additional tests to kill survived mutants
 - Re-run mutations after adding tests
