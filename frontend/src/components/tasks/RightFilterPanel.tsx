@@ -1,27 +1,27 @@
 import {
-  Search,
-  Target,
-  MapPin,
-  Tag,
-  CheckSquare,
   CheckCheck,
-  Inbox,
+  CheckSquare,
   CircleUser,
-  RefreshCw,
-  Trash2,
+  Inbox,
   Lightbulb,
+  MapPin,
+  RefreshCw,
+  Search,
+  Tag,
+  Target,
+  Trash2,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import type * as React from "react";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/shared/lib/cn";
-import type { PanelSide, MenuMode } from "@/types/common";
-import { ROUTES } from "@/constants";
-import { useSync } from "@/app/providers/SyncProvider";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { useSync } from "@/app/providers/SyncProvider";
+import { ROUTES } from "@/constants";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
-import * as React from "react";
+import { cn } from "@/shared/lib/cn";
+import type { MenuMode, PanelSide } from "@/types/common";
 
 export type RightPanelMode =
   | "inbox"

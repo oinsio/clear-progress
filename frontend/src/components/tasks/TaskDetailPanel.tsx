@@ -1,49 +1,49 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { X, Trash2, ChevronRight, ArrowLeft } from "lucide-react";
-import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
-import { useDndSensors } from "@/hooks/useDndSensors";
+import { ArrowLeft, ChevronRight, Trash2, X } from "lucide-react";
+import type * as React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type {
-  Task,
-  Goal,
-  Context,
-  Category,
-  ChecklistItem,
-} from "@/types/entities";
-import type { Box, RepeatRule } from "@/types/common";
-import { cn } from "@/shared/lib/cn";
-import { useChecklist } from "@/hooks/useChecklist";
 import { useSync } from "@/app/providers/SyncProvider";
-import {
-  parseRepeatRule,
-  serializeRepeatRule,
-  formatRepeatRuleLabel,
-} from "@/utils/repeatRule";
+import { EditableDescription } from "@/components/ui/EditableDescription";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { useChecklist } from "@/hooks/useChecklist";
 import { useChecklistItemEditing } from "@/hooks/useChecklistItemEditing";
+import { useDndSensors } from "@/hooks/useDndSensors";
+import { useSettings } from "@/hooks/useSettings";
 import { useTaskEditLabels } from "@/hooks/useTaskEditLabels";
 import { useTaskFormState } from "@/hooks/useTaskFormState";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
-import { useSettings } from "@/hooks/useSettings";
+import { cn } from "@/shared/lib/cn";
+import type { Box, RepeatRule } from "@/types/common";
+import type {
+  Category,
+  ChecklistItem,
+  Context,
+  Goal,
+  Task,
+} from "@/types/entities";
+import {
+  formatRepeatRuleLabel,
+  parseRepeatRule,
+  serializeRepeatRule,
+} from "@/utils/repeatRule";
 import { RepeatRuleSelector } from "./RepeatRuleSelector";
-import { EditableDescription } from "@/components/ui/EditableDescription";
+import { SortableChecklistItem } from "./SortableChecklistItem";
 import {
   ACTIVE_TAB,
   type ActiveTab,
-  BOX_OPTIONS,
   BOX_ICONS,
-  SELECTOR_TYPE,
-  type SelectorType,
-  SELECTOR_TITLE_KEYS,
+  BOX_OPTIONS,
   CHECKLIST_ITEM_VARIANT,
   type ChecklistItemVariant,
+  SELECTOR_TITLE_KEYS,
+  SELECTOR_TYPE,
+  type SelectorType,
 } from "./taskEditShared";
-import { SortableChecklistItem } from "./SortableChecklistItem";
-import * as React from "react";
 
 interface TaskDetailPanelProps {
   task: Task;
@@ -281,7 +281,6 @@ export function TaskDetailPanel({
     setIsConfirmingDelete(false);
     setNewItemName("");
   }, [
-    task.id,
     task.name,
     task.description,
     task.goal_id,

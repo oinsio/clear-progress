@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useLongPress } from "./useLongPress";
+import type React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  LONG_PRESS_THRESHOLD_MS,
   LONG_PRESS_MOVE_THRESHOLD_PX,
+  LONG_PRESS_THRESHOLD_MS,
 } from "@/constants";
-import React from "react";
+import { useLongPress } from "./useLongPress";
 
 // Helper functions to reduce duplication
 const createTouchEvent = (

@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, act, screen, fireEvent } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  PING_INTERVAL_MS,
-  SYNC_INTERVAL_MS,
-  SYNC_DEBOUNCE_MS,
-  MAX_SILENT_REFRESH_ATTEMPTS,
-  MAX_PING_ATTEMPTS,
   AUTH_REQUIRED_EVENT,
+  MAX_PING_ATTEMPTS,
+  MAX_SILENT_REFRESH_ATTEMPTS,
+  PING_INTERVAL_MS,
+  SYNC_DEBOUNCE_MS,
+  SYNC_INTERVAL_MS,
 } from "@/constants";
 import type { FullSyncStep } from "@/types/common";
 
@@ -191,7 +191,11 @@ beforeEach(() => {
   // Set up connection config for tests
   localStorage.setItem(
     "connection_config",
-    JSON.stringify({ type: "gas", url: "https://test.example.com", isActive: true }),
+    JSON.stringify({
+      type: "gas",
+      url: "https://test.example.com",
+      isActive: true,
+    }),
   );
 
   mockPull.mockResolvedValue(undefined);
@@ -799,7 +803,7 @@ describe("SyncProvider — triggerFullSync", () => {
   }
 
   function getSyncVersion(): number {
-    return parseInt(screen.getByTestId("version").textContent ?? "0");
+    return parseInt(screen.getByTestId("version").textContent ?? "0", 10);
   }
 
   function setupFullSyncMocks() {

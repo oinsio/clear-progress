@@ -1,12 +1,12 @@
 import { renderHook } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useShowCheckbox } from "./useShowCheckbox";
 
 vi.mock("./useIsDesktop");
 vi.mock("./useHasTouchPointer");
 
-import { useIsDesktop } from "./useIsDesktop";
 import { useHasTouchPointer } from "./useHasTouchPointer";
+import { useIsDesktop } from "./useIsDesktop";
 
 describe("useShowCheckbox", () => {
   beforeEach(() => {

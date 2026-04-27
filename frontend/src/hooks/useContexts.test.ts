@@ -1,10 +1,10 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useContexts } from "./useContexts";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/database";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { ContextService } from "@/services/ContextService";
 import { buildContext } from "@/test/factories/contextFactory";
+import { useContexts } from "./useContexts";
 
 const mockSchedulePush = vi.fn();
 

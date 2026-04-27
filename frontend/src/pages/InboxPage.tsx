@@ -1,35 +1,35 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { Plus, ChevronDown } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
+import type * as React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
-import { TaskList } from "@/components/tasks/TaskList";
-import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { BoxFilterBar } from "@/components/tasks/BoxFilterBar";
 import {
   RightFilterPanel,
   type RightPanelMode,
 } from "@/components/tasks/RightFilterPanel";
-import { useTasks } from "@/hooks/useTasks";
-import { useGoals } from "@/hooks/useGoals";
-import { useContexts } from "@/hooks/useContexts";
+import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
+import { TaskList } from "@/components/tasks/TaskList";
+import { BOX, BOX_FILTER_ALL } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useCompletedTasks } from "@/hooks/useCompletedTasks";
-import { useSearch } from "@/hooks/useSearch";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { useContexts } from "@/hooks/useContexts";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useSectionCollapse } from "@/hooks/useSectionCollapse";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useFocusMode } from "@/hooks/useFocusMode";
+import { useGoals } from "@/hooks/useGoals";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { useSearch } from "@/hooks/useSearch";
+import { useSectionCollapse } from "@/hooks/useSectionCollapse";
+import { useTasks } from "@/hooks/useTasks";
 import { defaultTaskService } from "@/services/defaultServices";
-import type { BoxFilter, Box } from "@/types/common";
-import type { Task } from "@/types/entities";
-import { BOX_FILTER_ALL, BOX } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import { groupCompletedTasks } from "@/shared/lib/utils";
-import * as React from "react";
+import type { Box, BoxFilter } from "@/types/common";
+import type { Task } from "@/types/entities";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -909,7 +909,6 @@ export default function InboxPage() {
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder={t("task.searchPlaceholder")}
-                autoFocus
                 className={cn(
                   "flex-1 text-sm outline-none placeholder:text-gray-400",
                   isSearching && "opacity-60",

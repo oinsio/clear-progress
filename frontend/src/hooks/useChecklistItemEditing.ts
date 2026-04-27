@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import * as React from "react";
+import type * as React from "react";
+import { useCallback, useState } from "react";
 
 export function useChecklistItemEditing(
   updateItem: (id: string, name: string) => Promise<void>,

@@ -1,4 +1,9 @@
-import { PROPERTY_KEYS, GOOGLE_TOKENINFO_URL, AUTH_FAILURE_REASONS, AuthFailureReason } from './constants';
+import {
+  AUTH_FAILURE_REASONS,
+  type AuthFailureReason,
+  GOOGLE_TOKENINFO_URL,
+  PROPERTY_KEYS,
+} from "./constants";
 
 interface TokenInfoResponse {
   email: string;
@@ -7,9 +12,12 @@ interface TokenInfoResponse {
 }
 
 function isTokenInfoResponse(data: unknown): data is TokenInfoResponse {
-  if (typeof data !== 'object' || data === null) return false;
+  if (typeof data !== "object" || data === null) return false;
   const record = data as Record<string, unknown>;
-  return typeof record.email === 'string' && typeof record.email_verified === 'string';
+  return (
+    typeof record.email === "string" &&
+    typeof record.email_verified === "string"
+  );
 }
 
 export type AuthResult =
@@ -28,13 +36,20 @@ export function verifyToken(accessToken: string): AuthResult {
   try {
     response = UrlFetchApp.fetch(
       `${GOOGLE_TOKENINFO_URL}?access_token=${encodeURIComponent(accessToken)}`,
-      { muteHttpExceptions: true }
+      { muteHttpExceptions: true },
     );
   } catch (networkError) {
-    const details = networkError instanceof Error ? networkError.message : String(networkError);
-    console.error('[verifyToken] UrlFetchApp error:', networkError);
-    if (details.includes('https://www.googleapis.com/auth/')) {
-      return { ok: false, reason: AUTH_FAILURE_REASONS.GAS_PERMISSION_ERROR, details };
+    const details =
+      networkError instanceof Error
+        ? networkError.message
+        : String(networkError);
+    console.error("[verifyToken] UrlFetchApp error:", networkError);
+    if (details.includes("https://www.googleapis.com/auth/")) {
+      return {
+        ok: false,
+        reason: AUTH_FAILURE_REASONS.GAS_PERMISSION_ERROR,
+        details,
+      };
     }
     return { ok: false, reason: AUTH_FAILURE_REASONS.NETWORK_ERROR, details };
   }
@@ -48,7 +63,7 @@ export function verifyToken(accessToken: string): AuthResult {
   if (!isTokenInfoResponse(parsed)) {
     return { ok: false, reason: AUTH_FAILURE_REASONS.INVALID_RESPONSE };
   }
-  if (parsed.email_verified !== 'true') {
+  if (parsed.email_verified !== "true") {
     return { ok: false, reason: AUTH_FAILURE_REASONS.EMAIL_NOT_VERIFIED };
   }
 

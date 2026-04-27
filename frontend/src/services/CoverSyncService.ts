@@ -1,21 +1,21 @@
-import type { PendingCoverRecord, CoverRecord } from "@/types/entities";
-import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
-import type { CoverRepository } from "@/db/repositories/CoverRepository";
-import type { GoalRepository } from "@/db/repositories/GoalRepository";
-import type { ApiClient } from "./ApiClient";
-import type { UploadCoverBatchItem } from "@/types/api";
-import { localCoverCache } from "./LocalCoverCache";
 import {
-  LOCAL_COVER_ID_PREFIX,
   FALLBACK_COVER_MIME_TYPE,
+  LOCAL_COVER_ID_PREFIX,
   MAX_COVER_BATCH_SIZE,
 } from "@/constants";
+import type { CoverRepository } from "@/db/repositories/CoverRepository";
+import type { GoalRepository } from "@/db/repositories/GoalRepository";
+import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
+import type { UploadCoverBatchItem } from "@/types/api";
+import type { CoverRecord, PendingCoverRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import type { ApiClient } from "./ApiClient";
 import {
   arrayBufferToBase64,
   buildCoverFilename,
   computeSha256Hex,
 } from "./CoverService";
+import { localCoverCache } from "./LocalCoverCache";
 
 export class CoverSyncService {
   constructor(
@@ -65,7 +65,7 @@ export class CoverSyncService {
         break;
       }
 
-      let response;
+      let response: Awaited<ReturnType<typeof this.apiClient.uploadCovers>>;
       try {
         response = await this.apiClient.uploadCovers(batchItems);
       } catch {
@@ -143,7 +143,7 @@ export class CoverSyncService {
     ) {
       const chunk = batchEntries.slice(offset, offset + MAX_COVER_BATCH_SIZE);
 
-      let response;
+      let response: Awaited<ReturnType<typeof this.apiClient.uploadCovers>>;
       try {
         response = await this.apiClient.uploadCovers(
           chunk.map((entry) => entry.item),

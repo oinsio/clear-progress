@@ -1,4 +1,5 @@
-import React, { createContext, useState, useCallback } from "react";
+import type React from "react";
+import { createContext, useCallback, useState } from "react";
 import { STORAGE_KEYS } from "@/constants";
 
 interface ShowHiddenContextValue {

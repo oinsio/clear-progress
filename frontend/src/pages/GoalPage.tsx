@@ -1,16 +1,16 @@
-import { useState, useCallback } from "react";
-import { X, CircleMinus, Pause, Square, Play, Check } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Check, CircleMinus, Pause, Play, Square, X } from "lucide-react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGoal } from "@/hooks/useGoal";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
-import { useCoverPreview } from "@/hooks/useCoverPreview";
-import { cn } from "@/shared/lib/cn";
-import type { GoalStatus } from "@/types/common";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
 import { EditableDescription } from "@/components/ui/EditableDescription";
+import { useCoverPreview } from "@/hooks/useCoverPreview";
+import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useGoal } from "@/hooks/useGoal";
 import type { CoverService } from "@/services/CoverService";
 import { defaultCoverService } from "@/services/defaultServices";
+import { cn } from "@/shared/lib/cn";
+import type { GoalStatus } from "@/types/common";
 
 interface GoalStatusOption {
   status: GoalStatus;
@@ -112,6 +112,7 @@ export default function GoalPage({
     currentName,
     currentDescription,
     onClose,
+    t,
   ]);
 
   const handleStatusChange = useCallback(

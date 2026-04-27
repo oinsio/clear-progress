@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SettingsService } from "./SettingsService";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BOX, DEFAULT_ACCENT_COLOR, SETTING_KEYS } from "@/constants";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
-import { SETTING_KEYS, BOX, DEFAULT_ACCENT_COLOR } from "@/constants";
+import { SettingsService } from "./SettingsService";
 
 function createMockSettingsRepository(
   overrides: Partial<Record<keyof SettingsRepository, unknown>> = {},

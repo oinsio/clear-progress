@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
-import type { Context } from "@/types/entities";
-import { ContextService } from "@/services/ContextService";
-import { ContextRepository } from "@/db/repositories/ContextRepository";
+import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { ContextRepository } from "@/db/repositories/ContextRepository";
+import { ContextService } from "@/services/ContextService";
+import type { Context } from "@/types/entities";
 
 const defaultContextService = new ContextService(new ContextRepository());
 

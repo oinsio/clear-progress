@@ -1,9 +1,9 @@
-import type { Goal } from "@/types/entities";
-import type { GoalStatus } from "@/types/common";
-import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { GOAL_STATUS_SORT_ORDER } from "@/constants";
-import { hasEntityChanged } from "@/utils/deepEqual";
+import type { GoalRepository } from "@/db/repositories/GoalRepository";
+import type { GoalStatus } from "@/types/common";
+import type { Goal } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class GoalService {
   constructor(private readonly goalRepository: GoalRepository) {}
@@ -57,9 +57,7 @@ export class GoalService {
     // Применяем метаданные только если есть изменения
     const updatedGoal: Goal = {
       ...candidateGoal,
-      updated_at: hasChanged
-        ? toISOTimestamp()
-        : existingGoal.updated_at,
+      updated_at: hasChanged ? toISOTimestamp() : existingGoal.updated_at,
       version: hasChanged ? existingGoal.version + 1 : existingGoal.version,
       needsSync: hasChanged,
     };

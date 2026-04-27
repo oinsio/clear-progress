@@ -38,7 +38,7 @@ export class IdeaRepository {
     await db.transaction("rw", db.ideas, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.ideas.get(serverRecord.id);
-        if (!localRecord || !localRecord.needsSync) {
+        if (!localRecord?.needsSync) {
           await db.ideas.put({ ...serverRecord, needsSync: false });
         }
       }

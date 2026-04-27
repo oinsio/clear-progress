@@ -1,50 +1,58 @@
-import React, { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  ChevronDown,
+  Monitor,
+  Moon,
+  PanelLeft,
+  PanelRight,
+  Sun,
+} from "lucide-react";
+import type React from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, Monitor, Sun, Moon, PanelLeft, PanelRight } from "lucide-react";
-import { useSettings } from "@/hooks/useSettings";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { useLanguage } from "@/hooks/useLanguage";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
-import { useFocusMode } from "@/hooks/useFocusMode";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useNavigate } from "react-router-dom";
 import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useSync } from "@/app/providers/SyncProvider";
-import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { useTheme } from "@/app/providers/ThemeProvider";
+import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
+import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
+import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
 import {
   RightFilterPanel,
   type RightPanelMode,
 } from "@/components/tasks/RightFilterPanel";
-import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
-import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
-import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
-import { OpacityBars } from "@/components/ui/OpacityBars";
 import { BOX_ICONS } from "@/components/tasks/taskEditShared";
-import { locales, getLocaleByCode } from "@/services/localeRegistry";
-import { disconnect } from "@/services/connectionService";
+import { OpacityBars } from "@/components/ui/OpacityBars";
 import {
-  BOX_ORDER,
-  ACCENT_COLORS,
   ACCENT_COLOR_VALUES,
   ACCENT_COLOR_VALUES_DARK,
+  ACCENT_COLORS,
+  BOX_ORDER,
   COLOR_SCHEMES,
-  PANEL_SIDES,
   FILTER_BAR_POSITIONS,
-  INTERFACE_SCALES,
-  ROUTES,
-  LANGUAGE_SEARCH_THRESHOLD,
   FOCUS_OPACITY_LEVELS,
+  INTERFACE_SCALES,
+  LANGUAGE_SEARCH_THRESHOLD,
+  PANEL_SIDES,
+  ROUTES,
 } from "@/constants";
-import type {
-  Box,
-  AccentColor,
-  ColorScheme,
-  PanelSide,
-  FilterBarPosition,
-} from "@/types/common";
+import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useFocusMode } from "@/hooks/useFocusMode";
+import { useLanguage } from "@/hooks/useLanguage";
+import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { useSettings } from "@/hooks/useSettings";
+import { disconnect } from "@/services/connectionService";
+import { getLocaleByCode, locales } from "@/services/localeRegistry";
 import { cn } from "@/shared/lib/cn";
+import type {
+  AccentColor,
+  Box,
+  ColorScheme,
+  FilterBarPosition,
+  PanelSide,
+} from "@/types/common";
 
 const THEME_ICONS: Record<ColorScheme, React.FC<{ className?: string }>> = {
   system: ({ className }) => <Monitor className={className} />,
@@ -97,7 +105,7 @@ export default function SettingsPage() {
       (locale) =>
         locale.nativeName.toLowerCase().includes(query) ||
         locale.name.toLowerCase().includes(query) ||
-        locale.code.toLowerCase().includes(query)
+        locale.code.toLowerCase().includes(query),
     );
   }, [languageSearchQuery]);
 
@@ -128,7 +136,7 @@ export default function SettingsPage() {
       setCustomDarkInput(darkHex);
       void setCustomAccentColors(lightHex, darkHex);
     },
-    [setCustomAccentColors]
+    [setCustomAccentColors],
   );
 
   const handleColorSchemeSelect = (scheme: ColorScheme): void => {
@@ -178,7 +186,7 @@ export default function SettingsPage() {
       className="relative flex flex-1 overflow-hidden bg-white"
     >
       {/* Main content */}
-        <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto px-4 py-6 space-y-8">
             <h1 className="text-xl font-semibold text-gray-900">
@@ -288,7 +296,9 @@ export default function SettingsPage() {
                     <input
                       type="color"
                       value={customLightInput}
-                      onChange={(e) => handleCustomColorChange(e.target.value, customDarkInput)}
+                      onChange={(e) =>
+                        handleCustomColorChange(e.target.value, customDarkInput)
+                      }
                       className="w-8 h-8 border-0 cursor-pointer"
                       data-testid="settings-custom-light-picker"
                     />
@@ -316,7 +326,12 @@ export default function SettingsPage() {
                     <input
                       type="color"
                       value={customDarkInput}
-                      onChange={(e) => handleCustomColorChange(customLightInput, e.target.value)}
+                      onChange={(e) =>
+                        handleCustomColorChange(
+                          customLightInput,
+                          e.target.value,
+                        )
+                      }
                       className="w-8 h-8 border-0 cursor-pointer"
                       data-testid="settings-custom-dark-picker"
                     />
@@ -437,7 +452,7 @@ export default function SettingsPage() {
                   size={16}
                   className={cn(
                     "ml-auto transition-transform",
-                    isLanguagePanelOpen && "rotate-180"
+                    isLanguagePanelOpen && "rotate-180",
                   )}
                 />
               </button>
@@ -475,7 +490,7 @@ export default function SettingsPage() {
                           "flex items-center gap-2 text-left text-sm px-3 py-1.5 rounded-lg transition-colors",
                           language === locale.code
                             ? "bg-accent/10 text-accent font-medium"
-                            : "text-gray-700 hover:bg-gray-100"
+                            : "text-gray-700 hover:bg-gray-100",
                         )}
                       >
                         <span>{locale.emoji}</span>
@@ -500,7 +515,11 @@ export default function SettingsPage() {
                     <button
                       key={side}
                       data-testid={`settings-panel-side-option-${side}`}
-                      aria-label={side === "left" ? t("settings.panelLeft") : t("settings.panelRight")}
+                      aria-label={
+                        side === "left"
+                          ? t("settings.panelLeft")
+                          : t("settings.panelRight")
+                      }
                       aria-pressed={isSelected}
                       onClick={() => handlePanelSideSelect(side)}
                       className={cn(
@@ -661,8 +680,7 @@ export default function SettingsPage() {
                     {connectionStatus === "offline" && t("sync.noConnection")}
                     {connectionStatus === "unauthorized" &&
                       t("sync.unauthorized")}
-                    {connectionStatus === "no_auth" &&
-                      t("settings.syncNoAuth")}
+                    {connectionStatus === "no_auth" && t("settings.syncNoAuth")}
                     {connectionStatus === "not_configured" &&
                       t("settings.syncNotConnected")}
                   </span>

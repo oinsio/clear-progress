@@ -1,7 +1,7 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, beforeEach } from "vitest";
-import { useSectionCollapse } from "./useSectionCollapse";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
+import { useSectionCollapse } from "./useSectionCollapse";
 
 describe("useSectionCollapse", () => {
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe("useSectionCollapse", () => {
     const stored = JSON.parse(
       localStorage.getItem(STORAGE_KEYS.SECTION_COLLAPSE) ?? "{}",
     ) as Record<string, boolean>;
-    expect(stored["week"]).toBe(true);
+    expect(stored.week).toBe(true);
   });
 
   it("should read initial collapsed state from localStorage", () => {
@@ -73,6 +73,6 @@ describe("useSectionCollapse", () => {
     const stored = JSON.parse(
       localStorage.getItem(STORAGE_KEYS.SECTION_COLLAPSE) ?? "{}",
     ) as Record<string, boolean>;
-    expect(stored["inbox"]).toBe(false);
+    expect(stored.inbox).toBe(false);
   });
 });

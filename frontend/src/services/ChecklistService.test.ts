@@ -1,11 +1,11 @@
-import { describe, it, expect, vi } from "vitest";
-import { ChecklistService } from "./ChecklistService";
-import type { ChecklistItem } from "@/types/entities";
+import { describe, expect, it, vi } from "vitest";
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { Temporal } from "@/lib/temporal";
 import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { createMockChecklistRepository } from "@/test/factories/checklistRepositoryFactory";
+import type { ChecklistItem } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import { Temporal } from "@/lib/temporal";
+import { ChecklistService } from "./ChecklistService";
 
 function createService(
   overrides: Partial<Record<keyof ChecklistRepository, unknown>> = {},
@@ -143,13 +143,17 @@ describe("ChecklistService", () => {
 
     it("should update updated_at timestamp on update", async () => {
       const item = buildChecklistItem({
-        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
+        ),
       });
       const { service } = createService({
         getById: vi.fn().mockResolvedValue(item),
       });
       const updated = await service.update(item.id, { name: "New name" });
-      expect(updated.updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
+      expect(updated.updated_at).not.toBe(
+        toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+      );
     });
 
     it("should throw when item not found", async () => {
@@ -277,7 +281,9 @@ describe("ChecklistService", () => {
     });
 
     it("should update updated_at for each item", async () => {
-      const oldTimestamp = toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z"));
+      const oldTimestamp = toISOTimestamp(
+        Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
+      );
       const items = [
         buildChecklistItem({ updated_at: oldTimestamp }),
         buildChecklistItem({ updated_at: oldTimestamp }),

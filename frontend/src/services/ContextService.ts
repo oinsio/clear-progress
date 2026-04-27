@@ -1,7 +1,7 @@
+import type { ContextRepository } from "@/db/repositories/ContextRepository";
 import type { Context } from "@/types/entities";
-import { ContextRepository } from "@/db/repositories/ContextRepository";
-import { hasEntityChanged } from "@/utils/deepEqual";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class ContextService {
   constructor(private readonly contextRepository: ContextRepository) {}
@@ -94,9 +94,7 @@ export class ContextService {
     // Применяем метаданные только если есть изменения
     const updatedContext: Context = {
       ...candidateContext,
-      updated_at: hasChanged
-        ? toISOTimestamp()
-        : existingContext.updated_at,
+      updated_at: hasChanged ? toISOTimestamp() : existingContext.updated_at,
       version: hasChanged
         ? existingContext.version + 1
         : existingContext.version,

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import { SWIPE_COMPLETE_THRESHOLD_PERCENT } from "@/constants";
 
 export function useSwipeAction(

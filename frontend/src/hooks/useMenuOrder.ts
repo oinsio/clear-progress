@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { STORAGE_KEYS, MENU_ORDER_CHANGED_EVENT } from "@/constants";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MENU_ORDER_CHANGED_EVENT, STORAGE_KEYS } from "@/constants";
 import type { MenuItemConfig, MenuMode } from "@/types/common";
 
 const DEFAULT_MENU_MODE_ORDER: MenuMode[] = [
@@ -50,7 +50,7 @@ export function useMenuOrder() {
     if (!shouldBroadcast.current) return;
     shouldBroadcast.current = false;
     window.dispatchEvent(new Event(MENU_ORDER_CHANGED_EVENT));
-  }, [menuOrder]);
+  }, []);
 
   // Listen for changes made by other hook instances
   useEffect(() => {

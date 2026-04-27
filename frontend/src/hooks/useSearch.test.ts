@@ -1,15 +1,15 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useSearch } from "./useSearch";
-import type { TaskService } from "@/services/TaskService";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GoalService } from "@/services/GoalService";
 import type { IdeaService } from "@/services/IdeaService";
-import { buildTask } from "@/test/factories/taskFactory";
+import type { TaskService } from "@/services/TaskService";
 import { buildGoal } from "@/test/factories/goalFactory";
 import { buildIdea } from "@/test/factories/ideaFactory";
-import { createMockTaskService } from "@/test/mocks/taskServiceMock";
+import { buildTask } from "@/test/factories/taskFactory";
 import { createMockGoalService } from "@/test/mocks/goalServiceMock";
 import { createMockIdeaService } from "@/test/mocks/ideaServiceMock";
+import { createMockTaskService } from "@/test/mocks/taskServiceMock";
+import { useSearch } from "./useSearch";
 
 describe("useSearch", () => {
   let mockTaskService: TaskService;

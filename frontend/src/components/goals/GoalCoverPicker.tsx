@@ -1,5 +1,6 @@
-import React, { useRef, useCallback } from "react";
 import { X } from "lucide-react";
+import type React from "react";
+import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
 

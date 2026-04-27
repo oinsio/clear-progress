@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { Temporal, type Clock } from "@/lib/temporal";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { type Clock, Temporal } from "@/lib/temporal";
 
 const { mockRevealHiddenTasks } = vi.hoisted(() => ({
   mockRevealHiddenTasks: vi.fn(),
@@ -41,8 +41,7 @@ function createMutableClock(
   let instant = Temporal.Instant.from(isoTimestamp);
   return {
     instant: () => instant,
-    plainDateISO: () =>
-      instant.toZonedDateTimeISO(timeZone).toPlainDate(),
+    plainDateISO: () => instant.toZonedDateTimeISO(timeZone).toPlainDate(),
     timeZoneId: () => timeZone,
     setInstant(iso: string) {
       instant = Temporal.Instant.from(iso);

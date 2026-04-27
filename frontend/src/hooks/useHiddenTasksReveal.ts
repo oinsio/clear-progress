@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import { HiddenTaskService } from "@/services/HiddenTaskService";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { type Clock, systemClock } from "@/lib/temporal";
+import { HiddenTaskService } from "@/services/HiddenTaskService";
 
 const MIDNIGHT_BUFFER_MS = 1000;
 

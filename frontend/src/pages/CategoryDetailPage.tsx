@@ -1,13 +1,13 @@
-import { useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { Tag } from "lucide-react";
-import { useCategoryTasks } from "@/hooks/useCategoryTasks";
-import { useCategories } from "@/hooks/useCategories";
-import { useGoals } from "@/hooks/useGoals";
-import { useContexts } from "@/hooks/useContexts";
+import { useCallback, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { EntityDetailLayout } from "@/components/tasks/EntityDetailLayout";
-import { type RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import type { RightPanelMode } from "@/components/tasks/RightFilterPanel";
 import { ROUTES } from "@/constants";
+import { useCategories } from "@/hooks/useCategories";
+import { useCategoryTasks } from "@/hooks/useCategoryTasks";
+import { useContexts } from "@/hooks/useContexts";
+import { useGoals } from "@/hooks/useGoals";
 
 const CATEGORY_I18N_KEYS = {
   back: "category.back",

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { Task } from "@/types/entities";
 import type { Box, RepeatRule } from "@/types/common";
+import type { Task } from "@/types/entities";
 import { parseRepeatRule } from "@/utils/repeatRule";
 
 export function useTaskFormState(task: Task) {

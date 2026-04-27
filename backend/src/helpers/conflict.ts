@@ -1,19 +1,19 @@
-import { CONFLICT_RESOLUTION } from './constants';
+import { CONFLICT_RESOLUTION } from "./constants";
 
 // Last-write-wins conflict resolution by updated_at
 
-type ConflictResult = 'accept' | 'conflict';
+type ConflictResult = "accept" | "conflict";
 
 export function resolveConflict(
   clientUpdatedAt: string,
-  serverUpdatedAt: string
+  serverUpdatedAt: string,
 ): ConflictResult {
   const clientTime = new Date(clientUpdatedAt).getTime();
   const serverTime = new Date(serverUpdatedAt).getTime();
 
-  if (isNaN(clientTime) || isNaN(serverTime)) {
+  if (Number.isNaN(clientTime) || Number.isNaN(serverTime)) {
     throw new Error(
-      `Invalid timestamp format: client=${clientUpdatedAt}, server=${serverUpdatedAt}`
+      `Invalid timestamp format: client=${clientUpdatedAt}, server=${serverUpdatedAt}`,
     );
   }
 

@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  mockGoogleLogin,
+  clearGoogleLoginOptions,
   createGoogleOAuthMock,
   getGoogleLoginOptions,
-  clearGoogleLoginOptions,
+  mockGoogleLogin,
 } from "@/test/mocks/googleOAuthMock";
 
 vi.mock("@react-oauth/google", () => createGoogleOAuthMock());
@@ -19,8 +19,8 @@ vi.mock("@/services/connectionService", () => ({
   getConnectionConfig: () => mockGetConnectionConfig(),
 }));
 
-import { AuthProvider, useAuth } from "./AuthProvider";
 import { setAccessToken } from "@/services/ApiClient";
+import { AuthProvider, useAuth } from "./AuthProvider";
 
 function TestConsumer() {
   const { accessToken, userEmail, signIn, signOut, silentRefresh } = useAuth();

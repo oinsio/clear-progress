@@ -1,18 +1,29 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { init } from './init';
-import { PROPERTY_KEYS, DRIVE_FOLDER_NAMES, DRIVE_MIME_TYPES, SHEET_HEADERS, SHEET_NAMES } from '../helpers/constants';
-import { resetScriptProperties, setScriptProperty, getScriptPropertiesStore } from '../../tests/setup/gas-mocks';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  getScriptPropertiesStore,
+  resetScriptProperties,
+  setScriptProperty,
+} from "../../tests/setup/gas-mocks";
+import {
+  DRIVE_FOLDER_NAMES,
+  DRIVE_MIME_TYPES,
+  PROPERTY_KEYS,
+  SHEET_HEADERS,
+  SHEET_NAMES,
+} from "../helpers/constants";
+import { init } from "./init";
 
-vi.mock('../helpers/drive', () => ({ driveFileExists: vi.fn() }));
-vi.mock('../sheets/settings.sheet', () => ({ initDefaults: vi.fn() }));
-vi.mock('../sheets/meta.sheet', () => ({ initMetaSheet: vi.fn() }));
+vi.mock("../helpers/drive", () => ({ driveFileExists: vi.fn() }));
+vi.mock("../sheets/settings.sheet", () => ({ initDefaults: vi.fn() }));
+vi.mock("../sheets/meta.sheet", () => ({ initMetaSheet: vi.fn() }));
 
-import { driveFileExists } from '../helpers/drive';
-import { initDefaults } from '../sheets/settings.sheet';
-import { initMetaSheet } from '../sheets/meta.sheet';
+import { driveFileExists } from "../helpers/drive";
+import { initMetaSheet } from "../sheets/meta.sheet";
+import { initDefaults } from "../sheets/settings.sheet";
 
 function parseResponse(): Record<string, unknown> {
-  const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>).mock.calls;
+  const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>)
+    .mock.calls;
   const lastCall = calls[calls.length - 1];
   return JSON.parse(lastCall[0]);
 }
@@ -24,12 +35,12 @@ function makeSheetMock() {
   };
 }
 
-const MOCK_ROOT_FOLDER_ID = 'root-folder-id';
-const MOCK_COVERS_FOLDER_ID = 'covers-folder-id';
-const MOCK_SPREADSHEET_FILE_ID = 'spreadsheet-file-id';
-const MOCK_SPREADSHEET_ID = 'mock-spreadsheet-id';
+const MOCK_ROOT_FOLDER_ID = "root-folder-id";
+const MOCK_COVERS_FOLDER_ID = "covers-folder-id";
+const MOCK_SPREADSHEET_FILE_ID = "spreadsheet-file-id";
+const MOCK_SPREADSHEET_ID = "mock-spreadsheet-id";
 
-describe('init — already initialized', () => {
+describe("init — already initialized", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetScriptProperties();
@@ -37,7 +48,7 @@ describe('init — already initialized', () => {
     vi.mocked(driveFileExists).mockReturnValue(true);
   });
 
-  it('should return ok: true, created: false, spreadsheet_id when already initialized', () => {
+  it("should return ok: true, created: false, spreadsheet_id when already initialized", () => {
     init();
     const response = parseResponse();
     expect(response.ok).toBe(true);
@@ -45,17 +56,17 @@ describe('init — already initialized', () => {
     expect(response.spreadsheet_id).toBe(MOCK_SPREADSHEET_ID);
   });
 
-  it('should not call Drive.Files.create when already initialized', () => {
+  it("should not call Drive.Files.create when already initialized", () => {
     init();
     expect(Drive.Files.create).not.toHaveBeenCalled();
   });
 });
 
-describe('init — stale property (file deleted)', () => {
+describe("init — stale property (file deleted)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetScriptProperties();
-    setScriptProperty(PROPERTY_KEYS.SPREADSHEET_ID, 'stale-spreadsheet-id');
+    setScriptProperty(PROPERTY_KEYS.SPREADSHEET_ID, "stale-spreadsheet-id");
     vi.mocked(driveFileExists).mockReturnValue(false);
 
     const defaultSheet = makeSheetMock();
@@ -65,7 +76,9 @@ describe('init — stale property (file deleted)', () => {
 
     const spreadsheetMock = {
       getSheets: vi.fn().mockReturnValue([defaultSheet]),
-      insertSheet: vi.fn().mockImplementation(() => insertedSheets[insertedSheetIndex++]),
+      insertSheet: vi
+        .fn()
+        .mockImplementation(() => insertedSheets[insertedSheetIndex++]),
       getId: vi.fn().mockReturnValue(MOCK_SPREADSHEET_ID),
     };
 
@@ -74,23 +87,25 @@ describe('init — stale property (file deleted)', () => {
       .mockReturnValueOnce({ id: MOCK_COVERS_FOLDER_ID })
       .mockReturnValueOnce({ id: MOCK_SPREADSHEET_FILE_ID });
 
-    vi.mocked(SpreadsheetApp.openById).mockReturnValue(spreadsheetMock as never);
+    vi.mocked(SpreadsheetApp.openById).mockReturnValue(
+      spreadsheetMock as never,
+    );
     vi.mocked(initDefaults).mockReturnValue(undefined);
   });
 
-  it('should clear stale properties and save new spreadsheet_id', () => {
+  it("should clear stale properties and save new spreadsheet_id", () => {
     init();
     const store = getScriptPropertiesStore();
     expect(store[PROPERTY_KEYS.SPREADSHEET_ID]).toBe(MOCK_SPREADSHEET_ID);
   });
 
-  it('should call Drive.Files.create 3 times when stale property found', () => {
+  it("should call Drive.Files.create 3 times when stale property found", () => {
     init();
     expect(Drive.Files.create).toHaveBeenCalledTimes(3);
   });
 });
 
-describe('init — first time setup', () => {
+describe("init — first time setup", () => {
   let defaultSheet: ReturnType<typeof makeSheetMock>;
   let insertedSheets: ReturnType<typeof makeSheetMock>[];
   let spreadsheetMock: {
@@ -110,7 +125,9 @@ describe('init — first time setup', () => {
 
     spreadsheetMock = {
       getSheets: vi.fn().mockReturnValue([defaultSheet]),
-      insertSheet: vi.fn().mockImplementation(() => insertedSheets[insertedSheetIndex++]),
+      insertSheet: vi
+        .fn()
+        .mockImplementation(() => insertedSheets[insertedSheetIndex++]),
       getId: vi.fn().mockReturnValue(MOCK_SPREADSHEET_ID),
     };
 
@@ -119,11 +136,13 @@ describe('init — first time setup', () => {
       .mockReturnValueOnce({ id: MOCK_COVERS_FOLDER_ID })
       .mockReturnValueOnce({ id: MOCK_SPREADSHEET_FILE_ID });
 
-    vi.mocked(SpreadsheetApp.openById).mockReturnValue(spreadsheetMock as never);
+    vi.mocked(SpreadsheetApp.openById).mockReturnValue(
+      spreadsheetMock as never,
+    );
     vi.mocked(initDefaults).mockReturnValue(undefined);
   });
 
-  it('should create root folder with correct name and mimeType', () => {
+  it("should create root folder with correct name and mimeType", () => {
     init();
     expect(vi.mocked(Drive.Files.create).mock.calls[0][0]).toMatchObject({
       name: DRIVE_FOLDER_NAMES.ROOT,
@@ -131,7 +150,7 @@ describe('init — first time setup', () => {
     });
   });
 
-  it('should create covers folder inside root folder', () => {
+  it("should create covers folder inside root folder", () => {
     init();
     expect(vi.mocked(Drive.Files.create).mock.calls[1][0]).toMatchObject({
       name: DRIVE_FOLDER_NAMES.COVERS,
@@ -140,7 +159,7 @@ describe('init — first time setup', () => {
     });
   });
 
-  it('should create spreadsheet file inside root folder', () => {
+  it("should create spreadsheet file inside root folder", () => {
     init();
     expect(vi.mocked(Drive.Files.create).mock.calls[2][0]).toMatchObject({
       name: DRIVE_FOLDER_NAMES.DATA_FILE,
@@ -149,27 +168,31 @@ describe('init — first time setup', () => {
     });
   });
 
-  it('should open spreadsheet by id returned from Drive', () => {
+  it("should open spreadsheet by id returned from Drive", () => {
     init();
-    expect(SpreadsheetApp.openById).toHaveBeenCalledWith(MOCK_SPREADSHEET_FILE_ID);
+    expect(SpreadsheetApp.openById).toHaveBeenCalledWith(
+      MOCK_SPREADSHEET_FILE_ID,
+    );
   });
 
-  it('should rename default sheet to the first sheet name', () => {
+  it("should rename default sheet to the first sheet name", () => {
     init();
     const firstSheetName = Object.keys(SHEET_HEADERS)[0];
     expect(defaultSheet.setName).toHaveBeenCalledWith(firstSheetName);
   });
 
-  it('should insert N-1 additional sheets with correct names', () => {
+  it("should insert N-1 additional sheets with correct names", () => {
     init();
     const sheetNames = Object.keys(SHEET_HEADERS);
     sheetNames.slice(1).forEach((sheetName) => {
       expect(spreadsheetMock.insertSheet).toHaveBeenCalledWith(sheetName);
     });
-    expect(spreadsheetMock.insertSheet).toHaveBeenCalledTimes(sheetNames.length - 1);
+    expect(spreadsheetMock.insertSheet).toHaveBeenCalledTimes(
+      sheetNames.length - 1,
+    );
   });
 
-  it('should set headers on the first (renamed) sheet', () => {
+  it("should set headers on the first (renamed) sheet", () => {
     init();
     const firstSheetName = Object.keys(SHEET_HEADERS)[0];
     const headers = SHEET_HEADERS[firstSheetName];
@@ -178,7 +201,7 @@ describe('init — first time setup', () => {
     expect(rangeInstance.setValues).toHaveBeenCalledWith([headers]);
   });
 
-  it('should set headers on each inserted sheet', () => {
+  it("should set headers on each inserted sheet", () => {
     init();
     const sheetNames = Object.keys(SHEET_HEADERS);
     insertedSheets.forEach((sheetMock, index) => {
@@ -190,7 +213,7 @@ describe('init — first time setup', () => {
     });
   });
 
-  it('should save SPREADSHEET_ID, FOLDER_ID, COVERS_FOLDER_ID to PropertiesService', () => {
+  it("should save SPREADSHEET_ID, FOLDER_ID, COVERS_FOLDER_ID to PropertiesService", () => {
     init();
     const store = getScriptPropertiesStore();
     expect(store[PROPERTY_KEYS.SPREADSHEET_ID]).toBe(MOCK_SPREADSHEET_ID);
@@ -198,25 +221,25 @@ describe('init — first time setup', () => {
     expect(store[PROPERTY_KEYS.COVERS_FOLDER_ID]).toBe(MOCK_COVERS_FOLDER_ID);
   });
 
-  it('should call initDefaults once', () => {
+  it("should call initDefaults once", () => {
     init();
     expect(initDefaults).toHaveBeenCalledTimes(1);
   });
 
-  it('should call initMetaSheet once', () => {
+  it("should call initMetaSheet once", () => {
     init();
     expect(initMetaSheet).toHaveBeenCalledTimes(1);
   });
 
   it('should include "revision" column in Tasks sheet headers', () => {
-    expect(SHEET_HEADERS[SHEET_NAMES.TASKS]).toContain('revision');
+    expect(SHEET_HEADERS[SHEET_NAMES.TASKS]).toContain("revision");
   });
 
   it('should include "revision" column in Goals sheet headers', () => {
-    expect(SHEET_HEADERS[SHEET_NAMES.GOALS]).toContain('revision');
+    expect(SHEET_HEADERS[SHEET_NAMES.GOALS]).toContain("revision");
   });
 
-  it('should return created: true with spreadsheet_id and folder_id', () => {
+  it("should return created: true with spreadsheet_id and folder_id", () => {
     init();
     const response = parseResponse();
     expect(response.ok).toBe(true);
@@ -225,7 +248,7 @@ describe('init — first time setup', () => {
     expect(response.folder_id).toBe(MOCK_ROOT_FOLDER_ID);
   });
 
-  it('should not call driveFileExists when SPREADSHEET_ID is not set', () => {
+  it("should not call driveFileExists when SPREADSHEET_ID is not set", () => {
     init();
     expect(driveFileExists).not.toHaveBeenCalled();
   });

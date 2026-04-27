@@ -1,8 +1,8 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { useCoverUrl } from "./useCoverUrl";
-import { localCoverCache } from "@/services/LocalCoverCache";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { LOCAL_COVER_ID_PREFIX } from "@/constants";
+import { localCoverCache } from "@/services/LocalCoverCache";
+import { useCoverUrl } from "./useCoverUrl";
 
 vi.mock("@/services/defaultServices", () => ({
   defaultCoverSyncService: {

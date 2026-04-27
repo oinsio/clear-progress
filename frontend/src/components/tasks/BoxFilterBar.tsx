@@ -1,17 +1,17 @@
-import { useState, useCallback, useRef, useEffect } from "react";
 import { ChevronDown, Plus } from "lucide-react";
+import type * as React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { HiddenTasksToggle } from "@/components/tasks/HiddenTasksToggle";
+import { TASK_BOX_FILTER_ORDER } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import type { BoxFilter, FilterBarPosition } from "@/types/common";
-import { TASK_BOX_FILTER_ORDER } from "@/constants";
 import {
+  AllBoxesIcon,
+  LaterBoxIcon,
   TodayBoxIcon,
   WeekBoxIcon,
-  LaterBoxIcon,
-  AllBoxesIcon,
 } from "./BoxIcons";
-import { HiddenTasksToggle } from "@/components/tasks/HiddenTasksToggle";
-import * as React from "react";
 
 type TaskBoxFilter = Exclude<BoxFilter, "inbox">;
 

@@ -1,7 +1,7 @@
+import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import type { Category } from "@/types/entities";
-import { CategoryRepository } from "@/db/repositories/CategoryRepository";
-import { hasEntityChanged } from "@/utils/deepEqual";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class CategoryService {
   constructor(private readonly categoryRepository: CategoryRepository) {}
@@ -94,9 +94,7 @@ export class CategoryService {
     // Применяем метаданные только если есть изменения
     const updatedCategory: Category = {
       ...candidateCategory,
-      updated_at: hasChanged
-        ? toISOTimestamp()
-        : existingCategory.updated_at,
+      updated_at: hasChanged ? toISOTimestamp() : existingCategory.updated_at,
       version: hasChanged
         ? existingCategory.version + 1
         : existingCategory.version,

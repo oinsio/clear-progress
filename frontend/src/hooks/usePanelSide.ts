@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
-import type { PanelSide } from "@/types/common";
+import { useCallback, useState } from "react";
 import { DEFAULT_PANEL_SIDE, PANEL_SIDES, STORAGE_KEYS } from "@/constants";
+import type { PanelSide } from "@/types/common";
 
 function getCachedPanelSide(): PanelSide {
   try {

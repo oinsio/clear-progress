@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BACKEND_CONNECTION_EVENT } from "@/constants";
 import { getConnectionConfig } from "@/services/connectionService";
-import type { ConnectionConfig, BackendType } from "@/types/connection";
+import type { BackendType, ConnectionConfig } from "@/types/connection";
 
 export function useConnectionConfig(): ConnectionConfig | null {
-  const [config, setConfig] = useState<ConnectionConfig | null>(getConnectionConfig);
+  const [config, setConfig] = useState<ConnectionConfig | null>(
+    getConnectionConfig,
+  );
 
   useEffect(() => {
     const update = () => setConfig(getConnectionConfig());

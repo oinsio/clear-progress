@@ -1,10 +1,10 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import GoalsPage from "./GoalsPage";
-import { buildGoal } from "@/test/factories/goalFactory";
+import { describe, expect, it, vi } from "vitest";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
+import { buildGoal } from "@/test/factories/goalFactory";
 import type { Task } from "@/types/entities";
+import GoalsPage from "./GoalsPage";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -30,10 +30,10 @@ vi.mock("@/db/repositories/TaskRepository", () => ({
 }));
 
 import { useGoals } from "@/hooks/useGoals";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useTasks } from "@/hooks/useTasks";
+import { usePanelSide } from "@/hooks/usePanelSide";
 import type { UseTasksReturn } from "@/hooks/useTasks";
+import { useTasks } from "@/hooks/useTasks";
 
 const mockUseGoals = vi.mocked(useGoals);
 const mockUsePanelSide = vi.mocked(usePanelSide);

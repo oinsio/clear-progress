@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { TaskRepository } from "./TaskRepository";
-import { db } from "../database";
+import { beforeEach, describe, expect, it } from "vitest";
+import { Temporal } from "@/lib/temporal";
 import { buildTask } from "@/test/factories/taskFactory";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import { Temporal } from "@/lib/temporal";
+import { db } from "../database";
+import { TaskRepository } from "./TaskRepository";
 
 describe("TaskRepository", () => {
   let taskRepository: TaskRepository;
@@ -301,8 +301,16 @@ describe("TaskRepository", () => {
 
   describe("getChangedSince", () => {
     it("should return tasks with updated_at after since", async () => {
-      const oldTask = buildTask({ updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")) });
-      const newTask = buildTask({ updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")) });
+      const oldTask = buildTask({
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+        ),
+      });
+      const newTask = buildTask({
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+        ),
+      });
       await db.tasks.bulkAdd([oldTask, newTask]);
 
       const tasks = await taskRepository.getChangedSince(
@@ -313,7 +321,11 @@ describe("TaskRepository", () => {
     });
 
     it("should return empty array when no tasks are newer than since", async () => {
-      const task = buildTask({ updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")) });
+      const task = buildTask({
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+        ),
+      });
       await db.tasks.add(task);
 
       const tasks = await taskRepository.getChangedSince(
@@ -323,7 +335,9 @@ describe("TaskRepository", () => {
     });
 
     it("should not include tasks with updated_at equal to since", async () => {
-      const timestamp = toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z"));
+      const timestamp = toISOTimestamp(
+        Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+      );
       const task = buildTask({ updated_at: timestamp });
       await db.tasks.add(task);
 
@@ -334,7 +348,9 @@ describe("TaskRepository", () => {
     it("should include soft-deleted tasks that changed after since", async () => {
       const deletedTask = buildTask({
         is_deleted: true,
-        updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")),
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+        ),
       });
       await db.tasks.add(deletedTask);
 
@@ -374,8 +390,8 @@ describe("TaskRepository", () => {
 
       const saved = await db.tasks.get(serverTask.id);
       expect(saved).toBeDefined();
-      expect(saved!.needsSync).toBe(false);
-      expect(saved!.revision).toBe(5);
+      expect(saved?.needsSync).toBe(false);
+      expect(saved?.revision).toBe(5);
     });
 
     it("should overwrite clean local records with server version", async () => {
@@ -390,8 +406,8 @@ describe("TaskRepository", () => {
       await taskRepository.applyServerRecords([serverTask]);
 
       const saved = await db.tasks.get(localTask.id);
-      expect(saved!.name).toBe("server");
-      expect(saved!.needsSync).toBe(false);
+      expect(saved?.name).toBe("server");
+      expect(saved?.needsSync).toBe(false);
     });
 
     it("should skip needsSync local records", async () => {
@@ -406,8 +422,8 @@ describe("TaskRepository", () => {
       await taskRepository.applyServerRecords([serverTask]);
 
       const saved = await db.tasks.get(localTask.id);
-      expect(saved!.name).toBe("local needsSync");
-      expect(saved!.needsSync).toBe(true);
+      expect(saved?.name).toBe("local needsSync");
+      expect(saved?.needsSync).toBe(true);
     });
   });
 
@@ -430,8 +446,8 @@ describe("TaskRepository", () => {
       const found = await taskRepository.findHiddenRecurringTask("original-1");
 
       expect(found).toBeDefined();
-      expect(found!.id).toBe("copy-1");
-      expect(found!.original_task_id).toBe("original-1");
+      expect(found?.id).toBe("copy-1");
+      expect(found?.original_task_id).toBe("original-1");
     });
 
     it("should return undefined when no hidden copy exists", async () => {
@@ -532,7 +548,7 @@ describe("TaskRepository", () => {
       const found = await taskRepository.findHiddenRecurringTask("original-1");
 
       expect(found).toBeDefined();
-      expect(["copy-1", "copy-2"]).toContain(found!.id);
+      expect(["copy-1", "copy-2"]).toContain(found?.id);
     });
   });
 

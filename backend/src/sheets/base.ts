@@ -1,5 +1,11 @@
-import { SHEET_HEADERS, coerceSheetBool, toISOStringValue, isDateOnlyColumn, normalizeToSheetDate } from '../helpers/constants';
-import { getSheet } from './client';
+import {
+  coerceSheetBool,
+  isDateOnlyColumn,
+  normalizeToSheetDate,
+  SHEET_HEADERS,
+  toISOStringValue,
+} from "../helpers/constants";
+import { getSheet } from "./client";
 
 export type NamedEntity = {
   id: string;
@@ -12,10 +18,13 @@ export type NamedEntity = {
   revision: number;
 };
 
-export function rowToNamedEntity(row: unknown[], cols: Record<string, number>): NamedEntity {
+export function rowToNamedEntity(
+  row: unknown[],
+  cols: Record<string, number>,
+): NamedEntity {
   return {
-    id: String(row[cols.id] ?? ''),
-    name: String(row[cols.name] ?? ''),
+    id: String(row[cols.id] ?? ""),
+    name: String(row[cols.name] ?? ""),
     sort_order: Number(row[cols.sort_order] ?? 0),
     is_deleted: coerceSheetBool(row[cols.is_deleted]),
     created_at: toISOStringValue(row[cols.created_at]),
@@ -26,7 +35,7 @@ export function rowToNamedEntity(row: unknown[], cols: Record<string, number>): 
 }
 
 export function recordToRow<T>(sheetName: string, record: T): unknown[] {
-  return SHEET_HEADERS[sheetName].map(col => {
+  return SHEET_HEADERS[sheetName].map((col) => {
     const value = (record as Record<string, unknown>)[col];
     // For date-only fields, use normalizeToSheetDate to prevent Google Sheets auto-conversion
     if (isDateOnlyColumn(sheetName, col)) {
@@ -36,22 +45,32 @@ export function recordToRow<T>(sheetName: string, record: T): unknown[] {
   });
 }
 
-export function getAllRecords<T>(sheetName: string, rowMapper: (row: unknown[]) => T): T[] {
+export function getAllRecords<T>(
+  sheetName: string,
+  rowMapper: (row: unknown[]) => T,
+): T[] {
   const sheet = getSheet(sheetName);
-  return sheet.getDataRange().getValues()
+  return sheet
+    .getDataRange()
+    .getValues()
     .slice(1)
     .filter((row: unknown[]) => row[0])
     .map((row: unknown[]) => rowMapper(row));
 }
 
-export function upsertRecord<T extends { id: string }>(sheetName: string, record: T): void {
+export function upsertRecord<T extends { id: string }>(
+  sheetName: string,
+  record: T,
+): void {
   const sheet = getSheet(sheetName);
   const data = sheet.getDataRange().getValues();
   const row = recordToRow(sheetName, record);
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === record.id) {
-      sheet.getRange(i + 1, 1, 1, SHEET_HEADERS[sheetName].length).setValues([row]);
+      sheet
+        .getRange(i + 1, 1, 1, SHEET_HEADERS[sheetName].length)
+        .setValues([row]);
       return;
     }
   }
@@ -59,7 +78,10 @@ export function upsertRecord<T extends { id: string }>(sheetName: string, record
   sheet.appendRow(row);
 }
 
-export function upsertRecords<T extends { id: string }>(sheetName: string, records: T[]): void {
+export function upsertRecords<T extends { id: string }>(
+  sheetName: string,
+  records: T[],
+): void {
   if (records.length === 0) return;
 
   const sheet = getSheet(sheetName);
@@ -97,6 +119,6 @@ export function deleteRecordsByIds(sheetName: string, ids: string[]): number {
     }
   }
 
-  rowsToDelete.forEach(rowIndex => sheet.deleteRow(rowIndex));
+  rowsToDelete.forEach((rowIndex) => sheet.deleteRow(rowIndex));
   return rowsToDelete.length;
 }

@@ -1,7 +1,13 @@
-import { Inbox, CalendarDays, Target, Lightbulb, Search } from "lucide-react";
-import { NavLink } from "react-router-dom";
-import { type LucideIcon } from "lucide-react";
+import {
+  CalendarDays,
+  Inbox,
+  Lightbulb,
+  type LucideIcon,
+  Search,
+  Target,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { NavLink } from "react-router-dom";
 import { ROUTES } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 

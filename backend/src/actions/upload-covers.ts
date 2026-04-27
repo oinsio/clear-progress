@@ -1,19 +1,24 @@
 import {
-  MAX_COVER_BATCH_SIZE,
-  PROPERTY_KEYS,
+  buildFolderQuery,
   DRIVE_QUERY_FIELDS,
   ERROR_MESSAGES,
-  buildFolderQuery,
-} from '../helpers/constants';
-import { jsonOk, jsonError, jsonNotInitialized, ERROR_CODES } from '../helpers/response';
-import { uploadSingleCover } from './upload-cover';
-import type { SingleCoverInput, SingleCoverResult } from './upload-cover';
+  MAX_COVER_BATCH_SIZE,
+  PROPERTY_KEYS,
+} from "../helpers/constants";
+import {
+  ERROR_CODES,
+  jsonError,
+  jsonNotInitialized,
+  jsonOk,
+} from "../helpers/response";
+import type { SingleCoverInput, SingleCoverResult } from "./upload-cover";
+import { uploadSingleCover } from "./upload-cover";
 
 interface BatchCoverInput extends SingleCoverInput {
   local_id: string;
 }
 
-interface BatchCoverResult extends Omit<SingleCoverResult, 'errorMessage'> {
+interface BatchCoverResult extends Omit<SingleCoverResult, "errorMessage"> {
   local_id: string;
 }
 
@@ -23,14 +28,22 @@ export function uploadCovers(payload: {
   const { covers } = payload;
 
   if (!Array.isArray(covers) || covers.length === 0) {
-    return jsonError(ERROR_CODES.INVALID_PAYLOAD, ERROR_MESSAGES.COVERS_REQUIRED);
+    return jsonError(
+      ERROR_CODES.INVALID_PAYLOAD,
+      ERROR_MESSAGES.COVERS_REQUIRED,
+    );
   }
 
   if (covers.length > MAX_COVER_BATCH_SIZE) {
-    return jsonError(ERROR_CODES.INVALID_PAYLOAD, ERROR_MESSAGES.COVERS_TOO_MANY);
+    return jsonError(
+      ERROR_CODES.INVALID_PAYLOAD,
+      ERROR_MESSAGES.COVERS_TOO_MANY,
+    );
   }
 
-  const coversFolderId = PropertiesService.getScriptProperties().getProperty(PROPERTY_KEYS.COVERS_FOLDER_ID);
+  const coversFolderId = PropertiesService.getScriptProperties().getProperty(
+    PROPERTY_KEYS.COVERS_FOLDER_ID,
+  );
   if (!coversFolderId) {
     return jsonNotInitialized();
   }
@@ -41,7 +54,7 @@ export function uploadCovers(payload: {
   });
   const existingFiles = fileList.files ?? [];
 
-  const results: BatchCoverResult[] = covers.map(cover => {
+  const results: BatchCoverResult[] = covers.map((cover) => {
     const result = uploadSingleCover(cover, existingFiles, coversFolderId);
     const { errorMessage: _, ...resultWithoutMessage } = result;
     return { ...resultWithoutMessage, local_id: cover.local_id };

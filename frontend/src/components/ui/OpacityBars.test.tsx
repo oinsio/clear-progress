@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { OpacityBars } from "./OpacityBars";
+import { describe, expect, it, vi } from "vitest";
 import { FOCUS_OPACITY_LEVELS } from "@/constants";
+import { OpacityBars } from "./OpacityBars";
 
 describe("OpacityBars", () => {
   it("should render 5 bars for default levels", () => {
@@ -17,7 +17,9 @@ describe("OpacityBars", () => {
   it("should render custom number of bars when levels prop is provided", () => {
     const customLevels = [80, 60, 40, 20];
     const onChange = vi.fn();
-    render(<OpacityBars value={60} onChange={onChange} levels={customLevels} />);
+    render(
+      <OpacityBars value={60} onChange={onChange} levels={customLevels} />,
+    );
 
     customLevels.forEach((level) => {
       expect(screen.getByTestId(`opacity-bar-${level}`)).toBeInTheDocument();

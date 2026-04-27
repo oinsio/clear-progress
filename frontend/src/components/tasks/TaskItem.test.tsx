@@ -1,11 +1,11 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, afterEach } from "vitest";
 import { useState } from "react";
-import { TaskItem } from "./TaskItem";
-import { buildTask } from "@/test/factories/taskFactory";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildGoal } from "@/test/factories/goalFactory";
+import { buildTask } from "@/test/factories/taskFactory";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { TaskItem } from "./TaskItem";
 
 vi.mock("@/hooks/useChecklist", () => ({
   useChecklist: vi.fn().mockReturnValue({

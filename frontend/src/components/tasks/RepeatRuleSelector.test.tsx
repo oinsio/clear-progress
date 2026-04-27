@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { RepeatRuleSelector } from "./RepeatRuleSelector";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { RepeatRule } from "@/types/common";
+import { RepeatRuleSelector } from "./RepeatRuleSelector";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -38,7 +38,10 @@ describe("RepeatRuleSelector", () => {
   });
 
   // Helper: render component with default props
-  const renderComponent = (value: RepeatRule | null = null, defaultBox?: "inbox" | "today" | "week" | "later") => {
+  const renderComponent = (
+    value: RepeatRule | null = null,
+    defaultBox?: "inbox" | "today" | "week" | "later",
+  ) => {
     return render(
       <RepeatRuleSelector
         value={value}
@@ -50,24 +53,32 @@ describe("RepeatRuleSelector", () => {
   };
 
   // Helper: navigate to fixed params step
-  const navigateToFixedParams = async (user: ReturnType<typeof userEvent.setup>) => {
+  const navigateToFixedParams = async (
+    user: ReturnType<typeof userEvent.setup>,
+  ) => {
     await user.click(screen.getByTestId("repeat-type-fixed"));
   };
 
   // Helper: navigate to after completion params step
-  const navigateToAfterCompletionParams = async (user: ReturnType<typeof userEvent.setup>) => {
+  const navigateToAfterCompletionParams = async (
+    user: ReturnType<typeof userEvent.setup>,
+  ) => {
     await user.click(screen.getByTestId("repeat-type-after-completion"));
   };
 
   // Helper: navigate to placement step via fixed frequency
-  const navigateToPlacementViaFixed = async (user: ReturnType<typeof userEvent.setup>) => {
+  const navigateToPlacementViaFixed = async (
+    user: ReturnType<typeof userEvent.setup>,
+  ) => {
     await navigateToFixedParams(user);
     await user.click(screen.getByTestId("repeat-frequency-daily"));
     await user.click(screen.getByTestId("repeat-fixed-next"));
   };
 
   // Helper: navigate to placement step via after completion
-  const navigateToPlacementViaAfterCompletion = async (user: ReturnType<typeof userEvent.setup>) => {
+  const navigateToPlacementViaAfterCompletion = async (
+    user: ReturnType<typeof userEvent.setup>,
+  ) => {
     await navigateToAfterCompletionParams(user);
     await user.click(screen.getByTestId("repeat-after-completion-next"));
   };
@@ -82,14 +93,19 @@ describe("RepeatRuleSelector", () => {
   });
 
   // Helper: setup yearly frequency and return day input
-  const setupYearlyFrequency = async (user: ReturnType<typeof userEvent.setup>) => {
+  const setupYearlyFrequency = async (
+    user: ReturnType<typeof userEvent.setup>,
+  ) => {
     await navigateToFixedParams(user);
     await user.click(screen.getByTestId("repeat-frequency-yearly"));
     return screen.getByTestId("repeat-day-input") as HTMLInputElement;
   };
 
   // Helper: select month in yearly frequency
-  const selectMonth = async (user: ReturnType<typeof userEvent.setup>, monthNumber: number) => {
+  const selectMonth = async (
+    user: ReturnType<typeof userEvent.setup>,
+    monthNumber: number,
+  ) => {
     // Открыть панель выбора месяца, если она закрыта
     const trigger = screen.queryByTestId("repeat-month-trigger");
     if (trigger) {
@@ -243,7 +259,9 @@ describe("RepeatRuleSelector", () => {
       await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-monthly"));
 
-      const dayOfMonthInput = screen.getByTestId("repeat-day-of-month-input") as HTMLInputElement;
+      const dayOfMonthInput = screen.getByTestId(
+        "repeat-day-of-month-input",
+      ) as HTMLInputElement;
       expect(dayOfMonthInput.value).toBe("15");
     });
 
@@ -253,7 +271,9 @@ describe("RepeatRuleSelector", () => {
       await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-yearly"));
 
-      const dayInput = screen.getByTestId("repeat-day-input") as HTMLInputElement;
+      const dayInput = screen.getByTestId(
+        "repeat-day-input",
+      ) as HTMLInputElement;
       expect(dayInput.value).toBe("15");
 
       // Проверяем, что выбран апрель (месяц 4)
@@ -750,7 +770,9 @@ describe("RepeatRuleSelector", () => {
 
       // Navigate to fixed params
       await navigateToFixedParams(user);
-      expect(screen.getByTestId("repeat-fixed-params-step")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("repeat-fixed-params-step"),
+      ).toBeInTheDocument();
 
       // Select monthly frequency
       await user.click(screen.getByTestId("repeat-frequency-monthly"));

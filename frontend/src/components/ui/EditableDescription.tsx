@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { LinkedText } from "./LinkedText";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { LinkedText } from "./LinkedText";
 
 interface EditableDescriptionProps {
   value: string;

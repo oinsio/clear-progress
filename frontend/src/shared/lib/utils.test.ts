@@ -1,26 +1,40 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import i18next from "i18next";
+import { beforeEach, describe, expect, it } from "vitest";
+import { fakeClock, Temporal } from "@/lib/temporal";
+import { buildTask } from "@/test/factories/taskFactory";
 import {
+  formatAppearDate,
   formatCompletedAt,
   formatShortDateTime,
   groupCompletedTasks,
-  formatAppearDate,
 } from "./utils";
-import { buildTask } from "@/test/factories/taskFactory";
-import i18next from "i18next";
-import { Temporal, fakeClock } from "@/lib/temporal";
 
-function buildISOForTodayAt(hours: number, minutes: number, referenceDate: string): string {
+function buildISOForTodayAt(
+  hours: number,
+  minutes: number,
+  referenceDate: string,
+): string {
   const date = Temporal.PlainDate.from(referenceDate);
   return date
-    .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: hours, minute: minutes } })
+    .toZonedDateTime({
+      timeZone: "UTC",
+      plainTime: { hour: hours, minute: minutes },
+    })
     .toInstant()
     .toString();
 }
 
-function buildISOForYesterdayAt(hours: number, minutes: number, referenceDate: string): string {
+function buildISOForYesterdayAt(
+  hours: number,
+  minutes: number,
+  referenceDate: string,
+): string {
   const date = Temporal.PlainDate.from(referenceDate).subtract({ days: 1 });
   return date
-    .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: hours, minute: minutes } })
+    .toZonedDateTime({
+      timeZone: "UTC",
+      plainTime: { hour: hours, minute: minutes },
+    })
     .toInstant()
     .toString();
 }
@@ -31,9 +45,14 @@ function buildISOForDaysAgoAt(
   minutes: number,
   referenceDate: string,
 ): string {
-  const date = Temporal.PlainDate.from(referenceDate).subtract({ days: daysAgo });
+  const date = Temporal.PlainDate.from(referenceDate).subtract({
+    days: daysAgo,
+  });
   return date
-    .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: hours, minute: minutes } })
+    .toZonedDateTime({
+      timeZone: "UTC",
+      plainTime: { hour: hours, minute: minutes },
+    })
     .toInstant()
     .toString();
 }
@@ -143,7 +162,10 @@ describe("groupCompletedTasks", () => {
     const task = buildTask({
       is_completed: true,
       completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
-        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 10, minute: 0 } })
+        .toZonedDateTime({
+          timeZone: "UTC",
+          plainTime: { hour: 10, minute: 0 },
+        })
         .toInstant()
         .toString() as any,
     });
@@ -172,7 +194,10 @@ describe("groupCompletedTasks", () => {
       is_completed: true,
       completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
         .subtract({ days: 1 })
-        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 14, minute: 0 } })
+        .toZonedDateTime({
+          timeZone: "UTC",
+          plainTime: { hour: 14, minute: 0 },
+        })
         .toInstant()
         .toString() as any,
     });
@@ -202,7 +227,10 @@ describe("groupCompletedTasks", () => {
       is_completed: true,
       completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
         .subtract({ days: 2 })
-        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 10, minute: 0 } })
+        .toZonedDateTime({
+          timeZone: "UTC",
+          plainTime: { hour: 10, minute: 0 },
+        })
         .toInstant()
         .toString() as any,
     });
@@ -232,7 +260,10 @@ describe("groupCompletedTasks", () => {
       is_completed: true,
       completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
         .subtract({ days: 8 })
-        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 23, minute: 59 } })
+        .toZonedDateTime({
+          timeZone: "UTC",
+          plainTime: { hour: 23, minute: 59 },
+        })
         .toInstant()
         .toString() as any,
     });
@@ -263,7 +294,10 @@ describe("groupCompletedTasks", () => {
       is_completed: true,
       completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
         .subtract({ days: 31 })
-        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 23, minute: 59 } })
+        .toZonedDateTime({
+          timeZone: "UTC",
+          plainTime: { hour: 23, minute: 59 },
+        })
         .toInstant()
         .toString() as any,
     });
@@ -321,13 +355,10 @@ describe("groupCompletedTasks", () => {
         .toInstant()
         .toString() as any,
     });
-    const result = groupCompletedTasks([
-      todayTask,
-      yesterdayTask,
-      weekTask,
-      monthTask,
-      earlierTask,
-    ], clock);
+    const result = groupCompletedTasks(
+      [todayTask, yesterdayTask, weekTask, monthTask, earlierTask],
+      clock,
+    );
     expect(result.todayTasks).toEqual([todayTask]);
     expect(result.yesterdayTasks).toEqual([yesterdayTask]);
     expect(result.weekTasks).toEqual([weekTask]);
@@ -340,7 +371,10 @@ describe("groupCompletedTasks", () => {
       is_completed: true,
       completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
         .subtract({ days: 1 })
-        .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 20, minute: 0 } })
+        .toZonedDateTime({
+          timeZone: "UTC",
+          plainTime: { hour: 20, minute: 0 },
+        })
         .toInstant()
         .toString() as any,
     });

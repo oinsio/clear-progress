@@ -1,10 +1,17 @@
-import { STORAGE_KEYS, BACKEND_CONNECTION_EVENT, GOOGLE_CLIENT_ID_CHANGED_EVENT } from "@/constants";
-import type { ConnectionConfig, BackendType } from "@/types/connection";
+import {
+  BACKEND_CONNECTION_EVENT,
+  GOOGLE_CLIENT_ID_CHANGED_EVENT,
+  STORAGE_KEYS,
+} from "@/constants";
+import type { BackendType, ConnectionConfig } from "@/types/connection";
 
 export function connect(config: ConnectionConfig): void {
   try {
     const activeConfig: ConnectionConfig = { ...config, isActive: true };
-    localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(activeConfig));
+    localStorage.setItem(
+      STORAGE_KEYS.CONNECTION_CONFIG,
+      JSON.stringify(activeConfig),
+    );
     window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
 
     if (config.type === "gas" && config.clientId) {
@@ -22,8 +29,14 @@ export function disconnect(): void {
     const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
     if (raw) {
       const config = JSON.parse(raw) as ConnectionConfig;
-      const deactivatedConfig: ConnectionConfig = { ...config, isActive: false };
-      localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(deactivatedConfig));
+      const deactivatedConfig: ConnectionConfig = {
+        ...config,
+        isActive: false,
+      };
+      localStorage.setItem(
+        STORAGE_KEYS.CONNECTION_CONFIG,
+        JSON.stringify(deactivatedConfig),
+      );
     }
 
     // Remove auth keys

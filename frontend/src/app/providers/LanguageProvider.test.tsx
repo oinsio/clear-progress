@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { LanguageProvider, useLanguage } from "./LanguageProvider";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_LANGUAGE, STORAGE_KEYS } from "@/constants";
+import { LanguageProvider, useLanguage } from "./LanguageProvider";
 
 vi.mock("@/i18n", () => ({
   default: {
@@ -13,18 +13,36 @@ vi.mock("@/i18n", () => ({
 
 vi.mock("@/services/localeRegistry", () => {
   const mockLocales = [
-    { code: "en", name: "English", nativeName: "English", baseLanguage: "en", emoji: "🇬🇧" },
-    { code: "ru", name: "Russian", nativeName: "Русский", baseLanguage: "ru", emoji: "🇷🇺" },
-    { code: "house", name: "Dr. House", nativeName: "Доктор Хаус", baseLanguage: "ru", emoji: "🏥" },
+    {
+      code: "en",
+      name: "English",
+      nativeName: "English",
+      baseLanguage: "en",
+      emoji: "🇬🇧",
+    },
+    {
+      code: "ru",
+      name: "Russian",
+      nativeName: "Русский",
+      baseLanguage: "ru",
+      emoji: "🇷🇺",
+    },
+    {
+      code: "house",
+      name: "Dr. House",
+      nativeName: "Доктор Хаус",
+      baseLanguage: "ru",
+      emoji: "🏥",
+    },
   ];
 
   return {
     locales: mockLocales,
     localeResources: {},
-    // @ts-ignore - используются внутри LanguageProvider
-    isValidLocaleCode: (code: string) => mockLocales.some(l => l.code === code),
-    // @ts-ignore - используются внутри LanguageProvider
-    getBaseLanguageCodes: () => Array.from(new Set(mockLocales.map(l => l.baseLanguage))),
+    isValidLocaleCode: (code: string) =>
+      mockLocales.some((l) => l.code === code),
+    getBaseLanguageCodes: () =>
+      Array.from(new Set(mockLocales.map((l) => l.baseLanguage))),
   };
 });
 

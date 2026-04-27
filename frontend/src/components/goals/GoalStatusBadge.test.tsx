@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
-import { GoalStatusBadge } from "./GoalStatusBadge";
+import { describe, expect, it } from "vitest";
 import type { GoalStatus } from "@/types/common";
+import { GoalStatusBadge } from "./GoalStatusBadge";
 
 describe("GoalStatusBadge", () => {
   it.each<[GoalStatus, string]>([

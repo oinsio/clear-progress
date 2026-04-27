@@ -1,14 +1,25 @@
-import { jsonOk, jsonError, jsonNotInitialized, ERROR_CODES } from '../helpers/response';
-import { getTasksByRevision } from '../sheets/tasks.sheet';
-import { getGoalsByRevision } from '../sheets/goals.sheet';
-import { getContextsByRevision } from '../sheets/contexts.sheet';
-import { getCategoriesByRevision } from '../sheets/categories.sheet';
-import { getChecklistItemsByRevision } from '../sheets/checklists.sheet';
-import { getIdeasByRevision } from '../sheets/ideas.sheet';
-import { getAllSettings, getSettingsChangedSince } from '../sheets/settings.sheet';
-import { readNextRevision, readPurgeRevision } from '../sheets/meta.sheet';
+import {
+  ERROR_CODES,
+  jsonError,
+  jsonNotInitialized,
+  jsonOk,
+} from "../helpers/response";
+import { getCategoriesByRevision } from "../sheets/categories.sheet";
+import { getChecklistItemsByRevision } from "../sheets/checklists.sheet";
+import { getContextsByRevision } from "../sheets/contexts.sheet";
+import { getGoalsByRevision } from "../sheets/goals.sheet";
+import { getIdeasByRevision } from "../sheets/ideas.sheet";
+import { readNextRevision, readPurgeRevision } from "../sheets/meta.sheet";
+import {
+  getAllSettings,
+  getSettingsChangedSince,
+} from "../sheets/settings.sheet";
+import { getTasksByRevision } from "../sheets/tasks.sheet";
 
-export function pull({ since_revision, settings_updated_at }: {
+export function pull({
+  since_revision,
+  settings_updated_at,
+}: {
   since_revision?: number;
   settings_updated_at?: string;
 }): GoogleAppsScript.Content.TextOutput {

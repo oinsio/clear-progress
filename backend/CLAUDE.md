@@ -18,6 +18,11 @@ pnpm clasp deploy       # Create new deployment
 - **Auth**: first caller's email auto-registered as `OWNER_EMAIL` in PropertiesService; subsequent calls must match
 - Action files use **kebab-case** (`upload-cover.ts`), everything else is `camelCase.ts`
 
+## Code Quality
+
+- **Linter** + **Formatter**: Biome (`pnpm run lint`, `pnpm run lint:fix`)
+- Configuration: shared `biome.json` in project root
+
 ## Response Format
 
 - Success: `{ ok: true, ...data }`

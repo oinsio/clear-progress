@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { CoverSyncService } from "./CoverSyncService";
-import type { ApiClient } from "./ApiClient";
-import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
-import type { CoverRepository } from "@/db/repositories/CoverRepository";
-import type { GoalRepository } from "@/db/repositories/GoalRepository";
-import type { PendingCoverRecord } from "@/types/entities";
-import { localCoverCache } from "./LocalCoverCache";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  LOCAL_COVER_ID_PREFIX,
   FALLBACK_COVER_MIME_TYPE,
+  LOCAL_COVER_ID_PREFIX,
   MAX_COVER_BATCH_SIZE,
 } from "@/constants";
+import type { CoverRepository } from "@/db/repositories/CoverRepository";
+import type { GoalRepository } from "@/db/repositories/GoalRepository";
+import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
+import type { PendingCoverRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import type { ApiClient } from "./ApiClient";
+import { CoverSyncService } from "./CoverSyncService";
+import { localCoverCache } from "./LocalCoverCache";
 
 // jsdom does not implement Blob.prototype.arrayBuffer — polyfill for tests
 Object.defineProperty(Blob.prototype, "arrayBuffer", {
@@ -891,7 +891,9 @@ describe("CoverSyncService", () => {
       });
 
       it("should mark goal as needsSync after updating cover_file_id", async () => {
-        const goalWithCleanDirty = createGoalWithServerCover({ needsSync: false });
+        const goalWithCleanDirty = createGoalWithServerCover({
+          needsSync: false,
+        });
         mockGoalRepository = createMockGoalRepository({
           getActive: vi.fn().mockResolvedValue([goalWithCleanDirty]),
         });

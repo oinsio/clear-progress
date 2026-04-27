@@ -1,13 +1,21 @@
-import { useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { FileText, Target, Pencil, Inbox, MapPin, Tag, Repeat } from "lucide-react";
-import type { Task, Goal, Context, Category } from "@/types/entities";
-import type { Box, RepeatRule } from "@/types/common";
-import { cn } from "@/shared/lib/cn";
-import { BOX, BOX_FILTER_LABELS } from "@/constants";
-import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon } from "./BoxIcons";
-import { RepeatRuleSelector } from "./RepeatRuleSelector";
+import {
+  FileText,
+  Inbox,
+  MapPin,
+  Pencil,
+  Repeat,
+  Tag,
+  Target,
+} from "lucide-react";
 import * as React from "react";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { BOX, BOX_FILTER_LABELS } from "@/constants";
+import { cn } from "@/shared/lib/cn";
+import type { Box, RepeatRule } from "@/types/common";
+import type { Category, Context, Goal, Task } from "@/types/entities";
+import { LaterBoxIcon, TodayBoxIcon, WeekBoxIcon } from "./BoxIcons";
+import { RepeatRuleSelector } from "./RepeatRuleSelector";
 
 type QuickActionMode =
   | "none"
@@ -162,7 +170,9 @@ export function TaskQuickActions({
 
   const handleRepeatChange = useCallback(
     async (rule: RepeatRule | null) => {
-      await onUpdate(task.id, { repeat_rule: rule ? JSON.stringify(rule) : "" });
+      await onUpdate(task.id, {
+        repeat_rule: rule ? JSON.stringify(rule) : "",
+      });
       setActiveMode("none");
     },
     [task.id, onUpdate],
@@ -262,7 +272,6 @@ export function TaskQuickActions({
             onBlur={() => void handleDescriptionSave()}
             placeholder={t("taskEdit.descriptionPlaceholder")}
             rows={3}
-            autoFocus
             className="w-full text-sm text-gray-700 placeholder:text-gray-400 bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none"
           />
         </div>

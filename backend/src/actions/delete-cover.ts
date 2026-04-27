@@ -1,16 +1,21 @@
-import { ERROR_MESSAGES } from '../helpers/constants';
-import { jsonOk, jsonError, ERROR_CODES } from '../helpers/response';
-import { getCoverFileIds } from '../sheets/goals.sheet';
+import { ERROR_MESSAGES } from "../helpers/constants";
+import { ERROR_CODES, jsonError, jsonOk } from "../helpers/response";
+import { getCoverFileIds } from "../sheets/goals.sheet";
 
-export function deleteCover(payload: { file_id: string }): GoogleAppsScript.Content.TextOutput {
+export function deleteCover(payload: {
+  file_id: string;
+}): GoogleAppsScript.Content.TextOutput {
   const { file_id } = payload;
 
   if (!file_id) {
-    return jsonError(ERROR_CODES.INVALID_PAYLOAD, ERROR_MESSAGES.FILE_ID_REQUIRED);
+    return jsonError(
+      ERROR_CODES.INVALID_PAYLOAD,
+      ERROR_MESSAGES.FILE_ID_REQUIRED,
+    );
   }
 
   const allFileIds = getCoverFileIds();
-  const refCount = allFileIds.filter(id => id === file_id).length;
+  const refCount = allFileIds.filter((id) => id === file_id).length;
 
   if (refCount > 0) {
     return jsonOk({ deleted: false, ref_count: refCount });
@@ -20,6 +25,9 @@ export function deleteCover(payload: { file_id: string }): GoogleAppsScript.Cont
     Drive.Files.update({ trashed: true }, file_id);
     return jsonOk({ deleted: true, ref_count: 0 });
   } catch {
-    return jsonError(ERROR_CODES.FILE_NOT_FOUND, `${ERROR_MESSAGES.FILE_NOT_FOUND}: ${file_id}`);
+    return jsonError(
+      ERROR_CODES.FILE_NOT_FOUND,
+      `${ERROR_MESSAGES.FILE_NOT_FOUND}: ${file_id}`,
+    );
   }
 }

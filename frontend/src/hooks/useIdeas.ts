@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
-import type { Idea } from "@/types/entities";
-import { IdeaService } from "@/services/IdeaService";
-import { IdeaRepository } from "@/db/repositories/IdeaRepository";
+import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { IdeaRepository } from "@/db/repositories/IdeaRepository";
+import { IdeaService } from "@/services/IdeaService";
+import type { Idea } from "@/types/entities";
 
 const defaultIdeaService = new IdeaService(new IdeaRepository());
 

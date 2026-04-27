@@ -1,13 +1,13 @@
-import { useState, useCallback } from "react";
-import type { Task, Goal, Idea } from "@/types/entities";
-import { TaskService } from "@/services/TaskService";
-import { GoalService } from "@/services/GoalService";
-import { IdeaService } from "@/services/IdeaService";
+import { useCallback, useState } from "react";
 import {
-  defaultTaskService,
   defaultGoalService,
   defaultIdeaService,
+  defaultTaskService,
 } from "@/services/defaultServices";
+import type { GoalService } from "@/services/GoalService";
+import type { IdeaService } from "@/services/IdeaService";
+import type { TaskService } from "@/services/TaskService";
+import type { Goal, Idea, Task } from "@/types/entities";
 
 export interface UseSearchReturn {
   tasks: Task[];

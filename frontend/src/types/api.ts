@@ -1,13 +1,13 @@
+import type { PushResultStatus } from "./common";
 import type {
-  Task,
-  Goal,
-  Context,
   Category,
   ChecklistItem,
+  Context,
+  Goal,
   Idea,
   Setting,
+  Task,
 } from "./entities";
-import type { PushResultStatus } from "./common";
 
 export interface PullRequest {
   action: "pull";

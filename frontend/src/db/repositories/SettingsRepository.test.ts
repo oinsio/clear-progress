@@ -1,15 +1,17 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { SettingsRepository } from "./SettingsRepository";
-import { db } from "../database";
-import type { Setting } from "@/types/entities";
+import { beforeEach, describe, expect, it } from "vitest";
 import { Temporal } from "@/lib/temporal";
+import type { Setting } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { db } from "../database";
+import { SettingsRepository } from "./SettingsRepository";
 
 function buildSetting(overrides: Partial<Setting> = {}): Setting {
   return <Setting>{
     key: "default_box",
     value: "inbox",
-    updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")),
+    updated_at: toISOTimestamp(
+      Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+    ),
     ...overrides,
   };
 }
@@ -97,7 +99,9 @@ describe("SettingsRepository", () => {
       expect(setting).toBeDefined();
       expect(setting!.updated_at >= before).toBe(true);
       // Проверяем, что timestamp не в будущем (с буфером 500ms)
-      const maxAllowed = toISOTimestamp(Temporal.Now.instant().add({ milliseconds: 500 }));
+      const maxAllowed = toISOTimestamp(
+        Temporal.Now.instant().add({ milliseconds: 500 }),
+      );
       expect(setting!.updated_at <= maxAllowed).toBe(true);
     });
   });
@@ -108,7 +112,9 @@ describe("SettingsRepository", () => {
         buildSetting({
           key: "default_box",
           value: "today",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+          ),
         }),
       ];
 
@@ -123,7 +129,9 @@ describe("SettingsRepository", () => {
         buildSetting({
           key: "default_box",
           value: "inbox",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+          ),
         }),
       );
 
@@ -131,7 +139,9 @@ describe("SettingsRepository", () => {
         buildSetting({
           key: "default_box",
           value: "week",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+          ),
         }),
       ]);
 
@@ -144,7 +154,9 @@ describe("SettingsRepository", () => {
         buildSetting({
           key: "default_box",
           value: "today",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+          ),
         }),
       );
 
@@ -152,7 +164,9 @@ describe("SettingsRepository", () => {
         buildSetting({
           key: "default_box",
           value: "inbox",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+          ),
         }),
       ]);
 
@@ -161,7 +175,9 @@ describe("SettingsRepository", () => {
     });
 
     it("should not overwrite local setting when incoming has same updated_at", async () => {
-      const sameTimestamp = toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z"));
+      const sameTimestamp = toISOTimestamp(
+        Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+      );
       await db.settings.add(
         buildSetting({
           key: "accent_color",
@@ -187,12 +203,16 @@ describe("SettingsRepository", () => {
         buildSetting({
           key: "default_box",
           value: "today",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+          ),
         }),
         buildSetting({
           key: "accent_color",
           value: "green",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+          ),
         }),
       ]);
 
@@ -200,12 +220,16 @@ describe("SettingsRepository", () => {
         buildSetting({
           key: "default_box",
           value: "inbox",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+          ),
         }),
         buildSetting({
           key: "accent_color",
           value: "purple",
-          updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")),
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+          ),
         }),
       ]);
 
@@ -231,11 +255,15 @@ describe("SettingsRepository", () => {
     it("should return settings with updated_at after since", async () => {
       const oldSetting = buildSetting({
         key: "default_box",
-        updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")),
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+        ),
       });
       const newSetting = buildSetting({
         key: "accent_color",
-        updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")),
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+        ),
       });
       await db.settings.bulkAdd([oldSetting, newSetting]);
 
@@ -248,7 +276,11 @@ describe("SettingsRepository", () => {
 
     it("should return empty array when no settings are newer than since", async () => {
       await db.settings.add(
-        buildSetting({ updated_at: toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")) }),
+        buildSetting({
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+          ),
+        }),
       );
 
       const settings = await settingsRepository.getChangedSince(
@@ -259,7 +291,11 @@ describe("SettingsRepository", () => {
 
     it("should not include settings with updated_at equal to since", async () => {
       await db.settings.add(
-        buildSetting({ updated_at: toISOTimestamp(Temporal.Instant.from("2026-03-01T00:00:00.000Z")) }),
+        buildSetting({
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-03-01T00:00:00.000Z"),
+          ),
+        }),
       );
 
       const settings = await settingsRepository.getChangedSince(

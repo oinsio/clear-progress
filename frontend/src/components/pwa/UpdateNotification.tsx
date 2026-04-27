@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const UPDATE_CHECK_INTERVAL_MS = 60000;
 

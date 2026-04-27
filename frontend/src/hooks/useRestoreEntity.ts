@@ -1,15 +1,15 @@
 import { useCallback } from "react";
-import { TaskService } from "@/services/TaskService";
-import { GoalService } from "@/services/GoalService";
-import { ContextService } from "@/services/ContextService";
-import { CategoryService } from "@/services/CategoryService";
-import { ChecklistService } from "@/services/ChecklistService";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { GoalRepository } from "@/db/repositories/GoalRepository";
-import { ContextRepository } from "@/db/repositories/ContextRepository";
+import { useSync } from "@/app/providers/SyncProvider";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { useSync } from "@/app/providers/SyncProvider";
+import { ContextRepository } from "@/db/repositories/ContextRepository";
+import { GoalRepository } from "@/db/repositories/GoalRepository";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { CategoryService } from "@/services/CategoryService";
+import { ChecklistService } from "@/services/ChecklistService";
+import { ContextService } from "@/services/ContextService";
+import { GoalService } from "@/services/GoalService";
+import { TaskService } from "@/services/TaskService";
 
 const defaultTaskService = new TaskService(
   new TaskRepository(),

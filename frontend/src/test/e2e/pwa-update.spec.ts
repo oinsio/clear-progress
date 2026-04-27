@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("PWA Update Notification", () => {
   test("should show update notification when new version is available", async ({

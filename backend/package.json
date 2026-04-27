@@ -7,9 +7,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run",
+    "lint": "biome check . --config-path=../biome.json",
+    "lint:fix": "biome check . --write --config-path=../biome.json"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
     "@stryker-mutator/core": "^9.6.0",
     "@stryker-mutator/vitest-runner": "^9.6.0",
     "@types/google-apps-script": "^1.0.0",

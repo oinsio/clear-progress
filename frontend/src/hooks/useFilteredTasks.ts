@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
-import type { Task } from "@/types/entities";
+import { useCallback, useEffect, useState } from "react";
+import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
-import { TaskService } from "@/services/TaskService";
+import type { Task } from "@/types/entities";
 import { useTaskMutations } from "./useTaskMutations";
 
 export interface UseFilteredTasksReturn {

@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import type { Task } from "@/types/entities";
-import { TaskService } from "@/services/TaskService";
-import { defaultTaskService } from "@/services/defaultServices";
-import { BOX } from "@/constants";
+import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { BOX } from "@/constants";
+import { defaultTaskService } from "@/services/defaultServices";
+import type { TaskService } from "@/services/TaskService";
+import type { Task } from "@/types/entities";
 
 export interface UseInboxTasksReturn {
   tasks: Task[];

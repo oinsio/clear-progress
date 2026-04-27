@@ -1,8 +1,8 @@
-import type { Idea } from "@/types/entities";
-import { IdeaRepository } from "@/db/repositories/IdeaRepository";
-import { hasEntityChanged } from "@/utils/deepEqual";
-import { toISOTimestamp } from "@/utils/dateHelpers";
+import type { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { Temporal } from "@/lib/temporal";
+import type { Idea } from "@/types/entities";
+import { toISOTimestamp } from "@/utils/dateHelpers";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class IdeaService {
   constructor(private readonly ideaRepository: IdeaRepository) {}
@@ -54,9 +54,7 @@ export class IdeaService {
     // Применяем метаданные только если есть изменения
     const updatedIdea: Idea = {
       ...candidateIdea,
-      updated_at: hasChanged
-        ? toISOTimestamp()
-        : existingIdea.updated_at,
+      updated_at: hasChanged ? toISOTimestamp() : existingIdea.updated_at,
       version: hasChanged ? existingIdea.version + 1 : existingIdea.version,
       needsSync: hasChanged,
     };

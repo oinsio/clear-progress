@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AddTaskInput } from "./AddTaskInput";
 
 vi.mock("@/hooks/useShowCheckbox");
@@ -114,7 +114,8 @@ describe("AddTaskInput", () => {
   it("should show checkbox when useShowCheckbox returns true", () => {
     vi.mocked(useShowCheckbox).mockReturnValue(true);
     renderInput();
-    const checkbox = screen.getByTestId("add-task-input")
+    const checkbox = screen
+      .getByTestId("add-task-input")
       .parentElement?.querySelector(".rounded-full");
     expect(checkbox).toBeInTheDocument();
   });
@@ -122,7 +123,8 @@ describe("AddTaskInput", () => {
   it("should hide checkbox when useShowCheckbox returns false", () => {
     vi.mocked(useShowCheckbox).mockReturnValue(false);
     renderInput();
-    const checkbox = screen.getByTestId("add-task-input")
+    const checkbox = screen
+      .getByTestId("add-task-input")
       .parentElement?.querySelector(".rounded-full");
     expect(checkbox).not.toBeInTheDocument();
   });

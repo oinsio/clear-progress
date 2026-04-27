@@ -1,5 +1,5 @@
-import { useIsDesktop } from "./useIsDesktop";
 import { useHasTouchPointer } from "./useHasTouchPointer";
+import { useIsDesktop } from "./useIsDesktop";
 
 /**
  * Определяет, нужно ли отображать чекбокс завершения задачи.

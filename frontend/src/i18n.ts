@@ -1,11 +1,8 @@
 import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import {
-  localeResources,
-  getLocaleByCode,
-} from "@/services/localeRegistry";
+import { initReactI18next } from "react-i18next";
 import { DEFAULT_LANGUAGE, STORAGE_KEYS } from "@/constants";
+import { getLocaleByCode, localeResources } from "@/services/localeRegistry";
 
 void i18n
   .use(LanguageDetector)

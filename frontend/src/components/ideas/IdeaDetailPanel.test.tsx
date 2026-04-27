@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { IdeaDetailPanel } from "./IdeaDetailPanel";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Idea } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { IdeaDetailPanel } from "./IdeaDetailPanel";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -76,7 +76,9 @@ describe("IdeaDetailPanel", () => {
     );
 
     // Verify description is displayed
-    expect(screen.getByTestId("idea-detail-description")).toHaveTextContent("Test Description");
+    expect(screen.getByTestId("idea-detail-description")).toHaveTextContent(
+      "Test Description",
+    );
   });
 
   it("should call onUpdate when name input is blurred with changes", async () => {
@@ -115,7 +117,9 @@ describe("IdeaDetailPanel", () => {
     );
 
     // Verify description is displayed
-    expect(screen.getByTestId("idea-detail-description")).toHaveTextContent("Test Description");
+    expect(screen.getByTestId("idea-detail-description")).toHaveTextContent(
+      "Test Description",
+    );
 
     // Note: EditableDescription internal behavior is tested in EditableDescription.test.tsx
     // This test just verifies the component integration

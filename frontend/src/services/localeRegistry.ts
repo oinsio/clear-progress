@@ -35,7 +35,7 @@ for (const [path, module] of Object.entries(localeFiles)) {
   if (!code || !name || !nativeName || !baseLanguage || !emoji) {
     console.error(
       `[localeRegistry] Incomplete _meta in ${path}:`,
-      content._meta
+      content._meta,
     );
     continue;
   }
@@ -44,7 +44,7 @@ for (const [path, module] of Object.entries(localeFiles)) {
   const fileName = path.split("/").pop()?.replace(".json", "");
   if (fileName !== code) {
     console.error(
-      `[localeRegistry] Code mismatch in ${path}: _meta.code="${code}" but filename="${fileName}"`
+      `[localeRegistry] Code mismatch in ${path}: _meta.code="${code}" but filename="${fileName}"`,
     );
     continue;
   }
@@ -72,5 +72,5 @@ export function getBaseLanguageCodes(): string[] {
   return Array.from(new Set(locales.map((locale) => locale.baseLanguage)));
 }
 
-export { locales, localeResources };
 export type { LocaleMeta };
+export { localeResources, locales };

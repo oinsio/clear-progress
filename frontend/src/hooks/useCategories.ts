@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
-import type { Category } from "@/types/entities";
-import { CategoryService } from "@/services/CategoryService";
-import { CategoryRepository } from "@/db/repositories/CategoryRepository";
+import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { CategoryRepository } from "@/db/repositories/CategoryRepository";
+import { CategoryService } from "@/services/CategoryService";
+import type { Category } from "@/types/entities";
 
 const defaultCategoryService = new CategoryService(new CategoryRepository());
 

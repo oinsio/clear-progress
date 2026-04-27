@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ContextService } from "./ContextService";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContextRepository } from "@/db/repositories/ContextRepository";
+import { Temporal } from "@/lib/temporal";
 import { buildContext } from "@/test/factories/contextFactory";
 import { createMockContextRepository } from "@/test/mocks/contextRepositoryMock";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import { Temporal } from "@/lib/temporal";
+import { ContextService } from "./ContextService";
 
 describe("ContextService", () => {
   let mockContextRepository: ContextRepository;
@@ -132,13 +132,19 @@ describe("ContextService", () => {
     });
 
     it("should update updated_at timestamp", async () => {
-      const context = buildContext({ updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")) });
+      const context = buildContext({
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
+        ),
+      });
       mockContextRepository = createMockContextRepository({
         getById: vi.fn().mockResolvedValue(context),
       });
       const contextService = new ContextService(mockContextRepository);
       const updated = await contextService.update(context.id, "X");
-      expect(updated.updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
+      expect(updated.updated_at).not.toBe(
+        toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+      );
     });
 
     it("should set needsSync to true", async () => {
@@ -265,11 +271,17 @@ describe("ContextService", () => {
     });
 
     it("should update updated_at for each reordered context", async () => {
-      const contextA = buildContext({ updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")) });
+      const contextA = buildContext({
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
+        ),
+      });
       const contextService = new ContextService(mockContextRepository);
       await contextService.reorderContexts([contextA]);
       const upserted = getUpsertedContexts();
-      expect(upserted[0].updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
+      expect(upserted[0].updated_at).not.toBe(
+        toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+      );
     });
 
     it("should set needsSync to true for each reordered context", async () => {

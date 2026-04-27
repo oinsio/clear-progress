@@ -1,8 +1,8 @@
 import {
-  useSensor,
-  useSensors,
   PointerSensor,
   TouchSensor,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 
 const DRAG_ACTIVATION_DISTANCE_PX = 8;

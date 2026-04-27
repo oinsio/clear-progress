@@ -1,27 +1,27 @@
-import { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { ArrowLeft, Plus, Pencil, Check, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Pencil, Plus, Trash2 } from "lucide-react";
 import type { ComponentType } from "react";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useSettings } from "@/hooks/useSettings";
-import { useTasksByBox } from "@/hooks/useTasksByBox";
-import { defaultTaskService } from "@/services/defaultServices";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
-import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
 import {
   RightFilterPanel,
   type RightPanelMode,
 } from "@/components/tasks/RightFilterPanel";
+import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { useIsUnsynced } from "@/hooks/useIsUnsynced";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { useSettings } from "@/hooks/useSettings";
+import { useTasksByBox } from "@/hooks/useTasksByBox";
+import { defaultTaskService } from "@/services/defaultServices";
 import { cn } from "@/shared/lib/cn";
-import type { Task, Goal, Context, Category } from "@/types/entities";
 import type { Box } from "@/types/common";
+import type { Category, Context, Goal, Task } from "@/types/entities";
 
 interface EntityDetailLayoutI18nKeys {
   back: string;
@@ -229,7 +229,6 @@ export function EntityDetailLayout({
 
                   {isEditing ? (
                     <input
-                      autoFocus
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}

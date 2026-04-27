@@ -1,3 +1,5 @@
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import type * as React from "react";
 import {
   createContext,
   useCallback,
@@ -7,13 +9,11 @@ import {
   useRef,
   useState,
 } from "react";
-import * as React from "react";
-import { GoogleOAuthProvider } from "@react-oauth/google";
-import { setAccessToken } from "@/services/ApiClient";
 import { GOOGLE_CLIENT_ID_CHANGED_EVENT, STORAGE_KEYS } from "@/constants";
-import { GoogleAuthSync } from "./GoogleAuthSync";
 import { Temporal } from "@/lib/temporal";
+import { setAccessToken } from "@/services/ApiClient";
 import { getConnectionConfig } from "@/services/connectionService";
+import { GoogleAuthSync } from "./GoogleAuthSync";
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -31,7 +31,7 @@ const noop = () => {};
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [googleClientId, setGoogleClientId] = useState<string | null>(() => {
     const config = getConnectionConfig();
-    return config?.type === "gas" ? config.clientId ?? null : null;
+    return config?.type === "gas" ? (config.clientId ?? null) : null;
   });
   const [accessToken, setAccessTokenState] = useState<string | null>(() => {
     const storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
@@ -63,7 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleChange = () => {
       const config = getConnectionConfig();
-      const newClientId = config?.type === "gas" ? config.clientId ?? null : null;
+      const newClientId =
+        config?.type === "gas" ? (config.clientId ?? null) : null;
       setGoogleClientId(newClientId);
     };
     window.addEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);

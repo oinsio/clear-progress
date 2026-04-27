@@ -1,13 +1,13 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MapPin } from "lucide-react";
+import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { UseSettingsReturn } from "@/hooks/useSettings";
+import type { Task } from "@/types/entities";
 import {
   EntityDetailLayout,
   type EntityDetailLayoutProps,
 } from "./EntityDetailLayout";
-import type { UseSettingsReturn } from "@/hooks/useSettings";
-import type { Task } from "@/types/entities";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -26,10 +26,10 @@ vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
 vi.mock("@/hooks/useSettings");
 
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { useIsUnsynced } from "@/hooks/useIsUnsynced";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useSettings } from "@/hooks/useSettings";
 

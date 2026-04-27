@@ -1,15 +1,19 @@
-import type { Task, ChecklistItem } from "@/types/entities";
+import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import type { TaskRepository } from "@/db/repositories/TaskRepository";
+import { type Clock, systemClock, Temporal } from "@/lib/temporal";
 import type { Box } from "@/types/common";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import type { ChecklistItem, Task } from "@/types/entities";
+import {
+  sanitizeDateOnly,
+  toISODate,
+  toISOTimestamp,
+} from "@/utils/dateHelpers";
 import { hasEntityChanged } from "@/utils/deepEqual";
 import {
-  parseRepeatRule,
-  calculateNextDate,
   calculateAppearDate,
+  calculateNextDate,
+  parseRepeatRule,
 } from "@/utils/repeatRule";
-import { toISOTimestamp, toISODate, sanitizeDateOnly } from "@/utils/dateHelpers";
-import { Temporal, systemClock, type Clock } from "@/lib/temporal";
 
 export class TaskService {
   constructor(
@@ -127,9 +131,7 @@ export class TaskService {
 
           // Определяем, нужно ли раскрыть клон сразу
           const today = this.clock.plainDateISO().toString();
-          const sanitizedAppearDate = sanitizeDateOnly(
-            toISODate(appearDate),
-          );
+          const sanitizedAppearDate = sanitizeDateOnly(toISODate(appearDate));
           const shouldReveal =
             sanitizedAppearDate &&
             Temporal.PlainDate.compare(

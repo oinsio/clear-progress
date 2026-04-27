@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { TaskList } from "@/components/tasks/TaskList";
 import { BOX, BOX_FILTER_LABELS } from "@/constants";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
-import type { Task, Goal, Context, Category } from "@/types/entities";
 import type { Box } from "@/types/common";
+import type { Category, Context, Goal, Task } from "@/types/entities";
 
 const BOX_SECTION_ORDER: Box[] = [BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER];
 

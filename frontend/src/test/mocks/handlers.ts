@@ -1,4 +1,4 @@
-import { http, HttpResponse } from "msw";
+import { HttpResponse, http } from "msw";
 
 const GAS_URL = "https://script.google.com/macros/s/test-deploy-id/exec";
 

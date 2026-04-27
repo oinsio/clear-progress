@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import type { Goal, Context, Category } from "@/types/entities";
 import { resolveEntityName } from "@/components/tasks/taskEditShared";
+import type { Category, Context, Goal } from "@/types/entities";
 
 interface ChecklistProgress {
   completed: number;

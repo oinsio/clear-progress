@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
-import type { Task } from "@/types/entities";
-import type { Box } from "@/types/common";
-import { TaskService } from "@/services/TaskService";
-import { defaultTaskService } from "@/services/defaultServices";
+import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useShowHidden } from "@/hooks/useShowHidden";
+import { defaultTaskService } from "@/services/defaultServices";
+import type { TaskService } from "@/services/TaskService";
+import type { Box } from "@/types/common";
+import type { Task } from "@/types/entities";
 
 export interface UseTasksReturn {
   tasks: Task[];

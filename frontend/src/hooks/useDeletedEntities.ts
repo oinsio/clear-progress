@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
+import { useCallback, useEffect, useState } from "react";
 import { db } from "@/db/database";
 import type {
-  Task,
-  Goal,
-  Context,
   Category,
   ChecklistItem,
+  Context,
+  Goal,
+  Task,
 } from "@/types/entities";
 
 export interface DeletedEntities {

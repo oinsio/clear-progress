@@ -45,6 +45,7 @@ Object.defineProperty(window, "matchMedia", {
 // jsdom doesn't support URL.createObjectURL/revokeObjectURL
 global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
 global.URL.revokeObjectURL = vi.fn();
+
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { localeResources } from "@/services/localeRegistry";

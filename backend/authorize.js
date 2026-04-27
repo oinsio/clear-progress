@@ -11,9 +11,12 @@
  * 3. Click Run → accept the authorization dialog
  * 4. Check Execution Log: "Done. All scopes authorized."
  */
-function authorizeScopes() {
-  UrlFetchApp.fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=probe', { muteHttpExceptions: true });
+function _authorizeScopes() {
+  UrlFetchApp.fetch(
+    "https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=probe",
+    { muteHttpExceptions: true },
+  );
   SpreadsheetApp.getActiveSpreadsheet();
   DriveApp.getRootFolder();
-  Logger.log('Done. All scopes authorized.');
+  Logger.log("Done. All scopes authorized.");
 }

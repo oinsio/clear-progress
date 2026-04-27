@@ -1,7 +1,7 @@
-import { TaskRepository } from "@/db/repositories/TaskRepository";
+import type { TaskRepository } from "@/db/repositories/TaskRepository";
+import { type Clock, systemClock } from "@/lib/temporal";
 import type { Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import { type Clock, systemClock } from "@/lib/temporal";
 
 export class HiddenTaskService {
   constructor(

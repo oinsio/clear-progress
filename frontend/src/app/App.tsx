@@ -1,13 +1,13 @@
 import { RouterProvider } from "react-router-dom";
-import { ThemeProvider } from "./providers/ThemeProvider";
-import { SyncProvider } from "./providers/SyncProvider";
-import { ShowHiddenProvider } from "./providers/ShowHiddenProvider";
-import { LanguageProvider } from "./providers/LanguageProvider";
-import { AuthProvider } from "./providers/AuthProvider";
-import { PanelSettingsProvider } from "./providers/PanelSettingsProvider";
-import { InterfaceScaleProvider } from "./providers/InterfaceScaleProvider";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
 import { useHiddenTasksReveal } from "@/hooks/useHiddenTasksReveal";
+import { AuthProvider } from "./providers/AuthProvider";
+import { InterfaceScaleProvider } from "./providers/InterfaceScaleProvider";
+import { LanguageProvider } from "./providers/LanguageProvider";
+import { PanelSettingsProvider } from "./providers/PanelSettingsProvider";
+import { ShowHiddenProvider } from "./providers/ShowHiddenProvider";
+import { SyncProvider } from "./providers/SyncProvider";
+import { ThemeProvider } from "./providers/ThemeProvider";
 import { router } from "./router";
 
 // GoogleOAuthProvider is now managed inside AuthProvider (see AuthProvider.tsx).

@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { X, Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Idea } from "@/types/entities";
-import { cn } from "@/shared/lib/cn";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { EditableDescription } from "@/components/ui/EditableDescription";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { cn } from "@/shared/lib/cn";
+import type { Idea } from "@/types/entities";
 
 interface IdeaDetailPanelProps {
   idea: Idea;
@@ -34,7 +35,7 @@ export function IdeaDetailPanel({
     setName(idea.name);
     setDescription(idea.description);
     setIsConfirmingDelete(false);
-  }, [idea.id, idea.name, idea.description]);
+  }, [idea.name, idea.description]);
 
   const handleNameBlur = useCallback(async () => {
     const trimmedName = name.trim();

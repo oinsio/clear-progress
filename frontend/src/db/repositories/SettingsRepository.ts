@@ -1,6 +1,6 @@
 import type { Setting } from "@/types/entities";
-import { db } from "../database";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { db } from "../database";
 
 export class SettingsRepository {
   async getAll(): Promise<Setting[]> {
@@ -25,7 +25,12 @@ export class SettingsRepository {
     }
 
     const updatedAt = toISOTimestamp();
-    await db.settings.put({ key, value, updated_at: updatedAt, needsSync: true });
+    await db.settings.put({
+      key,
+      value,
+      updated_at: updatedAt,
+      needsSync: true,
+    });
   }
 
   async getChangedSince(since: string): Promise<Setting[]> {
