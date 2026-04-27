@@ -1,10 +1,10 @@
-import { useState, useCallback } from "react";
-import type { FilterBarPosition } from "@/types/common";
+import { useCallback, useState } from "react";
 import {
   DEFAULT_FILTER_BAR_POSITION,
   FILTER_BAR_POSITIONS,
   STORAGE_KEYS,
 } from "@/constants";
+import type { FilterBarPosition } from "@/types/common";
 
 function getCachedFilterBarPosition(): FilterBarPosition {
   try {

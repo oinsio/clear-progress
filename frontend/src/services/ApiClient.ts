@@ -1,26 +1,26 @@
-import type {
-  PingResponse,
-  PullRequest,
-  PullResponse,
-  PushRequest,
-  PushResponse,
-  InitResponse,
-  UploadCoverResponse,
-  UploadCoverBatchItem,
-  UploadCoversResponse,
-  DeleteCoverResponse,
-  GetCoversResponse,
-  PurgeResponse,
-} from "@/types/api";
 import {
-  STORAGE_KEYS,
   API_ACTIONS,
-  GAS_AUTH_ERROR_CODE,
-  TOKEN_EXPIRY_BUFFER_S,
   API_AUTH_ERROR_NAME,
+  GAS_AUTH_ERROR_CODE,
+  STORAGE_KEYS,
+  TOKEN_EXPIRY_BUFFER_S,
 } from "@/constants";
 import { Temporal } from "@/lib/temporal";
 import { getConnectionConfig } from "@/services/connectionService";
+import type {
+  DeleteCoverResponse,
+  GetCoversResponse,
+  InitResponse,
+  PingResponse,
+  PullRequest,
+  PullResponse,
+  PurgeResponse,
+  PushRequest,
+  PushResponse,
+  UploadCoverBatchItem,
+  UploadCoverResponse,
+  UploadCoversResponse,
+} from "@/types/api";
 
 // Module-level shared state — all ApiClient instances use the same token
 let sharedAccessToken: string | null = null;
@@ -46,7 +46,8 @@ export function setAccessToken(token: string | null, expiresIn?: number): void {
   sharedAccessToken = token;
   sharedTokenExpiresAt =
     token && expiresIn !== undefined
-      ? Temporal.Now.instant().epochMilliseconds + (expiresIn - TOKEN_EXPIRY_BUFFER_S) * 1000
+      ? Temporal.Now.instant().epochMilliseconds +
+        (expiresIn - TOKEN_EXPIRY_BUFFER_S) * 1000
       : null;
 
   if (token && sharedTokenExpiresAt !== null) {
@@ -78,7 +79,10 @@ export class ApiClient {
   }
 
   private async request<TResponse>(body: object): Promise<TResponse> {
-    if (sharedTokenExpiresAt !== null && Temporal.Now.instant().epochMilliseconds > sharedTokenExpiresAt) {
+    if (
+      sharedTokenExpiresAt !== null &&
+      Temporal.Now.instant().epochMilliseconds > sharedTokenExpiresAt
+    ) {
       throw new ApiAuthError();
     }
 

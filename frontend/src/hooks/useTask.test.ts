@@ -1,10 +1,10 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useTask } from "./useTask";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BOX } from "@/constants";
 import type { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
-import { BOX } from "@/constants";
 import { createMockTaskService } from "@/test/mocks/taskServiceMock";
+import { useTask } from "./useTask";
 
 describe("useTask", () => {
   let mockTaskService: TaskService;

@@ -1,7 +1,7 @@
+import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import type { ChecklistItem } from "@/types/entities";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { hasEntityChanged } from "@/utils/deepEqual";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { hasEntityChanged } from "@/utils/deepEqual";
 
 export interface ChecklistProgress {
   completed: number;
@@ -118,9 +118,7 @@ export class ChecklistService {
     // Применяем метаданные только если есть изменения
     const updatedItem: ChecklistItem = {
       ...candidateItem,
-      updated_at: hasChanged
-        ? toISOTimestamp()
-        : existingItem.updated_at,
+      updated_at: hasChanged ? toISOTimestamp() : existingItem.updated_at,
       version: hasChanged ? existingItem.version + 1 : existingItem.version,
       needsSync: hasChanged,
     };

@@ -1,55 +1,54 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import type { LucideIcon } from "lucide-react";
 import {
   ArrowLeft,
-  Pencil,
+  Check,
   CheckCheck,
-  Plus,
   CircleMinus,
   Pause,
-  Square,
+  Pencil,
   Play,
-  Check,
+  Plus,
+  Square,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
-import { useCoverPreview } from "@/hooks/useCoverPreview";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
-import { useGoal } from "@/hooks/useGoal";
-import { useGoalTasks } from "@/hooks/useGoalTasks";
-import { useGoals } from "@/hooks/useGoals";
-import { useContexts } from "@/hooks/useContexts";
-import { useCategories } from "@/hooks/useCategories";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useFocusMode } from "@/hooks/useFocusMode";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useSettings } from "@/hooks/useSettings";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
-import { useTasksByBox } from "@/hooks/useTasksByBox";
-import { AddTaskInput } from "@/components/tasks/AddTaskInput";
-import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
-import { BoxSectionList } from "@/components/tasks/BoxSectionList";
-import { TaskList } from "@/components/tasks/TaskList";
-import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
+import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
+import { AddTaskInput } from "@/components/tasks/AddTaskInput";
+import { BoxSectionList } from "@/components/tasks/BoxSectionList";
 import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
+import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
+import { TaskList } from "@/components/tasks/TaskList";
 import { EditableDescription } from "@/components/ui/EditableDescription";
 import { LinkedText } from "@/components/ui/LinkedText";
+import { ROUTES } from "@/constants";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { useCategories } from "@/hooks/useCategories";
+import { useContexts } from "@/hooks/useContexts";
+import { useCoverPreview } from "@/hooks/useCoverPreview";
+import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useFocusMode } from "@/hooks/useFocusMode";
+import { useGoal } from "@/hooks/useGoal";
+import { useGoals } from "@/hooks/useGoals";
+import { useGoalTasks } from "@/hooks/useGoalTasks";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { useIsUnsynced } from "@/hooks/useIsUnsynced";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
+import { useSettings } from "@/hooks/useSettings";
+import { useTasksByBox } from "@/hooks/useTasksByBox";
 import {
   defaultCoverService,
   defaultTaskService,
 } from "@/services/defaultServices";
-import { ROUTES } from "@/constants";
 import { cn } from "@/shared/lib/cn";
+import type { Box, GoalStatus } from "@/types/common";
 import type { Task } from "@/types/entities";
-import type { Box } from "@/types/common";
-import type { GoalStatus } from "@/types/common";
 
 interface GoalStatusOption {
   status: GoalStatus;
@@ -376,7 +375,6 @@ export default function GoalDetailPage() {
                           <textarea
                             ref={editNameTextareaRef}
                             id="goal-edit-name"
-                            autoFocus
                             rows={1}
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
@@ -632,7 +630,7 @@ export default function GoalDetailPage() {
                     onSelect={handleTaskSelect}
                     selectedTaskId={selectedTaskId}
                     isFocusMode={isFocusMode}
-                focusDimmedOpacity={focusOpacity}
+                    focusDimmedOpacity={focusOpacity}
                   />
                 </section>
               )}

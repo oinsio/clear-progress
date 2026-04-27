@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import type { IdeaService } from "@/services/IdeaService";
-import { createMock } from "./createMock";
 import { createBaseCrudMocks } from "./baseMocks";
+import { createMock } from "./createMock";
 
 export function createMockIdeaService(
   overrides: Partial<Record<keyof IdeaService, unknown>> = {},

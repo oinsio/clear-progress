@@ -1,16 +1,16 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import InboxPage from "./InboxPage";
-import { buildTask } from "@/test/factories/taskFactory";
-import { buildGoal } from "@/test/factories/goalFactory";
-import type { UseTasksReturn } from "@/hooks/useTasks";
-import type { UseGoalsReturn } from "@/hooks/useGoals";
-import type { UseSearchReturn } from "@/hooks/useSearch";
-import type { UseContextsReturn } from "@/hooks/useContexts";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UseCategoriesReturn } from "@/hooks/useCategories";
 import type { UseCompletedTasksReturn } from "@/hooks/useCompletedTasks";
+import type { UseContextsReturn } from "@/hooks/useContexts";
+import type { UseGoalsReturn } from "@/hooks/useGoals";
+import type { UseSearchReturn } from "@/hooks/useSearch";
+import type { UseTasksReturn } from "@/hooks/useTasks";
+import { buildGoal } from "@/test/factories/goalFactory";
+import { buildTask } from "@/test/factories/taskFactory";
 import type { Task } from "@/types/entities";
+import InboxPage from "./InboxPage";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -35,12 +35,12 @@ vi.mock("@/hooks/useShowHidden", () => ({
   }),
 }));
 
-import { useTasks } from "@/hooks/useTasks";
-import { useGoals } from "@/hooks/useGoals";
-import { useSearch } from "@/hooks/useSearch";
-import { useContexts } from "@/hooks/useContexts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCompletedTasks } from "@/hooks/useCompletedTasks";
+import { useContexts } from "@/hooks/useContexts";
+import { useGoals } from "@/hooks/useGoals";
+import { useSearch } from "@/hooks/useSearch";
+import { useTasks } from "@/hooks/useTasks";
 
 const mockUseTasks = vi.mocked(useTasks);
 const mockUseGoals = vi.mocked(useGoals);

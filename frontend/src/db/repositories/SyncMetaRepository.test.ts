@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { SyncMetaRepository } from "./SyncMetaRepository";
-import { db } from "@/db/database";
+import { beforeEach, describe, expect, it } from "vitest";
 import { SYNC_META_KEYS } from "@/constants";
+import { db } from "@/db/database";
+import { SyncMetaRepository } from "./SyncMetaRepository";
 
 describe("SyncMetaRepository", () => {
   let repo: SyncMetaRepository;

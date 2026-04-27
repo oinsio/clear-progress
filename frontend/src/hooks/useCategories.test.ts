@@ -1,10 +1,10 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useCategories } from "./useCategories";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/database";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { CategoryService } from "@/services/CategoryService";
 import { buildCategory } from "@/test/factories/categoryFactory";
+import { useCategories } from "./useCategories";
 
 const mockSchedulePush = vi.fn();
 

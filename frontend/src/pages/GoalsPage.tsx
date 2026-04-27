@@ -1,30 +1,30 @@
-import { useState, useCallback, useEffect } from "react";
-import { Target, Plus, GripVertical } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
-import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
+import { GripVertical, Plus, Target } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { GoalItem } from "@/components/goals/GoalItem";
-import { useGoals } from "@/hooks/useGoals";
-import { useTasks } from "@/hooks/useTasks";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
-import { useDndSensors } from "@/hooks/useDndSensors";
-import { useInlineAdd } from "@/hooks/useInlineAdd";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
 import { BOX } from "@/constants";
-import { cn } from "@/shared/lib/cn";
-import { TaskService } from "@/services/TaskService";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { useDndSensors } from "@/hooks/useDndSensors";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useGoals } from "@/hooks/useGoals";
+import { useInlineAdd } from "@/hooks/useInlineAdd";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
+import { useTasks } from "@/hooks/useTasks";
+import { TaskService } from "@/services/TaskService";
+import { cn } from "@/shared/lib/cn";
 import type { Goal } from "@/types/entities";
 
 function SortableGoalItem({
@@ -234,7 +234,6 @@ export default function GoalsPage() {
                 <textarea
                   ref={newGoalTextareaRef}
                   rows={1}
-                  autoFocus
                   value={newGoalName}
                   onChange={(event) => setNewGoalName(event.target.value)}
                   onKeyDown={handleAddGoalKeyDown}
@@ -252,7 +251,6 @@ export default function GoalsPage() {
                 <textarea
                   ref={newTaskTextareaRef}
                   rows={1}
-                  autoFocus
                   value={newTaskName}
                   onChange={(event) => setNewTaskName(event.target.value)}
                   onKeyDown={handleAddTaskKeyDown}

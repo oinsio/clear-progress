@@ -1,30 +1,30 @@
-import type {
-  Task,
-  Goal,
-  Context,
-  Category,
-  ChecklistItem,
-  Idea,
-  Setting,
-} from "@/types/entities";
-import type { PushResponseData, PurgeResponse } from "@/types/api";
-import { ApiClient } from "./ApiClient";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { GoalRepository } from "@/db/repositories/GoalRepository";
-import { ContextRepository } from "@/db/repositories/ContextRepository";
-import { CategoryRepository } from "@/db/repositories/CategoryRepository";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { IdeaRepository } from "@/db/repositories/IdeaRepository";
-import { SettingsRepository } from "@/db/repositories/SettingsRepository";
-import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import {
-  PUSH_RESULT_STATUS,
   LOCAL_COVER_ID_PREFIX,
-  SYNC_META_KEYS,
+  PUSH_RESULT_STATUS,
   STORAGE_KEYS,
+  SYNC_META_KEYS,
 } from "@/constants";
 import { db } from "@/db/database";
+import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
+import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import type { ContextRepository } from "@/db/repositories/ContextRepository";
+import type { GoalRepository } from "@/db/repositories/GoalRepository";
+import type { IdeaRepository } from "@/db/repositories/IdeaRepository";
+import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
+import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { Temporal } from "@/lib/temporal";
+import type { PurgeResponse, PushResponseData } from "@/types/api";
+import type {
+  Category,
+  ChecklistItem,
+  Context,
+  Goal,
+  Idea,
+  Setting,
+  Task,
+} from "@/types/entities";
+import type { ApiClient } from "./ApiClient";
 
 export class SyncService {
   private syncMutex: Promise<void> = Promise.resolve();
@@ -110,18 +110,15 @@ export class SyncService {
     // лексикографического, т.к. ISO 8601 строки могут иметь разное количество
     // десятичных знаков (0 vs 3), что ломает строковое сравнение.
     if (pullResponse.settings.length > 0) {
-      const maxUpdatedAt = pullResponse.settings.reduce(
-        (max, setting) => {
-          if (!max) return setting.updated_at;
-          return Temporal.Instant.compare(
-            Temporal.Instant.from(setting.updated_at),
-            Temporal.Instant.from(max),
-          ) > 0
-            ? setting.updated_at
-            : max;
-        },
-        settingsUpdatedAt ?? "",
-      );
+      const maxUpdatedAt = pullResponse.settings.reduce((max, setting) => {
+        if (!max) return setting.updated_at;
+        return Temporal.Instant.compare(
+          Temporal.Instant.from(setting.updated_at),
+          Temporal.Instant.from(max),
+        ) > 0
+          ? setting.updated_at
+          : max;
+      }, settingsUpdatedAt ?? "");
       localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
     }
 

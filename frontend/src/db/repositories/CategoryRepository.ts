@@ -38,7 +38,7 @@ export class CategoryRepository {
     await db.transaction("rw", db.categories, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.categories.get(serverRecord.id);
-        if (!localRecord || !localRecord.needsSync) {
+        if (!localRecord?.needsSync) {
           await db.categories.put({ ...serverRecord, needsSync: false });
         }
       }

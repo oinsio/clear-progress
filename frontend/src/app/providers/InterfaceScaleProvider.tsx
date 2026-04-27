@@ -1,11 +1,11 @@
+import type * as React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
-import type { InterfaceScale } from "@/types/common";
 import {
-  INTERFACE_SCALES,
   DEFAULT_INTERFACE_SCALE,
+  INTERFACE_SCALES,
   STORAGE_KEYS,
 } from "@/constants";
-import * as React from "react";
+import type { InterfaceScale } from "@/types/common";
 
 interface InterfaceScaleContextValue {
   interfaceScale: InterfaceScale;

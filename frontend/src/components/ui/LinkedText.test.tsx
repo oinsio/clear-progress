@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { LinkedText } from "./LinkedText";
 
 describe("LinkedText", () => {
@@ -22,7 +22,9 @@ describe("LinkedText", () => {
   });
 
   it("should render multiple links", () => {
-    render(<LinkedText text="Visit https://example.com and https://test.org" />);
+    render(
+      <LinkedText text="Visit https://example.com and https://test.org" />,
+    );
 
     const links = screen.getAllByRole("link");
     expect(links).toHaveLength(2);
@@ -51,7 +53,7 @@ describe("LinkedText", () => {
     render(
       <div onClick={handleClick}>
         <LinkedText text="Visit https://example.com" />
-      </div>
+      </div>,
     );
 
     const link = screen.getByRole("link");
@@ -62,7 +64,7 @@ describe("LinkedText", () => {
 
   it("should apply custom className", () => {
     const { container } = render(
-      <LinkedText text="Plain text" className="custom-class" />
+      <LinkedText text="Plain text" className="custom-class" />,
     );
 
     expect(container.firstChild).toHaveClass("custom-class");
@@ -91,6 +93,9 @@ describe("LinkedText", () => {
     render(<LinkedText text="Check this https://example.com" />);
 
     expect(screen.getByText("Check this")).toBeInTheDocument();
-    expect(screen.getByRole("link")).toHaveAttribute("href", "https://example.com");
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      "https://example.com",
+    );
   });
 });

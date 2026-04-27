@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { STORAGE_KEYS } from "@/constants";
 
 function readCollapsedSections(): Record<string, boolean> {

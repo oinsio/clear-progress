@@ -1,14 +1,14 @@
 import {
-  MAX_COVER_SIZE_BYTES,
-  LOCAL_COVER_ID_PREFIX,
   COVER_HASH_PREFIX_LENGTH,
   DEFAULT_COVER_EXTENSION,
+  LOCAL_COVER_ID_PREFIX,
+  MAX_COVER_SIZE_BYTES,
 } from "@/constants";
-import type { ApiClient } from "./ApiClient";
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
-import { localCoverCache } from "./LocalCoverCache";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import type { ApiClient } from "./ApiClient";
+import { localCoverCache } from "./LocalCoverCache";
 
 const COVER_ERROR = {
   INVALID_TYPE: "INVALID_TYPE",

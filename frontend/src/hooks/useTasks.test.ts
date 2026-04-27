@@ -1,13 +1,13 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useTasks } from "./useTasks";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BOX } from "@/constants";
 import { db } from "@/db/database";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
-import { BOX } from "@/constants";
 import type { Task } from "@/types/entities";
+import { useTasks } from "./useTasks";
 
 const mockSchedulePush = vi.fn();
 
@@ -312,7 +312,7 @@ describe("useTasks", () => {
       });
 
       expect(duplicatedTask).toBeDefined();
-      expect(duplicatedTask!.name).toBe("Original task");
+      expect(duplicatedTask?.name).toBe("Original task");
     });
 
     it("should create a duplicate task with different id", async () => {
@@ -324,7 +324,7 @@ describe("useTasks", () => {
       });
 
       expect(duplicatedTask).toBeDefined();
-      expect(duplicatedTask!.id).not.toBe(task.id);
+      expect(duplicatedTask?.id).not.toBe(task.id);
     });
 
     it("should add duplicated task to the list", async () => {
@@ -359,8 +359,8 @@ describe("useTasks", () => {
       });
 
       expect(duplicatedTask).toBeDefined();
-      expect(duplicatedTask!.name).toBe("Test task");
-      expect(duplicatedTask!.box).toBe("today");
+      expect(duplicatedTask?.name).toBe("Test task");
+      expect(duplicatedTask?.box).toBe("today");
     });
   });
 });

@@ -1,14 +1,14 @@
-import { GripVertical } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
-import { cn } from "@/shared/lib/cn";
+import { GripVertical } from "lucide-react";
+import type * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { cn } from "@/shared/lib/cn";
 import type { ChecklistItem } from "@/types/entities";
 import {
   CHECKLIST_ITEM_VARIANT,
   type ChecklistItemVariant,
 } from "./taskEditShared";
-import * as React from "react";
 
 export interface SortableChecklistItemProps {
   item: ChecklistItem;
@@ -122,7 +122,6 @@ export function SortableChecklistItem({
           onChange={(event) => onEditChange(event.target.value)}
           onBlur={onEditBlur}
           onKeyDown={onEditKeyDown}
-          autoFocus
           className={cn(
             "flex-1 text-sm outline-none resize-none overflow-hidden",
             isCompleted ? "text-gray-400 line-through" : "text-gray-800",

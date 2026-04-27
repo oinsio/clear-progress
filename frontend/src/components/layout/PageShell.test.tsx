@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
+import type React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { PageShell } from "./PageShell";
-import React from "react";
 
 function renderWithRouter(children: React.ReactNode) {
   return render(

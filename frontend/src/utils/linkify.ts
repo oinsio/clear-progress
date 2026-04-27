@@ -57,7 +57,9 @@ export function shortenUrl(url: string): string {
       return hostname;
     }
 
-    const pathSegments = pathname.split("/").filter((segment) => segment !== "");
+    const pathSegments = pathname
+      .split("/")
+      .filter((segment) => segment !== "");
 
     if (pathSegments.length > 2) {
       return `${hostname}/${pathSegments[0]}/…/${pathSegments[pathSegments.length - 1]}`;

@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import type { Task } from "@/types/entities";
-import type { Box } from "@/types/common";
-import { TaskService } from "@/services/TaskService";
+import { useCallback, useEffect, useState } from "react";
 import { defaultTaskService } from "@/services/defaultServices";
+import type { TaskService } from "@/services/TaskService";
+import type { Box } from "@/types/common";
+import type { Task } from "@/types/entities";
 
 export interface UseTaskReturn {
   task: Task | undefined;

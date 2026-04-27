@@ -1,14 +1,15 @@
+import type React from "react";
 import { useTranslation } from "react-i18next";
-import { GoalStatusBadge } from "./GoalStatusBadge";
-import type { Goal } from "@/types/entities";
-import type { GoalStatus } from "@/types/common";
-import { formatShortDateTime } from "@/shared/lib/utils";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
+import { useCoverUrl } from "@/hooks/useCoverUrl";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { cn } from "@/shared/lib/cn";
-import React from "react";
+import { formatShortDateTime } from "@/shared/lib/utils";
+import type { GoalStatus } from "@/types/common";
+import type { Goal } from "@/types/entities";
+import { GoalStatusBadge } from "./GoalStatusBadge";
+
 const FINISHED_GOAL_STATUSES = new Set<GoalStatus>(["completed", "cancelled"]);
 
 interface GoalItemProps {

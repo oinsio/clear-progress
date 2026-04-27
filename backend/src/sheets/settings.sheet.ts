@@ -1,6 +1,12 @@
-import { SHEET_NAMES, SHEET_HEADERS, colMap, DEFAULT_SETTINGS, toISOStringValue } from '../helpers/constants';
-import { getSheet } from './client';
-import type { Setting } from '../types';
+import {
+  colMap,
+  DEFAULT_SETTINGS,
+  SHEET_HEADERS,
+  SHEET_NAMES,
+  toISOStringValue,
+} from "../helpers/constants";
+import type { Setting } from "../types";
+import { getSheet } from "./client";
 
 const SET_COLS = colMap(SHEET_NAMES.SETTINGS);
 
@@ -13,17 +19,22 @@ const DEFAULTS: Setting[] = [
 ];
 
 function settingToRow(setting: Setting): unknown[] {
-  return SHEET_HEADERS[SHEET_NAMES.SETTINGS].map(col => (setting as unknown as Record<string, unknown>)[col]);
+  return SHEET_HEADERS[SHEET_NAMES.SETTINGS].map(
+    (col) => (setting as unknown as Record<string, unknown>)[col],
+  );
 }
 
 export function getAllSettings(): Setting[] {
   const sheet = getSheet(SHEET_NAMES.SETTINGS);
   const data = sheet.getDataRange().getValues();
-  return data.slice(1).filter((row: unknown[]) => row[0]).map((row: unknown[]) => ({
-    key: String(row[SET_COLS.key]),
-    value: String(row[SET_COLS.value] ?? ''),
-    updated_at: toISOStringValue(row[SET_COLS.updated_at]),
-  }));
+  return data
+    .slice(1)
+    .filter((row: unknown[]) => row[0])
+    .map((row: unknown[]) => ({
+      key: String(row[SET_COLS.key]),
+      value: String(row[SET_COLS.value] ?? ""),
+      updated_at: toISOStringValue(row[SET_COLS.updated_at]),
+    }));
 }
 
 export function getSettingsChangedSince(since: string): Setting[] {
@@ -34,7 +45,7 @@ export function getSettingsChangedSince(since: string): Setting[] {
   // разное количество десятичных знаков (0 vs 3), что ломает лексикографическое сравнение.
   const sinceMs = new Date(since).getTime();
   return getAllSettings().filter(
-    (setting) => new Date(setting.updated_at).getTime() > sinceMs
+    (setting) => new Date(setting.updated_at).getTime() > sinceMs,
   );
 }
 
@@ -43,7 +54,9 @@ export function upsertSetting(setting: Setting): void {
   const data = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
     if (data[i][SET_COLS.key] === setting.key) {
-      sheet.getRange(i + 1, 1, 1, SHEET_HEADERS[SHEET_NAMES.SETTINGS].length).setValues([settingToRow(setting)]);
+      sheet
+        .getRange(i + 1, 1, 1, SHEET_HEADERS[SHEET_NAMES.SETTINGS].length)
+        .setValues([settingToRow(setting)]);
       return;
     }
   }
@@ -59,10 +72,11 @@ export function upsertSettings(settings: Setting[]): void {
 
   const keyToRowIndex = new Map<string, number>();
   for (let i = 1; i < data.length; i++) {
-    if (data[i][SET_COLS.key]) keyToRowIndex.set(String(data[i][SET_COLS.key]), i);
+    if (data[i][SET_COLS.key])
+      keyToRowIndex.set(String(data[i][SET_COLS.key]), i);
   }
 
-  const updatedRows = data.map(row => [...row] as unknown[]);
+  const updatedRows = data.map((row) => [...row] as unknown[]);
   const newRows: unknown[][] = [];
   let hasUpdates = false;
 
@@ -87,8 +101,8 @@ export function upsertSettings(settings: Setting[]): void {
 }
 
 export function initDefaults(): void {
-  const existingKeys = getAllSettings().map(s => s.key);
-  DEFAULTS.forEach(def => {
+  const existingKeys = getAllSettings().map((s) => s.key);
+  DEFAULTS.forEach((def) => {
     if (!existingKeys.includes(def.key)) upsertSetting(def);
   });
 }

@@ -1,5 +1,5 @@
-import { Temporal, type Clock, systemClock } from "@/lib/temporal";
-import type { ISOTimestamp, ISODate } from "@/types/entities";
+import { type Clock, systemClock, Temporal } from "@/lib/temporal";
+import type { ISODate, ISOTimestamp } from "@/types/entities";
 
 /**
  * Преобразует Clock или Temporal.Instant в ISOTimestamp (branded type).
@@ -126,9 +126,7 @@ export function getDaysInMonth(month: number): number {
  * @param clock - Clock для получения текущей даты (по умолчанию systemClock)
  * @returns Объект с текущим днём месяца и месяцем
  */
-export function getCurrentDateDefaults(
-  clock: Clock = systemClock,
-): {
+export function getCurrentDateDefaults(clock: Clock = systemClock): {
   dayOfMonth: number;
   month: number;
   day: number;

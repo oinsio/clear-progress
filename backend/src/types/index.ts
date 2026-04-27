@@ -1,8 +1,13 @@
 // Shared types for GAS backend
 
-export type Box = 'inbox' | 'today' | 'week' | 'later';
-export type GoalStatus = 'planning' | 'in_progress' | 'paused' | 'completed' | 'cancelled';
-export type PushItemStatus = 'created' | 'accepted' | 'conflict' | 'rejected';
+export type Box = "inbox" | "today" | "week" | "later";
+export type GoalStatus =
+  | "planning"
+  | "in_progress"
+  | "paused"
+  | "completed"
+  | "cancelled";
+export type PushItemStatus = "created" | "accepted" | "conflict" | "rejected";
 
 interface BaseEntity {
   id: string;

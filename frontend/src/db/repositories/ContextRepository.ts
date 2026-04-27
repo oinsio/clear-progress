@@ -38,7 +38,7 @@ export class ContextRepository {
     await db.transaction("rw", db.contexts, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.contexts.get(serverRecord.id);
-        if (!localRecord || !localRecord.needsSync) {
+        if (!localRecord?.needsSync) {
           await db.contexts.put({ ...serverRecord, needsSync: false });
         }
       }

@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GoalService } from "./GoalService";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GoalRepository } from "@/db/repositories/GoalRepository";
+import { Temporal } from "@/lib/temporal";
 import { buildGoal } from "@/test/factories/goalFactory";
 import { createMockGoalRepository } from "@/test/mocks/goalRepositoryMock";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import { Temporal } from "@/lib/temporal";
+import { GoalService } from "./GoalService";
 
 describe("GoalService", () => {
   let mockGoalRepository: GoalRepository;
@@ -288,13 +288,19 @@ describe("GoalService", () => {
     });
 
     it("should update updated_at timestamp", async () => {
-      const goal = buildGoal({ updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")) });
+      const goal = buildGoal({
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
+        ),
+      });
       mockGoalRepository = createMockGoalRepository({
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
       const updated = await goalService.update(goal.id, { name: "X" });
-      expect(updated.updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
+      expect(updated.updated_at).not.toBe(
+        toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+      );
     });
 
     it("should set needsSync to true", async () => {
@@ -421,11 +427,17 @@ describe("GoalService", () => {
     });
 
     it("should update updated_at for each reordered goal", async () => {
-      const goalA = buildGoal({ updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")) });
+      const goalA = buildGoal({
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
+        ),
+      });
       const goalService = new GoalService(mockGoalRepository);
       await goalService.reorderGoals([goalA]);
       const upserted = getUpsertedGoals();
-      expect(upserted[0].updated_at).not.toBe(toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")));
+      expect(upserted[0].updated_at).not.toBe(
+        toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+      );
     });
 
     it("should set needsSync to true for each reordered goal", async () => {
@@ -555,9 +567,15 @@ describe("GoalService", () => {
     });
 
     it("should sort goals with same status by updated_at descending", async () => {
-      const timestamp1 = toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z"));
-      const timestamp2 = toISOTimestamp(Temporal.Instant.from("2025-01-02T10:00:00.000Z"));
-      const timestamp3 = toISOTimestamp(Temporal.Instant.from("2025-01-03T10:00:00.000Z"));
+      const timestamp1 = toISOTimestamp(
+        Temporal.Instant.from("2025-01-01T10:00:00.000Z"),
+      );
+      const timestamp2 = toISOTimestamp(
+        Temporal.Instant.from("2025-01-02T10:00:00.000Z"),
+      );
+      const timestamp3 = toISOTimestamp(
+        Temporal.Instant.from("2025-01-03T10:00:00.000Z"),
+      );
       const goals = [
         buildGoal({
           name: "Goal A",
@@ -589,12 +607,16 @@ describe("GoalService", () => {
       const planningGoal = buildGoal({
         name: "Goal A",
         status: "planning",
-        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-03T10:00:00.000Z")),
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2025-01-03T10:00:00.000Z"),
+        ),
       });
       const inProgressGoal = buildGoal({
         name: "Goal B",
         status: "in_progress",
-        updated_at: toISOTimestamp(Temporal.Instant.from("2025-01-01T10:00:00.000Z")),
+        updated_at: toISOTimestamp(
+          Temporal.Instant.from("2025-01-01T10:00:00.000Z"),
+        ),
       });
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue([planningGoal, inProgressGoal]),

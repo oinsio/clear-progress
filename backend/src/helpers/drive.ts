@@ -1,4 +1,4 @@
-import { DRIVE_QUERY_FIELDS } from './constants';
+import { DRIVE_QUERY_FIELDS } from "./constants";
 
 /**
  * Checks whether a Drive file exists and is not trashed.
@@ -7,7 +7,9 @@ import { DRIVE_QUERY_FIELDS } from './constants';
  */
 export function driveFileExists(fileId: string): boolean {
   try {
-    const file = Drive.Files.get(fileId, { fields: DRIVE_QUERY_FIELDS.FILE_EXISTS });
+    const file = Drive.Files.get(fileId, {
+      fields: DRIVE_QUERY_FIELDS.FILE_EXISTS,
+    });
     return !file.trashed;
   } catch (error) {
     console.error(`[driveFileExists] Failed to check file ${fileId}:`, error);

@@ -1,12 +1,12 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi } from "vitest";
-import { TaskQuickActions } from "./TaskQuickActions";
-import { buildTask } from "@/test/factories/taskFactory";
-import { buildGoal } from "@/test/factories/goalFactory";
-import { buildContext } from "@/test/factories/contextFactory";
-import { buildCategory } from "@/test/factories/categoryFactory";
+import { describe, expect, it, vi } from "vitest";
 import { BOX } from "@/constants";
+import { buildCategory } from "@/test/factories/categoryFactory";
+import { buildContext } from "@/test/factories/contextFactory";
+import { buildGoal } from "@/test/factories/goalFactory";
+import { buildTask } from "@/test/factories/taskFactory";
+import { TaskQuickActions } from "./TaskQuickActions";
 
 function renderQuickActions(overrides = {}) {
   const task = buildTask();

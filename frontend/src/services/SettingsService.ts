@@ -1,6 +1,6 @@
-import type { Box, AccentColor } from "@/types/common";
-import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { BOX, DEFAULT_ACCENT_COLOR, SETTING_KEYS } from "@/constants";
+import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import type { AccentColor, Box } from "@/types/common";
 
 export class SettingsService {
   constructor(private readonly settingsRepository: SettingsRepository) {}

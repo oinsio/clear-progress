@@ -1,23 +1,23 @@
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
-import { ROUTES } from "@/constants";
 import { AppShell } from "@/components/layout/AppShell";
-import { RouteErrorFallback } from "@/components/RouteErrorFallback";
 import { PageShell } from "@/components/layout/PageShell";
-import InboxPage from "@/pages/InboxPage";
-import TodayPage from "@/pages/TodayPage";
-import WeekPage from "@/pages/WeekPage";
-import LaterPage from "@/pages/LaterPage";
-import GoalsPage from "@/pages/GoalsPage";
-import GoalDetailPage from "@/pages/GoalDetailPage";
-import IdeasPage from "@/pages/IdeasPage";
+import { RouteErrorFallback } from "@/components/RouteErrorFallback";
+import { ROUTES } from "@/constants";
 import CategoriesPage from "@/pages/CategoriesPage";
 import CategoryDetailPage from "@/pages/CategoryDetailPage";
-import ContextsPage from "@/pages/ContextsPage";
 import ContextDetailPage from "@/pages/ContextDetailPage";
+import ContextsPage from "@/pages/ContextsPage";
+import DeletedPage from "@/pages/DeletedPage";
+import GoalDetailPage from "@/pages/GoalDetailPage";
+import GoalsPage from "@/pages/GoalsPage";
+import IdeasPage from "@/pages/IdeasPage";
+import InboxPage from "@/pages/InboxPage";
+import LaterPage from "@/pages/LaterPage";
 import SearchPage from "@/pages/SearchPage";
 import SettingsPage from "@/pages/SettingsPage";
 import SetupPage from "@/pages/SetupPage";
-import DeletedPage from "@/pages/DeletedPage";
+import TodayPage from "@/pages/TodayPage";
+import WeekPage from "@/pages/WeekPage";
 
 /** All routes share AppShell (provides SideNav on tablet/desktop) */
 function AppLayout() {

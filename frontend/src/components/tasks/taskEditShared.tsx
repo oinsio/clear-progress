@@ -1,8 +1,8 @@
-import * as React from "react";
 import { Inbox } from "lucide-react";
-import type { Box } from "@/types/common";
+import type * as React from "react";
 import { BOX } from "@/constants";
-import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon } from "./BoxIcons";
+import type { Box } from "@/types/common";
+import { LaterBoxIcon, TodayBoxIcon, WeekBoxIcon } from "./BoxIcons";
 
 export const ACTIVE_TAB = {
   DETAILS: "details",

@@ -1,7 +1,14 @@
-import { expect, vi } from 'vitest';
-import { parseResponse } from './response';
-import { ERROR_CODES } from '../../src/helpers/response';
-import type { Task, Goal, Context, Category, ChecklistItem, Setting } from '../../src/types';
+import { expect, vi } from "vitest";
+import { ERROR_CODES } from "../../src/helpers/response";
+import type {
+  Category,
+  ChecklistItem,
+  Context,
+  Goal,
+  Setting,
+  Task,
+} from "../../src/types";
+import { parseResponse } from "./response";
 
 export function expectErrorResponse(errorCode: string) {
   const response = parseResponse();
@@ -38,12 +45,12 @@ export function getResponseData() {
 export function expectPullResponseStructure() {
   const response = expectSuccessResponse();
   const data = getResponseData();
-  expect(data).toHaveProperty('tasks');
-  expect(data).toHaveProperty('goals');
-  expect(data).toHaveProperty('contexts');
-  expect(data).toHaveProperty('categories');
-  expect(data).toHaveProperty('checklist_items');
-  expect(data).toHaveProperty('ideas');
+  expect(data).toHaveProperty("tasks");
+  expect(data).toHaveProperty("goals");
+  expect(data).toHaveProperty("contexts");
+  expect(data).toHaveProperty("categories");
+  expect(data).toHaveProperty("checklist_items");
+  expect(data).toHaveProperty("ideas");
   return response;
 }
 
@@ -56,24 +63,24 @@ export function expectValidServerTime() {
 // Factory functions for push tests
 export function makeTask(overrides: Partial<Task> = {}): Task {
   return {
-    id: '11111111-1111-4111-a111-111111111111',
-    name: 'Test task',
-    description: '',
-    box: 'inbox',
-    goal_id: '',
-    context_id: '',
-    category_id: '',
+    id: "11111111-1111-4111-a111-111111111111",
+    name: "Test task",
+    description: "",
+    box: "inbox",
+    goal_id: "",
+    context_id: "",
+    category_id: "",
     is_completed: false,
-    completed_at: '',
-    repeat_rule: '',
+    completed_at: "",
+    repeat_rule: "",
     is_hidden: false,
-    next_date: '',
-    appear_date: '',
-    original_task_id: '',
+    next_date: "",
+    appear_date: "",
+    original_task_id: "",
     sort_order: 0,
     is_deleted: false,
-    created_at: '2025-01-01T00:00:00.000Z',
-    updated_at: '2025-01-01T00:00:00.000Z',
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2025-01-01T00:00:00.000Z",
     version: 1,
     revision: 0,
     ...overrides,
@@ -82,15 +89,15 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
 
 export function makeGoal(overrides: Partial<Goal> = {}): Goal {
   return {
-    id: '22222222-2222-4222-a222-222222222222',
-    name: 'Test goal',
-    description: '',
-    cover_file_id: '',
-    status: 'planning',
+    id: "22222222-2222-4222-a222-222222222222",
+    name: "Test goal",
+    description: "",
+    cover_file_id: "",
+    status: "planning",
     sort_order: 0,
     is_deleted: false,
-    created_at: '2025-01-01T00:00:00.000Z',
-    updated_at: '2025-01-01T00:00:00.000Z',
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2025-01-01T00:00:00.000Z",
     version: 1,
     revision: 0,
     ...overrides,
@@ -99,12 +106,12 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
 
 export function makeContext(overrides: Partial<Context> = {}): Context {
   return {
-    id: '33333333-3333-4333-a333-333333333333',
-    name: '@Home',
+    id: "33333333-3333-4333-a333-333333333333",
+    name: "@Home",
     sort_order: 0,
     is_deleted: false,
-    created_at: '2025-01-01T00:00:00.000Z',
-    updated_at: '2025-01-01T00:00:00.000Z',
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2025-01-01T00:00:00.000Z",
     version: 1,
     revision: 0,
     ...overrides,
@@ -113,28 +120,30 @@ export function makeContext(overrides: Partial<Context> = {}): Context {
 
 export function makeCategory(overrides: Partial<Category> = {}): Category {
   return {
-    id: '44444444-4444-4444-a444-444444444444',
-    name: 'Work',
+    id: "44444444-4444-4444-a444-444444444444",
+    name: "Work",
     sort_order: 0,
     is_deleted: false,
-    created_at: '2025-01-01T00:00:00.000Z',
-    updated_at: '2025-01-01T00:00:00.000Z',
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2025-01-01T00:00:00.000Z",
     version: 1,
     revision: 0,
     ...overrides,
   };
 }
 
-export function makeChecklistItem(overrides: Partial<ChecklistItem> = {}): ChecklistItem {
+export function makeChecklistItem(
+  overrides: Partial<ChecklistItem> = {},
+): ChecklistItem {
   return {
-    id: '55555555-5555-4555-a555-555555555555',
-    task_id: '11111111-1111-4111-a111-111111111111',
-    name: 'Subtask',
+    id: "55555555-5555-4555-a555-555555555555",
+    task_id: "11111111-1111-4111-a111-111111111111",
+    name: "Subtask",
     is_completed: false,
     sort_order: 0,
     is_deleted: false,
-    created_at: '2025-01-01T00:00:00.000Z',
-    updated_at: '2025-01-01T00:00:00.000Z',
+    created_at: "2025-01-01T00:00:00.000Z",
+    updated_at: "2025-01-01T00:00:00.000Z",
     version: 1,
     revision: 0,
     ...overrides,

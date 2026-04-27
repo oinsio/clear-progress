@@ -1,4 +1,5 @@
-import React, {
+import type React from "react";
+import {
   createContext,
   useCallback,
   useContext,
@@ -6,31 +7,31 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { SyncStatus, FullSyncStep } from "@/types/common";
-import {
-  SYNC_INTERVAL_MS,
-  PING_INTERVAL_MS,
-  SYNC_DEBOUNCE_MS,
-  STORAGE_KEYS,
-  MAX_SILENT_REFRESH_ATTEMPTS,
-  MAX_PING_ATTEMPTS,
-  AUTH_REQUIRED_EVENT,
-  API_AUTH_ERROR_NAME,
-} from "@/constants";
-import { toISOTimestamp } from "@/utils/dateHelpers";
-import { SyncService } from "@/services/SyncService";
-import { ApiClient } from "@/services/ApiClient";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { GoalRepository } from "@/db/repositories/GoalRepository";
-import { ContextRepository } from "@/db/repositories/ContextRepository";
+import {
+  API_AUTH_ERROR_NAME,
+  AUTH_REQUIRED_EVENT,
+  MAX_PING_ATTEMPTS,
+  MAX_SILENT_REFRESH_ATTEMPTS,
+  PING_INTERVAL_MS,
+  STORAGE_KEYS,
+  SYNC_DEBOUNCE_MS,
+  SYNC_INTERVAL_MS,
+} from "@/constants";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { ContextRepository } from "@/db/repositories/ContextRepository";
+import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
-import { defaultCoverSyncService } from "@/services/defaultServices";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
+import { ApiClient } from "@/services/ApiClient";
+import { defaultCoverSyncService } from "@/services/defaultServices";
+import { SyncService } from "@/services/SyncService";
+import type { FullSyncStep, SyncStatus } from "@/types/common";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 interface SyncContextValue {
   syncStatus: SyncStatus;

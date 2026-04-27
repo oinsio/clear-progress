@@ -1,15 +1,15 @@
 import type { TFunction } from "i18next";
-import type { RepeatRule } from "@/types/common";
-import { Temporal, type Clock, systemClock } from "@/lib/temporal";
-import { sanitizeDateOnly } from "@/utils/dateHelpers";
 import {
-  MIN_ISO_WEEKDAY,
-  MAX_ISO_WEEKDAY,
-  MIN_DAY_OF_MONTH,
   MAX_DAY_OF_MONTH,
-  MIN_MONTH,
+  MAX_ISO_WEEKDAY,
   MAX_MONTH,
+  MIN_DAY_OF_MONTH,
+  MIN_ISO_WEEKDAY,
+  MIN_MONTH,
 } from "@/constants";
+import { type Clock, systemClock, Temporal } from "@/lib/temporal";
+import type { RepeatRule } from "@/types/common";
+import { sanitizeDateOnly } from "@/utils/dateHelpers";
 
 function isValidInteger(value: number): boolean {
   return Number.isInteger(value);
@@ -23,7 +23,10 @@ function validateRepeatRule(rule: RepeatRule): boolean {
   if (rule.weekdays !== undefined) {
     if (rule.weekdays.length === 0) return false;
     for (const day of rule.weekdays) {
-      if (!isValidInteger(day) || !isInRange(day, MIN_ISO_WEEKDAY, MAX_ISO_WEEKDAY)) {
+      if (
+        !isValidInteger(day) ||
+        !isInRange(day, MIN_ISO_WEEKDAY, MAX_ISO_WEEKDAY)
+      ) {
         return false;
       }
     }
@@ -39,7 +42,9 @@ function validateRepeatRule(rule: RepeatRule): boolean {
     if (!isInRange(rule.month_and_day.month, MIN_MONTH, MAX_MONTH)) {
       return false;
     }
-    if (!isInRange(rule.month_and_day.day, MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH)) {
+    if (
+      !isInRange(rule.month_and_day.day, MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH)
+    ) {
       return false;
     }
   }
@@ -253,7 +258,9 @@ function calculateNextDateAfterCompletion(
     console.error("Invalid timezone from system, falling back to UTC:", error);
     timeZone = "UTC";
   }
-  const completedDate = completedInstant.toZonedDateTimeISO(timeZone).toPlainDate();
+  const completedDate = completedInstant
+    .toZonedDateTimeISO(timeZone)
+    .toPlainDate();
   return completedDate.add({ days: delayDays }).toString();
 }
 
@@ -266,7 +273,11 @@ export function calculateNextDate(
   if (rule.type === "after_completion") {
     if (!rule.delay_days)
       throw new Error("delay_days required for after_completion");
-    return calculateNextDateAfterCompletion(rule.delay_days, completedAt, clock);
+    return calculateNextDateAfterCompletion(
+      rule.delay_days,
+      completedAt,
+      clock,
+    );
   }
 
   // type === 'fixed'
@@ -278,7 +289,10 @@ export function calculateNextDate(
     try {
       timeZone = clock.timeZoneId();
     } catch (error) {
-      console.error("Invalid timezone from system, falling back to UTC:", error);
+      console.error(
+        "Invalid timezone from system, falling back to UTC:",
+        error,
+      );
       timeZone = "UTC";
     }
     previousNextDate = completedInstant
@@ -298,7 +312,12 @@ export function calculateNextDate(
       if (!rule.weekdays || rule.weekdays.length === 0) {
         throw new Error("weekdays required for weekly");
       }
-      return calculateNextDateWeekly(interval, rule.weekdays, previousNextDate, clock);
+      return calculateNextDateWeekly(
+        interval,
+        rule.weekdays,
+        previousNextDate,
+        clock,
+      );
     case "monthly":
       if (!rule.day_of_month)
         throw new Error("day_of_month required for monthly");
@@ -352,7 +371,10 @@ export function formatRepeatRuleLabel(rule: RepeatRule, t: TFunction): string {
       return t("repeat.weekly");
     }
     case "monthly":
-      return t("repeat.everyNMonths", { count: interval, day: rule.day_of_month });
+      return t("repeat.everyNMonths", {
+        count: interval,
+        day: rule.day_of_month,
+      });
     case "yearly": {
       if (!rule.month_and_day) return t("repeat.none");
 

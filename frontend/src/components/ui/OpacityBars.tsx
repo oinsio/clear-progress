@@ -1,5 +1,5 @@
-import { cn } from "@/shared/lib/cn";
 import { FOCUS_OPACITY_LEVELS } from "@/constants";
+import { cn } from "@/shared/lib/cn";
 
 interface OpacityBarsProps {
   value: number;

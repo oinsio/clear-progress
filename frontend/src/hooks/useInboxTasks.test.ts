@@ -1,10 +1,10 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useInboxTasks } from "./useInboxTasks";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BOX } from "@/constants";
 import type { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
-import { BOX } from "@/constants";
 import { createMockTaskService } from "@/test/mocks/taskServiceMock";
+import { useInboxTasks } from "./useInboxTasks";
 
 const syncState = { version: 0 };
 
@@ -74,23 +74,23 @@ describe("useInboxTasks", () => {
         hook.deleteTask(taskId),
       serviceMethod: "softDelete" as const,
     },
-  ])(
-    "should call $serviceMethod and refresh tasks when $label is called",
-    async ({ hookAction, serviceMethod }) => {
-      const task = buildTask({ box: "inbox" });
-      const mockGetByBox = vi.fn().mockResolvedValue([task]);
-      mockTaskService = createMockTaskService({ getByBox: mockGetByBox });
-      const { result } = renderHook(() => useInboxTasks(mockTaskService));
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+  ])("should call $serviceMethod and refresh tasks when $label is called", async ({
+    hookAction,
+    serviceMethod,
+  }) => {
+    const task = buildTask({ box: "inbox" });
+    const mockGetByBox = vi.fn().mockResolvedValue([task]);
+    mockTaskService = createMockTaskService({ getByBox: mockGetByBox });
+    const { result } = renderHook(() => useInboxTasks(mockTaskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      await act(async () => {
-        await hookAction(result.current, task.id);
-      });
+    await act(async () => {
+      await hookAction(result.current, task.id);
+    });
 
-      expect(mockTaskService[serviceMethod]).toHaveBeenCalledWith(task.id);
-      expect(mockGetByBox).toHaveBeenCalledTimes(2);
-    },
-  );
+    expect(mockTaskService[serviceMethod]).toHaveBeenCalledWith(task.id);
+    expect(mockGetByBox).toHaveBeenCalledTimes(2);
+  });
 
   it("should reload when syncVersion changes", async () => {
     const mockGetByBox = vi.fn().mockResolvedValue([]);
@@ -148,33 +148,33 @@ describe("useInboxTasks", () => {
       hookAction: (hook: ReturnType<typeof useInboxTasks>, taskId: string) =>
         hook.deleteTask(taskId),
     },
-  ])(
-    "should use updated service when $label is called after service changes",
-    async ({ serviceMethod, hookAction }) => {
-      const task = buildTask({ box: "inbox" });
-      const firstService = createMockTaskService({
-        getByBox: vi.fn().mockResolvedValue([task]),
-      });
-      const secondService = createMockTaskService({
-        getByBox: vi.fn().mockResolvedValue([task]),
-        [serviceMethod]: vi.fn().mockResolvedValue(undefined),
-      });
+  ])("should use updated service when $label is called after service changes", async ({
+    serviceMethod,
+    hookAction,
+  }) => {
+    const task = buildTask({ box: "inbox" });
+    const firstService = createMockTaskService({
+      getByBox: vi.fn().mockResolvedValue([task]),
+    });
+    const secondService = createMockTaskService({
+      getByBox: vi.fn().mockResolvedValue([task]),
+      [serviceMethod]: vi.fn().mockResolvedValue(undefined),
+    });
 
-      const { result, rerender } = renderHook(
-        ({ service }: { service: TaskService }) => useInboxTasks(service),
-        { initialProps: { service: firstService } },
-      );
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const { result, rerender } = renderHook(
+      ({ service }: { service: TaskService }) => useInboxTasks(service),
+      { initialProps: { service: firstService } },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-      rerender({ service: secondService });
-      await waitFor(() => expect(secondService.getByBox).toHaveBeenCalled());
+    rerender({ service: secondService });
+    await waitFor(() => expect(secondService.getByBox).toHaveBeenCalled());
 
-      await act(async () => {
-        await hookAction(result.current, task.id);
-      });
+    await act(async () => {
+      await hookAction(result.current, task.id);
+    });
 
-      expect(secondService[serviceMethod]).toHaveBeenCalledWith(task.id);
-      expect(firstService[serviceMethod]).not.toHaveBeenCalled();
-    },
-  );
+    expect(secondService[serviceMethod]).toHaveBeenCalledWith(task.id);
+    expect(firstService[serviceMethod]).not.toHaveBeenCalled();
+  });
 });

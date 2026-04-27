@@ -1,10 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { extractLinks, shortenUrl } from "./linkify";
 
 describe("extractLinks", () => {
   it("should return single text segment when no URLs present", () => {
     const result = extractLinks("Just plain text without links");
-    expect(result).toEqual([{ type: "text", value: "Just plain text without links" }]);
+    expect(result).toEqual([
+      { type: "text", value: "Just plain text without links" },
+    ]);
   });
 
   it("should extract single URL from text", () => {
@@ -17,7 +19,9 @@ describe("extractLinks", () => {
   });
 
   it("should extract multiple URLs from text", () => {
-    const result = extractLinks("Visit https://example.com and https://test.org");
+    const result = extractLinks(
+      "Visit https://example.com and https://test.org",
+    );
     expect(result).toEqual([
       { type: "text", value: "Visit " },
       { type: "url", value: "https://example.com" },
@@ -27,7 +31,9 @@ describe("extractLinks", () => {
   });
 
   it("should handle URL with query parameters", () => {
-    const result = extractLinks("Translate https://translate.google.com/?hl=ru&sl=en here");
+    const result = extractLinks(
+      "Translate https://translate.google.com/?hl=ru&sl=en here",
+    );
     expect(result).toEqual([
       { type: "text", value: "Translate " },
       { type: "url", value: "https://translate.google.com/?hl=ru&sl=en" },
@@ -36,7 +42,9 @@ describe("extractLinks", () => {
   });
 
   it("should handle URL with coordinates in path", () => {
-    const result = extractLinks("Map https://maps.google.com/@37.7749,-122.4194,15z location");
+    const result = extractLinks(
+      "Map https://maps.google.com/@37.7749,-122.4194,15z location",
+    );
     expect(result).toEqual([
       { type: "text", value: "Map " },
       { type: "url", value: "https://maps.google.com/@37.7749,-122.4194,15z" },
@@ -45,7 +53,9 @@ describe("extractLinks", () => {
   });
 
   it("should strip trailing punctuation from URL", () => {
-    const result = extractLinks("See https://example.com. Also https://test.org, and https://foo.bar)");
+    const result = extractLinks(
+      "See https://example.com. Also https://test.org, and https://foo.bar)",
+    );
     expect(result).toEqual([
       { type: "text", value: "See " },
       { type: "url", value: "https://example.com" },
@@ -148,7 +158,9 @@ describe("shortenUrl", () => {
   });
 
   it("should handle complex path with query and hash", () => {
-    const result = shortenUrl("https://www.example.com/a/b/c/d?foo=bar#section");
+    const result = shortenUrl(
+      "https://www.example.com/a/b/c/d?foo=bar#section",
+    );
     expect(result).toBe("example.com/a/…/d");
   });
 });

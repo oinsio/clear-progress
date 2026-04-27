@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parseGasInput } from "./gasUrl";
 
 const FULL_URL = "https://script.google.com/macros/s/AKfycbxABC123/exec";

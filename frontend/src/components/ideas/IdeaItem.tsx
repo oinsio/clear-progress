@@ -1,10 +1,10 @@
-import type { Idea } from "@/types/entities";
+import { Pencil } from "lucide-react";
+import type React from "react";
+import { useTranslation } from "react-i18next";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { cn } from "@/shared/lib/cn";
-import { Pencil } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import React from "react";
+import type { Idea } from "@/types/entities";
 
 interface IdeaItemProps {
   idea: Idea;

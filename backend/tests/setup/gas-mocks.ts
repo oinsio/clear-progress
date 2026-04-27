@@ -1,17 +1,17 @@
 /// <reference lib="esnext" />
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 // --- ContentService mock ---
 
 const mockTextOutput = {
   setMimeType: vi.fn().mockReturnThis(),
-  getContent: vi.fn().mockReturnValue(''),
-  getMimeType: vi.fn().mockReturnValue('application/json'),
+  getContent: vi.fn().mockReturnValue(""),
+  getMimeType: vi.fn().mockReturnValue("application/json"),
 };
 
-vi.stubGlobal('ContentService', {
+vi.stubGlobal("ContentService", {
   createTextOutput: vi.fn().mockReturnValue(mockTextOutput),
-  MimeType: { JSON: 'application/json' },
+  MimeType: { JSON: "application/json" },
 });
 
 // --- PropertiesService mock ---
@@ -20,24 +20,32 @@ const scriptPropertiesStore: Record<string, string> = {};
 
 const mockScriptProperties = {
   getProperty: vi.fn((key: string) => scriptPropertiesStore[key] ?? null),
-  setProperty: vi.fn((key: string, value: string) => { scriptPropertiesStore[key] = value; }),
-  setProperties: vi.fn((props: Record<string, string>) => { Object.assign(scriptPropertiesStore, props); }),
-  deleteAllProperties: vi.fn(() => { Object.keys(scriptPropertiesStore).forEach(key => delete scriptPropertiesStore[key]); }),
+  setProperty: vi.fn((key: string, value: string) => {
+    scriptPropertiesStore[key] = value;
+  }),
+  setProperties: vi.fn((props: Record<string, string>) => {
+    Object.assign(scriptPropertiesStore, props);
+  }),
+  deleteAllProperties: vi.fn(() => {
+    Object.keys(scriptPropertiesStore).forEach(
+      (key) => delete scriptPropertiesStore[key],
+    );
+  }),
 };
 
-vi.stubGlobal('PropertiesService', {
+vi.stubGlobal("PropertiesService", {
   getScriptProperties: vi.fn().mockReturnValue(mockScriptProperties),
 });
 
 // --- SpreadsheetApp mock ---
 
-vi.stubGlobal('SpreadsheetApp', {
+vi.stubGlobal("SpreadsheetApp", {
   openById: vi.fn(),
 });
 
 // --- Drive mock ---
 
-vi.stubGlobal('Drive', {
+vi.stubGlobal("Drive", {
   Files: {
     get: vi.fn(),
     create: vi.fn(),
@@ -53,31 +61,31 @@ vi.stubGlobal('Drive', {
 
 const mockBlob = {
   getBytes: vi.fn().mockReturnValue([]),
-  getContentType: vi.fn().mockReturnValue('image/jpeg'),
-  getDataAsString: vi.fn().mockReturnValue(''),
+  getContentType: vi.fn().mockReturnValue("image/jpeg"),
+  getDataAsString: vi.fn().mockReturnValue(""),
 };
 
 const mockDriveFile = {
   getBlob: vi.fn().mockReturnValue(mockBlob),
 };
 
-vi.stubGlobal('DriveApp', {
+vi.stubGlobal("DriveApp", {
   getFileById: vi.fn().mockReturnValue(mockDriveFile),
 });
 
 // --- Utilities mock ---
 
-vi.stubGlobal('Utilities', {
+vi.stubGlobal("Utilities", {
   base64Decode: vi.fn().mockReturnValue([]),
-  base64Encode: vi.fn().mockReturnValue('bW9ja2Jhc2U2NA=='),
+  base64Encode: vi.fn().mockReturnValue("bW9ja2Jhc2U2NA=="),
   computeDigest: vi.fn().mockReturnValue(Array(32).fill(0)),
-  DigestAlgorithm: { SHA_256: 'SHA_256' },
+  DigestAlgorithm: { SHA_256: "SHA_256" },
   newBlob: vi.fn().mockReturnValue({}),
 });
 
 // --- UrlFetchApp mock ---
 
-vi.stubGlobal('UrlFetchApp', {
+vi.stubGlobal("UrlFetchApp", {
   fetch: vi.fn(),
 });
 
@@ -88,7 +96,7 @@ const mockLock = {
   releaseLock: vi.fn(),
 };
 
-vi.stubGlobal('LockService', {
+vi.stubGlobal("LockService", {
   getScriptLock: vi.fn().mockReturnValue(mockLock),
 });
 
@@ -98,7 +106,9 @@ export function getMockLock() {
 
 // Helpers to reset mocks and state between tests
 export function resetScriptProperties(): void {
-  Object.keys(scriptPropertiesStore).forEach(key => delete scriptPropertiesStore[key]);
+  Object.keys(scriptPropertiesStore).forEach(
+    (key) => delete scriptPropertiesStore[key],
+  );
 }
 
 export function setScriptProperty(key: string, value: string): void {

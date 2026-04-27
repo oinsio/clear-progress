@@ -1,50 +1,65 @@
-import { ACTIONS, ERROR_MESSAGES, AUTH_FAILURE_REASONS } from './helpers/constants';
-import { jsonError, jsonUnauthorized, ERROR_CODES } from './helpers/response';
-import { verifyToken } from './helpers/auth';
-import { ping } from './actions/ping';
-import { init } from './actions/init';
-import { pull } from './actions/pull';
-import { push } from './actions/push';
-import { purge } from './actions/purge';
-import { uploadCover } from './actions/upload-cover';
-import { uploadCovers } from './actions/upload-covers';
-import { deleteCover } from './actions/delete-cover';
-import { getCover } from './actions/get-cover';
+import { deleteCover } from "./actions/delete-cover";
+import { getCover } from "./actions/get-cover";
+import { init } from "./actions/init";
+import { ping } from "./actions/ping";
+import { pull } from "./actions/pull";
+import { purge } from "./actions/purge";
+import { push } from "./actions/push";
+import { uploadCover } from "./actions/upload-cover";
+import { uploadCovers } from "./actions/upload-covers";
+import { verifyToken } from "./helpers/auth";
+import {
+  ACTIONS,
+  AUTH_FAILURE_REASONS,
+  ERROR_MESSAGES,
+} from "./helpers/constants";
+import { ERROR_CODES, jsonError, jsonUnauthorized } from "./helpers/response";
 
 const AUTH_FAILURE_MESSAGES: Record<string, string> = {
   [AUTH_FAILURE_REASONS.NETWORK_ERROR]: ERROR_MESSAGES.AUTH_NETWORK_ERROR,
-  [AUTH_FAILURE_REASONS.GAS_PERMISSION_ERROR]: ERROR_MESSAGES.AUTH_GAS_PERMISSION_ERROR,
+  [AUTH_FAILURE_REASONS.GAS_PERMISSION_ERROR]:
+    ERROR_MESSAGES.AUTH_GAS_PERMISSION_ERROR,
   [AUTH_FAILURE_REASONS.INVALID_RESPONSE]: ERROR_MESSAGES.AUTH_INVALID_RESPONSE,
-  [AUTH_FAILURE_REASONS.EMAIL_NOT_VERIFIED]: ERROR_MESSAGES.AUTH_EMAIL_NOT_VERIFIED,
+  [AUTH_FAILURE_REASONS.EMAIL_NOT_VERIFIED]:
+    ERROR_MESSAGES.AUTH_EMAIL_NOT_VERIFIED,
   [AUTH_FAILURE_REASONS.WRONG_ACCOUNT]: ERROR_MESSAGES.AUTH_WRONG_ACCOUNT,
 };
 
 // GAS entry points — must be global functions
-function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextOutput {
+function doGet(
+  e: GoogleAppsScript.Events.DoGet,
+): GoogleAppsScript.Content.TextOutput {
   const action = e.parameter?.action;
   if (action === ACTIONS.PING) return ping();
-  return jsonError(ERROR_CODES.INVALID_ACTION, `${ERROR_MESSAGES.UNKNOWN_ACTION}: ${action}`);
+  return jsonError(
+    ERROR_CODES.INVALID_ACTION,
+    `${ERROR_MESSAGES.UNKNOWN_ACTION}: ${action}`,
+  );
 }
 
-function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput {
+function doPost(
+  e: GoogleAppsScript.Events.DoPost,
+): GoogleAppsScript.Content.TextOutput {
   let body: { action?: string; access_token?: unknown; [key: string]: unknown };
 
   try {
-    body = JSON.parse(e.postData?.contents ?? '{}');
+    body = JSON.parse(e.postData?.contents ?? "{}");
   } catch {
     return jsonError(ERROR_CODES.INVALID_PAYLOAD, ERROR_MESSAGES.INVALID_JSON);
   }
 
   const { action, access_token, ...payload } = body;
 
-  if (!access_token || typeof access_token !== 'string') {
+  if (!access_token || typeof access_token !== "string") {
     return jsonUnauthorized(ERROR_MESSAGES.TOKEN_REQUIRED);
   }
 
   const authResult = verifyToken(access_token);
   if (!authResult.ok) {
     const baseMessage = AUTH_FAILURE_MESSAGES[authResult.reason];
-    const fullMessage = authResult.details ? `${baseMessage}: ${authResult.details}` : baseMessage;
+    const fullMessage = authResult.details
+      ? `${baseMessage}: ${authResult.details}`
+      : baseMessage;
     return jsonUnauthorized(fullMessage);
   }
 
@@ -66,10 +81,13 @@ function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.Tex
     case ACTIONS.PURGE:
       return purge(payload as Parameters<typeof purge>[0]);
     default:
-      return jsonError(ERROR_CODES.INVALID_ACTION, `${ERROR_MESSAGES.UNKNOWN_ACTION}: ${action}`);
+      return jsonError(
+        ERROR_CODES.INVALID_ACTION,
+        `${ERROR_MESSAGES.UNKNOWN_ACTION}: ${action}`,
+      );
   }
 }
 
 // Expose GAS entry points to global scope (required when bundled with esbuild IIFE format)
-(globalThis as Record<string, unknown>)['doGet'] = doGet;
-(globalThis as Record<string, unknown>)['doPost'] = doPost;
+(globalThis as Record<string, unknown>).doGet = doGet;
+(globalThis as Record<string, unknown>).doPost = doPost;

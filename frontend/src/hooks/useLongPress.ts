@@ -1,7 +1,8 @@
-import React, { useRef, useCallback } from "react";
+import type React from "react";
+import { useCallback, useRef } from "react";
 import {
-  LONG_PRESS_THRESHOLD_MS,
   LONG_PRESS_MOVE_THRESHOLD_PX,
+  LONG_PRESS_THRESHOLD_MS,
 } from "@/constants";
 
 interface UseLongPressOptions {

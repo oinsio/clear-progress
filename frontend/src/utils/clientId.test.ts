@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parseClientId } from "./clientId";
 
 const FULL_CLIENT_ID =

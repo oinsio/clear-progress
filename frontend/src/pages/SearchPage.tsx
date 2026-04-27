@@ -1,31 +1,32 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TaskList } from "@/components/tasks/TaskList";
-import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
+import { useNavigate } from "react-router-dom";
 import { GoalItem } from "@/components/goals/GoalItem";
-import { IdeaItem } from "@/components/ideas/IdeaItem";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
+import { IdeaItem } from "@/components/ideas/IdeaItem";
 import {
   RightFilterPanel,
   type RightPanelMode,
 } from "@/components/tasks/RightFilterPanel";
-import { useSearch } from "@/hooks/useSearch";
-import { useGoals } from "@/hooks/useGoals";
-import { useContexts } from "@/hooks/useContexts";
-import { useCategories } from "@/hooks/useCategories";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useFocusMode } from "@/hooks/useFocusMode";
-import {
-  defaultTaskService,
-  defaultIdeaService,
-} from "@/services/defaultServices";
-import type { Task, Idea } from "@/types/entities";
-import type { Box } from "@/types/common";
+import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
+import { TaskList } from "@/components/tasks/TaskList";
 import { ROUTES } from "@/constants";
+import { useCategories } from "@/hooks/useCategories";
+import { useContexts } from "@/hooks/useContexts";
+import { useFocusMode } from "@/hooks/useFocusMode";
+import { useGoals } from "@/hooks/useGoals";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { useSearch } from "@/hooks/useSearch";
+import {
+  defaultIdeaService,
+  defaultTaskService,
+} from "@/services/defaultServices";
 import { cn } from "@/shared/lib/cn";
+import type { Box } from "@/types/common";
+import type { Idea, Task } from "@/types/entities";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -194,7 +195,6 @@ export default function SearchPage() {
             value={searchQuery}
             onChange={handleSearchChange}
             placeholder={t("search.placeholder")}
-            autoFocus
             aria-label={t("filter.search")}
             className={cn(
               "flex-1 text-sm outline-none placeholder:text-gray-400",

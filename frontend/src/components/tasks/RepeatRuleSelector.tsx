@@ -1,14 +1,17 @@
-import React, { useState, useCallback } from "react";
 import { ArrowLeft, ChevronDown, Inbox } from "lucide-react";
+import type React from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { RepeatRule, Box } from "@/types/common";
+import { MAX_DAY_OF_MONTH, MIN_DAY_OF_MONTH } from "@/constants";
 import { cn } from "@/shared/lib/cn";
-import { getDaysInMonth, getCurrentDateDefaults } from "@/utils/dateHelpers";
-import { MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH } from "@/constants";
-import { TodayBoxIcon, WeekBoxIcon, LaterBoxIcon } from "./BoxIcons";
+import type { Box, RepeatRule } from "@/types/common";
+import { getCurrentDateDefaults, getDaysInMonth } from "@/utils/dateHelpers";
+import { LaterBoxIcon, TodayBoxIcon, WeekBoxIcon } from "./BoxIcons";
 
 const TARGET_BOX_ICONS: Record<Box, React.FC<{ className?: string }>> = {
-  inbox: ({ className }: { className?: string }) => <Inbox className={className} />,
+  inbox: ({ className }: { className?: string }) => (
+    <Inbox className={className} />
+  ),
   today: TodayBoxIcon,
   week: WeekBoxIcon,
   later: LaterBoxIcon,
@@ -126,7 +129,7 @@ export function RepeatRuleSelector({
   const handleIntervalChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const parsed = parseInt(event.target.value, 10);
-      if (!isNaN(parsed)) {
+      if (!Number.isNaN(parsed)) {
         setState((prev) => ({
           ...prev,
           interval: Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, parsed)),
@@ -148,7 +151,7 @@ export function RepeatRuleSelector({
   const handleDayOfMonthChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const parsed = parseInt(event.target.value, 10);
-      if (!isNaN(parsed)) {
+      if (!Number.isNaN(parsed)) {
         setState((prev) => ({
           ...prev,
           dayOfMonth: Math.min(
@@ -167,7 +170,10 @@ export function RepeatRuleSelector({
       let newDay = prev.monthAndDay.day;
 
       // Если текущий день 30 или 31, а новый месяц — февраль, устанавливаем 28
-      if ((prev.monthAndDay.day === 30 || prev.monthAndDay.day === 31) && month === 2) {
+      if (
+        (prev.monthAndDay.day === 30 || prev.monthAndDay.day === 31) &&
+        month === 2
+      ) {
         newDay = 28;
       }
       // Если текущий день 31, а новый месяц имеет только 30 дней, устанавливаем 30
@@ -189,7 +195,7 @@ export function RepeatRuleSelector({
   const handleDayChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const parsed = parseInt(event.target.value, 10);
-      if (!isNaN(parsed)) {
+      if (!Number.isNaN(parsed)) {
         setState((prev) => {
           const maxDaysInMonth = getDaysInMonth(prev.monthAndDay.month);
           return {
@@ -208,7 +214,7 @@ export function RepeatRuleSelector({
   const handleDelayDaysChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const parsed = parseInt(event.target.value, 10);
-      if (!isNaN(parsed)) {
+      if (!Number.isNaN(parsed)) {
         setState((prev) => ({
           ...prev,
           delayDays: Math.min(MAX_DELAY_DAYS, Math.max(MIN_DELAY_DAYS, parsed)),
@@ -218,17 +224,14 @@ export function RepeatRuleSelector({
     [],
   );
 
-  const handleTargetBoxSelect = useCallback(
-    (targetBox: Box) => {
-      setState((prev) => ({ ...prev, targetBox }));
-    },
-    [],
-  );
+  const handleTargetBoxSelect = useCallback((targetBox: Box) => {
+    setState((prev) => ({ ...prev, targetBox }));
+  }, []);
 
   const handleAdvanceDaysChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const parsed = parseInt(event.target.value, 10);
-      if (!isNaN(parsed)) {
+      if (!Number.isNaN(parsed)) {
         setState((prev) => ({
           ...prev,
           advanceDays: Math.min(
@@ -402,10 +405,14 @@ export function RepeatRuleSelector({
                 htmlFor="repeat-interval"
                 className="text-sm text-gray-600"
               >
-                {state.frequency === "daily" && t("repeat.intervalDays", { count: state.interval })}
-                {state.frequency === "weekly" && t("repeat.intervalWeeks", { count: state.interval })}
-                {state.frequency === "monthly" && t("repeat.intervalMonths", { count: state.interval })}
-                {state.frequency === "yearly" && t("repeat.intervalYears", { count: state.interval })}
+                {state.frequency === "daily" &&
+                  t("repeat.intervalDays", { count: state.interval })}
+                {state.frequency === "weekly" &&
+                  t("repeat.intervalWeeks", { count: state.interval })}
+                {state.frequency === "monthly" &&
+                  t("repeat.intervalMonths", { count: state.interval })}
+                {state.frequency === "yearly" &&
+                  t("repeat.intervalYears", { count: state.interval })}
               </label>
               <input
                 id="repeat-interval"
@@ -458,7 +465,10 @@ export function RepeatRuleSelector({
                 htmlFor="repeat-day-of-month"
                 className="text-sm text-gray-600"
               >
-                {t("repeat.dayOfMonthLabel", { count: state.dayOfMonth, ordinal: true })}
+                {t("repeat.dayOfMonthLabel", {
+                  count: state.dayOfMonth,
+                  ordinal: true,
+                })}
               </label>
               <input
                 id="repeat-day-of-month"
@@ -480,7 +490,7 @@ export function RepeatRuleSelector({
                 {t("repeat.monthAndDayWithValue", {
                   count: state.monthAndDay.day,
                   month: t(`repeat.monthGenitive${state.monthAndDay.month}`),
-                  ordinal: true
+                  ordinal: true,
                 })}
               </label>
 
@@ -488,7 +498,10 @@ export function RepeatRuleSelector({
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
                 {/* Поле выбора месяца */}
                 <div className="flex flex-col gap-2 sm:flex-1">
-                  <label htmlFor="repeat-month-trigger" className="text-sm text-gray-600">
+                  <label
+                    htmlFor="repeat-month-trigger"
+                    className="text-sm text-gray-600"
+                  >
                     {t("repeat.month")}
                   </label>
                   {/* Триггер выбора месяца */}
@@ -506,7 +519,7 @@ export function RepeatRuleSelector({
                       size={16}
                       className={cn(
                         "ml-auto transition-transform text-gray-400",
-                        isMonthPanelOpen && "rotate-180"
+                        isMonthPanelOpen && "rotate-180",
                       )}
                     />
                   </button>
@@ -525,7 +538,7 @@ export function RepeatRuleSelector({
                               "text-left text-sm px-3 py-2 rounded-lg transition-colors",
                               state.monthAndDay.month === month
                                 ? "bg-accent/10 text-accent font-medium"
-                                : "text-gray-700 hover:bg-gray-100"
+                                : "text-gray-700 hover:bg-gray-100",
                             )}
                           >
                             {t(`repeat.month${month}`)}
@@ -538,7 +551,10 @@ export function RepeatRuleSelector({
 
                 {/* Поле ввода дня */}
                 <div className="flex flex-col gap-2 sm:flex-1">
-                  <label htmlFor="repeat-day-input" className="text-sm text-gray-600">
+                  <label
+                    htmlFor="repeat-day-input"
+                    className="text-sm text-gray-600"
+                  >
                     {t("repeat.dayOfMonth")}
                   </label>
                   <input

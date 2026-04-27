@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
-import type { ChecklistItem } from "@/types/entities";
-import {
-  ChecklistService,
-  type ChecklistProgress,
-} from "@/services/ChecklistService";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import {
+  type ChecklistProgress,
+  ChecklistService,
+} from "@/services/ChecklistService";
+import type { ChecklistItem } from "@/types/entities";
 
 const defaultChecklistService = new ChecklistService(new ChecklistRepository());
 

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-import { TaskList } from "./TaskList";
+import { describe, expect, it, vi } from "vitest";
 import { buildTask } from "@/test/factories/taskFactory";
+import { TaskList } from "./TaskList";
 import "./__mocks__/taskListMocks";
 
 const DEFAULT_OPACITY = 30;
@@ -13,7 +13,9 @@ const FOCUS_PROPS = {
 
 type TaskListProps = Parameters<typeof TaskList>[0];
 
-function buildTaskListProps(overrides: Partial<TaskListProps> = {}): TaskListProps {
+function buildTaskListProps(
+  overrides: Partial<TaskListProps> = {},
+): TaskListProps {
   return {
     tasks: [],
     goals: [],
@@ -136,7 +138,11 @@ describe("TaskList", () => {
 
       // In uncontrolled mode the internal expandedTaskId is managed internally.
       // We verify that after removing the task, focus dimming is not stuck.
-      rerender(<TaskList {...buildTaskListProps({ tasks: [task2], ...FOCUS_PROPS })} />);
+      rerender(
+        <TaskList
+          {...buildTaskListProps({ tasks: [task2], ...FOCUS_PROPS })}
+        />,
+      );
 
       expectAllUndimmed();
     });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const TOUCH_POINTER_QUERY = "(pointer: coarse)";
 

@@ -1,5 +1,6 @@
+import type * as React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
-import type { AccentColor, ColorScheme } from "@/types/common";
+import { useSync } from "@/app/providers/SyncProvider";
 import {
   ACCENT_COLOR_VALUES,
   ACCENT_COLOR_VALUES_DARK,
@@ -11,9 +12,8 @@ import {
   STORAGE_KEYS,
 } from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
-import { useSync } from "@/app/providers/SyncProvider";
+import type { AccentColor, ColorScheme } from "@/types/common";
 import { hexToRgb } from "@/utils/colorHelpers";
-import * as React from "react";
 
 const DEFAULT_CUSTOM_LIGHT = "#fcd34d";
 const DEFAULT_CUSTOM_DARK = "#14b8a6";
@@ -77,10 +77,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     getInitialColorScheme,
   );
   const [customAccentLight, setCustomAccentLight] = useState<string>(
-    () => localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT) || DEFAULT_CUSTOM_LIGHT
+    () =>
+      localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT) ||
+      DEFAULT_CUSTOM_LIGHT,
   );
   const [customAccentDark, setCustomAccentDark] = useState<string>(
-    () => localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK) || DEFAULT_CUSTOM_DARK
+    () =>
+      localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK) ||
+      DEFAULT_CUSTOM_DARK,
   );
   const { syncVersion } = useSync();
 
@@ -92,7 +96,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const storedColor = await settingsRepository.getValue(SETTING_KEYS.ACCENT_COLOR);
+        const storedColor = await settingsRepository.getValue(
+          SETTING_KEYS.ACCENT_COLOR,
+        );
 
         // Валидация цвета
         if (storedColor && ACCENT_COLORS.includes(storedColor as AccentColor)) {
@@ -102,8 +108,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
           // Если custom, загрузить пользовательские цвета
           if (color === "custom") {
-            lightHex = await settingsRepository.getValue(SETTING_KEYS.CUSTOM_ACCENT_LIGHT);
-            darkHex = await settingsRepository.getValue(SETTING_KEYS.CUSTOM_ACCENT_DARK);
+            lightHex = await settingsRepository.getValue(
+              SETTING_KEYS.CUSTOM_ACCENT_LIGHT,
+            );
+            darkHex = await settingsRepository.getValue(
+              SETTING_KEYS.CUSTOM_ACCENT_DARK,
+            );
 
             if (lightHex) {
               setCustomAccentLight(lightHex);
@@ -120,7 +130,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, color);
         } else if (storedColor) {
           // Невалидный цвет — установить дефолтный и синхронизировать
-          await settingsRepository.set(SETTING_KEYS.ACCENT_COLOR, DEFAULT_ACCENT_COLOR);
+          await settingsRepository.set(
+            SETTING_KEYS.ACCENT_COLOR,
+            DEFAULT_ACCENT_COLOR,
+          );
           applyAccentColor(DEFAULT_ACCENT_COLOR);
           setAccentColorState(DEFAULT_ACCENT_COLOR);
           localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, DEFAULT_ACCENT_COLOR);
@@ -155,7 +168,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     await settingsRepository.set(SETTING_KEYS.ACCENT_COLOR, color);
   };
 
-  const setCustomAccentColors = async (lightHex: string, darkHex: string): Promise<void> => {
+  const setCustomAccentColors = async (
+    lightHex: string,
+    darkHex: string,
+  ): Promise<void> => {
     setCustomAccentLight(lightHex);
     setCustomAccentDark(darkHex);
     localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
@@ -191,14 +207,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function applyAccentColor(color: AccentColor, customLight?: string, customDark?: string): void {
+function applyAccentColor(
+  color: AccentColor,
+  customLight?: string,
+  customDark?: string,
+): void {
   document.documentElement.setAttribute("data-accent", color);
 
   if (color === "custom") {
     const isDark = document.documentElement.classList.contains("dark");
     const hex = isDark
-      ? (customDark || DEFAULT_CUSTOM_DARK)
-      : (customLight || DEFAULT_CUSTOM_LIGHT);
+      ? customDark || DEFAULT_CUSTOM_DARK
+      : customLight || DEFAULT_CUSTOM_LIGHT;
 
     try {
       const rgb = hexToRgb(hex);

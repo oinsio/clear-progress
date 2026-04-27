@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { STORAGE_KEYS, DEFAULT_FOCUS_OPACITY } from "@/constants";
+import { useCallback, useState } from "react";
+import { DEFAULT_FOCUS_OPACITY, STORAGE_KEYS } from "@/constants";
 
 const DEFAULT_FOCUS_MODE = true;
 
@@ -40,8 +40,9 @@ export interface UseFocusModeReturn {
 export function useFocusMode(): UseFocusModeReturn {
   const [isFocusMode, setFocusModeState] =
     useState<boolean>(getCachedFocusMode);
-  const [focusOpacity, setFocusOpacityState] =
-    useState<number>(getCachedFocusOpacity);
+  const [focusOpacity, setFocusOpacityState] = useState<number>(
+    getCachedFocusOpacity,
+  );
 
   const setFocusMode = useCallback((enabled: boolean) => {
     try {

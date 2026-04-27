@@ -1,17 +1,17 @@
 import Dexie, { type EntityTable } from "dexie";
+import { DB_NAME, SYNC_META_KEYS } from "@/constants";
 import type {
-  Task,
-  Goal,
-  Context,
   Category,
   ChecklistItem,
+  Context,
+  CoverRecord,
+  Goal,
   Idea,
+  PendingCoverRecord,
   Setting,
   SyncMeta,
-  CoverRecord,
-  PendingCoverRecord,
+  Task,
 } from "@/types/entities";
-import { DB_NAME, SYNC_META_KEYS } from "@/constants";
 import { DB_SCHEMA, DB_SCHEMA_V4 } from "./schema";
 
 const V1_SCHEMA = {

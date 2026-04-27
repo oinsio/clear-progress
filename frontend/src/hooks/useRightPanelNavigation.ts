@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/constants";
-import { FILTER_ITEMS } from "@/components/tasks/RightFilterPanel";
 import type { RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import { FILTER_ITEMS } from "@/components/tasks/RightFilterPanel";
+import { ROUTES } from "@/constants";
 
 export function useRightPanelNavigation(): (newMode: RightPanelMode) => void {
   const navigate = useNavigate();

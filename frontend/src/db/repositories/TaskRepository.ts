@@ -1,8 +1,8 @@
-import type { Task, ISODate } from "@/types/entities";
-import type { Box } from "@/types/common";
-import { db } from "../database";
 import { Temporal } from "@/lib/temporal";
+import type { Box } from "@/types/common";
+import type { ISODate, Task } from "@/types/entities";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
+import { db } from "../database";
 
 export class TaskRepository {
   async getAll(): Promise<Task[]> {
@@ -117,13 +117,15 @@ export class TaskRepository {
     await db.transaction("rw", db.tasks, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.tasks.get(serverRecord.id);
-        if (!localRecord || !localRecord.needsSync) {
+        if (!localRecord?.needsSync) {
           const sanitizedRecord = {
             ...serverRecord,
-            next_date: (sanitizeDateOnly(serverRecord.next_date) ||
-              "") as ISODate | "",
-            appear_date: (sanitizeDateOnly(serverRecord.appear_date) ||
-              "") as ISODate | "",
+            next_date: (sanitizeDateOnly(serverRecord.next_date) || "") as
+              | ISODate
+              | "",
+            appear_date: (sanitizeDateOnly(serverRecord.appear_date) || "") as
+              | ISODate
+              | "",
             needsSync: false,
           };
           await db.tasks.put(sanitizedRecord);

@@ -1,16 +1,16 @@
-import { GripVertical } from "lucide-react";
-import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
+import { GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/shared/lib/cn";
+import { FILTER_ITEMS } from "@/components/tasks/RightFilterPanel";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
-import { FILTER_ITEMS } from "@/components/tasks/RightFilterPanel";
+import { cn } from "@/shared/lib/cn";
 import type { MenuItemConfig, MenuMode } from "@/types/common";
 
 interface SortableMenuOrderItemProps {

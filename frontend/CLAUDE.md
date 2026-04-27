@@ -10,6 +10,11 @@ React PWA for GTD. See root `CLAUDE.md` for data model, API protocol, and shared
 - **Mobile-first PWA** — always consider touch interactions and small screens
 - **`@/` import alias** maps to `src/`
 
+## Code Quality
+
+- **Linter** + **Formatter**: Biome (`pnpm run lint`, `pnpm run lint:fix`)
+- Configuration: shared `biome.json` in project root
+
 ## i18n
 
 - All user-facing strings via `t("namespace.key")` — NEVER hardcode strings in JSX

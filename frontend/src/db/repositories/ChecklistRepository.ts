@@ -42,7 +42,7 @@ export class ChecklistRepository {
     await db.transaction("rw", db.checklist_items, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.checklist_items.get(serverRecord.id);
-        if (!localRecord || !localRecord.needsSync) {
+        if (!localRecord?.needsSync) {
           await db.checklist_items.put({ ...serverRecord, needsSync: false });
         }
       }

@@ -1,28 +1,28 @@
-import { useCallback, useState } from "react";
-import { Lightbulb, Plus, GripVertical } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
-import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
-import { IdeaItem } from "@/components/ideas/IdeaItem";
+import { GripVertical, Lightbulb, Plus } from "lucide-react";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
-import { useIdeas } from "@/hooks/useIdeas";
-import { useTasks } from "@/hooks/useTasks";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
-import { useDndSensors } from "@/hooks/useDndSensors";
-import { useInlineAdd } from "@/hooks/useInlineAdd";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { IdeaItem } from "@/components/ideas/IdeaItem";
+import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
 import { BOX } from "@/constants";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { useDndSensors } from "@/hooks/useDndSensors";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useIdeas } from "@/hooks/useIdeas";
+import { useInlineAdd } from "@/hooks/useInlineAdd";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
+import { useTasks } from "@/hooks/useTasks";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
 
@@ -255,7 +255,6 @@ export default function IdeasPage() {
                   <textarea
                     ref={newIdeaTextareaRef}
                     rows={1}
-                    autoFocus
                     value={newIdeaName}
                     onChange={(event) => setNewIdeaName(event.target.value)}
                     onKeyDown={handleAddIdeaKeyDown}
@@ -273,7 +272,6 @@ export default function IdeasPage() {
                   <textarea
                     ref={newTaskTextareaRef}
                     rows={1}
-                    autoFocus
                     value={newTaskName}
                     onChange={(event) => setNewTaskName(event.target.value)}
                     onKeyDown={handleAddTaskKeyDown}

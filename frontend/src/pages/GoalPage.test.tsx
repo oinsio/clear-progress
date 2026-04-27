@@ -1,9 +1,9 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-import GoalPage from "./GoalPage";
-import { buildGoal } from "@/test/factories/goalFactory";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import type { UseGoalReturn } from "@/hooks/useGoal";
 import type { CoverService } from "@/services/CoverService";
+import { buildGoal } from "@/test/factories/goalFactory";
+import GoalPage from "./GoalPage";
 
 vi.mock("@/hooks/useGoal");
 
@@ -106,7 +106,9 @@ describe("GoalPage", () => {
     renderGoalPage();
 
     // Just verify the component renders with the description
-    expect(screen.getByTestId("goal-description-input")).toHaveTextContent("Old Desc");
+    expect(screen.getByTestId("goal-description-input")).toHaveTextContent(
+      "Old Desc",
+    );
 
     // Change name to trigger save
     fireEvent.change(screen.getByTestId("goal-name-input"), {

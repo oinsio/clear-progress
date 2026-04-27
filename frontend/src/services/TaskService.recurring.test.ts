@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TaskService } from "./TaskService";
-import type { ChecklistItem } from "@/types/entities";
-import type { TaskRepository } from "@/db/repositories/TaskRepository";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { buildTask } from "@/test/factories/taskFactory";
-import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
-import { createMockTaskRepository } from "@/test/mocks/taskRepositoryMock";
-import { createMockChecklistRepository } from "@/test/factories/checklistRepositoryFactory";
-import { toISOTimestamp, toISODate } from "@/utils/dateHelpers";
+import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { fakeClock } from "@/lib/temporal";
+import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
+import { createMockChecklistRepository } from "@/test/factories/checklistRepositoryFactory";
+import { buildTask } from "@/test/factories/taskFactory";
+import { createMockTaskRepository } from "@/test/mocks/taskRepositoryMock";
+import type { ChecklistItem } from "@/types/entities";
+import { toISODate, toISOTimestamp } from "@/utils/dateHelpers";
+import { TaskService } from "./TaskService";
 
 const setupCompletionMocks = (
   mockTaskRepository: TaskRepository,
@@ -121,7 +121,11 @@ describe("TaskService - Recurring Tasks Integration", () => {
   describe("Completing recurring task", () => {
     it("should create hidden clone when completing task with repeat_rule", async () => {
       const clock = fakeClock("2026-04-20T10:00:00Z");
-      taskService = new TaskService(mockTaskRepository, mockChecklistRepository, clock);
+      taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+        clock,
+      );
 
       const repeatRule = {
         type: "fixed" as const,
@@ -434,7 +438,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const createdTask = getCreatedTask();
       expect(createdTask).toBeDefined();
-      expect(createdTask!.original_task_id).toBe("task-1");
+      expect(createdTask?.original_task_id).toBe("task-1");
     });
 
     it("should preserve original_task_id when completing a copy", async () => {
@@ -473,7 +477,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const createdTask = getCreatedTask();
       expect(createdTask).toBeDefined();
-      expect(createdTask!.original_task_id).toBe("task-1");
+      expect(createdTask?.original_task_id).toBe("task-1");
     });
 
     it("should not create duplicate when hidden copy already exists", async () => {
@@ -519,8 +523,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
       expect(mockTaskRepository.create).not.toHaveBeenCalled();
       const updatedCopyTask = getUpdatedCopyTask();
       expect(updatedCopyTask).toBeDefined();
-      expect(updatedCopyTask!.name).toBe("Daily review");
-      expect(updatedCopyTask!.description).toBe("Old description");
+      expect(updatedCopyTask?.name).toBe("Daily review");
+      expect(updatedCopyTask?.description).toBe("Old description");
     });
 
     it("should update all fields in existing hidden copy", async () => {
@@ -571,11 +575,11 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const updatedCopyTask = getUpdatedCopyTask();
       expect(updatedCopyTask).toBeDefined();
-      expect(updatedCopyTask!.name).toBe("Updated name");
-      expect(updatedCopyTask!.description).toBe("Updated description");
-      expect(updatedCopyTask!.goal_id).toBe("goal-1");
-      expect(updatedCopyTask!.context_id).toBe("context-1");
-      expect(updatedCopyTask!.category_id).toBe("category-1");
+      expect(updatedCopyTask?.name).toBe("Updated name");
+      expect(updatedCopyTask?.description).toBe("Updated description");
+      expect(updatedCopyTask?.goal_id).toBe("goal-1");
+      expect(updatedCopyTask?.context_id).toBe("context-1");
+      expect(updatedCopyTask?.category_id).toBe("category-1");
     });
   });
 
@@ -737,7 +741,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const createdTask = getCreatedTask();
       expect(createdTask).toBeDefined();
-      expect(createdTask!.is_hidden).toBe(expectedHidden);
+      expect(createdTask?.is_hidden).toBe(expectedHidden);
     }
 
     it("should reveal hidden clone immediately when appear_date <= today", async () => {
@@ -746,7 +750,13 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
     it("should keep hidden clone hidden when appear_date in future", async () => {
       const clock = fakeClock("2026-04-20T10:00:00Z");
-      await testHiddenFieldAfterComplete("2026-05-01", "2026-04-26", 5, true, clock);
+      await testHiddenFieldAfterComplete(
+        "2026-05-01",
+        "2026-04-26",
+        5,
+        true,
+        clock,
+      );
     });
 
     it("should reveal hidden clone when appear_date equals today", async () => {
@@ -795,12 +805,16 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const updatedCopy = getUpdatedCopy();
       expect(updatedCopy).toBeDefined();
-      expect(updatedCopy!.is_hidden).toBe(false);
+      expect(updatedCopy?.is_hidden).toBe(false);
     });
 
     it("should keep updated hidden clone hidden when appear_date in future", async () => {
       const clock = fakeClock("2026-04-20T10:00:00Z");
-      taskService = new TaskService(mockTaskRepository, mockChecklistRepository, clock);
+      taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+        clock,
+      );
 
       const repeatRule = {
         type: "fixed" as const,
@@ -843,7 +857,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const updatedCopy = getUpdatedCopy();
       expect(updatedCopy).toBeDefined();
-      expect(updatedCopy!.is_hidden).toBe(true);
+      expect(updatedCopy?.is_hidden).toBe(true);
     });
   });
 

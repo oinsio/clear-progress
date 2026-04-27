@@ -1,17 +1,17 @@
+import type * as React from "react";
 import {
   createContext,
-  useContext,
-  useState,
   useCallback,
+  useContext,
   useEffect,
+  useState,
 } from "react";
-import * as React from "react";
+import { DEFAULT_LANGUAGE, STORAGE_KEYS } from "@/constants";
 import i18n from "@/i18n";
 import {
-  isValidLocaleCode,
   getBaseLanguageCodes,
+  isValidLocaleCode,
 } from "@/services/localeRegistry";
-import { DEFAULT_LANGUAGE, STORAGE_KEYS } from "@/constants";
 
 interface LanguageContextValue {
   language: string;
@@ -58,7 +58,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // определённый язык с i18next при монтировании компонента
   useEffect(() => {
     void i18n.changeLanguage(language);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [language]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setLanguage = useCallback((lang: string) => {
     setLanguageState(lang);

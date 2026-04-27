@@ -1,13 +1,18 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ROUTES } from "@/constants";
-import { parseGasInput } from "@/utils/gasUrl";
-import { parseClientId } from "@/utils/clientId";
-import { defaultApiClient } from "@/services/defaultServices";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { connect, disconnect, getConnectionConfig, getSavedConnectionConfig } from "@/services/connectionService";
+import { ROUTES } from "@/constants";
+import {
+  connect,
+  disconnect,
+  getConnectionConfig,
+  getSavedConnectionConfig,
+} from "@/services/connectionService";
+import { defaultApiClient } from "@/services/defaultServices";
 import { cn } from "@/shared/lib/cn";
+import { parseClientId } from "@/utils/clientId";
+import { parseGasInput } from "@/utils/gasUrl";
 
 type SetupPhase =
   | "input"
@@ -26,11 +31,13 @@ export default function SetupPage() {
   const config = getConnectionConfig(); // активный конфиг (или null)
   const savedConfig = getSavedConnectionConfig(); // любой конфиг (для предзаполнения)
   const savedUrl = savedConfig?.type === "gas" ? savedConfig.url : "";
-  const savedClientId = savedConfig?.type === "gas" ? savedConfig.clientId ?? "" : "";
+  const savedClientId =
+    savedConfig?.type === "gas" ? (savedConfig.clientId ?? "") : "";
 
   // Для отображения в секции "connected" используем активный конфиг
   const existingUrl = config?.type === "gas" ? config.url : "";
-  const existingClientId = config?.type === "gas" ? config.clientId ?? "" : "";
+  const existingClientId =
+    config?.type === "gas" ? (config.clientId ?? "") : "";
 
   const [urlInput, setUrlInput] = useState(savedUrl);
   const [clientIdInput, setClientIdInput] = useState(savedClientId);

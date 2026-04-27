@@ -1,14 +1,14 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useGoal } from "./useGoal";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/database";
+import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { GoalService } from "@/services/GoalService";
 import { TaskService } from "@/services/TaskService";
 import { buildGoal } from "@/test/factories/goalFactory";
 import { buildTask } from "@/test/factories/taskFactory";
+import { useGoal } from "./useGoal";
 
 const mockSchedulePush = vi.fn();
 

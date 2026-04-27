@@ -1,7 +1,12 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { connect, disconnect, getConnectionConfig, getSavedConnectionConfig } from "./connectionService";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
 import type { GasConnectionConfig } from "@/types/connection";
+import {
+  connect,
+  disconnect,
+  getConnectionConfig,
+  getSavedConnectionConfig,
+} from "./connectionService";
 
 describe("connectionService", () => {
   beforeEach(() => {
@@ -37,7 +42,10 @@ describe("connectionService", () => {
         clientId: "test-client-id",
         isActive: true,
       };
-      localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(config));
+      localStorage.setItem(
+        STORAGE_KEYS.CONNECTION_CONFIG,
+        JSON.stringify(config),
+      );
 
       disconnect();
 
@@ -55,17 +63,25 @@ describe("connectionService", () => {
         url: "https://example.com",
         isActive: true,
       };
-      localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(config));
+      localStorage.setItem(
+        STORAGE_KEYS.CONNECTION_CONFIG,
+        JSON.stringify(config),
+      );
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "token");
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT, "123456");
       localStorage.setItem(STORAGE_KEYS.USER_PICTURE, "pic.jpg");
       localStorage.setItem(STORAGE_KEYS.LAST_SYNC, "2026-01-01T00:00:00.000Z");
-      localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, "2026-01-01T00:00:00.000Z");
+      localStorage.setItem(
+        STORAGE_KEYS.SETTINGS_UPDATED_AT,
+        "2026-01-01T00:00:00.000Z",
+      );
 
       disconnect();
 
       expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)).toBeNull();
-      expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT)).toBeNull();
+      expect(
+        localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT),
+      ).toBeNull();
       expect(localStorage.getItem(STORAGE_KEYS.USER_PICTURE)).toBeNull();
       expect(localStorage.getItem(STORAGE_KEYS.LAST_SYNC)).toBeNull();
       expect(localStorage.getItem(STORAGE_KEYS.SETTINGS_UPDATED_AT)).toBeNull();
@@ -85,7 +101,10 @@ describe("connectionService", () => {
         clientId: "test-client-id",
         isActive: false,
       };
-      localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(config));
+      localStorage.setItem(
+        STORAGE_KEYS.CONNECTION_CONFIG,
+        JSON.stringify(config),
+      );
 
       const result = getConnectionConfig();
 
@@ -99,7 +118,10 @@ describe("connectionService", () => {
         clientId: "test-client-id",
         isActive: true,
       };
-      localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(config));
+      localStorage.setItem(
+        STORAGE_KEYS.CONNECTION_CONFIG,
+        JSON.stringify(config),
+      );
 
       const result = getConnectionConfig();
 
@@ -120,7 +142,10 @@ describe("connectionService", () => {
         clientId: "test-client-id",
         isActive: false,
       };
-      localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(config));
+      localStorage.setItem(
+        STORAGE_KEYS.CONNECTION_CONFIG,
+        JSON.stringify(config),
+      );
 
       const result = getSavedConnectionConfig();
 
@@ -133,7 +158,10 @@ describe("connectionService", () => {
         url: "https://example.com",
         isActive: true,
       };
-      localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(config));
+      localStorage.setItem(
+        STORAGE_KEYS.CONNECTION_CONFIG,
+        JSON.stringify(config),
+      );
 
       const result = getSavedConnectionConfig();
 

@@ -1,13 +1,13 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import GoalDetailPage from "./GoalDetailPage";
-import { buildGoal } from "@/test/factories/goalFactory";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UseGoalReturn } from "@/hooks/useGoal";
-import type { UseGoalTasksReturn } from "@/hooks/useGoalTasks";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
+import type { UseGoalTasksReturn } from "@/hooks/useGoalTasks";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
+import { buildGoal } from "@/test/factories/goalFactory";
 import type { Task } from "@/types/entities";
+import GoalDetailPage from "./GoalDetailPage";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -33,18 +33,18 @@ vi.mock("@/hooks/useCoverUrl");
 vi.mock("@/hooks/useCoverPreview");
 vi.mock("@/hooks/useSettings");
 
-import { useGoal } from "@/hooks/useGoal";
-import { useGoalTasks } from "@/hooks/useGoalTasks";
-import { useGoals } from "@/hooks/useGoals";
-import { useContexts } from "@/hooks/useContexts";
 import { useCategories } from "@/hooks/useCategories";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useContexts } from "@/hooks/useContexts";
 import { useCoverPreview } from "@/hooks/useCoverPreview";
+import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useGoal } from "@/hooks/useGoal";
+import { useGoals } from "@/hooks/useGoals";
+import { useGoalTasks } from "@/hooks/useGoalTasks";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useSettings } from "@/hooks/useSettings";
 
 const mockUseGoal = vi.mocked(useGoal);

@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
 import { liveQuery } from "dexie";
-import type { Task } from "@/types/entities";
-import type { Box } from "@/types/common";
-import { TaskService } from "@/services/TaskService";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { useTaskMutations } from "./useTaskMutations";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { TaskService } from "@/services/TaskService";
+import type { Box } from "@/types/common";
+import type { Task } from "@/types/entities";
+import { useTaskMutations } from "./useTaskMutations";
 
 const defaultTaskService = new TaskService(
   new TaskRepository(),

@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { TaskService } from "@/services/TaskService";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { TaskService } from "@/services/TaskService";
 import {
-  useFilteredTasks,
   type UseFilteredTasksReturn,
+  useFilteredTasks,
 } from "./useFilteredTasks";
 
 const defaultTaskService = new TaskService(

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import type { Task } from "@/types/entities";
+import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
-import { TaskService } from "@/services/TaskService";
+import type { Task } from "@/types/entities";
 import { useSyncWrapper } from "./useMutationHelpers";
 
 export interface UseTaskMutationsReturn {
@@ -31,7 +31,8 @@ export function useTaskMutations(
           } else {
             const { recurring } = await taskService.complete(id);
             // Возвращаем ID только если копия НЕ скрыта
-            recurringId = recurring && !recurring.is_hidden ? recurring.id : null;
+            recurringId =
+              recurring && !recurring.is_hidden ? recurring.id : null;
           }
           return recurringId;
         });

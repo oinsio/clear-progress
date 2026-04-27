@@ -1,10 +1,10 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useTaskMutations } from "./useTaskMutations";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BOX } from "@/constants";
 import type { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
-import { BOX } from "@/constants";
 import { createMockTaskService } from "@/test/mocks/taskServiceMock";
+import { useTaskMutations } from "./useTaskMutations";
 
 const mockSchedulePush = vi.fn();
 
@@ -256,20 +256,22 @@ describe("useTaskMutations", () => {
       expect(onReload).toHaveBeenCalledOnce();
     });
 
-    it.each([BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER])(
-      "should move to %s box correctly",
-      async (box) => {
-        const { result } = renderHook(() =>
-          useTaskMutations(mockTaskService, onReload),
-        );
+    it.each([
+      BOX.INBOX,
+      BOX.TODAY,
+      BOX.WEEK,
+      BOX.LATER,
+    ])("should move to %s box correctly", async (box) => {
+      const { result } = renderHook(() =>
+        useTaskMutations(mockTaskService, onReload),
+      );
 
-        await act(async () => {
-          await result.current.moveTask("task-1", box);
-        });
+      await act(async () => {
+        await result.current.moveTask("task-1", box);
+      });
 
-        expect(mockTaskService.moveToBox).toHaveBeenCalledWith("task-1", box);
-      },
-    );
+      expect(mockTaskService.moveToBox).toHaveBeenCalledWith("task-1", box);
+    });
 
     it("should call schedulePush after moving a task", async () => {
       const { result } = renderHook(() =>
@@ -346,7 +348,10 @@ describe("useTaskMutations", () => {
         method: "deleteTask" as const,
         setup: (): string => "task-1",
       },
-    ])("should call updated onReload in $method after onReload changes", async ({ method, setup }) => {
+    ])("should call updated onReload in $method after onReload changes", async ({
+      method,
+      setup,
+    }) => {
       const taskId = setup();
       const firstOnReload = vi.fn().mockResolvedValue(undefined);
       const secondOnReload = vi.fn().mockResolvedValue(undefined);

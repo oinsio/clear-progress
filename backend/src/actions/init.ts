@@ -1,8 +1,13 @@
-import { PROPERTY_KEYS, DRIVE_FOLDER_NAMES, DRIVE_MIME_TYPES, SHEET_HEADERS } from '../helpers/constants';
-import { jsonOk } from '../helpers/response';
-import { driveFileExists } from '../helpers/drive';
-import { initDefaults } from '../sheets/settings.sheet';
-import { initMetaSheet } from '../sheets/meta.sheet';
+import {
+  DRIVE_FOLDER_NAMES,
+  DRIVE_MIME_TYPES,
+  PROPERTY_KEYS,
+  SHEET_HEADERS,
+} from "../helpers/constants";
+import { driveFileExists } from "../helpers/drive";
+import { jsonOk } from "../helpers/response";
+import { initMetaSheet } from "../sheets/meta.sheet";
+import { initDefaults } from "../sheets/settings.sheet";
 
 export function init(): GoogleAppsScript.Content.TextOutput {
   const props = PropertiesService.getScriptProperties();
@@ -16,7 +21,10 @@ export function init(): GoogleAppsScript.Content.TextOutput {
   }
 
   // Create folder structure
-  const rootFolderFile = Drive.Files.create({ name: DRIVE_FOLDER_NAMES.ROOT, mimeType: DRIVE_MIME_TYPES.FOLDER });
+  const rootFolderFile = Drive.Files.create({
+    name: DRIVE_FOLDER_NAMES.ROOT,
+    mimeType: DRIVE_MIME_TYPES.FOLDER,
+  });
   const rootFolderId = rootFolderFile.id!;
 
   const coversFolderFile = Drive.Files.create({
@@ -46,7 +54,9 @@ export function init(): GoogleAppsScript.Content.TextOutput {
     } else {
       sheet = spreadsheet.insertSheet(name);
     }
-    sheet.getRange(1, 1, 1, SHEET_HEADERS[name].length).setValues([SHEET_HEADERS[name]]);
+    sheet
+      .getRange(1, 1, 1, SHEET_HEADERS[name].length)
+      .setValues([SHEET_HEADERS[name]]);
   });
 
   // Save IDs
@@ -62,5 +72,9 @@ export function init(): GoogleAppsScript.Content.TextOutput {
   // Initialize Meta sheet with revision counter
   initMetaSheet();
 
-  return jsonOk({ created: true, spreadsheet_id: spreadsheet.getId(), folder_id: rootFolderId });
+  return jsonOk({
+    created: true,
+    spreadsheet_id: spreadsheet.getId(),
+    folder_id: rootFolderId,
+  });
 }

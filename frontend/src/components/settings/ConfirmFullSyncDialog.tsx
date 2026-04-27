@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
 import { Check, Loader2 } from "lucide-react";
-import type { FullSyncStep } from "@/types/common";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/cn";
+import type { FullSyncStep } from "@/types/common";
 
 interface ConfirmFullSyncDialogProps {
   isOpen: boolean;

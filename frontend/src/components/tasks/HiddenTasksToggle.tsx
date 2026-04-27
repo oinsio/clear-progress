@@ -1,7 +1,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { cn } from "@/shared/lib/cn";
 import { useShowHidden } from "@/hooks/useShowHidden";
+import { cn } from "@/shared/lib/cn";
 
 export function HiddenTasksToggle() {
   const { t } = useTranslation();

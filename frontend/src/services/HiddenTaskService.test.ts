@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { HiddenTaskService } from "./HiddenTaskService";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { fakeClock } from "@/lib/temporal";
-import type { Task, ISODate, ISOTimestamp } from "@/types/entities";
+import type { ISODate, ISOTimestamp, Task } from "@/types/entities";
+import { HiddenTaskService } from "./HiddenTaskService";
 
 describe("HiddenTaskService", () => {
   let mockTaskRepository: TaskRepository;
@@ -19,11 +19,15 @@ describe("HiddenTaskService", () => {
     const clock = fakeClock("2026-04-16T10:30:00Z");
     service = new HiddenTaskService(mockTaskRepository, clock);
 
-    (mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (
+      mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([]);
 
     await service.revealHiddenTasks();
 
-    expect(mockTaskRepository.getTasksToReveal).toHaveBeenCalledWith("2026-04-16");
+    expect(mockTaskRepository.getTasksToReveal).toHaveBeenCalledWith(
+      "2026-04-16",
+    );
   });
 
   it("should reveal tasks with appear_date <= current date", async () => {
@@ -54,8 +58,12 @@ describe("HiddenTaskService", () => {
       needsSync: false,
     };
 
-    (mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>).mockResolvedValue([hiddenTask]);
-    (mockTaskRepository.update as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (
+      mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([hiddenTask]);
+    (mockTaskRepository.update as ReturnType<typeof vi.fn>).mockResolvedValue(
+      undefined,
+    );
 
     const revealed = await service.revealHiddenTasks();
 
@@ -68,7 +76,7 @@ describe("HiddenTaskService", () => {
         is_hidden: false,
         version: 2,
         needsSync: true,
-      })
+      }),
     );
   });
 
@@ -76,7 +84,9 @@ describe("HiddenTaskService", () => {
     const clock = fakeClock("2026-04-16T10:30:00Z");
     service = new HiddenTaskService(mockTaskRepository, clock);
 
-    (mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (
+      mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([]);
 
     const revealed = await service.revealHiddenTasks();
 
@@ -112,8 +122,12 @@ describe("HiddenTaskService", () => {
       needsSync: false,
     };
 
-    (mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>).mockResolvedValue([hiddenTask]);
-    (mockTaskRepository.update as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (
+      mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([hiddenTask]);
+    (mockTaskRepository.update as ReturnType<typeof vi.fn>).mockResolvedValue(
+      undefined,
+    );
 
     const revealed = await service.revealHiddenTasks();
 
@@ -149,12 +163,18 @@ describe("HiddenTaskService", () => {
       needsSync: false,
     };
 
-    (mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>).mockResolvedValue([hiddenTask]);
-    (mockTaskRepository.update as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (
+      mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>
+    ).mockResolvedValue([hiddenTask]);
+    (mockTaskRepository.update as ReturnType<typeof vi.fn>).mockResolvedValue(
+      undefined,
+    );
 
     const revealed = await service.revealHiddenTasks();
 
-    expect(revealed[0].updated_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(revealed[0].updated_at).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+    );
     expect(revealed[0].updated_at).not.toBe("2026-04-15T10:00:00.000Z");
   });
 });

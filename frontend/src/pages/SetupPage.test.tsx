@@ -1,9 +1,9 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import SetupPage from "./SetupPage";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ROUTES } from "@/constants";
 import { localStorageMock } from "@/test/mocks/localStorageMock";
+import SetupPage from "./SetupPage";
 
 const mockNavigate = vi.fn();
 
@@ -12,7 +12,14 @@ vi.mock("react-router-dom", async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-const { mockPingUrl, mockInit, mockConnect, mockDisconnect, mockGetConnectionConfig, mockGetSavedConnectionConfig } = vi.hoisted(() => ({
+const {
+  mockPingUrl,
+  mockInit,
+  mockConnect,
+  mockDisconnect,
+  mockGetConnectionConfig,
+  mockGetSavedConnectionConfig,
+} = vi.hoisted(() => ({
   mockPingUrl: vi.fn(),
   mockInit: vi.fn(),
   mockConnect: vi.fn(),
@@ -41,9 +48,9 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
+import { useAuth } from "@/app/providers/AuthProvider";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
-import { useAuth } from "@/app/providers/AuthProvider";
 
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUsePanelSide = vi.mocked(usePanelSide);
@@ -214,9 +221,7 @@ describe("SetupPage", () => {
       renderPage();
       await enterUrlClientIdAndConnect(TEST_URL, TEST_CLIENT_ID);
       await waitFor(() => {
-        expect(
-          screen.getByTestId("setup-awaiting-signin"),
-        ).toBeInTheDocument();
+        expect(screen.getByTestId("setup-awaiting-signin")).toBeInTheDocument();
       });
     });
 
@@ -225,9 +230,7 @@ describe("SetupPage", () => {
       renderPage();
       await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
-        expect(
-          screen.getByTestId("setup-back-button"),
-        ).toBeInTheDocument();
+        expect(screen.getByTestId("setup-back-button")).toBeInTheDocument();
       });
     });
 
@@ -249,9 +252,7 @@ describe("SetupPage", () => {
           userPicture: null,
         });
         await reachAwaitingSigninPhase();
-        expect(
-          screen.getByTestId("setup-sign-in-btn"),
-        ).toBeInTheDocument();
+        expect(screen.getByTestId("setup-sign-in-btn")).toBeInTheDocument();
       });
 
       it("should call signIn when sign-in button is clicked", async () => {

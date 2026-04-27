@@ -1,9 +1,9 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import SettingsPage from "./SettingsPage";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
 import type { AccentColor } from "@/types/common";
+import SettingsPage from "./SettingsPage";
 
 vi.mock("@/hooks/useSettings");
 vi.mock("@/app/providers/ThemeProvider");
@@ -24,19 +24,19 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-import { useSettings } from "@/hooks/useSettings";
-import { localStorageMock } from "@/test/mocks/localStorageMock";
-import { useTheme } from "@/app/providers/ThemeProvider";
-import { useLanguage } from "@/hooks/useLanguage";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
-import { useFocusMode } from "@/hooks/useFocusMode";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useSync } from "@/app/providers/SyncProvider";
-import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { useTheme } from "@/app/providers/ThemeProvider";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
+import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useFocusMode } from "@/hooks/useFocusMode";
+import { useLanguage } from "@/hooks/useLanguage";
+import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { useSettings } from "@/hooks/useSettings";
+import { localStorageMock } from "@/test/mocks/localStorageMock";
 
 const mockUseSettings = vi.mocked(useSettings);
 const mockUseTheme = vi.mocked(useTheme);
@@ -83,10 +83,7 @@ function buildThemeHook(
 }
 
 function buildLanguageHook(
-  overrides: {
-    language?: string;
-    setLanguage?: ReturnType<typeof vi.fn>;
-  } = {},
+  overrides: { language?: string; setLanguage?: ReturnType<typeof vi.fn> } = {},
 ): ReturnType<typeof useLanguage> {
   return {
     language: "ru",
@@ -247,9 +244,7 @@ describe("SettingsPage", () => {
   it("should render the language section with trigger button", () => {
     renderPage();
     expect(screen.getByTestId("settings-language")).toBeInTheDocument();
-    expect(
-      screen.getByTestId("settings-language-trigger"),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("settings-language-trigger")).toBeInTheDocument();
   });
 
   it("should show current language in trigger button", () => {
@@ -419,9 +414,7 @@ describe("SettingsPage", () => {
         setFocusOpacity: vi.fn(),
       });
       renderPage();
-      expect(
-        screen.getByTestId("settings-focus-opacity"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("settings-focus-opacity")).toBeInTheDocument();
     });
 
     it("should call setFocusMode when toggle is clicked", () => {

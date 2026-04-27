@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LG_BREAKPOINT_PX } from "@/constants";
 
 const MEDIA_QUERY = `(min-width: ${LG_BREAKPOINT_PX}px)`;

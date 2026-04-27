@@ -1,11 +1,11 @@
 import type {
+  AccentColor,
   Box,
   BoxFilter,
-  AccentColor,
-  PanelSide,
   ColorScheme,
   FilterBarPosition,
   InterfaceScale,
+  PanelSide,
 } from "@/types/common";
 
 export const ROUTES = {

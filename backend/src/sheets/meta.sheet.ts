@@ -1,5 +1,10 @@
-import { SHEET_NAMES, META_KEYS, META_INITIAL_REVISION, META_INITIAL_PURGE_REVISION } from '../helpers/constants';
-import { getSpreadsheet, getSheet } from './client';
+import {
+  META_INITIAL_PURGE_REVISION,
+  META_INITIAL_REVISION,
+  META_KEYS,
+  SHEET_NAMES,
+} from "../helpers/constants";
+import { getSheet, getSpreadsheet } from "./client";
 
 const META_KEY_COL = 0;
 const META_VALUE_COL = 1;
@@ -50,7 +55,7 @@ export function initMetaSheet(): void {
   if (existingSheet) return;
 
   const metaSheet = spreadsheet.insertSheet(SHEET_NAMES.META);
-  metaSheet.appendRow(['key', 'value']);
+  metaSheet.appendRow(["key", "value"]);
   metaSheet.appendRow([META_KEYS.NEXT_REVISION, META_INITIAL_REVISION]);
   metaSheet.appendRow([META_KEYS.PURGE_REVISION, META_INITIAL_PURGE_REVISION]);
 }

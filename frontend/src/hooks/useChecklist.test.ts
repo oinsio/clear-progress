@@ -1,10 +1,10 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useChecklist } from "./useChecklist";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/database";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ChecklistService } from "@/services/ChecklistService";
 import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
+import { useChecklist } from "./useChecklist";
 
 const mockSchedulePush = vi.fn();
 

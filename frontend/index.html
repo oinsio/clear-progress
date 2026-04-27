@@ -13,20 +13,18 @@
     <script>
       // Restore SPA route encoded by 404.html (GitHub Pages SPA trick)
       // https://github.com/rafgraph/spa-github-pages
-      (function (location) {
+      ((location) => {
         if (location.search[1] === "/") {
-          let decoded = location.search
+          const decoded = location.search
             .slice(1)
             .split("&")
-            .map(function (s) {
-              return s.replace(/~and~/g, "&");
-            });
+            .map((s) => s.replace(/~and~/g, "&"));
           window.history.replaceState(
             null,
             null,
             decoded[0] +
               (decoded.slice(1).join("&")
-                ? "&" + decoded.slice(1).join("&")
+                ? `&${decoded.slice(1).join("&")}`
                 : "") +
               location.hash,
           );
@@ -37,17 +35,17 @@
       try {
         // Helper function to convert hex to RGB
         function hexToRgb(hex) {
-          let cleanHex = hex.replace(/^#/, "");
+          const cleanHex = hex.replace(/^#/, "");
           if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
             return null;
           }
-          let r = parseInt(cleanHex.substring(0, 2), 16);
-          let g = parseInt(cleanHex.substring(2, 4), 16);
-          let b = parseInt(cleanHex.substring(4, 6), 16);
-          return r + " " + g + " " + b;
+          const r = parseInt(cleanHex.substring(0, 2), 16);
+          const g = parseInt(cleanHex.substring(2, 4), 16);
+          const b = parseInt(cleanHex.substring(4, 6), 16);
+          return `${r} ${g} ${b}`;
         }
 
-        let accentColorValues = {
+        const accentColorValues = {
           green: "#69b23e",
           coral: "#fb7185",
           orange: "#f57c00",
@@ -56,21 +54,21 @@
           indigo: "#4f46e5",
           purple: "#a855f7",
         };
-        let accentColor = localStorage.getItem("accent_color");
+        const accentColor = localStorage.getItem("accent_color");
 
         if (accentColor === "custom") {
           // Handle custom color
-          let isDark = document.documentElement.classList.contains("dark");
-          let customLight = localStorage.getItem("custom_accent_light");
-          let customDark = localStorage.getItem("custom_accent_dark");
-          let hex = isDark ? customDark : customLight;
+          const isDark = document.documentElement.classList.contains("dark");
+          const customLight = localStorage.getItem("custom_accent_light");
+          const customDark = localStorage.getItem("custom_accent_dark");
+          const hex = isDark ? customDark : customLight;
 
           if (hex) {
-            let rgb = hexToRgb(hex);
+            const rgb = hexToRgb(hex);
             if (rgb) {
               document.documentElement.setAttribute("data-accent", "custom");
               document.documentElement.style.setProperty("--color-accent", rgb);
-              let metaThemeColor = document.querySelector(
+              const metaThemeColor = document.querySelector(
                 'meta[name="theme-color"]',
               );
               if (metaThemeColor) {
@@ -81,7 +79,7 @@
         } else if (accentColor && accentColorValues[accentColor]) {
           // Handle predefined colors
           document.documentElement.setAttribute("data-accent", accentColor);
-          let metaThemeColor = document.querySelector(
+          const metaThemeColor = document.querySelector(
             'meta[name="theme-color"]',
           );
           if (metaThemeColor) {
@@ -91,7 +89,7 @@
             );
           }
         }
-      } catch (e) {}
+      } catch (_e) {}
     </script>
   </head>
   <body>

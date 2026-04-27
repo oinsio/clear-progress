@@ -1,22 +1,22 @@
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  type DragEndEvent,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
-import type { Task, Goal, Context, Category } from "@/types/entities";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Box } from "@/types/common";
+import type { Category, Context, Goal, Task } from "@/types/entities";
 import { TaskItem } from "./TaskItem";
 
 const DRAG_ACTIVATION_DISTANCE_PX = 8;

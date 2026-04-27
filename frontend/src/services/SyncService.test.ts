@@ -1,19 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SyncService } from "./SyncService";
-import type { ApiClient } from "./ApiClient";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { GoalRepository } from "@/db/repositories/GoalRepository";
-import { ContextRepository } from "@/db/repositories/ContextRepository";
-import { CategoryRepository } from "@/db/repositories/CategoryRepository";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { IdeaRepository } from "@/db/repositories/IdeaRepository";
-import { SettingsRepository } from "@/db/repositories/SettingsRepository";
-import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
-import type { Task, Goal, ISOTimestamp } from "@/types/entities";
-import type { PullResponse, PushResponse, PushResponseData } from "@/types/api";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LOCAL_COVER_ID_PREFIX, SYNC_META_KEYS } from "@/constants";
 import { db } from "@/db/database";
+import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
+import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import type { ContextRepository } from "@/db/repositories/ContextRepository";
+import type { GoalRepository } from "@/db/repositories/GoalRepository";
+import type { IdeaRepository } from "@/db/repositories/IdeaRepository";
+import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
+import type { TaskRepository } from "@/db/repositories/TaskRepository";
+import type { PullResponse, PushResponse, PushResponseData } from "@/types/api";
+import type { Goal, ISOTimestamp, Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import type { ApiClient } from "./ApiClient";
+import { SyncService } from "./SyncService";
 
 function makePullResponse(overrides: Partial<PullResponse> = {}): PullResponse {
   return {
@@ -340,9 +340,9 @@ describe("SyncService", () => {
         },
       ];
       mockApiClient = createMockApiClient({
-        pull: vi.fn().mockResolvedValue(
-          makePullResponse({ settings: serverSettings }),
-        ),
+        pull: vi
+          .fn()
+          .mockResolvedValue(makePullResponse({ settings: serverSettings })),
       });
       const service = createService();
 
@@ -390,9 +390,9 @@ describe("SyncService", () => {
         },
       ];
       mockApiClient = createMockApiClient({
-        pull: vi.fn().mockResolvedValue(
-          makePullResponse({ settings: serverSettings }),
-        ),
+        pull: vi
+          .fn()
+          .mockResolvedValue(makePullResponse({ settings: serverSettings })),
       });
       const service = createService();
 
@@ -407,9 +407,9 @@ describe("SyncService", () => {
   describe("push", () => {
     it("should call getNeedingSync on all repositories", async () => {
       const needsSyncTask = makeTask();
-      (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue([
-        needsSyncTask,
-      ]);
+      (
+        taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([needsSyncTask]);
       (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
         needsSyncTask,
       );
@@ -435,9 +435,9 @@ describe("SyncService", () => {
 
     it("should strip needsSync from records before sending to apiClient", async () => {
       const needsSyncTask = makeTask({ needsSync: true });
-      (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue([
-        needsSyncTask,
-      ]);
+      (
+        taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([needsSyncTask]);
       (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
         needsSyncTask,
       );
@@ -453,25 +453,22 @@ describe("SyncService", () => {
     it.each([
       ["strips local cover_file_id", `${LOCAL_COVER_ID_PREFIX}local-uuid`, ""],
       ["keeps remote cover_file_id", "remote-file-id", "remote-file-id"],
-    ])(
-      "should %s before sending goal to server",
-      async (_, cover_file_id, expected) => {
-        const needsSyncGoal = makeGoal({ cover_file_id, needsSync: true });
-        (goalRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [needsSyncGoal],
-        );
-        (goalRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
-          needsSyncGoal,
-        );
-        const service = createService();
+    ])("should %s before sending goal to server", async (_, cover_file_id, expected) => {
+      const needsSyncGoal = makeGoal({ cover_file_id, needsSync: true });
+      (
+        goalRepository.getNeedingSync as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([needsSyncGoal]);
+      (goalRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
+        needsSyncGoal,
+      );
+      const service = createService();
 
-        await service.push();
+      await service.push();
 
-        const pushCall = (mockApiClient.push as ReturnType<typeof vi.fn>).mock
-          .calls[0][0];
-        expect(pushCall.changes.goals[0].cover_file_id).toBe(expected);
-      },
-    );
+      const pushCall = (mockApiClient.push as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
+      expect(pushCall.changes.goals[0].cover_file_id).toBe(expected);
+    });
 
     it("should send push when only contexts are needsSync", async () => {
       const context = {
@@ -769,9 +766,9 @@ describe("SyncService", () => {
 
     it("should throw if push response is not ok", async () => {
       const needsSyncTask = makeTask();
-      (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue([
-        needsSyncTask,
-      ]);
+      (
+        taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([needsSyncTask]);
       mockApiClient = createMockApiClient({
         push: vi.fn().mockResolvedValue({ ok: false, results: {} }),
       });
@@ -783,9 +780,9 @@ describe("SyncService", () => {
     describe("applyPushResults — created/accepted", () => {
       it("should clear needsSync and set revision when version is unchanged", async () => {
         const task = makeTask({ id: "t1", version: 3, needsSync: true });
-        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [task],
-        );
+        (
+          taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
         // version same as when sent
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({
           ...task,
@@ -809,9 +806,9 @@ describe("SyncService", () => {
 
       it("should keep needsSync and set revision when version changed during push", async () => {
         const task = makeTask({ id: "t1", version: 3, needsSync: true });
-        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [task],
-        );
+        (
+          taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
         // version has bumped since sending
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({
           ...task,
@@ -846,9 +843,9 @@ describe("SyncService", () => {
           revision: 9,
           needsSync: false,
         });
-        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [task],
-        );
+        (
+          taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           task,
         );
@@ -882,9 +879,9 @@ describe("SyncService", () => {
           revision: 3,
           needsSync: false,
         });
-        (goalRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [goal],
-        );
+        (
+          goalRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([goal]);
         (goalRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           goal,
         );
@@ -914,9 +911,9 @@ describe("SyncService", () => {
     describe("last_known_revision update after push", () => {
       it("should update last_known_revision using response.revision (top-level)", async () => {
         const task = makeTask({ id: "t1" });
-        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [task],
-        );
+        (
+          taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           task,
         );
@@ -942,9 +939,9 @@ describe("SyncService", () => {
 
       it("should not update last_known_revision if push response has no top-level revision (all conflict)", async () => {
         const task = makeTask({ id: "t1" });
-        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [task],
-        );
+        (
+          taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           task,
         );
@@ -966,9 +963,9 @@ describe("SyncService", () => {
     describe("applyPushResults — edge cases", () => {
       it("should skip update when getById returns undefined for created/accepted record", async () => {
         const task = makeTask({ id: "t1", needsSync: true });
-        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [task],
-        );
+        (
+          taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           undefined,
         );
@@ -989,9 +986,9 @@ describe("SyncService", () => {
       it("should not enter conflict branch for created record even if server_record is present", async () => {
         const task = makeTask({ id: "t1", version: 3, needsSync: true });
         const serverTask = makeTask({ id: "t1", name: "Server Version" });
-        (taskRepository.getNeedingSync as ReturnType<typeof vi.fn>).mockResolvedValue(
-          [task],
-        );
+        (
+          taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({
           ...task,
           version: 3,
@@ -1081,7 +1078,7 @@ describe("SyncService", () => {
       await service.resetAndPull();
 
       const task = await db.tasks.get(taskId);
-      expect(task!.needsSync).toBe(false);
+      expect(task?.needsSync).toBe(false);
     });
 
     it("should mark all goals as needsSync: false in db", async () => {
@@ -1105,7 +1102,7 @@ describe("SyncService", () => {
       await service.resetAndPull();
 
       const goal = await db.goals.get(goalId);
-      expect(goal!.needsSync).toBe(false);
+      expect(goal?.needsSync).toBe(false);
     });
 
     it("should mark all contexts as needsSync: false in db", async () => {
@@ -1126,7 +1123,7 @@ describe("SyncService", () => {
       await service.resetAndPull();
 
       const context = await db.contexts.get(contextId);
-      expect(context!.needsSync).toBe(false);
+      expect(context?.needsSync).toBe(false);
     });
 
     it("should mark all categories as needsSync: false in db", async () => {
@@ -1147,7 +1144,7 @@ describe("SyncService", () => {
       await service.resetAndPull();
 
       const category = await db.categories.get(categoryId);
-      expect(category!.needsSync).toBe(false);
+      expect(category?.needsSync).toBe(false);
     });
 
     it("should mark all checklist_items as needsSync: false in db", async () => {
@@ -1171,7 +1168,7 @@ describe("SyncService", () => {
       await service.resetAndPull();
 
       const item = await db.checklist_items.get(itemId);
-      expect(item!.needsSync).toBe(false);
+      expect(item?.needsSync).toBe(false);
     });
 
     it("should mark all settings as needsSync: false in db", async () => {
@@ -1186,7 +1183,7 @@ describe("SyncService", () => {
       await service.resetAndPull();
 
       const setting = await db.settings.get("accent_color");
-      expect(setting!.needsSync).toBe(false);
+      expect(setting?.needsSync).toBe(false);
     });
   });
 

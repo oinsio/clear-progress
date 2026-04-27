@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef } from "react";
 import type * as React from "react";
+import { useCallback, useRef, useState } from "react";
 import {
-  STORAGE_KEYS,
   PANEL_SPLIT_DEFAULT_RATIO,
-  PANEL_SPLIT_MIN_RATIO,
   PANEL_SPLIT_MAX_RATIO,
+  PANEL_SPLIT_MIN_RATIO,
+  STORAGE_KEYS,
 } from "@/constants";
 
 function clampRatio(value: number): number {
@@ -19,7 +19,7 @@ function readStoredRatio(): number {
     const stored = localStorage.getItem(STORAGE_KEYS.PANEL_SPLIT);
     if (stored !== null) {
       const parsed = parseFloat(stored);
-      if (!isNaN(parsed)) return clampRatio(parsed);
+      if (!Number.isNaN(parsed)) return clampRatio(parsed);
     }
   } catch {
     // localStorage unavailable

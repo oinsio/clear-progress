@@ -38,7 +38,7 @@ export class GoalRepository {
     await db.transaction("rw", db.goals, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.goals.get(serverRecord.id);
-        if (!localRecord || !localRecord.needsSync) {
+        if (!localRecord?.needsSync) {
           await db.goals.put({ ...serverRecord, needsSync: false });
         }
       }

@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
 import { liveQuery } from "dexie";
-import type { Goal } from "@/types/entities";
-import type { GoalStatus } from "@/types/common";
-import { GoalService } from "@/services/GoalService";
-import { GoalRepository } from "@/db/repositories/GoalRepository";
+import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { GoalRepository } from "@/db/repositories/GoalRepository";
+import { GoalService } from "@/services/GoalService";
+import type { GoalStatus } from "@/types/common";
+import type { Goal } from "@/types/entities";
 
 const defaultGoalService = new GoalService(new GoalRepository());
 

@@ -1,11 +1,11 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useCategoryTasks } from "./useCategoryTasks";
-import type { TaskService } from "@/services/TaskService";
-import type { Task } from "@/types/entities";
-import { buildTask } from "@/test/factories/taskFactory";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BOX } from "@/constants";
+import type { TaskService } from "@/services/TaskService";
+import { buildTask } from "@/test/factories/taskFactory";
 import { createMockTaskService } from "@/test/mocks/taskServiceMock";
+import type { Task } from "@/types/entities";
+import { useCategoryTasks } from "./useCategoryTasks";
 
 describe("useCategoryTasks", () => {
   let mockTaskService: TaskService;

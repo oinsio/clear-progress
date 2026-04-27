@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  CoverService,
-  buildCoverFilename,
-  getCoverDisplayUrl,
-} from "./CoverService";
-import type { ApiClient } from "./ApiClient";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MAX_COVER_SIZE_BYTES } from "@/constants";
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
-import { MAX_COVER_SIZE_BYTES } from "@/constants";
-import { localCoverCache } from "./LocalCoverCache";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import type { ApiClient } from "./ApiClient";
+import {
+  buildCoverFilename,
+  CoverService,
+  getCoverDisplayUrl,
+} from "./CoverService";
+import { localCoverCache } from "./LocalCoverCache";
 
 const FAKE_ARRAY_BUFFER = new TextEncoder().encode("fake image content")
   .buffer as ArrayBuffer;

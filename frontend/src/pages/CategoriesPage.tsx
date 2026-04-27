@@ -1,33 +1,33 @@
-import { useState, useCallback, useEffect } from "react";
-import { Tag, Plus, GripVertical } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
+import { GripVertical, Plus, Tag } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   RightFilterPanel,
   type RightPanelMode,
 } from "@/components/tasks/RightFilterPanel";
-import { useCategories } from "@/hooks/useCategories";
-import { useTasks } from "@/hooks/useTasks";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useDndSensors } from "@/hooks/useDndSensors";
-import { useInlineAdd } from "@/hooks/useInlineAdd";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { BOX, ROUTES } from "@/constants";
+import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
+import { useCategories } from "@/hooks/useCategories";
+import { useDndSensors } from "@/hooks/useDndSensors";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useInlineAdd } from "@/hooks/useInlineAdd";
+import { useIsUnsynced } from "@/hooks/useIsUnsynced";
+import { usePanelOpen } from "@/hooks/usePanelOpen";
+import { usePanelSide } from "@/hooks/usePanelSide";
+import { useTasks } from "@/hooks/useTasks";
+import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
 import type { Category } from "@/types/entities";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { TaskService } from "@/services/TaskService";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 
 const defaultTaskService = new TaskService(
   new TaskRepository(),
@@ -253,7 +253,6 @@ export default function CategoriesPage() {
                         <textarea
                           ref={newCategoryTextareaRef}
                           rows={1}
-                          autoFocus
                           value={newCategoryName}
                           onChange={(event) =>
                             setNewCategoryName(event.target.value)
@@ -277,7 +276,6 @@ export default function CategoriesPage() {
                 <textarea
                   ref={newTaskTextareaRef}
                   rows={1}
-                  autoFocus
                   value={newTaskName}
                   onChange={(event) => setNewTaskName(event.target.value)}
                   onKeyDown={handleAddTaskKeyDown}

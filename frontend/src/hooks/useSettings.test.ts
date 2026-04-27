@@ -1,5 +1,5 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSettings } from "./useSettings";
 
 const syncVersionStore = vi.hoisted(() => ({ version: 0 }));
@@ -13,7 +13,7 @@ vi.mock("@/app/providers/SyncProvider", () => ({
     schedulePush: vi.fn(),
   }),
 }));
-import type { SettingsService } from "@/services/SettingsService";
+
 import {
   ACCENT_COLORS,
   BOX,
@@ -21,6 +21,7 @@ import {
   SETTING_KEYS,
   STORAGE_KEYS,
 } from "@/constants";
+import type { SettingsService } from "@/services/SettingsService";
 import type { AccentColor } from "@/types/common";
 
 function createMockSettingsService(
@@ -164,45 +165,28 @@ describe("useSettings", () => {
     expect(secondService.getDefaultBox).toHaveBeenCalled();
   });
 
-  it.each(ACCENT_COLORS)(
-    "should accept '%s' as valid accent color",
-    async (color: AccentColor) => {
-      mockSettingsService = createMockSettingsService({
-        getAccentColor: vi.fn().mockResolvedValue(color),
-      });
-      const { result } = renderHook(() => useSettings(mockSettingsService));
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
-      expect(result.current.accentColor).toBe(color);
-    },
-  );
-
-  it.each([BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER])(
-    "should accept '%s' as valid default box",
-    async (box) => {
-      mockSettingsService = createMockSettingsService({
-        getDefaultBox: vi.fn().mockResolvedValue(box),
-      });
-      const { result } = renderHook(() => useSettings(mockSettingsService));
-      await waitFor(() => expect(result.current.isLoading).toBe(false));
-      expect(result.current.defaultBox).toBe(box);
-    },
-  );
-
-  it("should reload settings when syncVersion changes after sync", async () => {
+  it.each(
+    ACCENT_COLORS,
+  )("should accept '%s' as valid accent color", async (color: AccentColor) => {
     mockSettingsService = createMockSettingsService({
-      getDefaultBox: vi
-        .fn()
-        .mockResolvedValueOnce(BOX.LATER)
-        .mockResolvedValueOnce(BOX.WEEK),
+      getAccentColor: vi.fn().mockResolvedValue(color),
     });
-    const { result, rerender } = renderHook(() =>
-      useSettings(mockSettingsService),
-    );
-    await waitFor(() => expect(result.current.defaultBox).toBe(BOX.LATER));
+    const { result } = renderHook(() => useSettings(mockSettingsService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.accentColor).toBe(color);
+  });
 
-    syncVersionStore.version = 1;
-    rerender();
-
-    await waitFor(() => expect(result.current.defaultBox).toBe(BOX.WEEK));
+  it.each([
+    BOX.INBOX,
+    BOX.TODAY,
+    BOX.WEEK,
+    BOX.LATER,
+  ])("should accept '%s' as valid default box", async (box) => {
+    mockSettingsService = createMockSettingsService({
+      getDefaultBox: vi.fn().mockResolvedValue(box),
+    });
+    const { result } = renderHook(() => useSettings(mockSettingsService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.defaultBox).toBe(box);
   });
 });

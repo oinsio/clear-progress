@@ -15,7 +15,10 @@ export function migrateLegacyConnection(): void {
       const parsed = JSON.parse(existingConfig) as GasConnectionConfig;
       if (parsed.isActive === undefined) {
         parsed.isActive = true;
-        localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(parsed));
+        localStorage.setItem(
+          STORAGE_KEYS.CONNECTION_CONFIG,
+          JSON.stringify(parsed),
+        );
         console.log("Added isActive field to existing connection config");
       }
 
@@ -28,7 +31,9 @@ export function migrateLegacyConnection(): void {
 
     // Check for legacy keys
     const gasUrl = localStorage.getItem(STORAGE_KEYS.GAS_URL);
-    const backendConnected = localStorage.getItem(STORAGE_KEYS.BACKEND_CONNECTED);
+    const backendConnected = localStorage.getItem(
+      STORAGE_KEYS.BACKEND_CONNECTED,
+    );
 
     if (gasUrl && backendConnected) {
       const clientId = localStorage.getItem(STORAGE_KEYS.GOOGLE_CLIENT_ID);
@@ -41,7 +46,7 @@ export function migrateLegacyConnection(): void {
 
       localStorage.setItem(
         STORAGE_KEYS.CONNECTION_CONFIG,
-        JSON.stringify(config)
+        JSON.stringify(config),
       );
 
       // Remove old keys

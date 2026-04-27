@@ -1,19 +1,20 @@
-import React, { useState } from "react";
 import {
-  Trash2,
-  ChevronDown,
-  ArchiveRestore,
   AlertTriangle,
+  ArchiveRestore,
+  ChevronDown,
+  Trash2,
 } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
 import { useDeletedEntities } from "@/hooks/useDeletedEntities";
-import { useRestoreEntity } from "@/hooks/useRestoreEntity";
-import { useSectionCollapse } from "@/hooks/useSectionCollapse";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
+import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePurge } from "@/hooks/usePurge";
+import { useRestoreEntity } from "@/hooks/useRestoreEntity";
+import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
+import { useSectionCollapse } from "@/hooks/useSectionCollapse";
 import { cn } from "@/shared/lib/cn";
 
 const SECTION_KEY_TASKS = "deleted-tasks";

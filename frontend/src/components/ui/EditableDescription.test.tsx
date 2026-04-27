@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { EditableDescription } from "./EditableDescription";
 
 describe("EditableDescription", () => {
@@ -9,11 +9,14 @@ describe("EditableDescription", () => {
       <EditableDescription
         value="Check https://example.com"
         onChange={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText("Check")).toBeInTheDocument();
-    expect(screen.getByRole("link")).toHaveAttribute("href", "https://example.com");
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      "https://example.com",
+    );
   });
 
   it("should display placeholder when value is empty", () => {
@@ -22,7 +25,7 @@ describe("EditableDescription", () => {
         value=""
         onChange={vi.fn()}
         placeholder="Enter description"
-      />
+      />,
     );
 
     expect(screen.getByText("Enter description")).toBeInTheDocument();
@@ -30,12 +33,7 @@ describe("EditableDescription", () => {
 
   it("should switch to edit mode on click", async () => {
     const user = userEvent.setup();
-    render(
-      <EditableDescription
-        value="Some text"
-        onChange={vi.fn()}
-      />
-    );
+    render(<EditableDescription value="Some text" onChange={vi.fn()} />);
 
     await user.click(screen.getByText("Some text"));
 
@@ -50,7 +48,7 @@ describe("EditableDescription", () => {
       <EditableDescription
         value="Visit https://example.com"
         onChange={vi.fn()}
-      />
+      />,
     );
 
     const link = screen.getByRole("link");
@@ -61,12 +59,7 @@ describe("EditableDescription", () => {
 
   it("should autofocus textarea when switching to edit mode", async () => {
     const user = userEvent.setup();
-    render(
-      <EditableDescription
-        value="Some text"
-        onChange={vi.fn()}
-      />
-    );
+    render(<EditableDescription value="Some text" onChange={vi.fn()} />);
 
     await user.click(screen.getByText("Some text"));
 
@@ -78,12 +71,7 @@ describe("EditableDescription", () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
 
-    render(
-      <EditableDescription
-        value="Initial"
-        onChange={handleChange}
-      />
-    );
+    render(<EditableDescription value="Initial" onChange={handleChange} />);
 
     await user.click(screen.getByText("Initial"));
     const textarea = screen.getByRole("textbox");
@@ -95,12 +83,7 @@ describe("EditableDescription", () => {
 
   it("should switch back to view mode on blur", async () => {
     const user = userEvent.setup();
-    render(
-      <EditableDescription
-        value="Some text"
-        onChange={vi.fn()}
-      />
-    );
+    render(<EditableDescription value="Some text" onChange={vi.fn()} />);
 
     await user.click(screen.getByText("Some text"));
     const textarea = screen.getByRole("textbox");
@@ -120,7 +103,7 @@ describe("EditableDescription", () => {
         value="Some text"
         onChange={vi.fn()}
         onBlur={handleBlur}
-      />
+      />,
     );
 
     await user.click(screen.getByText("Some text"));
@@ -135,7 +118,7 @@ describe("EditableDescription", () => {
         value="Text"
         onChange={vi.fn()}
         className="custom-class"
-      />
+      />,
     );
 
     expect(container.firstChild).toHaveClass("custom-class");
@@ -147,7 +130,7 @@ describe("EditableDescription", () => {
         value="Text"
         onChange={vi.fn()}
         data-test-id="test-description"
-      />
+      />,
     );
 
     expect(screen.getByTestId("test-description")).toBeInTheDocument();
@@ -160,7 +143,7 @@ describe("EditableDescription", () => {
         value=""
         onChange={vi.fn()}
         placeholder="Click to edit"
-      />
+      />,
     );
 
     await user.click(screen.getByText("Click to edit"));
@@ -174,7 +157,7 @@ describe("EditableDescription", () => {
       <EditableDescription
         value="Visit https://example.com/very/long/path"
         onChange={vi.fn()}
-      />
+      />,
     );
 
     await user.click(screen.getByText("Visit"));

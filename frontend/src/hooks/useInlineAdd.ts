@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
 import type * as React from "react";
+import { useCallback, useState } from "react";
 
 export function useInlineAdd(onCreate: (name: string) => Promise<unknown>) {
   const [isAdding, setIsAdding] = useState(false);

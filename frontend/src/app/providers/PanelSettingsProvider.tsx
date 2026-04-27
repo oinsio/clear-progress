@@ -1,6 +1,6 @@
+import type * as React from "react";
 import { createContext, useCallback, useState } from "react";
 import { STORAGE_KEYS } from "@/constants";
-import * as React from "react";
 
 interface PanelSettingsContextValue {
   isPanelAlwaysOpen: boolean;

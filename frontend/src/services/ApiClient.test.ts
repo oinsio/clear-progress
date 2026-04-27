@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { HttpResponse, http } from "msw";
 import type { MockInstance } from "vitest";
-import { http, HttpResponse } from "msw";
-import { server } from "@/test/mocks/server";
-import { ApiClient, setAccessToken, ApiAuthError } from "./ApiClient";
-import type { UploadCoverBatchItem } from "@/types/api";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
+import { server } from "@/test/mocks/server";
+import type { UploadCoverBatchItem } from "@/types/api";
+import { ApiAuthError, ApiClient, setAccessToken } from "./ApiClient";
 
 function getLastRequestBody(
   fetchSpy: MockInstance<typeof fetch>,

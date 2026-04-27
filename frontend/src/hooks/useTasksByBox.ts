@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { BOX } from "@/constants";
-import type { Task } from "@/types/entities";
 import type { Box } from "@/types/common";
+import type { Task } from "@/types/entities";
 
 export function useTasksByBox(tasks: Task[]): Record<Box, Task[]> {
   return useMemo(() => {

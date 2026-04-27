@@ -1,14 +1,14 @@
-import { describe, it, expect } from "vitest";
 import i18n from "i18next";
+import { describe, expect, it } from "vitest";
+import { fakeClock } from "@/lib/temporal";
+import type { RepeatRule } from "@/types/common";
 import {
+  calculateAppearDate,
+  calculateNextDate,
+  formatRepeatRuleLabel,
   parseRepeatRule,
   serializeRepeatRule,
-  formatRepeatRuleLabel,
-  calculateNextDate,
-  calculateAppearDate,
 } from "./repeatRule";
-import type { RepeatRule } from "@/types/common";
-import { fakeClock } from "@/lib/temporal";
 
 describe("parseRepeatRule", () => {
   it("should return null for empty string", () => {

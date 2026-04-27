@@ -1,7 +1,7 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import type * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useInlineAdd } from "./useInlineAdd";
-import * as React from "react";
 
 describe("useInlineAdd", () => {
   let onCreate = vi.fn().mockResolvedValue(undefined);
@@ -53,21 +53,22 @@ describe("useInlineAdd", () => {
       expect(result.current.isAdding).toBe(false);
     });
 
-    it.each(["", "   ", "  \t  "])(
-      "should not call onCreate when Enter is pressed with blank value %j",
-      async (blankValue) => {
-        act(() => {
-          result.current.setValue(blankValue);
-        });
+    it.each([
+      "",
+      "   ",
+      "  \t  ",
+    ])("should not call onCreate when Enter is pressed with blank value %j", async (blankValue) => {
+      act(() => {
+        result.current.setValue(blankValue);
+      });
 
-        await act(async () => {
-          result.current.handleKeyDown({ key: "Enter" } as React.KeyboardEvent);
-          await Promise.resolve();
-        });
+      await act(async () => {
+        result.current.handleKeyDown({ key: "Enter" } as React.KeyboardEvent);
+        await Promise.resolve();
+      });
 
-        expect(onCreate).not.toHaveBeenCalled();
-      },
-    );
+      expect(onCreate).not.toHaveBeenCalled();
+    });
 
     it("should set isAdding to false and clear value when Escape is pressed", () => {
       act(() => {

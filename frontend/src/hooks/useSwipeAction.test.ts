@@ -1,8 +1,9 @@
-import { renderHook, act } from "@testing-library/react";
-import React, { createRef } from "react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { useSwipeAction } from "./useSwipeAction";
+import { act, renderHook } from "@testing-library/react";
+import type React from "react";
+import { createRef } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SWIPE_COMPLETE_THRESHOLD_PERCENT } from "@/constants";
+import { useSwipeAction } from "./useSwipeAction";
 
 function createElementRef() {
   const element = document.createElement("div");
@@ -90,9 +91,7 @@ describe("useSwipeAction", () => {
 
   // When disabled
   it("should not change translateX when isEnabled is false", () => {
-    const { result } = renderHook(() =>
-      useSwipeAction(ref, vi.fn(), false),
-    );
+    const { result } = renderHook(() => useSwipeAction(ref, vi.fn(), false));
     act(() => {
       fireTouchStart(element, 0, 0);
       fireTouchMove(element, 50, 0);
@@ -217,9 +216,7 @@ describe("useSwipeAction", () => {
   // Cleanup
   it("should remove event listeners on unmount", () => {
     const removeEventListenerSpy = vi.spyOn(element, "removeEventListener");
-    const { unmount } = renderHook(() =>
-      useSwipeAction(ref, vi.fn(), true),
-    );
+    const { unmount } = renderHook(() => useSwipeAction(ref, vi.fn(), true));
     unmount();
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       "touchstart",
@@ -278,21 +275,18 @@ describe("useSwipeAction", () => {
     ["threshold - 1", -1, false],
     ["threshold", 0, true],
     ["threshold + 1", 1, true],
-  ] as const)(
-    "onAction called=%s when swipe is %s relative to threshold",
-    (_label, offset, shouldCall) => {
-      const onAction = vi.fn();
-      renderHook(() => useSwipeAction(ref, onAction, true));
-      act(() => {
-        fireTouchStart(element, 0, 0);
-        fireTouchMove(element, threshold + offset, 0);
-        fireTouchEnd(element);
-      });
-      if (shouldCall) {
-        expect(onAction).toHaveBeenCalledOnce();
-      } else {
-        expect(onAction).not.toHaveBeenCalled();
-      }
-    },
-  );
+  ] as const)("onAction called=%s when swipe is %s relative to threshold", (_label, offset, shouldCall) => {
+    const onAction = vi.fn();
+    renderHook(() => useSwipeAction(ref, onAction, true));
+    act(() => {
+      fireTouchStart(element, 0, 0);
+      fireTouchMove(element, threshold + offset, 0);
+      fireTouchEnd(element);
+    });
+    if (shouldCall) {
+      expect(onAction).toHaveBeenCalledOnce();
+    } else {
+      expect(onAction).not.toHaveBeenCalled();
+    }
+  });
 });

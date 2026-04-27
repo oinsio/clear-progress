@@ -27,10 +27,7 @@ export const systemClock: Clock = {
  * @param isoTimestamp - ISO 8601 timestamp (e.g., "2026-04-16T10:30:00Z")
  * @param timeZone - IANA timezone (default: "UTC")
  */
-export function fakeClock(
-  isoTimestamp: string,
-  timeZone = "UTC",
-): Clock {
+export function fakeClock(isoTimestamp: string, timeZone = "UTC"): Clock {
   const instant = Temporal.Instant.from(isoTimestamp);
   return {
     instant: () => instant,

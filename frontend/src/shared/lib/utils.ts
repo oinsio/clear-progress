@@ -1,6 +1,6 @@
-import type { Task } from "@/types/entities";
 import i18next from "i18next";
-import { Temporal, type Clock, systemClock } from "@/lib/temporal";
+import { type Clock, systemClock, Temporal } from "@/lib/temporal";
+import type { Task } from "@/types/entities";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
 
 export interface GroupedCompletedTasks {
@@ -14,17 +14,28 @@ export interface GroupedCompletedTasks {
 const DAYS_IN_WEEK = 7;
 const DAYS_IN_MONTH = 30;
 
-export function groupCompletedTasks(tasks: Task[], clock: Clock = systemClock): GroupedCompletedTasks {
+export function groupCompletedTasks(
+  tasks: Task[],
+  clock: Clock = systemClock,
+): GroupedCompletedTasks {
   const userTimeZone = clock.timeZoneId();
   const today = clock.plainDateISO();
   const yesterday = today.subtract({ days: 1 });
   const sevenDaysAgo = today.subtract({ days: DAYS_IN_WEEK });
   const thirtyDaysAgo = today.subtract({ days: DAYS_IN_MONTH });
 
-  const startOfToday = today.toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" }).toInstant();
-  const startOfYesterday = yesterday.toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" }).toInstant();
-  const startOf7DaysAgo = sevenDaysAgo.toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" }).toInstant();
-  const startOf30DaysAgo = thirtyDaysAgo.toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" }).toInstant();
+  const startOfToday = today
+    .toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" })
+    .toInstant();
+  const startOfYesterday = yesterday
+    .toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" })
+    .toInstant();
+  const startOf7DaysAgo = sevenDaysAgo
+    .toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" })
+    .toInstant();
+  const startOf30DaysAgo = thirtyDaysAgo
+    .toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" })
+    .toInstant();
 
   const todayTasks: Task[] = [];
   const yesterdayTasks: Task[] = [];
@@ -36,13 +47,25 @@ export function groupCompletedTasks(tasks: Task[], clock: Clock = systemClock): 
     const completedInstant = task.completed_at
       ? Temporal.Instant.from(task.completed_at)
       : null;
-    if (completedInstant && Temporal.Instant.compare(completedInstant, startOfToday) >= 0) {
+    if (
+      completedInstant &&
+      Temporal.Instant.compare(completedInstant, startOfToday) >= 0
+    ) {
       todayTasks.push(task);
-    } else if (completedInstant && Temporal.Instant.compare(completedInstant, startOfYesterday) >= 0) {
+    } else if (
+      completedInstant &&
+      Temporal.Instant.compare(completedInstant, startOfYesterday) >= 0
+    ) {
       yesterdayTasks.push(task);
-    } else if (completedInstant && Temporal.Instant.compare(completedInstant, startOf7DaysAgo) >= 0) {
+    } else if (
+      completedInstant &&
+      Temporal.Instant.compare(completedInstant, startOf7DaysAgo) >= 0
+    ) {
       weekTasks.push(task);
-    } else if (completedInstant && Temporal.Instant.compare(completedInstant, startOf30DaysAgo) >= 0) {
+    } else if (
+      completedInstant &&
+      Temporal.Instant.compare(completedInstant, startOf30DaysAgo) >= 0
+    ) {
       monthTasks.push(task);
     } else {
       earlierTasks.push(task);
@@ -63,12 +86,19 @@ function getDayBoundaries(clock: Clock = systemClock): DayBoundaries {
   const yesterday = today.subtract({ days: 1 });
 
   return {
-    startOfToday: today.toZonedDateTime({ timeZone, plainTime: "00:00" }).toInstant(),
-    startOfYesterday: yesterday.toZonedDateTime({ timeZone, plainTime: "00:00" }).toInstant(),
+    startOfToday: today
+      .toZonedDateTime({ timeZone, plainTime: "00:00" })
+      .toInstant(),
+    startOfYesterday: yesterday
+      .toZonedDateTime({ timeZone, plainTime: "00:00" })
+      .toInstant(),
   };
 }
 
-export function formatCompletedAt(isoString: string, clock: Clock = systemClock): string {
+export function formatCompletedAt(
+  isoString: string,
+  clock: Clock = systemClock,
+): string {
   if (!isoString) return "";
   const completedInstant = Temporal.Instant.from(isoString);
   const { startOfToday, startOfYesterday } = getDayBoundaries(clock);
@@ -95,10 +125,16 @@ export function formatCompletedAt(isoString: string, clock: Clock = systemClock)
     timeZone,
   });
   const dateString = dateFormatter.format(completedInstant.epochMilliseconds);
-  return i18next.t("task.completedDate", { date: dateString, time: timeString });
+  return i18next.t("task.completedDate", {
+    date: dateString,
+    time: timeString,
+  });
 }
 
-export function formatShortDateTime(isoString: string, clock: Clock = systemClock): string {
+export function formatShortDateTime(
+  isoString: string,
+  clock: Clock = systemClock,
+): string {
   if (!isoString) return "";
   const instant = Temporal.Instant.from(isoString);
   const { startOfToday, startOfYesterday } = getDayBoundaries(clock);

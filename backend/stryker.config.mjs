@@ -1,18 +1,14 @@
 /** @type {import('@stryker-mutator/core').PartialStrykerOptions} */
 const config = {
-  testRunner: 'vitest',
-  plugins: ['@stryker-mutator/vitest-runner'],
+  testRunner: "vitest",
+  plugins: ["@stryker-mutator/vitest-runner"],
   vitest: {
-    configFile: 'vitest.config.ts',
+    configFile: "vitest.config.ts",
   },
-  mutate: [
-    'src/**/*.ts',
-    '!src/**/*.test.ts',
-    '!src/types/**/*.ts',
-  ],
-  reporters: ['html', 'clear-text', 'progress'],
+  mutate: ["src/**/*.ts", "!src/**/*.test.ts", "!src/types/**/*.ts"],
+  reporters: ["html", "clear-text", "progress"],
   htmlReporter: {
-    fileName: 'reports/mutation/index.html',
+    fileName: "reports/mutation/index.html",
   },
   thresholds: {
     high: 80,
