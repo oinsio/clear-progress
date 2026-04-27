@@ -91,15 +91,15 @@ src/
 
 ### Layers and Responsibilities
 
-| Layer | Path | Contains | Depends on |
-|---|---|---|---|
-| Pages | `src/pages/` | Route-bound page components | features, shared, services |
-| Features | `src/features/{domain}/` | Domain components, hooks, utilities | shared, db, services, types |
-| Services | `src/services/` | Business logic, sync, API client | db/repositories, types |
-| Repositories | `src/db/repositories/` | IndexedDB CRUD operations via Dexie | db/schema, types |
-| Shared | `src/shared/` | Reusable UI and utilities | types (never depends on features) |
-| Types | `src/types/` | Interfaces and types | nothing |
-| Constants | `src/constants/` | Constants and enum-like values | types |
+| Layer        | Path                     | Contains                            | Depends on                        |
+|--------------|--------------------------|-------------------------------------|-----------------------------------|
+| Pages        | `src/pages/`             | Route-bound page components         | features, shared, services        |
+| Features     | `src/features/{domain}/` | Domain components, hooks, utilities | shared, db, services, types       |
+| Services     | `src/services/`          | Business logic, sync, API client    | db/repositories, types            |
+| Repositories | `src/db/repositories/`   | IndexedDB CRUD operations via Dexie | db/schema, types                  |
+| Shared       | `src/shared/`            | Reusable UI and utilities           | types (never depends on features) |
+| Types        | `src/types/`             | Interfaces and types                | nothing                           |
+| Constants    | `src/constants/`         | Constants and enum-like values      | types                             |
 
 ### Dependency Direction
 
@@ -117,21 +117,21 @@ Forbidden:
 
 ### Where to Place New Code
 
-| What you're creating | Where to put it |
-|---|---|
-| New page/route | `src/pages/` + register in `src/app/router.tsx` |
-| Feature-specific component | `src/features/{domain}/components/` |
-| Feature-specific hook | `src/features/{domain}/hooks/` |
-| Feature-specific utility | `src/features/{domain}/utils/` |
-| shadcn/ui component | `src/shared/ui/` |
-| Reusable project component | `src/shared/components/` |
-| Reusable hook (not domain-bound) | `src/shared/hooks/` |
-| General-purpose utility (cn, formatDate) | `src/shared/lib/` |
-| Entity repository | `src/db/repositories/` |
-| Business logic service | `src/services/` |
-| Interface/type | `src/types/` |
-| Constant | `src/constants/index.ts` |
-| Context provider (Theme, Auth, Sync) | `src/app/providers/` |
+| What you're creating                     | Where to put it                                 |
+|------------------------------------------|-------------------------------------------------|
+| New page/route                           | `src/pages/` + register in `src/app/router.tsx` |
+| Feature-specific component               | `src/features/{domain}/components/`             |
+| Feature-specific hook                    | `src/features/{domain}/hooks/`                  |
+| Feature-specific utility                 | `src/features/{domain}/utils/`                  |
+| shadcn/ui component                      | `src/shared/ui/`                                |
+| Reusable project component               | `src/shared/components/`                        |
+| Reusable hook (not domain-bound)         | `src/shared/hooks/`                             |
+| General-purpose utility (cn, formatDate) | `src/shared/lib/`                               |
+| Entity repository                        | `src/db/repositories/`                          |
+| Business logic service                   | `src/services/`                                 |
+| Interface/type                           | `src/types/`                                    |
+| Constant                                 | `src/constants/index.ts`                        |
+| Context provider (Theme, Auth, Sync)     | `src/app/providers/`                            |
 
 ### Adding a New Feature (Domain)
 
@@ -182,12 +182,12 @@ src/shared/lib/
 
 The `src/test/` directory contains only shared infrastructure, not tests:
 
-| Path | Purpose |
-|---|---|
-| `src/test/setup.ts` | Global setup: fake-indexeddb, MSW server start, custom matchers |
-| `src/test/mocks/handlers.ts` | MSW request handlers for GAS API mocking (ping, init, pull, push) |
-| `src/test/mocks/server.ts` | MSW server instance |
-| `src/test/factories/` | Factories for creating test entities (Task, Goal, etc.) with default values |
+| Path                         | Purpose                                                                     |
+|------------------------------|-----------------------------------------------------------------------------|
+| `src/test/setup.ts`          | Global setup: fake-indexeddb, MSW server start, custom matchers             |
+| `src/test/mocks/handlers.ts` | MSW request handlers for GAS API mocking (ping, init, pull, push)           |
+| `src/test/mocks/server.ts`   | MSW server instance                                                         |
+| `src/test/factories/`        | Factories for creating test entities (Task, Goal, etc.) with default values |
 
 ### Vitest Configuration
 
@@ -222,15 +222,15 @@ export default defineConfig({
 
 ### What to Test
 
-| Priority | Layer | Examples |
-|---|---|---|
-| High | `services/` | Business logic in TaskService, SyncService (conflict resolution) |
-| High | `db/repositories/` | CRUD operations with fake-indexeddb |
-| High | `features/*/utils/` | Pure functions (sorting, filtering) |
-| Medium | `features/*/hooks/` | Custom hooks via renderHook |
-| Medium | `shared/lib/` | Utilities (formatDate, cn, uuid) |
-| Low | `features/*/components/` | Components — only critical interactions |
-| Low | `pages/` | Page integration tests (if needed) |
+| Priority | Layer                    | Examples                                                         |
+|----------|--------------------------|------------------------------------------------------------------|
+| High     | `services/`              | Business logic in TaskService, SyncService (conflict resolution) |
+| High     | `db/repositories/`       | CRUD operations with fake-indexeddb                              |
+| High     | `features/*/utils/`      | Pure functions (sorting, filtering)                              |
+| Medium   | `features/*/hooks/`      | Custom hooks via renderHook                                      |
+| Medium   | `shared/lib/`            | Utilities (formatDate, cn, uuid)                                 |
+| Low      | `features/*/components/` | Components — only critical interactions                          |
+| Low      | `pages/`                 | Page integration tests (if needed)                               |
 
 ---
 

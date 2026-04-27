@@ -1,6 +1,7 @@
 # Clear Progress — Frontend
 
 React PWA for GTD. See root `CLAUDE.md` for data model, API protocol, and shared conventions.
+**@docs/frontend-project-structure.md**
 
 ## Gotchas
 
