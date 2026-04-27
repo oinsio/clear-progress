@@ -2,43 +2,35 @@
 
 Shared contract package for Clear Progress GTD app.
 
-## Purpose
+## What's inside
 
-This package defines the protocol between client and backend adapters:
-- **Domain types** — wire-format entities (WireTask, WireGoal, etc.)
-- **Protocol types** — API request/response shapes (PullRequest, PushResponse, etc.)
-- **Ports** — SyncAdapter interface that all backend adapters must implement
-- **Constants** — shared constants (API_ACTIONS, PUSH_RESULT_STATUS, etc.)
+- **Domain types** (`WireTask`, `WireGoal`, etc.) — wire-format entities that travel between client and server
+- **Protocol types** (`PullRequest`, `PushResponse`, etc.) — sync protocol messages
+- **SyncAdapter interface** — port for backend implementations
+- **Constants** — shared constants like `API_ACTIONS`, `PUSH_RESULT_STATUS`, `SYNC_META_KEYS`
 
 ## Usage
 
 ```typescript
-import type { SyncAdapter, PullRequest, WireTask } from "@clear-progress/contract";
+import type { SyncAdapter, PullRequest, PullResponse } from "@clear-progress/contract";
 
 class MyAdapter implements SyncAdapter {
-  async pull(request: PullRequest) {
-    // ...
+  async pull(request: PullRequest): Promise<PullResponse> {
+    // implementation
   }
   // ... other methods
 }
 ```
 
-## Wire Types vs Client Types
+## Wire types vs Client types
 
-Wire types (WireTask, WireGoal, etc.) are plain objects with string timestamps:
-- `created_at: string` (ISO 8601)
-- `updated_at: string` (ISO 8601)
-- No `needsSync` field
+Wire types (`WireTask`, `WireGoal`, etc.) use plain strings for timestamps and dates:
+- `created_at: string` (ISO 8601 timestamp)
+- `next_date: string` (ISO date or empty string)
 
-Client types (Task, Goal, etc.) extend wire types with:
+Client types extend wire types with:
 - Branded types (`ISOTimestamp`, `ISODate`)
-- `needsSync: boolean` (client-only field)
-
-## Contract Tests
-
-Contract tests ensure adapter implementations comply with the protocol.
-
-See `tests/contracts/sync-adapter.contract.ts` for the test suite factory.
+- Client-only fields (`needsSync: boolean`)
 
 ## Building
 

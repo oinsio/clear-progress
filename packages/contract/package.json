@@ -1,24 +1,20 @@
 {
-	"name": "@clear-progress/contract",
-	"version": "0.1.0",
-	"type": "module",
-	"main": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
-		},
-		"./contracts": {
-			"types": "./dist/tests/contracts/index.d.ts",
-			"import": "./dist/tests/contracts/index.js"
-		}
-	},
-	"scripts": {
-		"build": "tsc -b",
-		"typecheck": "tsc --noEmit"
-	},
-	"devDependencies": {
-		"typescript": "^5.9.3"
-	}
+  "name": "@clear-progress/contract",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }
