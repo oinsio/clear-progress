@@ -1,6 +1,7 @@
 /** @type {import('@stryker-mutator/core').PartialStrykerOptions} */
 const config = {
   testRunner: "vitest",
+  plugins: ["@stryker-mutator/vitest-runner"],
   vitest: {
     configFile: "vite.config.ts",
   },

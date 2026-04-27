@@ -8,6 +8,7 @@ import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { createMockTaskRepository } from "@/test/mocks/taskRepositoryMock";
 import { createMockChecklistRepository } from "@/test/factories/checklistRepositoryFactory";
 import { toISOTimestamp, toISODate } from "@/utils/dateHelpers";
+import { fakeClock } from "@/lib/temporal";
 
 const setupCompletionMocks = (
   mockTaskRepository: TaskRepository,
@@ -119,6 +120,9 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
   describe("Completing recurring task", () => {
     it("should create hidden clone when completing task with repeat_rule", async () => {
+      const clock = fakeClock("2026-04-20T10:00:00Z");
+      taskService = new TaskService(mockTaskRepository, mockChecklistRepository, clock);
+
       const repeatRule = {
         type: "fixed" as const,
         frequency: "daily" as const,
@@ -147,7 +151,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: true,
         next_date: toISODate("2026-05-02"),
-        appear_date: toISODate("2026-05-02"),
+        appear_date: toISODate("2026-04-22"),
         box: "today",
       });
 
@@ -694,7 +698,12 @@ describe("TaskService - Recurring Tasks Integration", () => {
       appearDate: string,
       advanceDays: number,
       expectedHidden: boolean,
+      clock?: ReturnType<typeof fakeClock>,
     ) {
+      const service = clock
+        ? new TaskService(mockTaskRepository, mockChecklistRepository, clock)
+        : taskService;
+
       const repeatRule = {
         type: "fixed" as const,
         frequency: "daily" as const,
@@ -724,7 +733,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         mockChecklistRepository,
       );
 
-      await taskService.complete("task-1");
+      await service.complete("task-1");
 
       const createdTask = getCreatedTask();
       expect(createdTask).toBeDefined();
@@ -736,7 +745,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
     });
 
     it("should keep hidden clone hidden when appear_date in future", async () => {
-      await testHiddenFieldAfterComplete("2026-04-26", "2026-04-26", 5, true);
+      const clock = fakeClock("2026-04-20T10:00:00Z");
+      await testHiddenFieldAfterComplete("2026-05-01", "2026-04-26", 5, true, clock);
     });
 
     it("should reveal hidden clone when appear_date equals today", async () => {
@@ -789,6 +799,9 @@ describe("TaskService - Recurring Tasks Integration", () => {
     });
 
     it("should keep updated hidden clone hidden when appear_date in future", async () => {
+      const clock = fakeClock("2026-04-20T10:00:00Z");
+      taskService = new TaskService(mockTaskRepository, mockChecklistRepository, clock);
+
       const repeatRule = {
         type: "fixed" as const,
         frequency: "daily" as const,
@@ -801,7 +814,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         id: "task-1",
         name: "Daily task",
         repeat_rule: JSON.stringify(repeatRule),
-        next_date: toISODate("2026-04-26"),
+        next_date: toISODate("2026-05-01"),
         appear_date: toISODate("2026-04-26"),
       });
 

@@ -27,4 +27,4 @@ React PWA for GTD. See root `CLAUDE.md` for data model, API protocol, and shared
 
 After editing source files:
 1. Call `getDiagnostics` via JetBrains MCP for changed files — fix errors immediately without asking
-2. Run `npm run build` to verify the build is not broken
+2. Run `pnpm run build` to verify the build is not broken

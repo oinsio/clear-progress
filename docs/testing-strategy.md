@@ -1,64 +1,64 @@
-# Clear Progress — Стратегия тестирования
+# Clear Progress — Testing Strategy
 
-## 1. Обзор
+## 1. Overview
 
-Документ описывает инструменты, подходы и практики тестирования для приложения Clear Progress (React PWA + Google Apps Script + Google Sheets).
+This document describes the tools, approaches, and testing practices for the Clear Progress application (React PWA + Google Apps Script + Google Sheets).
 
-### Пирамида тестов
+### Test Pyramid
 
 ```
         ╱ ‾ ‾ ‾ ‾ ‾ ╲
        ╱   E2E (10%)   ╲          Playwright
       ╱─────────────────╲
-     ╱ Интеграционные (30%)╲      Vitest + Testing Library + MSW
+     ╱ Integration (30%) ╲      Vitest + Testing Library + MSW
     ╱───────────────────────╲
-   ╱    Юнит-тесты (60%)     ╲    Vitest
+   ╱    Unit Tests (60%)     ╲    Vitest
   ╱ ‾ ‾ ‾ ‾ ‾ ‾ ‾ ‾ ‾ ‾ ‾ ‾ ‾╲
 ```
 
-| Уровень | Инструменты | Что покрывает |
-|---------|------------|---------------|
-| Юнит | Vitest | Утилиты, хелперы, sync-логика, трансформации данных |
-| Интеграционные | Vitest + React Testing Library + MSW | Компоненты с взаимодействием, хуки, CRUD-операции, IndexedDB |
-| E2E | Playwright | Полные пользовательские сценарии, офлайн, свайпы, PWA |
+| Level       | Tools                                | Coverage                                                        |
+|-------------|--------------------------------------|-----------------------------------------------------------------|
+| Unit        | Vitest                               | Utils, helpers, sync logic, data transformations                |
+| Integration | Vitest + React Testing Library + MSW | Components with interactions, hooks, CRUD operations, IndexedDB |
+| E2E         | Playwright                           | Full user scenarios, offline, swipes, PWA                       |
 
 ---
 
-## 2. Стек инструментов
+## 2. Tool Stack
 
 ### 2.1 Vitest
 
-Основной тест-раннер. Выбран потому что уже в стеке проекта, нативно работает с Vite, поддерживает TypeScript без дополнительной настройки, совместим с Jest API.
+Primary test runner. Chosen because it's already in the project stack, works natively with Vite, supports TypeScript without additional configuration, and is compatible with Jest API.
 
-**Зона ответственности:** юнит-тесты, интеграционные тесты компонентов.
+**Responsibility:** unit tests, component integration tests.
 
 ### 2.2 React Testing Library
 
-Тестирование компонентов с точки зрения пользователя — через видимый текст, роли, лейблы. Не зависит от деталей реализации.
+Testing components from the user's perspective — through visible text, roles, labels. Independent of implementation details.
 
-**Зона ответственности:** рендеринг компонентов, пользовательские взаимодействия (клик, ввод), проверка отображаемого состояния.
+**Responsibility:** component rendering, user interactions (click, input), checking displayed state.
 
 ### 2.3 MSW (Mock Service Worker)
 
-Перехват HTTP-запросов на уровне сервис-воркера. Единый слой моков для Vitest и Playwright.
+HTTP request interception at the service worker level. Single mock layer for both Vitest and Playwright.
 
-**Зона ответственности:** мок GAS API (pull/push/ping/init), эмуляция конфликтов синхронизации, эмуляция сетевых ошибок.
+**Responsibility:** mocking GAS API (pull/push/ping/init), simulating sync conflicts, simulating network errors.
 
 ### 2.4 Playwright
 
-Кроссбраузерный E2E-фреймворк. Поддерживает эмуляцию мобильных устройств, офлайн-режим, touch-события.
+Cross-browser E2E framework. Supports mobile device emulation, offline mode, touch events.
 
-**Зона ответственности:** полные пользовательские сценарии, офлайн/онлайн переходы, свайп-жесты, визуальная регрессия.
+**Responsibility:** full user scenarios, offline/online transitions, swipe gestures, visual regression.
 
 ### 2.5 fake-indexeddb
 
-In-memory реализация IndexedDB для Node.js. Позволяет тестировать Dexie.js в юнит-тестах без браузера.
+In-memory IndexedDB implementation for Node.js. Allows testing Dexie.js in unit tests without a browser.
 
-**Зона ответственности:** операции с локальным кэшем, очередь офлайн-изменений.
+**Responsibility:** local cache operations, offline change queue.
 
 ---
 
-## 3. Конфигурация
+## 3. Configuration
 
 ### 3.1 Vitest
 
@@ -100,7 +100,7 @@ export default defineConfig({
 });
 ```
 
-### 3.2 Setup-файл
+### 3.2 Setup File
 
 ```ts
 // src/test/setup.ts
@@ -110,7 +110,7 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, beforeAll, afterAll } from 'vitest';
 import { server } from './mocks/server';
 
-// MSW — запуск перед всеми тестами
+// MSW — start before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
@@ -118,7 +118,7 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
-// Мок crypto.randomUUID для стабильных тестов
+// Mock crypto.randomUUID for stable tests
 let uuidCounter = 0;
 vi.stubGlobal('crypto', {
   ...crypto,
@@ -126,7 +126,7 @@ vi.stubGlobal('crypto', {
 });
 ```
 
-### 3.3 MSW — обработчики
+### 3.3 MSW — Handlers
 
 ```ts
 // src/test/mocks/handlers.ts
@@ -134,7 +134,7 @@ import { http, HttpResponse } from 'msw';
 
 const GAS_URL = 'https://script.google.com/macros/s/*/exec';
 
-// Фабрика данных
+// Data factory
 export function createTask(overrides = {}) {
   return {
     id: crypto.randomUUID(),
@@ -189,7 +189,7 @@ export const handlers = [
     if (body.action === 'push') {
       return HttpResponse.json({
         ok: true,
-        results: [], // все accepted
+        results: [], // all accepted
       });
     }
 
@@ -250,9 +250,9 @@ export default defineConfig({
 
 ---
 
-## 4. Примеры тестов
+## 4. Test Examples
 
-### 4.1 Юнит-тест — утилита сортировки задач
+### 4.1 Unit Test — Task Sorting Utility
 
 ```ts
 // src/utils/sort.test.ts
@@ -261,7 +261,7 @@ import { sortTasks } from './sort';
 import { createTask } from '@/test/mocks/handlers';
 
 describe('sortTasks', () => {
-  it('сортирует по sort_order по возрастанию', () => {
+  it('sorts by sort_order ascending', () => {
     const tasks = [
       createTask({ name: 'C', sort_order: 3 }),
       createTask({ name: 'A', sort_order: 1 }),
@@ -272,7 +272,7 @@ describe('sortTasks', () => {
     expect(sorted.map(t => t.name)).toEqual(['A', 'B', 'C']);
   });
 
-  it('исключает soft-deleted задачи', () => {
+  it('excludes soft-deleted tasks', () => {
     const tasks = [
       createTask({ name: 'Active', is_deleted: false }),
       createTask({ name: 'Deleted', is_deleted: true }),
@@ -285,7 +285,7 @@ describe('sortTasks', () => {
 });
 ```
 
-### 4.2 Интеграционный тест — создание задачи
+### 4.2 Integration Test — Task Creation
 
 ```tsx
 // src/features/tasks/TaskCreateForm.test.tsx
@@ -296,7 +296,7 @@ import { TaskCreateForm } from './TaskCreateForm';
 import { TestProviders } from '@/test/TestProviders';
 
 describe('TaskCreateForm', () => {
-  it('создаёт задачу и очищает форму', async () => {
+  it('creates task and clears form', async () => {
     const user = userEvent.setup();
     const onCreated = vi.fn();
 
@@ -306,20 +306,20 @@ describe('TaskCreateForm', () => {
       </TestProviders>
     );
 
-    const input = screen.getByPlaceholderText(/название задачи/i);
-    await user.type(input, 'Купить молоко');
-    await user.click(screen.getByRole('button', { name: /создать/i }));
+    const input = screen.getByPlaceholderText(/task name/i);
+    await user.type(input, 'Buy milk');
+    await user.click(screen.getByRole('button', { name: /create/i }));
 
     expect(onCreated).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: 'Купить молоко',
+        name: 'Buy milk',
         box: 'inbox',
       })
     );
     expect(input).toHaveValue('');
   });
 
-  it('не создаёт задачу с пустым названием', async () => {
+  it('does not create task with empty name', async () => {
     const user = userEvent.setup();
     const onCreated = vi.fn();
 
@@ -329,13 +329,13 @@ describe('TaskCreateForm', () => {
       </TestProviders>
     );
 
-    await user.click(screen.getByRole('button', { name: /создать/i }));
+    await user.click(screen.getByRole('button', { name: /create/i }));
     expect(onCreated).not.toHaveBeenCalled();
   });
 });
 ```
 
-### 4.3 Интеграционный тест — синхронизация с конфликтом
+### 4.3 Integration Test — Sync with Conflict
 
 ```ts
 // src/services/sync.test.ts
@@ -351,7 +351,7 @@ describe('SyncService.push', () => {
     await db.tasks.clear();
   });
 
-  it('обрабатывает conflict — перезаписывает локальную версию', async () => {
+  it('handles conflict — overwrites local version', async () => {
     const localTask = createTask({
       id: 'task-1',
       name: 'Local Version',
@@ -386,7 +386,7 @@ describe('SyncService.push', () => {
 });
 ```
 
-### 4.4 Тест IndexedDB / Dexie.js
+### 4.4 IndexedDB / Dexie.js Test
 
 ```ts
 // src/db/tasks.test.ts
@@ -399,7 +399,7 @@ describe('TasksDB', () => {
     await db.tasks.clear();
   });
 
-  it('сохраняет и находит задачу по box', async () => {
+  it('saves and finds task by box', async () => {
     await db.tasks.bulkPut([
       createTask({ id: '1', box: 'today' }),
       createTask({ id: '2', box: 'inbox' }),
@@ -414,7 +414,7 @@ describe('TasksDB', () => {
     expect(todayTasks).toHaveLength(2);
   });
 
-  it('хранит очередь неотправленных изменений', async () => {
+  it('stores queue of unsent changes', async () => {
     const task = createTask({ id: '1', name: 'Offline Task' });
     await db.tasks.put(task);
     await db.pendingChanges.put({
@@ -431,31 +431,31 @@ describe('TasksDB', () => {
 });
 ```
 
-### 4.5 E2E — полный сценарий задачи
+### 4.5 E2E — Full Task Scenario
 
 ```ts
 // e2e/task-lifecycle.spec.ts
 import { test, expect } from '@playwright/test';
 
-test.describe('Жизненный цикл задачи', () => {
-  test('создание → перемещение → завершение', async ({ page }) => {
+test.describe('Task Lifecycle', () => {
+  test('create → move → complete', async ({ page }) => {
     await page.goto('/');
 
-    // Создать задачу в inbox
-    await page.getByPlaceholder(/название задачи/i).fill('E2E задача');
-    await page.getByRole('button', { name: /создать/i }).click();
-    await expect(page.getByText('E2E задача')).toBeVisible();
+    // Create task in inbox
+    await page.getByPlaceholder(/task name/i).fill('E2E task');
+    await page.getByRole('button', { name: /create/i }).click();
+    await expect(page.getByText('E2E task')).toBeVisible();
 
-    // Переместить в today
-    await page.getByText('E2E задача').click();
+    // Move to today
+    await page.getByText('E2E task').click();
     await page.getByRole('button', { name: /today/i }).click();
 
-    // Перейти в today и проверить
+    // Navigate to today and verify
     await page.getByRole('link', { name: /today/i }).click();
-    await expect(page.getByText('E2E задача')).toBeVisible();
+    await expect(page.getByText('E2E task')).toBeVisible();
 
-    // Завершить задачу (свайп вправо)
-    const task = page.getByText('E2E задача');
+    // Complete task (swipe right)
+    const task = page.getByText('E2E task');
     const box = await task.boundingBox();
     if (box) {
       await page.mouse.move(box.x + 10, box.y + box.height / 2);
@@ -464,62 +464,62 @@ test.describe('Жизненный цикл задачи', () => {
       await page.mouse.up();
     }
 
-    await expect(page.getByText('E2E задача')).not.toBeVisible();
+    await expect(page.getByText('E2E task')).not.toBeVisible();
   });
 });
 ```
 
-### 4.6 E2E — офлайн-режим
+### 4.6 E2E — Offline Mode
 
 ```ts
 // e2e/offline-sync.spec.ts
 import { test, expect } from '@playwright/test';
 
-test.describe('Офлайн-синхронизация', () => {
-  test('задача создаётся офлайн и синхронизируется при восстановлении', async ({ page, context }) => {
+test.describe('Offline Sync', () => {
+  test('task created offline and syncs on reconnect', async ({ page, context }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Отключить сеть
+    // Go offline
     await context.setOffline(true);
 
-    // Создать задачу
-    await page.getByPlaceholder(/название задачи/i).fill('Офлайн задача');
-    await page.getByRole('button', { name: /создать/i }).click();
+    // Create task
+    await page.getByPlaceholder(/task name/i).fill('Offline task');
+    await page.getByRole('button', { name: /create/i }).click();
 
-    // Задача видна в UI
-    await expect(page.getByText('Офлайн задача')).toBeVisible();
+    // Task visible in UI
+    await expect(page.getByText('Offline task')).toBeVisible();
 
-    // Индикатор офлайн-статуса
+    // Offline indicator
     await expect(page.getByTestId('offline-indicator')).toBeVisible();
 
-    // Восстановить сеть
+    // Reconnect
     await context.setOffline(false);
 
-    // Индикатор синхронизации → исчезает
+    // Sync indicator → disappears
     await expect(page.getByTestId('sync-indicator')).toBeVisible();
     await expect(page.getByTestId('sync-indicator')).not.toBeVisible({
       timeout: 15000,
     });
 
-    // Задача по-прежнему видна
-    await expect(page.getByText('Офлайн задача')).toBeVisible();
+    // Task still visible
+    await expect(page.getByText('Offline task')).toBeVisible();
   });
 });
 ```
 
 ---
 
-## 5. Структура файлов
+## 5. File Structure
 
 ```
 src/
 ├── test/
-│   ├── setup.ts                    # Глобальный setup (MSW, fake-indexeddb, моки)
-│   ├── TestProviders.tsx            # Обёртка с Router, Store, QueryClient
+│   ├── setup.ts                    # Global setup (MSW, fake-indexeddb, mocks)
+│   ├── TestProviders.tsx            # Wrapper with Router, Store, QueryClient
 │   └── mocks/
-│       ├── handlers.ts              # MSW-обработчики + фабрики данных
-│       └── server.ts                # MSW-сервер для Node
+│       ├── handlers.ts              # MSW handlers + data factories
+│       └── server.ts                # MSW server for Node
 ├── db/
 │   ├── index.ts
 │   └── tasks.test.ts
@@ -546,81 +546,81 @@ e2e/
 ├── navigation.spec.ts
 ├── goals.spec.ts
 └── fixtures/
-    └── test-data.ts                 # Фикстуры для E2E
+    └── test-data.ts                 # E2E fixtures
 ```
 
-Принцип: тестовые файлы лежат рядом с тестируемым кодом (`.test.ts` / `.test.tsx`). E2E — в отдельной папке `e2e/`.
+Principle: test files are co-located with tested code (`.test.ts` / `.test.tsx`). E2E in separate `e2e/` folder.
 
 ---
 
-## 6. MSW — моки GAS API
+## 6. MSW — GAS API Mocks
 
-### 6.1 Принцип
+### 6.1 Principle
 
-MSW перехватывает все запросы к GAS URL и возвращает контролируемые ответы. Один набор обработчиков используется и в Vitest, и в Playwright (через `setupWorker` в браузере).
+MSW intercepts all requests to GAS URL and returns controlled responses. One set of handlers is used in both Vitest and Playwright (via `setupWorker` in browser).
 
-### 6.2 Переопределение для конкретного теста
+### 6.2 Override for Specific Test
 
 ```ts
 import { http, HttpResponse } from 'msw';
 import { server } from '@/test/mocks/server';
 
-it('показывает ошибку при недоступном бэкенде', async () => {
+it('shows error when backend unavailable', async () => {
   server.use(
     http.get('https://script.google.com/macros/s/*/exec', () => {
-      return HttpResponse.error(); // Имитация сетевой ошибки
+      return HttpResponse.error(); // Simulate network error
     })
   );
 
-  // ... рендер и проверка
+  // ... render and verify
 });
 ```
 
-### 6.3 Сценарии для моков
+### 6.3 Mock Scenarios
 
-| Сценарий | Что мокать |
-|----------|-----------|
-| Первый запуск (не инициализирован) | `ping` → `{ initialized: false }` |
-| Нормальная работа | `pull` → данные, `push` → `accepted` |
-| Конфликт синхронизации | `push` → `conflict` + `server_record` |
-| Сетевая ошибка | `HttpResponse.error()` |
-| Медленный ответ | `delay('real')` или `delay(5000)` |
-| Ошибка сервера | `HttpResponse.json({ ok: false }, { status: 500 })` |
-
----
-
-## 7. Тестирование IndexedDB / Dexie.js
-
-### 7.1 Подход
-
-В юнит/интеграционных тестах: `fake-indexeddb/auto` (импорт в setup.ts) подменяет глобальный `indexedDB` in-memory реализацией. Dexie работает с ней прозрачно.
-
-В E2E: Playwright использует реальную IndexedDB браузера. Очистка между тестами — через `page.evaluate(() => indexedDB.deleteDatabase('ClearProgressDB'))`.
-
-### 7.2 Что тестировать
-
-- CRUD-операции для каждой сущности
-- Индексы и выборки по `box`, `goal_id`, `context_id`, `is_deleted`
-- Очередь `pendingChanges` — добавление, извлечение, очистка после push
-- Миграции схемы (при обновлении версии Dexie)
-- Пограничные случаи: пустые строки вместо null, корректность ISO-дат
+| Scenario                        | What to Mock                                        |
+|---------------------------------|-----------------------------------------------------|
+| First run (not initialized)     | `ping` → `{ initialized: false }`                   |
+| Normal operation                | `pull` → data, `push` → `accepted`                  |
+| Sync conflict                   | `push` → `conflict` + `server_record`               |
+| Network error                   | `HttpResponse.error()`                              |
+| Slow response                   | `delay('real')` or `delay(5000)`                    |
+| Server error                    | `HttpResponse.json({ ok: false }, { status: 500 })` |
 
 ---
 
-## 8. Тестирование GAS-бэкенда
+## 7. Testing IndexedDB / Dexie.js
 
-### 8.1 Подход
+### 7.1 Approach
 
-GAS не имеет встроенного тест-фреймворка. Варианты:
+In unit/integration tests: `fake-indexeddb/auto` (imported in setup.ts) replaces global `indexedDB` with in-memory implementation. Dexie works with it transparently.
 
-**Вариант A — HTTP-тесты к тестовому деплою.** Отдельный деплой GAS, привязанный к тестовой Google-таблице. Тесты (Vitest или любой HTTP-клиент) отправляют запросы и проверяют ответы.
+In E2E: Playwright uses real browser IndexedDB. Cleanup between tests via `page.evaluate(() => indexedDB.deleteDatabase('ClearProgressDB'))`.
+
+### 7.2 What to Test
+
+- CRUD operations for each entity
+- Indexes and queries by `box`, `goal_id`, `context_id`, `is_deleted`
+- `pendingChanges` queue — add, retrieve, clear after push
+- Schema migrations (when updating Dexie version)
+- Edge cases: empty strings instead of null, ISO date correctness
+
+---
+
+## 8. Testing GAS Backend
+
+### 8.1 Approach
+
+GAS has no built-in test framework. Options:
+
+**Option A — HTTP tests against test deployment.** Separate GAS deployment linked to test Google Sheet. Tests (Vitest or any HTTP client) send requests and verify responses.
 
 ```ts
 // backend-tests/api.test.ts
 const GAS_TEST_URL = process.env.GAS_TEST_DEPLOY_URL;
 
 describe('GAS API', () => {
-  it('init создаёт структуру таблицы', async () => {
+  it('init creates sheet structure', async () => {
     const res = await fetch(GAS_TEST_URL, {
       method: 'POST',
       body: JSON.stringify({ action: 'init' }),
@@ -651,41 +651,41 @@ describe('GAS API', () => {
 });
 ```
 
-**Вариант B — clasp + газовые юнит-тесты.** Вынести бизнес-логику GAS в чистые функции, тестировать их локально через `gas-local` или аналогичные библиотеки.
+**Option B — clasp + GAS unit tests.** Extract GAS business logic into pure functions, test them locally via `gas-local` or similar libraries.
 
 ---
 
-## 9. Ключевые сценарии для покрытия
+## 9. Key Scenarios to Cover
 
-### 9.1 Критические (обязательно)
+### 9.1 Critical (Must Have)
 
-- Создание/редактирование/удаление задачи (soft delete)
-- Перемещение между коробками (inbox → today → week → later)
-- Завершение задачи (свайп)
-- Синхронизация: pull → push → обработка конфликтов
-- Офлайн-режим: создание задач → восстановление → синхронизация
-- Навигация: боковое меню, переходы между экранами
-- Цели: создание, статусы, привязка задач, обложки
+- Create/edit/delete task (soft delete)
+- Move between boxes (inbox → today → week → later)
+- Complete task (swipe)
+- Sync: pull → push → conflict handling
+- Offline mode: create tasks → reconnect → sync
+- Navigation: side menu, screen transitions
+- Goals: create, statuses, task linking, covers
 
-### 9.2 Важные (MVP)
+### 9.2 Important (MVP)
 
-- Поиск задач
-- Фильтрация по контексту/категории
-- Коробка по умолчанию в настройках
-- Акцентный цвет — переключение
-- Свайп-действия (влево — удаление, вправо — завершение)
+- Task search
+- Filter by context/category
+- Default box in settings
+- Accent color — switching
+- Swipe actions (left — delete, right — complete)
 
-### 9.3 Регрессионные (v1.1+)
+### 9.3 Regression (v1.1+)
 
-- Чеклисты внутри задачи
-- Повторяющиеся задачи
-- Режим «Фокус»
-- Панель быстрых свойств
-- Обработка входящих
+- Checklists inside task
+- Recurring tasks
+- Focus mode
+- Quick properties panel
+- Inbox processing
 
 ---
 
-## 10. CI-интеграция
+## 10. CI Integration
 
 ### GitHub Actions
 
@@ -708,8 +708,8 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - run: npm ci
-      - run: npx vitest run --coverage
+      - run: pnpm ci
+      - run: pnpm vitest run --coverage
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
@@ -723,9 +723,9 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --project=chromium
+      - run: pnpm ci
+      - run: pnpm playwright install --with-deps chromium
+      - run: pnpm playwright test --project=chromium
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -733,35 +733,35 @@ jobs:
           path: playwright-report/
 ```
 
-### Рекомендации для CI
+### CI Recommendations
 
-- Юнит/интеграционные тесты — на каждый push и PR
-- E2E — на каждый PR в main, можно ограничить только Chromium для скорости
-- Полный кроссбраузерный прогон (Chromium + Mobile Chrome + Mobile Safari) — перед релизом
-- Порог покрытия: 70% statements/lines/functions, 65% branches
-- Кэширование `node_modules` и Playwright-браузеров для ускорения
+- Unit/integration tests — on every push and PR
+- E2E — on every PR to main, can limit to Chromium only for speed
+- Full cross-browser run (Chromium + Mobile Chrome + Mobile Safari) — before release
+- Coverage threshold: 70% statements/lines/functions, 65% branches
+- Cache `node_modules` and Playwright browsers for speed
 
 ---
 
-## 11. Зависимости для установки
+## 11. Dependencies to Install
 
 ```bash
-# Юнит и интеграционные тесты
-npm install -D vitest @testing-library/react @testing-library/jest-dom \
+# Unit and integration tests
+pnpm add -D vitest @testing-library/react @testing-library/jest-dom \
   @testing-library/user-event jsdom fake-indexeddb msw
 
 # E2E
-npm install -D @playwright/test
-npx playwright install
+pnpm add -D @playwright/test
+pnpm playwright install
 ```
 
 ---
 
-## 12. Полезные практики
+## 12. Best Practices
 
-- **Фабрики данных** (`createTask`, `createGoal`, ...) — единый источник тестовых данных, переиспользуются на всех уровнях.
-- **TestProviders** — обёртка с Router, Store, QueryClient для интеграционных тестов. Позволяет рендерить компоненты в реалистичном окружении.
-- **Тесты рядом с кодом** — `.test.ts` лежат в той же папке, что и тестируемый модуль. Проще находить и поддерживать.
-- **Один assert на сценарий** — где возможно, один тест проверяет одно поведение. Исключение: E2E, где допустимы longer flows.
-- **Детерминированные UUID** — мок `crypto.randomUUID()` в setup для предсказуемых ID.
-- **Очистка между тестами** — `afterEach(cleanup)` для DOM, `db.table.clear()` для IndexedDB, `server.resetHandlers()` для MSW.
+- **Data factories** (`createTask`, `createGoal`, ...) — single source of test data, reused at all levels.
+- **TestProviders** — wrapper with Router, Store, QueryClient for integration tests. Allows rendering components in realistic environment.
+- **Tests co-located with code** — `.test.ts` files in same folder as tested module. Easier to find and maintain.
+- **One assertion per scenario** — where possible, one test checks one behavior. Exception: E2E, where longer flows are acceptable.
+- **Deterministic UUIDs** — mock `crypto.randomUUID()` in setup for predictable IDs.
+- **Cleanup between tests** — `afterEach(cleanup)` for DOM, `db.table.clear()` for IndexedDB, `server.resetHandlers()` for MSW.

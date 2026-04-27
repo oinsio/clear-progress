@@ -211,7 +211,7 @@ interface Task {
 ### 3. Запустить тесты
 
 ```bash
-npm run test
+pnpm run test
 ```
 
 ## Файлы для миграции (из TEMPORAL_MIGRATION_AUDIT.md)
@@ -263,11 +263,11 @@ npm run test
 
 ## После миграции
 
-1. Запустить все тесты: `npm run test`
-2. Проверить типы: `npm run typecheck`
-3. Запустить линтер: `npm run lint`
-4. Проверить сборку: `npm run build`
-5. Запустить E2E тесты: `npm run test:e2e`
+1. Запустить все тесты: `pnpm run test`
+2. Проверить типы: `pnpm run typecheck`
+3. Запустить линтер: `pnpm run lint`
+4. Проверить сборку: `pnpm run build`
+5. Запустить E2E тесты: `pnpm run test:e2e`
 
 ## Дополнительные ресурсы
 

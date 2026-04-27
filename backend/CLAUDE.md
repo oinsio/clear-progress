@@ -5,8 +5,8 @@ Google Apps Script backend. See root `CLAUDE.md` for data model, API protocol, a
 ## Deploy
 
 ```bash
-npx clasp push         # Push code to GAS
-npx clasp deploy       # Create new deployment
+pnpm clasp push         # Push code to GAS
+pnpm clasp deploy       # Create new deployment
 ./deploy.sh            # Full deploy script (build + push + deploy)
 ```
 

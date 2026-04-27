@@ -39,7 +39,7 @@ confirm() {
 # ─── Validation ──────────────────────────────────────────────────────────────
 
 check_clasp() {
-  command -v clasp >/dev/null 2>&1 || die "clasp not found. Install: npm install -g @google/clasp"
+  command -v clasp >/dev/null 2>&1 || die "clasp not found. Install: pnpm add -g @google/clasp"
 }
 
 check_env() {
@@ -77,13 +77,13 @@ get_deploy_url() {
 cmd_build() {
   info "Running tests..."
   cd "$SCRIPT_DIR"
-  npm install --silent
-  npm run test
+  pnpm install --silent
+  pnpm run test
   info "Check tests quality..."
-  npm run test:mutation
+  pnpm run test:mutation
   info "Compiling TypeScript..."
   rm -rf dist/
-  npm run build
+  pnpm run build
   success "Build complete."
 }
 

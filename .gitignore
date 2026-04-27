@@ -5,3 +5,11 @@ node_modules
 .env
 .scannerwork
 .environment
+
+# pnpm
+.pnpm-store/
+.pnpm-debug.log
+
+# npm (old files)
+package-lock.json
+npm-debug.log
