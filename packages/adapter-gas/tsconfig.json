@@ -13,6 +13,7 @@
     "noUncheckedIndexedAccess": false,
     "types": ["google-apps-script"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "tests", "src/**/*.test.ts"]
+  "include": ["src/server/**/*.ts"],
+  "exclude": ["node_modules", "tests",
+    "tests/server", "src/**/*.test.ts"]
 }

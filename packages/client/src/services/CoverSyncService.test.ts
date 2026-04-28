@@ -9,7 +9,7 @@ import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import type { PendingCoverRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { ApiClient } from "./ApiClient";
+import type { SyncAdapter } from "@clear-progress/contract";
 import { CoverSyncService } from "./CoverSyncService";
 import { localCoverCache } from "./LocalCoverCache";
 
@@ -51,21 +51,22 @@ function createMockGetCoversNotFound(fileId: string) {
   });
 }
 
-function createMockApiClient(
-  overrides: Partial<Record<keyof ApiClient, unknown>> = {},
-): ApiClient {
+function createMockSyncAdapter(
+  overrides: Partial<SyncAdapter> = {},
+): SyncAdapter {
   return {
     uploadCover: vi.fn().mockResolvedValue({
+      ok: true,
       file_id: "uploaded-file-id",
       reused: false,
     }),
     uploadCovers: vi
       .fn()
       .mockImplementation(
-        (covers: Array<{ local_id: string; goal_id: string }>) =>
+        (request: { covers: Array<{ local_id: string; goal_id: string }> }) =>
           Promise.resolve({
             ok: true,
-            results: covers.map((cover) => ({
+            results: request.covers.map((cover) => ({
               local_id: cover.local_id,
               goal_id: cover.goal_id,
               file_id: "uploaded-file-id",
@@ -73,14 +74,15 @@ function createMockApiClient(
             })),
           }),
       ),
-    deleteCover: vi.fn().mockResolvedValue({ deleted: true, ref_count: 0 }),
-    getCovers: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
+    deleteCover: vi.fn().mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
+    getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
     ping: vi.fn(),
     init: vi.fn(),
     pull: vi.fn(),
     push: vi.fn(),
+    purge: vi.fn(),
     ...overrides,
-  } as ApiClient;
+  } as SyncAdapter;
 }
 
 function createMockPendingCoverRepository(
@@ -136,14 +138,14 @@ function createPendingCover(
 }
 
 describe("CoverSyncService", () => {
-  let mockApiClient: ApiClient;
+  let mockSyncAdapter: SyncAdapter;
   let mockPendingCoverRepository: PendingCoverRepository;
   let mockCoverRepository: CoverRepository;
   let mockGoalRepository: GoalRepository;
 
   function createService(): CoverSyncService {
     return new CoverSyncService(
-      mockApiClient,
+      mockSyncAdapter,
       mockPendingCoverRepository,
       mockCoverRepository,
       mockGoalRepository,
@@ -151,7 +153,7 @@ describe("CoverSyncService", () => {
   }
 
   beforeEach(() => {
-    mockApiClient = createMockApiClient();
+    mockSyncAdapter = createMockSyncAdapter();
     mockPendingCoverRepository = createMockPendingCoverRepository();
     mockCoverRepository = createMockCoverRepository();
     mockGoalRepository = createMockGoalRepository();
@@ -304,7 +306,7 @@ describe("CoverSyncService", () => {
         { length: MAX_COVER_BATCH_SIZE + 1 },
         (_, i) => createPendingCover({ local_id: `cover-id-${i}` }),
       );
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         uploadCovers: vi.fn().mockRejectedValue(new Error("Network error")),
       });
       mockPendingCoverRepository = createMockPendingCoverRepository({
@@ -314,7 +316,7 @@ describe("CoverSyncService", () => {
 
       await service.sync();
 
-      expect(mockApiClient.uploadCovers).toHaveBeenCalledTimes(1);
+      expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledTimes(1);
     });
 
     it("should skip per-item error and continue with remaining items in same chunk", async () => {
@@ -326,7 +328,7 @@ describe("CoverSyncService", () => {
         local_id: "ok-id",
         goal_id: "ok-goal",
       });
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         uploadCovers: vi.fn().mockResolvedValue({
           ok: true,
           results: [
@@ -369,10 +371,10 @@ describe("CoverSyncService", () => {
 
       await service.sync();
 
-      expect(mockApiClient.uploadCovers).toHaveBeenCalledTimes(2);
-      const firstCallCovers = vi.mocked(mockApiClient.uploadCovers).mock
+      expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledTimes(2);
+      const firstCallCovers = vi.mocked(mockSyncAdapter.uploadCovers).mock
         .calls[0][0];
-      expect(firstCallCovers.length).toBe(MAX_COVER_BATCH_SIZE);
+      expect(firstCallCovers.covers.length).toBe(MAX_COVER_BATCH_SIZE);
     });
 
     it("should not update goal if cover_file_id no longer matches", async () => {
@@ -526,7 +528,7 @@ describe("CoverSyncService", () => {
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue(createCoverRecord()),
       });
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         uploadCovers: vi.fn().mockResolvedValue({
           ok: true,
           results: [
@@ -553,7 +555,7 @@ describe("CoverSyncService", () => {
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.uploadCovers).not.toHaveBeenCalled();
     });
 
     it("should skip goals with local: cover_file_id prefix", async () => {
@@ -568,33 +570,33 @@ describe("CoverSyncService", () => {
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.uploadCovers).not.toHaveBeenCalled();
     });
 
     it("should skip goals without a cover blob in CoverRepository when server fetch also fails", async () => {
       mockCoverRepository = createMockCoverRepository({});
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversNotFound(EXISTING_SERVER_FILE_ID),
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversNotFound(EXISTING_SERVER_FILE_ID),
       });
       const service = createService();
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.uploadCovers).not.toHaveBeenCalled();
     });
 
     it("should skip goals with no CoverRecord at all when server fetch also fails", async () => {
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue(undefined),
       });
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversNotFound(EXISTING_SERVER_FILE_ID),
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversNotFound(EXISTING_SERVER_FILE_ID),
       });
       const service = createService();
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.uploadCovers).not.toHaveBeenCalled();
     });
 
     it("should call uploadCovers with goal_id in batch item when blob exists", async () => {
@@ -602,10 +604,12 @@ describe("CoverSyncService", () => {
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ goal_id: "goal-reupload" }),
-        ]),
+      expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          covers: expect.arrayContaining([
+            expect.objectContaining({ goal_id: "goal-reupload" }),
+          ]),
+        }),
       );
     });
 
@@ -615,10 +619,12 @@ describe("CoverSyncService", () => {
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ filename: "cover-hash-x.jpg" }),
-        ]),
+      expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          covers: expect.arrayContaining([
+            expect.objectContaining({ filename: "cover-hash-x.jpg" }),
+          ]),
+        }),
       );
     });
 
@@ -634,10 +640,12 @@ describe("CoverSyncService", () => {
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ mime_type: "image/png" }),
-        ]),
+      expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          covers: expect.arrayContaining([
+            expect.objectContaining({ mime_type: "image/png" }),
+          ]),
+        }),
       );
     });
 
@@ -653,10 +661,12 @@ describe("CoverSyncService", () => {
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ mime_type: FALLBACK_COVER_MIME_TYPE }),
-        ]),
+      expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledWith(
+        expect.objectContaining({
+          covers: expect.arrayContaining([
+            expect.objectContaining({ mime_type: FALLBACK_COVER_MIME_TYPE }),
+          ]),
+        }),
       );
     });
 
@@ -682,7 +692,7 @@ describe("CoverSyncService", () => {
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue(createCoverRecord("file-fail")),
       });
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         uploadCovers: vi.fn().mockResolvedValue({
           ok: true,
           results: [
@@ -704,12 +714,12 @@ describe("CoverSyncService", () => {
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).toHaveBeenCalledTimes(1);
+      expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledTimes(1);
       expect(mockGoalRepository.update).not.toHaveBeenCalled(); // file-ok is the same as goal's cover
     });
 
     it("should not update goal when uploadCovers throws (network error)", async () => {
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         uploadCovers: vi.fn().mockRejectedValue(new Error("Network error")),
       });
       const service = createService();
@@ -732,7 +742,7 @@ describe("CoverSyncService", () => {
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue(createCoverRecord()),
       });
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         uploadCovers: vi
           .fn()
           .mockRejectedValueOnce(new Error("Network error"))
@@ -742,7 +752,7 @@ describe("CoverSyncService", () => {
 
       await service.reuploadLocalCovers();
 
-      expect(mockApiClient.uploadCovers).toHaveBeenCalledTimes(2);
+      expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledTimes(2);
     });
 
     describe("when cover has no local blob — fetch from server via get_cover API", () => {
@@ -756,7 +766,7 @@ describe("CoverSyncService", () => {
             .mockResolvedValueOnce(undefined) // first call: no record
             .mockResolvedValueOnce(createCoverRecord()), // second call: after cacheFromServer
         });
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           uploadCovers: vi.fn().mockResolvedValue({
             ok: true,
             results: [
@@ -768,19 +778,21 @@ describe("CoverSyncService", () => {
               },
             ],
           }),
-          getCovers: createMockGetCoversSuccess(EXISTING_SERVER_FILE_ID),
+          getCover: createMockGetCoversSuccess(EXISTING_SERVER_FILE_ID),
         });
       });
 
-      it("should call uploadCovers when getCovers fetch succeeds", async () => {
+      it("should call uploadCovers when getCover fetch succeeds", async () => {
         const service = createService();
 
         await service.reuploadLocalCovers();
 
-        expect(mockApiClient.uploadCovers).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({ goal_id: "goal-reupload" }),
-          ]),
+        expect(mockSyncAdapter.uploadCovers).toHaveBeenCalledWith(
+          expect.objectContaining({
+            covers: expect.arrayContaining([
+              expect.objectContaining({ goal_id: "goal-reupload" }),
+            ]),
+          }),
         );
       });
 
@@ -788,8 +800,8 @@ describe("CoverSyncService", () => {
         mockCoverRepository = createMockCoverRepository({
           getByFileId: vi.fn().mockResolvedValue(undefined),
         });
-        mockApiClient = createMockApiClient({
-          getCovers: createMockGetCoversSuccess(EXISTING_SERVER_FILE_ID),
+        mockSyncAdapter = createMockSyncAdapter({
+          getCover: createMockGetCoversSuccess(EXISTING_SERVER_FILE_ID),
         });
         const service = createService();
 
@@ -803,19 +815,19 @@ describe("CoverSyncService", () => {
         );
       });
 
-      it("should skip cover gracefully when getCovers fails", async () => {
+      it("should skip cover gracefully when getCover fails", async () => {
         mockCoverRepository = createMockCoverRepository({
           getByFileId: vi.fn().mockResolvedValue(undefined),
         });
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           uploadCovers: vi.fn(),
-          getCovers: createMockGetCoversNotFound(EXISTING_SERVER_FILE_ID),
+          getCover: createMockGetCoversNotFound(EXISTING_SERVER_FILE_ID),
         });
         const service = createService();
 
         await service.reuploadLocalCovers();
 
-        expect(mockApiClient.uploadCovers).not.toHaveBeenCalled();
+        expect(mockSyncAdapter.uploadCovers).not.toHaveBeenCalled();
       });
     });
 
@@ -827,7 +839,7 @@ describe("CoverSyncService", () => {
         mockCoverRepository = createMockCoverRepository({
           getByFileId: vi.fn().mockResolvedValue(coverRecord),
         });
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           uploadCovers: vi.fn().mockResolvedValue({
             ok: true,
             results: [
@@ -974,7 +986,7 @@ describe("CoverSyncService", () => {
 
       await service.fullSync();
 
-      expect(mockApiClient.getCovers).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.getCover).not.toHaveBeenCalled();
     });
 
     describe("when CoverRecord with blob already exists in repository", () => {
@@ -1002,12 +1014,12 @@ describe("CoverSyncService", () => {
         expect(localCoverCache.get(REMOTE_FILE_ID)).toBeDefined();
       });
 
-      it("should not call getCovers when blob exists in IndexedDB", async () => {
+      it("should not call getCover when blob exists in IndexedDB", async () => {
         const service = createService();
 
         await service.fullSync();
 
-        expect(mockApiClient.getCovers).not.toHaveBeenCalled();
+        expect(mockSyncAdapter.getCover).not.toHaveBeenCalled();
       });
     });
 
@@ -1023,20 +1035,20 @@ describe("CoverSyncService", () => {
         });
       });
 
-      it("should call getCovers API to fetch cover", async () => {
-        mockApiClient = createMockApiClient({
-          getCovers: createMockGetCoversSuccess(REMOTE_FILE_ID),
+      it("should call getCover API to fetch cover", async () => {
+        mockSyncAdapter = createMockSyncAdapter({
+          getCover: createMockGetCoversSuccess(REMOTE_FILE_ID),
         });
         const service = createService();
 
         await service.fullSync();
 
-        expect(mockApiClient.getCovers).toHaveBeenCalled();
+        expect(mockSyncAdapter.getCover).toHaveBeenCalled();
       });
 
-      it("should save downloaded blob to coverRepository when getCovers succeeds", async () => {
-        mockApiClient = createMockApiClient({
-          getCovers: createMockGetCoversSuccess(REMOTE_FILE_ID),
+      it("should save downloaded blob to coverRepository when getCover succeeds", async () => {
+        mockSyncAdapter = createMockSyncAdapter({
+          getCover: createMockGetCoversSuccess(REMOTE_FILE_ID),
         });
         const service = createService();
 
@@ -1051,8 +1063,8 @@ describe("CoverSyncService", () => {
       });
 
       it("should add cover to localCoverCache after successful download", async () => {
-        mockApiClient = createMockApiClient({
-          getCovers: createMockGetCoversSuccess(REMOTE_FILE_ID),
+        mockSyncAdapter = createMockSyncAdapter({
+          getCover: createMockGetCoversSuccess(REMOTE_FILE_ID),
         });
         const service = createService();
 
@@ -1061,9 +1073,9 @@ describe("CoverSyncService", () => {
         expect(localCoverCache.get(REMOTE_FILE_ID)).toBeDefined();
       });
 
-      it("should not save to coverRepository when getCovers fails", async () => {
-        mockApiClient = createMockApiClient({
-          getCovers: vi.fn().mockRejectedValue(new Error("Network error")),
+      it("should not save to coverRepository when getCover fails", async () => {
+        mockSyncAdapter = createMockSyncAdapter({
+          getCover: vi.fn().mockRejectedValue(new Error("Network error")),
         });
         const service = createService();
 
@@ -1072,9 +1084,9 @@ describe("CoverSyncService", () => {
         expect(mockCoverRepository.save).not.toHaveBeenCalled();
       });
 
-      it("should not add cover to localCoverCache when getCovers fails", async () => {
-        mockApiClient = createMockApiClient({
-          getCovers: vi.fn().mockRejectedValue(new Error("Network error")),
+      it("should not add cover to localCoverCache when getCover fails", async () => {
+        mockSyncAdapter = createMockSyncAdapter({
+          getCover: vi.fn().mockRejectedValue(new Error("Network error")),
         });
         const service = createService();
 
@@ -1083,9 +1095,9 @@ describe("CoverSyncService", () => {
         expect(localCoverCache.get(REMOTE_FILE_ID)).toBeUndefined();
       });
 
-      it("should not save to coverRepository when getCovers returns FILE_NOT_FOUND", async () => {
-        mockApiClient = createMockApiClient({
-          getCovers: createMockGetCoversNotFound(REMOTE_FILE_ID),
+      it("should not save to coverRepository when getCover returns FILE_NOT_FOUND", async () => {
+        mockSyncAdapter = createMockSyncAdapter({
+          getCover: createMockGetCoversNotFound(REMOTE_FILE_ID),
         });
         const service = createService();
 
@@ -1108,7 +1120,7 @@ describe("CoverSyncService", () => {
       expect(mockCoverRepository.getByFileId).not.toHaveBeenCalled();
     });
 
-    it("should create object URL from existing IndexedDB blob without calling getCovers", async () => {
+    it("should create object URL from existing IndexedDB blob without calling getCover", async () => {
       const existingBlob = new Blob(["img"], { type: "image/jpeg" });
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue({
@@ -1121,13 +1133,13 @@ describe("CoverSyncService", () => {
 
       await service.ensureCoverCached(FILE_ID);
 
-      expect(mockApiClient.getCovers).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.getCover).not.toHaveBeenCalled();
       expect(localCoverCache.get(FILE_ID)).toBeDefined();
     });
 
-    it("should call getCovers API and store in IndexedDB when blob is absent", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversSuccess(FILE_ID),
+    it("should call getCover API and store in IndexedDB when blob is absent", async () => {
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversSuccess(FILE_ID),
       });
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue(undefined),
@@ -1142,8 +1154,8 @@ describe("CoverSyncService", () => {
     });
 
     it("should add cover to localCoverCache after successful fetch from server", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversSuccess(FILE_ID),
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversSuccess(FILE_ID),
       });
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue(undefined),
@@ -1155,9 +1167,9 @@ describe("CoverSyncService", () => {
       expect(localCoverCache.get(FILE_ID)).toBeDefined();
     });
 
-    it("should not add to localCoverCache when getCovers fails", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: vi.fn().mockRejectedValue(new Error("Network error")),
+    it("should not add to localCoverCache when getCover fails", async () => {
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: vi.fn().mockRejectedValue(new Error("Network error")),
       });
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue(undefined),
@@ -1184,9 +1196,9 @@ describe("CoverSyncService", () => {
       expect(mockCoverRepository.save).not.toHaveBeenCalled();
     });
 
-    it("should make exactly one getCovers call when called concurrently with the same fileId", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversSuccess(FILE_ID),
+    it("should make exactly one getCover call when called concurrently with the same fileId", async () => {
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversSuccess(FILE_ID),
       });
       mockCoverRepository = createMockCoverRepository({
         getByFileId: vi.fn().mockResolvedValue(undefined),
@@ -1199,27 +1211,27 @@ describe("CoverSyncService", () => {
         service.ensureCoverCached(FILE_ID),
       ]);
 
-      expect(mockApiClient.getCovers).toHaveBeenCalledTimes(1);
+      expect(mockSyncAdapter.getCover).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("cacheFromServer", () => {
     const FILE_ID = "cache-from-server-id";
 
-    it("should call getCovers with the given fileId", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversSuccess(FILE_ID),
+    it("should call getCover with the given fileId", async () => {
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversSuccess(FILE_ID),
       });
       const service = createService();
 
       await service.cacheFromServer(FILE_ID);
 
-      expect(mockApiClient.getCovers).toHaveBeenCalledWith([FILE_ID]);
+      expect(mockSyncAdapter.getCover).toHaveBeenCalledWith({ file_ids: [FILE_ID] });
     });
 
     it("should add cover to localCoverCache after successful fetch", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversSuccess(FILE_ID),
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversSuccess(FILE_ID),
       });
       const service = createService();
 
@@ -1229,8 +1241,8 @@ describe("CoverSyncService", () => {
     });
 
     it("should save cover to coverRepository after successful fetch", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversSuccess(FILE_ID),
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversSuccess(FILE_ID),
       });
       const service = createService();
 
@@ -1242,8 +1254,8 @@ describe("CoverSyncService", () => {
     });
 
     it("should not add to localCoverCache when server returns FILE_NOT_FOUND", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: createMockGetCoversNotFound(FILE_ID),
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: createMockGetCoversNotFound(FILE_ID),
       });
       const service = createService();
 
@@ -1252,9 +1264,9 @@ describe("CoverSyncService", () => {
       expect(localCoverCache.get(FILE_ID)).toBeUndefined();
     });
 
-    it("should not throw when getCovers throws", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: vi.fn().mockRejectedValue(new Error("Network error")),
+    it("should not throw when getCover throws", async () => {
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: vi.fn().mockRejectedValue(new Error("Network error")),
       });
       const service = createService();
 
@@ -1262,8 +1274,8 @@ describe("CoverSyncService", () => {
     });
 
     it("should use FALLBACK_COVER_MIME_TYPE when mime_type is absent in response", async () => {
-      mockApiClient = createMockApiClient({
-        getCovers: vi.fn().mockResolvedValue({
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: vi.fn().mockResolvedValue({
           ok: true,
           covers: [{ file_id: FILE_ID, data: MOCK_BASE64 }],
         }),
@@ -1279,19 +1291,19 @@ describe("CoverSyncService", () => {
   });
 
   describe("batchCacheFromServer", () => {
-    it("should call getCovers for each chunk of file_ids", async () => {
+    it("should call getCover for each chunk of file_ids", async () => {
       const fileIds = Array.from(
         { length: MAX_COVER_BATCH_SIZE + 1 },
         (_, i) => `file-${i}`,
       );
-      mockApiClient = createMockApiClient({
-        getCovers: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
       });
       const service = createService();
 
       await service.batchCacheFromServer(fileIds);
 
-      expect(mockApiClient.getCovers).toHaveBeenCalledTimes(2);
+      expect(mockSyncAdapter.getCover).toHaveBeenCalledTimes(2);
     });
 
     it("should process first chunk with MAX_COVER_BATCH_SIZE items", async () => {
@@ -1299,15 +1311,15 @@ describe("CoverSyncService", () => {
         { length: MAX_COVER_BATCH_SIZE + 1 },
         (_, i) => `file-${i}`,
       );
-      mockApiClient = createMockApiClient({
-        getCovers: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
       });
       const service = createService();
 
       await service.batchCacheFromServer(fileIds);
 
-      const firstCall = vi.mocked(mockApiClient.getCovers).mock.calls[0][0];
-      expect(firstCall.length).toBe(MAX_COVER_BATCH_SIZE);
+      const firstCall = vi.mocked(mockSyncAdapter.getCover).mock.calls[0][0];
+      expect(firstCall.file_ids.length).toBe(MAX_COVER_BATCH_SIZE);
     });
 
     it("should continue processing after one chunk fails", async () => {
@@ -1315,8 +1327,8 @@ describe("CoverSyncService", () => {
         { length: MAX_COVER_BATCH_SIZE + 1 },
         (_, i) => `file-${i}`,
       );
-      mockApiClient = createMockApiClient({
-        getCovers: vi
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: vi
           .fn()
           .mockRejectedValueOnce(new Error("Network error"))
           .mockResolvedValueOnce({ ok: true, covers: [] }),
@@ -1326,14 +1338,14 @@ describe("CoverSyncService", () => {
       await expect(
         service.batchCacheFromServer(fileIds),
       ).resolves.toBeUndefined();
-      expect(mockApiClient.getCovers).toHaveBeenCalledTimes(2);
+      expect(mockSyncAdapter.getCover).toHaveBeenCalledTimes(2);
     });
 
     it("should save blobs for all successfully fetched covers", async () => {
       const FILE_ID_A = "file-a";
       const FILE_ID_B = "file-b";
-      mockApiClient = createMockApiClient({
-        getCovers: vi.fn().mockResolvedValue({
+      mockSyncAdapter = createMockSyncAdapter({
+        getCover: vi.fn().mockResolvedValue({
           ok: true,
           covers: [
             {

@@ -1,7 +1,7 @@
 import { build } from "esbuild";
 
 await build({
-  entryPoints: ["src/main.ts"],
+  entryPoints: ["src/server/main.ts"],
   bundle: true,
   format: "iife",
   outfile: "dist/bundle.js",

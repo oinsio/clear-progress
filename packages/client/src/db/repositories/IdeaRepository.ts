@@ -1,4 +1,5 @@
-import type { Idea } from "@/types/entities";
+import type { Idea, ISOTimestamp } from "@/types/entities";
+import type { WireIdea } from "@clear-progress/contract";
 import { db } from "../database";
 
 export class IdeaRepository {
@@ -34,12 +35,18 @@ export class IdeaRepository {
     return db.ideas.filter((idea) => idea.needsSync).toArray();
   }
 
-  async applyServerRecords(records: Idea[]): Promise<void> {
+  async applyServerRecords(records: WireIdea[]): Promise<void> {
     await db.transaction("rw", db.ideas, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.ideas.get(serverRecord.id);
         if (!localRecord?.needsSync) {
-          await db.ideas.put({ ...serverRecord, needsSync: false });
+          const idea: Idea = {
+            ...serverRecord,
+            created_at: serverRecord.created_at as ISOTimestamp,
+            updated_at: serverRecord.updated_at as ISOTimestamp,
+            needsSync: false,
+          };
+          await db.ideas.put(idea);
         }
       }
     });

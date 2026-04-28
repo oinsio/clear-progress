@@ -1,4 +1,5 @@
-import type { ChecklistItem } from "@/types/entities";
+import type { ChecklistItem, ISOTimestamp } from "@/types/entities";
+import type { WireChecklistItem } from "@clear-progress/contract";
 import { db } from "../database";
 
 export class ChecklistRepository {
@@ -38,12 +39,18 @@ export class ChecklistRepository {
     return db.checklist_items.filter((item) => item.needsSync).toArray();
   }
 
-  async applyServerRecords(records: ChecklistItem[]): Promise<void> {
+  async applyServerRecords(records: WireChecklistItem[]): Promise<void> {
     await db.transaction("rw", db.checklist_items, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.checklist_items.get(serverRecord.id);
         if (!localRecord?.needsSync) {
-          await db.checklist_items.put({ ...serverRecord, needsSync: false });
+          const item: ChecklistItem = {
+            ...serverRecord,
+            created_at: serverRecord.created_at as ISOTimestamp,
+            updated_at: serverRecord.updated_at as ISOTimestamp,
+            needsSync: false,
+          };
+          await db.checklist_items.put(item);
         }
       }
     });

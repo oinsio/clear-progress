@@ -1,5 +1,6 @@
-import type { Goal } from "@/types/entities";
+import type { Goal, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
+import type { WireGoal } from "@clear-progress/contract";
 
 export class GoalRepository {
   async getAll(): Promise<Goal[]> {
@@ -34,12 +35,18 @@ export class GoalRepository {
     return db.goals.filter((goal) => goal.needsSync).toArray();
   }
 
-  async applyServerRecords(records: Goal[]): Promise<void> {
+  async applyServerRecords(records: WireGoal[]): Promise<void> {
     await db.transaction("rw", db.goals, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.goals.get(serverRecord.id);
         if (!localRecord?.needsSync) {
-          await db.goals.put({ ...serverRecord, needsSync: false });
+          const goal: Goal = {
+            ...serverRecord,
+            created_at: serverRecord.created_at as ISOTimestamp,
+            updated_at: serverRecord.updated_at as ISOTimestamp,
+            needsSync: false,
+          };
+          await db.goals.put(goal);
         }
       }
     });

@@ -239,12 +239,12 @@ export default function GoalDetailPage() {
         );
         newCoverFileId = result.file_id;
         if (originalCoverFileId && originalCoverFileId !== newCoverFileId) {
-          void defaultCoverService.deleteCover(originalCoverFileId);
+          void defaultCoverService.deleteCover(originalCoverFileId, id);
         }
       } else if (isCoverRemoved) {
         newCoverFileId = "";
         if (originalCoverFileId) {
-          void defaultCoverService.deleteCover(originalCoverFileId);
+          void defaultCoverService.deleteCover(originalCoverFileId, id);
         }
       }
 

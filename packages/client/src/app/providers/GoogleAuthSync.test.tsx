@@ -10,11 +10,11 @@ import {
 
 vi.mock("@react-oauth/google", () => createGoogleOAuthMock());
 
-vi.mock("@/services/ApiClient", () => ({
+vi.mock("@/services/tokenManager", () => ({
   setAccessToken: vi.fn(),
 }));
 
-import { setAccessToken } from "@/services/ApiClient";
+import { setAccessToken } from "@/services/tokenManager";
 import { GoogleAuthSync } from "./GoogleAuthSync";
 
 const TOKEN_RESPONSE = { access_token: "test-token", expires_in: 3600 };

@@ -6,10 +6,9 @@ import {
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
-import type { UploadCoverBatchItem } from "@/types/api";
 import type { CoverRecord, PendingCoverRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { ApiClient } from "./ApiClient";
+import type { SyncAdapter, UploadCoverBatchItem } from "@clear-progress/contract";
 import {
   arrayBufferToBase64,
   buildCoverFilename,
@@ -19,7 +18,7 @@ import { localCoverCache } from "./LocalCoverCache";
 
 export class CoverSyncService {
   constructor(
-    private readonly apiClient: ApiClient,
+    private readonly syncAdapter: SyncAdapter,
     private readonly pendingCoverRepository: PendingCoverRepository,
     private readonly coverRepository: CoverRepository,
     private readonly goalRepository: GoalRepository,
@@ -65,9 +64,11 @@ export class CoverSyncService {
         break;
       }
 
-      let response: Awaited<ReturnType<typeof this.apiClient.uploadCovers>>;
+      let response: Awaited<ReturnType<typeof this.syncAdapter.uploadCovers>>;
       try {
-        response = await this.apiClient.uploadCovers(batchItems);
+        response = await this.syncAdapter.uploadCovers({
+          covers: batchItems,
+        });
       } catch {
         break;
       }
@@ -132,6 +133,7 @@ export class CoverSyncService {
           filename: buildCoverFilename(existingCover.data_hash, mimeType),
           mime_type: mimeType,
           data: base64Data,
+          data_hash: existingCover.data_hash,
         },
       });
     }
@@ -143,11 +145,11 @@ export class CoverSyncService {
     ) {
       const chunk = batchEntries.slice(offset, offset + MAX_COVER_BATCH_SIZE);
 
-      let response: Awaited<ReturnType<typeof this.apiClient.uploadCovers>>;
+      let response: Awaited<ReturnType<typeof this.syncAdapter.uploadCovers>>;
       try {
-        response = await this.apiClient.uploadCovers(
-          chunk.map((entry) => entry.item),
-        );
+        response = await this.syncAdapter.uploadCovers({
+          covers: chunk.map((entry) => entry.item),
+        });
       } catch {
         continue; // best-effort: skip this chunk
       }
@@ -276,7 +278,9 @@ export class CoverSyncService {
       );
 
       try {
-        const response = await this.apiClient.getCovers(chunk);
+        const response = await this.syncAdapter.getCover({
+          file_ids: chunk,
+        });
         console.log(
           "[CoverSyncService] batchCacheFromServer: received response, covers count =",
           response.covers.length,
@@ -319,7 +323,9 @@ export class CoverSyncService {
     fileId: string,
   ): Promise<CoverRecord | null> {
     try {
-      const response = await this.apiClient.getCovers([fileId]);
+      const response = await this.syncAdapter.getCover({
+        file_ids: [fileId],
+      });
       const coverResult = response.covers[0];
       if (!coverResult || coverResult.error || !coverResult.data) return null;
 
@@ -344,12 +350,14 @@ export class CoverSyncService {
   ): Promise<UploadCoverBatchItem> {
     const buffer = await pending.data.arrayBuffer();
     const base64Data = arrayBufferToBase64(buffer);
+    const dataHash = await computeSha256Hex(buffer);
     return {
       local_id: pending.local_id,
       goal_id: pending.goal_id,
       filename: pending.filename,
       mime_type: pending.mime_type,
       data: base64Data,
+      data_hash: dataHash,
     };
   }
 

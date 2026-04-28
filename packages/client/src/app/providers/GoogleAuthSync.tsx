@@ -2,7 +2,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
 import { GOOGLE_USERINFO_URL, STORAGE_KEYS } from "@/constants";
-import { setAccessToken } from "@/services/ApiClient";
+import { setAccessToken } from "@/services/tokenManager";
 
 const GOOGLE_OAUTH_SCOPES =
   "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.profile";

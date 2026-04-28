@@ -9,7 +9,9 @@ import {
   getConnectionConfig,
   getSavedConnectionConfig,
 } from "@/services/connectionService";
-import { defaultApiClient } from "@/services/defaultServices";
+import { getAccessToken } from "@/services/tokenManager";
+import { getDefaultSyncAdapter } from "@/services/defaultServices";
+import { GasSyncAdapter } from "@clear-progress/adapter-gas";
 import { cn } from "@/shared/lib/cn";
 import { parseClientId } from "@/utils/clientId";
 import { parseGasInput } from "@/utils/gasUrl";
@@ -54,7 +56,7 @@ export default function SetupPage() {
     setErrorMessage("");
 
     try {
-      const response = await defaultApiClient.init();
+      const response = await getDefaultSyncAdapter().init();
       if (!response.ok) {
         setPhase("error");
         setErrorMessage(t("setup.errorInit"));
@@ -95,7 +97,8 @@ export default function SetupPage() {
     setErrorMessage("");
 
     try {
-      const response = await defaultApiClient.pingUrl(resolvedUrl);
+      const tempAdapter = new GasSyncAdapter(resolvedUrl, getAccessToken);
+      const response = await tempAdapter.ping();
       if (!response.ok) {
         setPhase("error");
         setErrorMessage(t("setup.errorConnection"));

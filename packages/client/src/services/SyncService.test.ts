@@ -9,23 +9,20 @@ import type { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
-import type { PullResponse, PushResponse, PushResponseData } from "@/types/api";
 import type { Goal, ISOTimestamp, Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { ApiClient } from "./ApiClient";
+import type { SyncAdapter, PullResponse, PushResponse } from "@clear-progress/contract";
 import { SyncService } from "./SyncService";
 
 function makePullResponse(overrides: Partial<PullResponse> = {}): PullResponse {
   return {
     ok: true,
-    data: {
-      tasks: [],
-      goals: [],
-      ideas: [],
-      contexts: [],
-      categories: [],
-      checklist_items: [],
-    },
+    tasks: [],
+    goals: [],
+    ideas: [],
+    contexts: [],
+    categories: [],
+    checklist_items: [],
     settings: [],
     current_revision: 10,
     purge_revision: 0,
@@ -35,7 +32,7 @@ function makePullResponse(overrides: Partial<PullResponse> = {}): PullResponse {
 }
 
 function makePushResponse(
-  resultOverrides: PushResponseData = {},
+  resultOverrides: PushResponse["results"] = {},
   revision?: number,
 ): PushResponse {
   return {
@@ -48,21 +45,21 @@ function makePushResponse(
   };
 }
 
-function createMockApiClient(
-  overrides: Partial<Record<keyof ApiClient, unknown>> = {},
-): ApiClient {
+function createMockSyncAdapter(
+  overrides: Partial<SyncAdapter> = {},
+): SyncAdapter {
   return {
     uploadCover: vi.fn(),
     uploadCovers: vi.fn(),
     deleteCover: vi.fn(),
-    getCovers: vi.fn(),
+    getCover: vi.fn(),
     ping: vi.fn(),
-    pingUrl: vi.fn(),
     init: vi.fn(),
     pull: vi.fn().mockResolvedValue(makePullResponse()),
     push: vi.fn().mockResolvedValue(makePushResponse()),
+    purge: vi.fn(),
     ...overrides,
-  } as ApiClient;
+  } as SyncAdapter;
 }
 
 function makeTask(overrides: Partial<Task> = {}): Task {
@@ -111,7 +108,7 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
 }
 
 describe("SyncService", () => {
-  let mockApiClient: ApiClient;
+  let mockSyncAdapter: SyncAdapter;
   let taskRepository: TaskRepository;
   let goalRepository: GoalRepository;
   let contextRepository: ContextRepository;
@@ -122,7 +119,7 @@ describe("SyncService", () => {
   let syncMetaRepository: SyncMetaRepository;
 
   beforeEach(() => {
-    mockApiClient = createMockApiClient();
+    mockSyncAdapter = createMockSyncAdapter();
 
     taskRepository = {
       getNeedingSync: vi.fn().mockResolvedValue([]),
@@ -182,7 +179,7 @@ describe("SyncService", () => {
 
   function createService(): SyncService {
     return new SyncService(
-      mockApiClient,
+      mockSyncAdapter,
       syncMetaRepository,
       taskRepository,
       goalRepository,
@@ -216,22 +213,20 @@ describe("SyncService", () => {
 
       await service.pull();
 
-      expect(mockApiClient.pull).toHaveBeenCalledWith({ since_revision: 42 });
+      expect(mockSyncAdapter.pull).toHaveBeenCalledWith({ since_revision: 42 });
     });
 
     it("should call applyServerRecords on all entity repositories", async () => {
       const serverTasks = [makeTask({ needsSync: false })];
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         pull: vi.fn().mockResolvedValue(
           makePullResponse({
-            data: {
-              tasks: serverTasks,
-              goals: [],
-              ideas: [],
-              contexts: [],
-              categories: [],
-              checklist_items: [],
-            },
+            tasks: serverTasks,
+            goals: [],
+            ideas: [],
+            contexts: [],
+            categories: [],
+            checklist_items: [],
             current_revision: 5,
           }),
         ),
@@ -259,7 +254,7 @@ describe("SyncService", () => {
           needsSync: false,
         },
       ];
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         pull: vi
           .fn()
           .mockResolvedValue(
@@ -276,7 +271,7 @@ describe("SyncService", () => {
     });
 
     it("should save current_revision to sync_meta after pull", async () => {
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         pull: vi
           .fn()
           .mockResolvedValue(makePullResponse({ current_revision: 55 })),
@@ -292,7 +287,7 @@ describe("SyncService", () => {
     });
 
     it("should throw if pull response is not ok", async () => {
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         pull: vi.fn().mockResolvedValue({ ok: false }),
       });
       const service = createService();
@@ -306,7 +301,7 @@ describe("SyncService", () => {
 
       await service.pull();
 
-      expect(mockApiClient.pull).toHaveBeenCalledWith({
+      expect(mockSyncAdapter.pull).toHaveBeenCalledWith({
         since_revision: 0,
         settings_updated_at: "2026-04-15T10:00:00.000Z",
       });
@@ -318,7 +313,7 @@ describe("SyncService", () => {
 
       await service.pull();
 
-      expect(mockApiClient.pull).toHaveBeenCalledWith({
+      expect(mockSyncAdapter.pull).toHaveBeenCalledWith({
         since_revision: 0,
       });
     });
@@ -339,7 +334,7 @@ describe("SyncService", () => {
           needsSync: false,
         },
       ];
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         pull: vi
           .fn()
           .mockResolvedValue(makePullResponse({ settings: serverSettings })),
@@ -355,7 +350,7 @@ describe("SyncService", () => {
 
     it("should not update settings_updated_at when settings array is empty", async () => {
       localStorage.setItem("settings_updated_at", "2026-04-15T10:00:00.000Z");
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         pull: vi.fn().mockResolvedValue(makePullResponse({ settings: [] })),
       });
       const service = createService();
@@ -389,7 +384,7 @@ describe("SyncService", () => {
           needsSync: false,
         },
       ];
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         pull: vi
           .fn()
           .mockResolvedValue(makePullResponse({ settings: serverSettings })),
@@ -430,7 +425,7 @@ describe("SyncService", () => {
 
       await service.push();
 
-      expect(mockApiClient.push).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.push).not.toHaveBeenCalled();
     });
 
     it("should strip needsSync from records before sending to apiClient", async () => {
@@ -445,9 +440,9 @@ describe("SyncService", () => {
 
       await service.push();
 
-      const pushCall = (mockApiClient.push as ReturnType<typeof vi.fn>).mock
+      const pushCall = (mockSyncAdapter.push as ReturnType<typeof vi.fn>).mock
         .calls[0][0];
-      expect(pushCall.changes.tasks[0].needsSync).toBeUndefined();
+      expect(pushCall.tasks[0].needsSync).toBeUndefined();
     });
 
     it.each([
@@ -465,9 +460,9 @@ describe("SyncService", () => {
 
       await service.push();
 
-      const pushCall = (mockApiClient.push as ReturnType<typeof vi.fn>).mock
+      const pushCall = (mockSyncAdapter.push as ReturnType<typeof vi.fn>).mock
         .calls[0][0];
-      expect(pushCall.changes.goals[0].cover_file_id).toBe(expected);
+      expect(pushCall.goals[0].cover_file_id).toBe(expected);
     });
 
     it("should send push when only contexts are needsSync", async () => {
@@ -489,7 +484,7 @@ describe("SyncService", () => {
 
       await service.push();
 
-      expect(mockApiClient.push).toHaveBeenCalled();
+      expect(mockSyncAdapter.push).toHaveBeenCalled();
     });
 
     it("should send push when only categories are needsSync", async () => {
@@ -511,7 +506,7 @@ describe("SyncService", () => {
 
       await service.push();
 
-      expect(mockApiClient.push).toHaveBeenCalled();
+      expect(mockSyncAdapter.push).toHaveBeenCalled();
     });
 
     it("should send push when only checklist_items are needsSync", async () => {
@@ -535,7 +530,7 @@ describe("SyncService", () => {
 
       await service.push();
 
-      expect(mockApiClient.push).toHaveBeenCalled();
+      expect(mockSyncAdapter.push).toHaveBeenCalled();
     });
 
     it("should send push when only settings are needsSync", async () => {
@@ -552,7 +547,7 @@ describe("SyncService", () => {
 
       await service.push();
 
-      expect(mockApiClient.push).toHaveBeenCalled();
+      expect(mockSyncAdapter.push).toHaveBeenCalled();
     });
 
     describe("applyPushResults — settings", () => {
@@ -566,12 +561,12 @@ describe("SyncService", () => {
         (
           settingsRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([setting]);
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi
             .fn()
             .mockResolvedValue(
               makePushResponse(
-                { settings: [{ id: "accent_color", status: "accepted" }] },
+                { settings: [{ key: "accent_color", status: "accepted" }] },
                 5,
               ),
             ),
@@ -595,12 +590,12 @@ describe("SyncService", () => {
         (
           settingsRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([setting]);
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi
             .fn()
             .mockResolvedValue(
               makePushResponse(
-                { settings: [{ id: "default_box", status: "created" }] },
+                { settings: [{ key: "default_box", status: "created" }] },
                 6,
               ),
             ),
@@ -624,10 +619,10 @@ describe("SyncService", () => {
         (
           settingsRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([setting]);
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi.fn().mockResolvedValue(
             makePushResponse({
-              settings: [{ id: "accent_color", status: "conflict" }],
+              settings: [{ key: "accent_color", status: "conflict" }],
             }),
           ),
         });
@@ -647,7 +642,7 @@ describe("SyncService", () => {
 
         await service.push();
 
-        expect(mockApiClient.push).not.toHaveBeenCalled();
+        expect(mockSyncAdapter.push).not.toHaveBeenCalled();
       });
     });
 
@@ -669,7 +664,7 @@ describe("SyncService", () => {
       (contextRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
         { ...context },
       );
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         push: vi
           .fn()
           .mockResolvedValue(
@@ -706,7 +701,7 @@ describe("SyncService", () => {
       (
         categoryRepository.getById as ReturnType<typeof vi.fn>
       ).mockResolvedValue({ ...category });
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         push: vi
           .fn()
           .mockResolvedValue(
@@ -745,7 +740,7 @@ describe("SyncService", () => {
       (
         checklistRepository.getById as ReturnType<typeof vi.fn>
       ).mockResolvedValue({ ...item });
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         push: vi
           .fn()
           .mockResolvedValue(
@@ -769,7 +764,7 @@ describe("SyncService", () => {
       (
         taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
       ).mockResolvedValue([needsSyncTask]);
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         push: vi.fn().mockResolvedValue({ ok: false, results: {} }),
       });
       const service = createService();
@@ -788,7 +783,7 @@ describe("SyncService", () => {
           ...task,
           version: 3,
         });
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi
             .fn()
             .mockResolvedValue(
@@ -814,7 +809,7 @@ describe("SyncService", () => {
           ...task,
           version: 4,
         });
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi
             .fn()
             .mockResolvedValue(
@@ -849,7 +844,7 @@ describe("SyncService", () => {
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           task,
         );
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi.fn().mockResolvedValue(
             makePushResponse({
               tasks: [
@@ -885,7 +880,7 @@ describe("SyncService", () => {
         (goalRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           goal,
         );
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi.fn().mockResolvedValue(
             makePushResponse({
               goals: [
@@ -917,7 +912,7 @@ describe("SyncService", () => {
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           task,
         );
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi
             .fn()
             .mockResolvedValue(
@@ -945,7 +940,7 @@ describe("SyncService", () => {
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           task,
         );
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi.fn().mockResolvedValue(
             makePushResponse({
               tasks: [{ id: "t1", status: "conflict", server_record: task }],
@@ -969,7 +964,7 @@ describe("SyncService", () => {
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
           undefined,
         );
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi
             .fn()
             .mockResolvedValue(
@@ -993,7 +988,7 @@ describe("SyncService", () => {
           ...task,
           version: 3,
         });
-        mockApiClient = createMockApiClient({
+        mockSyncAdapter = createMockSyncAdapter({
           push: vi.fn().mockResolvedValue(
             makePushResponse(
               {
@@ -1036,7 +1031,7 @@ describe("SyncService", () => {
 
       await service.resetAndPull();
 
-      expect(mockApiClient.pull).toHaveBeenCalled();
+      expect(mockSyncAdapter.pull).toHaveBeenCalled();
     });
 
     it("should remove settings_updated_at from localStorage", async () => {
@@ -1192,7 +1187,7 @@ describe("SyncService", () => {
       const callOrder: string[] = [];
       let resolveFirst!: () => void;
 
-      (mockApiClient.pull as ReturnType<typeof vi.fn>)
+      (mockSyncAdapter.pull as ReturnType<typeof vi.fn>)
         .mockImplementationOnce(async () => {
           callOrder.push("pull1-start");
           await new Promise<void>((resolve) => {

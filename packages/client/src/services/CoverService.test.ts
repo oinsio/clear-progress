@@ -3,7 +3,7 @@ import { MAX_COVER_SIZE_BYTES } from "@/constants";
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { ApiClient } from "./ApiClient";
+import type { SyncAdapter } from "@clear-progress/contract";
 import {
   buildCoverFilename,
   CoverService,
@@ -58,21 +58,25 @@ function createMockPendingCoverRepository(
   } as PendingCoverRepository;
 }
 
-function createMockApiClient(
-  overrides: Partial<Record<keyof ApiClient, unknown>> = {},
-): ApiClient {
+function createMockSyncAdapter(
+  overrides: Partial<SyncAdapter> = {},
+): SyncAdapter {
   return {
     uploadCover: vi.fn().mockResolvedValue({
+      ok: true,
       file_id: "new-file-id",
       reused: false,
     }),
-    deleteCover: vi.fn().mockResolvedValue({ deleted: true, ref_count: 0 }),
+    deleteCover: vi.fn().mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
     ping: vi.fn(),
     init: vi.fn(),
     pull: vi.fn(),
     push: vi.fn(),
+    uploadCovers: vi.fn(),
+    getCover: vi.fn(),
+    purge: vi.fn(),
     ...overrides,
-  } as ApiClient;
+  } as SyncAdapter;
 }
 
 describe("buildCoverFilename", () => {
@@ -108,12 +112,12 @@ describe("buildCoverFilename", () => {
 });
 
 describe("CoverService", () => {
-  let mockApiClient: ApiClient;
+  let mockSyncAdapter: SyncAdapter;
   let mockCoverRepository: CoverRepository;
   let mockPendingCoverRepository: PendingCoverRepository;
 
   beforeEach(() => {
-    mockApiClient = createMockApiClient();
+    mockSyncAdapter = createMockSyncAdapter();
     mockCoverRepository = createMockCoverRepository();
     mockPendingCoverRepository = createMockPendingCoverRepository();
   });
@@ -125,7 +129,7 @@ describe("CoverService", () => {
   describe("uploadCover", () => {
     it("should throw INVALID_TYPE if file is not an image", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -137,7 +141,7 @@ describe("CoverService", () => {
 
     it("should throw FILE_TOO_LARGE if file exceeds MAX_COVER_SIZE_BYTES", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -156,7 +160,7 @@ describe("CoverService", () => {
         getByHash: vi.fn().mockResolvedValue(cached),
       });
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -164,19 +168,19 @@ describe("CoverService", () => {
       const result = await service.uploadCover(createImageFile(), "goal-1");
 
       expect(result.file_id).toBe("cached-id");
-      expect(mockApiClient.uploadCover).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.uploadCover).not.toHaveBeenCalled();
     });
 
     it("should call API when no cached cover exists for the hash", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
       await service.uploadCover(createImageFile(), "goal-1");
 
-      expect(mockApiClient.uploadCover).toHaveBeenCalledWith(
+      expect(mockSyncAdapter.uploadCover).toHaveBeenCalledWith(
         expect.objectContaining({
           goal_id: "goal-1",
           filename: "cover.jpg",
@@ -188,7 +192,7 @@ describe("CoverService", () => {
 
     it("should save cover record to DB after successful upload", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -205,7 +209,7 @@ describe("CoverService", () => {
 
     it("should save blob data to cover record after successful online upload", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -221,7 +225,7 @@ describe("CoverService", () => {
 
     it("should add blob URL to localCoverCache after successful online upload", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -233,7 +237,7 @@ describe("CoverService", () => {
 
     it("should return file_id from API response", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -252,7 +256,7 @@ describe("CoverService", () => {
         getByHash: vi.fn().mockResolvedValue(cached),
       });
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -263,11 +267,11 @@ describe("CoverService", () => {
     });
 
     it("should save locally when API fails with network error", async () => {
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         uploadCover: vi.fn().mockRejectedValue(new Error("Network error")),
       });
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -285,11 +289,11 @@ describe("CoverService", () => {
     });
 
     it("should return local:* file_id when saved locally", async () => {
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         uploadCover: vi.fn().mockRejectedValue(new Error("Network error")),
       });
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -301,7 +305,7 @@ describe("CoverService", () => {
 
     it("should not save locally for INVALID_TYPE error", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -316,7 +320,7 @@ describe("CoverService", () => {
 
     it("should not save locally for FILE_TOO_LARGE error", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -345,7 +349,7 @@ describe("CoverService", () => {
         }),
       });
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
@@ -353,50 +357,51 @@ describe("CoverService", () => {
       const result = await service.uploadCover(createImageFile(), "goal-1");
 
       expect(result.file_id).toBe(`local:${existingLocalId}`);
-      expect(mockApiClient.uploadCover).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.uploadCover).not.toHaveBeenCalled();
     });
   });
 
   describe("deleteCover", () => {
     it("should call API deleteCover with the file_id", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
-      await service.deleteCover("file-abc");
+      await service.deleteCover("file-abc", "goal-1");
 
-      expect(mockApiClient.deleteCover).toHaveBeenCalledWith({
+      expect(mockSyncAdapter.deleteCover).toHaveBeenCalledWith({
         file_id: "file-abc",
+        goal_id: "goal-1",
       });
     });
 
     it("should remove local record from DB when backend confirms deletion", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
-      await service.deleteCover("file-abc");
+      await service.deleteCover("file-abc", "goal-1");
 
       expect(mockCoverRepository.delete).toHaveBeenCalledWith("file-abc");
     });
 
     it("should keep local record when backend says not deleted (ref_count > 0)", async () => {
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         deleteCover: vi
           .fn()
           .mockResolvedValue({ deleted: false, ref_count: 2 }),
       });
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
-      await service.deleteCover("file-abc");
+      await service.deleteCover("file-abc", "goal-1");
 
       expect(mockCoverRepository.delete).not.toHaveBeenCalled();
     });
@@ -404,42 +409,42 @@ describe("CoverService", () => {
     it("should remove cover URL from localCoverCache when backend confirms deletion", async () => {
       localCoverCache.set("file-abc", "blob:http://localhost/abc");
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
-      await service.deleteCover("file-abc");
+      await service.deleteCover("file-abc", "goal-1");
 
       expect(localCoverCache.get("file-abc")).toBeUndefined();
     });
 
     it("should not remove cover from localCoverCache when backend says not deleted", async () => {
       localCoverCache.set("file-abc", "blob:http://localhost/abc");
-      mockApiClient = createMockApiClient({
+      mockSyncAdapter = createMockSyncAdapter({
         deleteCover: vi
           .fn()
           .mockResolvedValue({ deleted: false, ref_count: 2 }),
       });
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
-      await service.deleteCover("file-abc");
+      await service.deleteCover("file-abc", "goal-1");
 
       expect(localCoverCache.get("file-abc")).toBeDefined();
     });
 
     it("should delete pending cover from pendingCoverRepository when file_id starts with local:", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
-      await service.deleteCover("local:some-local-uuid");
+      await service.deleteCover("local:some-local-uuid", "goal-1");
 
       expect(mockPendingCoverRepository.delete).toHaveBeenCalledWith(
         "some-local-uuid",
@@ -448,25 +453,25 @@ describe("CoverService", () => {
 
     it("should not call API when file_id starts with local:", async () => {
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
-      await service.deleteCover("local:some-local-uuid");
+      await service.deleteCover("local:some-local-uuid", "goal-1");
 
-      expect(mockApiClient.deleteCover).not.toHaveBeenCalled();
+      expect(mockSyncAdapter.deleteCover).not.toHaveBeenCalled();
     });
 
     it("should remove local cover from localCoverCache when file_id starts with local:", async () => {
       localCoverCache.set("some-local-uuid", "blob:http://localhost/local");
       const service = new CoverService(
-        mockApiClient,
+        mockSyncAdapter,
         mockCoverRepository,
         mockPendingCoverRepository,
       );
 
-      await service.deleteCover("local:some-local-uuid");
+      await service.deleteCover("local:some-local-uuid", "goal-1");
 
       expect(localCoverCache.get("some-local-uuid")).toBeUndefined();
     });

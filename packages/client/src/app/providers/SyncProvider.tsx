@@ -27,8 +27,7 @@ import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
-import { ApiClient } from "@/services/ApiClient";
-import { defaultCoverSyncService } from "@/services/defaultServices";
+import { defaultCoverSyncService, defaultSyncAdapter } from "@/services/defaultServices";
 import { SyncService } from "@/services/SyncService";
 import type { FullSyncStep, SyncStatus } from "@/types/common";
 import { toISOTimestamp } from "@/utils/dateHelpers";
@@ -45,10 +44,8 @@ interface SyncContextValue {
 
 const SyncContext = createContext<SyncContextValue | null>(null);
 
-const apiClient = new ApiClient();
-
 const syncService = new SyncService(
-  apiClient,
+  defaultSyncAdapter,
   new SyncMetaRepository(),
   new TaskRepository(),
   new GoalRepository(),
@@ -215,11 +212,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const pingResult = await apiClient.ping();
+      const pingResult = await defaultSyncAdapter.ping();
       stopPingInterval();
       pingAttemptsRef.current = 0;
       if (!pingResult.initialized) {
-        await apiClient.init();
+        await defaultSyncAdapter.init();
       }
       await applySyncResult();
     } catch {

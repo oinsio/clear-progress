@@ -81,12 +81,12 @@ export default function GoalPage({
         const result = await coverService.uploadCover(pendingCoverFile, goalId);
         newCoverFileId = result.file_id;
         if (originalCoverFileId && originalCoverFileId !== newCoverFileId) {
-          void coverService.deleteCover(originalCoverFileId);
+          void coverService.deleteCover(originalCoverFileId, goalId);
         }
       } else if (isCoverRemoved) {
         newCoverFileId = "";
         if (originalCoverFileId) {
-          void coverService.deleteCover(originalCoverFileId);
+          void coverService.deleteCover(originalCoverFileId, goalId);
         }
       }
 

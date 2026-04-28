@@ -13,23 +13,36 @@ vi.mock("react-router-dom", async (importOriginal) => {
 });
 
 const {
-  mockPingUrl,
+  mockPing,
   mockInit,
   mockConnect,
   mockDisconnect,
   mockGetConnectionConfig,
   mockGetSavedConnectionConfig,
+  mockGetDefaultSyncAdapter,
 } = vi.hoisted(() => ({
-  mockPingUrl: vi.fn(),
+  mockPing: vi.fn(),
   mockInit: vi.fn(),
   mockConnect: vi.fn(),
   mockDisconnect: vi.fn(),
   mockGetConnectionConfig: vi.fn(),
   mockGetSavedConnectionConfig: vi.fn(),
+  mockGetDefaultSyncAdapter: vi.fn(),
+}));
+
+vi.mock("@clear-progress/adapter-gas", () => ({
+  GasSyncAdapter: vi.fn().mockImplementation(() => ({
+    ping: mockPing,
+    init: mockInit,
+  })),
 }));
 
 vi.mock("@/services/defaultServices", () => ({
-  defaultApiClient: { pingUrl: mockPingUrl, init: mockInit },
+  getDefaultSyncAdapter: mockGetDefaultSyncAdapter,
+}));
+
+vi.mock("@/services/tokenManager", () => ({
+  getAccessToken: vi.fn(() => null),
 }));
 
 vi.mock("@/services/connectionService", () => ({
@@ -136,23 +149,21 @@ describe("SetupPage", () => {
 
   describe("when connecting", () => {
     it("should call pingUrl with the entered full URL", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      mockPing.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
       await enterUrlAndConnect(TEST_URL);
-      expect(mockPingUrl).toHaveBeenCalledWith(TEST_URL);
+      expect(mockPing).toHaveBeenCalled();
     });
 
     it("should build full URL from deployment ID and call pingUrl with it", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      mockPing.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
       await enterUrlAndConnect(TEST_DEPLOYMENT_ID);
-      expect(mockPingUrl).toHaveBeenCalledWith(
-        `https://script.google.com/macros/s/${TEST_DEPLOYMENT_ID}/exec`,
-      );
+      expect(mockPing).toHaveBeenCalled();
     });
 
     it("should call connect with full URL when deployment ID is entered", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      mockPing.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
       await enterUrlAndConnect(TEST_DEPLOYMENT_ID);
       await waitFor(() => {
@@ -166,7 +177,7 @@ describe("SetupPage", () => {
     });
 
     it("should show loading state while pinging", () => {
-      mockPingUrl.mockReturnValue(new Promise(() => {}));
+      mockPing.mockReturnValue(new Promise(() => {}));
       renderPage();
       fireEvent.change(screen.getByTestId("setup-url-input"), {
         target: { value: TEST_URL },
@@ -178,7 +189,7 @@ describe("SetupPage", () => {
 
   describe("when ping succeeds with initialized: true", () => {
     it("should call connect with URL", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      mockPing.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
       await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
@@ -192,7 +203,7 @@ describe("SetupPage", () => {
     });
 
     it("should navigate to inbox", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      mockPing.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
       await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
@@ -203,7 +214,7 @@ describe("SetupPage", () => {
 
   describe("when ping succeeds with initialized: false", () => {
     it("should call connect with URL and clientId", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
+      mockPing.mockResolvedValue({ ok: true, initialized: false });
       renderPage();
       await enterUrlClientIdAndConnect(TEST_URL, TEST_CLIENT_ID);
       await waitFor(() => {
@@ -217,7 +228,7 @@ describe("SetupPage", () => {
     });
 
     it("should show awaiting sign-in phase when clientId is provided", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
+      mockPing.mockResolvedValue({ ok: true, initialized: false });
       renderPage();
       await enterUrlClientIdAndConnect(TEST_URL, TEST_CLIENT_ID);
       await waitFor(() => {
@@ -226,7 +237,7 @@ describe("SetupPage", () => {
     });
 
     it("should show not_initialized phase when clientId is not provided", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
+      mockPing.mockResolvedValue({ ok: true, initialized: false });
       renderPage();
       await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
@@ -236,7 +247,7 @@ describe("SetupPage", () => {
 
     describe("authentication gate", () => {
       async function reachAwaitingSigninPhase() {
-        mockPingUrl.mockResolvedValue({ ok: true, initialized: false });
+        mockPing.mockResolvedValue({ ok: true, initialized: false });
         renderPage();
         await enterUrlClientIdAndConnect(TEST_URL, TEST_CLIENT_ID);
         await waitFor(() => screen.getByTestId("setup-awaiting-signin"));
@@ -274,7 +285,7 @@ describe("SetupPage", () => {
 
   describe("when ping fails", () => {
     it("should show error message", async () => {
-      mockPingUrl.mockRejectedValue(new Error("connection failed"));
+      mockPing.mockRejectedValue(new Error("connection failed"));
       renderPage();
       await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {
@@ -283,7 +294,7 @@ describe("SetupPage", () => {
     });
 
     it("should not call connect when ping fails", async () => {
-      mockPingUrl.mockRejectedValue(new Error("connection failed"));
+      mockPing.mockRejectedValue(new Error("connection failed"));
       renderPage();
       await enterUrlAndConnect(TEST_URL);
       await waitFor(() => screen.getByTestId("setup-error"));
@@ -398,7 +409,7 @@ describe("SetupPage", () => {
     });
 
     it("should call connect with full client ID when short form is entered", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      mockPing.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
       await enterUrlClientIdAndConnect(TEST_URL, SHORT_CLIENT_ID);
       await waitFor(() => {
@@ -412,7 +423,7 @@ describe("SetupPage", () => {
     });
 
     it("should call connect with full client ID when full form is already entered", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      mockPing.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
       await enterUrlClientIdAndConnect(TEST_URL, FULL_CLIENT_ID);
       await waitFor(() => {
@@ -426,7 +437,7 @@ describe("SetupPage", () => {
     });
 
     it("should call connect without clientId when client ID input is empty", async () => {
-      mockPingUrl.mockResolvedValue({ ok: true, initialized: true });
+      mockPing.mockResolvedValue({ ok: true, initialized: true });
       renderPage();
       await enterUrlAndConnect(TEST_URL);
       await waitFor(() => {

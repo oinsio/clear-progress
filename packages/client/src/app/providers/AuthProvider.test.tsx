@@ -10,7 +10,7 @@ import {
 
 vi.mock("@react-oauth/google", () => createGoogleOAuthMock());
 
-vi.mock("@/services/ApiClient", () => ({
+vi.mock("@/services/tokenManager", () => ({
   setAccessToken: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ vi.mock("@/services/connectionService", () => ({
   getConnectionConfig: () => mockGetConnectionConfig(),
 }));
 
-import { setAccessToken } from "@/services/ApiClient";
+import { setAccessToken } from "@/services/tokenManager";
 import { AuthProvider, useAuth } from "./AuthProvider";
 
 function TestConsumer() {

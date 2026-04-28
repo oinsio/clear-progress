@@ -1,4 +1,5 @@
-import type { Category } from "@/types/entities";
+import type { Category, ISOTimestamp } from "@/types/entities";
+import type { WireCategory } from "@clear-progress/contract";
 import { db } from "../database";
 
 export class CategoryRepository {
@@ -34,12 +35,18 @@ export class CategoryRepository {
     return db.categories.filter((category) => category.needsSync).toArray();
   }
 
-  async applyServerRecords(records: Category[]): Promise<void> {
+  async applyServerRecords(records: WireCategory[]): Promise<void> {
     await db.transaction("rw", db.categories, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.categories.get(serverRecord.id);
         if (!localRecord?.needsSync) {
-          await db.categories.put({ ...serverRecord, needsSync: false });
+          const category: Category = {
+            ...serverRecord,
+            created_at: serverRecord.created_at as ISOTimestamp,
+            updated_at: serverRecord.updated_at as ISOTimestamp,
+            needsSync: false,
+          };
+          await db.categories.put(category);
         }
       }
     });

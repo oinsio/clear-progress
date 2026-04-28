@@ -7,7 +7,7 @@ import {
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { ApiClient } from "./ApiClient";
+import type { SyncAdapter } from "@clear-progress/contract";
 import { localCoverCache } from "./LocalCoverCache";
 
 const COVER_ERROR = {
@@ -54,7 +54,7 @@ export function getCoverDisplayUrl(fileId: string): string | null {
 
 export class CoverService {
   constructor(
-    private readonly apiClient: ApiClient,
+    private readonly syncAdapter: SyncAdapter,
     private readonly coverRepository: CoverRepository,
     private readonly pendingCoverRepository: PendingCoverRepository,
   ) {}
@@ -83,11 +83,12 @@ export class CoverService {
 
     try {
       const base64Data = arrayBufferToBase64(buffer);
-      const response = await this.apiClient.uploadCover({
+      const response = await this.syncAdapter.uploadCover({
         goal_id: goalId,
         filename: file.name,
         mime_type: file.type,
         data: base64Data,
+        data_hash: dataHash,
       });
 
       const blob = new Blob([buffer], { type: file.type });
@@ -129,14 +130,17 @@ export class CoverService {
     }
   }
 
-  async deleteCover(fileId: string): Promise<void> {
+  async deleteCover(fileId: string, goalId: string): Promise<void> {
     if (fileId.startsWith(LOCAL_COVER_ID_PREFIX)) {
       const localId = fileId.slice(LOCAL_COVER_ID_PREFIX.length);
       await this.pendingCoverRepository.delete(localId);
       localCoverCache.delete(localId);
       return;
     }
-    const response = await this.apiClient.deleteCover({ file_id: fileId });
+    const response = await this.syncAdapter.deleteCover({
+      file_id: fileId,
+      goal_id: goalId,
+    });
     if (response.deleted) {
       await this.coverRepository.delete(fileId);
       localCoverCache.delete(fileId);

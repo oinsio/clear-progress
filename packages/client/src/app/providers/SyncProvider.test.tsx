@@ -46,14 +46,6 @@ const {
   };
 });
 
-vi.mock("@/services/ApiClient", () => ({
-  ApiClient: vi.fn().mockImplementation(() => ({
-    ping: mockPing,
-    init: mockInit,
-  })),
-  ApiAuthError: MockApiAuthError,
-}));
-
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: vi.fn(() => ({
     accessToken: "mock-token",
@@ -75,6 +67,10 @@ vi.mock("@/services/SyncService", () => ({
 }));
 
 vi.mock("@/services/defaultServices", () => ({
+  defaultSyncAdapter: {
+    ping: mockPing,
+    init: mockInit,
+  },
   defaultCoverSyncService: {
     initializeLocalCovers: mockInitializeLocalCovers,
     sync: mockCoverSync,

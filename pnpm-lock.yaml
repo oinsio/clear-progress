@@ -16,6 +16,10 @@ importers:
         version: 5.9.3
 
   packages/adapter-gas:
+    dependencies:
+      '@clear-progress/contract':
+        specifier: workspace:*
+        version: link:../contract
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.4.13
@@ -41,6 +45,9 @@ importers:
 
   packages/client:
     dependencies:
+      '@clear-progress/adapter-gas':
+        specifier: workspace:*
+        version: link:../adapter-gas
       '@clear-progress/contract':
         specifier: workspace:*
         version: link:../contract

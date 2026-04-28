@@ -1,4 +1,5 @@
-import type { Context } from "@/types/entities";
+import type { Context, ISOTimestamp } from "@/types/entities";
+import type { WireContext } from "@clear-progress/contract";
 import { db } from "../database";
 
 export class ContextRepository {
@@ -34,12 +35,18 @@ export class ContextRepository {
     return db.contexts.filter((context) => context.needsSync).toArray();
   }
 
-  async applyServerRecords(records: Context[]): Promise<void> {
+  async applyServerRecords(records: WireContext[]): Promise<void> {
     await db.transaction("rw", db.contexts, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.contexts.get(serverRecord.id);
         if (!localRecord?.needsSync) {
-          await db.contexts.put({ ...serverRecord, needsSync: false });
+          const context: Context = {
+            ...serverRecord,
+            created_at: serverRecord.created_at as ISOTimestamp,
+            updated_at: serverRecord.updated_at as ISOTimestamp,
+            needsSync: false,
+          };
+          await db.contexts.put(context);
         }
       }
     });

@@ -1,6 +1,7 @@
-import type { Setting } from "@/types/entities";
+import type { ISOTimestamp, Setting } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { db } from "../database";
+import type { WireSetting } from "@clear-progress/contract";
 
 export class SettingsRepository {
   async getAll(): Promise<Setting[]> {
@@ -45,7 +46,7 @@ export class SettingsRepository {
     await db.settings.where("key").anyOf(keys).modify({ needsSync: false });
   }
 
-  async bulkUpsert(settings: Setting[]): Promise<void> {
+  async bulkUpsert(settings: WireSetting[]): Promise<void> {
     if (settings.length === 0) return;
 
     const existingSettings = await this.getAll();
@@ -59,7 +60,11 @@ export class SettingsRepository {
 
     if (settingsToUpsert.length > 0) {
       await db.settings.bulkPut(
-        settingsToUpsert.map((s) => ({ ...s, needsSync: false })),
+        settingsToUpsert.map((s) => ({
+          ...s,
+          updated_at: s.updated_at as ISOTimestamp,
+          needsSync: false,
+        })),
       );
     }
   }

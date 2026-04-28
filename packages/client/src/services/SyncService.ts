@@ -14,7 +14,7 @@ import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { Temporal } from "@/lib/temporal";
-import type { PurgeResponse, PushResponseData } from "@/types/api";
+import type { PurgeResponse } from "@/types/api";
 import type {
   Category,
   ChecklistItem,
@@ -24,13 +24,13 @@ import type {
   Setting,
   Task,
 } from "@/types/entities";
-import type { ApiClient } from "./ApiClient";
+import type { SyncAdapter, PushResponse } from "@clear-progress/contract";
 
 export class SyncService {
   private syncMutex: Promise<void> = Promise.resolve();
 
   constructor(
-    private readonly apiClient: ApiClient,
+    private readonly syncAdapter: SyncAdapter,
     private readonly syncMetaRepository: SyncMetaRepository,
     private readonly taskRepository: TaskRepository,
     private readonly goalRepository: GoalRepository,
@@ -70,7 +70,7 @@ export class SyncService {
     const settingsUpdatedAt =
       localStorage.getItem(STORAGE_KEYS.SETTINGS_UPDATED_AT) ?? undefined;
 
-    const pullResponse = await this.apiClient.pull({
+    const pullResponse = await this.syncAdapter.pull({
       since_revision: sinceRevision,
       settings_updated_at: settingsUpdatedAt,
     });
@@ -94,14 +94,14 @@ export class SyncService {
     }
 
     await Promise.all([
-      this.taskRepository.applyServerRecords(pullResponse.data.tasks),
-      this.goalRepository.applyServerRecords(pullResponse.data.goals),
-      this.contextRepository.applyServerRecords(pullResponse.data.contexts),
-      this.categoryRepository.applyServerRecords(pullResponse.data.categories),
+      this.taskRepository.applyServerRecords(pullResponse.tasks),
+      this.goalRepository.applyServerRecords(pullResponse.goals),
+      this.contextRepository.applyServerRecords(pullResponse.contexts),
+      this.categoryRepository.applyServerRecords(pullResponse.categories),
       this.checklistRepository.applyServerRecords(
-        pullResponse.data.checklist_items,
+        pullResponse.checklist_items,
       ),
-      this.ideaRepository.applyServerRecords(pullResponse.data.ideas),
+      this.ideaRepository.applyServerRecords(pullResponse.ideas),
       this.settingsRepository.bulkUpsert(pullResponse.settings),
     ]);
 
@@ -200,16 +200,14 @@ export class SyncService {
         : goal,
     );
 
-    const pushResponse = await this.apiClient.push({
-      changes: {
-        tasks: stripDirty(tasks) as Task[],
-        goals: stripDirty(goalsForPush) as Goal[],
-        contexts: stripDirty(contexts) as Context[],
-        categories: stripDirty(categories) as Category[],
-        checklist_items: stripDirty(checklist_items) as ChecklistItem[],
-        ideas: stripDirty(ideas) as Idea[],
-        settings: stripDirty(settings) as Setting[],
-      },
+    const pushResponse = await this.syncAdapter.push({
+      tasks: stripDirty(tasks) as Task[],
+      goals: stripDirty(goalsForPush) as Goal[],
+      contexts: stripDirty(contexts) as Context[],
+      categories: stripDirty(categories) as Category[],
+      checklist_items: stripDirty(checklist_items) as ChecklistItem[],
+      ideas: stripDirty(ideas) as Idea[],
+      settings: stripDirty(settings) as Setting[],
     });
 
     if (!pushResponse.ok) {
@@ -231,7 +229,7 @@ export class SyncService {
   }
 
   private async _applyPushResults(
-    results: PushResponseData,
+    results: PushResponse["results"],
     sentVersions: Map<string, number>,
     pushRevision: number | undefined,
   ): Promise<void> {
@@ -277,7 +275,7 @@ export class SyncService {
   }
 
   private async _applySettingsPushResults(
-    results: PushResponseData["settings"],
+    results: PushResponse["results"]["settings"],
   ): Promise<void> {
     if (!results || results.length === 0) return;
 
@@ -287,7 +285,7 @@ export class SyncService {
           result.status === PUSH_RESULT_STATUS.ACCEPTED ||
           result.status === PUSH_RESULT_STATUS.CREATED,
       )
-      .map((result) => result.id);
+      .map((result) => result.key);
 
     if (acceptedKeys.length > 0) {
       await this.settingsRepository.clearNeedsSyncByKey(acceptedKeys);
@@ -302,7 +300,7 @@ export class SyncService {
       revision: number;
     },
   >(
-    results: PushResponseData["tasks"],
+    results: PushResponse["results"]["tasks"],
     sentVersions: Map<string, number>,
     repository: {
       getById(id: string): Promise<T | undefined>;
@@ -394,7 +392,7 @@ export class SyncService {
 
   private async _purge(): Promise<PurgeResponse["purged"]> {
     // 1. Вызвать API purge
-    const response = await this.apiClient.purge();
+    const response = await this.syncAdapter.purge();
 
     if (!response.ok) {
       throw new Error("Purge failed");
