@@ -115,7 +115,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     } catch (coverError) {
       console.error("[SyncProvider] Cover sync failed:", coverError);
     }
-    setSyncStatus("idle");
+
+    // Check actual network state before setting final status
+    if (navigator.onLine) {
+      setSyncStatus("idle");
+    } else {
+      setSyncStatus("offline");
+    }
+
     setSyncVersion((version) => version + 1);
     persistLastSync(syncTimestamp);
     setLastSyncedAt(syncTimestamp);

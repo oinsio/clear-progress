@@ -69,7 +69,7 @@ function doPost(
     case ACTIONS.PULL:
       return pull(payload as Parameters<typeof pull>[0]);
     case ACTIONS.PUSH:
-      return push(payload.changes as Parameters<typeof push>[0]);
+      return push(payload as Parameters<typeof push>[0]);
     case ACTIONS.UPLOAD_COVER:
       return uploadCover(payload as Parameters<typeof uploadCover>[0]);
     case ACTIONS.UPLOAD_COVERS:

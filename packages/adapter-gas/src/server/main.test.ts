@@ -276,7 +276,7 @@ describe("doPost", () => {
       makeAuthenticatedPostEvent({ action: ACTIONS.PUSH, changes }),
     );
 
-    expect(push).toHaveBeenCalledWith(changes);
+    expect(push).toHaveBeenCalledWith({ changes });
   });
 
   it("should call uploadCover() with payload fields (excluding action and access_token)", () => {
