@@ -40,6 +40,7 @@
     "workbox-window": "^7.4.0"
   },
   "devDependencies": {
+    "@clear-progress/adapter-inmemory": "workspace:*",
     "@biomejs/biome": "^2.4.13",
     "@playwright/test": "^1.49.1",
     "@stryker-mutator/core": "^9.6.0",
