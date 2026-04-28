@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist/client",
+    "rootDir": "./src/client",
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["ESNext", "DOM"],
+    "types": []
+  },
+  "include": ["src/client/**/*.ts"],
+  "exclude": ["node_modules", "**/*.test.ts"]
+}

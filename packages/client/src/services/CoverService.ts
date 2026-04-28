@@ -1,0 +1,149 @@
+import type { SyncAdapter } from "@clear-progress/contract";
+import {
+  COVER_HASH_PREFIX_LENGTH,
+  DEFAULT_COVER_EXTENSION,
+  LOCAL_COVER_ID_PREFIX,
+  MAX_COVER_SIZE_BYTES,
+} from "@/constants";
+import type { CoverRepository } from "@/db/repositories/CoverRepository";
+import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
+import { toISOTimestamp } from "@/utils/dateHelpers";
+import { localCoverCache } from "./LocalCoverCache";
+
+const COVER_ERROR = {
+  INVALID_TYPE: "INVALID_TYPE",
+  FILE_TOO_LARGE: "FILE_TOO_LARGE",
+} as const;
+
+export function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 8192;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(offset, offset + chunkSize),
+    );
+  }
+  return btoa(binary);
+}
+
+export async function computeSha256Hex(buffer: ArrayBuffer): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export function buildCoverFilename(dataHash: string, mimeType: string): string {
+  const subtype = mimeType.split("/")[1] ?? "";
+  const ext =
+    subtype === "jpeg"
+      ? DEFAULT_COVER_EXTENSION
+      : subtype || DEFAULT_COVER_EXTENSION;
+  return `${dataHash.substring(0, COVER_HASH_PREFIX_LENGTH)}.${ext}`;
+}
+
+export function getCoverDisplayUrl(fileId: string): string | null {
+  if (!fileId) return null;
+  if (fileId.startsWith(LOCAL_COVER_ID_PREFIX)) {
+    const localId = fileId.slice(LOCAL_COVER_ID_PREFIX.length);
+    return localCoverCache.get(localId) ?? null;
+  }
+  return localCoverCache.get(fileId) ?? null;
+}
+
+export class CoverService {
+  constructor(
+    private readonly syncAdapter: SyncAdapter,
+    private readonly coverRepository: CoverRepository,
+    private readonly pendingCoverRepository: PendingCoverRepository,
+  ) {}
+
+  async uploadCover(file: File, goalId: string): Promise<{ file_id: string }> {
+    if (!file.type.startsWith("image/")) {
+      throw new Error(COVER_ERROR.INVALID_TYPE);
+    }
+    if (file.size > MAX_COVER_SIZE_BYTES) {
+      throw new Error(COVER_ERROR.FILE_TOO_LARGE);
+    }
+
+    const buffer = await file.arrayBuffer();
+    const dataHash = await computeSha256Hex(buffer);
+
+    const existingPending =
+      await this.pendingCoverRepository.getByHash(dataHash);
+    if (existingPending) {
+      return { file_id: `${LOCAL_COVER_ID_PREFIX}${existingPending.local_id}` };
+    }
+
+    const existingRemote = await this.coverRepository.getByHash(dataHash);
+    if (existingRemote) {
+      return { file_id: existingRemote.file_id };
+    }
+
+    try {
+      const base64Data = arrayBufferToBase64(buffer);
+      const response = await this.syncAdapter.uploadCover({
+        goal_id: goalId,
+        filename: file.name,
+        mime_type: file.type,
+        data: base64Data,
+        data_hash: dataHash,
+      });
+
+      const blob = new Blob([buffer], { type: file.type });
+      await this.coverRepository.save({
+        file_id: response.file_id,
+        data_hash: dataHash,
+        data: blob,
+      });
+      const blobUrl = URL.createObjectURL(blob);
+      localCoverCache.set(response.file_id, blobUrl);
+
+      return { file_id: response.file_id };
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        Object.values(COVER_ERROR).includes(
+          error.message as (typeof COVER_ERROR)[keyof typeof COVER_ERROR],
+        )
+      ) {
+        throw error;
+      }
+
+      const localId = crypto.randomUUID();
+      const blob = new Blob([buffer], { type: file.type });
+      await this.pendingCoverRepository.save({
+        local_id: localId,
+        goal_id: goalId,
+        data: blob,
+        filename: file.name,
+        mime_type: file.type,
+        data_hash: dataHash,
+        created_at: toISOTimestamp(),
+      });
+
+      const objectUrl = URL.createObjectURL(blob);
+      localCoverCache.set(localId, objectUrl);
+
+      return { file_id: `${LOCAL_COVER_ID_PREFIX}${localId}` };
+    }
+  }
+
+  async deleteCover(fileId: string, goalId: string): Promise<void> {
+    if (fileId.startsWith(LOCAL_COVER_ID_PREFIX)) {
+      const localId = fileId.slice(LOCAL_COVER_ID_PREFIX.length);
+      await this.pendingCoverRepository.delete(localId);
+      localCoverCache.delete(localId);
+      return;
+    }
+    const response = await this.syncAdapter.deleteCover({
+      file_id: fileId,
+      goal_id: goalId,
+    });
+    if (response.deleted) {
+      await this.coverRepository.delete(fileId);
+      localCoverCache.delete(fileId);
+    }
+  }
+}

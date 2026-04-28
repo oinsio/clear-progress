@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-accent: 105 178 62; /* green default */
+    --scale-factor: 1; /* interface scale default */
+  }
+
+  /* Interface scale variants */
+  html[data-scale="small"] {
+    --scale-factor: 0.875;
+    zoom: 0.875;
+  }
+
+  html[data-scale="normal"] {
+    --scale-factor: 1;
+    zoom: 1;
+  }
+
+  html[data-scale="large"] {
+    --scale-factor: 1.125;
+    zoom: 1.125;
+  }
+
+  html[data-scale="xLarge"] {
+    --scale-factor: 1.25;
+    zoom: 1.25;
+  }
+
+  :root[data-accent="green"] {
+    --color-accent: 105 178 62;
+  }
+
+  :root[data-accent="orange"] {
+    --color-accent: 245 124 0;
+  }
+
+  :root[data-accent="yellow"] {
+    --color-accent: 244 201 67;
+  }
+
+  :root[data-accent="blue"] {
+    --color-accent: 37 99 235;
+  }
+
+  :root[data-accent="indigo"] {
+    --color-accent: 79 70 229;
+  }
+
+  :root[data-accent="purple"] {
+    --color-accent: 168 85 247;
+  }
+
+  :root[data-accent="custom"] {
+    --color-accent: 136 136 136;
+  }
+
+  :root[data-accent="coral"] {
+    --color-accent: 251 113 133;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-size: calc(1rem * var(--scale-factor));
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Dark mode accent colors */
+  .dark:root[data-accent="coral"] {
+    --color-accent: 225 29 72;
+  }
+
+  .dark:root[data-accent="orange"] {
+    --color-accent: 197 90 0;
+  }
+
+  .dark:root[data-accent="yellow"] {
+    --color-accent: 202 154 4;
+  }
+
+  .dark:root[data-accent="green"] {
+    --color-accent: 77 124 15;
+  }
+
+  .dark:root[data-accent="blue"] {
+    --color-accent: 59 130 246;
+  }
+
+  .dark:root[data-accent="indigo"] {
+    --color-accent: 99 102 241;
+  }
+
+  .dark:root[data-accent="purple"] {
+    --color-accent: 124 58 237;
+  }
+
+  .dark:root[data-accent="custom"] {
+    --color-accent: 102 102 102;
+  }
+
+  /* Dark mode overrides */
+  html.dark body,
+  html.dark #root {
+    background-color: rgb(17 24 39);
+    color: rgb(243 244 246);
+  }
+
+  html.dark .bg-white {
+    background-color: rgb(31 41 55);
+  }
+  html.dark .bg-gray-50 {
+    background-color: rgb(17 24 39);
+  }
+  html.dark .bg-gray-100 {
+    background-color: rgb(31 41 55);
+  }
+  html.dark .text-gray-900 {
+    color: rgb(243 244 246);
+  }
+  html.dark .text-gray-800 {
+    color: rgb(229 231 235);
+  }
+  html.dark .text-gray-700 {
+    color: rgb(209 213 219);
+  }
+  html.dark .text-gray-600 {
+    color: rgb(156 163 175);
+  }
+  html.dark .text-gray-500 {
+    color: rgb(107 114 128);
+  }
+  html.dark .text-gray-400 {
+    color: rgb(75 85 99);
+  }
+  html.dark .border-gray-200 {
+    border-color: rgb(55 65 81);
+  }
+  html.dark .border-gray-300 {
+    border-color: rgb(75 85 99);
+  }
+  html.dark .hover\:border-gray-300:hover {
+    border-color: rgb(75 85 99);
+  }
+  html.dark .divide-gray-100 > * + * {
+    border-color: rgb(31 41 55);
+  }
+
+  /* Native form elements */
+  html.dark input,
+  html.dark textarea,
+  html.dark select {
+    background-color: rgb(31 41 55);
+    color: rgb(229 231 235);
+    border-color: rgb(55 65 81);
+  }
+
+  html.dark input::placeholder,
+  html.dark textarea::placeholder {
+    color: rgb(107 114 128);
+  }
+}
