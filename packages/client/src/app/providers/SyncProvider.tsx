@@ -105,7 +105,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applySyncResult = useCallback(async (): Promise<void> => {
-    const syncTimestamp = toISOTimestamp();
     await syncService.push();
     await syncService.pull();
     // Cover sync runs after entities — errors are caught separately so they don't
@@ -116,13 +115,12 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       console.error("[SyncProvider] Cover sync failed:", coverError);
     }
 
-    // Check actual network state before setting final status
-    if (navigator.onLine) {
-      setSyncStatus("idle");
-    } else {
-      setSyncStatus("offline");
-    }
+    // Timestamp taken AFTER all sync operations so that lastSyncedAt is always
+    // >= every entity's updated_at received during pull.
+    const syncTimestamp = toISOTimestamp();
 
+    // Push/pull succeeded — we are online regardless of navigator.onLine state.
+    setSyncStatus("idle");
     setSyncVersion((version) => version + 1);
     persistLastSync(syncTimestamp);
     setLastSyncedAt(syncTimestamp);
