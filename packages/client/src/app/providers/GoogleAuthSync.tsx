@@ -2,10 +2,12 @@ import { useGoogleLogin } from "@react-oauth/google";
 import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
 import { GOOGLE_USERINFO_URL, STORAGE_KEYS } from "@/constants";
-import { setAccessToken } from "@/services/tokenManager";
+import { setAccessToken, shouldRefreshToken } from "@/services/tokenManager";
 
 const GOOGLE_OAUTH_SCOPES =
   "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.profile";
+
+const TOKEN_REFRESH_CHECK_INTERVAL_MS = 30000; // 30 seconds
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -134,6 +136,17 @@ export function GoogleAuthSync({
   signInRef.current = doSignIn;
   signOutRef.current = doSignOut;
   silentRefreshRef.current = doSilentRefresh;
+
+  // Proactive token refresh: check every 30 seconds if token needs refresh
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (shouldRefreshToken()) {
+        doSilentRefresh();
+      }
+    }, TOKEN_REFRESH_CHECK_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+  }, [doSilentRefresh]);
 
   return null;
 }
