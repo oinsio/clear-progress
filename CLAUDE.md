@@ -8,6 +8,8 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 - `packages/client/` — React PWA (see @packages/client/CLAUDE.md)
 - `packages/adapter-gas/` — Google Apps Script (see @packages/adapter-gas/CLAUDE.md)
+- `packages/contract/` — Shared contract (see @packages/contract/CLAUDE.md)
+- `packages/adapter-inmemory/` — In-memory adapter for testing
 
 ## Code Style
 
@@ -40,3 +42,20 @@ Entities, relationships, backend API, pull/push protocol, sync engine:
 - Co-locate tests: `Component.test.tsx` next to `Component.tsx`
 - Frontend tests: run from `packages/client/`; backend tests: run from `packages/adapter-gas/`
 - **Mutation testing**: `npm run test:mutation` — target ≥95% score
+
+## Monorepo Commands
+
+```bash
+# Development
+pnpm dev                    # Start client dev server
+pnpm build                  # Build all packages
+pnpm test                   # Run all tests
+pnpm lint                   # Lint all packages
+pnpm typecheck              # Type check all packages
+pnpm preflight              # Run lint + typecheck + test
+
+# Package-specific
+pnpm --filter @clear-progress/client dev
+pnpm --filter @clear-progress/client test
+pnpm --filter @clear-progress/adapter-gas build
+```
