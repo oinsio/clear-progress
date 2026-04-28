@@ -31,7 +31,14 @@ import { verifyToken } from "./helpers/auth";
 // Import main.ts to trigger globalThis assignment of doGet/doPost
 import "./main";
 
-const globals = globalThis as unknown as Record<string, Function>;
+const globals = globalThis as unknown as {
+  doGet?: (
+    e: GoogleAppsScript.Events.DoGet,
+  ) => GoogleAppsScript.Content.TextOutput;
+  doPost?: (
+    e: GoogleAppsScript.Events.DoPost,
+  ) => GoogleAppsScript.Content.TextOutput;
+};
 
 const VALID_TOKEN = "valid-access-token";
 const OWNER_EMAIL = "owner@example.com";
@@ -39,7 +46,7 @@ const OWNER_EMAIL = "owner@example.com";
 function parseResponse(): Record<string, unknown> {
   const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>)
     .mock.calls;
-  return JSON.parse(calls[calls.length - 1][0]);
+  return JSON.parse(calls[calls.length - 1]?.[0] ?? "{}");
 }
 
 function makeGetEvent(
@@ -69,7 +76,7 @@ describe("doGet", () => {
   });
 
   it('should call ping() when action is "ping"', () => {
-    globals.doGet(makeGetEvent({ action: ACTIONS.PING }));
+    globals.doGet?.(makeGetEvent({ action: ACTIONS.PING }));
     expect(ping).toHaveBeenCalledTimes(1);
   });
 
@@ -77,13 +84,13 @@ describe("doGet", () => {
     const mockOutput = { setMimeType: vi.fn().mockReturnThis() };
     vi.mocked(ping).mockReturnValue(mockOutput as never);
 
-    const result = globals.doGet(makeGetEvent({ action: ACTIONS.PING }));
+    const result = globals.doGet?.(makeGetEvent({ action: ACTIONS.PING }));
 
     expect(result).toBe(mockOutput);
   });
 
   it("should return INVALID_ACTION error for unknown action", () => {
-    globals.doGet(makeGetEvent({ action: "unknown_action" }));
+    globals.doGet?.(makeGetEvent({ action: "unknown_action" }));
 
     const response = parseResponse();
     expect(response.ok).toBe(false);
@@ -91,19 +98,19 @@ describe("doGet", () => {
   });
 
   it("should include the unknown action name in the error message", () => {
-    globals.doGet(makeGetEvent({ action: "bad_action" }));
+    globals.doGet?.(makeGetEvent({ action: "bad_action" }));
 
     expect(parseResponse().message).toContain("bad_action");
   });
 
   it("should return INVALID_ACTION when no action parameter is provided", () => {
-    globals.doGet(makeGetEvent());
+    globals.doGet?.(makeGetEvent());
 
     expect(parseResponse().error).toBe(ERROR_CODES.INVALID_ACTION);
   });
 
   it("should return INVALID_ACTION when doGet event has no parameter property", () => {
-    globals.doGet({} as never);
+    globals.doGet?.({} as never);
 
     expect(parseResponse().error).toBe(ERROR_CODES.INVALID_ACTION);
   });
@@ -121,7 +128,7 @@ describe("doPost", () => {
 
   describe("authentication", () => {
     it("should return UNAUTHORIZED when access_token is missing", () => {
-      globals.doPost(makePostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makePostEvent({ action: ACTIONS.INIT }));
 
       const response = parseResponse();
       expect(response.ok).toBe(false);
@@ -129,13 +136,13 @@ describe("doPost", () => {
     });
 
     it("should include TOKEN_REQUIRED message when access_token is missing", () => {
-      globals.doPost(makePostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makePostEvent({ action: ACTIONS.INIT }));
 
       expect(parseResponse().message).toBe(ERROR_MESSAGES.TOKEN_REQUIRED);
     });
 
     it("should return UNAUTHORIZED when access_token is not a string", () => {
-      globals.doPost(
+      globals.doPost?.(
         makePostEvent({ action: ACTIONS.INIT, access_token: 123 }),
       );
 
@@ -143,7 +150,7 @@ describe("doPost", () => {
     });
 
     it("should include TOKEN_REQUIRED message when access_token is not a string", () => {
-      globals.doPost(
+      globals.doPost?.(
         makePostEvent({ action: ACTIONS.INIT, access_token: 123 }),
       );
 
@@ -155,7 +162,7 @@ describe("doPost", () => {
         ok: false,
         reason: AUTH_FAILURE_REASONS.NETWORK_ERROR,
       } as never);
-      globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
       expect(parseResponse().error).toBe(ERROR_CODES.UNAUTHORIZED);
     });
@@ -165,7 +172,7 @@ describe("doPost", () => {
         ok: false,
         reason: AUTH_FAILURE_REASONS.NETWORK_ERROR,
       } as never);
-      globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
       expect(parseResponse().message).toBe(ERROR_MESSAGES.AUTH_NETWORK_ERROR);
     });
@@ -175,7 +182,7 @@ describe("doPost", () => {
         ok: false,
         reason: AUTH_FAILURE_REASONS.INVALID_RESPONSE,
       } as never);
-      globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
       expect(parseResponse().message).toBe(
         ERROR_MESSAGES.AUTH_INVALID_RESPONSE,
@@ -187,7 +194,7 @@ describe("doPost", () => {
         ok: false,
         reason: AUTH_FAILURE_REASONS.EMAIL_NOT_VERIFIED,
       } as never);
-      globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
       expect(parseResponse().message).toBe(
         ERROR_MESSAGES.AUTH_EMAIL_NOT_VERIFIED,
@@ -199,13 +206,13 @@ describe("doPost", () => {
         ok: false,
         reason: AUTH_FAILURE_REASONS.WRONG_ACCOUNT,
       } as never);
-      globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
       expect(parseResponse().message).toBe(ERROR_MESSAGES.AUTH_WRONG_ACCOUNT);
     });
 
     it("should call verifyToken with the provided access_token", () => {
-      globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
       expect(verifyToken).toHaveBeenCalledWith(VALID_TOKEN);
     });
@@ -215,7 +222,7 @@ describe("doPost", () => {
         ok: false,
         reason: AUTH_FAILURE_REASONS.WRONG_ACCOUNT,
       } as never);
-      globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
       expect(init).not.toHaveBeenCalled();
     });
@@ -226,14 +233,14 @@ describe("doPost", () => {
         reason: AUTH_FAILURE_REASONS.NETWORK_ERROR,
         details: "connection refused",
       } as never);
-      globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+      globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
       expect(parseResponse().message).toContain("connection refused");
     });
   });
 
   it("should return INVALID_PAYLOAD when body is not valid JSON", () => {
-    globals.doPost(makePostEventRaw("{not valid json"));
+    globals.doPost?.(makePostEventRaw("{not valid json"));
 
     const response = parseResponse();
     expect(response.ok).toBe(false);
@@ -242,20 +249,20 @@ describe("doPost", () => {
   });
 
   it("should return UNAUTHORIZED when postData is missing (no token in body)", () => {
-    globals.doPost({} as never);
+    globals.doPost?.({} as never);
 
     expect(parseResponse().error).toBe(ERROR_CODES.UNAUTHORIZED);
   });
 
   it('should call init() for "init" action', () => {
-    globals.doPost(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
+    globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
     expect(init).toHaveBeenCalledTimes(1);
   });
 
   it("should call pull() with since_revision from the request body", () => {
     const sinceRevision = { since_revision: 42 };
 
-    globals.doPost(
+    globals.doPost?.(
       makeAuthenticatedPostEvent({ action: ACTIONS.PULL, ...sinceRevision }),
     );
 
@@ -265,7 +272,7 @@ describe("doPost", () => {
   it("should call push() with changes from the request body", () => {
     const changes = { tasks: [{ id: "task-1" }] };
 
-    globals.doPost(
+    globals.doPost?.(
       makeAuthenticatedPostEvent({ action: ACTIONS.PUSH, changes }),
     );
 
@@ -280,7 +287,7 @@ describe("doPost", () => {
       data: "base64",
     };
 
-    globals.doPost(
+    globals.doPost?.(
       makeAuthenticatedPostEvent({
         action: ACTIONS.UPLOAD_COVER,
         ...coverPayload,
@@ -291,7 +298,7 @@ describe("doPost", () => {
   });
 
   it("should call deleteCover() with payload fields (excluding action and access_token)", () => {
-    globals.doPost(
+    globals.doPost?.(
       makeAuthenticatedPostEvent({
         action: ACTIONS.DELETE_COVER,
         file_id: "file-abc",
@@ -313,7 +320,7 @@ describe("doPost", () => {
       ],
     };
 
-    globals.doPost(
+    globals.doPost?.(
       makeAuthenticatedPostEvent({
         action: ACTIONS.UPLOAD_COVERS,
         ...coversPayload,
@@ -327,7 +334,7 @@ describe("doPost", () => {
     const mockOutput = { setMimeType: vi.fn().mockReturnThis() };
     vi.mocked(uploadCovers).mockReturnValue(mockOutput as never);
 
-    const result = globals.doPost(
+    const result = globals.doPost?.(
       makeAuthenticatedPostEvent({ action: ACTIONS.UPLOAD_COVERS }),
     );
 
@@ -335,7 +342,7 @@ describe("doPost", () => {
   });
 
   it("should call getCover() with payload fields (excluding action and access_token)", () => {
-    globals.doPost(
+    globals.doPost?.(
       makeAuthenticatedPostEvent({
         action: ACTIONS.GET_COVER,
         file_ids: ["file-1"],
@@ -349,7 +356,7 @@ describe("doPost", () => {
     const mockOutput = { setMimeType: vi.fn().mockReturnThis() };
     vi.mocked(getCover).mockReturnValue(mockOutput as never);
 
-    const result = globals.doPost(
+    const result = globals.doPost?.(
       makeAuthenticatedPostEvent({ action: ACTIONS.GET_COVER }),
     );
 
@@ -357,7 +364,7 @@ describe("doPost", () => {
   });
 
   it("should call purge() with payload fields (excluding action and access_token)", () => {
-    globals.doPost(
+    globals.doPost?.(
       makeAuthenticatedPostEvent({ action: ACTIONS.PURGE, confirm: true }),
     );
 
@@ -368,7 +375,7 @@ describe("doPost", () => {
     const mockOutput = { setMimeType: vi.fn().mockReturnThis() };
     vi.mocked(init).mockReturnValue(mockOutput as never);
 
-    const result = globals.doPost(
+    const result = globals.doPost?.(
       makeAuthenticatedPostEvent({ action: ACTIONS.INIT }),
     );
 
@@ -376,7 +383,7 @@ describe("doPost", () => {
   });
 
   it("should return INVALID_ACTION error for unknown action", () => {
-    globals.doPost(makeAuthenticatedPostEvent({ action: "unknown_action" }));
+    globals.doPost?.(makeAuthenticatedPostEvent({ action: "unknown_action" }));
 
     const response = parseResponse();
     expect(response.ok).toBe(false);
@@ -384,13 +391,13 @@ describe("doPost", () => {
   });
 
   it("should include the unknown action name in the error message", () => {
-    globals.doPost(makeAuthenticatedPostEvent({ action: "bad_action" }));
+    globals.doPost?.(makeAuthenticatedPostEvent({ action: "bad_action" }));
 
     expect(parseResponse().message).toContain("bad_action");
   });
 
   it("should return INVALID_ACTION when no action field is present", () => {
-    globals.doPost(makeAuthenticatedPostEvent({}));
+    globals.doPost?.(makeAuthenticatedPostEvent({}));
 
     expect(parseResponse().error).toBe(ERROR_CODES.INVALID_ACTION);
   });

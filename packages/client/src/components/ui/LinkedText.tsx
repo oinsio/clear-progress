@@ -14,11 +14,11 @@ export function LinkedText({ text, className }: LinkedTextProps) {
 
   return (
     <span className={className}>
-      {segments.map((segment, index) => {
+      {segments.map((segment) => {
         if (segment.type === "url") {
           return (
             <a
-              key={index}
+              key={segment.value}
               href={segment.value}
               target="_blank"
               rel="noopener noreferrer"
@@ -33,7 +33,7 @@ export function LinkedText({ text, className }: LinkedTextProps) {
             </a>
           );
         }
-        return <span key={index}>{segment.value}</span>;
+        return <span key={segment.value}>{segment.value}</span>;
       })}
     </span>
   );

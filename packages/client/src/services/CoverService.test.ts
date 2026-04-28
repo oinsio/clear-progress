@@ -1,9 +1,9 @@
+import type { SyncAdapter } from "@clear-progress/contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MAX_COVER_SIZE_BYTES } from "@/constants";
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { SyncAdapter } from "@clear-progress/contract";
 import {
   buildCoverFilename,
   CoverService,
@@ -67,7 +67,9 @@ function createMockSyncAdapter(
       file_id: "new-file-id",
       reused: false,
     }),
-    deleteCover: vi.fn().mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
+    deleteCover: vi
+      .fn()
+      .mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
     ping: vi.fn(),
     init: vi.fn(),
     pull: vi.fn(),

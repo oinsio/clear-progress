@@ -1,3 +1,4 @@
+import { GasSyncAdapter } from "@clear-progress/adapter-gas";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -9,9 +10,8 @@ import {
   getConnectionConfig,
   getSavedConnectionConfig,
 } from "@/services/connectionService";
-import { getAccessToken } from "@/services/tokenManager";
 import { getDefaultSyncAdapter } from "@/services/defaultServices";
-import { GasSyncAdapter } from "@clear-progress/adapter-gas";
+import { getAccessToken } from "@/services/tokenManager";
 import { cn } from "@/shared/lib/cn";
 import { parseClientId } from "@/utils/clientId";
 import { parseGasInput } from "@/utils/gasUrl";

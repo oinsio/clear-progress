@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { Temporal } from "@/lib/temporal";
 import { buildTask } from "@/test/factories/taskFactory";
+import type { ISODate } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { db } from "../database";
 import { TaskRepository } from "./TaskRepository";
@@ -618,7 +619,7 @@ describe("TaskRepository", () => {
     it("should find hidden task with appear_date <= today", async () => {
       const hiddenTask = buildTask({
         is_hidden: true,
-        appear_date: "2026-04-20" as any,
+        appear_date: "2026-04-20" as ISODate,
         is_deleted: false,
         is_completed: false,
       });
@@ -633,7 +634,7 @@ describe("TaskRepository", () => {
     it("should not find hidden task with appear_date in future", async () => {
       const hiddenTask = buildTask({
         is_hidden: true,
-        appear_date: "2026-04-25" as any,
+        appear_date: "2026-04-25" as ISODate,
         is_deleted: false,
         is_completed: false,
       });
@@ -661,7 +662,7 @@ describe("TaskRepository", () => {
     it("should not find non-hidden task", async () => {
       const visibleTask = buildTask({
         is_hidden: false,
-        appear_date: "2026-04-20" as any,
+        appear_date: "2026-04-20" as ISODate,
         is_deleted: false,
         is_completed: false,
       });
@@ -675,7 +676,7 @@ describe("TaskRepository", () => {
     it("should not find deleted hidden task with appear_date <= today", async () => {
       const deletedTask = buildTask({
         is_hidden: true,
-        appear_date: "2026-04-20" as any,
+        appear_date: "2026-04-20" as ISODate,
         is_deleted: true,
         is_completed: false,
       });
@@ -689,7 +690,7 @@ describe("TaskRepository", () => {
     it("should not find completed hidden task with appear_date <= today", async () => {
       const completedTask = buildTask({
         is_hidden: true,
-        appear_date: "2026-04-20" as any,
+        appear_date: "2026-04-20" as ISODate,
         is_deleted: false,
         is_completed: true,
       });
@@ -703,7 +704,7 @@ describe("TaskRepository", () => {
     it("should find hidden task when appear_date equals today", async () => {
       const hiddenTask = buildTask({
         is_hidden: true,
-        appear_date: "2026-04-21" as any,
+        appear_date: "2026-04-21" as ISODate,
         is_deleted: false,
         is_completed: false,
       });
@@ -718,7 +719,7 @@ describe("TaskRepository", () => {
     it("should not find hidden task with invalid appear_date format", async () => {
       const hiddenTask = buildTask({
         is_hidden: true,
-        appear_date: "invalid-date" as any,
+        appear_date: "invalid-date" as ISODate,
         is_deleted: false,
         is_completed: false,
       });
@@ -732,7 +733,7 @@ describe("TaskRepository", () => {
     it("should not find hidden task with malformed appear_date", async () => {
       const hiddenTask = buildTask({
         is_hidden: true,
-        appear_date: "2026-13-45" as any,
+        appear_date: "2026-13-45" as ISODate,
         is_deleted: false,
         is_completed: false,
       });

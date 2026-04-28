@@ -1,5 +1,5 @@
-import type { Idea, ISOTimestamp } from "@/types/entities";
 import type { WireIdea } from "@clear-progress/contract";
+import type { Idea, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
 export class IdeaRepository {

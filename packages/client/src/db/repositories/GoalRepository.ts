@@ -1,6 +1,6 @@
+import type { WireGoal } from "@clear-progress/contract";
 import type { Goal, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
-import type { WireGoal } from "@clear-progress/contract";
 
 export class GoalRepository {
   async getAll(): Promise<Goal[]> {

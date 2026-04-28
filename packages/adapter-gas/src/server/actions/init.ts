@@ -25,14 +25,17 @@ export function init(): GoogleAppsScript.Content.TextOutput {
     name: DRIVE_FOLDER_NAMES.ROOT,
     mimeType: DRIVE_MIME_TYPES.FOLDER,
   });
-  const rootFolderId = rootFolderFile.id!;
+  const rootFolderId = rootFolderFile.id;
+  if (!rootFolderId) throw new Error("Drive API did not return root folder id");
 
   const coversFolderFile = Drive.Files.create({
     name: DRIVE_FOLDER_NAMES.COVERS,
     mimeType: DRIVE_MIME_TYPES.FOLDER,
     parents: [rootFolderId],
   });
-  const coversFolderId = coversFolderFile.id!;
+  const coversFolderId = coversFolderFile.id;
+  if (!coversFolderId)
+    throw new Error("Drive API did not return covers folder id");
 
   // Create spreadsheet
   const spreadsheetFile = Drive.Files.create({
@@ -40,7 +43,10 @@ export function init(): GoogleAppsScript.Content.TextOutput {
     mimeType: DRIVE_MIME_TYPES.SPREADSHEET,
     parents: [rootFolderId],
   });
-  const spreadsheet = SpreadsheetApp.openById(spreadsheetFile.id!);
+  const spreadsheetId = spreadsheetFile.id;
+  if (!spreadsheetId)
+    throw new Error("Drive API did not return spreadsheet id");
+  const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
 
   // Create sheets with headers
   const defaultSheet = spreadsheet.getSheets()[0];

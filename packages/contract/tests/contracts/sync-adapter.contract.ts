@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { SyncAdapter, WireTask, WireGoal, WireContext } from "../../src";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { SyncAdapter, WireContext, WireGoal, WireTask } from "../../src";
 
 function createWireTask(overrides: Partial<WireTask> = {}): WireTask {
   const now = new Date().toISOString();
@@ -143,7 +143,7 @@ export function syncAdapterContract(
 
         const task1 = createWireTask({ name: "Task 1" });
         const push1 = await adapter.push({ tasks: [task1] });
-        const rev1 = push1.revision!;
+        const rev1 = push1.revision ?? 0;
 
         const task2 = createWireTask({ name: "Task 2" });
         await adapter.push({ tasks: [task2] });
@@ -191,7 +191,11 @@ export function syncAdapterContract(
         const goal = createWireGoal({ name: "Goal" });
         const context = createWireContext({ name: "Context" });
 
-        await adapter.push({ tasks: [task], goals: [goal], contexts: [context] });
+        await adapter.push({
+          tasks: [task],
+          goals: [goal],
+          contexts: [context],
+        });
 
         const pullResponse = await adapter.pull({ since_revision: 0 });
         expect(pullResponse.tasks).toHaveLength(1);

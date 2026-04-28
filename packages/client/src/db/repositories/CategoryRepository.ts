@@ -1,5 +1,5 @@
-import type { Category, ISOTimestamp } from "@/types/entities";
 import type { WireCategory } from "@clear-progress/contract";
+import type { Category, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
 export class CategoryRepository {

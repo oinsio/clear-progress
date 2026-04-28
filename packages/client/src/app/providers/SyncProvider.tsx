@@ -27,7 +27,10 @@ import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
-import { defaultCoverSyncService, defaultSyncAdapter } from "@/services/defaultServices";
+import {
+  defaultCoverSyncService,
+  defaultSyncAdapter,
+} from "@/services/defaultServices";
 import { SyncService } from "@/services/SyncService";
 import type { FullSyncStep, SyncStatus } from "@/types/common";
 import { toISOTimestamp } from "@/utils/dateHelpers";

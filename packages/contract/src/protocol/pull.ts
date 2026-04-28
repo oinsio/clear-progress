@@ -1,11 +1,11 @@
 import type {
-  WireTask,
-  WireGoal,
-  WireContext,
   WireCategory,
-  WireIdea,
   WireChecklistItem,
+  WireContext,
+  WireGoal,
+  WireIdea,
   WireSetting,
+  WireTask,
 } from "../domain";
 
 export interface PullRequest {

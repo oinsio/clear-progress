@@ -27,9 +27,9 @@ const mockScriptProperties = {
     Object.assign(scriptPropertiesStore, props);
   }),
   deleteAllProperties: vi.fn(() => {
-    Object.keys(scriptPropertiesStore).forEach(
-      (key) => delete scriptPropertiesStore[key],
-    );
+    for (const key of Object.keys(scriptPropertiesStore)) {
+      delete scriptPropertiesStore[key];
+    }
   }),
 };
 
@@ -109,9 +109,9 @@ export function getMockLock(): {
 
 // Helpers to reset mocks and state between tests
 export function resetScriptProperties(): void {
-  Object.keys(scriptPropertiesStore).forEach(
-    (key) => delete scriptPropertiesStore[key],
-  );
+  for (const key of Object.keys(scriptPropertiesStore)) {
+    delete scriptPropertiesStore[key];
+  }
 }
 
 export function setScriptProperty(key: string, value: string): void {

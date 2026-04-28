@@ -1,20 +1,20 @@
 import type {
-  SyncAdapter,
-  PingResponse,
+  DeleteCoverRequest,
+  DeleteCoverResponse,
+  GetCoverRequest,
+  GetCoverResponse,
   InitResponse,
+  PingResponse,
   PullRequest,
   PullResponse,
+  PurgeResponse,
   PushRequest,
   PushResponse,
+  SyncAdapter,
   UploadCoverRequest,
   UploadCoverResponse,
   UploadCoversRequest,
   UploadCoversResponse,
-  GetCoverRequest,
-  GetCoverResponse,
-  DeleteCoverRequest,
-  DeleteCoverResponse,
-  PurgeResponse,
 } from "@clear-progress/contract";
 
 const API_TIMEOUT_MS = 30000;
@@ -30,8 +30,8 @@ export class ApiAuthError extends Error {
 type GetAccessToken = () => string | null;
 
 export class GasSyncAdapter implements SyncAdapter {
-  private url: string;
-  private getAccessToken: GetAccessToken;
+  private readonly url: string;
+  private readonly getAccessToken: GetAccessToken;
 
   constructor(url: string, getAccessToken: GetAccessToken) {
     this.url = url;
@@ -126,9 +126,7 @@ export class GasSyncAdapter implements SyncAdapter {
     });
   }
 
-  async deleteCover(
-    request: DeleteCoverRequest,
-  ): Promise<DeleteCoverResponse> {
+  async deleteCover(request: DeleteCoverRequest): Promise<DeleteCoverResponse> {
     return this.request<DeleteCoverResponse>({
       action: "delete_cover",
       ...request,

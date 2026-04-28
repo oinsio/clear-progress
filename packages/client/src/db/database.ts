@@ -112,7 +112,7 @@ export class ClearProgressDatabase extends Dexie {
           await tx
             .table(tableName)
             .toCollection()
-            .modify((record: any) => {
+            .modify((record: Record<string, unknown>) => {
               record.needsSync = record._dirty ?? false;
               delete record._dirty;
             });

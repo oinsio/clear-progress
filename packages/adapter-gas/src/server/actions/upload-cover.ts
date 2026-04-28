@@ -92,15 +92,18 @@ export function uploadSingleCover(
     { name: newFilename, description: hash, parents: [coversFolderId] },
     blob,
   );
+  const newFileId = newFile.id;
+  if (!newFileId) throw new Error("Drive API did not return file id");
+
   Drive.Permissions.create(
     {
       role: DRIVE_PERMISSIONS.ROLE_READER,
       type: DRIVE_PERMISSIONS.TYPE_ANYONE,
     },
-    newFile.id!,
+    newFileId,
   );
 
-  return { goal_id, local_id, file_id: newFile.id, reused: false };
+  return { goal_id, local_id, file_id: newFileId, reused: false };
 }
 
 export function uploadCover(payload: {
@@ -125,7 +128,7 @@ export function uploadCover(payload: {
   const result = uploadSingleCover(payload, existingFiles, coversFolderId);
 
   if (result.error) {
-    return jsonError(result.error, result.errorMessage!);
+    return jsonError(result.error, result.errorMessage ?? "");
   }
   return jsonOk({ file_id: result.file_id, reused: result.reused });
 }

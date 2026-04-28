@@ -1,5 +1,5 @@
-import type { ChecklistItem, ISOTimestamp } from "@/types/entities";
 import type { WireChecklistItem } from "@clear-progress/contract";
+import type { ChecklistItem, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
 export class ChecklistRepository {

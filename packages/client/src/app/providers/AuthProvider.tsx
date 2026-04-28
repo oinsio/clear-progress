@@ -11,8 +11,8 @@ import {
 } from "react";
 import { GOOGLE_CLIENT_ID_CHANGED_EVENT, STORAGE_KEYS } from "@/constants";
 import { Temporal } from "@/lib/temporal";
-import { setAccessToken } from "@/services/tokenManager";
 import { getConnectionConfig } from "@/services/connectionService";
+import { setAccessToken } from "@/services/tokenManager";
 import { GoogleAuthSync } from "./GoogleAuthSync";
 
 interface AuthContextValue {

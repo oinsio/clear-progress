@@ -1,10 +1,34 @@
+# OS files
 .DS_Store
+Thumbs.db
+
+# IDE
 .idea
+
+# Dependencies
 node_modules
-.playwright-mcp
+
+# Build output
+dist
+**/tests/**/*.js
+**/tests/**/*.d.ts
+**/tests/**/*.map
+
+# Environment
 .env
-.scannerwork
+.env.local
+.env.*.local
 .environment
+
+# Testing & Coverage
+coverage/
+reports/
+.stryker-tmp
+playwright-report/
+test-results/
+
+# TypeScript
+*.tsbuildinfo
 
 # pnpm
 .pnpm-store/
@@ -13,3 +37,7 @@ node_modules
 # npm (old files)
 package-lock.json
 npm-debug.log
+
+# Tools
+.playwright-mcp
+.scannerwork

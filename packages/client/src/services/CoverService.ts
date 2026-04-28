@@ -1,3 +1,4 @@
+import type { SyncAdapter } from "@clear-progress/contract";
 import {
   COVER_HASH_PREFIX_LENGTH,
   DEFAULT_COVER_EXTENSION,
@@ -7,7 +8,6 @@ import {
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { SyncAdapter } from "@clear-progress/contract";
 import { localCoverCache } from "./LocalCoverCache";
 
 const COVER_ERROR = {

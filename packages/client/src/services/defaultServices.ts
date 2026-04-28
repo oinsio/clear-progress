@@ -1,3 +1,5 @@
+import { GasSyncAdapter } from "@clear-progress/adapter-gas";
+import type { SyncAdapter } from "@clear-progress/contract";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -8,16 +10,14 @@ import { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { GasSyncAdapter } from "@clear-progress/adapter-gas";
-import type { SyncAdapter } from "@clear-progress/contract";
-import { getAccessToken } from "./tokenManager";
-import { getConnectionConfig } from "./connectionService";
 import { CoverService } from "./CoverService";
 import { CoverSyncService } from "./CoverSyncService";
+import { getConnectionConfig } from "./connectionService";
 import { GoalService } from "./GoalService";
 import { IdeaService } from "./IdeaService";
 import { SyncService } from "./SyncService";
 import { TaskService } from "./TaskService";
+import { getAccessToken } from "./tokenManager";
 
 function createSyncAdapter(): SyncAdapter {
   const config = getConnectionConfig();

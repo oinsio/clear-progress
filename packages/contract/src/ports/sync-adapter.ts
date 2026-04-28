@@ -1,17 +1,20 @@
-import type { PullRequest, PullResponse } from "../protocol";
-import type { PushRequest, PushResponse } from "../protocol";
-import type { PingResponse, InitResponse } from "../protocol";
 import type {
+  DeleteCoverRequest,
+  DeleteCoverResponse,
+  GetCoverRequest,
+  GetCoverResponse,
+  InitResponse,
+  PingResponse,
+  PullRequest,
+  PullResponse,
+  PurgeResponse,
+  PushRequest,
+  PushResponse,
   UploadCoverRequest,
   UploadCoverResponse,
   UploadCoversRequest,
   UploadCoversResponse,
-  GetCoverRequest,
-  GetCoverResponse,
-  DeleteCoverRequest,
-  DeleteCoverResponse,
 } from "../protocol";
-import type { PurgeResponse } from "../protocol";
 
 export interface SyncAdapter {
   ping(): Promise<PingResponse>;

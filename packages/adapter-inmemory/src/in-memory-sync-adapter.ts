@@ -1,29 +1,29 @@
 import type {
-  SyncAdapter,
-  PingResponse,
+  DeleteCoverRequest,
+  DeleteCoverResponse,
+  GetCoverRequest,
+  GetCoverResponse,
   InitResponse,
+  PingResponse,
   PullRequest,
   PullResponse,
+  PurgeResponse,
+  PushItemResult,
   PushRequest,
   PushResponse,
-  PushItemResult,
   PushSettingResult,
+  SyncAdapter,
   UploadCoverRequest,
   UploadCoverResponse,
   UploadCoversRequest,
   UploadCoversResponse,
-  GetCoverRequest,
-  GetCoverResponse,
-  DeleteCoverRequest,
-  DeleteCoverResponse,
-  PurgeResponse,
-  WireTask,
-  WireGoal,
-  WireContext,
   WireCategory,
-  WireIdea,
   WireChecklistItem,
+  WireContext,
+  WireGoal,
+  WireIdea,
   WireSetting,
+  WireTask,
 } from "@clear-progress/contract";
 
 const APP_NAME = "inmemory";
@@ -38,7 +38,13 @@ interface CoverMetadata {
   data_hash: string;
 }
 
-type EntityWithId = WireTask | WireGoal | WireContext | WireCategory | WireIdea | WireChecklistItem;
+type EntityWithId =
+  | WireTask
+  | WireGoal
+  | WireContext
+  | WireCategory
+  | WireIdea
+  | WireChecklistItem;
 
 export class InMemorySyncAdapter implements SyncAdapter {
   private tasks = new Map<string, WireTask>();
@@ -89,9 +95,10 @@ export class InMemorySyncAdapter implements SyncAdapter {
     );
 
     let settings = Array.from(this.settings.values());
-    if (request.settings_updated_at) {
+    const settingsUpdatedAt = request.settings_updated_at;
+    if (settingsUpdatedAt) {
       settings = settings.filter(
-        (setting) => setting.updated_at > request.settings_updated_at!,
+        (setting) => setting.updated_at > settingsUpdatedAt,
       );
     }
 
@@ -231,7 +238,9 @@ export class InMemorySyncAdapter implements SyncAdapter {
     };
   }
 
-  async uploadCovers(request: UploadCoversRequest): Promise<UploadCoversResponse> {
+  async uploadCovers(
+    request: UploadCoversRequest,
+  ): Promise<UploadCoversResponse> {
     const results = request.covers.map((cover) => {
       const fileId = crypto.randomUUID();
       const metadata: CoverMetadata = {

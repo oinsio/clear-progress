@@ -87,7 +87,9 @@ test.describe("PWA Update Notification", () => {
       (log) =>
         log.includes("[UpdateNotification]") || log.includes("[SyncProvider]"),
     );
-    relevantLogs.forEach((log) => console.log(log));
+    for (const log of relevantLogs) {
+      console.log(log);
+    }
     console.log("===================\n");
 
     // If notification is visible, test the update button

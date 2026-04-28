@@ -119,6 +119,8 @@ export function deleteRecordsByIds(sheetName: string, ids: string[]): number {
     }
   }
 
-  rowsToDelete.forEach((rowIndex) => sheet.deleteRow(rowIndex));
+  for (const rowIndex of rowsToDelete) {
+    sheet.deleteRow(rowIndex);
+  }
   return rowsToDelete.length;
 }

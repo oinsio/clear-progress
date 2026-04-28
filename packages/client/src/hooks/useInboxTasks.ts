@@ -25,6 +25,7 @@ export function useInboxTasks(
     setIsLoading(false);
   }, [taskService]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: syncVersion triggers reload after sync
   useEffect(() => {
     void loadTasks();
   }, [loadTasks, syncVersion]);

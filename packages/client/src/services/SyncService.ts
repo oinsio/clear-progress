@@ -1,3 +1,4 @@
+import type { PushResponse, SyncAdapter } from "@clear-progress/contract";
 import {
   LOCAL_COVER_ID_PREFIX,
   PUSH_RESULT_STATUS,
@@ -24,7 +25,6 @@ import type {
   Setting,
   Task,
 } from "@/types/entities";
-import type { SyncAdapter, PushResponse } from "@clear-progress/contract";
 
 export class SyncService {
   private syncMutex: Promise<void> = Promise.resolve();
@@ -98,9 +98,7 @@ export class SyncService {
       this.goalRepository.applyServerRecords(pullResponse.goals),
       this.contextRepository.applyServerRecords(pullResponse.contexts),
       this.categoryRepository.applyServerRecords(pullResponse.categories),
-      this.checklistRepository.applyServerRecords(
-        pullResponse.checklist_items,
-      ),
+      this.checklistRepository.applyServerRecords(pullResponse.checklist_items),
       this.ideaRepository.applyServerRecords(pullResponse.ideas),
       this.settingsRepository.bulkUpsert(pullResponse.settings),
     ]);

@@ -23,7 +23,8 @@ function SortableMenuOrderItem({
   onToggle,
 }: SortableMenuOrderItemProps) {
   const { t } = useTranslation();
-  const filterItem = FILTER_ITEMS.find((item) => item.mode === config.mode)!;
+  const filterItem =
+    FILTER_ITEMS.find((item) => item.mode === config.mode) ?? FILTER_ITEMS[0];
 
   const {
     attributes,

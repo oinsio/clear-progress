@@ -1,1 +1,1 @@
-export { GasSyncAdapter, ApiAuthError } from "./gas-sync-adapter";
+export { ApiAuthError, GasSyncAdapter } from "./gas-sync-adapter";

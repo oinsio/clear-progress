@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @clear-progress/client dev",
+    "prebuild": "pnpm lint:fix && pnpm typecheck",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "biome check .",

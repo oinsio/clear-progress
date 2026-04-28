@@ -649,7 +649,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       await taskService.softDelete("task-1");
 
       expect(deletedTask).toBeDefined();
-      expect(deletedTask!.is_deleted).toBe(true);
+      expect(deletedTask).toMatchObject({ is_deleted: true });
     });
 
     it("should skip deleted copies when reassigning", async () => {

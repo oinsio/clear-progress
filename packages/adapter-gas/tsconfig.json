@@ -14,6 +14,5 @@
     "types": ["google-apps-script"]
   },
   "include": ["src/server/**/*.ts"],
-  "exclude": ["node_modules", "tests",
-    "tests/server", "src/**/*.test.ts"]
+  "exclude": ["node_modules", "tests", "tests/server", "src/**/*.test.ts"]
 }

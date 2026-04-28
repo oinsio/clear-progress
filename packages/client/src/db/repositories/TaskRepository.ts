@@ -1,9 +1,9 @@
+import type { WireTask } from "@clear-progress/contract";
 import { Temporal } from "@/lib/temporal";
 import type { Box } from "@/types/common";
 import type { ISODate, ISOTimestamp, Task } from "@/types/entities";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
 import { db } from "../database";
-import type { WireTask } from "@clear-progress/contract";
 
 export class TaskRepository {
   async getAll(): Promise<Task[]> {

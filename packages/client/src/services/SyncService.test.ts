@@ -1,3 +1,8 @@
+import type {
+  PullResponse,
+  PushResponse,
+  SyncAdapter,
+} from "@clear-progress/contract";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LOCAL_COVER_ID_PREFIX, SYNC_META_KEYS } from "@/constants";
 import { db } from "@/db/database";
@@ -11,7 +16,6 @@ import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import type { Goal, ISOTimestamp, Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { SyncAdapter, PullResponse, PushResponse } from "@clear-progress/contract";
 import { SyncService } from "./SyncService";
 
 function makePullResponse(overrides: Partial<PullResponse> = {}): PullResponse {

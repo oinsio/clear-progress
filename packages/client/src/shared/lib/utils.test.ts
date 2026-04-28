@@ -2,6 +2,7 @@ import i18next from "i18next";
 import { beforeEach, describe, expect, it } from "vitest";
 import { fakeClock, Temporal } from "@/lib/temporal";
 import { buildTask } from "@/test/factories/taskFactory";
+import type { ISOTimestamp } from "@/types/entities";
 import {
   formatAppearDate,
   formatCompletedAt,
@@ -167,7 +168,7 @@ describe("groupCompletedTasks", () => {
           plainTime: { hour: 10, minute: 0 },
         })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.todayTasks).toContain(task);
@@ -183,7 +184,7 @@ describe("groupCompletedTasks", () => {
       completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
         .toZonedDateTime({ timeZone: "UTC", plainTime: "00:00" })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.todayTasks).toContain(task);
@@ -199,7 +200,7 @@ describe("groupCompletedTasks", () => {
           plainTime: { hour: 14, minute: 0 },
         })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.yesterdayTasks).toContain(task);
@@ -216,7 +217,7 @@ describe("groupCompletedTasks", () => {
         .subtract({ days: 1 })
         .toZonedDateTime({ timeZone: "UTC", plainTime: "00:00" })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.yesterdayTasks).toContain(task);
@@ -232,7 +233,7 @@ describe("groupCompletedTasks", () => {
           plainTime: { hour: 10, minute: 0 },
         })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.weekTasks).toContain(task);
@@ -249,7 +250,7 @@ describe("groupCompletedTasks", () => {
         .subtract({ days: 7 })
         .toZonedDateTime({ timeZone: "UTC", plainTime: "00:00" })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.weekTasks).toContain(task);
@@ -265,7 +266,7 @@ describe("groupCompletedTasks", () => {
           plainTime: { hour: 23, minute: 59 },
         })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.monthTasks).toContain(task);
@@ -282,7 +283,7 @@ describe("groupCompletedTasks", () => {
         .subtract({ days: 30 })
         .toZonedDateTime({ timeZone: "UTC", plainTime: "00:00" })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.monthTasks).toContain(task);
@@ -299,7 +300,7 @@ describe("groupCompletedTasks", () => {
           plainTime: { hour: 23, minute: 59 },
         })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([task], clock);
     expect(result.earlierTasks).toContain(task);
@@ -321,7 +322,7 @@ describe("groupCompletedTasks", () => {
       completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
         .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const yesterdayTask = buildTask({
       is_completed: true,
@@ -329,7 +330,7 @@ describe("groupCompletedTasks", () => {
         .subtract({ days: 1 })
         .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const weekTask = buildTask({
       is_completed: true,
@@ -337,7 +338,7 @@ describe("groupCompletedTasks", () => {
         .subtract({ days: 4 })
         .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const monthTask = buildTask({
       is_completed: true,
@@ -345,7 +346,7 @@ describe("groupCompletedTasks", () => {
         .subtract({ days: 9 })
         .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const earlierTask = buildTask({
       is_completed: true,
@@ -353,7 +354,7 @@ describe("groupCompletedTasks", () => {
         .subtract({ days: 37 })
         .toZonedDateTime({ timeZone: "UTC", plainTime: { hour: 8, minute: 0 } })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks(
       [todayTask, yesterdayTask, weekTask, monthTask, earlierTask],
@@ -376,7 +377,7 @@ describe("groupCompletedTasks", () => {
           plainTime: { hour: 20, minute: 0 },
         })
         .toInstant()
-        .toString() as any,
+        .toString() as ISOTimestamp,
     });
     const result = groupCompletedTasks([yesterdayTask], clock);
     expect(result.weekTasks).toHaveLength(0);

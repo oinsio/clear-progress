@@ -1,3 +1,7 @@
+import type {
+  SyncAdapter,
+  UploadCoverBatchItem,
+} from "@clear-progress/contract";
 import {
   FALLBACK_COVER_MIME_TYPE,
   LOCAL_COVER_ID_PREFIX,
@@ -8,7 +12,6 @@ import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import type { CoverRecord, PendingCoverRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { SyncAdapter, UploadCoverBatchItem } from "@clear-progress/contract";
 import {
   arrayBufferToBase64,
   buildCoverFilename,

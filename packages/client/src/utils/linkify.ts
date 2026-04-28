@@ -12,8 +12,8 @@ export function extractLinks(text: string): LinkSegment[] {
   const segments: LinkSegment[] = [];
   let lastIndex = 0;
 
-  let match: RegExpExecArray | null;
-  while ((match = urlRegex.exec(text)) !== null) {
+  let match = urlRegex.exec(text);
+  while (match !== null) {
     const rawUrl = match[0];
     const urlStart = match.index;
 
@@ -34,6 +34,7 @@ export function extractLinks(text: string): LinkSegment[] {
     });
 
     lastIndex = urlStart + cleanUrl.length;
+    match = urlRegex.exec(text);
   }
 
   // Add remaining text after last URL

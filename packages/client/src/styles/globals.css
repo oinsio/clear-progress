@@ -61,6 +61,27 @@
     --color-accent: 251 113 133;
   }
 
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-size: calc(1rem * var(--scale-factor));
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   /* Dark mode accent colors */
   .dark:root[data-accent="coral"] {
     --color-accent: 225 29 72;
@@ -153,26 +174,5 @@
   html.dark input::placeholder,
   html.dark textarea::placeholder {
     color: rgb(107 114 128);
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  html,
-  body,
-  #root {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    font-size: calc(1rem * var(--scale-factor));
-    font-family:
-      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-      sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 }

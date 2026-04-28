@@ -1,3 +1,4 @@
+import type { SyncAdapter } from "@clear-progress/contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   FALLBACK_COVER_MIME_TYPE,
@@ -9,7 +10,6 @@ import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import type { PendingCoverRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
-import type { SyncAdapter } from "@clear-progress/contract";
 import { CoverSyncService } from "./CoverSyncService";
 import { localCoverCache } from "./LocalCoverCache";
 
@@ -74,7 +74,9 @@ function createMockSyncAdapter(
             })),
           }),
       ),
-    deleteCover: vi.fn().mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
+    deleteCover: vi
+      .fn()
+      .mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
     getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
     ping: vi.fn(),
     init: vi.fn(),
@@ -1226,7 +1228,9 @@ describe("CoverSyncService", () => {
 
       await service.cacheFromServer(FILE_ID);
 
-      expect(mockSyncAdapter.getCover).toHaveBeenCalledWith({ file_ids: [FILE_ID] });
+      expect(mockSyncAdapter.getCover).toHaveBeenCalledWith({
+        file_ids: [FILE_ID],
+      });
     });
 
     it("should add cover to localCoverCache after successful fetch", async () => {

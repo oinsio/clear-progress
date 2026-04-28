@@ -50,6 +50,7 @@ Entities, relationships, backend API, pull/push protocol, sync engine:
 pnpm dev                    # Start client dev server
 pnpm build                  # Build all packages
 pnpm test                   # Run all tests
+pnpm test:mutation          # Run Stryker
 pnpm lint                   # Lint all packages
 pnpm typecheck              # Type check all packages
 pnpm preflight              # Run lint + typecheck + test

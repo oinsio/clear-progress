@@ -1,4 +1,8 @@
-import { API_AUTH_ERROR_NAME, STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_S } from "@/constants";
+import {
+  API_AUTH_ERROR_NAME,
+  STORAGE_KEYS,
+  TOKEN_EXPIRY_BUFFER_S,
+} from "@/constants";
 import { Temporal } from "@/lib/temporal";
 
 // Module-level shared state — all adapter instances use the same token

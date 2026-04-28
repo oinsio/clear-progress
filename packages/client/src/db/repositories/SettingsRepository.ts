@@ -1,7 +1,7 @@
+import type { WireSetting } from "@clear-progress/contract";
 import type { ISOTimestamp, Setting } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { db } from "../database";
-import type { WireSetting } from "@clear-progress/contract";
 
 export class SettingsRepository {
   async getAll(): Promise<Setting[]> {

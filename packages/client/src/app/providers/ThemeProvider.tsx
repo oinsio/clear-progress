@@ -93,6 +93,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyAccentColor(getInitialAccentColor());
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: syncVersion triggers reload after sync
   useEffect(() => {
     const loadSettings = async () => {
       try {

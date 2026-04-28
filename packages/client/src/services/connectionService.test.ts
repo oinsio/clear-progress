@@ -27,7 +27,7 @@ describe("connectionService", () => {
 
       const saved = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
       expect(saved).toBeTruthy();
-      const parsed = JSON.parse(saved!) as GasConnectionConfig;
+      const parsed = JSON.parse(saved ?? "") as GasConnectionConfig;
       expect(parsed.isActive).toBe(true);
       expect(parsed.url).toBe("https://example.com");
       expect(parsed.clientId).toBe("test-client-id");
@@ -51,7 +51,7 @@ describe("connectionService", () => {
 
       const saved = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
       expect(saved).toBeTruthy();
-      const parsed = JSON.parse(saved!) as GasConnectionConfig;
+      const parsed = JSON.parse(saved ?? "") as GasConnectionConfig;
       expect(parsed.isActive).toBe(false);
       expect(parsed.url).toBe("https://example.com");
       expect(parsed.clientId).toBe("test-client-id");

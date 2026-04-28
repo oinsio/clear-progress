@@ -97,12 +97,13 @@ describe("SettingsRepository", () => {
 
       const setting = await db.settings.get({ key: "default_box" });
       expect(setting).toBeDefined();
-      expect(setting!.updated_at >= before).toBe(true);
+      const updatedAt = setting?.updated_at ?? "";
+      expect(updatedAt >= before).toBe(true);
       // Проверяем, что timestamp не в будущем (с буфером 500ms)
       const maxAllowed = toISOTimestamp(
         Temporal.Now.instant().add({ milliseconds: 500 }),
       );
-      expect(setting!.updated_at <= maxAllowed).toBe(true);
+      expect(updatedAt <= maxAllowed).toBe(true);
     });
   });
 

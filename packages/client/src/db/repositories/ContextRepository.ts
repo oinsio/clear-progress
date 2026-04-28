@@ -1,5 +1,5 @@
-import type { Context, ISOTimestamp } from "@/types/entities";
 import type { WireContext } from "@clear-progress/contract";
+import type { Context, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
 export class ContextRepository {
