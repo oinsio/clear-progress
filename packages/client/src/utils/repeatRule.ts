@@ -1,63 +1,14 @@
+import { type RepeatRule, RepeatRuleSchema } from "@clear-progress/contract";
 import type { TFunction } from "i18next";
-import {
-  MAX_DAY_OF_MONTH,
-  MAX_ISO_WEEKDAY,
-  MAX_MONTH,
-  MIN_DAY_OF_MONTH,
-  MIN_ISO_WEEKDAY,
-  MIN_MONTH,
-} from "@/constants";
 import { type Clock, systemClock, Temporal } from "@/lib/temporal";
-import type { RepeatRule } from "@/types/common";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
-
-function isValidInteger(value: number): boolean {
-  return Number.isInteger(value);
-}
-
-function isInRange(value: number, min: number, max: number): boolean {
-  return value >= min && value <= max;
-}
-
-function validateRepeatRule(rule: RepeatRule): boolean {
-  if (rule.weekdays !== undefined) {
-    if (rule.weekdays.length === 0) return false;
-    for (const day of rule.weekdays) {
-      if (
-        !isValidInteger(day) ||
-        !isInRange(day, MIN_ISO_WEEKDAY, MAX_ISO_WEEKDAY)
-      ) {
-        return false;
-      }
-    }
-  }
-
-  if (rule.day_of_month !== undefined) {
-    if (!isInRange(rule.day_of_month, MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH)) {
-      return false;
-    }
-  }
-
-  if (rule.month_and_day !== undefined) {
-    if (!isInRange(rule.month_and_day.month, MIN_MONTH, MAX_MONTH)) {
-      return false;
-    }
-    if (
-      !isInRange(rule.month_and_day.day, MIN_DAY_OF_MONTH, MAX_DAY_OF_MONTH)
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 export function parseRepeatRule(json: string): RepeatRule | null {
   if (!json) return null;
   try {
-    const rule = JSON.parse(json) as RepeatRule;
-    if (!validateRepeatRule(rule)) return null;
-    return rule;
+    const parsed: unknown = JSON.parse(json);
+    const result = RepeatRuleSchema.safeParse(parsed);
+    return result.success ? result.data : null;
   } catch {
     return null;
   }

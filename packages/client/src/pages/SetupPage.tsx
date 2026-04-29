@@ -1,4 +1,4 @@
-import { GasSyncAdapter } from "@clear-progress/adapter-gas";
+import { createAdapter } from "@clear-progress/contract";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -97,7 +97,7 @@ export default function SetupPage() {
     setErrorMessage("");
 
     try {
-      const tempAdapter = new GasSyncAdapter(resolvedUrl, getAccessToken);
+      const tempAdapter = createAdapter("gas", resolvedUrl, getAccessToken);
       const response = await tempAdapter.ping();
       if (!response.ok) {
         setPhase("error");

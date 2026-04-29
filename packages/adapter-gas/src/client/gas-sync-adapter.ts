@@ -16,6 +16,18 @@ import type {
   UploadCoversRequest,
   UploadCoversResponse,
 } from "@clear-progress/contract";
+import {
+  DeleteCoverResponseSchema,
+  GetCoverResponseSchema,
+  InitResponseSchema,
+  PingResponseSchema,
+  PullResponseSchema,
+  PurgeResponseSchema,
+  PushResponseSchema,
+  UploadCoverResponseSchema,
+  UploadCoversResponseSchema,
+} from "@clear-progress/contract";
+import type { ZodType } from "zod";
 
 const API_TIMEOUT_MS = 30000;
 const GAS_AUTH_ERROR_CODE = "UNAUTHORIZED";
@@ -24,6 +36,14 @@ export class ApiAuthError extends Error {
   constructor() {
     super("Authentication required: token is missing, expired, or invalid");
     this.name = "ApiAuthError";
+  }
+}
+
+export class ApiValidationError extends Error {
+  constructor(action: string, cause: unknown) {
+    super(`Invalid API response for "${action}"`);
+    this.name = "ApiValidationError";
+    this.cause = cause;
   }
 }
 
@@ -38,13 +58,17 @@ export class GasSyncAdapter implements SyncAdapter {
     this.getAccessToken = getAccessToken;
   }
 
-  private async request<TResponse>(body: object): Promise<TResponse> {
+  private async request<TResponse>(
+    body: object,
+    schema: ZodType<TResponse>,
+  ): Promise<TResponse> {
     const token = this.getAccessToken();
     if (!token) {
       throw new ApiAuthError();
     }
 
     const requestBody = { ...body, access_token: token };
+    const action = (body as Record<string, unknown>).action as string;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
@@ -66,7 +90,12 @@ export class GasSyncAdapter implements SyncAdapter {
         throw new ApiAuthError();
       }
 
-      return parsed as TResponse;
+      const result = schema.safeParse(parsed);
+      if (!result.success) {
+        throw new ApiValidationError(action, result.error);
+      }
+
+      return result.data;
     } finally {
       clearTimeout(timeoutId);
     }
@@ -85,69 +114,59 @@ export class GasSyncAdapter implements SyncAdapter {
     } catch {
       throw new Error("Invalid response: expected JSON");
     }
-    if (!isValidPingResponse(parsedResponse)) {
-      throw new Error("Invalid response: not a valid ping response");
+    const result = PingResponseSchema.safeParse(parsedResponse);
+    if (!result.success) {
+      throw new ApiValidationError("ping", result.error);
     }
-    return parsedResponse;
+    return result.data;
   }
 
   async init(): Promise<InitResponse> {
-    return this.request<InitResponse>({ action: "init" });
+    return this.request({ action: "init" }, InitResponseSchema);
   }
 
   async pull(request: PullRequest): Promise<PullResponse> {
-    return this.request<PullResponse>({ action: "pull", ...request });
+    return this.request({ action: "pull", ...request }, PullResponseSchema);
   }
 
   async push(request: PushRequest): Promise<PushResponse> {
-    return this.request<PushResponse>({ action: "push", ...request });
+    return this.request({ action: "push", ...request }, PushResponseSchema);
   }
 
   async uploadCover(request: UploadCoverRequest): Promise<UploadCoverResponse> {
-    return this.request<UploadCoverResponse>({
-      action: "upload_cover",
-      ...request,
-    });
+    return this.request(
+      { action: "upload_cover", ...request },
+      UploadCoverResponseSchema,
+    );
   }
 
   async uploadCovers(
     request: UploadCoversRequest,
   ): Promise<UploadCoversResponse> {
-    return this.request<UploadCoversResponse>({
-      action: "upload_covers",
-      ...request,
-    });
+    return this.request(
+      { action: "upload_covers", ...request },
+      UploadCoversResponseSchema,
+    );
   }
 
   async getCover(request: GetCoverRequest): Promise<GetCoverResponse> {
-    return this.request<GetCoverResponse>({
-      action: "get_cover",
-      ...request,
-    });
+    return this.request(
+      { action: "get_cover", ...request },
+      GetCoverResponseSchema,
+    );
   }
 
   async deleteCover(request: DeleteCoverRequest): Promise<DeleteCoverResponse> {
-    return this.request<DeleteCoverResponse>({
-      action: "delete_cover",
-      ...request,
-    });
+    return this.request(
+      { action: "delete_cover", ...request },
+      DeleteCoverResponseSchema,
+    );
   }
 
   async purge(): Promise<PurgeResponse> {
-    return this.request<PurgeResponse>({
-      action: "purge",
-      confirm: true,
-    });
+    return this.request(
+      { action: "purge", confirm: true },
+      PurgeResponseSchema,
+    );
   }
-}
-
-function isValidPingResponse(data: unknown): data is PingResponse {
-  if (typeof data !== "object" || data === null) return false;
-  const record = data as Record<string, unknown>;
-  return (
-    typeof record.ok === "boolean" &&
-    typeof record.app === "string" &&
-    typeof record.version === "string" &&
-    typeof record.initialized === "boolean"
-  );
 }

@@ -46,36 +46,8 @@ export type FilterBarPosition = "top" | "bottom";
 
 export type InterfaceScale = "small" | "normal" | "large" | "xLarge";
 
-export type MenuMode =
-  | "inbox"
-  | "contexts"
-  | "categories"
-  | "goals"
-  | "ideas"
-  | "tasks"
-  | "completed"
-  | "deleted";
-
-export interface MenuItemConfig {
-  mode: MenuMode;
-  visible: boolean;
-}
-
-export interface RepeatRule {
-  type: "fixed" | "after_completion";
-  // Для fixed
-  frequency?: "daily" | "weekly" | "monthly" | "yearly";
-  interval?: number; // >= 1
-  weekdays?: number[]; // для weekly: 1=Пн ... 7=Вс
-  day_of_month?: number; // для monthly: 1-31
-  month_and_day?: {
-    // для yearly
-    month: number; // 1-12
-    day: number; // 1-31
-  };
-  // Для after_completion
-  delay_days?: number; // >= 1
-  // Общее
-  target_box: Box;
-  advance_days: number; // >= 0
-}
+export type {
+  MenuItemConfig,
+  MenuMode,
+  RepeatRule,
+} from "@clear-progress/contract";

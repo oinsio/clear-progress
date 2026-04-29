@@ -1,6 +1,7 @@
+import { type MenuItemConfig, MenuOrderSchema } from "@clear-progress/contract";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MENU_ORDER_CHANGED_EVENT, STORAGE_KEYS } from "@/constants";
-import type { MenuItemConfig, MenuMode } from "@/types/common";
+import type { MenuMode } from "@/types/common";
 
 const DEFAULT_MENU_MODE_ORDER: MenuMode[] = [
   "inbox",
@@ -27,9 +28,15 @@ function loadMenuOrder(): MenuItemConfig[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.MENU_ORDER);
     if (!stored) return DEFAULT_MENU_ORDER;
-    const parsed = JSON.parse(stored) as MenuItemConfig[];
+    const parseResult = MenuOrderSchema.safeParse(JSON.parse(stored));
+    if (!parseResult.success) {
+      console.error("Invalid menu order:", parseResult.error);
+      return DEFAULT_MENU_ORDER;
+    }
     const validModes = new Set<MenuMode>(DEFAULT_MENU_MODE_ORDER);
-    const filtered = parsed.filter((item) => validModes.has(item.mode));
+    const filtered = parseResult.data.filter((item) =>
+      validModes.has(item.mode),
+    );
     const storedModes = new Set(filtered.map((item) => item.mode));
     const missing = DEFAULT_MENU_ORDER.filter(
       (item) => !storedModes.has(item.mode),

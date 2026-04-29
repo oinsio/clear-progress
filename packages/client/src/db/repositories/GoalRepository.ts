@@ -1,4 +1,5 @@
 import type { WireGoal } from "@clear-progress/contract";
+import { ClientGoalSchema } from "@/schemas/entities";
 import type { Goal, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
@@ -16,14 +17,31 @@ export class GoalRepository {
   }
 
   async create(goal: Goal): Promise<void> {
+    const result = ClientGoalSchema.safeParse(goal);
+    if (!result.success) {
+      console.error("Invalid goal before IndexedDB write:", result.error);
+      throw new Error(`Invalid goal data: ${result.error.message}`);
+    }
     await db.goals.add(goal);
   }
 
   async update(goal: Goal): Promise<void> {
+    const result = ClientGoalSchema.safeParse(goal);
+    if (!result.success) {
+      console.error("Invalid goal before IndexedDB write:", result.error);
+      throw new Error(`Invalid goal data: ${result.error.message}`);
+    }
     await db.goals.put(goal);
   }
 
   async bulkUpsert(goals: Goal[]): Promise<void> {
+    for (const goal of goals) {
+      const result = ClientGoalSchema.safeParse(goal);
+      if (!result.success) {
+        console.error("Invalid goal in bulk operation:", result.error);
+        throw new Error(`Invalid goal data: ${result.error.message}`);
+      }
+    }
     await db.goals.bulkPut(goals);
   }
 

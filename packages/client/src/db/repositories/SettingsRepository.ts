@@ -1,4 +1,5 @@
 import type { WireSetting } from "@clear-progress/contract";
+import { ClientSettingSchema } from "@/schemas/entities";
 import type { ISOTimestamp, Setting } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { db } from "../database";
@@ -26,12 +27,20 @@ export class SettingsRepository {
     }
 
     const updatedAt = toISOTimestamp();
-    await db.settings.put({
+    const setting: Setting = {
       key,
       value,
       updated_at: updatedAt,
       needsSync: true,
-    });
+    };
+
+    const result = ClientSettingSchema.safeParse(setting);
+    if (!result.success) {
+      console.error("Invalid setting before IndexedDB write:", result.error);
+      throw new Error(`Invalid setting data: ${result.error.message}`);
+    }
+
+    await db.settings.put(setting);
   }
 
   async getChangedSince(since: string): Promise<Setting[]> {
@@ -59,13 +68,21 @@ export class SettingsRepository {
     });
 
     if (settingsToUpsert.length > 0) {
-      await db.settings.bulkPut(
-        settingsToUpsert.map((s) => ({
-          ...s,
-          updated_at: s.updated_at as ISOTimestamp,
-          needsSync: false,
-        })),
-      );
+      const clientSettings = settingsToUpsert.map((s) => ({
+        ...s,
+        updated_at: s.updated_at as ISOTimestamp,
+        needsSync: false,
+      }));
+
+      for (const setting of clientSettings) {
+        const result = ClientSettingSchema.safeParse(setting);
+        if (!result.success) {
+          console.error("Invalid setting in bulk operation:", result.error);
+          throw new Error(`Invalid setting data: ${result.error.message}`);
+        }
+      }
+
+      await db.settings.bulkPut(clientSettings);
     }
   }
 }

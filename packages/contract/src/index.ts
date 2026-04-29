@@ -1,5 +1,3 @@
-// Domain types
-
 // Constants
 export {
   API_ACTIONS,
@@ -8,10 +6,18 @@ export {
   PUSH_RESULT_STATUS,
   SYNC_META_KEYS,
 } from "./constants";
+// Domain types (re-exported from schemas)
 export type {
+  BackendType,
   Box,
+  ConnectionConfig,
+  GasConnectionConfig,
   GoalStatus,
+  MenuItemConfig,
+  MenuMode,
   PushResultStatus,
+  RepeatRule,
+  SupabaseConnectionConfig,
   WireCategory,
   WireChecklistItem,
   WireContext,
@@ -20,7 +26,6 @@ export type {
   WireSetting,
   WireTask,
 } from "./domain";
-
 // Ports
 export type { SyncAdapter } from "./ports";
 // Protocol types
@@ -46,3 +51,47 @@ export type {
   UploadCoversRequest,
   UploadCoversResponse,
 } from "./protocol";
+// Registry
+export { createAdapter, registerAdapter } from "./registry/adapterRegistry";
+// Schemas
+export {
+  BackendTypeSchema,
+  BoxSchema,
+  CollapsedSectionsSchema,
+  ConnectionConfigSchema,
+  // API response schemas
+  DeleteCoverResponseSchema,
+  GasConnectionConfigSchema,
+  GetCoverResponseSchema,
+  GetCoverResultSchema,
+  GoalStatusSchema,
+  InitResponseSchema,
+  ISODateOrEmptySchema,
+  ISODateSchema,
+  ISOTimestampOrEmptySchema,
+  ISOTimestampSchema,
+  MenuItemConfigSchema,
+  MenuModeSchema,
+  MenuOrderSchema,
+  PingResponseSchema,
+  PullResponseSchema,
+  PurgeResponseSchema,
+  PushItemResultSchema,
+  PushResponseSchema,
+  PushResultStatusSchema,
+  PushSettingResultSchema,
+  REPEAT_RULE_LIMITS,
+  RepeatRuleSchema,
+  SupabaseConnectionConfigSchema,
+  UploadCoverBatchResultSchema,
+  UploadCoverResponseSchema,
+  UploadCoversResponseSchema,
+  UUIDSchema,
+  WireCategorySchema,
+  WireChecklistItemSchema,
+  WireContextSchema,
+  WireGoalSchema,
+  WireIdeaSchema,
+  WireSettingSchema,
+  WireTaskSchema,
+} from "./schemas";

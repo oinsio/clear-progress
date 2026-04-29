@@ -1,4 +1,5 @@
 import type { WireIdea } from "@clear-progress/contract";
+import { ClientIdeaSchema } from "@/schemas/entities";
 import type { Idea, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
@@ -16,14 +17,31 @@ export class IdeaRepository {
   }
 
   async create(idea: Idea): Promise<void> {
+    const result = ClientIdeaSchema.safeParse(idea);
+    if (!result.success) {
+      console.error("Invalid idea before IndexedDB write:", result.error);
+      throw new Error(`Invalid idea data: ${result.error.message}`);
+    }
     await db.ideas.add(idea);
   }
 
   async update(idea: Idea): Promise<void> {
+    const result = ClientIdeaSchema.safeParse(idea);
+    if (!result.success) {
+      console.error("Invalid idea before IndexedDB write:", result.error);
+      throw new Error(`Invalid idea data: ${result.error.message}`);
+    }
     await db.ideas.put(idea);
   }
 
   async bulkUpsert(ideas: Idea[]): Promise<void> {
+    for (const idea of ideas) {
+      const result = ClientIdeaSchema.safeParse(idea);
+      if (!result.success) {
+        console.error("Invalid idea in bulk operation:", result.error);
+        throw new Error(`Invalid idea data: ${result.error.message}`);
+      }
+    }
     await db.ideas.bulkPut(ideas);
   }
 

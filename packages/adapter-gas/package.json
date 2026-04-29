@@ -20,7 +20,8 @@
     "lint:fix": "biome check . --write"
   },
   "dependencies": {
-    "@clear-progress/contract": "workspace:*"
+    "@clear-progress/contract": "workspace:*",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

@@ -1,3 +1,4 @@
+import { CollapsedSectionsSchema } from "@clear-progress/contract";
 import { useCallback, useState } from "react";
 import { STORAGE_KEYS } from "@/constants";
 
@@ -5,7 +6,11 @@ function readCollapsedSections(): Record<string, boolean> {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.SECTION_COLLAPSE);
     if (stored !== null) {
-      return JSON.parse(stored) as Record<string, boolean>;
+      const parseResult = CollapsedSectionsSchema.safeParse(JSON.parse(stored));
+      if (parseResult.success) {
+        return parseResult.data;
+      }
+      console.error("Invalid collapsed sections:", parseResult.error);
     }
   } catch {
     // localStorage недоступен или данные повреждены

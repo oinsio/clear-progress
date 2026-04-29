@@ -1,3 +1,4 @@
+import { ConnectionConfigSchema } from "@clear-progress/contract";
 import {
   BACKEND_CONNECTION_EVENT,
   GOOGLE_CLIENT_ID_CHANGED_EVENT,
@@ -28,15 +29,17 @@ export function disconnect(): void {
     // Update connection config to inactive instead of removing
     const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
     if (raw) {
-      const config = JSON.parse(raw) as ConnectionConfig;
-      const deactivatedConfig: ConnectionConfig = {
-        ...config,
-        isActive: false,
-      };
-      localStorage.setItem(
-        STORAGE_KEYS.CONNECTION_CONFIG,
-        JSON.stringify(deactivatedConfig),
-      );
+      const parseResult = ConnectionConfigSchema.safeParse(JSON.parse(raw));
+      if (parseResult.success) {
+        const deactivatedConfig: ConnectionConfig = {
+          ...parseResult.data,
+          isActive: false,
+        };
+        localStorage.setItem(
+          STORAGE_KEYS.CONNECTION_CONFIG,
+          JSON.stringify(deactivatedConfig),
+        );
+      }
     }
 
     // Remove auth keys
@@ -61,9 +64,13 @@ export function getConnectionConfig(): ConnectionConfig | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
     if (!raw) return null;
-    const config = JSON.parse(raw) as ConnectionConfig;
-    if (!config.isActive) return null;
-    return config;
+    const parseResult = ConnectionConfigSchema.safeParse(JSON.parse(raw));
+    if (!parseResult.success) {
+      console.error("Invalid connection config:", parseResult.error);
+      return null;
+    }
+    if (!parseResult.data.isActive) return null;
+    return parseResult.data;
   } catch (error) {
     console.error("Failed to parse connection config:", error);
     return null;
@@ -74,7 +81,12 @@ export function getSavedConnectionConfig(): ConnectionConfig | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
     if (!raw) return null;
-    return JSON.parse(raw) as ConnectionConfig;
+    const parseResult = ConnectionConfigSchema.safeParse(JSON.parse(raw));
+    if (!parseResult.success) {
+      console.error("Invalid saved connection config:", parseResult.error);
+      return null;
+    }
+    return parseResult.data;
   } catch (error) {
     console.error("Failed to parse saved connection config:", error);
     return null;

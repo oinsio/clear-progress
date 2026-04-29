@@ -1,5 +1,6 @@
 import type { WireTask } from "@clear-progress/contract";
 import { Temporal } from "@/lib/temporal";
+import { ClientTaskSchema } from "@/schemas/entities";
 import type { Box } from "@/types/common";
 import type { ISODate, ISOTimestamp, Task } from "@/types/entities";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
@@ -65,14 +66,31 @@ export class TaskRepository {
   }
 
   async create(task: Task): Promise<void> {
+    const result = ClientTaskSchema.safeParse(task);
+    if (!result.success) {
+      console.error("Invalid task before IndexedDB write:", result.error);
+      throw new Error(`Invalid task data: ${result.error.message}`);
+    }
     await db.tasks.add(task);
   }
 
   async update(task: Task): Promise<void> {
+    const result = ClientTaskSchema.safeParse(task);
+    if (!result.success) {
+      console.error("Invalid task before IndexedDB write:", result.error);
+      throw new Error(`Invalid task data: ${result.error.message}`);
+    }
     await db.tasks.put(task);
   }
 
   async bulkUpsert(tasks: Task[]): Promise<void> {
+    for (const task of tasks) {
+      const result = ClientTaskSchema.safeParse(task);
+      if (!result.success) {
+        console.error("Invalid task in bulk operation:", result.error);
+        throw new Error(`Invalid task data: ${result.error.message}`);
+      }
+    }
     await db.tasks.bulkPut(tasks);
   }
 

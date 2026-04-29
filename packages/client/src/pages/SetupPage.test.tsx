@@ -20,6 +20,7 @@ const {
   mockGetConnectionConfig,
   mockGetSavedConnectionConfig,
   mockGetDefaultSyncAdapter,
+  mockCreateAdapter,
 } = vi.hoisted(() => ({
   mockPing: vi.fn(),
   mockInit: vi.fn(),
@@ -28,14 +29,17 @@ const {
   mockGetConnectionConfig: vi.fn(),
   mockGetSavedConnectionConfig: vi.fn(),
   mockGetDefaultSyncAdapter: vi.fn(),
+  mockCreateAdapter: vi.fn(),
 }));
 
-vi.mock("@clear-progress/adapter-gas", () => ({
-  GasSyncAdapter: vi.fn().mockImplementation(() => ({
-    ping: mockPing,
-    init: mockInit,
-  })),
-}));
+vi.mock("@clear-progress/contract", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@clear-progress/contract")>();
+  return {
+    ...actual,
+    createAdapter: mockCreateAdapter,
+  };
+});
 
 vi.mock("@/services/defaultServices", () => ({
   getDefaultSyncAdapter: mockGetDefaultSyncAdapter,
@@ -104,6 +108,10 @@ describe("SetupPage", () => {
     localStorageMock.clear();
     mockGetConnectionConfig.mockReturnValue(null);
     mockGetSavedConnectionConfig.mockReturnValue(null);
+    mockCreateAdapter.mockReturnValue({
+      ping: mockPing,
+      init: mockInit,
+    });
     mockUsePanelOpen.mockReturnValue({
       isPanelOpen: false,
       togglePanelOpen: vi.fn(),

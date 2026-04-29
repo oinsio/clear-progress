@@ -1,4 +1,5 @@
 import type { WireChecklistItem } from "@clear-progress/contract";
+import { ClientChecklistItemSchema } from "@/schemas/entities";
 import type { ChecklistItem, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
@@ -20,14 +21,40 @@ export class ChecklistRepository {
   }
 
   async create(item: ChecklistItem): Promise<void> {
+    const result = ClientChecklistItemSchema.safeParse(item);
+    if (!result.success) {
+      console.error(
+        "Invalid checklist item before IndexedDB write:",
+        result.error,
+      );
+      throw new Error(`Invalid checklist item data: ${result.error.message}`);
+    }
     await db.checklist_items.add(item);
   }
 
   async update(item: ChecklistItem): Promise<void> {
+    const result = ClientChecklistItemSchema.safeParse(item);
+    if (!result.success) {
+      console.error(
+        "Invalid checklist item before IndexedDB write:",
+        result.error,
+      );
+      throw new Error(`Invalid checklist item data: ${result.error.message}`);
+    }
     await db.checklist_items.put(item);
   }
 
   async bulkUpsert(items: ChecklistItem[]): Promise<void> {
+    for (const item of items) {
+      const result = ClientChecklistItemSchema.safeParse(item);
+      if (!result.success) {
+        console.error(
+          "Invalid checklist item in bulk operation:",
+          result.error,
+        );
+        throw new Error(`Invalid checklist item data: ${result.error.message}`);
+      }
+    }
     await db.checklist_items.bulkPut(items);
   }
 
