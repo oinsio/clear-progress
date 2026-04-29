@@ -11,6 +11,7 @@ import {
 } from "@/components/tasks/RightFilterPanel";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useFocusMode } from "@/hooks/useFocusMode";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
@@ -83,6 +84,7 @@ export function EntityDetailLayout({
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { filterBarPosition } = useFilterBarPosition();
+  const { isFocusMode, focusOpacity } = useFocusMode();
   const isDesktop = useIsDesktop();
   const {
     ratio,
@@ -92,6 +94,7 @@ export function EntityDetailLayout({
   const isUnsynced = useIsUnsynced(entity ?? { updated_at: "" });
 
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -122,6 +125,10 @@ export function EntityDetailLayout({
 
   const handleTaskSelect = useCallback((taskId: string) => {
     setSelectedTaskId((previous) => (previous === taskId ? null : taskId));
+  }, []);
+
+  const handleTaskExpand = useCallback((taskId: string | null) => {
+    setExpandedTaskId(taskId);
   }, []);
 
   const handleDetailPanelClose = useCallback(() => {
@@ -297,6 +304,10 @@ export function EntityDetailLayout({
                 onDelete={onDeleteTask}
                 onSelect={handleTaskSelect}
                 selectedTaskId={selectedTaskId}
+                isFocusMode={isFocusMode}
+                focusDimmedOpacity={focusOpacity}
+                expandedTaskId={expandedTaskId}
+                onExpand={handleTaskExpand}
               />
             </div>
           </main>

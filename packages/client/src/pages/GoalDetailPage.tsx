@@ -111,6 +111,7 @@ export default function GoalDetailPage() {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   // edit form state
   const [editName, setEditName] = useState("");
@@ -168,6 +169,10 @@ export default function GoalDetailPage() {
 
   const handleTaskSelect = useCallback((taskId: string) => {
     setSelectedTaskId((previous) => (previous === taskId ? null : taskId));
+  }, []);
+
+  const handleTaskExpand = useCallback((taskId: string | null) => {
+    setExpandedTaskId(taskId);
   }, []);
 
   const handleDetailPanelClose = useCallback(() => {
@@ -608,6 +613,8 @@ export default function GoalDetailPage() {
                 selectedTaskId={selectedTaskId}
                 isFocusMode={isFocusMode}
                 focusDimmedOpacity={focusOpacity}
+                expandedTaskId={expandedTaskId}
+                onExpand={handleTaskExpand}
               />
 
               {/* Completed tasks section */}
@@ -631,6 +638,8 @@ export default function GoalDetailPage() {
                     selectedTaskId={selectedTaskId}
                     isFocusMode={isFocusMode}
                     focusDimmedOpacity={focusOpacity}
+                    expandedTaskId={expandedTaskId}
+                    onExpand={handleTaskExpand}
                   />
                 </section>
               )}
