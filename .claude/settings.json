@@ -18,6 +18,15 @@
             "command": "npx vitest run --reporter=verbose 2>&1 | tail -20"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm run prebuild"
+          }
+        ]
       }
     ]
   }
