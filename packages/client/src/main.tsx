@@ -2,13 +2,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/styles/globals.css";
 import "@/i18n";
-import { loadAdapters } from "@clear-progress/adapter-loader";
+import "@clear-progress/adapter-loader";
 import { migrateLegacyConnection } from "@/services/migrateLegacyConnection";
 import App from "./app/App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-
-// Register adapters before app launch
-loadAdapters();
 
 // Run one-time migration from old connection keys to new ConnectionConfig
 migrateLegacyConnection();
