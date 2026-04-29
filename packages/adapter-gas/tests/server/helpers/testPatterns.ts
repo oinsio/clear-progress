@@ -38,19 +38,14 @@ export function createMockEntityWithRevision(id: string, revision: number) {
   return { id, revision } as never;
 }
 
-export function getResponseData() {
-  return parseResponse().data as Record<string, unknown>;
-}
-
 export function expectPullResponseStructure() {
   const response = expectSuccessResponse();
-  const data = getResponseData();
-  expect(data).toHaveProperty("tasks");
-  expect(data).toHaveProperty("goals");
-  expect(data).toHaveProperty("contexts");
-  expect(data).toHaveProperty("categories");
-  expect(data).toHaveProperty("checklist_items");
-  expect(data).toHaveProperty("ideas");
+  expect(response).toHaveProperty("tasks");
+  expect(response).toHaveProperty("goals");
+  expect(response).toHaveProperty("contexts");
+  expect(response).toHaveProperty("categories");
+  expect(response).toHaveProperty("checklist_items");
+  expect(response).toHaveProperty("ideas");
   return response;
 }
 

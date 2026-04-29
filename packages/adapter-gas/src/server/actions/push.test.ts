@@ -61,8 +61,8 @@ function assertMixedTaskBatch(validTask: Task, invalidTask: Task): void {
   push({ tasks: [validTask, invalidTask] });
   const results = getResults();
   expect(results.tasks).toHaveLength(2);
-  expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
-  expect(results.tasks[1]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
+  expect(results.tasks![0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
+  expect(results.tasks![1]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
 }
 
 function assertRejectedTaskWithCreatedGoal(
@@ -71,8 +71,8 @@ function assertRejectedTaskWithCreatedGoal(
 ): void {
   push({ tasks: [invalidTask], goals: [validGoal] });
   const results = getResults();
-  expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
-  expect(results.goals[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
+  expect(results.tasks![0]).toMatchObject({ status: PUSH_STATUSES.REJECTED });
+  expect(results.goals![0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
 }
 
 function pushAcceptedTaskScenario(): void {
@@ -166,7 +166,7 @@ describe("push", () => {
       push({ tasks: [newTask] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
         status: PUSH_STATUSES.CREATED,
       });
@@ -195,7 +195,7 @@ describe("push", () => {
       push({ tasks: [newTask] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({ version: 3 });
+      expect(results.tasks![0]).toMatchObject({ version: 3 });
     });
   });
 
@@ -216,7 +216,7 @@ describe("push", () => {
       push({ tasks: [clientTask] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         id: "11111111-1111-4111-a111-111111111111",
         status: PUSH_STATUSES.ACCEPTED,
       });
@@ -234,7 +234,7 @@ describe("push", () => {
       pushAcceptedTaskScenario();
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({ version: 6 });
+      expect(results.tasks![0]).toMatchObject({ version: 6 });
     });
 
     it("should treat equal updated_at as accepted (last-write-wins, client >= server)", () => {
@@ -254,7 +254,7 @@ describe("push", () => {
       push({ tasks: [clientTask] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         status: PUSH_STATUSES.ACCEPTED,
       });
     });
@@ -265,7 +265,7 @@ describe("push", () => {
       pushConflictTaskScenario();
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         id: "11111111-1111-4111-a111-111111111111",
         status: PUSH_STATUSES.CONFLICT,
       });
@@ -281,7 +281,7 @@ describe("push", () => {
       const { serverTask } = pushConflictTaskScenario();
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({ server_record: serverTask });
+      expect(results.tasks![0]).toMatchObject({ server_record: serverTask });
     });
   });
 
@@ -307,7 +307,7 @@ describe("push", () => {
 
       const results = getResults();
       // serverTask2.version (10) + 1 = 11; if find() matched serverTask1, version would be 6
-      expect(results.tasks[0]).toMatchObject({ version: 11 });
+      expect(results.tasks![0]).toMatchObject({ version: 11 });
     });
   });
 
@@ -348,7 +348,7 @@ describe("push", () => {
       );
 
       const results = getResults();
-      expect(results.goals[0]).toMatchObject({
+      expect(results.goals![0]).toMatchObject({
         id: "eeeeeeee-eeee-4eee-aeee-eeeeeeeeeeee",
         status: PUSH_STATUSES.CREATED,
       });
@@ -370,7 +370,7 @@ describe("push", () => {
       );
 
       const results = getResults();
-      expect(results.contexts[0]).toMatchObject({
+      expect(results.contexts![0]).toMatchObject({
         status: PUSH_STATUSES.CREATED,
       });
     });
@@ -391,7 +391,7 @@ describe("push", () => {
       );
 
       const results = getResults();
-      expect(results.categories[0]).toMatchObject({
+      expect(results.categories![0]).toMatchObject({
         status: PUSH_STATUSES.CREATED,
       });
     });
@@ -412,7 +412,7 @@ describe("push", () => {
       );
 
       const results = getResults();
-      expect(results.checklist_items[0]).toMatchObject({
+      expect(results.checklist_items![0]).toMatchObject({
         status: PUSH_STATUSES.CREATED,
       });
     });
@@ -451,8 +451,8 @@ describe("push", () => {
       push({ settings });
 
       const results = getResults();
-      expect(results.settings[0]).toMatchObject({
-        id: "default_box",
+      expect(results.settings![0]).toMatchObject({
+        key: "default_box",
         status: PUSH_STATUSES.ACCEPTED,
       });
     });
@@ -510,8 +510,8 @@ describe("push", () => {
       push({ settings: [clientSetting] });
 
       const results = getResults();
-      expect(results.settings[0]).toMatchObject({
-        id: "default_box",
+      expect(results.settings![0]).toMatchObject({
+        key: "default_box",
         status: PUSH_STATUSES.ACCEPTED,
       });
     });
@@ -552,8 +552,8 @@ describe("push", () => {
       push({ settings: [clientSetting] });
 
       const results = getResults();
-      expect(results.settings[0]).toMatchObject({
-        id: "default_box",
+      expect(results.settings![0]).toMatchObject({
+        key: "default_box",
         status: PUSH_STATUSES.CONFLICT,
       });
     });
@@ -583,9 +583,103 @@ describe("push", () => {
 
       const results = getResults();
       // If find() incorrectly matched default_box (first), client (2025-01-01) < server (2025-01-02) → CONFLICT
-      expect(results.settings[0]).toMatchObject({
-        id: "accent_color",
+      expect(results.settings![0]).toMatchObject({
+        key: "accent_color",
         status: PUSH_STATUSES.ACCEPTED,
+      });
+    });
+  });
+
+  describe("response structure matches PushResponse contract", () => {
+    it("should return complete response with created task matching PushResponse shape", () => {
+      vi.mocked(readNextRevision).mockReturnValue(5);
+      const task = makeTask({ id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" });
+
+      push({ tasks: [task] });
+
+      const response = parseResponse();
+      expect(response).toStrictEqual({
+        ok: true,
+        revision: 5,
+        results: {
+          tasks: [
+            {
+              id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
+              status: "created",
+              version: 1,
+            },
+          ],
+        },
+        server_time: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+      });
+    });
+
+    it("should return complete empty response matching PushResponse shape", () => {
+      push({});
+
+      const response = parseResponse();
+      expect(response).toStrictEqual({
+        ok: true,
+        results: {},
+        server_time: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+      });
+    });
+
+    it("should return settings result with key field matching PushSettingResult shape", () => {
+      const setting = {
+        key: "accent_color",
+        value: "purple",
+        updated_at: "2025-01-01T00:00:00.000Z",
+      };
+
+      push({ settings: [setting] });
+
+      const response = parseResponse();
+      expect(response).toStrictEqual({
+        ok: true,
+        results: {
+          settings: [{ key: "accent_color", status: "accepted" }],
+        },
+        server_time: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+      });
+    });
+
+    it("should return complete conflict response matching PushResponse shape", () => {
+      const serverTask = makeTask({
+        id: "11111111-1111-4111-a111-111111111111",
+        updated_at: "2025-01-02T00:00:00.000Z",
+        version: 3,
+      });
+      const clientTask = makeTask({
+        id: "11111111-1111-4111-a111-111111111111",
+        updated_at: "2025-01-01T00:00:00.000Z",
+        version: 1,
+      });
+      vi.mocked(getAllTasks).mockReturnValue([serverTask]);
+
+      push({ tasks: [clientTask] });
+
+      const response = parseResponse();
+      expect(response).toStrictEqual({
+        ok: true,
+        results: {
+          tasks: [
+            {
+              id: "11111111-1111-4111-a111-111111111111",
+              status: "conflict",
+              server_record: serverTask,
+            },
+          ],
+        },
+        server_time: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
       });
     });
   });
@@ -600,7 +694,7 @@ describe("push", () => {
       push({ tasks: [blankTask] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         id: "cccccccc-cccc-4ccc-accc-cccccccccccc",
         status: PUSH_STATUSES.REJECTED,
       });
@@ -623,7 +717,7 @@ describe("push", () => {
       push({ tasks: [blankTask] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         id: "dddddddd-dddd-4ddd-addd-dddddddddddd",
         status: PUSH_STATUSES.REJECTED,
       });
@@ -638,7 +732,7 @@ describe("push", () => {
       push({ goals: [blankGoal] });
 
       const results = getResults();
-      expect(results.goals[0]).toMatchObject({
+      expect(results.goals![0]).toMatchObject({
         id: "ffffffff-ffff-4fff-afff-ffffffffffff",
         status: PUSH_STATUSES.REJECTED,
       });
@@ -661,7 +755,7 @@ describe("push", () => {
       push({ contexts: [blankContext] });
 
       const results = getResults();
-      expect(results.contexts[0]).toMatchObject({
+      expect(results.contexts![0]).toMatchObject({
         id: "b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2",
         status: PUSH_STATUSES.REJECTED,
       });
@@ -684,7 +778,7 @@ describe("push", () => {
       push({ categories: [blankCategory] });
 
       const results = getResults();
-      expect(results.categories[0]).toMatchObject({
+      expect(results.categories![0]).toMatchObject({
         id: "d4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4",
         status: PUSH_STATUSES.REJECTED,
       });
@@ -707,7 +801,7 @@ describe("push", () => {
       push({ checklist_items: [blankItem] });
 
       const results = getResults();
-      expect(results.checklist_items[0]).toMatchObject({
+      expect(results.checklist_items![0]).toMatchObject({
         id: "f0f0f0f0-f0f0-4f0f-8f0f-f0f0f0f0f0f0",
         status: PUSH_STATUSES.REJECTED,
       });
@@ -727,7 +821,7 @@ describe("push", () => {
       push({ tasks: [blankTask] });
 
       const results = getResults();
-      expect(results.tasks[0]).toHaveProperty("reason");
+      expect(results.tasks![0]).toHaveProperty("reason");
     });
 
     it("should process valid records alongside rejected ones in same array", () => {
@@ -764,7 +858,7 @@ describe("push", () => {
       push({ tasks: [task] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         status: PUSH_STATUSES.REJECTED,
       });
     });
@@ -783,7 +877,7 @@ describe("push", () => {
       push({ tasks: [task] });
 
       const results = getResults();
-      expect(results.tasks[0]).toHaveProperty("reason");
+      expect(results.tasks![0]).toHaveProperty("reason");
     });
 
     it.each([
@@ -797,7 +891,9 @@ describe("push", () => {
       push({ tasks: [task] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({ status: PUSH_STATUSES.CREATED });
+      expect(results.tasks![0]).toMatchObject({
+        status: PUSH_STATUSES.CREATED,
+      });
     });
 
     it("should process valid task alongside rejected one with invalid box", () => {
@@ -821,7 +917,7 @@ describe("push", () => {
         push({ tasks: [task] });
 
         const results = getResults();
-        expect(results.tasks[0]).toMatchObject({
+        expect(results.tasks![0]).toMatchObject({
           status: PUSH_STATUSES.REJECTED,
         });
       });
@@ -840,7 +936,7 @@ describe("push", () => {
         push({ tasks: [task] });
 
         const results = getResults();
-        expect(results.tasks[0]).toMatchObject({
+        expect(results.tasks![0]).toMatchObject({
           status: PUSH_STATUSES.REJECTED,
         });
       });
@@ -851,7 +947,7 @@ describe("push", () => {
         push({ tasks: [task] });
 
         const results = getResults();
-        expect(results.tasks[0]).toMatchObject({
+        expect(results.tasks![0]).toMatchObject({
           status: PUSH_STATUSES.REJECTED,
         });
       });
@@ -862,7 +958,7 @@ describe("push", () => {
         push({ tasks: [task] });
 
         const results = getResults();
-        expect(results.tasks[0]).toMatchObject({
+        expect(results.tasks![0]).toMatchObject({
           status: PUSH_STATUSES.CREATED,
         });
       });
@@ -873,7 +969,7 @@ describe("push", () => {
         push({ tasks: [task] });
 
         const results = getResults();
-        expect(results.tasks[0]).toMatchObject({
+        expect(results.tasks![0]).toMatchObject({
           status: PUSH_STATUSES.CREATED,
         });
       });
@@ -884,7 +980,7 @@ describe("push", () => {
         push({ tasks: [task] });
 
         const results = getResults();
-        expect(results.tasks[0]).toHaveProperty("reason");
+        expect(results.tasks![0]).toHaveProperty("reason");
       });
     });
 
@@ -895,7 +991,7 @@ describe("push", () => {
         push({ checklist_items: [item] });
 
         const results = getResults();
-        expect(results.checklist_items[0]).toMatchObject({
+        expect(results.checklist_items![0]).toMatchObject({
           status: PUSH_STATUSES.REJECTED,
         });
       });
@@ -914,7 +1010,7 @@ describe("push", () => {
         push({ checklist_items: [item] });
 
         const results = getResults();
-        expect(results.checklist_items[0]).toMatchObject({
+        expect(results.checklist_items![0]).toMatchObject({
           status: PUSH_STATUSES.REJECTED,
         });
       });
@@ -925,7 +1021,7 @@ describe("push", () => {
         push({ checklist_items: [item] });
 
         const results = getResults();
-        expect(results.checklist_items[0]).toMatchObject({
+        expect(results.checklist_items![0]).toMatchObject({
           status: PUSH_STATUSES.CREATED,
         });
       });
@@ -936,7 +1032,7 @@ describe("push", () => {
         push({ checklist_items: [item] });
 
         const results = getResults();
-        expect(results.checklist_items[0]).toHaveProperty("reason");
+        expect(results.checklist_items![0]).toHaveProperty("reason");
       });
 
       it("should use a different reason for missing required FK vs invalid optional FK", () => {
@@ -946,9 +1042,11 @@ describe("push", () => {
         push({ tasks: [taskWithBadGoal], checklist_items: [itemWithNoTaskId] });
 
         const results = getResults();
-        const taskReason = (results.tasks[0] as Record<string, unknown>).reason;
+        const taskReason = (
+          results.tasks![0] as unknown as Record<string, unknown>
+        ).reason;
         const itemReason = (
-          results.checklist_items[0] as Record<string, unknown>
+          results.checklist_items![0] as unknown as Record<string, unknown>
         ).reason;
         expect(taskReason).not.toBe(itemReason);
       });
@@ -971,7 +1069,7 @@ describe("push", () => {
       push({ tasks: [task] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         status: PUSH_STATUSES.REJECTED,
       });
     });
@@ -990,7 +1088,7 @@ describe("push", () => {
       push({ tasks: [task] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         status: PUSH_STATUSES.REJECTED,
       });
     });
@@ -1001,7 +1099,7 @@ describe("push", () => {
       push({ tasks: [task] });
 
       const results = getResults();
-      expect(results.tasks[0]).toMatchObject({
+      expect(results.tasks![0]).toMatchObject({
         status: PUSH_STATUSES.REJECTED,
       });
     });
@@ -1012,7 +1110,7 @@ describe("push", () => {
       push({ goals: [goal] });
 
       const results = getResults();
-      expect(results.goals[0]).toMatchObject({
+      expect(results.goals![0]).toMatchObject({
         status: PUSH_STATUSES.REJECTED,
       });
     });
@@ -1031,7 +1129,7 @@ describe("push", () => {
       push({ contexts: [context] });
 
       const results = getResults();
-      expect(results.contexts[0]).toMatchObject({
+      expect(results.contexts![0]).toMatchObject({
         status: PUSH_STATUSES.REJECTED,
       });
     });
@@ -1050,7 +1148,7 @@ describe("push", () => {
       push({ categories: [category] });
 
       const results = getResults();
-      expect(results.categories[0]).toMatchObject({
+      expect(results.categories![0]).toMatchObject({
         status: PUSH_STATUSES.REJECTED,
       });
     });
@@ -1069,7 +1167,7 @@ describe("push", () => {
       push({ checklist_items: [item] });
 
       const results = getResults();
-      expect(results.checklist_items[0]).toMatchObject({
+      expect(results.checklist_items![0]).toMatchObject({
         status: PUSH_STATUSES.REJECTED,
       });
     });
@@ -1088,7 +1186,7 @@ describe("push", () => {
       push({ tasks: [task] });
 
       const results = getResults();
-      expect(results.tasks[0]).toHaveProperty("reason");
+      expect(results.tasks![0]).toHaveProperty("reason");
     });
 
     it("should process valid records alongside invalid-id records in same array", () => {
@@ -1380,14 +1478,14 @@ describe("push", () => {
       push({ tasks: [newTask] });
 
       const results = getResults();
-      expect(results.tasks[0]).not.toHaveProperty("revision");
+      expect(results.tasks![0]).not.toHaveProperty("revision");
     });
 
     it("should NOT return revision for a conflict result", () => {
       pushConflictTaskScenario();
 
       const results = getResults();
-      expect(results.tasks[0]).not.toHaveProperty("revision");
+      expect(results.tasks![0]).not.toHaveProperty("revision");
     });
 
     it("should NOT return top-level revision when all records are conflict", () => {

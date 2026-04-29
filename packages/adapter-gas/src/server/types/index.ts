@@ -76,3 +76,10 @@ export interface PushItemResult {
   server_record?: Task | Goal | Context | Category | Idea | ChecklistItem;
   reason?: string;
 }
+
+export interface PushSettingResult {
+  key: string;
+  status: PushItemStatus;
+  server_record?: Setting;
+  reason?: string;
+}

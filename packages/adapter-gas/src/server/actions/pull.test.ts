@@ -5,7 +5,8 @@ import {
   expectPullResponseStructure,
   expectSuccessResponse,
   expectValidServerTime,
-  getResponseData,
+  makeGoal,
+  makeTask,
   parseResponse,
 } from "../../../tests/server/helpers";
 import { ERROR_CODES } from "../helpers/response";
@@ -114,8 +115,8 @@ describe("pull", () => {
 
     pull({ since_revision: 0 });
 
-    const data = getResponseData();
-    expect(data.tasks).toEqual([mockTask]);
+    const response = parseResponse();
+    expect(response.tasks).toEqual([mockTask]);
   });
 
   it("should return settings returned by getAllSettings", () => {
@@ -229,6 +230,66 @@ describe("pull", () => {
       });
 
       expect(parseResponse().settings).toEqual([]);
+    });
+  });
+
+  describe("response structure matches PullResponse contract", () => {
+    it("should return complete response matching PullResponse shape", () => {
+      const mockTask = makeTask({ revision: 5 });
+      const mockGoal = makeGoal({ revision: 5 });
+      const mockSetting = {
+        key: "default_box",
+        value: "inbox",
+        updated_at: "2025-01-01T00:00:00.000Z",
+      };
+      vi.mocked(getTasksByRevision).mockReturnValue([mockTask]);
+      vi.mocked(getGoalsByRevision).mockReturnValue([mockGoal]);
+      vi.mocked(getAllSettings).mockReturnValue([mockSetting]);
+      vi.mocked(readNextRevision).mockReturnValue(6);
+      vi.mocked(readPurgeRevision).mockReturnValue(2);
+
+      pull({ since_revision: 0 });
+
+      const response = parseResponse();
+      expect(response).toStrictEqual({
+        ok: true,
+        tasks: [mockTask],
+        goals: [mockGoal],
+        contexts: [],
+        categories: [],
+        checklist_items: [],
+        ideas: [],
+        settings: [mockSetting],
+        current_revision: 5,
+        purge_revision: 2,
+        server_time: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+      });
+    });
+
+    it("should return complete empty response matching PullResponse shape", () => {
+      vi.mocked(readNextRevision).mockReturnValue(1);
+      vi.mocked(readPurgeRevision).mockReturnValue(0);
+
+      pull({ since_revision: 0 });
+
+      const response = parseResponse();
+      expect(response).toStrictEqual({
+        ok: true,
+        tasks: [],
+        goals: [],
+        contexts: [],
+        categories: [],
+        checklist_items: [],
+        ideas: [],
+        settings: [],
+        current_revision: 0,
+        purge_revision: 0,
+        server_time: expect.stringMatching(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        ),
+      });
     });
   });
 });

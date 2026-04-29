@@ -32,6 +32,7 @@ import type {
   Goal,
   Idea,
   PushItemResult,
+  PushSettingResult,
   Setting,
   Task,
 } from "../types";
@@ -172,7 +173,7 @@ export function push(changes: {
   }
 
   try {
-    const results: Record<string, PushItemResult[]> = {};
+    const results: Record<string, PushItemResult[] | PushSettingResult[]> = {};
     let pushRevision: number | undefined;
     let hasAcceptedOrCreated = false;
 
@@ -246,9 +247,9 @@ export function push(changes: {
             new Date(serverSetting.updated_at).getTime();
         if (isClientNewer) {
           settingsToUpsert.push(clientSetting);
-          return { id: clientSetting.key, status: PUSH_STATUSES.ACCEPTED };
+          return { key: clientSetting.key, status: PUSH_STATUSES.ACCEPTED };
         }
-        return { id: clientSetting.key, status: PUSH_STATUSES.CONFLICT };
+        return { key: clientSetting.key, status: PUSH_STATUSES.CONFLICT };
       });
       upsertSettings(settingsToUpsert);
     }

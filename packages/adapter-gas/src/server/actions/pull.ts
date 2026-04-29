@@ -29,14 +29,12 @@ export function pull({
     const purgeRevision = readPurgeRevision();
 
     return jsonOk({
-      data: {
-        tasks: getTasksByRevision(sinceRevision),
-        goals: getGoalsByRevision(sinceRevision),
-        contexts: getContextsByRevision(sinceRevision),
-        categories: getCategoriesByRevision(sinceRevision),
-        checklist_items: getChecklistItemsByRevision(sinceRevision),
-        ideas: getIdeasByRevision(sinceRevision),
-      },
+      tasks: getTasksByRevision(sinceRevision),
+      goals: getGoalsByRevision(sinceRevision),
+      contexts: getContextsByRevision(sinceRevision),
+      categories: getCategoriesByRevision(sinceRevision),
+      checklist_items: getChecklistItemsByRevision(sinceRevision),
+      ideas: getIdeasByRevision(sinceRevision),
       settings: settings_updated_at
         ? getSettingsChangedSince(settings_updated_at)
         : getAllSettings(),
