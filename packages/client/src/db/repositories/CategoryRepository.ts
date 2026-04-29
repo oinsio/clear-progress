@@ -1,4 +1,5 @@
 import type { WireCategory } from "@clear-progress/contract";
+import { ClientCategorySchema } from "@/schemas/entities";
 import type { Category, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
@@ -16,14 +17,31 @@ export class CategoryRepository {
   }
 
   async create(category: Category): Promise<void> {
+    const result = ClientCategorySchema.safeParse(category);
+    if (!result.success) {
+      console.error("Invalid category before IndexedDB write:", result.error);
+      throw new Error(`Invalid category data: ${result.error.message}`);
+    }
     await db.categories.add(category);
   }
 
   async update(category: Category): Promise<void> {
+    const result = ClientCategorySchema.safeParse(category);
+    if (!result.success) {
+      console.error("Invalid category before IndexedDB write:", result.error);
+      throw new Error(`Invalid category data: ${result.error.message}`);
+    }
     await db.categories.put(category);
   }
 
   async bulkUpsert(categories: Category[]): Promise<void> {
+    for (const category of categories) {
+      const result = ClientCategorySchema.safeParse(category);
+      if (!result.success) {
+        console.error("Invalid category in bulk operation:", result.error);
+        throw new Error(`Invalid category data: ${result.error.message}`);
+      }
+    }
     await db.categories.bulkPut(categories);
   }
 

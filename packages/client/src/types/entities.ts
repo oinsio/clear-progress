@@ -1,5 +1,3 @@
-import type { Box, GoalStatus } from "./common";
-
 /**
  * Branded type for ISO 8601 timestamps with timezone (e.g., "2026-04-16T14:30:00.000Z").
  * Used for created_at, updated_at, completed_at fields.
@@ -12,90 +10,21 @@ export type ISOTimestamp = string & { readonly __brand: "ISOTimestamp" };
  */
 export type ISODate = string & { readonly __brand: "ISODate" };
 
-export interface Task {
-  id: string;
-  name: string;
-  description: string;
-  box: Box;
-  goal_id: string;
-  context_id: string;
-  category_id: string;
-  is_completed: boolean;
-  completed_at: ISOTimestamp | "";
-  repeat_rule: string;
-  is_hidden: boolean;
-  next_date: ISODate | "";
-  appear_date: ISODate | "";
-  original_task_id: string;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: ISOTimestamp;
-  updated_at: ISOTimestamp;
-  version: number;
-  revision: number;
-  needsSync: boolean;
-}
+// Client entities (Wire types + needsSync field)
+export type {
+  ClientCategory as Category,
+  ClientChecklistItem as ChecklistItem,
+  ClientContext as Context,
+  ClientGoal as Goal,
+  ClientIdea as Idea,
+  ClientSetting as Setting,
+  ClientTask as Task,
+} from "@/schemas/entities";
 
-export interface Goal {
-  id: string;
-  name: string;
-  description: string;
-  cover_file_id: string;
-  status: GoalStatus;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: ISOTimestamp;
-  updated_at: ISOTimestamp;
-  version: number;
-  revision: number;
-  needsSync: boolean;
-}
-
-interface NamedEntity {
-  id: string;
-  name: string;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: ISOTimestamp;
-  updated_at: ISOTimestamp;
-  version: number;
-  revision: number;
-  needsSync: boolean;
-  [key: string]: unknown;
-}
-
-export type Context = NamedEntity;
-
-export type Category = NamedEntity;
-
-export interface Idea extends NamedEntity {
-  description: string;
-}
-
-export interface ChecklistItem {
-  id: string;
-  task_id: string;
-  name: string;
-  is_completed: boolean;
-  sort_order: number;
-  is_deleted: boolean;
-  created_at: ISOTimestamp;
-  updated_at: ISOTimestamp;
-  version: number;
-  revision: number;
-  needsSync: boolean;
-}
-
+// Entities without Wire equivalents
 export interface SyncMeta {
   key: string;
   value: number;
-}
-
-export interface Setting {
-  key: string;
-  value: string;
-  updated_at: ISOTimestamp;
-  needsSync: boolean;
 }
 
 export interface CoverRecord {

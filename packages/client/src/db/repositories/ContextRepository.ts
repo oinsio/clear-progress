@@ -1,4 +1,5 @@
 import type { WireContext } from "@clear-progress/contract";
+import { ClientContextSchema } from "@/schemas/entities";
 import type { Context, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
 
@@ -16,14 +17,31 @@ export class ContextRepository {
   }
 
   async create(context: Context): Promise<void> {
+    const result = ClientContextSchema.safeParse(context);
+    if (!result.success) {
+      console.error("Invalid context before IndexedDB write:", result.error);
+      throw new Error(`Invalid context data: ${result.error.message}`);
+    }
     await db.contexts.add(context);
   }
 
   async update(context: Context): Promise<void> {
+    const result = ClientContextSchema.safeParse(context);
+    if (!result.success) {
+      console.error("Invalid context before IndexedDB write:", result.error);
+      throw new Error(`Invalid context data: ${result.error.message}`);
+    }
     await db.contexts.put(context);
   }
 
   async bulkUpsert(contexts: Context[]): Promise<void> {
+    for (const context of contexts) {
+      const result = ClientContextSchema.safeParse(context);
+      if (!result.success) {
+        console.error("Invalid context in bulk operation:", result.error);
+        throw new Error(`Invalid context data: ${result.error.message}`);
+      }
+    }
     await db.contexts.bulkPut(contexts);
   }
 

@@ -37,11 +37,12 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "temporal-polyfill": "^0.3.2",
-    "workbox-window": "^7.4.0"
+    "workbox-window": "^7.4.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@clear-progress/adapter-inmemory": "workspace:*",
     "@biomejs/biome": "^2.4.13",
+    "@clear-progress/adapter-inmemory": "workspace:*",
     "@playwright/test": "^1.49.1",
     "@stryker-mutator/core": "^9.6.0",
     "@stryker-mutator/vitest-runner": "^9.6.0",

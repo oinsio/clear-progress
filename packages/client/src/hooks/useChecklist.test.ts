@@ -24,7 +24,7 @@ const checklistService = new ChecklistService(new ChecklistRepository());
 async function setupWithItem(
   overrides: Parameters<typeof buildChecklistItem>[0] = {},
 ) {
-  const taskId = overrides.task_id ?? "task-1";
+  const taskId = overrides.task_id ?? crypto.randomUUID();
   const item = buildChecklistItem({ task_id: taskId, ...overrides });
   await db.checklist_items.add(item);
   const { result } = renderHook(() => useChecklist(taskId, checklistService));
@@ -40,28 +40,26 @@ describe("useChecklist", () => {
 
   it("should set isLoading to true on initial render", () => {
     const { result } = renderHook(() =>
-      useChecklist("task-1", checklistService),
+      useChecklist(crypto.randomUUID(), checklistService),
     );
     expect(result.current.isLoading).toBe(true);
   });
 
   it("should set isLoading to false after items are fetched", async () => {
-    const { result } = renderHook(() =>
-      useChecklist("task-1", checklistService),
-    );
+    const taskId = crypto.randomUUID();
+    const { result } = renderHook(() => useChecklist(taskId, checklistService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
   it("should return empty array when task has no checklist items", async () => {
-    const { result } = renderHook(() =>
-      useChecklist("task-1", checklistService),
-    );
+    const taskId = crypto.randomUUID();
+    const { result } = renderHook(() => useChecklist(taskId, checklistService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.items).toEqual([]);
   });
 
   it("should return items after loading", async () => {
-    const taskId = "task-1";
+    const taskId = crypto.randomUUID();
     const items = [
       buildChecklistItem({ task_id: taskId }),
       buildChecklistItem({ task_id: taskId }),
@@ -73,7 +71,7 @@ describe("useChecklist", () => {
   });
 
   it("should return progress after loading", async () => {
-    const taskId = "task-1";
+    const taskId = crypto.randomUUID();
     await db.checklist_items.bulkAdd([
       buildChecklistItem({ task_id: taskId, is_completed: true }),
       buildChecklistItem({ task_id: taskId, is_completed: true }),
@@ -87,7 +85,7 @@ describe("useChecklist", () => {
   });
 
   it("should add new item when createItem is called", async () => {
-    const taskId = "task-1";
+    const taskId = crypto.randomUUID();
     const { result } = renderHook(() => useChecklist(taskId, checklistService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -100,9 +98,8 @@ describe("useChecklist", () => {
   });
 
   it("should schedule push when createItem is called", async () => {
-    const { result } = renderHook(() =>
-      useChecklist("task-1", checklistService),
-    );
+    const taskId = crypto.randomUUID();
+    const { result } = renderHook(() => useChecklist(taskId, checklistService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
@@ -177,7 +174,7 @@ describe("useChecklist", () => {
   });
 
   it("should reorder items when reorderItems is called", async () => {
-    const taskId = "task-1";
+    const taskId = crypto.randomUUID();
     const item1 = buildChecklistItem({ task_id: taskId, sort_order: 0 });
     const item2 = buildChecklistItem({ task_id: taskId, sort_order: 1 });
     await db.checklist_items.bulkAdd([item1, item2]);
@@ -193,7 +190,7 @@ describe("useChecklist", () => {
   });
 
   it("should schedule push when reorderItems is called", async () => {
-    const taskId = "task-1";
+    const taskId = crypto.randomUUID();
     const items = [
       buildChecklistItem({ task_id: taskId, sort_order: 0 }),
       buildChecklistItem({ task_id: taskId, sort_order: 1 }),
@@ -211,23 +208,25 @@ describe("useChecklist", () => {
   });
 
   it("should only return items for the given taskId", async () => {
+    const taskId1 = crypto.randomUUID();
+    const taskId2 = crypto.randomUUID();
     await db.checklist_items.bulkAdd([
-      buildChecklistItem({ task_id: "task-1" }),
-      buildChecklistItem({ task_id: "task-2" }),
-      buildChecklistItem({ task_id: "task-1" }),
+      buildChecklistItem({ task_id: taskId1 }),
+      buildChecklistItem({ task_id: taskId2 }),
+      buildChecklistItem({ task_id: taskId1 }),
     ]);
 
     const { result } = renderHook(() =>
-      useChecklist("task-1", checklistService),
+      useChecklist(taskId1, checklistService),
     );
     await waitFor(() => expect(result.current.items).toHaveLength(2));
-    expect(
-      result.current.items.every((item) => item.task_id === "task-1"),
-    ).toBe(true);
+    expect(result.current.items.every((item) => item.task_id === taskId1)).toBe(
+      true,
+    );
   });
 
   it("should reactively update when items change from another source", async () => {
-    const taskId = "task-1";
+    const taskId = crypto.randomUUID();
     const { result } = renderHook(() => useChecklist(taskId, checklistService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.items).toHaveLength(0);
