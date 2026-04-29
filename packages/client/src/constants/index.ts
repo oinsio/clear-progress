@@ -203,7 +203,6 @@ export const PUSH_RESULT_STATUS = {
 export const LG_BREAKPOINT_PX = 1024;
 
 export const TOKEN_EXPIRY_BUFFER_S = 60;
-export const GAS_AUTH_ERROR_CODE = "UNAUTHORIZED";
 export const API_AUTH_ERROR_NAME = "ApiAuthError";
 
 export const SWIPE_COMPLETE_THRESHOLD_PERCENT = 0.4;
@@ -212,13 +211,6 @@ export const TASK_COMPLETE_ANIMATION_DELAY_MS = 300;
 
 export const LONG_PRESS_THRESHOLD_MS = 500;
 export const LONG_PRESS_MOVE_THRESHOLD_PX = 10;
-
-export const MIN_ISO_WEEKDAY = 1;
-export const MAX_ISO_WEEKDAY = 7;
-export const MIN_DAY_OF_MONTH = 1;
-export const MAX_DAY_OF_MONTH = 31;
-export const MIN_MONTH = 1;
-export const MAX_MONTH = 12;
 
 export const GOAL_STATUS_SORT_ORDER: Record<
   import("@/types/common").GoalStatus,

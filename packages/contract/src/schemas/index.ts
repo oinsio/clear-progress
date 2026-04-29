@@ -42,3 +42,5 @@ export {
   PushResultStatusSchema,
   UUIDSchema,
 } from "./primitives";
+export type { RepeatRule } from "./repeat-rule";
+export { REPEAT_RULE_LIMITS, RepeatRuleSchema } from "./repeat-rule";

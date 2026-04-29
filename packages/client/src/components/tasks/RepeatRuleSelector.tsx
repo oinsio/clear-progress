@@ -1,10 +1,10 @@
+import { REPEAT_RULE_LIMITS, type RepeatRule } from "@clear-progress/contract";
 import { ArrowLeft, ChevronDown, Inbox } from "lucide-react";
 import type React from "react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MAX_DAY_OF_MONTH, MIN_DAY_OF_MONTH } from "@/constants";
 import { cn } from "@/shared/lib/cn";
-import type { Box, RepeatRule } from "@/types/common";
+import type { Box } from "@/types/common";
 import { getCurrentDateDefaults, getDaysInMonth } from "@/utils/dateHelpers";
 import { LaterBoxIcon, TodayBoxIcon, WeekBoxIcon } from "./BoxIcons";
 
@@ -44,12 +44,16 @@ interface State {
   advanceDays: number;
 }
 
-const MIN_INTERVAL = 1;
-const MAX_INTERVAL = 365;
-const MIN_DELAY_DAYS = 1;
-const MAX_DELAY_DAYS = 365;
-const MIN_ADVANCE_DAYS = 0;
-const MAX_ADVANCE_DAYS = 90;
+const {
+  MIN_INTERVAL,
+  MAX_INTERVAL,
+  MIN_DELAY_DAYS,
+  MAX_DELAY_DAYS,
+  MIN_ADVANCE_DAYS,
+  MAX_ADVANCE_DAYS,
+  MIN_DAY_OF_MONTH,
+  MAX_DAY_OF_MONTH,
+} = REPEAT_RULE_LIMITS;
 
 const ALL_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
@@ -90,7 +94,7 @@ export function RepeatRuleSelector({
         weekdays: [],
         dayOfMonth: 1,
         monthAndDay: { month: 1, day: 1 },
-        delayDays: value.delay_days ?? 1,
+        delayDays: value.delay_days,
         targetBox: value.target_box,
         advanceDays: value.advance_days,
       };
@@ -100,8 +104,8 @@ export function RepeatRuleSelector({
     return {
       step: "type",
       type: "fixed",
-      frequency: value.frequency ?? "daily",
-      interval: value.interval ?? 1,
+      frequency: value.frequency,
+      interval: value.interval,
       weekdays: value.weekdays ?? [],
       dayOfMonth: value.day_of_month ?? 1,
       monthAndDay: value.month_and_day ?? { month: 1, day: 1 },
@@ -258,16 +262,15 @@ export function RepeatRuleSelector({
 
   const handleApply = useCallback(() => {
     if (state.type === "after_completion") {
-      const rule: RepeatRule = {
+      onChange({
         type: "after_completion",
         delay_days: state.delayDays,
         target_box: state.targetBox,
         advance_days: state.advanceDays,
-      };
-      onChange(rule);
+      });
     } else if (state.type === "fixed" && state.frequency) {
-      const rule: RepeatRule = {
-        type: "fixed",
+      const fixedBase = {
+        type: "fixed" as const,
         frequency: state.frequency,
         interval: state.interval,
         target_box: state.targetBox,
@@ -275,14 +278,14 @@ export function RepeatRuleSelector({
       };
 
       if (state.frequency === "weekly") {
-        rule.weekdays = state.weekdays;
+        onChange({ ...fixedBase, weekdays: state.weekdays });
       } else if (state.frequency === "monthly") {
-        rule.day_of_month = state.dayOfMonth;
+        onChange({ ...fixedBase, day_of_month: state.dayOfMonth });
       } else if (state.frequency === "yearly") {
-        rule.month_and_day = state.monthAndDay;
+        onChange({ ...fixedBase, month_and_day: state.monthAndDay });
+      } else {
+        onChange(fixedBase);
       }
-
-      onChange(rule);
     }
     onBack();
   }, [state, onChange, onBack]);
