@@ -20,6 +20,9 @@ importers:
       '@clear-progress/contract':
         specifier: workspace:*
         version: link:../contract
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.4.13
@@ -199,6 +202,10 @@ importers:
         version: 3.2.4(@types/node@22.19.17)(jiti@1.21.7)(jsdom@25.0.1)(msw@2.13.6(@types/node@22.19.17)(typescript@5.9.3))(terser@5.46.2)
 
   packages/contract:
+    dependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       typescript:
         specifier: ^5.9.3

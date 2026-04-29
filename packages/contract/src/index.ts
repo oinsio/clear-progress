@@ -1,5 +1,3 @@
-// Domain types
-
 // Constants
 export {
   API_ACTIONS,
@@ -8,6 +6,8 @@ export {
   PUSH_RESULT_STATUS,
   SYNC_META_KEYS,
 } from "./constants";
+
+// Domain types (re-exported from schemas)
 export type {
   Box,
   GoalStatus,
@@ -20,7 +20,6 @@ export type {
   WireSetting,
   WireTask,
 } from "./domain";
-
 // Ports
 export type { SyncAdapter } from "./ports";
 // Protocol types
@@ -46,3 +45,35 @@ export type {
   UploadCoversRequest,
   UploadCoversResponse,
 } from "./protocol";
+// Schemas
+export {
+  BoxSchema,
+  // API response schemas
+  DeleteCoverResponseSchema,
+  GetCoverResponseSchema,
+  GetCoverResultSchema,
+  GoalStatusSchema,
+  InitResponseSchema,
+  ISODateOrEmptySchema,
+  ISODateSchema,
+  ISOTimestampOrEmptySchema,
+  ISOTimestampSchema,
+  PingResponseSchema,
+  PullResponseSchema,
+  PurgeResponseSchema,
+  PushItemResultSchema,
+  PushResponseSchema,
+  PushResultStatusSchema,
+  PushSettingResultSchema,
+  UploadCoverBatchResultSchema,
+  UploadCoverResponseSchema,
+  UploadCoversResponseSchema,
+  UUIDSchema,
+  WireCategorySchema,
+  WireChecklistItemSchema,
+  WireContextSchema,
+  WireGoalSchema,
+  WireIdeaSchema,
+  WireSettingSchema,
+  WireTaskSchema,
+} from "./schemas";
