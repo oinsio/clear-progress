@@ -46,19 +46,8 @@ export type FilterBarPosition = "top" | "bottom";
 
 export type InterfaceScale = "small" | "normal" | "large" | "xLarge";
 
-export type MenuMode =
-  | "inbox"
-  | "contexts"
-  | "categories"
-  | "goals"
-  | "ideas"
-  | "tasks"
-  | "completed"
-  | "deleted";
-
-export interface MenuItemConfig {
-  mode: MenuMode;
-  visible: boolean;
-}
-
-export type { RepeatRule } from "@clear-progress/contract";
+export type {
+  MenuItemConfig,
+  MenuMode,
+  RepeatRule,
+} from "@clear-progress/contract";

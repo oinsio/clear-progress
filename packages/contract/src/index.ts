@@ -9,10 +9,16 @@ export {
 
 // Domain types (re-exported from schemas)
 export type {
+  BackendType,
   Box,
+  ConnectionConfig,
+  GasConnectionConfig,
   GoalStatus,
+  MenuItemConfig,
+  MenuMode,
   PushResultStatus,
   RepeatRule,
+  SupabaseConnectionConfig,
   WireCategory,
   WireChecklistItem,
   WireContext,
@@ -48,9 +54,13 @@ export type {
 } from "./protocol";
 // Schemas
 export {
+  BackendTypeSchema,
   BoxSchema,
+  CollapsedSectionsSchema,
+  ConnectionConfigSchema,
   // API response schemas
   DeleteCoverResponseSchema,
+  GasConnectionConfigSchema,
   GetCoverResponseSchema,
   GetCoverResultSchema,
   GoalStatusSchema,
@@ -59,6 +69,9 @@ export {
   ISODateSchema,
   ISOTimestampOrEmptySchema,
   ISOTimestampSchema,
+  MenuItemConfigSchema,
+  MenuModeSchema,
+  MenuOrderSchema,
   PingResponseSchema,
   PullResponseSchema,
   PurgeResponseSchema,
@@ -68,6 +81,7 @@ export {
   PushSettingResultSchema,
   REPEAT_RULE_LIMITS,
   RepeatRuleSchema,
+  SupabaseConnectionConfigSchema,
   UploadCoverBatchResultSchema,
   UploadCoverResponseSchema,
   UploadCoversResponseSchema,

@@ -1,3 +1,11 @@
+export type {
+  BackendType,
+  ConnectionConfig,
+  GasConnectionConfig,
+  MenuItemConfig,
+  MenuMode,
+  SupabaseConnectionConfig,
+} from "../schemas";
 export type { WireCategory } from "./category";
 export type { WireChecklistItem } from "./checklist-item";
 export type { Box, GoalStatus, PushResultStatus, RepeatRule } from "./common";

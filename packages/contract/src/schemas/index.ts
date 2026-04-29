@@ -14,6 +14,18 @@ export {
   UploadCoversResponseSchema,
 } from "./api";
 export type {
+  BackendType,
+  ConnectionConfig,
+  GasConnectionConfig,
+  SupabaseConnectionConfig,
+} from "./connection";
+export {
+  BackendTypeSchema,
+  ConnectionConfigSchema,
+  GasConnectionConfigSchema,
+  SupabaseConnectionConfigSchema,
+} from "./connection";
+export type {
   WireCategory,
   WireChecklistItem,
   WireContext,
@@ -31,6 +43,13 @@ export {
   WireSettingSchema,
   WireTaskSchema,
 } from "./entities";
+export type { MenuItemConfig, MenuMode } from "./local-storage";
+export {
+  CollapsedSectionsSchema,
+  MenuItemConfigSchema,
+  MenuModeSchema,
+  MenuOrderSchema,
+} from "./local-storage";
 export type { Box, GoalStatus, PushResultStatus } from "./primitives";
 export {
   BoxSchema,
