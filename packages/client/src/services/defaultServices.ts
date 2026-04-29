@@ -1,5 +1,5 @@
-import { GasSyncAdapter } from "@clear-progress/adapter-gas";
 import type { SyncAdapter } from "@clear-progress/contract";
+import { createAdapter } from "@clear-progress/contract";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -21,10 +21,10 @@ import { getAccessToken } from "./tokenManager";
 
 function createSyncAdapter(): SyncAdapter {
   const config = getConnectionConfig();
-  if (config?.type === "gas") {
-    return new GasSyncAdapter(config.url, getAccessToken);
+  if (!config) {
+    throw new Error("No backend configured");
   }
-  throw new Error("No backend configured");
+  return createAdapter(config.type, config.url, getAccessToken);
 }
 
 let _defaultSyncAdapter: SyncAdapter | null = null;

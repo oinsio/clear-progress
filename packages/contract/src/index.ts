@@ -6,7 +6,6 @@ export {
   PUSH_RESULT_STATUS,
   SYNC_META_KEYS,
 } from "./constants";
-
 // Domain types (re-exported from schemas)
 export type {
   BackendType,
@@ -52,6 +51,8 @@ export type {
   UploadCoversRequest,
   UploadCoversResponse,
 } from "./protocol";
+// Registry
+export { createAdapter, registerAdapter } from "./registry/adapterRegistry";
 // Schemas
 export {
   BackendTypeSchema,

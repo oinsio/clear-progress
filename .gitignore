@@ -10,9 +10,9 @@ node_modules
 
 # Build output
 dist
-**/tests/**/*.js
-**/tests/**/*.d.ts
-**/tests/**/*.map
+**/*.js
+**/*.d.ts
+**/*.map
 
 # Environment
 .env
@@ -27,8 +27,9 @@ reports/
 playwright-report/
 test-results/
 
-# TypeScript
+# TypeScript incremental compilation cache
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # pnpm
 .pnpm-store/

@@ -4,12 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @clear-progress/client dev",
-    "prebuild": "pnpm lint:fix && pnpm typecheck",
-    "build": "pnpm -r build",
+    "prebuild": "pnpm lint:fix",
+    "build": "pnpm --filter @clear-progress/contract build && pnpm --filter @clear-progress/adapter-gas build && pnpm --filter @clear-progress/adapter-inmemory build && pnpm --filter @clear-progress/adapter-loader build && pnpm --filter @clear-progress/client build",
     "test": "pnpm -r test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm --filter @clear-progress/contract build && pnpm --filter @clear-progress/adapter-gas build && pnpm --filter @clear-progress/adapter-inmemory build && pnpm --filter @clear-progress/adapter-loader build && pnpm -r typecheck",
     "test:mutation": "pnpm -r test:mutation",
     "preflight": "pnpm lint && pnpm typecheck && pnpm test"
   },
