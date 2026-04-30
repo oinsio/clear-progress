@@ -102,7 +102,15 @@
     "back": "Назад",
     "notFound": "Цель не найдена",
     "deleteConfirmName": "Удалить цель?",
-    "taskCount": "Задач:"
+    "taskCount": "Задач:",
+    "addToFocus": "Добавить в фокус",
+    "removeFromFocus": "Убрать из фокуса"
+  },
+  "focusGoalReplacementDialog": {
+    "title": "Заменить цель в фокусе",
+    "message": "У вас уже 2 цели в фокусе. Какую заменить?",
+    "replaceGoal": "Заменить {{goalName}}",
+    "cancel": "Отмена"
   },
   "idea": {
     "pageName": "Идеи",
@@ -171,6 +179,7 @@
     "contexts": "Контексты",
     "categories": "Категории",
     "goals": "Цели",
+    "focused_goals": "Фокус на целях",
     "ideas": "Идеи",
     "tasks": "Задачи",
     "completed": "Завершённые",

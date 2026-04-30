@@ -102,7 +102,15 @@
     "back": "Back",
     "notFound": "Goal not found",
     "deleteConfirmName": "Delete goal?",
-    "taskCount": "Tasks:"
+    "taskCount": "Tasks:",
+    "addToFocus": "Add to focus",
+    "removeFromFocus": "Remove from focus"
+  },
+  "focusGoalReplacementDialog": {
+    "title": "Replace focused goal",
+    "message": "You already have 2 focused goals. Which one would you like to replace?",
+    "replaceGoal": "Replace {{goalName}}",
+    "cancel": "Cancel"
   },
   "idea": {
     "pageName": "Ideas",
@@ -171,6 +179,7 @@
     "contexts": "Contexts",
     "categories": "Categories",
     "goals": "Goals",
+    "focused_goals": "Focused Goals",
     "ideas": "Ideas",
     "tasks": "Tasks",
     "completed": "Completed",

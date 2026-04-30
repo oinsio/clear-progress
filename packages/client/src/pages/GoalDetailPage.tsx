@@ -9,11 +9,13 @@ import {
   Play,
   Plus,
   Square,
+  Target,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
+import { FocusGoalReplacementDialog } from "@/components/goals/FocusGoalReplacementDialog";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
 import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
@@ -30,6 +32,7 @@ import { useContexts } from "@/hooks/useContexts";
 import { useCoverPreview } from "@/hooks/useCoverPreview";
 import { useCoverUrl } from "@/hooks/useCoverUrl";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
+import { useFocusedGoals } from "@/hooks/useFocusedGoals";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoal } from "@/hooks/useGoal";
 import { useGoals } from "@/hooks/useGoals";
@@ -48,7 +51,7 @@ import {
 } from "@/services/defaultServices";
 import { cn } from "@/shared/lib/cn";
 import type { Box, GoalStatus } from "@/types/common";
-import type { Task } from "@/types/entities";
+import type { Goal, Task } from "@/types/entities";
 
 interface GoalStatusOption {
   status: GoalStatus;
@@ -90,6 +93,12 @@ export default function GoalDetailPage() {
     reorderTasks,
   } = useGoalTasks(id ?? "");
   const { goals } = useGoals();
+  const {
+    focusedGoalIds,
+    addGoalToFocus,
+    removeGoalFromFocus,
+    replaceGoalInFocus,
+  } = useFocusedGoals();
   const { contexts } = useContexts();
   const { categories } = useCategories();
   const { panelSide } = usePanelSide();
@@ -112,6 +121,7 @@ export default function GoalDetailPage() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [isReplacementDialogOpen, setIsReplacementDialogOpen] = useState(false);
 
   // edit form state
   const [editName, setEditName] = useState("");
@@ -289,6 +299,30 @@ export default function GoalDetailPage() {
     await deleteGoal();
     navigate(ROUTES.GOALS);
   }, [deleteGoal, navigate]);
+
+  const isFocused = goal ? focusedGoalIds.includes(goal.id) : false;
+
+  const handleFocusToggle = useCallback(async () => {
+    if (!goal) return;
+
+    if (isFocused) {
+      await removeGoalFromFocus(goal.id);
+    } else {
+      const result = await addGoalToFocus(goal.id);
+      if (result === "limit_reached") {
+        setIsReplacementDialogOpen(true);
+      }
+    }
+  }, [goal, isFocused, addGoalToFocus, removeGoalFromFocus]);
+
+  const handleReplace = useCallback(
+    async (oldGoalId: string) => {
+      if (!goal) return;
+      await replaceGoalInFocus(oldGoalId, goal.id);
+      setIsReplacementDialogOpen(false);
+    },
+    [goal, replaceGoalInFocus],
+  );
 
   const handleModeChange = useRightPanelNavigation();
 
@@ -568,6 +602,26 @@ export default function GoalDetailPage() {
                           <CheckCheck className="w-4 h-4" aria-hidden="true" />
                         </button>
 
+                        {/* Toggle focus button */}
+                        <button
+                          type="button"
+                          aria-label={
+                            isFocused
+                              ? t("goal.removeFromFocus")
+                              : t("goal.addToFocus")
+                          }
+                          data-testid="toggle-focus-button"
+                          onClick={() => void handleFocusToggle()}
+                          className={cn(
+                            "w-8 h-8 flex items-center justify-center rounded-full transition-colors",
+                            isFocused
+                              ? "text-accent bg-accent/10 hover:bg-accent/20"
+                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                          )}
+                        >
+                          <Target className="w-4 h-4" aria-hidden="true" />
+                        </button>
+
                         {/* Edit goal button */}
                         <button
                           type="button"
@@ -696,6 +750,19 @@ export default function GoalDetailPage() {
           />
         )}
       </div>
+
+      {/* Focus goal replacement dialog */}
+      {isReplacementDialogOpen && goal && (
+        <FocusGoalReplacementDialog
+          isOpen={isReplacementDialogOpen}
+          goalToAdd={goal}
+          focusedGoals={focusedGoalIds
+            .map((id) => goals.find((g) => g.id === id))
+            .filter((g): g is Goal => g !== undefined)}
+          onReplace={handleReplace}
+          onClose={() => setIsReplacementDialogOpen(false)}
+        />
+      )}
 
       {/* Right filter panel */}
       <RightFilterPanel

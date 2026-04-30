@@ -2,6 +2,7 @@ import {
   CheckCheck,
   CheckSquare,
   CircleUser,
+  Crosshair,
   Inbox,
   Lightbulb,
   MapPin,
@@ -22,12 +23,14 @@ import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { cn } from "@/shared/lib/cn";
 import type { MenuMode, PanelSide } from "@/types/common";
+import { FocusedGoalsBlock } from "./FocusedGoalsBlock";
 
 export type RightPanelMode =
   | "inbox"
   | "tasks"
   | "completed"
   | "goals"
+  | "focused_goals"
   | "ideas"
   | "contexts"
   | "categories"
@@ -61,6 +64,11 @@ export const FILTER_ITEMS: FilterItem[] = [
     labelKey: "filter.goals",
     Icon: Target,
     route: ROUTES.GOALS,
+  },
+  {
+    mode: "focused_goals",
+    labelKey: "filter.focused_goals",
+    Icon: Crosshair,
   },
   {
     mode: "ideas",
@@ -269,6 +277,12 @@ export function RightFilterPanel({
             >
               {visibleFilterItems.map(
                 ({ mode: itemMode, labelKey, Icon, route }) => {
+                  if (itemMode === "focused_goals") {
+                    return (
+                      <FocusedGoalsBlock key={itemMode} isExpanded={true} />
+                    );
+                  }
+
                   const isActive = mode === itemMode;
                   const label = t(labelKey);
                   return (
@@ -401,6 +415,12 @@ export function RightFilterPanel({
           >
             {visibleFilterItems.map(
               ({ mode: itemMode, labelKey, Icon, route }) => {
+                if (itemMode === "focused_goals") {
+                  return (
+                    <FocusedGoalsBlock key={itemMode} isExpanded={false} />
+                  );
+                }
+
                 const isActive = mode === itemMode;
                 const label = t(labelKey);
                 return (
