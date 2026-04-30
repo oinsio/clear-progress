@@ -4,12 +4,12 @@ import {
   Check,
   CheckCheck,
   CircleMinus,
+  Crosshair,
   Pause,
   Pencil,
   Play,
   Plus,
   Square,
-  Target,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -582,6 +582,26 @@ export default function GoalDetailPage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 flex-shrink-0">
+                        {/* Toggle focus button */}
+                        <button
+                          type="button"
+                          aria-label={
+                            isFocused
+                              ? t("goal.removeFromFocus")
+                              : t("goal.addToFocus")
+                          }
+                          data-testid="toggle-focus-button"
+                          onClick={() => void handleFocusToggle()}
+                          className={cn(
+                            "w-8 h-8 flex items-center justify-center rounded-full transition-colors",
+                            isFocused
+                              ? "text-accent bg-accent/10 hover:bg-accent/20"
+                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                          )}
+                        >
+                          <Crosshair className="w-4 h-4" aria-hidden="true" />
+                        </button>
+
                         {/* Toggle completed tasks button */}
                         <button
                           type="button"
@@ -600,26 +620,6 @@ export default function GoalDetailPage() {
                           )}
                         >
                           <CheckCheck className="w-4 h-4" aria-hidden="true" />
-                        </button>
-
-                        {/* Toggle focus button */}
-                        <button
-                          type="button"
-                          aria-label={
-                            isFocused
-                              ? t("goal.removeFromFocus")
-                              : t("goal.addToFocus")
-                          }
-                          data-testid="toggle-focus-button"
-                          onClick={() => void handleFocusToggle()}
-                          className={cn(
-                            "w-8 h-8 flex items-center justify-center rounded-full transition-colors",
-                            isFocused
-                              ? "text-accent bg-accent/10 hover:bg-accent/20"
-                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
-                          )}
-                        >
-                          <Target className="w-4 h-4" aria-hidden="true" />
                         </button>
 
                         {/* Edit goal button */}
