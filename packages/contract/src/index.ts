@@ -3,7 +3,9 @@ export {
   API_ACTIONS,
   MAX_COVER_BATCH_SIZE,
   MAX_COVER_SIZE_BYTES,
+  MAX_FOCUSED_GOALS,
   PUSH_RESULT_STATUS,
+  SETTINGS_KEYS,
   SYNC_META_KEYS,
 } from "./constants";
 // Domain types (re-exported from schemas)

@@ -11,6 +11,7 @@ export const MenuModeSchema = z.enum([
   "ideas",
   "tasks",
   "completed",
+  "focused_goals",
   "deleted",
 ]);
 
