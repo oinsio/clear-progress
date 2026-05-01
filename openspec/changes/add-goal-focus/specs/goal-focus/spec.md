@@ -90,23 +90,35 @@ Focused goals MUST be displayed in RightFilterPanel as separate navigation items
 
 ### Requirement: Auto-cleanup of invalid focused goals
 
-System MUST automatically remove a goal from focus if it is deleted (soft delete), completed, or cancelled. Implements FR9 of add-goal-focus.
+System MUST automatically remove a goal from focus if it is deleted (soft delete), completed, or cancelled **after the changes are saved to IndexedDB**. During editing (before clicking "Save"), the goal MUST remain in focus even if its status is changed to `completed` or `cancelled` in the UI. Implements FR9 of add-goal-focus.
 
 #### Scenario: Focused goal is soft-deleted
 - **WHEN** a focused goal is marked `is_deleted = true`
 - **THEN** goal is removed from focus, remaining goal shifts to `focused_goal_1`, goal disappears from navigation
 
-#### Scenario: Focused goal is completed
-- **WHEN** a focused goal's status changes to `completed`
+#### Scenario: Focused goal is completed (after save)
+- **WHEN** a focused goal's status is saved as `completed` in IndexedDB (user clicked "Save" in edit mode, or status was changed via sync/API)
 - **THEN** goal is removed from focus, remaining goal shifts to `focused_goal_1`, goal disappears from navigation
 
-#### Scenario: Focused goal is cancelled
-- **WHEN** a focused goal's status changes to `cancelled`
+#### Scenario: Focused goal is cancelled (after save)
+- **WHEN** a focused goal's status is saved as `cancelled` in IndexedDB (user clicked "Save" in edit mode, or status was changed via sync/API)
 - **THEN** goal is removed from focus, remaining goal shifts to `focused_goal_1`, goal disappears from navigation
 
 #### Scenario: Both focused goals become invalid simultaneously
 - **WHEN** both focused goals are deleted/completed/cancelled
 - **THEN** `focused_goal_1=""`, `focused_goal_2=""`, block disappears from navigation
+
+#### Scenario: Status changed to completed/cancelled during editing (not saved yet)
+- **WHEN** user opens edit mode for a focused goal, changes status to `completed` or `cancelled` in the UI, but does NOT click "Save" (still in edit mode)
+- **THEN** goal remains in focus, focus icon remains active, goal is still visible in navigation
+
+#### Scenario: Status changed to completed/cancelled, then edit cancelled
+- **WHEN** user opens edit mode for a focused goal, changes status to `completed` or `cancelled` in the UI, then clicks "Cancel"
+- **THEN** goal remains in focus with its original status, focus icon remains active, goal is still visible in navigation
+
+#### Scenario: Status changed to completed/cancelled, then saved
+- **WHEN** user opens edit mode for a focused goal, changes status to `completed` or `cancelled` in the UI, then clicks "Save"
+- **THEN** after save completes and status is written to IndexedDB, goal is removed from focus, remaining goal shifts to `focused_goal_1`, goal disappears from navigation
 
 ### Requirement: Focus slots have no gaps
 

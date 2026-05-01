@@ -140,6 +140,46 @@ Feature: Goal Focus
     And Settings has focused_goal_1 = ""
     And Settings has focused_goal_2 = ""
 
+  @add-goal-focus @FR9
+  Scenario: Goal remains in focus during editing when status changed to completed (not saved)
+    Given 1 goal in focus: "Write a book"
+    And goal "Write a book" has status "in_progress"
+    When user opens goal page "Write a book"
+    And user starts editing goal
+    And user changes status to "completed" in edit mode
+    But user does NOT save changes (still in edit mode)
+    Then goal "Write a book" remains in focus
+    And focus icon is active
+    And navigation displays "Write a book"
+    And Settings has focused_goal_1 = "11111111-1111-1111-1111-111111111111"
+
+  @add-goal-focus @FR9
+  Scenario: Goal remains in focus when status change is cancelled
+    Given 1 goal in focus: "Launch a startup"
+    And goal "Launch a startup" has status "planning"
+    When user opens goal page "Launch a startup"
+    And user starts editing goal
+    And user changes status to "cancelled" in edit mode
+    And user cancels editing
+    Then goal "Launch a startup" remains in focus
+    And goal "Launch a startup" has status "planning"
+    And focus icon is active
+    And navigation displays "Launch a startup"
+    And Settings has focused_goal_1 = "44444444-4444-4444-4444-444444444444"
+
+  @add-goal-focus @FR9
+  Scenario: Goal removed from focus after saving status change to completed
+    Given 1 goal in focus: "Write a book"
+    And goal "Write a book" has status "in_progress"
+    When user opens goal page "Write a book"
+    And user starts editing goal
+    And user changes status to "completed" in edit mode
+    And user saves changes
+    Then goal "Write a book" is automatically removed from focus
+    And Settings has focused_goal_1 = ""
+    And Settings has focused_goal_2 = ""
+    And "focused_goals" block is not displayed in navigation
+
   @add-goal-focus @FR11
   Scenario: Self-healing — invalid UUID in focused_goal_1
     Given Settings has focused_goal_1 = "corrupted"
