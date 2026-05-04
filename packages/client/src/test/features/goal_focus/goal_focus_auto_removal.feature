@@ -59,7 +59,7 @@ Feature: Goal Focus — Auto-removal on Status Change
     And user changes status to "cancelled" in edit mode
     And user cancels editing
     Then goal "Launch a startup" remains in focus
-    And goal "Launch a startup" has status "planning"
+    And goal "Launch a startup" remains to have status "planning"
     And focus icon is active
     And navigation displays "Launch a startup"
     And Settings has focused_goal_1 = "44444444-4444-4444-4444-444444444444"
