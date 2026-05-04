@@ -1,13 +1,13 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
-import { db } from "@/db/database";
-import { GoalRepository } from "@/db/repositories/GoalRepository";
-import { SettingsRepository } from "@/db/repositories/SettingsRepository";
-import { buildGoal } from "@/test/factories/goalFactory";
-import type { Goal } from "@/types/entities";
+import { db } from "@/db/database.ts";
+import { GoalRepository } from "@/db/repositories/GoalRepository.ts";
+import { SettingsRepository } from "@/db/repositories/SettingsRepository.ts";
+import { buildGoal } from "@/test/factories/goalFactory.ts";
+import type { Goal } from "@/types/entities.ts";
 
-const feature = await loadFeature("./goal_focus_01.feature");
+const feature = await loadFeature("../goal_focus_01.feature");
 
 type FeatureContext = {
   testGoals: Map<string, Goal>;
