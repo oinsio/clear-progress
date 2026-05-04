@@ -7,7 +7,7 @@ import { SettingsRepository } from "@/db/repositories/SettingsRepository.ts";
 import { buildGoal } from "@/test/factories/goalFactory.ts";
 import type { Goal } from "@/types/entities.ts";
 
-const feature = await loadFeature("../goal_focus_01.feature");
+const feature = await loadFeature("../goal_focus_add_remove.feature");
 
 type FeatureContext = {
   testGoals: Map<string, Goal>;
@@ -27,7 +27,6 @@ describeFeature(
 
     f.Background(({ Given }) => {
       Given("goals exist:", async (_ctx: TestContext, table) => {
-        // Initialize testGoals in Background
         f.context.testGoals = new Map();
 
         const rows = Array.isArray(table) ? table : [];
@@ -48,6 +47,7 @@ describeFeature(
       });
     });
 
+    // @add-goal-focus @FR1 @FR8
     f.Scenario("Add first goal to focus", ({ Given, When, Then, And }) => {
       Given(
         "{int} goals in focus",
@@ -84,11 +84,9 @@ describeFeature(
         const focused1 = await settingsRepository.getValue("focused_goal_1");
         const focused2 = await settingsRepository.getValue("focused_goal_2");
 
-        // Check if goal is already focused
         const isFocused = focused1 === goal!.id || focused2 === goal!.id;
 
         if (isFocused) {
-          // Remove from focus (compaction)
           const remaining: string[] = [];
           if (focused1 !== goal!.id && focused1) remaining.push(focused1);
           if (focused2 !== goal!.id && focused2) remaining.push(focused2);
@@ -96,7 +94,6 @@ describeFeature(
           await settingsRepository.set("focused_goal_1", remaining[0] || "");
           await settingsRepository.set("focused_goal_2", remaining[1] || "");
         } else {
-          // Add to focus
           if (!focused1) {
             await settingsRepository.set("focused_goal_1", goal!.id);
           } else if (!focused2) {
@@ -157,6 +154,7 @@ describeFeature(
       );
     });
 
+    // @add-goal-focus @FR1 @FR8
     f.Scenario("Add second goal to focus", ({ Given, When, Then, And }) => {
       Given(
         "{int} goal in focus: {string}",
@@ -164,14 +162,11 @@ describeFeature(
           const goal = f.context.testGoals.get(goalName);
           expect(goal).toBeDefined();
 
-          // Set goal in focused_goal_1
           await settingsRepository.set("focused_goal_1", goal!.id);
 
-          // Verify it's set correctly
           const focused1 = await settingsRepository.getValue("focused_goal_1");
           expect(focused1).toBe(goal!.id);
 
-          // Verify count matches (focused_goal_2 should be empty for count=1)
           const focused2 = await settingsRepository.getValue("focused_goal_2");
           if (count === 1) {
             expect(focused2).toBeUndefined();
@@ -195,11 +190,9 @@ describeFeature(
         const focused1 = await settingsRepository.getValue("focused_goal_1");
         const focused2 = await settingsRepository.getValue("focused_goal_2");
 
-        // Check if goal is already focused
         const isFocused = focused1 === goal!.id || focused2 === goal!.id;
 
         if (isFocused) {
-          // Remove from focus (compaction)
           const remaining: string[] = [];
           if (focused1 !== goal!.id && focused1) remaining.push(focused1);
           if (focused2 !== goal!.id && focused2) remaining.push(focused2);
@@ -207,7 +200,6 @@ describeFeature(
           await settingsRepository.set("focused_goal_1", remaining[0] || "");
           await settingsRepository.set("focused_goal_2", remaining[1] || "");
         } else {
-          // Add to focus
           if (!focused1) {
             await settingsRepository.set("focused_goal_1", goal!.id);
           } else if (!focused2) {
@@ -268,6 +260,7 @@ describeFeature(
       );
     });
 
+    // @add-goal-focus @FR10
     f.Scenario(
       "Remove goal from focus via toggle",
       ({ Given, When, Then, And }) => {
@@ -382,6 +375,7 @@ describeFeature(
       },
     );
 
+    // @add-goal-focus @FR1 @FR2
     f.Scenario(
       "Remove first goal when second is occupied — shift up",
       ({ Given, When, Then, And }) => {
