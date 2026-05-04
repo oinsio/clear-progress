@@ -368,7 +368,7 @@ describeFeature(
     // @add-goal-focus @FR9
     f.Scenario(
       "Goal remains in focus during editing when status changed to completed (not saved)",
-      ({ Given, When, Then, And }) => {
+      ({ Given, When, Then, And, But }) => {
         Given(
           "{int} goal in focus: {string}",
           async (_ctx: TestContext, _count: number, goalName: string) => {
@@ -417,7 +417,7 @@ describeFeature(
           },
         );
 
-        And(
+        But(
           "user does NOT save changes (still in edit mode)",
           async (_ctx: TestContext) => {
             expect(f.context.isEditMode).toBe(true);
