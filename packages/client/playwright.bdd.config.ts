@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { defineBddConfig, cucumberReporter } from "playwright-bdd";
+import { cucumberReporter, defineBddConfig } from "playwright-bdd";
 
 const testDir = defineBddConfig({
   features: "src/test/features/**/*_e2e.feature",

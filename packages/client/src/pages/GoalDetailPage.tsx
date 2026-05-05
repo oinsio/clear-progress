@@ -590,7 +590,8 @@ export default function GoalDetailPage() {
                               ? t("goal.removeFromFocus")
                               : t("goal.addToFocus")
                           }
-                          data-testid="toggle-focus-button"
+                          aria-pressed={isFocused}
+                          data-testid="focus-icon"
                           onClick={() => void handleFocusToggle()}
                           className={cn(
                             "w-8 h-8 flex items-center justify-center rounded-full transition-colors",

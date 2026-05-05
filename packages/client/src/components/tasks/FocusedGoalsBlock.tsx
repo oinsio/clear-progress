@@ -22,7 +22,7 @@ export function FocusedGoalsBlock({ isExpanded }: FocusedGoalsBlockProps) {
   }
 
   return (
-    <>
+    <div data-testid="focus-panel" data-collapsed={!isExpanded}>
       {focusedGoals.map((goal) => (
         <FocusedGoalNavItem
           key={goal.id}
@@ -31,6 +31,6 @@ export function FocusedGoalsBlock({ isExpanded }: FocusedGoalsBlockProps) {
           onClick={(goalId) => navigate(`/goals/${goalId}`)}
         />
       ))}
-    </>
+    </div>
   );
 }
