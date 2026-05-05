@@ -23,6 +23,8 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 - **TDD**: Red-Green-Refactor cycle — @.claude/docs/tdd-workflow.md
 - **Mutation testing**: `npm run test:mutation` — target ≥95% score
+- **BDD Unit** (vitest-cucumber): @.claude/docs/architecture/bdd-unit-vitest-cucumber.md
+- **BDD E2E** (playwright-bdd): @.claude/docs/architecture/bdd-e2e-playwright-bdd.md
 
 ## Architecture
 
