@@ -1,5 +1,5 @@
 Feature: Goal Focus — Replacement Dialog
-  When user attempts to add a third goal, show replacement dialog.
+  Replacement dialog appears when attempting to add a third goal.
   User can replace one of the existing focused goals or cancel.
 
   Background:
