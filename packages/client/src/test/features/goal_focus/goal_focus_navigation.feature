@@ -19,7 +19,7 @@ Feature: Goal Focus — Navigation Display
     When user adds goal "Write a book" to focus
     Then navigation displays 1 item: "Write a book"
 
-    When user adds goal "Learn Spanish" to focus
+    When user adds second goal "Learn Spanish" to focus
     Then navigation displays 2 items: "Write a book", "Learn Spanish"
 
   @add-goal-focus @FR5 @UX2
