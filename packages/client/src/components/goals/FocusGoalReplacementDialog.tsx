@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
 import { useCoverUrl } from "@/hooks/useCoverUrl";
@@ -50,11 +50,27 @@ export function FocusGoalReplacementDialog({
   onClose,
 }: FocusGoalReplacementDialogProps) {
   const { t } = useTranslation();
+  const dialogContentRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
+      }
+      if (event.key === "Tab" && dialogContentRef.current) {
+        const focusableButtons =
+          dialogContentRef.current.querySelectorAll<HTMLElement>("button");
+        if (!focusableButtons.length) return;
+        const firstElement = focusableButtons[0];
+        const lastElement = focusableButtons[focusableButtons.length - 1];
+        if (event.shiftKey && document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
+        } else if (!event.shiftKey && document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement.focus();
+        }
       }
     },
     [onClose],
@@ -62,9 +78,15 @@ export function FocusGoalReplacementDialog({
 
   useEffect(() => {
     if (isOpen) {
+      previouslyFocusedElementRef.current =
+        document.activeElement as HTMLElement | null;
       document.addEventListener("keydown", handleKeyDown);
+      const firstButton =
+        dialogContentRef.current?.querySelector<HTMLElement>("button");
+      firstButton?.focus();
       return () => {
         document.removeEventListener("keydown", handleKeyDown);
+        previouslyFocusedElementRef.current?.focus();
       };
     }
   }, [isOpen, handleKeyDown]);
@@ -83,7 +105,10 @@ export function FocusGoalReplacementDialog({
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-sm mx-4 rounded-2xl bg-white p-6 shadow-xl">
+      <div
+        ref={dialogContentRef}
+        className="relative w-full max-w-sm mx-4 rounded-2xl bg-white p-6 shadow-xl"
+      >
         <h2
           data-testid="focus-goal-replacement-dialog-title"
           className="text-base font-semibold text-gray-900 mb-2"

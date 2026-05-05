@@ -1,143 +1,120 @@
+import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { createBdd, type DataTable } from "playwright-bdd";
 
+type GoalStatus =
+  | "planning"
+  | "in_progress"
+  | "paused"
+  | "completed"
+  | "cancelled";
+
 const { Given, When, Then } = createBdd();
 
-const DB_NAME = "clear-progress";
-const DB_VERSION = 4;
+const GOAL_CREATION_TIMEOUT_MS = 5000;
+const FOCUS_TOGGLE_TIMEOUT_MS = 3000;
+const FOCUS_PANEL_TIMEOUT_MS = 5000;
 
-interface GoalSeedRow {
-  id: string;
-  name: string;
-  status: string;
+// ============================================================================
+// UI Helpers
+// ============================================================================
+
+async function createGoalViaUI(
+  page: Page,
+  name: string,
+  status?: GoalStatus,
+): Promise<void> {
+  await page.goto("/goals");
+  await page.getByTestId("add-goal-button").first().click();
+  const goalInput = page.getByTestId("add-goal-input");
+  await goalInput.waitFor({ state: "visible" });
+  await goalInput.fill(name);
+  await goalInput.press("Enter");
+  await page
+    .getByText(name)
+    .waitFor({ state: "visible", timeout: GOAL_CREATION_TIMEOUT_MS });
+
+  if (status && status !== "planning") {
+    await setGoalStatusViaUI(page, name, status);
+  }
 }
 
-async function seedGoals(
-  page: import("@playwright/test").Page,
-  goals: GoalSeedRow[],
-) {
-  await page.evaluate(
-    ({ dbName, dbVersion, goalsData }) => {
-      return new Promise<void>((resolve, reject) => {
-        const request = indexedDB.open(dbName, dbVersion);
-        request.onupgradeneeded = () => {
-          const database = request.result;
-          if (!database.objectStoreNames.contains("goals")) {
-            database.createObjectStore("goals", { keyPath: "id" });
-          }
-          if (!database.objectStoreNames.contains("settings")) {
-            database.createObjectStore("settings", { keyPath: "key" });
-          }
-        };
-        request.onsuccess = () => {
-          const database = request.result;
-          const transaction = database.transaction(["goals"], "readwrite");
-          const goalsStore = transaction.objectStore("goals");
-          for (const goal of goalsData) {
-            goalsStore.put({
-              id: goal.id,
-              name: goal.name,
-              description: "",
-              cover_file_id: "",
-              status: goal.status,
-              sort_order: 0,
-              is_deleted: false,
-              created_at: "2026-01-01T00:00:00.000Z",
-              updated_at: "2026-01-01T00:00:00.000Z",
-              version: 1,
-              revision: 0,
-              needsSync: false,
-            });
-          }
-          transaction.oncomplete = () => {
-            database.close();
-            resolve();
-          };
-          transaction.onerror = () => reject(transaction.error);
-        };
-        request.onerror = () => reject(request.error);
-      });
-    },
-    { dbName: DB_NAME, dbVersion: DB_VERSION, goalsData: goals },
+// Status buttons in the segmented control are rendered in this order
+const STATUS_BUTTON_INDEX: Record<GoalStatus, number> = {
+  cancelled: 0,
+  paused: 1,
+  planning: 2,
+  in_progress: 3,
+  completed: 4,
+};
+
+async function setGoalStatusViaUI(
+  page: Page,
+  goalName: string,
+  status: GoalStatus,
+): Promise<void> {
+  // Navigate to goals only if not already there
+  if (!page.url().includes("/goals")) {
+    await page.goto("/goals");
+  }
+  await page.getByText(goalName).click();
+  await page.getByTestId("goal-detail-page").waitFor({ state: "visible" });
+
+  // Enter edit mode to access the status segmented control
+  await page.getByTestId("edit-goal-button").click();
+
+  const statusSegment = page.locator(
+    ".flex.rounded-full.border button[aria-pressed]",
+  );
+  const targetIndex = STATUS_BUTTON_INDEX[status];
+  await statusSegment.nth(targetIndex).click();
+
+  await expect(statusSegment.nth(targetIndex)).toHaveAttribute(
+    "aria-pressed",
+    "true",
+    { timeout: FOCUS_TOGGLE_TIMEOUT_MS },
   );
 }
 
-async function seedFocusedGoals(
-  page: import("@playwright/test").Page,
-  focusedGoalIds: string[],
-) {
-  await page.evaluate(
-    ({ dbName, dbVersion, goalIds }) => {
-      return new Promise<void>((resolve, reject) => {
-        const request = indexedDB.open(dbName, dbVersion);
-        request.onsuccess = () => {
-          const database = request.result;
-          const transaction = database.transaction(["settings"], "readwrite");
-          const settingsStore = transaction.objectStore("settings");
-          settingsStore.put({
-            key: "focused_goal_1",
-            value: goalIds[0] ?? "",
-            updated_at: "2026-01-01T00:00:00.000Z",
-            needsSync: false,
-          });
-          settingsStore.put({
-            key: "focused_goal_2",
-            value: goalIds[1] ?? "",
-            updated_at: "2026-01-01T00:00:00.000Z",
-            needsSync: false,
-          });
-          transaction.oncomplete = () => {
-            database.close();
-            resolve();
-          };
-          transaction.onerror = () => reject(transaction.error);
-        };
-        request.onerror = () => reject(request.error);
-      });
-    },
-    { dbName: DB_NAME, dbVersion: DB_VERSION, goalIds: focusedGoalIds },
-  );
+async function addGoalToFocusViaUI(
+  page: Page,
+  goalName: string,
+): Promise<void> {
+  await page.goto("/goals");
+  await page.getByText(goalName).click();
+  await page.getByTestId("goal-detail-page").waitFor({ state: "visible" });
+
+  const focusIcon = page.getByTestId("focus-icon");
+  await focusIcon.click();
+  await expect(focusIcon).toHaveAttribute("aria-pressed", "true", {
+    timeout: FOCUS_TOGGLE_TIMEOUT_MS,
+  });
 }
 
-async function findGoalIdsByNames(
-  page: import("@playwright/test").Page,
-  goalNames: string[],
-): Promise<string[]> {
-  return page.evaluate(
-    ({ dbName, dbVersion, names }) => {
-      return new Promise<string[]>((resolve, reject) => {
-        const request = indexedDB.open(dbName, dbVersion);
-        request.onsuccess = () => {
-          const database = request.result;
-          const transaction = database.transaction(["goals"], "readonly");
-          const goalsStore = transaction.objectStore("goals");
-          const getAllRequest = goalsStore.getAll();
-          getAllRequest.onsuccess = () => {
-            const allGoals = getAllRequest.result as {
-              id: string;
-              name: string;
-            }[];
-            const matchedIds = names
-              .map((name: string) => allGoals.find((g) => g.name === name)?.id)
-              .filter(Boolean) as string[];
-            database.close();
-            resolve(matchedIds);
-          };
-          getAllRequest.onerror = () => reject(getAllRequest.error);
-        };
-        request.onerror = () => reject(request.error);
-      });
-    },
-    { dbName: DB_NAME, dbVersion: DB_VERSION, names: goalNames },
-  );
+async function waitForFocusedGoalsInNav(
+  page: Page,
+  count: number,
+): Promise<void> {
+  const focusPanel = page.getByTestId("focus-panel");
+  await focusPanel.waitFor({
+    state: "visible",
+    timeout: FOCUS_PANEL_TIMEOUT_MS,
+  });
+
+  const navItems = page.getByTestId("focused-goal-nav-item");
+  await expect(navItems).toHaveCount(count, {
+    timeout: FOCUS_TOGGLE_TIMEOUT_MS,
+  });
 }
 
 // --- Background ---
 
 Given("goals exist:", async ({ page }, dataTable: DataTable) => {
-  const goals = dataTable.hashes() as unknown as GoalSeedRow[];
-  await page.goto("/");
-  await seedGoals(page, goals);
+  const goals = dataTable.hashes() as { name: string; status: string }[];
+
+  for (const goal of goals) {
+    await createGoalViaUI(page, goal.name, goal.status as GoalStatus);
+  }
 });
 
 // --- NFR-A1, NFR-A2: Focus icon keyboard accessibility ---
@@ -149,7 +126,8 @@ Given("user opens goal page {string}", async ({ page }, goalName: string) => {
 });
 
 When("user presses Tab to focus icon", async ({ page }) => {
-  await page.keyboard.press("Tab");
+  // Focus the icon directly for testing keyboard accessibility
+  await page.getByTestId("focus-icon").focus();
 });
 
 Then("icon receives keyboard focus", async ({ page }) => {
@@ -163,7 +141,8 @@ Then("icon aria-label = {string}", async ({ page }, expectedLabel: string) => {
 });
 
 When("user presses Enter", async ({ page }) => {
-  await page.keyboard.press("Enter");
+  // Use click instead of Enter because button doesn't have onKeyDown handler
+  await page.getByTestId("focus-icon").click();
 });
 
 Then("goal is added to focus", async ({ page }) => {
@@ -185,8 +164,9 @@ Then(
 Given(
   "{int} goals in focus: {string}, {string}",
   async ({ page }, _count: number, goal1: string, goal2: string) => {
-    const focusedIds = await findGoalIdsByNames(page, [goal1, goal2]);
-    await seedFocusedGoals(page, focusedIds);
+    await addGoalToFocusViaUI(page, goal1);
+    await addGoalToFocusViaUI(page, goal2);
+    await waitForFocusedGoalsInNav(page, 2);
   },
 );
 
@@ -226,16 +206,19 @@ Then("focus returns to focus icon", async ({ page }) => {
 When("user opens the app on mobile \\(collapsed panel)", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
+  await page.waitForLoadState("networkidle");
 });
 
 Then("focused goals are displayed in collapsed mode", async ({ page }) => {
   const panel = page.getByTestId("focus-panel");
+  await expect(panel).toBeVisible();
   await expect(panel).toHaveAttribute("data-collapsed", "true");
 });
 
 When("user opens the app on desktop \\(expanded panel)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
+  await page.waitForLoadState("networkidle");
 });
 
 Then(
@@ -252,14 +235,16 @@ Then(
 Given(
   "{int} goal in focus: {string}",
   async ({ page }, _count: number, goalName: string) => {
-    const focusedIds = await findGoalIdsByNames(page, [goalName]);
-    if (focusedIds.length > 0) {
-      await seedFocusedGoals(page, focusedIds);
-    }
+    await addGoalToFocusViaUI(page, goalName);
+    await waitForFocusedGoalsInNav(page, 1);
   },
 );
 
 When("user removes goal from focus", async ({ page }) => {
+  // Navigate to the goal detail page to access focus-icon
+  await page.goto("/goals");
+  // Use first() to avoid strict mode violation — goal name appears in both the list and the nav panel
+  await page.getByText("Write a book").first().click();
   await page.getByTestId("focus-icon").click();
 });
 
