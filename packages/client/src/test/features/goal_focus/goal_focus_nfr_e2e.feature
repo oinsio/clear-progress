@@ -1,6 +1,6 @@
-Feature: Goal Focus — Non-Functional Requirements
-  Accessibility, performance, responsive design, and UX polish.
-  Ensures the feature works well across devices and for all users.
+Feature: Goal Focus — Non-Functional Requirements (E2E)
+  Accessibility, responsive design, and UX polish.
+  Tests that require real browser behavior.
 
   Background:
     Given goals exist:
@@ -31,13 +31,6 @@ Feature: Goal Focus — Non-Functional Requirements
     When user presses Escape
     Then dialog closes
     And focus returns to focus icon
-
-  @add-goal-focus @NFR-P1
-  Scenario: Optimistic UI when adding to focus
-    Given 0 goals in focus
-    When user clicks focus icon
-    Then icon instantly becomes active (< 100ms)
-    And goal appears in navigation without waiting for IndexedDB write
 
   @add-goal-focus @NFR-R1
   Scenario: Display focused goals on different screen sizes
