@@ -26,6 +26,8 @@ reports/
 .stryker-tmp
 playwright-report/
 test-results/
+.features-gen/
+cucumber-report/
 
 # TypeScript incremental compilation cache
 *.tsbuildinfo
