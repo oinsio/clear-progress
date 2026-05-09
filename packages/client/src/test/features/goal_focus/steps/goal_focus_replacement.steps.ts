@@ -1,18 +1,23 @@
-import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
+import type {
+  FeatureDescriibeCallbackParams,
+  StepTest,
+} from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database.ts";
 import { GoalRepository } from "@/db/repositories/GoalRepository.ts";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository.ts";
-import {
-  expectGoalInFocus,
-  expectSettingValue,
-} from "@/test/helpers/bdd/goalFocus/assertions.ts";
+import { expectGoalInFocus } from "@/test/helpers/bdd/goalFocus/assertions.ts";
 import {
   getFocusedGoals,
   getGoalFromContext,
 } from "@/test/helpers/bdd/goalFocus/helpers.ts";
-import { createBackgroundSteps } from "@/test/helpers/bdd/goalFocus/stepDefinitions.ts";
+import {
+  createAndSteps,
+  createBackgroundSteps,
+  createGivenSteps,
+  createThenSteps,
+} from "@/test/helpers/bdd/goalFocus/stepDefinitions.ts";
 import type { Goal } from "@/types/entities.ts";
 
 const feature = await loadFeature("../goal_focus_replacement.feature");
@@ -42,6 +47,9 @@ describeFeature(
     });
 
     const backgroundSteps = createBackgroundSteps(f, goalRepository);
+    const givenSteps = createGivenSteps(f, settingsRepository);
+    const thenSteps = createThenSteps(f, settingsRepository);
+    const andSteps = createAndSteps(f, settingsRepository);
 
     f.Background(({ Given }) => {
       backgroundSteps(Given);
@@ -49,58 +57,29 @@ describeFeature(
 
     // Shared step definitions
     const sharedSteps = {
-      givenTwoGoalsInFocus: (Given: any) => {
-        Given(
-          "{int} goals in focus: {string}, {string}",
-          async (
-            _ctx: TestContext,
-            _count: number,
-            goal1Name: string,
-            goal2Name: string,
-          ) => {
-            const goal1 = getGoalFromContext(f.context.testGoals, goal1Name);
-            const goal2 = getGoalFromContext(f.context.testGoals, goal2Name);
-
-            await settingsRepository.set("focused_goal_1", goal1.id);
-            await settingsRepository.set("focused_goal_2", goal2.id);
-
-            const { focused1, focused2 } =
-              await getFocusedGoals(settingsRepository);
-            expect(focused1).toBe(goal1.id);
-            expect(focused2).toBe(goal2.id);
-          },
-        );
-      },
-
-      whenUserOpensGoalPage: (When: any) => {
-        When(
+      userOpensGoalPage: (step: StepTest["Given"]) => {
+        step(
           "user opens goal page {string}",
           async (_ctx: TestContext, goalName: string) => {
-            const goal = getGoalFromContext(f.context.testGoals, goalName);
-            f.context.currentGoal = goal;
+            f.context.currentGoal = getGoalFromContext(
+              f.context.testGoals,
+              goalName,
+            );
           },
         );
       },
 
-      andUserOpensGoalPage: (And: any) => {
-        And(
-          "user opens goal page {string}",
-          async (_ctx: TestContext, goalName: string) => {
-            const goal = getGoalFromContext(f.context.testGoals, goalName);
-            f.context.currentGoal = goal;
-          },
-        );
-      },
-
-      andClicksFocusIcon: (And: any) => {
-        And("clicks focus icon", async (_ctx: TestContext) => {
+      clicksFocusIcon: (step: StepTest["Given"]) => {
+        step("clicks focus icon", async (_ctx: TestContext) => {
           const goal = f.context.currentGoal;
-          expect(goal).toBeDefined();
+          if (!goal) {
+            throw new Error("currentGoal is undefined");
+          }
 
           const { focused1, focused2 } =
             await getFocusedGoals(settingsRepository);
 
-          const isFocused = focused1 === goal!.id || focused2 === goal!.id;
+          const isFocused = focused1 === goal.id || focused2 === goal.id;
 
           if (!isFocused && focused1 && focused2) {
             f.context.isReplacementDialogDisplayed = true;
@@ -124,13 +103,13 @@ describeFeature(
         });
       },
 
-      andReplacementDialogIsDisplayed: (And: any) => {
-        And("replacement dialog is displayed", async (_ctx: TestContext) => {
+      replacementDialogIsDisplayed: (step: StepTest["Given"]) => {
+        step("replacement dialog is displayed", async (_ctx: TestContext) => {
           expect(f.context.isReplacementDialogDisplayed).toBe(true);
         });
       },
 
-      thenGoalIsRemovedFromFocus: (Then: any) => {
+      thenGoalIsRemovedFromFocus: (Then: StepTest["Given"]) => {
         Then(
           "goal {string} is removed from focus",
           async (_ctx: TestContext, goalName: string) => {
@@ -140,46 +119,70 @@ describeFeature(
         );
       },
 
-      andGoalIsAddedToFocus: (And: any) => {
-        And(
-          "goal {string} is added to focus",
-          async (_ctx: TestContext, goalName: string) => {
-            const goal = getGoalFromContext(f.context.testGoals, goalName);
-            await expectGoalInFocus(goal.id, settingsRepository, true);
-          },
-        );
-      },
+      whenUserSelectsReplaceAction: (When: StepTest["Given"]) => {
+        When(
+          "user selects {string}",
+          async (_ctx: TestContext, action: string) => {
+            expect(f.context.isReplacementDialogDisplayed).toBe(true);
+            f.context.selectedAction = action;
 
-      andSettingsHasFocusedGoal1: (And: any) => {
-        And(
-          "Settings has focused_goal_1 = {string}",
-          async (_ctx: TestContext, expectedId: string) => {
-            const actualId =
-              await settingsRepository.getValue("focused_goal_1");
-            expectSettingValue(actualId, expectedId);
-          },
-        );
-      },
+            const goal = f.context.currentGoal;
+            if (!goal) {
+              throw new Error("currentGoal is undefined");
+            }
 
-      andSettingsHasFocusedGoal2: (And: any) => {
-        And(
-          "Settings has focused_goal_2 = {string}",
-          async (_ctx: TestContext, expectedId: string) => {
-            const actualId =
-              await settingsRepository.getValue("focused_goal_2");
-            expectSettingValue(actualId, expectedId);
+            const { focused1, focused2 } =
+              await getFocusedGoals(settingsRepository);
+
+            if (action.startsWith("Replace")) {
+              const goalNameToReplace = action.replace("Replace ", "");
+              const goalToReplace = getGoalFromContext(
+                f.context.testGoals,
+                goalNameToReplace,
+              );
+
+              if (goalToReplace.id === focused1) {
+                if (!focused2) {
+                  throw new Error("focused2 is undefined");
+                }
+                await settingsRepository.set("focused_goal_1", focused2);
+                await settingsRepository.set("focused_goal_2", goal.id);
+              } else if (goalToReplace.id === focused2) {
+                await settingsRepository.set("focused_goal_2", goal.id);
+              }
+
+              f.context.isReplacementDialogDisplayed = false;
+            }
           },
         );
       },
+    };
+
+    // Helper for replacement scenarios
+    const replaceGoalScenario = (
+      Given: StepTest["Given"],
+      When: StepTest["When"],
+      Then: StepTest["Then"],
+      And: StepTest["Given"],
+    ) => {
+      givenSteps.givenTwoGoalsInFocus(Given);
+      sharedSteps.userOpensGoalPage(And);
+      sharedSteps.clicksFocusIcon(And);
+      sharedSteps.replacementDialogIsDisplayed(And);
+      sharedSteps.whenUserSelectsReplaceAction(When);
+      sharedSteps.thenGoalIsRemovedFromFocus(Then);
+      thenSteps.thenGoalIsAddedToFocus(And);
+      andSteps.andSettingsHasFocusedGoal1(And);
+      andSteps.andSettingsHasFocusedGoal2(And);
     };
 
     //@add-goal-focus @FR2 @FR3 @UX3
     f.Scenario(
       "Attempt to add third goal — show replacement dialog",
       ({ Given, When, Then, And }) => {
-        sharedSteps.givenTwoGoalsInFocus(Given);
-        sharedSteps.whenUserOpensGoalPage(When);
-        sharedSteps.andClicksFocusIcon(And);
+        givenSteps.givenTwoGoalsInFocus(Given);
+        sharedSteps.userOpensGoalPage(When);
+        sharedSteps.clicksFocusIcon(And);
 
         Then("replacement dialog is displayed", async (_ctx: TestContext) => {
           expect(f.context.isReplacementDialogDisplayed).toBe(true);
@@ -213,46 +216,7 @@ describeFeature(
     f.Scenario(
       "Replace first goal via dialog — shift up",
       ({ Given, When, Then, And }) => {
-        sharedSteps.givenTwoGoalsInFocus(Given);
-        sharedSteps.andUserOpensGoalPage(And);
-        sharedSteps.andClicksFocusIcon(And);
-        sharedSteps.andReplacementDialogIsDisplayed(And);
-
-        When(
-          "user selects {string}",
-          async (_ctx: TestContext, action: string) => {
-            expect(f.context.isReplacementDialogDisplayed).toBe(true);
-            f.context.selectedAction = action;
-
-            const goal = f.context.currentGoal;
-            expect(goal).toBeDefined();
-
-            const { focused1, focused2 } =
-              await getFocusedGoals(settingsRepository);
-
-            if (action.startsWith("Replace")) {
-              const goalNameToReplace = action.replace("Replace ", "");
-              const goalToReplace = getGoalFromContext(
-                f.context.testGoals,
-                goalNameToReplace,
-              );
-
-              if (goalToReplace.id === focused1) {
-                await settingsRepository.set("focused_goal_1", focused2!);
-                await settingsRepository.set("focused_goal_2", goal!.id);
-              } else if (goalToReplace.id === focused2) {
-                await settingsRepository.set("focused_goal_2", goal!.id);
-              }
-
-              f.context.isReplacementDialogDisplayed = false;
-            }
-          },
-        );
-
-        sharedSteps.thenGoalIsRemovedFromFocus(Then);
-        sharedSteps.andGoalIsAddedToFocus(And);
-        sharedSteps.andSettingsHasFocusedGoal1(And);
-        sharedSteps.andSettingsHasFocusedGoal2(And);
+        replaceGoalScenario(Given, When, Then, And);
       },
     );
 
@@ -260,55 +224,16 @@ describeFeature(
     f.Scenario(
       "Replace second goal via dialog",
       ({ Given, When, Then, And }) => {
-        sharedSteps.givenTwoGoalsInFocus(Given);
-        sharedSteps.andUserOpensGoalPage(And);
-        sharedSteps.andClicksFocusIcon(And);
-        sharedSteps.andReplacementDialogIsDisplayed(And);
-
-        When(
-          "user selects {string}",
-          async (_ctx: TestContext, action: string) => {
-            expect(f.context.isReplacementDialogDisplayed).toBe(true);
-            f.context.selectedAction = action;
-
-            const goal = f.context.currentGoal;
-            expect(goal).toBeDefined();
-
-            const { focused1, focused2 } =
-              await getFocusedGoals(settingsRepository);
-
-            if (action.startsWith("Replace")) {
-              const goalNameToReplace = action.replace("Replace ", "");
-              const goalToReplace = getGoalFromContext(
-                f.context.testGoals,
-                goalNameToReplace,
-              );
-
-              if (goalToReplace.id === focused1) {
-                await settingsRepository.set("focused_goal_1", focused2!);
-                await settingsRepository.set("focused_goal_2", goal!.id);
-              } else if (goalToReplace.id === focused2) {
-                await settingsRepository.set("focused_goal_2", goal!.id);
-              }
-
-              f.context.isReplacementDialogDisplayed = false;
-            }
-          },
-        );
-
-        sharedSteps.thenGoalIsRemovedFromFocus(Then);
-        sharedSteps.andGoalIsAddedToFocus(And);
-        sharedSteps.andSettingsHasFocusedGoal1(And);
-        sharedSteps.andSettingsHasFocusedGoal2(And);
+        replaceGoalScenario(Given, When, Then, And);
       },
     );
 
     // @add-goal-focus @FR3
     f.Scenario("Cancel goal replacement", ({ Given, When, Then, And }) => {
-      sharedSteps.givenTwoGoalsInFocus(Given);
-      sharedSteps.andUserOpensGoalPage(And);
-      sharedSteps.andClicksFocusIcon(And);
-      sharedSteps.andReplacementDialogIsDisplayed(And);
+      givenSteps.givenTwoGoalsInFocus(Given);
+      sharedSteps.userOpensGoalPage(And);
+      sharedSteps.clicksFocusIcon(And);
+      sharedSteps.replacementDialogIsDisplayed(And);
 
       When(
         "user selects {string}",
@@ -348,8 +273,8 @@ describeFeature(
         },
       );
 
-      sharedSteps.andSettingsHasFocusedGoal1(And);
-      sharedSteps.andSettingsHasFocusedGoal2(And);
+      andSteps.andSettingsHasFocusedGoal1(And);
+      andSteps.andSettingsHasFocusedGoal2(And);
     });
   },
 );
