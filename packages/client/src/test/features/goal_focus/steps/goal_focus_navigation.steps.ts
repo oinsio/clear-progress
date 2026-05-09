@@ -6,7 +6,11 @@ import { STORAGE_KEYS } from "@/constants";
 import { db } from "@/db/database.ts";
 import { GoalRepository } from "@/db/repositories/GoalRepository.ts";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository.ts";
-import { buildGoal } from "@/test/factories/goalFactory.ts";
+import {
+  getFocusedGoals,
+  getGoalFromContext,
+} from "@/test/helpers/bdd/goalFocus/helpers.ts";
+import { createBackgroundSteps } from "@/test/helpers/bdd/goalFocus/stepDefinitions.ts";
 import type { Goal } from "@/types/entities.ts";
 
 const feature = await loadFeature("../goal_focus_navigation.feature");
@@ -42,8 +46,7 @@ function saveMenuOrder(menuOrder: MenuItemConfig[]): void {
 async function getFocusedGoalIds(
   settingsRepository: SettingsRepository,
 ): Promise<string[]> {
-  const focused1 = await settingsRepository.getValue("focused_goal_1");
-  const focused2 = await settingsRepository.getValue("focused_goal_2");
+  const { focused1, focused2 } = await getFocusedGoals(settingsRepository);
   const ids: string[] = [];
   if (focused1) ids.push(focused1);
   if (focused2) ids.push(focused2);
@@ -65,30 +68,14 @@ describeFeature(
       await db.goals.clear();
       await db.settings.clear();
       localStorage.removeItem(STORAGE_KEYS.MENU_ORDER);
+      f.context.menuOrder = [];
+      f.context.navigatedUrl = "";
     });
 
+    const backgroundSteps = createBackgroundSteps(f, goalRepository);
+
     f.Background(({ Given }) => {
-      Given("goals exist:", async (_ctx: TestContext, table) => {
-        f.context.testGoals = new Map();
-        f.context.menuOrder = [];
-        f.context.navigatedUrl = "";
-
-        const rows = Array.isArray(table) ? table : [];
-
-        for (const row of rows) {
-          const goal = buildGoal({
-            id: row.id,
-            name: row.name,
-            status: row.status as Goal["status"],
-          });
-
-          await goalRepository.create(goal);
-          f.context.testGoals.set(row.name, goal);
-        }
-
-        const allGoals = await goalRepository.getAll();
-        expect(allGoals).toHaveLength(rows.length);
-      });
+      backgroundSteps(Given);
     });
 
     // @add-goal-focus @FR4 @FR5 @FR7
@@ -118,16 +105,15 @@ describeFeature(
         When(
           "user adds goal {string} to focus",
           async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
 
             const focused1 =
               await settingsRepository.getValue("focused_goal_1");
 
             if (!focused1) {
-              await settingsRepository.set("focused_goal_1", goal!.id);
+              await settingsRepository.set("focused_goal_1", goal.id);
             } else {
-              await settingsRepository.set("focused_goal_2", goal!.id);
+              await settingsRepository.set("focused_goal_2", goal.id);
             }
           },
         );
@@ -138,9 +124,8 @@ describeFeature(
             const focusedIds = await getFocusedGoalIds(settingsRepository);
             expect(focusedIds).toHaveLength(count);
 
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
-            expect(focusedIds).toContain(goal!.id);
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
+            expect(focusedIds).toContain(goal.id);
 
             const isVisible = isFocusedGoalsBlockVisible(f.context.menuOrder);
             expect(isVisible).toBe(true);
@@ -150,16 +135,15 @@ describeFeature(
         When(
           "user adds second goal {string} to focus",
           async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
 
             const focused1 =
               await settingsRepository.getValue("focused_goal_1");
 
             if (!focused1) {
-              await settingsRepository.set("focused_goal_1", goal!.id);
+              await settingsRepository.set("focused_goal_1", goal.id);
             } else {
-              await settingsRepository.set("focused_goal_2", goal!.id);
+              await settingsRepository.set("focused_goal_2", goal.id);
             }
           },
         );
@@ -175,12 +159,10 @@ describeFeature(
             const focusedIds = await getFocusedGoalIds(settingsRepository);
             expect(focusedIds).toHaveLength(count);
 
-            const goal1 = f.context.testGoals.get(goalName1);
-            const goal2 = f.context.testGoals.get(goalName2);
-            expect(goal1).toBeDefined();
-            expect(goal2).toBeDefined();
-            expect(focusedIds).toContain(goal1!.id);
-            expect(focusedIds).toContain(goal2!.id);
+            const goal1 = getGoalFromContext(f.context.testGoals, goalName1);
+            const goal2 = getGoalFromContext(f.context.testGoals, goalName2);
+            expect(focusedIds).toContain(goal1.id);
+            expect(focusedIds).toContain(goal2.id);
 
             const isVisible = isFocusedGoalsBlockVisible(f.context.menuOrder);
             expect(isVisible).toBe(true);
@@ -196,24 +178,22 @@ describeFeature(
         Given(
           "{int} goal in focus: {string}",
           async (_ctx: TestContext, _count: number, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
 
-            await settingsRepository.set("focused_goal_1", goal!.id);
+            await settingsRepository.set("focused_goal_1", goal.id);
 
             const focused1 =
               await settingsRepository.getValue("focused_goal_1");
-            expect(focused1).toBe(goal!.id);
+            expect(focused1).toBe(goal.id);
           },
         );
 
         When(
           "user clicks {string} in navigation",
           async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
 
-            f.context.navigatedUrl = `/goals/${goal!.id}`;
+            f.context.navigatedUrl = `/goals/${goal.id}`;
           },
         );
 
@@ -238,13 +218,11 @@ describeFeature(
             goal1Name: string,
             goal2Name: string,
           ) => {
-            const goal1 = f.context.testGoals.get(goal1Name);
-            const goal2 = f.context.testGoals.get(goal2Name);
-            expect(goal1).toBeDefined();
-            expect(goal2).toBeDefined();
+            const goal1 = getGoalFromContext(f.context.testGoals, goal1Name);
+            const goal2 = getGoalFromContext(f.context.testGoals, goal2Name);
 
-            await settingsRepository.set("focused_goal_1", goal1!.id);
-            await settingsRepository.set("focused_goal_2", goal2!.id);
+            await settingsRepository.set("focused_goal_1", goal1.id);
+            await settingsRepository.set("focused_goal_2", goal2.id);
           },
         );
 
@@ -307,13 +285,11 @@ describeFeature(
             goal1Name: string,
             goal2Name: string,
           ) => {
-            const goal1 = f.context.testGoals.get(goal1Name);
-            const goal2 = f.context.testGoals.get(goal2Name);
-            expect(goal1).toBeDefined();
-            expect(goal2).toBeDefined();
+            const goal1 = getGoalFromContext(f.context.testGoals, goal1Name);
+            const goal2 = getGoalFromContext(f.context.testGoals, goal2Name);
 
-            await settingsRepository.set("focused_goal_1", goal1!.id);
-            await settingsRepository.set("focused_goal_2", goal2!.id);
+            await settingsRepository.set("focused_goal_1", goal1.id);
+            await settingsRepository.set("focused_goal_2", goal2.id);
           },
         );
 
@@ -342,11 +318,14 @@ describeFeature(
           const focused1 = await settingsRepository.getValue("focused_goal_1");
           const focused2 = await settingsRepository.getValue("focused_goal_2");
 
-          const goal1 = f.context.testGoals.get("Write a book");
-          const goal2 = f.context.testGoals.get("Learn Spanish");
+          const goal1 = getGoalFromContext(f.context.testGoals, "Write a book");
+          const goal2 = getGoalFromContext(
+            f.context.testGoals,
+            "Learn Spanish",
+          );
 
-          expect(focused1).toBe(goal1!.id);
-          expect(focused2).toBe(goal2!.id);
+          expect(focused1).toBe(goal1.id);
+          expect(focused2).toBe(goal2.id);
         });
       },
     );

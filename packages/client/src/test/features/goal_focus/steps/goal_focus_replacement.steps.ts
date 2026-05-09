@@ -4,7 +4,15 @@ import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database.ts";
 import { GoalRepository } from "@/db/repositories/GoalRepository.ts";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository.ts";
-import { buildGoal } from "@/test/factories/goalFactory.ts";
+import {
+  expectGoalInFocus,
+  expectSettingValue,
+} from "@/test/helpers/bdd/goalFocus/assertions.ts";
+import {
+  getFocusedGoals,
+  getGoalFromContext,
+} from "@/test/helpers/bdd/goalFocus/helpers.ts";
+import { createBackgroundSteps } from "@/test/helpers/bdd/goalFocus/stepDefinitions.ts";
 import type { Goal } from "@/types/entities.ts";
 
 const feature = await loadFeature("../goal_focus_replacement.feature");
@@ -33,32 +41,15 @@ describeFeature(
       f.context.selectedAction = undefined;
     });
 
+    const backgroundSteps = createBackgroundSteps(f, goalRepository);
+
     f.Background(({ Given }) => {
-      Given("goals exist:", async (_ctx: TestContext, table) => {
-        f.context.testGoals = new Map();
-
-        const rows = Array.isArray(table) ? table : [];
-
-        for (const row of rows) {
-          const goal = buildGoal({
-            id: row.id,
-            name: row.name,
-            status: row.status as Goal["status"],
-          });
-
-          await goalRepository.create(goal);
-          f.context.testGoals.set(row.name, goal);
-        }
-
-        const allGoals = await goalRepository.getAll();
-        expect(allGoals).toHaveLength(rows.length);
-      });
+      backgroundSteps(Given);
     });
 
-    //@add-goal-focus @FR2 @FR3 @UX3
-    f.Scenario(
-      "Attempt to add third goal — show replacement dialog",
-      ({ Given, When, Then, And }) => {
+    // Shared step definitions
+    const sharedSteps = {
+      givenTwoGoalsInFocus: (Given: any) => {
         Given(
           "{int} goals in focus: {string}, {string}",
           async (
@@ -67,38 +58,47 @@ describeFeature(
             goal1Name: string,
             goal2Name: string,
           ) => {
-            const goal1 = f.context.testGoals.get(goal1Name);
-            const goal2 = f.context.testGoals.get(goal2Name);
-            expect(goal1).toBeDefined();
-            expect(goal2).toBeDefined();
+            const goal1 = getGoalFromContext(f.context.testGoals, goal1Name);
+            const goal2 = getGoalFromContext(f.context.testGoals, goal2Name);
 
-            await settingsRepository.set("focused_goal_1", goal1!.id);
-            await settingsRepository.set("focused_goal_2", goal2!.id);
+            await settingsRepository.set("focused_goal_1", goal1.id);
+            await settingsRepository.set("focused_goal_2", goal2.id);
 
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
-            expect(focused1).toBe(goal1!.id);
-            expect(focused2).toBe(goal2!.id);
+            const { focused1, focused2 } =
+              await getFocusedGoals(settingsRepository);
+            expect(focused1).toBe(goal1.id);
+            expect(focused2).toBe(goal2.id);
           },
         );
+      },
 
+      whenUserOpensGoalPage: (When: any) => {
         When(
           "user opens goal page {string}",
           async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
             f.context.currentGoal = goal;
           },
         );
+      },
 
+      andUserOpensGoalPage: (And: any) => {
+        And(
+          "user opens goal page {string}",
+          async (_ctx: TestContext, goalName: string) => {
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
+            f.context.currentGoal = goal;
+          },
+        );
+      },
+
+      andClicksFocusIcon: (And: any) => {
         And("clicks focus icon", async (_ctx: TestContext) => {
           const goal = f.context.currentGoal;
           expect(goal).toBeDefined();
 
-          const focused1 = await settingsRepository.getValue("focused_goal_1");
-          const focused2 = await settingsRepository.getValue("focused_goal_2");
+          const { focused1, focused2 } =
+            await getFocusedGoals(settingsRepository);
 
           const isFocused = focused1 === goal!.id || focused2 === goal!.id;
 
@@ -122,6 +122,64 @@ describeFeature(
             ];
           }
         });
+      },
+
+      andReplacementDialogIsDisplayed: (And: any) => {
+        And("replacement dialog is displayed", async (_ctx: TestContext) => {
+          expect(f.context.isReplacementDialogDisplayed).toBe(true);
+        });
+      },
+
+      thenGoalIsRemovedFromFocus: (Then: any) => {
+        Then(
+          "goal {string} is removed from focus",
+          async (_ctx: TestContext, goalName: string) => {
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
+            await expectGoalInFocus(goal.id, settingsRepository, false);
+          },
+        );
+      },
+
+      andGoalIsAddedToFocus: (And: any) => {
+        And(
+          "goal {string} is added to focus",
+          async (_ctx: TestContext, goalName: string) => {
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
+            await expectGoalInFocus(goal.id, settingsRepository, true);
+          },
+        );
+      },
+
+      andSettingsHasFocusedGoal1: (And: any) => {
+        And(
+          "Settings has focused_goal_1 = {string}",
+          async (_ctx: TestContext, expectedId: string) => {
+            const actualId =
+              await settingsRepository.getValue("focused_goal_1");
+            expectSettingValue(actualId, expectedId);
+          },
+        );
+      },
+
+      andSettingsHasFocusedGoal2: (And: any) => {
+        And(
+          "Settings has focused_goal_2 = {string}",
+          async (_ctx: TestContext, expectedId: string) => {
+            const actualId =
+              await settingsRepository.getValue("focused_goal_2");
+            expectSettingValue(actualId, expectedId);
+          },
+        );
+      },
+    };
+
+    //@add-goal-focus @FR2 @FR3 @UX3
+    f.Scenario(
+      "Attempt to add third goal — show replacement dialog",
+      ({ Given, When, Then, And }) => {
+        sharedSteps.givenTwoGoalsInFocus(Given);
+        sharedSteps.whenUserOpensGoalPage(When);
+        sharedSteps.andClicksFocusIcon(And);
 
         Then("replacement dialog is displayed", async (_ctx: TestContext) => {
           expect(f.context.isReplacementDialogDisplayed).toBe(true);
@@ -155,73 +213,10 @@ describeFeature(
     f.Scenario(
       "Replace first goal via dialog — shift up",
       ({ Given, When, Then, And }) => {
-        Given(
-          "{int} goals in focus: {string}, {string}",
-          async (
-            _ctx: TestContext,
-            _count: number,
-            goal1Name: string,
-            goal2Name: string,
-          ) => {
-            const goal1 = f.context.testGoals.get(goal1Name);
-            const goal2 = f.context.testGoals.get(goal2Name);
-            expect(goal1).toBeDefined();
-            expect(goal2).toBeDefined();
-
-            await settingsRepository.set("focused_goal_1", goal1!.id);
-            await settingsRepository.set("focused_goal_2", goal2!.id);
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
-            expect(focused1).toBe(goal1!.id);
-            expect(focused2).toBe(goal2!.id);
-          },
-        );
-
-        And(
-          "user opens goal page {string}",
-          async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
-            f.context.currentGoal = goal;
-          },
-        );
-
-        And("clicks focus icon", async (_ctx: TestContext) => {
-          const goal = f.context.currentGoal;
-          expect(goal).toBeDefined();
-
-          const focused1 = await settingsRepository.getValue("focused_goal_1");
-          const focused2 = await settingsRepository.getValue("focused_goal_2");
-
-          const isFocused = focused1 === goal!.id || focused2 === goal!.id;
-
-          if (!isFocused && focused1 && focused2) {
-            f.context.isReplacementDialogDisplayed = true;
-
-            const goal1 = Array.from(f.context.testGoals.values()).find(
-              (g) => g.id === focused1,
-            );
-            const goal2 = Array.from(f.context.testGoals.values()).find(
-              (g) => g.id === focused2,
-            );
-
-            if (goal1) f.context.dialogFocusedGoals.push(goal1.name);
-            if (goal2) f.context.dialogFocusedGoals.push(goal2.name);
-
-            f.context.dialogActions = [
-              `Replace ${goal1?.name}`,
-              `Replace ${goal2?.name}`,
-              "Cancel",
-            ];
-          }
-        });
-
-        And("replacement dialog is displayed", async (_ctx: TestContext) => {
-          expect(f.context.isReplacementDialogDisplayed).toBe(true);
-        });
+        sharedSteps.givenTwoGoalsInFocus(Given);
+        sharedSteps.andUserOpensGoalPage(And);
+        sharedSteps.andClicksFocusIcon(And);
+        sharedSteps.andReplacementDialogIsDisplayed(And);
 
         When(
           "user selects {string}",
@@ -232,88 +227,32 @@ describeFeature(
             const goal = f.context.currentGoal;
             expect(goal).toBeDefined();
 
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
+            const { focused1, focused2 } =
+              await getFocusedGoals(settingsRepository);
 
             if (action.startsWith("Replace")) {
               const goalNameToReplace = action.replace("Replace ", "");
-              const goalToReplace = f.context.testGoals.get(goalNameToReplace);
+              const goalToReplace = getGoalFromContext(
+                f.context.testGoals,
+                goalNameToReplace,
+              );
 
-              if (goalToReplace && goalToReplace.id === focused1) {
+              if (goalToReplace.id === focused1) {
                 await settingsRepository.set("focused_goal_1", focused2!);
                 await settingsRepository.set("focused_goal_2", goal!.id);
-              } else if (goalToReplace && goalToReplace.id === focused2) {
+              } else if (goalToReplace.id === focused2) {
                 await settingsRepository.set("focused_goal_2", goal!.id);
               }
 
               f.context.isReplacementDialogDisplayed = false;
-            } else if (action === "Cancel") {
-              f.context.isReplacementDialogDisplayed = false;
             }
           },
         );
 
-        Then(
-          "goal {string} is removed from focus",
-          async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
-
-            const isInFocus = focused1 === goal?.id || focused2 === goal?.id;
-            expect(isInFocus).toBe(false);
-          },
-        );
-
-        And(
-          "goal {string} is added to focus",
-          async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
-
-            const isInFocus = focused1 === goal?.id || focused2 === goal?.id;
-            expect(isInFocus).toBe(true);
-          },
-        );
-
-        And(
-          "Settings has focused_goal_1 = {string}",
-          async (_ctx: TestContext, expectedId: string) => {
-            const actualId =
-              await settingsRepository.getValue("focused_goal_1");
-
-            if (expectedId === "") {
-              expect(actualId === undefined || actualId === "").toBe(true);
-            } else {
-              expect(actualId).toBe(expectedId);
-            }
-          },
-        );
-
-        And(
-          "Settings has focused_goal_2 = {string}",
-          async (_ctx: TestContext, expectedId: string) => {
-            const actualId =
-              await settingsRepository.getValue("focused_goal_2");
-
-            if (expectedId === "") {
-              expect(actualId === undefined || actualId === "").toBe(true);
-            } else {
-              expect(actualId).toBe(expectedId);
-            }
-          },
-        );
+        sharedSteps.thenGoalIsRemovedFromFocus(Then);
+        sharedSteps.andGoalIsAddedToFocus(And);
+        sharedSteps.andSettingsHasFocusedGoal1(And);
+        sharedSteps.andSettingsHasFocusedGoal2(And);
       },
     );
 
@@ -321,73 +260,10 @@ describeFeature(
     f.Scenario(
       "Replace second goal via dialog",
       ({ Given, When, Then, And }) => {
-        Given(
-          "{int} goals in focus: {string}, {string}",
-          async (
-            _ctx: TestContext,
-            _count: number,
-            goal1Name: string,
-            goal2Name: string,
-          ) => {
-            const goal1 = f.context.testGoals.get(goal1Name);
-            const goal2 = f.context.testGoals.get(goal2Name);
-            expect(goal1).toBeDefined();
-            expect(goal2).toBeDefined();
-
-            await settingsRepository.set("focused_goal_1", goal1!.id);
-            await settingsRepository.set("focused_goal_2", goal2!.id);
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
-            expect(focused1).toBe(goal1!.id);
-            expect(focused2).toBe(goal2!.id);
-          },
-        );
-
-        And(
-          "user opens goal page {string}",
-          async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
-            f.context.currentGoal = goal;
-          },
-        );
-
-        And("clicks focus icon", async (_ctx: TestContext) => {
-          const goal = f.context.currentGoal;
-          expect(goal).toBeDefined();
-
-          const focused1 = await settingsRepository.getValue("focused_goal_1");
-          const focused2 = await settingsRepository.getValue("focused_goal_2");
-
-          const isFocused = focused1 === goal!.id || focused2 === goal!.id;
-
-          if (!isFocused && focused1 && focused2) {
-            f.context.isReplacementDialogDisplayed = true;
-
-            const goal1 = Array.from(f.context.testGoals.values()).find(
-              (g) => g.id === focused1,
-            );
-            const goal2 = Array.from(f.context.testGoals.values()).find(
-              (g) => g.id === focused2,
-            );
-
-            if (goal1) f.context.dialogFocusedGoals.push(goal1.name);
-            if (goal2) f.context.dialogFocusedGoals.push(goal2.name);
-
-            f.context.dialogActions = [
-              `Replace ${goal1?.name}`,
-              `Replace ${goal2?.name}`,
-              "Cancel",
-            ];
-          }
-        });
-
-        And("replacement dialog is displayed", async (_ctx: TestContext) => {
-          expect(f.context.isReplacementDialogDisplayed).toBe(true);
-        });
+        sharedSteps.givenTwoGoalsInFocus(Given);
+        sharedSteps.andUserOpensGoalPage(And);
+        sharedSteps.andClicksFocusIcon(And);
+        sharedSteps.andReplacementDialogIsDisplayed(And);
 
         When(
           "user selects {string}",
@@ -398,158 +274,41 @@ describeFeature(
             const goal = f.context.currentGoal;
             expect(goal).toBeDefined();
 
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
+            const { focused1, focused2 } =
+              await getFocusedGoals(settingsRepository);
 
             if (action.startsWith("Replace")) {
               const goalNameToReplace = action.replace("Replace ", "");
-              const goalToReplace = f.context.testGoals.get(goalNameToReplace);
+              const goalToReplace = getGoalFromContext(
+                f.context.testGoals,
+                goalNameToReplace,
+              );
 
-              if (goalToReplace && goalToReplace.id === focused1) {
+              if (goalToReplace.id === focused1) {
                 await settingsRepository.set("focused_goal_1", focused2!);
                 await settingsRepository.set("focused_goal_2", goal!.id);
-              } else if (goalToReplace && goalToReplace.id === focused2) {
+              } else if (goalToReplace.id === focused2) {
                 await settingsRepository.set("focused_goal_2", goal!.id);
               }
 
               f.context.isReplacementDialogDisplayed = false;
-            } else if (action === "Cancel") {
-              f.context.isReplacementDialogDisplayed = false;
             }
           },
         );
 
-        Then(
-          "goal {string} is removed from focus",
-          async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
-
-            const isInFocus = focused1 === goal?.id || focused2 === goal?.id;
-            expect(isInFocus).toBe(false);
-          },
-        );
-
-        And(
-          "goal {string} is added to focus",
-          async (_ctx: TestContext, goalName: string) => {
-            const goal = f.context.testGoals.get(goalName);
-            expect(goal).toBeDefined();
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            const focused2 =
-              await settingsRepository.getValue("focused_goal_2");
-
-            const isInFocus = focused1 === goal?.id || focused2 === goal?.id;
-            expect(isInFocus).toBe(true);
-          },
-        );
-
-        And(
-          "Settings has focused_goal_1 = {string}",
-          async (_ctx: TestContext, expectedId: string) => {
-            const actualId =
-              await settingsRepository.getValue("focused_goal_1");
-
-            if (expectedId === "") {
-              expect(actualId === undefined || actualId === "").toBe(true);
-            } else {
-              expect(actualId).toBe(expectedId);
-            }
-          },
-        );
-
-        And(
-          "Settings has focused_goal_2 = {string}",
-          async (_ctx: TestContext, expectedId: string) => {
-            const actualId =
-              await settingsRepository.getValue("focused_goal_2");
-
-            if (expectedId === "") {
-              expect(actualId === undefined || actualId === "").toBe(true);
-            } else {
-              expect(actualId).toBe(expectedId);
-            }
-          },
-        );
+        sharedSteps.thenGoalIsRemovedFromFocus(Then);
+        sharedSteps.andGoalIsAddedToFocus(And);
+        sharedSteps.andSettingsHasFocusedGoal1(And);
+        sharedSteps.andSettingsHasFocusedGoal2(And);
       },
     );
 
     // @add-goal-focus @FR3
     f.Scenario("Cancel goal replacement", ({ Given, When, Then, And }) => {
-      Given(
-        "{int} goals in focus: {string}, {string}",
-        async (
-          _ctx: TestContext,
-          _count: number,
-          goal1Name: string,
-          goal2Name: string,
-        ) => {
-          const goal1 = f.context.testGoals.get(goal1Name);
-          const goal2 = f.context.testGoals.get(goal2Name);
-          expect(goal1).toBeDefined();
-          expect(goal2).toBeDefined();
-
-          await settingsRepository.set("focused_goal_1", goal1!.id);
-          await settingsRepository.set("focused_goal_2", goal2!.id);
-
-          const focused1 = await settingsRepository.getValue("focused_goal_1");
-          const focused2 = await settingsRepository.getValue("focused_goal_2");
-          expect(focused1).toBe(goal1!.id);
-          expect(focused2).toBe(goal2!.id);
-        },
-      );
-
-      And(
-        "user opens goal page {string}",
-        async (_ctx: TestContext, goalName: string) => {
-          const goal = f.context.testGoals.get(goalName);
-          expect(goal).toBeDefined();
-          f.context.currentGoal = goal;
-        },
-      );
-
-      And("clicks focus icon", async (_ctx: TestContext) => {
-        const goal = f.context.currentGoal;
-        expect(goal).toBeDefined();
-
-        const focused1 = await settingsRepository.getValue("focused_goal_1");
-        const focused2 = await settingsRepository.getValue("focused_goal_2");
-
-        const isFocused = focused1 === goal!.id || focused2 === goal!.id;
-
-        if (!isFocused && focused1 && focused2) {
-          f.context.isReplacementDialogDisplayed = true;
-
-          const goal1 = Array.from(f.context.testGoals.values()).find(
-            (g) => g.id === focused1,
-          );
-          const goal2 = Array.from(f.context.testGoals.values()).find(
-            (g) => g.id === focused2,
-          );
-
-          if (goal1) f.context.dialogFocusedGoals.push(goal1.name);
-          if (goal2) f.context.dialogFocusedGoals.push(goal2.name);
-
-          f.context.dialogActions = [
-            `Replace ${goal1?.name}`,
-            `Replace ${goal2?.name}`,
-            "Cancel",
-          ];
-        }
-      });
-
-      And("replacement dialog is displayed", async (_ctx: TestContext) => {
-        expect(f.context.isReplacementDialogDisplayed).toBe(true);
-      });
+      sharedSteps.givenTwoGoalsInFocus(Given);
+      sharedSteps.andUserOpensGoalPage(And);
+      sharedSteps.andClicksFocusIcon(And);
+      sharedSteps.andReplacementDialogIsDisplayed(And);
 
       When(
         "user selects {string}",
@@ -575,45 +334,22 @@ describeFeature(
           goal1Name: string,
           goal2Name: string,
         ) => {
-          const goal1 = f.context.testGoals.get(goal1Name);
-          const goal2 = f.context.testGoals.get(goal2Name);
-          expect(goal1).toBeDefined();
-          expect(goal2).toBeDefined();
+          const { focused1, focused2 } =
+            await getFocusedGoals(settingsRepository);
 
-          const focused1 = await settingsRepository.getValue("focused_goal_1");
-          const focused2 = await settingsRepository.getValue("focused_goal_2");
+          const focusedIds = [focused1, focused2].filter(Boolean);
+          expect(focusedIds).toHaveLength(count);
 
-          expect(focused1).toBe(goal1!.id);
-          expect(focused2).toBe(goal2!.id);
-          expect(count).toBe(2);
+          const goal1 = getGoalFromContext(f.context.testGoals, goal1Name);
+          const goal2 = getGoalFromContext(f.context.testGoals, goal2Name);
+
+          expect(focusedIds).toContain(goal1.id);
+          expect(focusedIds).toContain(goal2.id);
         },
       );
 
-      And(
-        "Settings has focused_goal_1 = {string}",
-        async (_ctx: TestContext, expectedId: string) => {
-          const actualId = await settingsRepository.getValue("focused_goal_1");
-
-          if (expectedId === "") {
-            expect(actualId === undefined || actualId === "").toBe(true);
-          } else {
-            expect(actualId).toBe(expectedId);
-          }
-        },
-      );
-
-      And(
-        "Settings has focused_goal_2 = {string}",
-        async (_ctx: TestContext, expectedId: string) => {
-          const actualId = await settingsRepository.getValue("focused_goal_2");
-
-          if (expectedId === "") {
-            expect(actualId === undefined || actualId === "").toBe(true);
-          } else {
-            expect(actualId).toBe(expectedId);
-          }
-        },
-      );
+      sharedSteps.andSettingsHasFocusedGoal1(And);
+      sharedSteps.andSettingsHasFocusedGoal2(And);
     });
   },
 );
