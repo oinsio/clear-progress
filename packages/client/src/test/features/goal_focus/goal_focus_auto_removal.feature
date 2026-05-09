@@ -37,7 +37,7 @@ Feature: Goal Focus — Auto-removal on Status Change
     And Settings has focused_goal_1 = ""
     And Settings has focused_goal_2 = ""
 
-  @add-goal-focus @FR9
+  @add-goal-focus @FR9 @fix-goal-status-edit-mode @FR1
   Scenario: Goal remains in focus during editing when status changed to completed (not saved)
     Given 1 goal in focus: "Write a book"
     And goal "Write a book" has status "in_progress"
@@ -50,7 +50,7 @@ Feature: Goal Focus — Auto-removal on Status Change
     And navigation displays "Write a book"
     And Settings has focused_goal_1 = "11111111-1111-1111-1111-111111111111"
 
-  @add-goal-focus @FR9
+  @add-goal-focus @FR9 @fix-goal-status-edit-mode @FR3
   Scenario: Goal remains in focus when status change is cancelled
     Given 1 goal in focus: "Launch a startup"
     And goal "Launch a startup" has status "planning"
@@ -64,7 +64,7 @@ Feature: Goal Focus — Auto-removal on Status Change
     And navigation displays "Launch a startup"
     And Settings has focused_goal_1 = "44444444-4444-4444-4444-444444444444"
 
-  @add-goal-focus @FR9
+  @add-goal-focus @FR9 @fix-goal-status-edit-mode @FR2
   Scenario: Goal removed from focus after saving status change to completed
     Given 1 goal in focus: "Write a book"
     And goal "Write a book" has status "in_progress"
