@@ -37,7 +37,7 @@ describeFeature(
     });
 
     const givenSteps = createGivenSteps(f, settingsRepository);
-    const whenSteps = createWhenSteps(f, settingsRepository);
+    const whenSteps = createWhenSteps(f);
     const thenSteps = createThenSteps(f, settingsRepository);
     const andSteps = createAndSteps(f, settingsRepository);
 

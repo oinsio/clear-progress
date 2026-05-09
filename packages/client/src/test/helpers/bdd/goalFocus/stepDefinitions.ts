@@ -1,4 +1,7 @@
-import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
+import type {
+  FeatureDescriibeCallbackParams,
+  StepTest,
+} from "@amiceli/vitest-cucumber";
 import type { TestContext } from "vitest";
 import { expect } from "vitest";
 import { db } from "@/db/database.ts";
@@ -26,8 +29,8 @@ export function createBackgroundSteps(
   f: FeatureDescriibeCallbackParams<FeatureContext>,
   goalRepository: GoalRepository,
 ) {
-  return (Given: any) => {
-    Given("goals exist:", async (_ctx: TestContext, table: any) => {
+  return (Given: StepTest["Given"]) => {
+    Given("goals exist:", async (_ctx: TestContext, table: unknown) => {
       f.context.testGoals = new Map();
 
       const rows = Array.isArray(table) ? table : [];
@@ -56,7 +59,7 @@ export function createGivenSteps(
   settingsRepository: SettingsRepository,
 ) {
   return {
-    givenGoalsInFocus: (Given: any) => {
+    givenGoalsInFocus: (Given: StepTest["Given"]) => {
       Given(
         "{int} goals in focus",
         async (_ctx: TestContext, count: number) => {
@@ -65,7 +68,7 @@ export function createGivenSteps(
       );
     },
 
-    givenOneGoalInFocus: (Given: any) => {
+    givenOneGoalInFocus: (Given: StepTest["Given"]) => {
       Given(
         "{int} goal in focus: {string}",
         async (_ctx: TestContext, count: number, goalName: string) => {
@@ -83,7 +86,7 @@ export function createGivenSteps(
       );
     },
 
-    givenTwoGoalsInFocus: (Given: any) => {
+    givenTwoGoalsInFocus: (Given: StepTest["Given"]) => {
       Given(
         "{int} goals in focus: {string}, {string}",
         async (
@@ -110,25 +113,18 @@ export function createGivenSteps(
 
 export function createWhenSteps(
   f: FeatureDescriibeCallbackParams<FeatureContext>,
-  settingsRepository: SettingsRepository,
 ) {
   return {
-    whenUserOpensGoalPage: (When: any) => {
+    whenUserOpensGoalPage: (When: StepTest["Given"]) => {
       When(
         "user opens goal page {string}",
         async (_ctx: TestContext, goalName: string) => {
-          const goal = getGoalFromContext(f.context.testGoals, goalName);
-          f.context.currentGoal = goal;
+          f.context.currentGoal = getGoalFromContext(
+            f.context.testGoals,
+            goalName,
+          );
         },
       );
-    },
-
-    whenClicksFocusIcon: (When: any) => {
-      When("clicks focus icon", async (_ctx: TestContext) => {
-        const goal = f.context.currentGoal;
-        expect(goal).toBeDefined();
-        await clickFocusIcon(goal!.id, settingsRepository);
-      });
     },
   };
 }
@@ -138,7 +134,7 @@ export function createThenSteps(
   settingsRepository: SettingsRepository,
 ) {
   return {
-    thenGoalIsAddedToFocus: (Then: any) => {
+    thenGoalIsAddedToFocus: (Then: StepTest["Given"]) => {
       Then(
         "goal {string} is added to focus",
         async (_ctx: TestContext, goalName: string) => {
@@ -148,7 +144,7 @@ export function createThenSteps(
       );
     },
 
-    thenGoalIsRemovedFromFocus: (Then: any) => {
+    thenGoalIsRemovedFromFocus: (Then: StepTest["Given"]) => {
       Then(
         "goal {string} is removed from focus",
         async (_ctx: TestContext, goalName: string) => {
@@ -165,15 +161,17 @@ export function createAndSteps(
   settingsRepository: SettingsRepository,
 ) {
   return {
-    andClicksFocusIcon: (And: any) => {
+    andClicksFocusIcon: (And: StepTest["Given"]) => {
       And("clicks focus icon", async (_ctx: TestContext) => {
         const goal = f.context.currentGoal;
-        expect(goal).toBeDefined();
-        await clickFocusIcon(goal!.id, settingsRepository);
+        if (!goal) {
+          throw new Error("currentGoal is undefined");
+        }
+        await clickFocusIcon(goal.id, settingsRepository);
       });
     },
 
-    andSettingsHasFocusedGoal1: (And: any) => {
+    andSettingsHasFocusedGoal1: (And: StepTest["Given"]) => {
       And(
         "Settings has focused_goal_1 = {string}",
         async (_ctx: TestContext, expectedId: string) => {
@@ -183,7 +181,7 @@ export function createAndSteps(
       );
     },
 
-    andSettingsHasFocusedGoal2: (And: any) => {
+    andSettingsHasFocusedGoal2: (And: StepTest["Given"]) => {
       And(
         "Settings has focused_goal_2 = {string}",
         async (_ctx: TestContext, expectedId: string) => {
@@ -193,23 +191,27 @@ export function createAndSteps(
       );
     },
 
-    andFocusIconIsActive: (And: any) => {
+    andFocusIconIsActive: (And: StepTest["Given"]) => {
       And("focus icon is active", async (_ctx: TestContext) => {
         const goal = f.context.currentGoal;
-        expect(goal).toBeDefined();
-        await expectGoalInFocus(goal!.id, settingsRepository, true);
+        if (!goal) {
+          throw new Error("currentGoal is undefined");
+        }
+        await expectGoalInFocus(goal.id, settingsRepository, true);
       });
     },
 
-    andFocusIconIsInactive: (And: any) => {
+    andFocusIconIsInactive: (And: StepTest["Given"]) => {
       And("focus icon is inactive", async (_ctx: TestContext) => {
         const goal = f.context.currentGoal;
-        expect(goal).toBeDefined();
-        await expectGoalInFocus(goal!.id, settingsRepository, false);
+        if (!goal) {
+          throw new Error("currentGoal is undefined");
+        }
+        await expectGoalInFocus(goal.id, settingsRepository, false);
       });
     },
 
-    andGoalRemainsInFocus: (And: any) => {
+    andGoalRemainsInFocus: (And: StepTest["Given"]) => {
       And(
         "goal {string} remains in focus",
         async (_ctx: TestContext, goalName: string) => {

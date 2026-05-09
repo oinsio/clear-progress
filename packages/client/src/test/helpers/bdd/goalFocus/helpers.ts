@@ -1,6 +1,71 @@
-import { expect } from "vitest";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository.ts";
 import type { Goal } from "@/types/entities.ts";
+
+/**
+ * Checks if a string looks like a UUID (basic format check).
+ */
+export function looksLikeUUID(value: string): boolean {
+  return (
+    value.length === 36 &&
+    value[8] === "-" &&
+    value[13] === "-" &&
+    value[18] === "-" &&
+    value[23] === "-"
+  );
+}
+
+/**
+ * Validates a goal ID for focus slots.
+ * Returns the ID if valid, null if invalid/deleted/completed/cancelled.
+ */
+export function validateGoalIdForFocus(
+  id: string | undefined,
+  goalMap: Map<string, Goal>,
+): string | null {
+  if (!id || id === "") return null;
+  if (!looksLikeUUID(id)) return null;
+
+  const goal = goalMap.get(id);
+  if (!goal) return null;
+  if (goal.is_deleted) return null;
+  if (goal.status === "completed" || goal.status === "cancelled") return null;
+
+  return id;
+}
+
+/**
+ * Runs self-healing logic for focused goals.
+ * Returns true if healing was needed and performed.
+ */
+export async function runSelfHealing(
+  settingsRepository: SettingsRepository,
+  goals: Goal[],
+): Promise<boolean> {
+  const [value1, value2] = await Promise.all([
+    settingsRepository.getValue("focused_goal_1"),
+    settingsRepository.getValue("focused_goal_2"),
+  ]);
+
+  const goalMap = new Map(goals.map((goal) => [goal.id, goal]));
+
+  const validId1 = validateGoalIdForFocus(value1, goalMap);
+  const validId2 = validateGoalIdForFocus(value2, goalMap);
+
+  const validIds: string[] = [];
+  if (validId1) validIds.push(validId1);
+  if (validId2) validIds.push(validId2);
+
+  const needsHealing =
+    (value1 || "") !== (validIds[0] || "") ||
+    (value2 || "") !== (validIds[1] || "");
+
+  if (needsHealing) {
+    await settingsRepository.set("focused_goal_1", validIds[0] || "");
+    await settingsRepository.set("focused_goal_2", validIds[1] || "");
+  }
+
+  return needsHealing;
+}
 
 /**
  * Gets both focused goal IDs from settings.
@@ -79,6 +144,8 @@ export function getGoalFromContext(
   goalName: string,
 ): Goal {
   const goal = testGoals.get(goalName);
-  expect(goal).toBeDefined();
-  return goal!;
+  if (!goal) {
+    throw new Error(`Goal "${goalName}" not found in test context`);
+  }
+  return goal;
 }

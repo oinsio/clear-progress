@@ -74,20 +74,24 @@ describeFeature(
 
             // Pick first goal for testing
             const firstGoal = Array.from(f.context.testGoals.values())[0];
-            expect(firstGoal).toBeDefined();
-            f.context.currentGoalId = firstGoal!.id;
+            if (!firstGoal) {
+              throw new Error("No goals found in test context");
+            }
+            f.context.currentGoalId = firstGoal.id;
           },
         );
 
         When("user clicks focus icon", async (_ctx: TestContext) => {
-          expect(f.context.currentGoalId).toBeDefined();
+          if (!f.context.currentGoalId) {
+            throw new Error("currentGoalId is undefined");
+          }
 
           // Measure performance of adding goal to focus
           f.context.clickStartTime = performance.now();
 
           await settingsRepository.set(
             SETTINGS_KEYS.FOCUSED_GOAL_1,
-            f.context.currentGoalId!,
+            f.context.currentGoalId,
           );
 
           f.context.clickEndTime = performance.now();
@@ -105,7 +109,10 @@ describeFeature(
             const focused1 = await settingsRepository.getValue(
               SETTINGS_KEYS.FOCUSED_GOAL_1,
             );
-            expect(focused1).toBe(f.context.currentGoalId!);
+            if (!f.context.currentGoalId) {
+              throw new Error("currentGoalId is undefined");
+            }
+            expect(focused1).toBe(f.context.currentGoalId);
           },
         );
 
@@ -116,7 +123,10 @@ describeFeature(
             const focused1 = await settingsRepository.getValue(
               SETTINGS_KEYS.FOCUSED_GOAL_1,
             );
-            expect(focused1).toBe(f.context.currentGoalId!);
+            if (!f.context.currentGoalId) {
+              throw new Error("currentGoalId is undefined");
+            }
+            expect(focused1).toBe(f.context.currentGoalId);
 
             // Note: This unit test verifies that the IndexedDB write operation is fast (< 100ms).
             // In real implementation with optimistic UI, the UI would update immediately
