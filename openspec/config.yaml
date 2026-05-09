@@ -1,10 +1,10 @@
 schema: spec-driven
 
 context: |
-  # Clear Progress — Personal GTD App
+  # Clear Progress — Personal Productivity App
 
   ## Domain
-  Personal GTD (Getting Things Done) productivity app. Client-first architecture with swappable backends.
+  Personal productivity app suitable for the GTD methodology. Client-first architecture with swappable backends.
 
   ## Tech Stack
   - Monorepo (pnpm workspaces)

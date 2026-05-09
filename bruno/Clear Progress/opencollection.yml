@@ -1,7 +1,7 @@
 opencollection: 1.0.0
 
 info:
-  name: Clear Progress (GTD)
+  name: Clear Progress
 config:
   proxy:
     inherit: true

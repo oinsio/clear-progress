@@ -33,7 +33,7 @@ src/
 │   │   ├── components/
 │   │   ├── hooks/
 │   │   └── utils/
-│   ├── contexts/                # GTD contexts (@Home, @Office)
+│   ├── contexts/                # contexts (@Home, @Office)
 │   ├── categories/
 │   ├── checklist/               # v1.1
 │   └── settings/

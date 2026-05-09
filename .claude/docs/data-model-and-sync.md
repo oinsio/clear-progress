@@ -11,7 +11,7 @@ Fields: `id`, `name`, `description?`, `cover_file_id?` (Google Drive), `status` 
 **Ideas** — user ideas
 Fields: `id`, `name`, `description`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
 
-**Contexts** — GTD contexts (@Home, @Office...)
+**Contexts** — contexts (@Home, @Office...)
 Fields: `id`, `name`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `version`, `revision`
 
 **Categories** — life areas (Work, Family...)

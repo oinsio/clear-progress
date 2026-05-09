@@ -1,10 +1,10 @@
 openapi: 3.0.3
 
 info:
-  title: Clear Progress (GTD) API
+  title: Clear Progress API
   version: 1.0.0
   description: |
-    Google Apps Script Web App API for the Clear Progress GTD application.
+    Google Apps Script Web App API for the Clear Progress application.
 
     **Single endpoint, routing by `action` field:**
     - GET `/exec?action=ping` — health check

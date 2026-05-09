@@ -19,8 +19,8 @@ This rule applies when writing ANY new code and when refactoring existing code.
 - Error messages → constants or i18n keys
 
 ### Enums instead of string literals
-- GTD task statuses → `TaskStatus.ACTIVE`, `TaskStatus.COMPLETED`
-- GTD contexts → `enum GtdContext`
+- Task statuses → `TaskStatus.ACTIVE`, `TaskStatus.COMPLETED`
+- Contexts → `enum AppContext`
 - Action/event types → `SyncAction.PUSH`, `SyncAction.PULL`
 - Roles, entity types → always enum
 - **Rule**: if a value is used in a `switch`, `if`, or for branching — it must be an enum
@@ -89,8 +89,8 @@ const filtered = tasks.filter(t => t.context === "@home");
 ```ts
 // ✅ Good
 if (task.status === TaskStatus.ACTIVE) { ... }
-if (item.type === GtdEntityType.PROJECT) { ... }
-const filtered = tasks.filter(t => t.context === GtdContext.HOME);
+if (item.type === EntityType.PROJECT) { ... }
+const filtered = tasks.filter(t => t.context === AppContext.HOME);
 ```
 
 ## Exceptions (these are NOT hardcoded values)

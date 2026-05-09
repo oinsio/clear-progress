@@ -29,7 +29,7 @@ function calculateNextDateDaily(
   const today = clock.plainDateISO();
   // Skip logic: если next_date оказался в прошлом (пользователь не открывал приложение
   // несколько дней), вычисляем ближайшую будущую дату вместо создания множества
-  // пропущенных копий. Это сознательное архитектурное решение для GTD-приложения.
+  // пропущенных копий. Это сознательное архитектурное решение для приложения.
   // Подробнее: .claude/docs/architecture/recurring-tasks-skip-logic.md
   if (Temporal.PlainDate.compare(next, today) < 0) {
     const totalDays = prev.until(today, { largestUnit: "days" }).days;
