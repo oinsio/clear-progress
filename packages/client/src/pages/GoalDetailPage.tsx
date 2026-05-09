@@ -76,7 +76,6 @@ export default function GoalDetailPage() {
     isLoading: isGoalLoading,
     reload: reloadGoal,
     updateGoal,
-    updateGoalStatus,
     deleteGoal,
   } = useGoal(id ?? "");
   const { url: existingCoverUrl } = useCoverUrl(goal?.cover_file_id ?? "");
@@ -126,6 +125,7 @@ export default function GoalDetailPage() {
   // edit form state
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editStatus, setEditStatus] = useState<GoalStatus>("planning");
   const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null);
   const [isCoverRemoved, setIsCoverRemoved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -214,6 +214,7 @@ export default function GoalDetailPage() {
   const handleStartEdit = useCallback(() => {
     setEditName(goal?.name ?? "");
     setEditDescription(goal?.description ?? "");
+    setEditStatus(goal?.status ?? "planning");
     setPendingCoverFile(null);
     setIsCoverRemoved(false);
     setSaveError(null);
@@ -267,6 +268,7 @@ export default function GoalDetailPage() {
         name: editName.trim(),
         description: editDescription.trim(),
         cover_file_id: newCoverFileId,
+        status: editStatus,
       });
       void reloadGoal();
       setIsEditing(false);
@@ -284,16 +286,14 @@ export default function GoalDetailPage() {
     updateGoal,
     editName,
     editDescription,
+    editStatus,
     reloadGoal,
     t,
   ]);
 
-  const handleStatusChange = useCallback(
-    async (newStatus: GoalStatus) => {
-      await updateGoalStatus(newStatus);
-    },
-    [updateGoalStatus],
-  );
+  const handleStatusChange = useCallback((newStatus: GoalStatus) => {
+    setEditStatus(newStatus);
+  }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
     await deleteGoal();
@@ -334,7 +334,7 @@ export default function GoalDetailPage() {
     );
   }
 
-  const activeStatus = goal?.status ?? "planning";
+  const activeStatus = isEditing ? editStatus : (goal?.status ?? "planning");
 
   return (
     <div
@@ -456,7 +456,7 @@ export default function GoalDetailPage() {
                                   aria-label={t(`goal.status.${optionStatus}`)}
                                   aria-pressed={isSelected}
                                   onClick={() =>
-                                    void handleStatusChange(optionStatus)
+                                    handleStatusChange(optionStatus)
                                   }
                                   className={cn(
                                     "flex-1 flex items-center justify-center py-3 transition-colors",

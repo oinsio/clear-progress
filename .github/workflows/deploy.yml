@@ -49,7 +49,7 @@ jobs:
       - name: Build client
         run: pnpm --filter @clear-progress/client... build
         env:
-          VITE_BASE_PATH: /clear-progress-gtd/
+          VITE_BASE_PATH: /clear-progress/
 
       - uses: actions/upload-pages-artifact@v3
         with:

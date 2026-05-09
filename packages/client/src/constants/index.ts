@@ -126,7 +126,6 @@ export const MAX_PING_ATTEMPTS = 20; // 10 minutes (20 × 30s)
 
 export const BACKEND_CONNECTION_EVENT = "backend_connection_changed";
 export const GOOGLE_CLIENT_ID_CHANGED_EVENT = "google_client_id_changed";
-export const MENU_ORDER_CHANGED_EVENT = "menu_order_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
 
 export const DB_NAME = "clear-progress";

@@ -289,7 +289,7 @@ describeFeature(
       );
     };
 
-    // @add-goal-focus @FR9
+    // @add-goal-focus @FR9 @fix-goal-status-edit-mode @FR1
     f.Scenario(
       "Goal remains in focus during editing when status changed to completed (not saved)",
       ({ Given, When, Then, And, But }) => {
@@ -309,7 +309,7 @@ describeFeature(
       },
     );
 
-    // @add-goal-focus @FR9
+    // @add-goal-focus @FR9 @fix-goal-status-edit-mode @FR3
     f.Scenario(
       "Goal remains in focus when status change is cancelled",
       ({ Given, When, Then, And }) => {
@@ -340,7 +340,7 @@ describeFeature(
       },
     );
 
-    // @add-goal-focus @FR9
+    // @add-goal-focus @FR9 @fix-goal-status-edit-mode @FR2
     f.Scenario(
       "Goal removed from focus after saving status change to completed",
       ({ Given, When, Then, And }) => {

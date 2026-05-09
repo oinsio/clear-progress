@@ -1,7 +1,7 @@
 # Clear Progress — Project Context
 
 ## Что это
-Персональное GTD-приложение (Getting Things Done) для управления задачами и целями.
+Персональное приложение для управления задачами и целями. Подходит для работы по методике GTD.
 Тип: PWA. Архитектура: React frontend + Google Apps Script backend + Google Sheets хранилище.
 
 ## Архитектура и стек
@@ -18,7 +18,7 @@
 
 **Goals** — цели. Поля: id, name, description?, cover_file_id? (Google Drive), status (not_started|in_progress|paused|completed|cancelled), sort_order, is_deleted, created_at, updated_at, version.
 
-**Contexts** — GTD-контексты (@Дом, @Офис...). Поля: id, name, sort_order, is_deleted, created_at, updated_at, version.
+**Contexts** — контексты (@Дом, @Офис...). Поля: id, name, sort_order, is_deleted, created_at, updated_at, version.
 
 **Categories** — сферы жизни (Работа, Семья...). Структура аналогична Contexts.
 

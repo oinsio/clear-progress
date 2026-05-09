@@ -2,11 +2,13 @@ import { renderHook } from "@testing-library/react";
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
+import { _resetForTesting } from "@/stores/menuOrderStore";
 import { useMenuOrder } from "./useMenuOrder";
 
 describe("useMenuOrder", () => {
   beforeEach(() => {
     localStorage.clear();
+    _resetForTesting();
     vi.clearAllMocks();
   });
 
@@ -28,6 +30,7 @@ describe("useMenuOrder", () => {
         STORAGE_KEYS.MENU_ORDER,
         JSON.stringify(oldMenuOrder),
       );
+      _resetForTesting();
 
       const { result } = renderHook(() => useMenuOrder());
 
@@ -58,6 +61,7 @@ describe("useMenuOrder", () => {
         STORAGE_KEYS.MENU_ORDER,
         JSON.stringify(menuOrderWithFocusedGoals),
       );
+      _resetForTesting();
 
       const { result } = renderHook(() => useMenuOrder());
 
@@ -86,6 +90,7 @@ describe("useMenuOrder", () => {
         STORAGE_KEYS.MENU_ORDER,
         JSON.stringify(customMenuOrder),
       );
+      _resetForTesting();
 
       const { result } = renderHook(() => useMenuOrder());
 
@@ -113,6 +118,7 @@ describe("useMenuOrder", () => {
         STORAGE_KEYS.MENU_ORDER,
         JSON.stringify(oldMenuOrder),
       );
+      _resetForTesting();
 
       const { result } = renderHook(() => useMenuOrder());
 
@@ -174,6 +180,24 @@ describe("useMenuOrder", () => {
         { mode: "focused_goals", visible: false },
         { mode: "inbox", visible: true },
       ]);
+    });
+
+    it("should reflect changes across hook instances via shared store", () => {
+      const { result: firstInstance } = renderHook(() => useMenuOrder());
+      const { result: secondInstance } = renderHook(() => useMenuOrder());
+
+      act(() => {
+        firstInstance.current.setMenuOrder([
+          { mode: "goals", visible: true },
+          { mode: "inbox", visible: true },
+        ]);
+      });
+
+      const secondModes = secondInstance.current.menuOrder.map(
+        (item) => item.mode,
+      );
+      expect(secondModes[0]).toBe("goals");
+      expect(secondModes[1]).toBe("inbox");
     });
   });
 });

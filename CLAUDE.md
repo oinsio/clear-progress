@@ -1,6 +1,6 @@
 # Clear Progress
 
-Personal GTD app. Client-first architecture.
+Personal app suitable for working with the GTD method. Client-first architecture.
 
 IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
