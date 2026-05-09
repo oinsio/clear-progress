@@ -205,6 +205,9 @@ Then("focus returns to focus icon", async ({ page }) => {
 // Verifies NFR-R1 of add-goal-focus
 When("user opens the app on mobile \\(collapsed panel)", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
+  await page.evaluate(() => {
+    localStorage.setItem("panel_open", "false");
+  });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
 });
@@ -217,6 +220,9 @@ Then("focused goals are displayed in collapsed mode", async ({ page }) => {
 
 When("user opens the app on desktop \\(expanded panel)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
+  await page.evaluate(() => {
+    localStorage.setItem("panel_open", "true");
+  });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
 });
