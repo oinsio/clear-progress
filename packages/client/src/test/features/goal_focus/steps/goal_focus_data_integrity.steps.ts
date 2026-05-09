@@ -1,24 +1,18 @@
-import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
+import type {
+  FeatureDescriibeCallbackParams,
+  StepTest,
+} from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database.ts";
 import { GoalRepository } from "@/db/repositories/GoalRepository.ts";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository.ts";
 import { buildGoal } from "@/test/factories/goalFactory.ts";
+import { runSelfHealing } from "@/test/helpers/bdd/goalFocus/helpers.ts";
 import type { Goal } from "@/types/entities.ts";
 import { toISOTimestamp } from "@/utils/dateHelpers.ts";
 
 const feature = await loadFeature("../goal_focus_data_integrity.feature");
-
-function looksLikeUUID(value: string): boolean {
-  return (
-    value.length === 36 &&
-    value[8] === "-" &&
-    value[13] === "-" &&
-    value[18] === "-" &&
-    value[23] === "-"
-  );
-}
 
 type FeatureContext = {
   testGoals: Map<string, Goal>;
@@ -80,51 +74,6 @@ describeFeature(
       }
     }
 
-    // Self-healing logic mirroring useFocusedGoals.ts
-    // Uses f.context.testGoals instead of DB query because vitest-cucumber
-    // runs BeforeEachScenario AFTER Background, clearing goals from DB.
-    async function runSelfHealing(): Promise<boolean> {
-      const [value1, value2] = await Promise.all([
-        settingsRepository.getValue("focused_goal_1"),
-        settingsRepository.getValue("focused_goal_2"),
-      ]);
-
-      const goalMap = new Map(
-        Array.from(f.context.testGoals.values()).map((goal) => [goal.id, goal]),
-      );
-
-      const validateGoalId = (id: string | undefined): string | null => {
-        if (!id || id === "") return null;
-        if (!looksLikeUUID(id)) return null;
-
-        const goal = goalMap.get(id);
-        if (!goal) return null;
-        if (goal.is_deleted) return null;
-        if (goal.status === "completed" || goal.status === "cancelled")
-          return null;
-
-        return id;
-      };
-
-      const validId1 = validateGoalId(value1);
-      const validId2 = validateGoalId(value2);
-
-      const validIds: string[] = [];
-      if (validId1) validIds.push(validId1);
-      if (validId2) validIds.push(validId2);
-
-      const needsHealing =
-        (value1 || "") !== (validIds[0] || "") ||
-        (value2 || "") !== (validIds[1] || "");
-
-      if (needsHealing) {
-        await settingsRepository.set("focused_goal_1", validIds[0] || "");
-        await settingsRepository.set("focused_goal_2", validIds[1] || "");
-      }
-
-      return needsHealing;
-    }
-
     async function assertCorrectedDataSentForSync() {
       const setting1 = await settingsRepository.getByKey("focused_goal_1");
       const setting2 = await settingsRepository.getByKey("focused_goal_2");
@@ -132,6 +81,59 @@ describeFeature(
       const hasSyncFlag =
         setting1?.needsSync === true || setting2?.needsSync === true;
       expect(hasSyncFlag).toBe(true);
+    }
+
+    // Helper to set focused_goal_2 with a specific UUID
+    async function setFocusedGoal2ToValidUUID() {
+      await setSettingDirectly(
+        "focused_goal_2",
+        "22222222-2222-2222-2222-222222222222",
+      );
+    }
+
+    // Common step: And Settings has focused_goal_2 = "22222222-2222-2222-2222-222222222222"
+    function createSetFocusedGoal2Step(And: StepTest["And"]) {
+      And(
+        'Settings has focused_goal_2 = "22222222-2222-2222-2222-222222222222"',
+        async (_ctx: TestContext) => {
+          await setFocusedGoal2ToValidUUID();
+        },
+      );
+    }
+
+    // Common step: When user opens the app
+    function createUserOpensAppStep(When: StepTest["When"]) {
+      When("user opens the app", async (_ctx: TestContext) => {
+        // Uses f.context.testGoals instead of DB query because vitest-cucumber
+        // runs BeforeEachScenario AFTER Background, clearing goals from DB.
+        const goals = Array.from(f.context.testGoals.values());
+        f.context.wasHealed = await runSelfHealing(settingsRepository, goals);
+      });
+    }
+
+    // Helper to create step definitions for self-healing verification
+    function createSelfHealingVerificationSteps(
+      And: StepTest["And"],
+      expectedFocusedGoal1: string,
+      expectedFocusedGoal2: string,
+    ) {
+      And(
+        `Settings has focused_goal_1 = "${expectedFocusedGoal1}"`,
+        async (_ctx: TestContext) => {
+          await assertSettingValue("focused_goal_1", expectedFocusedGoal1);
+        },
+      );
+
+      And(
+        `Settings has focused_goal_2 = "${expectedFocusedGoal2}"`,
+        async (_ctx: TestContext) => {
+          await assertSettingValue("focused_goal_2", expectedFocusedGoal2);
+        },
+      );
+
+      And("corrected data is sent for sync", async (_ctx: TestContext) => {
+        await assertCorrectedDataSentForSync();
+      });
     }
 
     // vitest-cucumber matches And steps by text via find(), so duplicate
@@ -149,19 +151,9 @@ describeFeature(
           },
         );
 
-        And(
-          'Settings has focused_goal_2 = "22222222-2222-2222-2222-222222222222"',
-          async (_ctx: TestContext) => {
-            await setSettingDirectly(
-              "focused_goal_2",
-              "22222222-2222-2222-2222-222222222222",
-            );
-          },
-        );
+        createSetFocusedGoal2Step(And);
 
-        When("user opens the app", async (_ctx: TestContext) => {
-          f.context.wasHealed = await runSelfHealing();
-        });
+        createUserOpensAppStep(When);
 
         Then(
           "system automatically corrects data",
@@ -170,23 +162,11 @@ describeFeature(
           },
         );
 
-        And(
-          'Settings has focused_goal_1 = "22222222-2222-2222-2222-222222222222"',
-          async (_ctx: TestContext) => {
-            await assertSettingValue(
-              "focused_goal_1",
-              "22222222-2222-2222-2222-222222222222",
-            );
-          },
+        createSelfHealingVerificationSteps(
+          And,
+          "22222222-2222-2222-2222-222222222222",
+          "",
         );
-
-        And('Settings has focused_goal_2 = ""', async (_ctx: TestContext) => {
-          await assertSettingValue("focused_goal_2", "");
-        });
-
-        And("corrected data is sent for sync", async (_ctx: TestContext) => {
-          await assertCorrectedDataSentForSync();
-        });
       },
     );
 
@@ -214,19 +194,9 @@ describeFeature(
           },
         );
 
-        And(
-          'Settings has focused_goal_2 = "22222222-2222-2222-2222-222222222222"',
-          async (_ctx: TestContext) => {
-            await setSettingDirectly(
-              "focused_goal_2",
-              "22222222-2222-2222-2222-222222222222",
-            );
-          },
-        );
+        createSetFocusedGoal2Step(And);
 
-        When("user opens the app", async (_ctx: TestContext) => {
-          f.context.wasHealed = await runSelfHealing();
-        });
+        createUserOpensAppStep(When);
 
         Then(
           "system automatically corrects data",
@@ -235,23 +205,11 @@ describeFeature(
           },
         );
 
-        And(
-          'Settings has focused_goal_1 = "22222222-2222-2222-2222-222222222222"',
-          async (_ctx: TestContext) => {
-            await assertSettingValue(
-              "focused_goal_1",
-              "22222222-2222-2222-2222-222222222222",
-            );
-          },
+        createSelfHealingVerificationSteps(
+          And,
+          "22222222-2222-2222-2222-222222222222",
+          "",
         );
-
-        And('Settings has focused_goal_2 = ""', async (_ctx: TestContext) => {
-          await assertSettingValue("focused_goal_2", "");
-        });
-
-        And("corrected data is sent for sync", async (_ctx: TestContext) => {
-          await assertCorrectedDataSentForSync();
-        });
       },
     );
 
@@ -273,9 +231,7 @@ describeFeature(
           },
         );
 
-        When("user opens the app", async (_ctx: TestContext) => {
-          f.context.wasHealed = await runSelfHealing();
-        });
+        createUserOpensAppStep(When);
 
         Then(
           "system automatically corrects data",
@@ -284,17 +240,7 @@ describeFeature(
           },
         );
 
-        And('Settings has focused_goal_1 = ""', async (_ctx: TestContext) => {
-          await assertSettingValue("focused_goal_1", "");
-        });
-
-        And('Settings has focused_goal_2 = ""', async (_ctx: TestContext) => {
-          await assertSettingValue("focused_goal_2", "");
-        });
-
-        And("corrected data is sent for sync", async (_ctx: TestContext) => {
-          await assertCorrectedDataSentForSync();
-        });
+        createSelfHealingVerificationSteps(And, "", "");
       },
     );
 
@@ -319,9 +265,7 @@ describeFeature(
           },
         );
 
-        When("user opens the app", async (_ctx: TestContext) => {
-          f.context.wasHealed = await runSelfHealing();
-        });
+        createUserOpensAppStep(When);
 
         Then(
           "system automatically corrects data",
@@ -330,23 +274,11 @@ describeFeature(
           },
         );
 
-        And(
-          'Settings has focused_goal_1 = "11111111-1111-1111-1111-111111111111"',
-          async (_ctx: TestContext) => {
-            await assertSettingValue(
-              "focused_goal_1",
-              "11111111-1111-1111-1111-111111111111",
-            );
-          },
+        createSelfHealingVerificationSteps(
+          And,
+          "11111111-1111-1111-1111-111111111111",
+          "",
         );
-
-        And('Settings has focused_goal_2 = ""', async (_ctx: TestContext) => {
-          await assertSettingValue("focused_goal_2", "");
-        });
-
-        And("corrected data is sent for sync", async (_ctx: TestContext) => {
-          await assertCorrectedDataSentForSync();
-        });
       },
     );
 
@@ -373,9 +305,11 @@ describeFeature(
         "user adds goal {string} to focus",
         async (_ctx: TestContext, goalName: string) => {
           const goal = f.context.testGoals.get(goalName);
-          expect(goal).toBeDefined();
+          if (!goal) {
+            throw new Error(`Goal "${goalName}" not found in test context`);
+          }
 
-          await settingsRepository.set("focused_goal_1", goal!.id);
+          await settingsRepository.set("focused_goal_1", goal.id);
         },
       );
 
@@ -426,8 +360,10 @@ describeFeature(
           expect(focusedGoalIds).toHaveLength(count);
 
           const goal = f.context.testGoals.get(goalName);
-          expect(goal).toBeDefined();
-          expect(focusedGoalIds).toContain(goal!.id);
+          if (!goal) {
+            throw new Error(`Goal "${goalName}" not found in test context`);
+          }
+          expect(focusedGoalIds).toContain(goal.id);
         },
       );
 
@@ -443,8 +379,10 @@ describeFeature(
           if (focused2 && focused2 !== "") focusedGoalIds.push(focused2);
 
           const goal = f.context.testGoals.get(goalName);
-          expect(goal).toBeDefined();
-          expect(focusedGoalIds).toContain(goal!.id);
+          if (!goal) {
+            throw new Error(`Goal "${goalName}" not found in test context`);
+          }
+          expect(focusedGoalIds).toContain(goal.id);
         },
       );
     });
