@@ -11,6 +11,7 @@ const DEFAULT_MENU_MODE_ORDER: MenuMode[] = [
   "ideas",
   "tasks",
   "completed",
+  "focused_goals",
   "deleted",
 ];
 
