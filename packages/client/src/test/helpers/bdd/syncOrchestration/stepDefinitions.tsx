@@ -7,8 +7,9 @@ import { cleanup, render, screen } from "@testing-library/react/pure";
 
 export const cleanupRender = cleanup;
 
+import type React from "react";
 import { expect, vi } from "vitest";
-import { useAuth } from "@/app/providers/AuthProvider";
+import { AuthProvider, useAuth } from "@/app/providers/AuthProvider";
 import { SyncProvider, useSync } from "@/app/providers/SyncProvider";
 import type { SyncTestContext } from "./types";
 
@@ -59,6 +60,7 @@ const {
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: vi.fn(() => STABLE_AUTH_VALUE),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 vi.mock("@/hooks/useConnectionConfig", () => ({
@@ -135,10 +137,12 @@ function SyncMethodTrigger() {
 // Helper: render SyncProvider with test components
 function renderSyncProvider() {
   return render(
-    <SyncProvider>
-      <SyncStatusDisplay />
-      <SyncMethodTrigger />
-    </SyncProvider>,
+    <AuthProvider>
+      <SyncProvider>
+        <SyncStatusDisplay />
+        <SyncMethodTrigger />
+      </SyncProvider>
+    </AuthProvider>,
   );
 }
 
@@ -221,6 +225,18 @@ export function createBackgroundSteps(
       Given("user is authenticated with a valid token", () => {
         // Restore useAuth mock after vi.clearAllMocks() — use stable reference
         vi.mocked(useAuth).mockReturnValue(STABLE_AUTH_VALUE);
+      });
+    },
+    givenUserHasNoAccessToken: (Given: StepTest["Given"]) => {
+      Given("user has no access token", () => {
+        vi.mocked(useAuth).mockReturnValue({
+          accessToken: null,
+          userEmail: null,
+          userPicture: null,
+          signIn: vi.fn(),
+          signOut: mockSignOut,
+          silentRefresh: mockSilentRefresh,
+        });
       });
     },
     givenConnectionConfigIsActive: (And: StepTest["Given"]) => {
