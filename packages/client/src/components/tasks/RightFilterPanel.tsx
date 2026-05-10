@@ -94,6 +94,7 @@ interface RightFilterPanelProps {
   mode: RightPanelMode;
   isOpen: boolean;
   side?: PanelSide;
+  activeFocusedGoalId?: string;
   onToggle: () => void;
   onModeChange: (mode: RightPanelMode) => void;
 }
@@ -102,6 +103,7 @@ export function RightFilterPanel({
   mode,
   isOpen,
   side = "right",
+  activeFocusedGoalId,
   onToggle,
   onModeChange,
 }: RightFilterPanelProps) {
@@ -279,7 +281,11 @@ export function RightFilterPanel({
                 ({ mode: itemMode, labelKey, Icon, route }) => {
                   if (itemMode === "focused_goals") {
                     return (
-                      <FocusedGoalsBlock key={itemMode} isExpanded={true} />
+                      <FocusedGoalsBlock
+                        key={itemMode}
+                        isExpanded={true}
+                        activeGoalId={activeFocusedGoalId}
+                      />
                     );
                   }
 
@@ -417,7 +423,11 @@ export function RightFilterPanel({
               ({ mode: itemMode, labelKey, Icon, route }) => {
                 if (itemMode === "focused_goals") {
                   return (
-                    <FocusedGoalsBlock key={itemMode} isExpanded={false} />
+                    <FocusedGoalsBlock
+                      key={itemMode}
+                      isExpanded={false}
+                      activeGoalId={activeFocusedGoalId}
+                    />
                   );
                 }
 

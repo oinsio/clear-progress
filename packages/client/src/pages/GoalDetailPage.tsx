@@ -39,6 +39,7 @@ import { useGoals } from "@/hooks/useGoals";
 import { useGoalTasks } from "@/hooks/useGoalTasks";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
+import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
@@ -100,6 +101,7 @@ export default function GoalDetailPage() {
   } = useFocusedGoals();
   const { contexts } = useContexts();
   const { categories } = useCategories();
+  const { menuOrder } = useMenuOrder();
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { isFocusMode, focusOpacity } = useFocusMode();
@@ -301,6 +303,10 @@ export default function GoalDetailPage() {
   }, [deleteGoal, navigate]);
 
   const isFocused = goal ? focusedGoalIds.includes(goal.id) : false;
+
+  const isFocusedGoalsVisible = menuOrder.some(
+    (c) => c.mode === "focused_goals" && c.visible,
+  );
 
   const handleFocusToggle = useCallback(async () => {
     if (!goal) return;
@@ -767,9 +773,12 @@ export default function GoalDetailPage() {
 
       {/* Right filter panel */}
       <RightFilterPanel
-        mode="goals"
+        mode={isFocused && isFocusedGoalsVisible ? null : "goals"}
         isOpen={isPanelOpen}
         side={panelSide}
+        activeFocusedGoalId={
+          isFocused && isFocusedGoalsVisible ? goal?.id : undefined
+        }
         onToggle={togglePanelOpen}
         onModeChange={handleModeChange}
       />

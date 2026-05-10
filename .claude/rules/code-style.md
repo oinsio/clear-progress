@@ -27,15 +27,15 @@ This rule applies when writing ANY new code and when refactoring existing code.
 
 ## Where to place them
 
-| Type | Location |
-|---|---|
-| Business constants (limits, timeouts) | `src/constants/` grouped by domain |
-| Enums (statuses, types) | `src/types/` or `src/enums/` next to the domain model |
-| API endpoints, URLs | `src/constants/api.ts` |
-| Sheets sheet names | `src/constants/sheets.ts` (frontend) or `src/constants.ts` (GAS backend) |
-| Storage keys | `src/constants/storage.ts` |
-| Routes | `src/constants/routes.ts` |
-| Environment config (.env) | `.env` + `src/config.ts` |
+| Type                                  | Location                                                                 |
+|---------------------------------------|--------------------------------------------------------------------------|
+| Business constants (limits, timeouts) | `src/constants/` grouped by domain                                       |
+| Enums (statuses, types)               | `src/types/` or `src/enums/` next to the domain model                    |
+| API endpoints, URLs                   | `src/constants/api.ts`                                                   |
+| Sheets sheet names                    | `src/constants/sheets.ts` (frontend) or `src/constants.ts` (GAS backend) |
+| Storage keys                          | `src/constants/storage.ts`                                               |
+| Routes                                | `src/constants/routes.ts`                                                |
+| Environment config (.env)             | `.env` + `src/config.ts`                                                 |
 
 ## Examples: bad → good
 

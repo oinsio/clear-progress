@@ -9,6 +9,7 @@ import { SettingsRepository } from "@/db/repositories/SettingsRepository.ts";
 import {
   getFocusedGoals,
   getGoalFromContext,
+  removeGoalFromFocus,
 } from "@/test/helpers/bdd/goalFocus/helpers.ts";
 import { createBackgroundSteps } from "@/test/helpers/bdd/goalFocus/stepDefinitions.ts";
 import type { Goal } from "@/types/entities.ts";
@@ -27,10 +28,26 @@ const DEFAULT_MENU_ORDER: MenuItemConfig[] = [
   { mode: "deleted", visible: false },
 ];
 
+type RightPanelMode =
+  | "inbox"
+  | "tasks"
+  | "completed"
+  | "goals"
+  | "focused_goals"
+  | "ideas"
+  | "contexts"
+  | "categories"
+  | "deleted"
+  | "search"
+  | null;
+
 type FeatureContext = {
   testGoals: Map<string, Goal>;
   menuOrder: MenuItemConfig[];
   navigatedUrl: string;
+  currentGoalId: string | null;
+  rightPanelMode: RightPanelMode | null;
+  activeFocusedGoalId: string | undefined;
 };
 
 function loadMenuOrder(): MenuItemConfig[] {
@@ -58,6 +75,149 @@ function isFocusedGoalsBlockVisible(menuOrder: MenuItemConfig[]): boolean {
   return item?.visible ?? false;
 }
 
+function computeRightPanelState(
+  currentGoalId: string,
+  focusedGoalIds: string[],
+  menuOrder: MenuItemConfig[],
+): { mode: RightPanelMode | null; activeFocusedGoalId: string | undefined } {
+  const isFocusedGoal = focusedGoalIds.includes(currentGoalId);
+  const isFocusedGoalsVisible = menuOrder.some(
+    (c) => c.mode === "focused_goals" && c.visible,
+  );
+
+  if (isFocusedGoal && isFocusedGoalsVisible) {
+    return { mode: null, activeFocusedGoalId: currentGoalId };
+  } else {
+    return { mode: "goals", activeFocusedGoalId: undefined };
+  }
+}
+
+// Reusable step definitions
+function createNavigationSteps(
+  f: FeatureDescriibeCallbackParams<FeatureContext>,
+  settingsRepository: SettingsRepository,
+) {
+  return {
+    setBlockVisibility: (
+      _blockName: string,
+      visible: boolean,
+    ): ((_ctx: TestContext, blockName: string) => Promise<void>) => {
+      return async (_ctx: TestContext, blockName: string) => {
+        f.context.menuOrder = loadMenuOrder();
+        f.context.menuOrder = f.context.menuOrder.map((entry) =>
+          entry.mode === blockName ? { ...entry, visible } : entry,
+        );
+        saveMenuOrder(f.context.menuOrder);
+      };
+    },
+
+    setGoalInFocus: async (
+      _ctx: TestContext,
+      _count: number,
+      goalName: string,
+    ): Promise<void> => {
+      const goal = getGoalFromContext(f.context.testGoals, goalName);
+      await settingsRepository.set("focused_goal_1", goal.id);
+
+      const focused1 = await settingsRepository.getValue("focused_goal_1");
+      expect(focused1).toBe(goal.id);
+    },
+
+    navigateToGoalPage: async (
+      _ctx: TestContext,
+      goalName: string,
+    ): Promise<void> => {
+      const goal = getGoalFromContext(f.context.testGoals, goalName);
+      f.context.currentGoalId = goal.id;
+      f.context.navigatedUrl = `/goals/${goal.id}`;
+
+      const focusedIds = await getFocusedGoalIds(settingsRepository);
+      const state = computeRightPanelState(
+        goal.id,
+        focusedIds,
+        f.context.menuOrder,
+      );
+      f.context.rightPanelMode = state.mode;
+      f.context.activeFocusedGoalId = state.activeFocusedGoalId;
+    },
+
+    userIsOnGoalPage: async (
+      _ctx: TestContext,
+      goalName: string,
+    ): Promise<void> => {
+      const goal = getGoalFromContext(f.context.testGoals, goalName);
+      f.context.currentGoalId = goal.id;
+
+      const focusedIds = await getFocusedGoalIds(settingsRepository);
+      const state = computeRightPanelState(
+        goal.id,
+        focusedIds,
+        f.context.menuOrder,
+      );
+      f.context.rightPanelMode = state.mode;
+      f.context.activeFocusedGoalId = state.activeFocusedGoalId;
+    },
+
+    assertFocusedGoalNavItemActive: async (
+      _ctx: TestContext,
+      goalName: string,
+    ): Promise<void> => {
+      const goal = getGoalFromContext(f.context.testGoals, goalName);
+      expect(f.context.activeFocusedGoalId).toBe(goal.id);
+    },
+
+    assertFocusedGoalNavItemNotActive: async (
+      _ctx: TestContext,
+      goalName: string,
+    ): Promise<void> => {
+      const goal = getGoalFromContext(f.context.testGoals, goalName);
+      expect(f.context.activeFocusedGoalId).not.toBe(goal.id);
+    },
+
+    assertMenuItemActive: async (
+      _ctx: TestContext,
+      _menuItem: string,
+    ): Promise<void> => {
+      expect(f.context.rightPanelMode).toBe("goals");
+    },
+
+    assertMenuItemNotActive: async (
+      _ctx: TestContext,
+      _menuItem: string,
+    ): Promise<void> => {
+      expect(f.context.rightPanelMode).not.toBe("goals");
+    },
+
+    assertFocusedGoalNavItemNotRendered: async (
+      _ctx: TestContext,
+      goalName: string,
+    ): Promise<void> => {
+      const goal = getGoalFromContext(f.context.testGoals, goalName);
+      const focusedIds = await getFocusedGoalIds(settingsRepository);
+      const isInFocus = focusedIds.includes(goal.id);
+      const isVisible = isFocusedGoalsBlockVisible(f.context.menuOrder);
+
+      expect(isInFocus && isVisible).toBe(false);
+    },
+  };
+}
+
+async function addGoalToFocus(
+  goalName: string,
+  testGoals: Map<string, Goal>,
+  settingsRepository: SettingsRepository,
+): Promise<void> {
+  const goal = getGoalFromContext(testGoals, goalName);
+
+  const focused1 = await settingsRepository.getValue("focused_goal_1");
+
+  if (!focused1) {
+    await settingsRepository.set("focused_goal_1", goal.id);
+  } else {
+    await settingsRepository.set("focused_goal_2", goal.id);
+  }
+}
+
 describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
@@ -70,9 +230,13 @@ describeFeature(
       localStorage.removeItem(STORAGE_KEYS.MENU_ORDER);
       f.context.menuOrder = [];
       f.context.navigatedUrl = "";
+      f.context.currentGoalId = null;
+      f.context.rightPanelMode = null;
+      f.context.activeFocusedGoalId = undefined;
     });
 
     const backgroundSteps = createBackgroundSteps(f, goalRepository);
+    const navSteps = createNavigationSteps(f, settingsRepository);
 
     f.Background(({ Given }) => {
       backgroundSteps(Given);
@@ -105,16 +269,11 @@ describeFeature(
         When(
           "user adds goal {string} to focus",
           async (_ctx: TestContext, goalName: string) => {
-            const goal = getGoalFromContext(f.context.testGoals, goalName);
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-
-            if (!focused1) {
-              await settingsRepository.set("focused_goal_1", goal.id);
-            } else {
-              await settingsRepository.set("focused_goal_2", goal.id);
-            }
+            await addGoalToFocus(
+              goalName,
+              f.context.testGoals,
+              settingsRepository,
+            );
           },
         );
 
@@ -135,16 +294,11 @@ describeFeature(
         When(
           "user adds second goal {string} to focus",
           async (_ctx: TestContext, goalName: string) => {
-            const goal = getGoalFromContext(f.context.testGoals, goalName);
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-
-            if (!focused1) {
-              await settingsRepository.set("focused_goal_1", goal.id);
-            } else {
-              await settingsRepository.set("focused_goal_2", goal.id);
-            }
+            await addGoalToFocus(
+              goalName,
+              f.context.testGoals,
+              settingsRepository,
+            );
           },
         );
 
@@ -175,18 +329,7 @@ describeFeature(
     f.Scenario(
       "Click on goal in navigation leads to goal page",
       ({ Given, When, Then }) => {
-        Given(
-          "{int} goal in focus: {string}",
-          async (_ctx: TestContext, _count: number, goalName: string) => {
-            const goal = getGoalFromContext(f.context.testGoals, goalName);
-
-            await settingsRepository.set("focused_goal_1", goal.id);
-
-            const focused1 =
-              await settingsRepository.getValue("focused_goal_1");
-            expect(focused1).toBe(goal.id);
-          },
-        );
+        Given("{int} goal in focus: {string}", navSteps.setGoalInFocus);
 
         When(
           "user clicks {string} in navigation",
@@ -327,6 +470,214 @@ describeFeature(
           expect(focused1).toBe(goal1.id);
           expect(focused2).toBe(goal2.id);
         });
+      },
+    );
+
+    // @fix-focused-goal-highlight @FR1 @FR6
+    f.Scenario(
+      "Focused goal highlighted on its detail page",
+      ({ Given, When, Then, And }) => {
+        Given(
+          "{int} goals in focus: {string}, {string}",
+          async (
+            _ctx: TestContext,
+            _count: number,
+            goal1Name: string,
+            goal2Name: string,
+          ) => {
+            const goal1 = getGoalFromContext(f.context.testGoals, goal1Name);
+            const goal2 = getGoalFromContext(f.context.testGoals, goal2Name);
+
+            await settingsRepository.set("focused_goal_1", goal1.id);
+            await settingsRepository.set("focused_goal_2", goal2.id);
+          },
+        );
+
+        And(
+          "{string} block is visible in menu",
+          navSteps.setBlockVisibility("focused_goals", true),
+        );
+
+        When(
+          "user navigates to goal page {string}",
+          navSteps.navigateToGoalPage,
+        );
+
+        Then(
+          "focused goal {string} nav item is active",
+          navSteps.assertFocusedGoalNavItemActive,
+        );
+
+        And(
+          "{string} menu item is not active",
+          navSteps.assertMenuItemNotActive,
+        );
+
+        And(
+          "focused goal {string} nav item is not active",
+          navSteps.assertFocusedGoalNavItemNotActive,
+        );
+      },
+    );
+
+    // @fix-focused-goal-highlight @FR5
+    f.Scenario(
+      "Highlight updates reactively when focus is toggled off",
+      ({ Given, When, Then, And }) => {
+        Given(
+          "{int} goal in focus: {string}",
+          async (_ctx: TestContext, _count: number, goalName: string) => {
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
+            await settingsRepository.set("focused_goal_1", goal.id);
+          },
+        );
+
+        And(
+          "{string} block is visible in menu",
+          navSteps.setBlockVisibility("focused_goals", true),
+        );
+
+        And("user is on goal page {string}", navSteps.userIsOnGoalPage);
+
+        And(
+          "focused goal {string} nav item is active",
+          navSteps.assertFocusedGoalNavItemActive,
+        );
+
+        When(
+          "user removes goal {string} from focus",
+          async (_ctx: TestContext, goalName: string) => {
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
+            await removeGoalFromFocus(goal.id, settingsRepository);
+
+            if (f.context.currentGoalId) {
+              const focusedIds = await getFocusedGoalIds(settingsRepository);
+              const state = computeRightPanelState(
+                f.context.currentGoalId,
+                focusedIds,
+                f.context.menuOrder,
+              );
+              f.context.rightPanelMode = state.mode;
+              f.context.activeFocusedGoalId = state.activeFocusedGoalId;
+            }
+          },
+        );
+
+        Then(
+          "focused goal {string} nav item is not rendered",
+          navSteps.assertFocusedGoalNavItemNotRendered,
+        );
+
+        And("{string} menu item is active", navSteps.assertMenuItemActive);
+      },
+    );
+
+    // @fix-focused-goal-highlight @FR5
+    f.Scenario(
+      "Highlight updates reactively when focus is toggled on",
+      ({ Given, When, Then, And }) => {
+        Given(
+          "{int} goals in focus",
+          async (_ctx: TestContext, count: number) => {
+            const focusedIds = await getFocusedGoalIds(settingsRepository);
+            expect(focusedIds).toHaveLength(count);
+            // Initialize menuOrder for this scenario
+            f.context.menuOrder = loadMenuOrder();
+          },
+        );
+
+        And("user is on goal page {string}", navSteps.userIsOnGoalPage);
+
+        And("{string} menu item is active", navSteps.assertMenuItemActive);
+
+        When(
+          "user adds goal {string} to focus",
+          async (_ctx: TestContext, goalName: string) => {
+            await addGoalToFocus(
+              goalName,
+              f.context.testGoals,
+              settingsRepository,
+            );
+
+            if (f.context.currentGoalId) {
+              const focusedIds = await getFocusedGoalIds(settingsRepository);
+              const state = computeRightPanelState(
+                f.context.currentGoalId,
+                focusedIds,
+                f.context.menuOrder,
+              );
+              f.context.rightPanelMode = state.mode;
+              f.context.activeFocusedGoalId = state.activeFocusedGoalId;
+            }
+          },
+        );
+
+        Then(
+          "focused goal {string} nav item is active",
+          navSteps.assertFocusedGoalNavItemActive,
+        );
+
+        And(
+          "{string} menu item is not active",
+          navSteps.assertMenuItemNotActive,
+        );
+      },
+    );
+
+    // @fix-focused-goal-highlight @FR3
+    f.Scenario(
+      "Fallback to Goals highlight when focused_goals block is hidden",
+      ({ Given, When, Then, And }) => {
+        Given(
+          "{int} goal in focus: {string}",
+          async (_ctx: TestContext, _count: number, goalName: string) => {
+            const goal = getGoalFromContext(f.context.testGoals, goalName);
+            await settingsRepository.set("focused_goal_1", goal.id);
+          },
+        );
+
+        And(
+          "{string} block is hidden in menu",
+          navSteps.setBlockVisibility("focused_goals", false),
+        );
+
+        When(
+          "user navigates to goal page {string}",
+          navSteps.navigateToGoalPage,
+        );
+
+        Then("{string} menu item is active", navSteps.assertMenuItemActive);
+
+        And(
+          "focused goal {string} nav item is not rendered",
+          navSteps.assertFocusedGoalNavItemNotRendered,
+        );
+      },
+    );
+
+    // @fix-focused-goal-highlight @FR2
+    f.Scenario(
+      "Goals highlighted when goal is not in focus",
+      ({ Given, When, Then, And }) => {
+        Given(
+          "{int} goals in focus",
+          async (_ctx: TestContext, count: number) => {
+            const focusedIds = await getFocusedGoalIds(settingsRepository);
+            expect(focusedIds).toHaveLength(count);
+          },
+        );
+
+        When(
+          "user navigates to goal page {string}",
+          navSteps.navigateToGoalPage,
+        );
+
+        Then("{string} menu item is active", navSteps.assertMenuItemActive);
+
+        And(
+          "focused goal {string} nav item is not rendered",
+          navSteps.assertFocusedGoalNavItemNotRendered,
+        );
       },
     );
   },
