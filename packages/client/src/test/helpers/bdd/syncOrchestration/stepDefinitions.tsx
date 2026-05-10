@@ -121,7 +121,7 @@ function SyncStatusDisplay() {
 }
 
 function SyncMethodTrigger() {
-  const { pull, schedulePush } = useSync();
+  const { pull, schedulePush, triggerFullSync } = useSync();
   return (
     <>
       <button data-testid="pull-btn" onClick={() => void pull()}>
@@ -129,6 +129,12 @@ function SyncMethodTrigger() {
       </button>
       <button data-testid="schedule-btn" onClick={schedulePush}>
         schedule
+      </button>
+      <button
+        data-testid="full-sync-btn"
+        onClick={() => void triggerFullSync(() => {})}
+      >
+        full sync
       </button>
     </>
   );
@@ -141,6 +147,37 @@ function renderSyncProvider() {
       <SyncProvider>
         <SyncStatusDisplay />
         <SyncMethodTrigger />
+      </SyncProvider>
+    </AuthProvider>,
+  );
+}
+
+// Helper: render SyncProvider for full sync with progress tracking
+function renderSyncProviderForFullSync(
+  onProgress: (step: import("@/types/common").FullSyncStep) => void,
+) {
+  function FullSyncTrigger() {
+    const { triggerFullSync, pull } = useSync();
+    return (
+      <>
+        <button
+          data-testid="full-sync-btn"
+          onClick={() => void triggerFullSync(onProgress)}
+        >
+          full sync
+        </button>
+        <button data-testid="pull-btn" onClick={() => void pull()}>
+          pull
+        </button>
+      </>
+    );
+  }
+
+  return render(
+    <AuthProvider>
+      <SyncProvider>
+        <SyncStatusDisplay />
+        <FullSyncTrigger />
       </SyncProvider>
     </AuthProvider>,
   );
@@ -185,6 +222,9 @@ export function setupScenarioHooks(
     f.context.mockInit.mockReset();
     f.context.mockCoverSync.mockReset();
     f.context.mockInitializeLocalCovers.mockReset();
+    f.context.mockResetAndPull.mockReset();
+    f.context.mockReuploadLocalCovers.mockReset();
+    f.context.mockEnsureServerCoversAreCached.mockReset();
 
     f.context.mockPull.mockResolvedValue(undefined);
     f.context.mockPush.mockResolvedValue(undefined);
@@ -197,6 +237,12 @@ export function setupScenarioHooks(
     f.context.mockInit.mockResolvedValue(undefined);
     f.context.mockCoverSync.mockResolvedValue(undefined);
     f.context.mockInitializeLocalCovers.mockResolvedValue(undefined);
+    f.context.mockResetAndPull.mockResolvedValue(undefined);
+    f.context.mockReuploadLocalCovers.mockResolvedValue(undefined);
+    f.context.mockEnsureServerCoversAreCached.mockResolvedValue(undefined);
+
+    f.context.progressSteps = [];
+    f.context.initialSyncVersion = 0;
   });
 
   f.AfterEachScenario(() => {
@@ -217,6 +263,9 @@ export function createBackgroundSteps(
   f.context.mockInit = mockInit;
   f.context.mockCoverSync = mockCoverSync;
   f.context.mockInitializeLocalCovers = mockInitializeLocalCovers;
+  f.context.mockResetAndPull = mockResetAndPull;
+  f.context.mockReuploadLocalCovers = mockReuploadLocalCovers;
+  f.context.mockEnsureServerCoversAreCached = mockEnsureServerCoversAreCached;
   f.context.mockSignOut = mockSignOut;
   f.context.mockSilentRefresh = mockSilentRefresh;
 
@@ -567,6 +616,136 @@ export function createThenSteps(
         f.context.mockPing.mockClear();
         await vi.advanceTimersByTimeAsync(30000);
         expect(f.context.mockPing).toHaveBeenCalled();
+      });
+    },
+  };
+}
+
+// Full sync specific steps
+export function createFullSyncGivenSteps(
+  f: FeatureDescriibeCallbackParams<SyncTestContext>,
+) {
+  return {
+    givenSyncVersionIsN: (Given: StepTest["Given"]) => {
+      Given("syncVersion is N", () => {
+        f.context.initialSyncVersion = 0;
+      });
+    },
+    givenRegularSyncCycleIsInProgress: (Given: StepTest["Given"]) => {
+      Given("a regular sync cycle is in progress", async () => {
+        f.context.mockPush.mockImplementation(
+          () => new Promise((resolve) => setTimeout(resolve, 10000)),
+        );
+        const pullBtn = screen.getByTestId("pull-btn");
+        pullBtn.click();
+        await vi.advanceTimersByTimeAsync(0);
+      });
+    },
+  };
+}
+
+export function createFullSyncWhenSteps(
+  f: FeatureDescriibeCallbackParams<SyncTestContext>,
+) {
+  return {
+    whenUserTriggersFullSync: (When: StepTest["When"]) => {
+      When("user triggers full sync", async () => {
+        const fullSyncBtn = screen.getByTestId("full-sync-btn");
+        fullSyncBtn.click();
+        await flushSyncCycle();
+      });
+    },
+    whenUserTriggersFullSyncSuccessfully: (When: StepTest["When"]) => {
+      When("user triggers full sync successfully", async () => {
+        const fullSyncBtn = screen.getByTestId("full-sync-btn");
+        fullSyncBtn.click();
+        await flushSyncCycle();
+      });
+    },
+    whenResetAndPullFails: (And: StepTest["When"]) => {
+      And("resetAndPull fails", async () => {
+        f.context.mockResetAndPull.mockRejectedValueOnce(
+          new Error("Reset failed"),
+        );
+        const fullSyncBtn = screen.getByTestId("full-sync-btn");
+        fullSyncBtn.click();
+        await flushSyncCycle();
+      });
+    },
+  };
+}
+
+export function createFullSyncThenSteps(
+  f: FeatureDescriibeCallbackParams<SyncTestContext>,
+) {
+  const baseThenSteps = createThenSteps(f);
+  return {
+    ...baseThenSteps,
+    thenProgressReportsStepsInOrder: (Then: StepTest["Then"]) => {
+      Then("progress reports steps in order:", () => {
+        const expectedSteps: import("@/types/common").FullSyncStep[] = [
+          "reupload_covers",
+          "upload_covers",
+          "push",
+          "pull",
+          "download_covers",
+          "done",
+        ];
+        expect(f.context.progressSteps).toEqual(expectedSteps);
+      });
+    },
+    thenPushForceIsCalled: (Then: StepTest["Then"]) => {
+      Then("push(force=true) is called", () => {
+        expect(f.context.mockPush).toHaveBeenCalledWith(true);
+      });
+    },
+    thenResetAndPullIsCalled: (And: StepTest["Then"]) => {
+      And("resetAndPull() is called", () => {
+        expect(f.context.mockResetAndPull).toHaveBeenCalled();
+      });
+    },
+    thenSyncVersionBecomesNPlus1: (Then: StepTest["Then"]) => {
+      Then("syncVersion becomes N+1", () => {
+        expect(f.context.mockResetAndPull).toHaveBeenCalled();
+        expect(f.context.progressSteps).toContain("done");
+      });
+    },
+    thenProgressReportsError: (Then: StepTest["Then"]) => {
+      Then('progress reports "error"', () => {
+        expect(f.context.progressSteps).toContain("error");
+      });
+    },
+    thenFullSyncDoesNotStart: (Then: StepTest["Then"]) => {
+      Then("full sync does not start", () => {
+        expect(f.context.mockResetAndPull).not.toHaveBeenCalled();
+        expect(f.context.mockReuploadLocalCovers).not.toHaveBeenCalled();
+      });
+    },
+  };
+}
+
+export function createFullSyncBackgroundSteps(
+  f: FeatureDescriibeCallbackParams<SyncTestContext>,
+) {
+  const baseSteps = createBackgroundSteps(f);
+  return {
+    ...baseSteps,
+    givenSyncProviderMountedAndInitialSyncCompleted: (
+      And: StepTest["Given"],
+    ) => {
+      And("SyncProvider has mounted and initial sync completed", async () => {
+        vi.useFakeTimers();
+        const onProgress = (step: import("@/types/common").FullSyncStep) => {
+          f.context.progressSteps.push(step);
+        };
+        const { unmount } = renderSyncProviderForFullSync(onProgress);
+        f.context.syncProviderUnmount = unmount;
+        await flushSyncCycle();
+        f.context.mockPull.mockClear();
+        f.context.mockPush.mockClear();
+        f.context.mockPing.mockClear();
+        f.context.mockCoverSync.mockClear();
+        f.context.progressSteps = [];
       });
     },
   };
