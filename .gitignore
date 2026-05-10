@@ -44,3 +44,6 @@ npm-debug.log
 # Tools
 .playwright-mcp
 .scannerwork
+
+# Claude Code local settings
+.claude/settings.local.json
