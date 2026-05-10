@@ -1,13 +1,12 @@
 // implements sync-orchestration of sync-update
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
-import { vi } from "vitest";
 import {
-  cleanupRender,
   createBackgroundSteps,
   createGivenSteps,
   createThenSteps,
   createWhenSteps,
+  setupScenarioHooks,
 } from "@/test/helpers/bdd/syncOrchestration/stepDefinitions.tsx";
 import type { SyncTestContext } from "@/test/helpers/bdd/syncOrchestration/types";
 
@@ -16,38 +15,7 @@ const feature = await loadFeature("../sync_triggers.feature");
 describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<SyncTestContext>) => {
-    f.BeforeEachScenario(() => {
-      vi.clearAllMocks();
-      vi.useFakeTimers();
-
-      // Reset and configure mocks
-      f.context.mockPull.mockReset();
-      f.context.mockPush.mockReset();
-      f.context.mockPing.mockReset();
-      f.context.mockInit.mockReset();
-      f.context.mockCoverSync.mockReset();
-      f.context.mockInitializeLocalCovers.mockReset();
-
-      f.context.mockPull.mockResolvedValue(undefined);
-      f.context.mockPush.mockResolvedValue(undefined);
-      f.context.mockPing.mockResolvedValue({
-        ok: true,
-        app: "Clear Progress",
-        version: "1.0",
-        initialized: true,
-      });
-      f.context.mockInit.mockResolvedValue(undefined);
-      f.context.mockCoverSync.mockResolvedValue(undefined);
-      f.context.mockInitializeLocalCovers.mockResolvedValue(undefined);
-    });
-
-    f.AfterEachScenario(() => {
-      cleanupRender();
-      f.context.syncProviderUnmount = undefined;
-      vi.clearAllTimers();
-      vi.useRealTimers();
-      localStorage.clear();
-    });
+    setupScenarioHooks(f);
 
     const backgroundSteps = createBackgroundSteps(f);
     const givenSteps = createGivenSteps(f);

@@ -167,6 +167,43 @@ function expectNoSyncCycle(context: SyncTestContext) {
   expect(context.mockPull).not.toHaveBeenCalled();
 }
 
+export function setupScenarioHooks(
+  f: FeatureDescriibeCallbackParams<SyncTestContext>,
+) {
+  f.BeforeEachScenario(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+
+    // Reset and configure mocks
+    f.context.mockPull.mockReset();
+    f.context.mockPush.mockReset();
+    f.context.mockPing.mockReset();
+    f.context.mockInit.mockReset();
+    f.context.mockCoverSync.mockReset();
+    f.context.mockInitializeLocalCovers.mockReset();
+
+    f.context.mockPull.mockResolvedValue(undefined);
+    f.context.mockPush.mockResolvedValue(undefined);
+    f.context.mockPing.mockResolvedValue({
+      ok: true,
+      app: "Clear Progress",
+      version: "1.0",
+      initialized: true,
+    });
+    f.context.mockInit.mockResolvedValue(undefined);
+    f.context.mockCoverSync.mockResolvedValue(undefined);
+    f.context.mockInitializeLocalCovers.mockResolvedValue(undefined);
+  });
+
+  f.AfterEachScenario(() => {
+    cleanupRender();
+    f.context.syncProviderUnmount = undefined;
+    vi.clearAllTimers();
+    vi.useRealTimers();
+    localStorage.clear();
+  });
+}
+
 export function createBackgroundSteps(
   f: FeatureDescriibeCallbackParams<SyncTestContext>,
 ) {
@@ -222,6 +259,33 @@ export function createGivenSteps(
         f.context.mockPush.mockClear();
         f.context.mockPing.mockClear();
         f.context.mockCoverSync.mockClear();
+      });
+    },
+    givenNavigatorIsOffline: (Given: StepTest["Given"]) => {
+      Given("navigator is offline", () => {
+        Object.defineProperty(navigator, "onLine", {
+          writable: true,
+          configurable: true,
+          value: false,
+        });
+      });
+    },
+    givenPingIntervalIsActive: (Given: StepTest["Given"]) => {
+      Given("ping interval is active", async () => {
+        // Set navigator offline to trigger ping interval
+        Object.defineProperty(navigator, "onLine", {
+          writable: true,
+          configurable: true,
+          value: false,
+        });
+        const { unmount } = renderSyncProvider();
+        f.context.syncProviderUnmount = unmount;
+        await flushSyncCycle();
+        // Clear mocks after setup
+        f.context.mockPull.mockClear();
+        f.context.mockPush.mockClear();
+        f.context.mockPing.mockClear();
+        f.context.mockInit.mockClear();
       });
     },
   };
@@ -310,6 +374,57 @@ export function createWhenSteps(
         await vi.advanceTimersByTimeAsync(0);
       });
     },
+    whenSyncFailsWithNetworkError: (And: StepTest["When"]) => {
+      And("sync fails with a network error", async () => {
+        // Wait for initial sync to complete, then fail
+        await flushSyncCycle();
+        // Now configure next sync to fail
+        f.context.mockPush.mockRejectedValueOnce(new Error("Network error"));
+        // Trigger another sync by advancing periodic interval
+        await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+      });
+    },
+    whenPingSucceedsWithInitializedTrue: (When: StepTest["When"]) => {
+      When("ping succeeds with initialized=true", async () => {
+        f.context.mockPing.mockResolvedValueOnce({
+          ok: true,
+          app: "Clear Progress",
+          version: "1.0",
+          initialized: true,
+        });
+        // Reset push/pull for clean assertion
+        f.context.mockPush.mockResolvedValueOnce(undefined);
+        f.context.mockPull.mockResolvedValueOnce(undefined);
+        await vi.advanceTimersByTimeAsync(30000);
+        await flushSyncCycle();
+      });
+    },
+    whenPingSucceedsWithInitializedFalse: (When: StepTest["When"]) => {
+      When("ping succeeds with initialized=false", async () => {
+        f.context.mockPing.mockResolvedValueOnce({
+          ok: true,
+          app: "Clear Progress",
+          version: "1.0",
+          initialized: false,
+        });
+        await vi.advanceTimersByTimeAsync(30000);
+      });
+    },
+    whenPingFails: (When: StepTest["When"]) => {
+      When("ping fails", async () => {
+        f.context.mockPing.mockRejectedValueOnce(new Error("Ping failed"));
+        await vi.advanceTimersByTimeAsync(30000);
+      });
+    },
+    whenPingFailsMaxAttemptsTimes: (When: StepTest["When"]) => {
+      When("ping fails MAX_PING_ATTEMPTS times consecutively", async () => {
+        // MAX_PING_ATTEMPTS = 20
+        for (let i = 0; i < 20; i++) {
+          f.context.mockPing.mockRejectedValueOnce(new Error("Ping failed"));
+          await vi.advanceTimersByTimeAsync(30000);
+        }
+      });
+    },
   };
 }
 
@@ -380,6 +495,62 @@ export function createThenSteps(
     thenThisIsNotFullSync: (And: StepTest["Then"]) => {
       And("this is not a full sync (no force push, no revision reset)", () => {
         expect(f.context.mockPush).toHaveBeenCalledWith();
+      });
+    },
+    thenPingIntervalStarts: (And: StepTest["Then"]) => {
+      And("ping interval starts (every 30 seconds)", async () => {
+        // Wait for the effect that starts ping interval to run
+        await vi.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(0);
+        // Verify ping interval is active by checking if ping fires after 30s
+        f.context.mockPing.mockClear();
+        await vi.advanceTimersByTimeAsync(30000);
+        expect(f.context.mockPing).toHaveBeenCalled();
+      });
+    },
+    thenPingIntervalIsStopped: (And: StepTest["Then"]) => {
+      And("ping interval is stopped", async () => {
+        // Wait for performPing to complete and call stopPingInterval
+        await vi.runOnlyPendingTimersAsync();
+        // Clear ping mock and advance time to verify no more pings
+        f.context.mockPing.mockClear();
+        await vi.advanceTimersByTimeAsync(30000);
+        expect(f.context.mockPing).not.toHaveBeenCalled();
+      });
+    },
+    thenNoFurtherPingsFire: (And: StepTest["Then"]) => {
+      And("no further pings fire", async () => {
+        f.context.mockPing.mockClear();
+        await vi.advanceTimersByTimeAsync(60000);
+        expect(f.context.mockPing).not.toHaveBeenCalled();
+      });
+    },
+    thenInitIsCalled: (Then: StepTest["Then"]) => {
+      Then("init() is called", async () => {
+        await vi.runOnlyPendingTimersAsync();
+        expect(f.context.mockInit).toHaveBeenCalled();
+      });
+    },
+    thenSyncCycleFollows: (And: StepTest["Then"]) => {
+      And("a sync cycle follows", async () => {
+        await vi.runOnlyPendingTimersAsync();
+        expectSyncCycleExecuted(f.context);
+      });
+    },
+    thenPingIntervalContinues: (Then: StepTest["Then"]) => {
+      Then("ping interval continues", async () => {
+        // Verify another ping fires after 30s
+        f.context.mockPing.mockClear();
+        f.context.mockPing.mockRejectedValueOnce(new Error("Still failing"));
+        await vi.advanceTimersByTimeAsync(30000);
+        expect(f.context.mockPing).toHaveBeenCalled();
+      });
+    },
+    thenNextPingFiresAfter30Seconds: (And: StepTest["Then"]) => {
+      And("next ping fires after 30 seconds", async () => {
+        f.context.mockPing.mockClear();
+        await vi.advanceTimersByTimeAsync(30000);
+        expect(f.context.mockPing).toHaveBeenCalled();
       });
     },
   };
