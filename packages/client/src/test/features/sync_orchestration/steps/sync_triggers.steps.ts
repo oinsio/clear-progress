@@ -84,7 +84,7 @@ describeFeature(
       },
     );
 
-    // @sync-orchestration @T9
+    // @sync-orchestration @T6
     f.Scenario(
       "Sync runs when user clicks sync indicator",
       ({ Given, When, Then, And }) => {
@@ -94,32 +94,5 @@ describeFeature(
         thenSteps.thenThisIsNotFullSync(And);
       },
     );
-
-    // @sync-orchestration @T6
-    f.Scenario(
-      "Sync runs when tab becomes visible",
-      ({ Given, When, Then }) => {
-        givenSteps.givenSyncProviderMountedAndInitialSyncCompleted(Given);
-        whenSteps.whenTabBecomesVisible(When);
-        thenSteps.thenSyncCycleIsExecuted(Then);
-      },
-    );
-
-    // @sync-orchestration @T7
-    f.Scenario(
-      "Sync runs when window receives focus",
-      ({ Given, When, Then }) => {
-        givenSteps.givenSyncProviderMountedAndInitialSyncCompleted(Given);
-        whenSteps.whenWindowReceivesFocus(When);
-        thenSteps.thenSyncCycleIsExecuted(Then);
-      },
-    );
-
-    // @sync-orchestration @T8
-    f.Scenario("Sync runs on bfcache restore", ({ Given, When, Then }) => {
-      givenSteps.givenSyncProviderMountedAndInitialSyncCompleted(Given);
-      whenSteps.whenPageshowFiresWithPersistedTrue(When);
-      thenSteps.thenSyncCycleIsExecuted(Then);
-    });
   },
 );

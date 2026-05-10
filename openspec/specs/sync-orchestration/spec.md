@@ -33,21 +33,9 @@ When `window` fires the `online` event, a `performPing()` is executed immediatel
 
 When sync status becomes `offline` or `error`, a ping interval starts (`PING_INTERVAL_MS` = 30 seconds). Each tick calls `performPing()`. On success: sync cycle runs and interval stops. On failure: continues until `MAX_PING_ATTEMPTS`, then stops.
 
-### T6: Visibility change (tab becomes visible)
+### T6: Manual sync (spinner click)
 
-When `document.visibilityState` changes to `"visible"`, a sync cycle runs.
-
-### T7: Window focus
-
-When `window` fires the `focus` event, a sync cycle runs.
-
-### T8: Page show (bfcache restore)
-
-When `window` fires `pageshow` with `event.persisted === true`, a sync cycle runs.
-
-### T9: Manual sync (spinner click)
-
-User clicks the sync indicator in the UI. This calls `pull()` from SyncContext, which is mapped to `sync()` — a regular sync cycle (push + pull). Not the same as full sync (T10) — does not force-push or reset revision.
+User clicks the sync indicator in the UI. This calls `pull()` from SyncContext, which is mapped to `sync()` — a regular sync cycle (push + pull). Not the same as full sync (T7) — does not force-push or reset revision.
 
 ## Preconditions (gates)
 
@@ -78,7 +66,7 @@ A sync cycle is **skipped** when:
 
 Where N = `MAX_SILENT_REFRESH_ATTEMPTS`. Counter resets after any successful sync.
 
-## Full sync (T10, manual from settings)
+## Full sync (T7, manual from settings)
 
 Triggered explicitly by the user from settings. Differs from regular sync:
 1. Reupload local covers
