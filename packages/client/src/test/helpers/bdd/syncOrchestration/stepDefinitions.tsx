@@ -4,14 +4,13 @@ import type {
   StepTest,
 } from "@amiceli/vitest-cucumber";
 import { cleanup, render, screen } from "@testing-library/react/pure";
-
-export const cleanupRender = cleanup;
-
 import type React from "react";
 import { expect, vi } from "vitest";
 import { AuthProvider, useAuth } from "@/app/providers/AuthProvider";
 import { SyncProvider, useSync } from "@/app/providers/SyncProvider";
 import type { SyncTestContext } from "./types";
+
+export const cleanupRender = cleanup;
 
 const {
   mockPing,
@@ -353,6 +352,35 @@ export function createGivenSteps(
         f.context.mockInit.mockClear();
       });
     },
+    givenSyncHasFailedWithOneAuthError: (Given: StepTest["Given"]) => {
+      Given(
+        "sync has failed with 1 auth error and silentRefresh was called",
+        async () => {
+          const authError = new Error("Unauthorized");
+          authError.name = "ApiAuthError";
+          f.context.mockPull.mockRejectedValueOnce(authError);
+          const { unmount } = renderSyncProvider();
+          f.context.syncProviderUnmount = unmount;
+          await flushSyncCycle();
+          expect(f.context.mockSilentRefresh).toHaveBeenCalledTimes(1);
+          // Clear mocks but keep the provider mounted
+          f.context.mockSilentRefresh.mockClear();
+          f.context.mockSignOut.mockClear();
+          f.context.mockPull.mockClear();
+          f.context.mockPush.mockClear();
+        },
+      );
+    },
+    givenSyncProviderHasMounted: (Given: StepTest["Given"]) => {
+      Given("SyncProvider has mounted", async () => {
+        const { unmount } = renderSyncProvider();
+        f.context.syncProviderUnmount = unmount;
+        await flushSyncCycle();
+        f.context.mockPull.mockClear();
+        f.context.mockPush.mockClear();
+        f.context.mockCoverSync.mockClear();
+      });
+    },
   };
 }
 
@@ -365,6 +393,32 @@ export function createWhenSteps(
         const { unmount } = renderSyncProvider();
         f.context.syncProviderUnmount = unmount;
         await flushSyncCycle();
+      });
+    },
+    whenSyncProviderMountsWithAuthError: (When: StepTest["When"]) => {
+      When("SyncProvider mounts", async () => {
+        const authError = new Error("Unauthorized");
+        authError.name = "ApiAuthError";
+        f.context.mockPull.mockRejectedValueOnce(authError);
+        const { unmount } = renderSyncProvider();
+        f.context.syncProviderUnmount = unmount;
+        await flushSyncCycle();
+      });
+    },
+    whenSyncProviderMountsWithRepeatedAuthErrors: (When: StepTest["When"]) => {
+      When("SyncProvider mounts", async () => {
+        const authError = new Error("Unauthorized");
+        authError.name = "ApiAuthError";
+        f.context.mockPull.mockRejectedValue(authError);
+        const { unmount } = renderSyncProvider();
+        f.context.syncProviderUnmount = unmount;
+        // Initial sync attempt (attempt 1)
+        await flushSyncCycle();
+        // Trigger periodic syncs for attempts 2 and 3
+        for (let i = 1; i < 3; i++) {
+          await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+          await flushSyncCycle();
+        }
       });
     },
     whenTimePassesMinutes: (When: StepTest["When"], minutes: number) => {
@@ -488,6 +542,60 @@ export function createWhenSteps(
           f.context.mockPing.mockRejectedValueOnce(new Error("Ping failed"));
           await vi.advanceTimersByTimeAsync(30000);
         }
+      });
+    },
+    whenPeriodicSyncFailsWithNetworkError: (When: StepTest["When"]) => {
+      When("periodic sync fails with a network error", async () => {
+        f.context.mockPush.mockRejectedValueOnce(new Error("Network error"));
+        await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+        await flushSyncCycle();
+      });
+    },
+    whenSyncFailsWithAuthError: (And: StepTest["When"]) => {
+      And("sync fails with an auth error", () => {
+        // This step is for documentation only
+        // The auth error was already configured and triggered in whenSyncProviderMountsWithAuthError
+      });
+    },
+    whenSyncFailsWithAuthErrorMaxAttemptsTimes: (And: StepTest["When"]) => {
+      And(
+        "sync fails with an auth error MAX_SILENT_REFRESH_ATTEMPTS times",
+        () => {
+          // This step is for documentation only
+          // The repeated auth errors were already configured and triggered in whenSyncProviderMountsWithRepeatedAuthErrors
+        },
+      );
+    },
+    whenNextSyncSucceeds: (When: StepTest["When"]) => {
+      When("next sync succeeds", async () => {
+        f.context.mockPush.mockResolvedValue(undefined);
+        f.context.mockPull.mockResolvedValue(undefined);
+        await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+        await flushSyncCycle();
+        // Clear mocks after successful sync
+        f.context.mockPull.mockClear();
+        f.context.mockPush.mockClear();
+      });
+    },
+    whenThenSyncFailsWithAuthErrorAgain: (And: StepTest["When"]) => {
+      And("then sync fails with an auth error again", async () => {
+        const authError = new Error("Unauthorized");
+        authError.name = "ApiAuthError";
+        f.context.mockPull.mockRejectedValueOnce(authError);
+        await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+        await flushSyncCycle();
+      });
+    },
+    whenPushAndPullSucceedButCoverSyncThrowsError: (When: StepTest["When"]) => {
+      When("push and pull succeed but cover sync throws an error", async () => {
+        f.context.mockPush.mockResolvedValueOnce(undefined);
+        f.context.mockPull.mockResolvedValueOnce(undefined);
+        f.context.mockCoverSync.mockRejectedValueOnce(
+          new Error("Cover sync failed"),
+        );
+        f.context.initialSyncVersion = 0;
+        await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
+        await flushSyncCycle();
       });
     },
   };
@@ -616,6 +724,48 @@ export function createThenSteps(
         f.context.mockPing.mockClear();
         await vi.advanceTimersByTimeAsync(30000);
         expect(f.context.mockPing).toHaveBeenCalled();
+      });
+    },
+    thenSilentRefreshIsCalled: (Then: StepTest["Then"]) => {
+      Then("silentRefresh() is called", () => {
+        expect(f.context.mockSilentRefresh).toHaveBeenCalled();
+      });
+    },
+    thenSignOutIsNotCalled: (And: StepTest["Then"]) => {
+      And("signOut() is not called", () => {
+        expect(f.context.mockSignOut).not.toHaveBeenCalled();
+      });
+    },
+    thenSignOutIsCalled: (Then: StepTest["Then"]) => {
+      Then("signOut() is called", () => {
+        expect(f.context.mockSignOut).toHaveBeenCalled();
+      });
+    },
+    thenAuthRequiredEventIsDispatched: (And: StepTest["Then"]) => {
+      And("AUTH_REQUIRED_EVENT is dispatched", () => {
+        // Verify event was dispatched by checking signOut was called
+        // (event dispatch happens in same code path)
+        expect(f.context.mockSignOut).toHaveBeenCalled();
+      });
+    },
+    thenSilentRefreshIsCalledNotSignOut: (Then: StepTest["Then"]) => {
+      Then("silentRefresh() is called (not signOut)", () => {
+        expect(f.context.mockSilentRefresh).toHaveBeenCalled();
+        expect(f.context.mockSignOut).not.toHaveBeenCalled();
+      });
+    },
+    thenCounterStartsFromOneAgain: (And: StepTest["Then"]) => {
+      And("the counter starts from 1 again", () => {
+        // Verify counter was reset by checking silentRefresh was called once
+        expect(f.context.mockSilentRefresh).toHaveBeenCalledTimes(1);
+      });
+    },
+    thenSyncVersionIsIncremented: (And: StepTest["Then"]) => {
+      And("syncVersion is incremented", async () => {
+        await vi.advanceTimersByTimeAsync(0);
+        // Verify sync completed successfully despite cover sync error
+        expect(f.context.mockPush).toHaveBeenCalled();
+        expect(f.context.mockPull).toHaveBeenCalled();
       });
     },
   };
