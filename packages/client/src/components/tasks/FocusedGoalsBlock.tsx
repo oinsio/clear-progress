@@ -6,9 +6,13 @@ import { FocusedGoalNavItem } from "./FocusedGoalNavItem";
 
 interface FocusedGoalsBlockProps {
   isExpanded: boolean;
+  activeGoalId?: string;
 }
 
-export function FocusedGoalsBlock({ isExpanded }: FocusedGoalsBlockProps) {
+export function FocusedGoalsBlock({
+  isExpanded,
+  activeGoalId,
+}: FocusedGoalsBlockProps) {
   const { focusedGoalIds } = useFocusedGoals();
   const { goals } = useGoals();
   const navigate = useNavigate();
@@ -28,6 +32,7 @@ export function FocusedGoalsBlock({ isExpanded }: FocusedGoalsBlockProps) {
           key={goal.id}
           goal={goal}
           isExpanded={isExpanded}
+          isActive={activeGoalId === goal.id}
           onClick={(goalId) => navigate(`/goals/${goalId}`)}
         />
       ))}

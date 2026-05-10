@@ -41,3 +41,46 @@ Feature: Goal Focus — Navigation Display
     When user hides "focused_goals" block in menu settings
     Then both goals disappear from navigation
     And Settings data remains unchanged
+
+  @fix-focused-goal-highlight @FR1 @FR6
+  Scenario: Focused goal highlighted on its detail page
+    Given 2 goals in focus: "Write a book", "Learn Spanish"
+    And "focused_goals" block is visible in menu
+    When user navigates to goal page "Write a book"
+    Then focused goal "Write a book" nav item is active
+    And "Goals" menu item is not active
+    And focused goal "Learn Spanish" nav item is not active
+
+  @fix-focused-goal-highlight @FR5
+  Scenario: Highlight updates reactively when focus is toggled off
+    Given 1 goal in focus: "Write a book"
+    And "focused_goals" block is visible in menu
+    And user is on goal page "Write a book"
+    And focused goal "Write a book" nav item is active
+    When user removes goal "Write a book" from focus
+    Then focused goal "Write a book" nav item is not rendered
+    And "Goals" menu item is active
+
+  @fix-focused-goal-highlight @FR5
+  Scenario: Highlight updates reactively when focus is toggled on
+    Given 0 goals in focus
+    And user is on goal page "Write a book"
+    And "Goals" menu item is active
+    When user adds goal "Write a book" to focus
+    Then focused goal "Write a book" nav item is active
+    And "Goals" menu item is not active
+
+  @fix-focused-goal-highlight @FR3
+  Scenario: Fallback to Goals highlight when focused_goals block is hidden
+    Given 1 goal in focus: "Write a book"
+    And "focused_goals" block is hidden in menu
+    When user navigates to goal page "Write a book"
+    Then "Goals" menu item is active
+    And focused goal "Write a book" nav item is not rendered
+
+  @fix-focused-goal-highlight @FR2
+  Scenario: Goals highlighted when goal is not in focus
+    Given 0 goals in focus
+    When user navigates to goal page "Write a book"
+    Then "Goals" menu item is active
+    And focused goal "Write a book" nav item is not rendered
