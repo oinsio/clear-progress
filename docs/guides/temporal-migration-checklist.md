@@ -1,84 +1,84 @@
 # Temporal Migration Checklist
 
-Краткий чеклист для миграции кода с `Date` на Temporal API.
+Checklist for migrating code from `Date` to Temporal API.
 
-## Быстрая проверка: нужна ли миграция?
+## Quick Check: Is Migration Needed?
 
-### ✅ Мигрировать
+### Migrate
 
-- [ ] `new Date()` в production-коде (кроме исключений ниже)
-- [ ] `new Date(dateString)` для парсинга дат
-- [ ] `.getDate()`, `.getMonth()`, `.getFullYear()` для извлечения компонентов даты
-- [ ] `.setDate()`, `.setMonth()`, `.setFullYear()` для изменения дат
-- [ ] `.toISOString().split("T")[0]` для получения date-only строки
-- [ ] Арифметика через миллисекунды (`MS_PER_DAY`, `.getTime()`)
-- [ ] `Date.UTC()` для создания UTC-дат
-- [ ] `.getUTCDate()`, `.getUTCMonth()` и другие UTC-методы
+- [ ] `new Date()` in production code (except exceptions below)
+- [ ] `new Date(dateString)` for date parsing
+- [ ] `.getDate()`, `.getMonth()`, `.getFullYear()` for extracting date components
+- [ ] `.setDate()`, `.setMonth()`, `.setFullYear()` for modifying dates
+- [ ] `.toISOString().split("T")[0]` for getting date-only string
+- [ ] Millisecond arithmetic (`MS_PER_DAY`, `.getTime()`)
+- [ ] `Date.UTC()` for creating UTC dates
+- [ ] `.getUTCDate()`, `.getUTCMonth()` and other UTC methods
 
-### ❌ НЕ мигрировать
+### Do NOT Migrate
 
-- [ ] `Date.now()` в `ApiClient.ts` и `AuthProvider.tsx` (token expiry)
-- [ ] Весь backend (GAS) — не поддерживает Temporal
-- [ ] Тесты backend'а
+- [ ] `Date.now()` in `ApiClient.ts` and `AuthProvider.tsx` (token expiry)
+- [ ] Entire backend (GAS) — does not support Temporal
+- [ ] Backend tests
 
-## Паттерны миграции
+## Migration Patterns
 
-### 1. Текущий timestamp
+### 1. Current timestamp
 
 ```ts
-// Было
+// Before
 const timestamp = new Date().toISOString();
 
-// Стало
+// After
 import { Temporal } from "@/lib/temporal";
 const timestamp = Temporal.Now.instant().toString();
 ```
 
-### 2. Текущая дата (локальная)
+### 2. Current date (local)
 
 ```ts
-// Было
+// Before
 const today = new Date().toISOString().split("T")[0];
 
-// Стало
+// After
 import { Temporal } from "@/lib/temporal";
 const today = Temporal.Now.plainDateISO().toString();
 ```
 
-### 3. Парсинг date-only строки
+### 3. Parsing date-only string
 
 ```ts
-// Было
+// Before
 const date = new Date("2026-04-16");
-const day = date.getDate();        // может быть неправильно!
+const day = date.getDate();        // may be wrong!
 const month = date.getMonth() + 1;
 
-// Стало
+// After
 import { Temporal } from "@/lib/temporal";
 const date = Temporal.PlainDate.from("2026-04-16");
 const day = date.day;
 const month = date.month;
 ```
 
-### 4. Добавить/вычесть дни
+### 4. Add/subtract days
 
 ```ts
-// Было
+// Before
 const next = new Date(dateStr);
 next.setDate(next.getDate() + 7);
 const nextDate = next.toISOString().split("T")[0];
 
-// Стало
+// After
 import { Temporal } from "@/lib/temporal";
 const nextDate = Temporal.PlainDate.from(dateStr)
   .add({ days: 7 })
   .toString();
 ```
 
-### 5. Добавить месяцы
+### 5. Add months
 
 ```ts
-// Было
+// Before
 const date = new Date(dateStr);
 let year = date.getFullYear();
 let month = date.getMonth() + interval;
@@ -90,7 +90,7 @@ const daysInMonth = new Date(year, month + 1, 0).getDate();
 const day = Math.min(date.getDate(), daysInMonth);
 const result = new Date(Date.UTC(year, month, day)).toISOString().split("T")[0];
 
-// Стало
+// After
 import { Temporal } from "@/lib/temporal";
 const prev = Temporal.PlainDate.from(dateStr);
 const targetYearMonth = prev.toPlainYearMonth().add({ months: interval });
@@ -98,66 +98,66 @@ const actualDay = Math.min(prev.day, targetYearMonth.daysInMonth);
 const result = targetYearMonth.toPlainDate({ day: actualDay }).toString();
 ```
 
-### 6. Разница в днях
+### 6. Difference in days
 
 ```ts
-// Было
+// Before
 const daysDiff = Math.floor(
   (date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)
 );
 
-// Стало
+// After
 import { Temporal } from "@/lib/temporal";
 const start = Temporal.PlainDate.from(date1Str);
 const end = Temporal.PlainDate.from(date2Str);
 const daysDiff = start.until(end, { largestUnit: "days" }).days;
 ```
 
-### 7. День недели (ISO)
+### 7. Day of week (ISO)
 
 ```ts
-// Было
+// Before
 const utcDay = date.getUTCDay(); // 0=Sun, 6=Sat
-const isoDay = utcDay === 0 ? 7 : utcDay; // конвертация в ISO
+const isoDay = utcDay === 0 ? 7 : utcDay; // convert to ISO
 
-// Стало
+// After
 import { Temporal } from "@/lib/temporal";
 const date = Temporal.PlainDate.from(dateStr);
 const isoDay = date.dayOfWeek; // 1=Mon, 7=Sun
 ```
 
-### 8. Начало дня в локальном часовом поясе
+### 8. Start of day in local timezone
 
 ```ts
-// Было
+// Before
 const startOfToday = new Date();
 startOfToday.setHours(0, 0, 0, 0);
 
-// Стало
+// After
 import { Temporal } from "@/lib/temporal";
 const timeZone = Temporal.Now.timeZoneId();
 const today = Temporal.Now.plainDateISO();
 const startOfToday = today.toZonedDateTime(timeZone).toInstant();
 ```
 
-### 9. Сравнение дат
+### 9. Date comparison
 
 ```ts
-// Было
+// Before
 if (date1.getTime() < date2.getTime()) { ... }
 
-// Стало (для PlainDate)
+// After (for PlainDate)
 import { Temporal } from "@/lib/temporal";
 if (Temporal.PlainDate.compare(date1, date2) < 0) { ... }
 
-// Стало (для Instant)
+// After (for Instant)
 if (Temporal.Instant.compare(instant1, instant2) < 0) { ... }
 ```
 
-### 10. Функции с текущим временем (для тестируемости)
+### 10. Functions with current time (for testability)
 
 ```ts
-// Было
+// Before
 export function createTask(name: string): Task {
   return {
     id: crypto.randomUUID(),
@@ -167,7 +167,7 @@ export function createTask(name: string): Task {
   };
 }
 
-// Стало
+// After
 import { systemClock, type Clock } from "@/lib/temporal";
 
 export function createTask(
@@ -183,64 +183,64 @@ export function createTask(
 }
 ```
 
-## Тестирование после миграции
+## Testing After Migration
 
-### 1. Обновить тесты
+### 1. Update tests
 
 ```ts
-// Было
+// Before
 vi.setSystemTime(new Date("2026-04-16T10:00:00Z"));
 
-// Стало
+// After
 import { fakeClock } from "@/lib/temporal";
 const clock = fakeClock("2026-04-16T10:00:00Z");
 const result = functionUnderTest(clock);
 ```
 
-### 2. Проверить типы
+### 2. Verify types
 
-После миграции убедитесь, что используются branded types:
+After migration, ensure branded types are used:
 
 ```ts
 interface Task {
-  created_at: ISOTimestamp;  // ✅
-  next_date: ISODate | "";   // ✅
+  created_at: ISOTimestamp;
+  next_date: ISODate | "";
 }
 ```
 
-### 3. Запустить тесты
+### 3. Run tests
 
 ```bash
 pnpm run test
 ```
 
-## Файлы для миграции (из TEMPORAL_MIGRATION_AUDIT.md)
+## Files to Migrate (from TEMPORAL_MIGRATION_AUDIT.md)
 
-### Критические (с багами)
+### Critical (with bugs)
 
-- [ ] `src/utils/repeatRule.ts` — все функции `calculateNextDate*`, `calculateAppearDate`
-- [ ] `src/services/HiddenTaskService.ts` — определение «сегодня»
+- [ ] `src/utils/repeatRule.ts` — all `calculateNextDate*`, `calculateAppearDate`
+- [ ] `src/services/HiddenTaskService.ts` — determining "today"
 - [ ] `src/shared/lib/utils.ts` — `formatAppearDate`, `groupCompletedTasks`, `getDayBoundaries`
 
-### Timestamps (для единообразия)
+### Timestamps (for consistency)
 
-- [ ] `src/services/TaskService.ts` (5 мест)
-- [ ] `src/services/GoalService.ts` (3 места)
-- [ ] `src/services/ContextService.ts` (3 места)
-- [ ] `src/services/CategoryService.ts` (3 места)
-- [ ] `src/services/ChecklistService.ts` (3 места)
-- [ ] `src/services/IdeaService.ts` (3 места)
-- [ ] `src/services/CoverService.ts` (1 место)
-- [ ] `src/services/CoverSyncService.ts` (2 места)
-- [ ] `src/app/providers/SyncProvider.tsx` (2 места)
-- [ ] `src/db/repositories/SettingsRepository.ts` (1 место)
+- [ ] `src/services/TaskService.ts` (5 places)
+- [ ] `src/services/GoalService.ts` (3 places)
+- [ ] `src/services/ContextService.ts` (3 places)
+- [ ] `src/services/CategoryService.ts` (3 places)
+- [ ] `src/services/ChecklistService.ts` (3 places)
+- [ ] `src/services/IdeaService.ts` (3 places)
+- [ ] `src/services/CoverService.ts` (1 place)
+- [ ] `src/services/CoverSyncService.ts` (2 places)
+- [ ] `src/app/providers/SyncProvider.tsx` (2 places)
+- [ ] `src/db/repositories/SettingsRepository.ts` (1 place)
 
-### Утилиты
+### Utilities
 
 - [ ] `src/utils/dateHelpers.ts` — `getCurrentDateDefaults`
 - [ ] `src/shared/lib/utils.ts` — `formatCompletedAt`, `formatShortDateTime`
 
-### Тесты
+### Tests
 
 - [ ] `src/utils/repeatRule.test.ts`
 - [ ] `src/utils/dateHelpers.test.ts`
@@ -252,7 +252,7 @@ pnpm run test
 - [ ] `src/components/tasks/TaskItem.test.tsx`
 - [ ] `src/db/repositories/SettingsRepository.test.ts`
 
-### Фабрики
+### Factories
 
 - [ ] `src/test/factories/taskFactory.ts`
 - [ ] `src/test/factories/goalFactory.ts`
@@ -261,15 +261,15 @@ pnpm run test
 - [ ] `src/test/factories/categoryFactory.ts`
 - [ ] `src/test/factories/checklistItemFactory.ts`
 
-## После миграции
+## After Migration
 
-1. Запустить все тесты: `pnpm run test`
-2. Проверить типы: `pnpm run typecheck`
-3. Запустить линтер: `pnpm run lint`
-4. Проверить сборку: `pnpm run build`
-5. Запустить E2E тесты: `pnpm run test:e2e`
+1. Run all tests: `pnpm run test`
+2. Check types: `pnpm run typecheck`
+3. Run linter: `pnpm run lint`
+4. Verify build: `pnpm run build`
+5. Run E2E tests: `pnpm run test:e2e`
 
-## Дополнительные ресурсы
+## Additional Resources
 
-- [temporal-guide.md](./.claude/docs/temporal-guide.md) — полное руководство
-- [TEMPORAL_MIGRATION_AUDIT.md](../../TEMPORAL_MIGRATION_AUDIT.md) — детальный аудит
+- [temporal-guide.md](./temporal-guide.md) — full guide
+- [TEMPORAL_MIGRATION_AUDIT.md](../TEMPORAL_MIGRATION_AUDIT.md) — detailed audit

@@ -11,7 +11,7 @@
 ## Usage in components
 
 ```tsx
-// ✅ Always: use the t() function
+// Always: use the t() function
 import { useTranslation } from "react-i18next";
 
 function MyComponent() {
@@ -19,10 +19,10 @@ function MyComponent() {
   return <button>{t("goal.create")}</button>;
 }
 
-// ✅ With interpolation
+// With interpolation
 t("task.addPlaceholder", { box: t("box.today") })
 
-// ❌ Never: hardcoded strings in JSX or logic
+// Never: hardcoded strings in JSX or logic
 return <button>Create</button>;
 ```
 
@@ -136,8 +136,8 @@ t("repeat.dayOfMonthLabel", { count: 15, ordinal: true })
 
 **Where it's used:**
 - `RepeatRuleSelector.tsx` — monthly/yearly selector labels
-- `utils/repeatRule.ts` → `formatRepeatRuleLabel()` — yearly rule text description
-- `shared/lib/utils.ts` → `formatAppearDate()` — appear date formatting
+- `utils/repeatRule.ts` -> `formatRepeatRuleLabel()` — yearly rule text description
+- `shared/lib/utils.ts` -> `formatAppearDate()` — appear date formatting
 
 ## Testing with i18n
 

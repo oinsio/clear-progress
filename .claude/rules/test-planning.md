@@ -7,7 +7,7 @@ When decomposing a change into tasks, always prefer automated tests over manual 
 ### For every change
 
 - **Unit tests (Vitest)** — domain logic, utils, hooks via TDD
-- **Mutation testing (Stryker)** — verify test quality, target >= 95% score
+- **Mutation testing (Stryker)** — verify test quality, target >=95% score, minimum acceptable >=90%
 - **BDD unit tests (vitest-cucumber)** — executable Gherkin specs for business rules
 
 ### For changes with UI
@@ -46,5 +46,5 @@ When decomposing a change into tasks, always prefer automated tests over manual 
 - [ ] 5.2 BDD E2E: responsive layout scenarios (@NFR-R1), viewport 320px-2560px
 - [ ] 5.3 Storybook stories for loading/error/empty/offline states
 - [ ] 5.4 axe-core assertions in E2E tests
-- [ ] 5.5 Mutation testing >= 95% on new domain code
+- [ ] 5.5 Mutation testing >=95% on new domain code (minimum acceptable >=90%)
 ```

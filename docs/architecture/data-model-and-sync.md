@@ -32,10 +32,10 @@ Keys: `next_revision` (starts at 1, incremented after each successful push), `pu
 
 ## Relationships
 
-- `Tasks.goal_id` → `Goals.id` (0..1 : N)
-- `Tasks.context_id` → `Contexts.id` (0..1 : N)
-- `Tasks.category_id` → `Categories.id` (0..1 : N)
-- `Checklist_Items.task_id` → `Tasks.id` (1 : N)
+- `Tasks.goal_id` -> `Goals.id` (0..1 : N)
+- `Tasks.context_id` -> `Contexts.id` (0..1 : N)
+- `Tasks.category_id` -> `Categories.id` (0..1 : N)
+- `Checklist_Items.task_id` -> `Tasks.id` (1 : N)
 
 ## Backend API
 
@@ -50,7 +50,7 @@ Routing via `action` field in request body. Format: JSON.
 | `init`          | POST   | Create Drive folder + Sheets + sheet structure (idempotent) |
 | `pull`          | POST   | Get changes since client's known revision                   |
 | `push`          | POST   | Send local changes to server                                |
-| `upload_cover`  | POST   | Upload goal cover image (base64, ≤2MB, SHA-256 dedup)       |
+| `upload_cover`  | POST   | Upload goal cover image (base64, <=2MB, SHA-256 dedup)      |
 | `upload_covers` | POST   | Batch upload covers (up to 10)                              |
 | `get_cover`     | POST   | Download cover images by file_id                            |
 | `delete_cover`  | POST   | Delete cover (checks ref_count before actual delete)        |
@@ -66,11 +66,11 @@ Routing via `action` field in request body. Format: JSON.
 
 ### Flow
 
-1. **App open**: `push` queued changes → `pull` → cover sync
+1. **App open**: `push` queued changes -> `pull` -> cover sync
 2. **User makes changes**: write to IndexedDB immediately (optimistic UI)
 3. **After changes settle**: `push` with debounce (15 seconds)
 4. **Periodic**: `pull` every 5 minutes while app is active
-5. **Reconnect after offline**: `push` queued changes → `pull` to catch up
+5. **Reconnect after offline**: `push` queued changes -> `pull` to catch up
 
 ### Dirty Flag (`needsSync`)
 

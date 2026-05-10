@@ -1,16 +1,15 @@
-# ADR: Unit BDD Tests via vitest-cucumber
-
-**Status:** Accepted (implemented)
-**Date:** 2026-05-05
-**Context:** Verifying business logic (domain, application layer) through executable Gherkin specifications without a real browser
-
+---
+paths:
+  - "**/*_unit.feature"
+  - "**/*.feature"
+  - "**/steps/*.steps.ts"
+  - "**/test/features/**"
+  - "vitest.config.ts"
 ---
 
-## Decision
+# Rule: Unit BDD conventions (vitest-cucumber)
 
-Use **@amiceli/vitest-cucumber** — a Gherkin integration with Vitest. Feature files describe behavior, step definitions implement checks at the repository and service level (IndexedDB via fake-indexeddb).
-
----
+Use **@amiceli/vitest-cucumber** for verifying business logic (domain, application layer) through executable Gherkin specifications without a real browser.
 
 ## File Structure
 
@@ -42,17 +41,13 @@ goal_focus/
     └── goal_focus_nfr_unit.steps.ts
 ```
 
----
-
-## Conventions
-
-### File Naming
+## File Naming
 
 - Feature: `<feature>_<aspect>.feature` — snake_case, describes a behavior aspect
 - Steps: `<feature>_<aspect>.steps.ts` — one steps file per feature file
 - The `_unit` suffix is added only when a paired `_e2e` file exists for the same aspect
 
-### Step Definition Pattern
+## Step Definition Pattern
 
 ```typescript
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
@@ -89,7 +84,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<FeatureContext>) => 
 });
 ```
 
-### Key Rules
+## Key Rules
 
 1. **Real repositories** — use actual GoalRepository, SettingsRepository with fake-indexeddb, not mocks
 2. **Cleanup before each scenario** — `BeforeEachScenario` clears tables via `db.<table>.clear()`
@@ -98,13 +93,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<FeatureContext>) => 
 5. **Tag comment** — before `f.Scenario` add comment `// @<change-name> @FR-X`
 6. **loadFeature with relative path** — `await loadFeature("../<feature>.feature")`
 
-### Traceability
+## Traceability
 
 - Tags in Gherkin: `@<change-name> @FR-X` above each Scenario
 - Comment in steps: `// @<change-name> @FR-X` before `f.Scenario`
 - Scenario name in steps **must exactly match** the feature file
-
----
 
 ## Running
 
@@ -114,8 +107,6 @@ pnpm test:watch        # Watch mode
 ```
 
 Vitest picks up steps files via the pattern `src/**/*.steps.{ts,tsx}` in `vitest.config.ts`.
-
----
 
 ## When to Use Unit BDD vs E2E BDD
 
@@ -129,8 +120,6 @@ Vitest picks up steps files via the pattern `src/**/*.steps.{ts,tsx}` in `vitest
 | Responsive layout             | no                         | yes                      |
 | CSS animations, transitions   | no                         | yes                      |
 | Navigation (URL, routing)     | partially (mock)           | yes                      |
-
----
 
 ## Dependencies
 
