@@ -6,8 +6,8 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 ## Code Style
 
-- No hardcoded values — @.claude/rules/code-style.md
-- Descriptive naming — @.claude/rules/naming.md
+- No hardcoded values — .claude/rules/code-style.md
+- Descriptive naming — .claude/rules/naming.md
 
 ## Data Rules
 
@@ -21,15 +21,15 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 ## Testing
 
-- **TDD**: Red-Green-Refactor cycle — @.claude/docs/tdd-workflow.md
-- **Mutation testing**: `npm run test:mutation` — target ≥95% score
-- **BDD Unit** (vitest-cucumber): @.claude/docs/architecture/bdd-unit-vitest-cucumber.md
-- **BDD E2E** (playwright-bdd): @.claude/docs/architecture/bdd-e2e-playwright-bdd.md
+- **TDD**: Red-Green-Refactor cycle — .claude/rules/tdd-workflow.md
+- **Mutation testing**: `npm run test:mutation` — target >=95%, minimum acceptable >=90%
+- **BDD Unit** (vitest-cucumber): .claude/rules/bdd-unit.md (scoped)
+- **BDD E2E** (playwright-bdd): .claude/rules/bdd-e2e.md (scoped), ADR: docs/adr/0003-bdd-e2e-via-playwright-bdd.md
 
 ## Architecture
 
-- Data model & sync: @.claude/docs/data-model-and-sync.md
-- Recurring tasks: @.claude/docs/architecture/recurring-tasks-skip-logic.md, @.claude/docs/architecture/recurring-tasks-timezone-policy.md
+- Data model & sync: docs/architecture/data-model-and-sync.md
+- Recurring tasks: .claude/rules/skip-logic.md, .claude/rules/timezone-policy.md
 
 ## Post-Edit Workflow
 
@@ -65,10 +65,13 @@ Active changes: `openspec/changes/`. Archived: `openspec/changes/archive/`. Stab
 | `process-invariants.md` | global                            | Immutability, file size, module boundaries, change naming |
 | `antipatterns.md`       | global                            | Common mistakes to avoid (process, code, UI)              |
 | `test-planning.md`      | global                            | Maximize automated tests in task decomposition            |
+| `tdd-workflow.md`       | global                            | Red-Green-Refactor cycle, mutation testing thresholds     |
 | `proposal-format.md`    | `openspec/**/proposal.md`         | Required sections and format for PRD                      |
 | `delta-specs.md`        | `openspec/**/specs/**`            | Delta spec format with ADDED/MODIFIED/REMOVED             |
 | `design-decisions.md`   | `openspec/**/design.md`           | When and how to write local ADR                           |
 | `gherkin.md`            | `**/features/**/*.feature`        | Intentions not clicks, tagging conventions                |
+| `bdd-unit.md`           | `**/*.feature`, `**/*.steps.ts`   | vitest-cucumber conventions, step definition pattern      |
+| `bdd-e2e.md`            | `**/*_e2e.feature`, `**/*_e2e.steps.ts` | playwright-bdd conventions, config, scripts         |
 | `contracts.md`          | `**/application/**`, `**/ports*`  | Port interfaces and contract test patterns                |
 | `ui-states.md`          | `**/components/**`, `**/pages/**` | UI states, a11y, design system, optimistic updates        |
 | `adr.md`                | `docs/adr/**`                     | Global ADR format and lifecycle                           |

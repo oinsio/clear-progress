@@ -33,7 +33,6 @@ Renders plain text with clickable links.
 **Styling:**
 - Link background: `bg-blue-600/5 hover:bg-blue-600/10`
 - Link text: `text-blue-600`
-- Icon: 🔗 emoji
 - Max width: `max-w-[260px]` with `truncate`
 
 ## EditableDescription
@@ -63,8 +62,8 @@ View/edit hybrid for description fields.
 - **View mode** (default):
   - Displays `LinkedText` with clickable URLs if value is not empty
   - Shows placeholder in gray if value is empty
-  - Click on text → switches to edit mode
-  - Click on link → opens URL (doesn't switch mode, uses `stopPropagation`)
+  - Click on text -> switches to edit mode
+  - Click on link -> opens URL (doesn't switch mode, uses `stopPropagation`)
   - Visual: transparent border, gray border + light background on hover
   - Cursor: `cursor-text`
 
@@ -72,7 +71,7 @@ View/edit hybrid for description fields.
   - Full `textarea` with complete URLs (not shortened)
   - Auto-focus on switch
   - Auto-resize via `useAutoResizeTextarea` hook
-  - Blur → saves (`onChange` + `onBlur`), returns to view mode
+  - Blur -> saves (`onChange` + `onBlur`), returns to view mode
 
 **Integration points:**
 - `TaskDetailPanel.tsx:522` — task description
@@ -92,8 +91,6 @@ For read-only contexts (e.g., goal list), use `LinkedText` directly:
   />
 )}
 ```
-
-Example: `GoalDetailPage.tsx:534` — goal list view
 
 ## Testing
 
@@ -137,8 +134,8 @@ interface LinkSegment {
 Algorithm:
 1. Apply regex `/(https?:\/\/[^\s<>"'\]]+)/g` to raw text
 2. For each URL: strip trailing punctuation `/[),;.:!?]+$/`
-3. Text between URLs → segments with `type: 'text'`
-4. Empty string → empty array
+3. Text between URLs -> segments with `type: 'text'`
+4. Empty string -> empty array
 
 **shortenUrl(url: string): string**
 
@@ -146,22 +143,22 @@ Returns shortened URL for display:
 
 ```ts
 shortenUrl('https://www.example.com/path/to/resource?query=1')
-// → 'example.com/path/…/resource'
+// -> 'example.com/path/…/resource'
 
 shortenUrl('https://example.com')
-// → 'example.com'
+// -> 'example.com'
 
 shortenUrl('https://example.com/single')
-// → 'example.com/single'
+// -> 'example.com/single'
 ```
 
 ## Edge Cases
 
-- Text without URLs → `LinkedText` renders as plain `<span>`
-- Empty text → `EditableDescription` shows placeholder
-- URL with `&`, `;`, `,` inside query/path → correctly captured (regex doesn't trim)
-- Trailing `.`, `,`, `)` after URL in sentence → stripped, not part of link
-- Very long URL → `truncate` + `max-w-[260px]` + tooltip with full text
+- Text without URLs -> `LinkedText` renders as plain `<span>`
+- Empty text -> `EditableDescription` shows placeholder
+- URL with `&`, `;`, `,` inside query/path -> correctly captured (regex doesn't trim)
+- Trailing `.`, `,`, `)` after URL in sentence -> stripped, not part of link
+- Very long URL -> `truncate` + `max-w-[260px]` + tooltip with full text
 - XSS: React automatically escapes text, `dangerouslySetInnerHTML` is NOT used
 
 ## Migration from textarea
@@ -198,7 +195,3 @@ const textareaRef = useAutoResizeTextarea(description);
   data-test-id="task-detail-description"
 />
 ```
-
----
-
-*Последнее обновление: 17 апреля 2026*

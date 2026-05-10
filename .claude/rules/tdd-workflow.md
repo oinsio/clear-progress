@@ -26,7 +26,7 @@ When asked to set up or install something — just do it directly.
 
 - Write failing tests in Vitest for each listed behavior
 - Names describe behavior: `it('should return empty array when inbox has no items')`
-- Pattern: Arrange → Act → Assert
+- Pattern: Arrange -> Act -> Assert
 - Run `npx vitest run` — confirm all new tests FAIL
 - Show test output. Do NOT proceed until red.
 
@@ -47,13 +47,13 @@ When asked to set up or install something — just do it directly.
 - Analyze survived mutants — each survivor indicates a missed scenario or a weak assertion
 - Write additional tests to kill survived mutants
 - Re-run mutations after adding tests
-- Repeat until mutation score reaches ≥90%
+- Target mutation score: >=95%. Minimum acceptable: >=90%.
 
 ## Rules
 
 - Never write implementation before its test exists
 - Never skip the failing-test confirmation step
-- Always show test run output at each phase transition (red → green)
+- Always show test run output at each phase transition (red -> green)
 - One assertion per test when possible
 - Mock external dependencies (Google API, IndexedDB/Dexie) with `vi.fn()`, `vi.spyOn()`, `vi.mock()`
 - Mock current time with `fakeClock` from `@/lib/temporal`, never use `vi.setSystemTime()` or `vi.useFakeTimers()`

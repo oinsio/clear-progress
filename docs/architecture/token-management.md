@@ -41,8 +41,8 @@ Token created         Buffer zone starts          Token expires
      |--------------------------|------------------------|
      0                       3540 sec                 3600 sec
 
-     ← getAccessToken() = token →|← getAccessToken() = token →|← getAccessToken() = null
-     ← shouldRefreshToken() = false →|← shouldRefreshToken() = true →
+     <- getAccessToken() = token ->|<- getAccessToken() = token ->|<- getAccessToken() = null
+     <- shouldRefreshToken() = false ->|<- shouldRefreshToken() = true ->
 ```
 
 **Important:** Token **remains valid** in the buffer zone. `getAccessToken()` returns the token even if `shouldRefreshToken()` returned `true`.
@@ -82,8 +82,8 @@ if (!token) {
 ```
 
 `getAccessToken()` checks `sharedTokenExpiresAt`:
-- If `now < sharedTokenExpiresAt` → returns token
-- If `now > sharedTokenExpiresAt` → returns `null`
+- If `now < sharedTokenExpiresAt` -> returns token
+- If `now > sharedTokenExpiresAt` -> returns `null`
 
 ### 3. Proactive Refresh
 
@@ -102,8 +102,8 @@ useEffect(() => {
 ```
 
 `shouldRefreshToken()` checks `sharedTokenRefreshAt`:
-- If `now < sharedTokenRefreshAt` → `false` (token is fresh)
-- If `now > sharedTokenRefreshAt` → `true` (time to refresh)
+- If `now < sharedTokenRefreshAt` -> `false` (token is fresh)
+- If `now > sharedTokenRefreshAt` -> `true` (time to refresh)
 
 When `true`, `doSilentRefresh()` is called:
 - Requests new token via `googleLogin({ prompt: "none" })`
@@ -149,7 +149,7 @@ If token is valid — it's restored in memory. If expired — removed from `loca
 Before the fix (commit `7d28701`), only one time was used:
 
 ```typescript
-// ❌ Old implementation
+// Old implementation
 sharedTokenExpiresAt = now + (expiresIn - TOKEN_EXPIRY_BUFFER_S) * 1000;
 
 export function getAccessToken() {
@@ -202,43 +202,21 @@ const TOKEN_REFRESH_CHECK_INTERVAL_MS = 30000; // 30 seconds
 
 ### 1. Token Expires Between Check and Use
 
-**Scenario:**
-1. `getAccessToken()` checks token — valid (1 second remaining)
-2. Client sends request to GAS
-3. Token expires during transmission
-4. GAS receives invalid token → `UNAUTHORIZED` error
+**Scenario:** `getAccessToken()` checks token — valid (1 second remaining) -> client sends request -> token expires during transmission -> GAS receives invalid token -> `UNAUTHORIZED` error
 
-**Handling:**
-- Rare edge-case (probability ~1/3600)
-- User will see authorization error
-- Next request will succeed (token refreshes automatically)
+**Handling:** Rare edge-case (probability ~1/3600). User will see authorization error. Next request will succeed (token refreshes automatically).
 
 ### 2. Proactive Refresh Fails
 
-**Scenario:**
-1. `shouldRefreshToken()` returns `true`
-2. Client tries to refresh token via `googleLogin({ prompt: "none" })`
-3. Refresh fails (network error, user revoked access)
-4. Token expires in 60 seconds
+**Scenario:** `shouldRefreshToken()` returns `true` -> refresh via `googleLogin({ prompt: "none" })` fails -> token expires in 60 seconds
 
-**Handling:**
-- `getAccessToken()` will return `null` after expiration
-- User will see authorization error
-- Need to re-authenticate (explicit login)
+**Handling:** `getAccessToken()` will return `null` after expiration. User will see authorization error. Need to re-authenticate.
 
 ### 3. User Offline in Buffer Zone
 
-**Scenario:**
-1. Token enters buffer zone (59 seconds remaining)
-2. User loses internet
-3. Proactive refresh fails (no network)
-4. Token expires in 59 seconds
+**Scenario:** Token enters buffer zone -> user loses internet -> proactive refresh fails -> token expires
 
-**Handling:**
-- Token used until expiration (59 seconds of offline work)
-- After expiration `getAccessToken()` returns `null`
-- When internet returns, user will see authorization error
-- Need to re-authenticate
+**Handling:** Token used until expiration (59 seconds of offline work). After expiration, `getAccessToken()` returns `null`. When internet returns, user re-authenticates.
 
 ## Testing
 
@@ -247,15 +225,6 @@ Tests in `tokenManager.test.ts` cover:
 - Token return in buffer zone
 - Return `null` after actual expiration
 - Correct `shouldRefreshToken()` behavior
-
-For quick testing, you can change `TOKEN_EXPIRY_BUFFER_S`:
-
-```typescript
-// constants/index.ts
-export const TOKEN_EXPIRY_BUFFER_S = 10; // 10 seconds for testing
-```
-
-Then buffer zone will start at 3590 seconds (59 minutes 50 seconds) instead of 3540 seconds.
 
 ## Related Files
 
