@@ -401,6 +401,57 @@ describe("SyncService", () => {
         "2026-04-17T00:00:00.000Z",
       );
     });
+
+    // implements FR5 of spec-sync-protocol
+    it("should purge local deleted records when server purge_revision increased", async () => {
+      const deletedTaskId = crypto.randomUUID();
+      await db.tasks.put({
+        id: deletedTaskId,
+        name: "Deleted Task",
+        description: "",
+        box: "inbox",
+        goal_id: "",
+        context_id: "",
+        category_id: "",
+        is_completed: false,
+        completed_at: "",
+        repeat_rule: "",
+        is_hidden: false,
+        next_date: "",
+        appear_date: "",
+        original_task_id: "",
+        sort_order: 0,
+        is_deleted: true,
+        created_at: toISOTimestamp(),
+        updated_at: toISOTimestamp(),
+        version: 1,
+        revision: 1,
+        needsSync: false,
+      });
+
+      (syncMetaRepository.getValue as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce(5) // last_known_revision
+        .mockResolvedValueOnce(2); // last_known_purge_revision
+
+      mockSyncAdapter = createMockSyncAdapter({
+        pull: vi
+          .fn()
+          .mockResolvedValue(
+            makePullResponse({ purge_revision: 3, current_revision: 10 }),
+          ),
+      });
+      const service = createService();
+
+      await service.pull();
+
+      expect(syncMetaRepository.setValue).toHaveBeenCalledWith(
+        SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+        3,
+      );
+
+      const deletedTask = await db.tasks.get(deletedTaskId);
+      expect(deletedTask).toBeUndefined();
+    });
   });
 
   describe("push", () => {
@@ -422,6 +473,89 @@ describe("SyncService", () => {
       expect(categoryRepository.getNeedingSync).toHaveBeenCalledOnce();
       expect(checklistRepository.getNeedingSync).toHaveBeenCalledOnce();
       expect(settingsRepository.getNeedingSync).toHaveBeenCalledOnce();
+    });
+
+    // implements FR1 of spec-sync-protocol
+    it("should collect all records when force = true", async () => {
+      const allTasks = [
+        makeTask({ id: "t1", needsSync: true }),
+        makeTask({ id: "t2", needsSync: false }),
+      ];
+      const allGoals = [
+        makeGoal({ id: "g1", needsSync: true }),
+        makeGoal({ id: "g2", needsSync: false }),
+      ];
+
+      taskRepository = {
+        ...taskRepository,
+        getAll: vi.fn().mockResolvedValue(allTasks),
+        getById: vi
+          .fn()
+          .mockImplementation((id: string) =>
+            Promise.resolve(allTasks.find((t) => t.id === id)),
+          ),
+      } as unknown as TaskRepository;
+
+      goalRepository = {
+        ...goalRepository,
+        getAll: vi.fn().mockResolvedValue(allGoals),
+        getById: vi
+          .fn()
+          .mockImplementation((id: string) =>
+            Promise.resolve(allGoals.find((g) => g.id === id)),
+          ),
+      } as unknown as GoalRepository;
+
+      contextRepository = {
+        ...contextRepository,
+        getAll: vi.fn().mockResolvedValue([]),
+      } as unknown as ContextRepository;
+
+      categoryRepository = {
+        ...categoryRepository,
+        getAll: vi.fn().mockResolvedValue([]),
+      } as unknown as CategoryRepository;
+
+      checklistRepository = {
+        ...checklistRepository,
+        getAll: vi.fn().mockResolvedValue([]),
+      } as unknown as ChecklistRepository;
+
+      ideaRepository = {
+        ...ideaRepository,
+        getAll: vi.fn().mockResolvedValue([]),
+      } as unknown as IdeaRepository;
+
+      settingsRepository = {
+        ...settingsRepository,
+        getAll: vi.fn().mockResolvedValue([]),
+      } as unknown as SettingsRepository;
+
+      const service = createService();
+
+      await service.push(true);
+
+      expect(taskRepository.getAll).toHaveBeenCalled();
+      expect(taskRepository.getNeedingSync).not.toHaveBeenCalled();
+      expect(goalRepository.getAll).toHaveBeenCalled();
+      expect(goalRepository.getNeedingSync).not.toHaveBeenCalled();
+
+      const pushCall = (mockSyncAdapter.push as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
+      expect(pushCall.tasks).toHaveLength(2);
+      expect(pushCall.tasks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "t1" }),
+          expect.objectContaining({ id: "t2" }),
+        ]),
+      );
+      expect(pushCall.goals).toHaveLength(2);
+      expect(pushCall.goals).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "g1" }),
+          expect.objectContaining({ id: "g2" }),
+        ]),
+      );
     });
 
     it("should not call apiClient.push when no needsSync records exist", async () => {
@@ -467,6 +601,32 @@ describe("SyncService", () => {
       const pushCall = (mockSyncAdapter.push as ReturnType<typeof vi.fn>).mock
         .calls[0][0];
       expect(pushCall.goals[0].cover_file_id).toBe(expected);
+    });
+
+    // implements FR6 of spec-sync-protocol
+    it("should include soft-deleted records in push", async () => {
+      const deletedTask = makeTask({
+        id: "t1",
+        is_deleted: true,
+        needsSync: true,
+      });
+      (
+        taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([deletedTask]);
+      (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue(
+        deletedTask,
+      );
+      const service = createService();
+
+      await service.push();
+
+      expect(mockSyncAdapter.push).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tasks: expect.arrayContaining([
+            expect.objectContaining({ id: "t1", is_deleted: true }),
+          ]),
+        }),
+      );
     });
 
     it("should send push when only contexts are needsSync", async () => {

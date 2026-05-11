@@ -14,9 +14,36 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ## 3. Audit existing unit tests (SyncService)
 
-- [ ] 3.1 Check unit test coverage for `SyncService.ts` — map to push/pull/dirty flag scenarios (FR1, FR4, FR5, FR6, FR13, FR14)
-- [ ] 3.2 Check unit test coverage for `CoverSyncService.ts` — map to cover lifecycle scenarios (FR8-FR11)
-- [ ] 3.3 Compile gap analysis: which scenarios are not covered by unit tests
+- [x] 3.1 Check unit test coverage for `SyncService.ts` — map to push/pull/dirty flag scenarios (FR1, FR4, FR5, FR6, FR13, FR14)
+- [x] 3.2 Check unit test coverage for `CoverSyncService.ts` — map to cover lifecycle scenarios (FR8-FR11)
+- [x] 3.3 Compile gap analysis: which scenarios are not covered by unit tests
+
+## 3.5. Add missing unit tests (gap analysis from 3.3)
+
+### SyncService.ts gaps
+
+- [x] 3.5.1 SyncService: FR1 — test `push(force = true)` collects all records regardless of needsSync
+  - Should call `getAll()` instead of `getNeedingSync()`
+  - Should include both dirty and clean records in push payload
+- [x] 3.5.2 SyncService: FR5 — test pull detects purge_revision change and purges local deleted records
+  - When `pullResponse.purge_revision > localPurgeRevision`
+  - Should call `_purgeLocalDeletedRecords()`
+  - Should update `LAST_KNOWN_PURGE_REVISION` in sync_meta
+- [x] 3.5.3 SyncService: FR6 — test push includes soft-deleted records (is_deleted = true)
+  - Records with `is_deleted = true` and `needsSync = true` must be in push payload
+  - Verify server receives soft-deleted records
+
+### CoverSyncService.ts gaps
+
+- [ ] 3.5.4 CoverSyncService: FR8 — test deduplication handling (reused: true response)
+  - Mock `uploadCovers` to return `{ file_id: "existing-id", reused: true }`
+  - Verify goal is updated with existing `file_id` (not a new one)
+  - Verify pending cover is deleted after dedup
+- [ ] 3.5.5 CoverSyncService: FR11 — investigate cover deletion with reference counting
+  - Search codebase for `deleteCover` usage (may be in CoverService or elsewhere)
+  - If missing: implement `deleteCover()` method in CoverSyncService
+  - Add tests: delete when `ref_count = 0`, keep when `ref_count > 0`
+  - Add test: call `deleteCover` API when goal with cover is deleted
 
 ## 4. BDD unit tests for sync protocol
 
@@ -64,3 +91,33 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 - [ ] 8.1 `pnpm run build` — build passes
 - [ ] 8.2 `pnpm test` — all tests green
 - [ ] 8.3 Verify traceability: every FR from proposal has at least one test with a corresponding tag/comment
+
+---
+
+## 9. Recommendations from coverage analysis
+
+### Repository-level verification (FR4, FR13)
+
+- [ ] 9.1 Verify FR4 (dirty flag lifecycle) is covered in repository tests
+  - `hasEntityChanged()` logic: real change sets dirty flag
+  - No-op change does not set dirty flag
+  - Empty string equals undefined in comparison
+- [ ] 9.2 Verify FR13 (pull protection) is covered in `applyServerRecords()` tests
+  - Clean local record is overwritten by server
+  - Dirty local record (`needsSync = true`) is preserved
+  - New server record is inserted
+
+### Additional test quality improvements
+
+- [ ] 9.3 CoverSyncService: add explicit test for batch size enforcement
+  - Verify behavior when batch > MAX_COVER_BATCH_SIZE
+  - Currently only tested implicitly via chunking
+- [ ] 9.4 Review test quality notes from analysis files
+  - SyncService: mutex, error handling, settings sync, push results — already well covered ✅
+  - CoverSyncService: concurrency, error handling, edge cases, batch processing, cache — already well covered ✅
+
+### Documentation
+
+- [ ] 9.5 If FR11 (cover deletion) is implemented elsewhere, document the location
+  - Add comment in CoverSyncService pointing to deletion logic
+  - Or add to architecture docs if it's a cross-cutting concern
