@@ -35,7 +35,7 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ### CoverSyncService.ts gaps
 
-- [ ] 3.5.4 CoverSyncService: FR8 — test deduplication handling (reused: true response)
+- [x] 3.5.4 CoverSyncService: FR8 — test deduplication handling (reused: true response)
   - Mock `uploadCovers` to return `{ file_id: "existing-id", reused: true }`
   - Verify goal is updated with existing `file_id` (not a new one)
   - Verify pending cover is deleted after dedup
