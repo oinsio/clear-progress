@@ -4,8 +4,8 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ## 1. Sync specs to main
 
-- [ ] 1.1 Sync `specs/sync-protocol/spec.md` to `openspec/specs/sync-protocol/spec.md` (FR1-FR7, FR12-FR15)
-- [ ] 1.2 Sync `specs/cover-sync-protocol/spec.md` to `openspec/specs/cover-sync-protocol/spec.md` (FR8-FR11)
+- [x] 1.1 Sync `specs/sync-protocol/spec.md` to `openspec/specs/sync-protocol/spec.md` (FR1-FR7, FR12-FR15)
+- [x] 1.2 Sync `specs/cover-sync-protocol/spec.md` to `openspec/specs/cover-sync-protocol/spec.md` (FR8-FR11)
 
 ## 2. Audit existing contract tests
 
