@@ -39,11 +39,11 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
   - Mock `uploadCovers` to return `{ file_id: "existing-id", reused: true }`
   - Verify goal is updated with existing `file_id` (not a new one)
   - Verify pending cover is deleted after dedup
-- [ ] 3.5.5 CoverSyncService: FR11 — investigate cover deletion with reference counting
-  - Search codebase for `deleteCover` usage (may be in CoverService or elsewhere)
-  - If missing: implement `deleteCover()` method in CoverSyncService
-  - Add tests: delete when `ref_count = 0`, keep when `ref_count > 0`
-  - Add test: call `deleteCover` API when goal with cover is deleted
+- [x] 3.5.5 CoverSyncService: FR11 — investigate cover deletion with reference counting
+  - Investigation result: FR11 is implemented in `CoverService.deleteCover()`, not `CoverSyncService`
+  - Deletion is a goal-lifecycle operation, not a sync-cycle operation — architecturally correct
+  - Tests exist in `CoverService.test.ts`: local pending delete, server delete (ref_count=0), keep (ref_count>0)
+  - Added JSDoc note in `CoverSyncService` pointing to `CoverService.deleteCover`
 
 ## 4. BDD unit tests for sync protocol
 

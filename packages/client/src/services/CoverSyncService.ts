@@ -19,6 +19,12 @@ import {
 } from "./CoverService";
 import { localCoverCache } from "./LocalCoverCache";
 
+/**
+ * Handles cover sync operations: upload pending covers, download/cache server covers, reupload.
+ *
+ * Cover deletion (FR11 of spec-sync-protocol) is handled by {@link CoverService.deleteCover}
+ * because deletion is a goal-lifecycle operation, not a sync-cycle operation.
+ */
 export class CoverSyncService {
   constructor(
     private readonly syncAdapter: SyncAdapter,
