@@ -224,10 +224,7 @@ export class InMemorySyncAdapter implements SyncAdapter {
       return "Name must not be blank";
     }
 
-    if (
-      "box" in entity &&
-      !VALID_BOXES.has(entity.box)
-    ) {
+    if ("box" in entity && !VALID_BOXES.has(entity.box)) {
       return `Invalid box value: ${entity.box}`;
     }
 

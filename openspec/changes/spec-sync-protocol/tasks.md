@@ -98,26 +98,28 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ### Repository-level verification (FR4, FR13)
 
-- [ ] 9.1 Verify FR4 (dirty flag lifecycle) is covered in repository tests
-  - `hasEntityChanged()` logic: real change sets dirty flag
-  - No-op change does not set dirty flag
-  - Empty string equals undefined in comparison
-- [ ] 9.2 Verify FR13 (pull protection) is covered in `applyServerRecords()` tests
-  - Clean local record is overwritten by server
-  - Dirty local record (`needsSync = true`) is preserved
-  - New server record is inserted
+- [x] 9.1 Verify FR4 (dirty flag lifecycle) is covered in repository tests
+  - `hasEntityChanged()` logic: 14 tests in `deepEqual.test.ts` — real change, no-op, empty string ≡ undefined, null ≡ empty, metadata excluded ✅
+  - Services set `needsSync: hasChanged` — consistent pattern in all 6 services ✅
+  - Repositories don't manage dirty flag — it's a service responsibility ✅
+- [x] 9.2 Verify FR13 (pull protection) is covered in `applyServerRecords()` tests
+  - `TaskRepository.test.ts` lines 386-428: all 3 scenarios covered ✅
+  - Clean local record overwritten by server (line 398) ✅
+  - Dirty local record (`needsSync = true`) preserved (line 414) ✅
+  - New server record inserted (line 387) ✅
 
 ### Additional test quality improvements
 
-- [ ] 9.3 CoverSyncService: add explicit test for batch size enforcement
-  - Verify behavior when batch > MAX_COVER_BATCH_SIZE
-  - Currently only tested implicitly via chunking
-- [ ] 9.4 Review test quality notes from analysis files
+- [x] 9.3 CoverSyncService: add explicit test for batch size enforcement
+  - Client chunking: explicitly tested in `CoverSyncService.test.ts` (line 376, 391) — `MAX_COVER_BATCH_SIZE` ✅
+  - Server rejection: tested in `upload-covers.test.ts` (line 59) and `get-cover.test.ts` (line 72) ✅
+  - Already explicitly covered, no additional test needed
+- [x] 9.4 Review test quality notes from analysis files
   - SyncService: mutex, error handling, settings sync, push results — already well covered ✅
   - CoverSyncService: concurrency, error handling, edge cases, batch processing, cache — already well covered ✅
 
 ### Documentation
 
-- [ ] 9.5 If FR11 (cover deletion) is implemented elsewhere, document the location
-  - Add comment in CoverSyncService pointing to deletion logic
-  - Or add to architecture docs if it's a cross-cutting concern
+- [x] 9.5 If FR11 (cover deletion) is implemented elsewhere, document the location
+  - JSDoc already added in `CoverSyncService.ts:25` pointing to `CoverService.deleteCover` ✅
+  - FR11 is a goal-lifecycle operation, not sync-cycle — architecturally correct
