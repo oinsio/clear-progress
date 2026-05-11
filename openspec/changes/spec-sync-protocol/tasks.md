@@ -33,10 +33,10 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ## 5. BDD unit tests for cover sync protocol
 
-- [ ] 5.1 Write Gherkin feature `cover-upload.feature` with tags `@spec-sync-protocol @FR8 @FR9` — single upload, batch, dedup, validation
-- [ ] 5.2 Write step definitions for `cover-upload.feature`
-- [ ] 5.3 Write Gherkin feature `cover-lifecycle.feature` with tags `@spec-sync-protocol @FR10 @FR11` — download, delete, local lifecycle, full sync reupload
-- [ ] 5.4 Write step definitions for `cover-lifecycle.feature`
+- [x] 5.1 Write Gherkin feature `cover-upload.feature` with tags `@spec-sync-protocol @FR8 @FR9` — single upload, batch, dedup, validation
+- [x] 5.2 Write step definitions for `cover-upload.feature`
+- [x] 5.3 Write Gherkin feature `cover-lifecycle.feature` with tags `@spec-sync-protocol @FR10 @FR11` — download, delete, local lifecycle, full sync reupload
+- [x] 5.4 Write step definitions for `cover-lifecycle.feature`
 
 ## 6. Additional contract tests (gap analysis from 2.2)
 
