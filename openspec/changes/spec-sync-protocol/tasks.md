@@ -67,18 +67,18 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ## 6. Additional contract tests (gap analysis from 2.2)
 
-- [ ] 6.1 FR3: Client wins with newer timestamp (accepted, not conflict)
-- [ ] 6.2 FR3: Equal timestamps — client wins (>= comparison)
-- [ ] 6.3 FR15: `accepted` status on update of existing record with newer timestamp
-- [ ] 6.4 FR15: `rejected` status — invalid UUID, blank name, invalid box
-- [ ] 6.5 FR2: Pull response `current_revision` reflects latest push revision
-- [ ] 6.6 FR7: Settings conflict resolution (push older timestamp → conflict)
-- [ ] 6.7 FR8: SHA-256 deduplication (`reused: true` on duplicate hash)
-- [ ] 6.8 FR9: Partial batch failure (1 of N covers fails)
-- [ ] 6.9 FR9: Batch size limit (>10 items rejected)
-- [ ] 6.10 FR10: Missing cover returns error per item
-- [ ] 6.11 FR11: Reference counting — shared cover not deleted, `ref_count` decremented
-- [ ] 6.12 Run contract tests on in-memory adapter: `pnpm --filter contract test`
+- [x] 6.1 FR3: Client wins with newer timestamp (accepted, not conflict)
+- [x] 6.2 FR3: Equal timestamps — client wins (>= comparison)
+- [x] 6.3 FR15: `accepted` status on update of existing record with newer timestamp
+- [x] 6.4 FR15: `rejected` status — invalid UUID, blank name, invalid box
+- [x] 6.5 FR2: Pull response `current_revision` reflects latest push revision
+- [x] 6.6 FR7: Settings conflict resolution (push older timestamp → conflict)
+- [x] 6.7 FR8: SHA-256 deduplication (`reused: true` on duplicate hash)
+- [x] 6.8 FR9: Partial batch failure (1 of N covers fails)
+- [x] 6.9 FR9: Batch size limit (>10 items rejected)
+- [x] 6.10 FR10: Missing cover returns error per item
+- [x] 6.11 FR11: Reference counting — shared cover not deleted, `ref_count` decremented
+- [x] 6.12 Run contract tests on in-memory adapter: `pnpm --filter contract test`
 
 ## 7. Mutation testing
 
