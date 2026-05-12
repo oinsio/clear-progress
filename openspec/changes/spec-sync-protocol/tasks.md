@@ -103,11 +103,63 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 - [ ] 6.5.8 Verify SettingsRepository.set() compares before writing
 - [ ] 6.5.9 Write unit tests: same value skips put(), changed value triggers put() and needsSync
 
-## 7. Mutation testing
+## 7. Mutation testing — kill survived mutants
 
-- [ ] 7.1 Run `pnpm run test:mutation` on SyncService and CoverSyncService
-- [ ] 7.2 Analyze survived mutants and write additional tests for coverage
-- [ ] 7.3 Bring mutation score to >=90% (target >=95%)
+Source: `mutation-analysis.md` (SyncService 85.6%, CoverSyncService 80.1%). Target >=95%, minimum >=90%.
+
+### 7.1 Type A: strengthen assertions in existing scenarios
+
+- [ ] 7.1.1 `sync_soft_delete.feature`: "Pull does not purge when purge_revision unchanged" — assert specific tables, not just generic "not hard-deleted"
+- [ ] 7.1.2 `sync_soft_delete.feature`: "Pull detects server purge" — assert non-deleted records survive purge (kills `() => undefined` mutant)
+- [ ] 7.1.3 `cover_upload.feature`: "Duplicate cover detected by hash" — assert reupload does NOT happen, not just that file_id matches
+- [ ] 7.1.4 `cover_lifecycle.feature`: "Full sync reupload updates goal" — assert exact version value (`version = old + 1`), not just "incremented"
+
+### 7.2 Type B: new scenarios for SyncService (11 scenarios)
+
+#### `sync_pull.feature` — +3 scenarios
+
+- [ ] 7.2.1 FR5: Settings updated_at tie-breaking when timestamps are equal
+- [ ] 7.2.2 FR5: Settings updated_at fallback — not updated when pull returns no settings
+- [ ] 7.2.3 FR2: Pull dispatches `sync_complete` CustomEvent after applying records
+
+#### `sync_push.feature` — +3 scenarios
+
+- [ ] 7.2.4 FR1: Force push sends records even when nothing is dirty
+- [ ] 7.2.5 FR1: Push with empty results array does not throw
+- [ ] 7.2.6 FR1: Push handles partial response with missing entity arrays
+
+#### `sync_conflict.feature` — +2 scenarios
+
+- [ ] 7.2.7 FR3: Client record is not overwritten when local timestamp is newer
+- [ ] 7.2.8 FR3: Server record wins when timestamps are equal
+
+#### `sync_soft_delete.feature` — +2 scenarios
+
+- [ ] 7.2.9 FR6: Purge does not delete records that are not soft-deleted
+- [ ] 7.2.10 FR6: Full sync resets needsSync to false before pulling
+
+### 7.3 Type B: new scenarios for CoverSyncService (7 scenarios)
+
+#### `cover_lifecycle.feature` — +4 scenarios
+
+- [ ] 7.3.1 FR11: Initialization skips covers without blob data
+- [ ] 7.3.2 FR10: Download skips when result has error flag despite having file_id
+- [ ] 7.3.3 FR10: Download uses fallback MIME type when server omits mime_type
+- [ ] 7.3.4 FR11: Full sync reupload version is incremented not decremented
+
+#### `cover_upload.feature` — +2 scenarios
+
+- [ ] 7.3.5 FR9: Batch does not produce extra empty iteration on exact boundary
+- [ ] 7.3.6 FR9: Upload skips result with error flag even when file_id is present
+
+#### `cover_base64.feature` — new file, +1 scenario
+
+- [ ] 7.3.7 FR10: Base64 string is correctly decoded to Uint8Array
+
+### 7.4 Run and verify
+
+- [ ] 7.4.1 Run `pnpm run test:mutation` on SyncService and CoverSyncService
+- [ ] 7.4.2 Verify mutation score >=90% (target >=95%)
 
 ## 8. Verification
 
