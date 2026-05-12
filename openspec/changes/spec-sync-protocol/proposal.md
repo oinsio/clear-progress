@@ -59,6 +59,10 @@ _No changes to existing spec requirements._
 - FR13: Spec must describe pull protection (do not overwrite needsSync=true records)
 - FR14: Spec must describe resetAndPull (force pull with revision=0)
 - FR15: Spec must describe push results: created, accepted, conflict, rejected
+- FR16: Spec must describe chunked push for large batches (>200 records per chunk, sequential requests)
+- FR17: Spec must describe lock timeout behavior (SYNC_LOCK_TIMEOUT error and client retry)
+- FR18: Spec must describe reorder optimization (dirty flag only for records with changed sort_order)
+- FR19: Spec must describe settings no-op optimization (skip write when value unchanged)
 
 ### Non-Functional
 
@@ -89,7 +93,7 @@ No changes.
 
 ## Success Metrics
 
-- M1: All sync protocol business rules are captured in specs (FR1-FR15)
+- M1: All sync protocol business rules are captured in specs (FR1-FR19)
 - M2: Every rule has at least one BDD scenario or contract test
 
 ## Open Questions
@@ -104,3 +108,5 @@ _None._
 - `packages/client/src/services/CoverSyncService.ts` — described implementation
 - `packages/contract/tests/contracts/` — existing contract tests
 - `packages/client/src/db/repositories/` — dirty flag mechanism
+- `packages/client/src/services/` — reorder methods (reorderTasks, reorderGoals, etc.)
+- `packages/client/src/db/repositories/SettingsRepository.ts` — no-op optimization

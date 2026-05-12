@@ -237,3 +237,62 @@ The server SHALL validate each record in a push request before processing.
 #### Scenario: Box validation
 - **WHEN** task has `box` value not in ("inbox", "today", "week", "later")
 - **THEN** status is `rejected` with reason
+
+### Requirement: Chunked push for large batches
+When the number of records to push exceeds the chunk size limit (200 records), the client SHALL split the push into sequential chunk requests. Each chunk is sent as a separate `push()` call. This prevents GAS execution timeout (6-minute limit).
+
+#### Scenario: Push splits into chunks when exceeding limit
+- **WHEN** client has 450 dirty records to push
+- **THEN** client sends 3 sequential push requests: 200, 200, 50
+- **AND** each request is processed independently by the server
+
+#### Scenario: Push within limit sends single request
+- **WHEN** client has 150 dirty records to push
+- **THEN** client sends a single push request with all 150 records
+
+#### Scenario: Chunk failure stops remaining chunks
+- **WHEN** chunk 2 of 3 fails with a network error
+- **THEN** remaining chunks are not sent
+- **AND** records from failed and unsent chunks retain `needsSync = true`
+
+### Requirement: Lock timeout on push
+The server SHALL acquire a script lock before processing a push to ensure atomicity. If the lock cannot be acquired within the timeout period (30 seconds), the server SHALL return `SYNC_LOCK_TIMEOUT` error.
+
+#### Scenario: Lock acquired successfully
+- **WHEN** push request arrives and no other push is in progress
+- **THEN** lock is acquired and push proceeds normally
+
+#### Scenario: Lock timeout returns error
+- **WHEN** push request arrives but another push holds the lock for >30 seconds
+- **THEN** server returns `{ ok: false, error: "SYNC_LOCK_TIMEOUT" }`
+
+#### Scenario: Client retries after lock timeout
+- **WHEN** client receives `SYNC_LOCK_TIMEOUT` error
+- **THEN** client SHALL retry the push on the next sync cycle
+- **AND** dirty records remain with `needsSync = true`
+
+### Requirement: Reorder optimization for dirty flag
+The `reorderTasks()`, `reorderGoals()`, and similar reorder methods SHALL compare each record's new `sort_order` with its current value. Only records with actually changed `sort_order` SHALL be marked as `needsSync = true`. If no `sort_order` values changed, the operation SHALL exit without any writes.
+
+#### Scenario: Reorder with actual changes marks only changed records
+- **WHEN** user reorders 5 tasks, but only 3 have different `sort_order`
+- **THEN** only those 3 tasks have `needsSync = true`
+- **AND** the other 2 tasks are not modified
+
+#### Scenario: Reorder with no actual changes is a no-op
+- **WHEN** user triggers a reorder but all `sort_order` values remain the same
+- **THEN** no records are written to IndexedDB
+- **AND** no records are marked as `needsSync = true`
+
+### Requirement: Settings no-op optimization
+`SettingsRepository.set()` SHALL compare the new value with the existing value before writing. If the value is unchanged, no write occurs and no `needsSync` flag is set.
+
+#### Scenario: Setting changed value triggers write and sync
+- **WHEN** `set("default_box", "inbox")` is called and current value is `"today"`
+- **THEN** value is updated in IndexedDB
+- **AND** `needsSync` is set to `true`
+
+#### Scenario: Setting same value is a no-op
+- **WHEN** `set("default_box", "inbox")` is called and current value is already `"inbox"`
+- **THEN** no `put()` call is made
+- **AND** `needsSync` is NOT set

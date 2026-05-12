@@ -83,9 +83,39 @@ The related `sync-orchestration` spec describes triggers (when to sync). This do
 
 **Rationale:** Data will be synced on the next trigger anyway (periodic, debounced). A queue complicates the implementation without real benefit. Documented in sync-orchestration, mentioned here for completeness.
 
+### D8: Chunked push to avoid GAS timeout
+
+**Decision:** When `needsSync` record count exceeds 200, the client splits push into sequential chunks of 200.
+
+**Alternatives:**
+- Single large push — GAS has a 6-minute execution limit, large payloads timeout
+- Parallel chunk push — race conditions with server-side revision assignment
+
+**Rationale:** Sequential chunks are simple, respect GAS limits, and maintain revision ordering. The 200 threshold was chosen empirically to stay well within the 6-minute limit. Context: FR16.
+
+### D9: Reorder dirty flag optimization
+
+**Decision:** Reorder methods compare `sort_order` before/after and only mark records with actual changes as `needsSync = true`.
+
+**Alternatives:**
+- Mark all reordered records — unnecessary syncs, wastes bandwidth and server time
+
+**Rationale:** Drag-and-drop reorder fires frequently; most records in the list don't change position. Selective dirty marking avoids flooding push with unchanged records. Context: FR18.
+
+### D10: Settings no-op write guard
+
+**Decision:** `SettingsRepository.set()` compares new value with existing before calling `put()`.
+
+**Alternatives:**
+- Always write — unnecessary IndexedDB writes and sync cycles
+
+**Rationale:** Settings are written on every toggle/change event. Many events result in the same value (e.g., toggling a switch back and forth). The guard prevents cascading no-op syncs. Context: FR19.
+
 ## Risks / Trade-offs
 
 - **[LWW data loss]** When simultaneously editing the same record from two devices, one change will be lost -> Mitigation: single-user app, probability is low
 - **[Clock skew]** LWW depends on correct `updated_at` -> Mitigation: client generates timestamps, and the server only compares client timestamps with each other (not with its own clock)
 - **[Purge without undo]** After purge, data recovery is impossible -> Mitigation: purge is an explicit user action from the UI
 - **[Cover reupload on full sync]** Full sync re-uploads all covers -> Mitigation: SHA-256 dedup prevents duplication
+- **[Chunked push partial failure]** If chunk N fails, chunks 1..N-1 are already committed on server -> Mitigation: records from failed chunks retain `needsSync = true`, will be pushed on next sync cycle
+- **[Lock timeout under load]** Concurrent pushes from multiple tabs could starve each other -> Mitigation: single-user app, mutex in sync-orchestration prevents concurrent pushes from the same tab

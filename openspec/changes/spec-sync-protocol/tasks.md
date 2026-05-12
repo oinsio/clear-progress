@@ -80,6 +80,29 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 - [x] 6.11 FR11: Reference counting — shared cover not deleted, `ref_count` decremented
 - [x] 6.12 Run contract tests on in-memory adapter: `pnpm --filter contract test`
 
+## 6.5 Test coverage for new requirements (FR16-FR19)
+
+### FR16: Chunked push
+
+- [ ] 6.5.1 Verify SyncService chunked push implementation exists — check `SyncService.ts` for chunk splitting logic
+- [ ] 6.5.2 Write unit tests: push splits into chunks when >200 records, single request when <=200
+- [ ] 6.5.3 Write unit test: chunk failure stops remaining chunks, failed records retain needsSync
+
+### FR17: Lock timeout
+
+- [ ] 6.5.4 Write contract test: server returns `SYNC_LOCK_TIMEOUT` when lock unavailable
+- [ ] 6.5.5 Write unit test: SyncService handles `SYNC_LOCK_TIMEOUT` — records retain needsSync for retry
+
+### FR18: Reorder optimization
+
+- [ ] 6.5.6 Verify reorder methods (reorderTasks, reorderGoals) compare sort_order before marking needsSync
+- [ ] 6.5.7 Write unit tests: only changed sort_order records are marked dirty; no-op reorder writes nothing
+
+### FR19: Settings no-op optimization
+
+- [ ] 6.5.8 Verify SettingsRepository.set() compares before writing
+- [ ] 6.5.9 Write unit tests: same value skips put(), changed value triggers put() and needsSync
+
 ## 7. Mutation testing
 
 - [ ] 7.1 Run `pnpm run test:mutation` on SyncService and CoverSyncService
