@@ -147,19 +147,19 @@ Source: `mutation-analysis.md` (SyncService 85.6%, CoverSyncService 80.1%). Targ
 
 #### `cover_lifecycle.feature` — +4 scenarios
 
-- [ ] 7.3.1 FR11: Initialization skips covers without blob data
-- [ ] 7.3.2 FR10: Download skips when result has error flag despite having file_id
-- [ ] 7.3.3 FR10: Download uses fallback MIME type when server omits mime_type
-- [ ] 7.3.4 FR11: Full sync reupload version is incremented not decremented
+- [x] 7.3.1 FR11: Initialization skips covers without blob data
+- [x] 7.3.2 FR10: Download skips when result has error flag despite having file_id
+- [x] 7.3.3 FR10: Download uses fallback MIME type when server omits mime_type
+- [x] 7.3.4 FR11: Full sync reupload version is incremented not decremented
 
 #### `cover_upload.feature` — +2 scenarios
 
-- [ ] 7.3.5 FR9: Batch does not produce extra empty iteration on exact boundary
-- [ ] 7.3.6 FR9: Upload skips result with error flag even when file_id is present
+- [x] 7.3.5 FR9: Batch does not produce extra empty iteration on exact boundary
+- [x] 7.3.6 FR9: Upload skips result with error flag even when file_id is present
 
 #### `cover_base64.feature` — new file, +1 scenario
 
-- [ ] 7.3.7 FR10: Base64 string is correctly decoded to Uint8Array
+- [x] 7.3.7 FR10: Base64 string is correctly decoded to Uint8Array
 
 ### 7.4 Run and verify
 

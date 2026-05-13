@@ -44,12 +44,27 @@ Feature: Cover Sync Protocol — Upload
     Then uploadCovers is called twice
 
   @spec-sync-protocol @FR9
+  Scenario: Batch does not produce extra empty iteration on exact boundary
+    Given exactly MAX_COVER_BATCH_SIZE pending covers exist
+    When cover sync runs
+    Then uploadCovers is called exactly once
+    And no empty batch is processed
+
+  @spec-sync-protocol @FR9
   Scenario: Per-item error does not block other items in same chunk
     Given two pending covers exist: "bad-id" and "ok-id"
     And server will respond with error for "bad-id" and success for "ok-id"
     When cover sync runs
     Then pending cover "ok-id" is removed from repository
     And pending cover "bad-id" is not removed from repository
+
+  @spec-sync-protocol @FR9
+  Scenario: Upload skips result with error flag even when file_id is present
+    Given a pending cover "error-with-id" exists
+    And server will respond with error flag true and file_id for "error-with-id"
+    When cover sync runs
+    Then pending cover "error-with-id" is not removed from repository
+    And goal is not updated with the file_id
 
   @spec-sync-protocol @FR9
   Scenario: API failure stops processing remaining chunks

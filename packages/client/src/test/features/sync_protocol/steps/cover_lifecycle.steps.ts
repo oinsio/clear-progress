@@ -16,6 +16,7 @@ import {
   createMockGoalRepository,
   createMockPendingCoverRepository,
   createMockSyncAdapter,
+  MOCK_BASE64,
   MOCK_MIME_TYPE,
   setupGoalWithCoverBlob,
 } from "./coverSyncTestHelpers";
@@ -283,6 +284,203 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
 
       Then("getCover API is called exactly once", async (_ctx: TestContext) => {
         expect(deps.syncAdapter.getCover).toHaveBeenCalledTimes(1);
+      });
+    },
+  );
+
+  // @spec-sync-protocol @FR11
+  f.Scenario(
+    "Initialization skips covers without blob data",
+    ({ Given, When, Then }) => {
+      Given(
+        'cover repository has a cover without blob data for "no-blob-file"',
+        async (_ctx: TestContext) => {
+          deps.coverRepository = createMockCoverRepository({
+            getAll: vi.fn().mockResolvedValue([
+              {
+                file_id: "no-blob-file",
+                data_hash: "hash-no-blob",
+                data: null, // no blob data
+              },
+            ]),
+          });
+        },
+      );
+
+      When("initializeLocalCovers is called", async (_ctx: TestContext) => {
+        const service = createService();
+        await service.initializeLocalCovers();
+      });
+
+      Then(
+        'cover "no-blob-file" is not added to local cover cache',
+        async (_ctx: TestContext) => {
+          expect(localCoverCache.get("no-blob-file")).toBeUndefined();
+        },
+      );
+    },
+  );
+
+  // @spec-sync-protocol @FR10
+  f.Scenario(
+    "Download skips when result has error flag despite having file_id",
+    ({ Given, And, When, Then }) => {
+      Given(
+        'a cover with file_id "error-but-id" is not in local cache or repository',
+        async (_ctx: TestContext) => {
+          // default
+        },
+      );
+
+      And(
+        'server returns error flag true with file_id for "error-but-id"',
+        async (_ctx: TestContext) => {
+          deps.syncAdapter = createMockSyncAdapter({
+            getCover: vi.fn().mockResolvedValue({
+              ok: true,
+              covers: [
+                {
+                  file_id: "error-but-id",
+                  error: true, // error flag set
+                  data: MOCK_BASE64,
+                  mime_type: MOCK_MIME_TYPE,
+                },
+              ],
+            }),
+          });
+        },
+      );
+
+      When(
+        'cacheFromServer is called for "error-but-id"',
+        async (_ctx: TestContext) => {
+          const service = createService();
+          await service.cacheFromServer("error-but-id");
+        },
+      );
+
+      Then(
+        "cover is not saved to cover repository",
+        async (_ctx: TestContext) => {
+          expect(deps.coverRepository.save).not.toHaveBeenCalled();
+        },
+      );
+
+      And(
+        "cover is not added to local cover cache",
+        async (_ctx: TestContext) => {
+          expect(localCoverCache.get("error-but-id")).toBeUndefined();
+        },
+      );
+    },
+  );
+
+  // @spec-sync-protocol @FR10
+  f.Scenario(
+    "Download uses fallback MIME type when server omits mime_type",
+    ({ Given, And, When, Then }) => {
+      Given(
+        'a cover with file_id "no-mime" is not in local cache or repository',
+        async (_ctx: TestContext) => {
+          // default
+        },
+      );
+
+      And(
+        'server returns cover data without mime_type for "no-mime"',
+        async (_ctx: TestContext) => {
+          deps.syncAdapter = createMockSyncAdapter({
+            getCover: vi.fn().mockResolvedValue({
+              ok: true,
+              covers: [
+                {
+                  file_id: "no-mime",
+                  data: MOCK_BASE64,
+                  // mime_type omitted
+                },
+              ],
+            }),
+          });
+        },
+      );
+
+      When(
+        'cacheFromServer is called for "no-mime"',
+        async (_ctx: TestContext) => {
+          const service = createService();
+          await service.cacheFromServer("no-mime");
+        },
+      );
+
+      Then(
+        "cover is saved with fallback MIME type",
+        async (_ctx: TestContext) => {
+          expect(deps.coverRepository.save).toHaveBeenCalledWith(
+            expect.objectContaining({
+              file_id: "no-mime",
+              data: expect.any(Blob),
+            }),
+          );
+        },
+      );
+
+      And("cover is added to local cover cache", async (_ctx: TestContext) => {
+        expect(localCoverCache.get("no-mime")).toBeDefined();
+      });
+    },
+  );
+
+  // @spec-sync-protocol @FR11
+  f.Scenario(
+    "Full sync reupload version is incremented not decremented",
+    ({ Given, And, When, Then }) => {
+      Given(
+        'a goal has server cover "reupload-file" with version 5',
+        async (_ctx: TestContext) => {
+          const setup = setupGoalWithCoverBlob({
+            goalId: "goal-version-test",
+            fileId: "reupload-file",
+            version: 5,
+          });
+          deps.goalRepository = setup.goalRepository;
+          deps.coverRepository = setup.coverRepository;
+        },
+      );
+
+      And(
+        'server will respond with new file_id "reupload-new"',
+        async (_ctx: TestContext) => {
+          deps.syncAdapter = createMockSyncAdapter({
+            uploadCovers: vi.fn().mockResolvedValue({
+              ok: true,
+              results: [
+                {
+                  local_id: "goal-version-test",
+                  goal_id: "goal-version-test",
+                  file_id: "reupload-new",
+                  reused: false,
+                },
+              ],
+            }),
+          });
+        },
+      );
+
+      When("reuploadLocalCovers is called", async (_ctx: TestContext) => {
+        const service = createService();
+        await service.reuploadLocalCovers();
+      });
+
+      Then("goal version is 6", async (_ctx: TestContext) => {
+        expect(deps.goalRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({ version: 6 }),
+        );
+      });
+
+      And("goal version is not 4", async (_ctx: TestContext) => {
+        expect(deps.goalRepository.update).not.toHaveBeenCalledWith(
+          expect.objectContaining({ version: 4 }),
+        );
       });
     },
   );

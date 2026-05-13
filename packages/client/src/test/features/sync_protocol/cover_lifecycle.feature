@@ -20,6 +20,22 @@ Feature: Cover Sync Protocol — Lifecycle
     And cover is not added to local cover cache
 
   @spec-sync-protocol @FR10
+  Scenario: Download skips when result has error flag despite having file_id
+    Given a cover with file_id "error-but-id" is not in local cache or repository
+    And server returns error flag true with file_id for "error-but-id"
+    When cacheFromServer is called for "error-but-id"
+    Then cover is not saved to cover repository
+    And cover is not added to local cover cache
+
+  @spec-sync-protocol @FR10
+  Scenario: Download uses fallback MIME type when server omits mime_type
+    Given a cover with file_id "no-mime" is not in local cache or repository
+    And server returns cover data without mime_type for "no-mime"
+    When cacheFromServer is called for "no-mime"
+    Then cover is saved with fallback MIME type
+    And cover is added to local cover cache
+
+  @spec-sync-protocol @FR10
   Scenario: Batch download fetches covers in chunks
     Given more uncached file IDs than MAX_COVER_BATCH_SIZE exist
     When batchCacheFromServer is called
@@ -51,6 +67,12 @@ Feature: Cover Sync Protocol — Lifecycle
     And server has cover data for "concurrent-id"
     When ensureCoverCached is called three times concurrently for "concurrent-id"
     Then getCover API is called exactly once
+
+  @spec-sync-protocol @FR11
+  Scenario: Initialization skips covers without blob data
+    Given cover repository has a cover without blob data for "no-blob-file"
+    When initializeLocalCovers is called
+    Then cover "no-blob-file" is not added to local cover cache
 
   @spec-sync-protocol @FR11
   Scenario: Local cover initialization loads confirmed covers into cache
@@ -86,6 +108,14 @@ Feature: Cover Sync Protocol — Lifecycle
     Then goal cover_file_id is updated to "new-file"
     And goal version is incremented
     And goal is marked as needsSync
+
+  @spec-sync-protocol @FR11
+  Scenario: Full sync reupload version is incremented not decremented
+    Given a goal has server cover "reupload-file" with version 5
+    And server will respond with new file_id "reupload-new"
+    When reuploadLocalCovers is called
+    Then goal version is 6
+    And goal version is not 4
 
   @spec-sync-protocol @FR11
   Scenario: Full sync ensureServerCoversAreCached downloads missing covers

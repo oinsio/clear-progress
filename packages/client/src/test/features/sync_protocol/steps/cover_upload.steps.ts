@@ -473,4 +473,110 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       );
     },
   );
+
+  // @spec-sync-protocol @FR9
+  f.Scenario(
+    "Batch does not produce extra empty iteration on exact boundary",
+    ({ Given, When, Then, And }) => {
+      Given(
+        "exactly MAX_COVER_BATCH_SIZE pending covers exist",
+        async (_ctx: TestContext) => {
+          const pendingCovers = Array.from(
+            { length: MAX_COVER_BATCH_SIZE },
+            (_, i) => createPendingCover({ local_id: `cover-${i}` }),
+          );
+          deps.pendingCoverRepository = createMockPendingCoverRepository({
+            getAll: vi.fn().mockResolvedValue(pendingCovers),
+          });
+        },
+      );
+
+      When("cover sync runs", async (_ctx: TestContext) => {
+        const service = createService();
+        await service.sync();
+      });
+
+      Then("uploadCovers is called exactly once", async (_ctx: TestContext) => {
+        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledTimes(1);
+      });
+
+      And("no empty batch is processed", async (_ctx: TestContext) => {
+        // Verify the single call has exactly MAX_COVER_BATCH_SIZE items
+        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledWith(
+          expect.objectContaining({
+            covers: expect.arrayContaining([
+              expect.objectContaining({ local_id: expect.any(String) }),
+            ]),
+          }),
+        );
+        const callArgs = vi.mocked(deps.syncAdapter.uploadCovers).mock.calls[0];
+        expect(callArgs[0].covers).toHaveLength(MAX_COVER_BATCH_SIZE);
+      });
+    },
+  );
+
+  // @spec-sync-protocol @FR9
+  f.Scenario(
+    "Upload skips result with error flag even when file_id is present",
+    ({ Given, And, When, Then }) => {
+      Given(
+        'a pending cover "error-with-id" exists',
+        async (_ctx: TestContext) => {
+          deps.pendingCoverRepository = createMockPendingCoverRepository({
+            getAll: vi.fn().mockResolvedValue([
+              createPendingCover({
+                local_id: "error-with-id",
+                goal_id: "goal-error",
+              }),
+            ]),
+          });
+        },
+      );
+
+      And(
+        'server will respond with error flag true and file_id for "error-with-id"',
+        async (_ctx: TestContext) => {
+          deps.goalRepository = createMockGoalRepository({
+            getActive: vi.fn().mockResolvedValue([
+              createGoal({
+                id: "goal-error",
+                cover_file_id: `${LOCAL_COVER_ID_PREFIX}error-with-id`,
+              }),
+            ]),
+          });
+          deps.syncAdapter = createMockSyncAdapter({
+            uploadCovers: vi.fn().mockResolvedValue({
+              ok: true,
+              results: [
+                {
+                  local_id: "error-with-id",
+                  goal_id: "goal-error",
+                  file_id: "some-file-id", // file_id present
+                  error: "VALIDATION_FAILED", // but error flag is set
+                },
+              ],
+            }),
+          });
+        },
+      );
+
+      When("cover sync runs", async (_ctx: TestContext) => {
+        const service = createService();
+        await service.sync();
+      });
+
+      Then(
+        'pending cover "error-with-id" is not removed from repository',
+        async (_ctx: TestContext) => {
+          expect(deps.pendingCoverRepository.delete).not.toHaveBeenCalledWith(
+            "error-with-id",
+          );
+        },
+      );
+
+      And("goal is not updated with the file_id", async (_ctx: TestContext) => {
+        expect(deps.goalRepository.update).not.toHaveBeenCalled();
+      });
+    },
+  );
 });
