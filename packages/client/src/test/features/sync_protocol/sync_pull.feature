@@ -58,3 +58,23 @@ Feature: Sync Protocol — Pull
     Given server will respond to pull with ok false
     When pull is called
     Then pull throws "Pull failed"
+
+  @spec-sync-protocol @FR5
+  Scenario: Settings updated_at tie-breaking when timestamps are equal
+    Given settings_updated_at in localStorage is "2026-04-10T00:00:00.000Z"
+    And server will respond to pull with settings having updated_at "2026-04-10T00:00:00.000Z"
+    When pull is called
+    Then settings_updated_at in localStorage is "2026-04-10T00:00:00.000Z"
+
+  @spec-sync-protocol @FR5
+  Scenario: Settings updated_at not updated when pull returns no settings
+    Given settings_updated_at in localStorage is "2026-04-10T00:00:00.000Z"
+    And server will respond to pull with empty settings array
+    When pull is called
+    Then settings_updated_at in localStorage is "2026-04-10T00:00:00.000Z"
+
+  @spec-sync-protocol @FR2
+  Scenario: Pull dispatches sync_complete CustomEvent after applying records
+    Given server will respond to pull with tasks
+    When pull is called
+    Then sync_complete CustomEvent is dispatched

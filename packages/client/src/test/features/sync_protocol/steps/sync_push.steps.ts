@@ -11,6 +11,7 @@ import {
   makeGoal,
   makePushResponse,
   makeTask,
+  mockAllRepositoriesGetAll,
 } from "@/test/helpers/bdd/syncProtocol/helpers";
 import type { SyncProtocolTestContext } from "@/test/helpers/bdd/syncProtocol/types";
 
@@ -86,27 +87,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     Given(
       "client has 5 tasks, 2 with needsSync true",
       async (_ctx: TestContext) => {
-        (
-          repositories.taskRepository.getAll as ReturnType<typeof vi.fn>
-        ).mockResolvedValue(allTasks);
-        (
-          repositories.goalRepository.getAll as ReturnType<typeof vi.fn>
-        ).mockResolvedValue([]);
-        (
-          repositories.contextRepository.getAll as ReturnType<typeof vi.fn>
-        ).mockResolvedValue([]);
-        (
-          repositories.categoryRepository.getAll as ReturnType<typeof vi.fn>
-        ).mockResolvedValue([]);
-        (
-          repositories.checklistRepository.getAll as ReturnType<typeof vi.fn>
-        ).mockResolvedValue([]);
-        (
-          repositories.ideaRepository.getAll as ReturnType<typeof vi.fn>
-        ).mockResolvedValue([]);
-        (
-          repositories.settingsRepository.getAll as ReturnType<typeof vi.fn>
-        ).mockResolvedValue([]);
+        mockAllRepositoriesGetAll(repositories, { tasks: allTasks });
         (
           repositories.taskRepository.getById as ReturnType<typeof vi.fn>
         ).mockImplementation(async (id: string) =>
@@ -531,6 +512,139 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
       Then("last_known_revision is not updated", async (_ctx: TestContext) => {
         expect(repositories.syncMetaRepository.setValue).not.toHaveBeenCalled();
+      });
+    },
+  );
+
+  // @spec-sync-protocol @FR1
+  f.Scenario(
+    "Force push sends records even when nothing is dirty",
+    ({ Given, When, Then }) => {
+      const allTasks = [
+        makeTask({ needsSync: false }),
+        makeTask({ needsSync: false }),
+        makeTask({ needsSync: false }),
+      ];
+
+      Given(
+        "client has 3 tasks with needsSync false",
+        async (_ctx: TestContext) => {
+          mockAllRepositoriesGetAll(repositories, { tasks: allTasks });
+          (
+            repositories.taskRepository.getById as ReturnType<typeof vi.fn>
+          ).mockImplementation(async (id: string) =>
+            allTasks.find((task) => task.id === id),
+          );
+        },
+      );
+
+      When("push with force is called", async (_ctx: TestContext) => {
+        const service = createSyncService(syncAdapter, repositories);
+        await service.push(true);
+      });
+
+      Then("PushRequest contains all 3 tasks", async (_ctx: TestContext) => {
+        const pushCall = (syncAdapter.push as ReturnType<typeof vi.fn>).mock
+          .calls[0][0];
+        expect(pushCall.tasks).toHaveLength(3);
+      });
+    },
+  );
+
+  // @spec-sync-protocol @FR1
+  f.Scenario(
+    "Push with empty results array does not throw",
+    ({ Given, And, When, Then }) => {
+      const task = makeTask({ id: "t1", needsSync: true });
+
+      Given(
+        'client has a dirty task with id "t1"',
+        async (_ctx: TestContext) => {
+          (
+            repositories.taskRepository.getNeedingSync as ReturnType<
+              typeof vi.fn
+            >
+          ).mockResolvedValue([task]);
+          (
+            repositories.taskRepository.getById as ReturnType<typeof vi.fn>
+          ).mockResolvedValue(task);
+        },
+      );
+
+      And(
+        "server will respond with empty results for tasks",
+        async (_ctx: TestContext) => {
+          syncAdapter = createMockSyncAdapter({
+            push: vi.fn().mockResolvedValue(
+              makePushResponse({
+                tasks: [],
+              }),
+            ),
+          });
+        },
+      );
+
+      When("push is called", async (_ctx: TestContext) => {
+        const service = createSyncService(syncAdapter, repositories);
+        await service.push();
+      });
+
+      Then("push completes without error", async (_ctx: TestContext) => {
+        expect(syncAdapter.push).toHaveBeenCalled();
+      });
+    },
+  );
+
+  // @spec-sync-protocol @FR1
+  f.Scenario(
+    "Push handles partial response with missing entity arrays",
+    ({ Given, And, When, Then }) => {
+      const dirtyTask = makeTask({ needsSync: true });
+      const dirtyGoal = makeGoal({ needsSync: true });
+
+      Given(
+        "client has a dirty task and a dirty goal",
+        async (_ctx: TestContext) => {
+          (
+            repositories.taskRepository.getNeedingSync as ReturnType<
+              typeof vi.fn
+            >
+          ).mockResolvedValue([dirtyTask]);
+          (
+            repositories.goalRepository.getNeedingSync as ReturnType<
+              typeof vi.fn
+            >
+          ).mockResolvedValue([dirtyGoal]);
+          (
+            repositories.taskRepository.getById as ReturnType<typeof vi.fn>
+          ).mockResolvedValue(dirtyTask);
+          (
+            repositories.goalRepository.getById as ReturnType<typeof vi.fn>
+          ).mockResolvedValue(dirtyGoal);
+        },
+      );
+
+      And(
+        "server will respond with results only for tasks",
+        async (_ctx: TestContext) => {
+          syncAdapter = createMockSyncAdapter({
+            push: vi.fn().mockResolvedValue(
+              makePushResponse({
+                tasks: [{ id: dirtyTask.id, status: "created" }],
+                // goals array is missing
+              }),
+            ),
+          });
+        },
+      );
+
+      When("push is called", async (_ctx: TestContext) => {
+        const service = createSyncService(syncAdapter, repositories);
+        await service.push();
+      });
+
+      Then("push completes without error", async (_ctx: TestContext) => {
+        expect(syncAdapter.push).toHaveBeenCalled();
       });
     },
   );

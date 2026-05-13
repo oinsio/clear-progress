@@ -26,3 +26,17 @@ Feature: Sync Protocol — Conflict Resolution
     When push results are applied
     Then local task "t1" retains original name
     And local task "t1" has needsSync false
+
+  @spec-sync-protocol @FR3
+  Scenario: Client record is not overwritten when local timestamp is newer
+    Given client has task "t1" with updated_at "2026-05-13T10:00:00.000Z"
+    And server record for "t1" has updated_at "2026-05-13T09:00:00.000Z"
+    When applyServerRecords is called with server record
+    Then local task "t1" is not overwritten
+
+  @spec-sync-protocol @FR3
+  Scenario: Server record wins when timestamps are equal
+    Given client has task "t1" with updated_at "2026-05-13T10:00:00.000Z" and needsSync false
+    And server record for "t1" has updated_at "2026-05-13T10:00:00.000Z"
+    When applyServerRecords is called with server record
+    Then local task "t1" is overwritten with server record

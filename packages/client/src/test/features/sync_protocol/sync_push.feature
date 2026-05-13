@@ -76,3 +76,23 @@ Feature: Sync Protocol — Push
     And server will respond with conflict and no top-level revision
     When push is called
     Then last_known_revision is not updated
+
+  @spec-sync-protocol @FR1
+  Scenario: Force push sends records even when nothing is dirty
+    Given client has 3 tasks with needsSync false
+    When push with force is called
+    Then PushRequest contains all 3 tasks
+
+  @spec-sync-protocol @FR1
+  Scenario: Push with empty results array does not throw
+    Given client has a dirty task with id "t1"
+    And server will respond with empty results for tasks
+    When push is called
+    Then push completes without error
+
+  @spec-sync-protocol @FR1
+  Scenario: Push handles partial response with missing entity arrays
+    Given client has a dirty task and a dirty goal
+    And server will respond with results only for tasks
+    When push is called
+    Then push completes without error

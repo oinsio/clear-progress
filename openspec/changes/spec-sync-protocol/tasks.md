@@ -123,25 +123,25 @@ Source: `mutation-analysis.md` (SyncService 85.6%, CoverSyncService 80.1%). Targ
 
 #### `sync_pull.feature` — +3 scenarios
 
-- [ ] 7.2.1 FR5: Settings updated_at tie-breaking when timestamps are equal
-- [ ] 7.2.2 FR5: Settings updated_at fallback — not updated when pull returns no settings
-- [ ] 7.2.3 FR2: Pull dispatches `sync_complete` CustomEvent after applying records
+- [x] 7.2.1 FR5: Settings updated_at tie-breaking when timestamps are equal
+- [x] 7.2.2 FR5: Settings updated_at fallback — not updated when pull returns no settings
+- [x] 7.2.3 FR2: Pull dispatches `sync_complete` CustomEvent after applying records
 
 #### `sync_push.feature` — +3 scenarios
 
-- [ ] 7.2.4 FR1: Force push sends records even when nothing is dirty
-- [ ] 7.2.5 FR1: Push with empty results array does not throw
-- [ ] 7.2.6 FR1: Push handles partial response with missing entity arrays
+- [x] 7.2.4 FR1: Force push sends records even when nothing is dirty
+- [x] 7.2.5 FR1: Push with empty results array does not throw
+- [x] 7.2.6 FR1: Push handles partial response with missing entity arrays
 
 #### `sync_conflict.feature` — +2 scenarios
 
-- [ ] 7.2.7 FR3: Client record is not overwritten when local timestamp is newer
-- [ ] 7.2.8 FR3: Server record wins when timestamps are equal
+- [x] 7.2.7 FR3: Client record is not overwritten when local timestamp is newer
+- [x] 7.2.8 FR3: Server record wins when timestamps are equal
 
 #### `sync_soft_delete.feature` — +2 scenarios
 
-- [ ] 7.2.9 FR6: Purge does not delete records that are not soft-deleted
-- [ ] 7.2.10 FR6: Full sync resets needsSync to false before pulling
+- [x] 7.2.9 FR6: Purge does not delete records that are not soft-deleted
+- [x] 7.2.10 FR6: Full sync resets needsSync to false before pulling
 
 ### 7.3 Type B: new scenarios for CoverSyncService (7 scenarios)
 

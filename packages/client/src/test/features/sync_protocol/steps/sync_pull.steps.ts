@@ -332,4 +332,128 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(pullError?.message).toBe("Pull failed");
     });
   });
+
+  // @spec-sync-protocol @FR5
+  f.Scenario(
+    "Settings updated_at tie-breaking when timestamps are equal",
+    ({ Given, And, When, Then }) => {
+      Given(
+        'settings_updated_at in localStorage is "2026-04-10T00:00:00.000Z"',
+        async (_ctx: TestContext) => {
+          localStorage.setItem(
+            STORAGE_KEYS.SETTINGS_UPDATED_AT,
+            "2026-04-10T00:00:00.000Z",
+          );
+        },
+      );
+
+      And(
+        'server will respond to pull with settings having updated_at "2026-04-10T00:00:00.000Z"',
+        async (_ctx: TestContext) => {
+          syncAdapter = createMockSyncAdapter({
+            pull: vi.fn().mockResolvedValue(
+              makePullResponse({
+                settings: [
+                  {
+                    key: "setting1",
+                    value: "v1",
+                    updated_at: "2026-04-10T00:00:00.000Z" as ISOTimestamp,
+                  },
+                ],
+              }),
+            ),
+          });
+        },
+      );
+
+      When("pull is called", async (_ctx: TestContext) => {
+        const service = createSyncService(syncAdapter, repositories);
+        await service.pull();
+      });
+
+      Then(
+        'settings_updated_at in localStorage is "2026-04-10T00:00:00.000Z"',
+        async (_ctx: TestContext) => {
+          expect(localStorage.getItem(STORAGE_KEYS.SETTINGS_UPDATED_AT)).toBe(
+            "2026-04-10T00:00:00.000Z",
+          );
+        },
+      );
+    },
+  );
+
+  // @spec-sync-protocol @FR5
+  f.Scenario(
+    "Settings updated_at not updated when pull returns no settings",
+    ({ Given, And, When, Then }) => {
+      Given(
+        'settings_updated_at in localStorage is "2026-04-10T00:00:00.000Z"',
+        async (_ctx: TestContext) => {
+          localStorage.setItem(
+            STORAGE_KEYS.SETTINGS_UPDATED_AT,
+            "2026-04-10T00:00:00.000Z",
+          );
+        },
+      );
+
+      And(
+        "server will respond to pull with empty settings array",
+        async (_ctx: TestContext) => {
+          syncAdapter = createMockSyncAdapter({
+            pull: vi.fn().mockResolvedValue(makePullResponse({ settings: [] })),
+          });
+        },
+      );
+
+      When("pull is called", async (_ctx: TestContext) => {
+        const service = createSyncService(syncAdapter, repositories);
+        await service.pull();
+      });
+
+      Then(
+        'settings_updated_at in localStorage is "2026-04-10T00:00:00.000Z"',
+        async (_ctx: TestContext) => {
+          expect(localStorage.getItem(STORAGE_KEYS.SETTINGS_UPDATED_AT)).toBe(
+            "2026-04-10T00:00:00.000Z",
+          );
+        },
+      );
+    },
+  );
+
+  // @spec-sync-protocol @FR2
+  f.Scenario(
+    "Pull dispatches sync_complete CustomEvent after applying records",
+    ({ Given, When, Then }) => {
+      const serverTasks = [makeTask()];
+      let eventDispatched = false;
+
+      Given(
+        "server will respond to pull with tasks",
+        async (_ctx: TestContext) => {
+          syncAdapter = createMockSyncAdapter({
+            pull: vi
+              .fn()
+              .mockResolvedValue(makePullResponse({ tasks: serverTasks })),
+          });
+
+          window.addEventListener("sync_complete", () => {
+            eventDispatched = true;
+          });
+        },
+      );
+
+      When("pull is called", async (_ctx: TestContext) => {
+        const service = createSyncService(syncAdapter, repositories);
+        await service.pull();
+      });
+
+      Then(
+        "sync_complete CustomEvent is dispatched",
+        async (_ctx: TestContext) => {
+          expect(eventDispatched).toBe(true);
+        },
+      );
+    },
+  );
 });

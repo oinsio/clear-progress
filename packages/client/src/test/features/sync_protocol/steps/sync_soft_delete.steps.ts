@@ -45,9 +45,143 @@ function mockLastKnownPurgeRevision(
   });
 }
 
+function mockServerPullWithPurgeRevision(
+  purgeRevision: number,
+  currentRevision: number,
+): SyncAdapter {
+  return createMockSyncAdapter({
+    pull: vi.fn().mockResolvedValue(
+      makePullResponse({
+        purge_revision: purgeRevision,
+        current_revision: currentRevision,
+      }),
+    ),
+  });
+}
+
+function mockServerPurgeSuccess(
+  purgeRevision: number,
+  currentRevision: number,
+): SyncAdapter {
+  return createMockSyncAdapter({
+    purge: vi.fn().mockResolvedValue({
+      ok: true,
+      purge_revision: purgeRevision,
+      purged: { tasks: 1, goals: 0 },
+    }),
+    pull: vi.fn().mockResolvedValue(
+      makePullResponse({
+        purge_revision: purgeRevision,
+        current_revision: currentRevision,
+      }),
+    ),
+  });
+}
+
 describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   let repositories: ReturnType<typeof createMockRepositories>;
   let syncAdapter: SyncAdapter;
+
+  // Reusable step definitions
+  const givenDeletedTask = (
+    Given: Parameters<Parameters<typeof f.Scenario>[1]>[0]["Given"],
+  ): (() => string) => {
+    let deletedTaskId: string;
+    Given(
+      "client has local records with is_deleted true",
+      async (_ctx: TestContext) => {
+        deletedTaskId = await seedDeletedTask();
+      },
+    );
+    return () => deletedTaskId;
+  };
+
+  const andLastKnownPurgeRevisionIs = (
+    And: Parameters<Parameters<typeof f.Scenario>[1]>[0]["And"],
+    revision: number,
+  ): void => {
+    And(
+      `last_known_purge_revision is ${revision}`,
+      async (_ctx: TestContext) => {
+        mockLastKnownPurgeRevision(repositories, revision);
+      },
+    );
+  };
+
+  const andServerWillRespondToPullWithPurgeRevision = (
+    And: Parameters<Parameters<typeof f.Scenario>[1]>[0]["And"],
+    purgeRevision: number,
+    currentRevision: number,
+  ): void => {
+    And(
+      `server will respond to pull with purge_revision ${purgeRevision}`,
+      async (_ctx: TestContext) => {
+        syncAdapter = mockServerPullWithPurgeRevision(
+          purgeRevision,
+          currentRevision,
+        );
+      },
+    );
+  };
+
+  const andServerPurgeWillSucceed = (
+    And: Parameters<Parameters<typeof f.Scenario>[1]>[0]["And"],
+    purgeRevision: number,
+    currentRevision: number,
+  ): void => {
+    And(
+      `server purge will succeed with purge_revision ${purgeRevision}`,
+      async (_ctx: TestContext) => {
+        syncAdapter = mockServerPurgeSuccess(purgeRevision, currentRevision);
+      },
+    );
+  };
+
+  const whenPullIsCalled = (
+    When: Parameters<Parameters<typeof f.Scenario>[1]>[0]["When"],
+  ): void => {
+    When("pull is called", async (_ctx: TestContext) => {
+      const service = createSyncService(syncAdapter, repositories);
+      await service.pull();
+    });
+  };
+
+  const whenPurgeIsCalled = (
+    When: Parameters<Parameters<typeof f.Scenario>[1]>[0]["When"],
+  ): void => {
+    When("purge is called", async (_ctx: TestContext) => {
+      const service = createSyncService(syncAdapter, repositories);
+      await service.purge();
+    });
+  };
+
+  const andLastKnownPurgeRevisionIsSetTo = (
+    And: Parameters<Parameters<typeof f.Scenario>[1]>[0]["And"],
+    revision: number,
+  ): void => {
+    And(
+      `last_known_purge_revision is set to ${revision}`,
+      async (_ctx: TestContext) => {
+        expect(repositories.syncMetaRepository.setValue).toHaveBeenCalledWith(
+          SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+          revision,
+        );
+      },
+    );
+  };
+
+  const andLocalSoftDeletedRecordsAreHardDeleted = (
+    And: Parameters<Parameters<typeof f.Scenario>[1]>[0]["And"],
+    getTaskId: () => string,
+  ): void => {
+    And(
+      "local soft-deleted records are hard-deleted",
+      async (_ctx: TestContext) => {
+        const task = await db.tasks.get(getTaskId());
+        expect(task).toBeUndefined();
+      },
+    );
+  };
 
   f.BeforeEachScenario(async () => {
     repositories = createMockRepositories();
@@ -105,54 +239,20 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Pull detects server purge and cleans local records",
     ({ Given, And, When, Then }) => {
-      let deletedTaskId: string;
-
-      Given(
-        "client has local records with is_deleted true",
-        async (_ctx: TestContext) => {
-          deletedTaskId = await seedDeletedTask();
-        },
-      );
-
-      And("last_known_purge_revision is 2", async (_ctx: TestContext) => {
-        mockLastKnownPurgeRevision(repositories, 2);
-      });
-
-      And(
-        "server will respond to pull with purge_revision 3",
-        async (_ctx: TestContext) => {
-          syncAdapter = createMockSyncAdapter({
-            pull: vi
-              .fn()
-              .mockResolvedValue(
-                makePullResponse({ purge_revision: 3, current_revision: 10 }),
-              ),
-          });
-        },
-      );
-
-      When("pull is called", async (_ctx: TestContext) => {
-        const service = createSyncService(syncAdapter, repositories);
-        await service.pull();
-      });
+      const getTaskId = givenDeletedTask(Given);
+      andLastKnownPurgeRevisionIs(And, 2);
+      andServerWillRespondToPullWithPurgeRevision(And, 3, 10);
+      whenPullIsCalled(When);
 
       Then(
         "local soft-deleted records are hard-deleted",
         async (_ctx: TestContext) => {
-          const task = await db.tasks.get(deletedTaskId);
+          const task = await db.tasks.get(getTaskId());
           expect(task).toBeUndefined();
         },
       );
 
-      And(
-        "last_known_purge_revision is set to 3",
-        async (_ctx: TestContext) => {
-          expect(repositories.syncMetaRepository.setValue).toHaveBeenCalledWith(
-            SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
-            3,
-          );
-        },
-      );
+      andLastKnownPurgeRevisionIsSetTo(And, 3);
     },
   );
 
@@ -160,41 +260,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Pull does not purge when purge_revision unchanged",
     ({ Given, And, When, Then }) => {
-      let deletedTaskId: string;
-
-      Given(
-        "client has local records with is_deleted true",
-        async (_ctx: TestContext) => {
-          deletedTaskId = await seedDeletedTask();
-        },
-      );
-
-      And("last_known_purge_revision is 2", async (_ctx: TestContext) => {
-        mockLastKnownPurgeRevision(repositories, 2);
-      });
-
-      And(
-        "server will respond to pull with purge_revision 2",
-        async (_ctx: TestContext) => {
-          syncAdapter = createMockSyncAdapter({
-            pull: vi
-              .fn()
-              .mockResolvedValue(
-                makePullResponse({ purge_revision: 2, current_revision: 10 }),
-              ),
-          });
-        },
-      );
-
-      When("pull is called", async (_ctx: TestContext) => {
-        const service = createSyncService(syncAdapter, repositories);
-        await service.pull();
-      });
+      const getTaskId = givenDeletedTask(Given);
+      andLastKnownPurgeRevisionIs(And, 2);
+      andServerWillRespondToPullWithPurgeRevision(And, 2, 10);
+      whenPullIsCalled(When);
 
       Then(
         "local soft-deleted records are not hard-deleted",
         async (_ctx: TestContext) => {
-          const task = await db.tasks.get(deletedTaskId);
+          const task = await db.tasks.get(getTaskId());
           expect(task).toBeDefined();
           expect(task?.is_deleted).toBe(true);
         },
@@ -206,63 +280,121 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Client purge calls server and cleans local records",
     ({ Given, And, When, Then }) => {
-      let deletedTaskId: string;
-
-      Given(
-        "client has local records with is_deleted true",
-        async (_ctx: TestContext) => {
-          deletedTaskId = await seedDeletedTask();
-        },
-      );
-
-      And(
-        "server purge will succeed with purge_revision 5",
-        async (_ctx: TestContext) => {
-          syncAdapter = createMockSyncAdapter({
-            purge: vi.fn().mockResolvedValue({
-              ok: true,
-              purge_revision: 5,
-              purged: { tasks: 1, goals: 0 },
-            }),
-            pull: vi
-              .fn()
-              .mockResolvedValue(
-                makePullResponse({ purge_revision: 5, current_revision: 15 }),
-              ),
-          });
-        },
-      );
-
-      When("purge is called", async (_ctx: TestContext) => {
-        const service = createSyncService(syncAdapter, repositories);
-        await service.purge();
-      });
+      const getTaskId = givenDeletedTask(Given);
+      andServerPurgeWillSucceed(And, 5, 15);
+      whenPurgeIsCalled(When);
 
       Then("server purge API is called", async (_ctx: TestContext) => {
         expect(syncAdapter.purge).toHaveBeenCalled();
       });
 
-      And(
-        "local soft-deleted records are hard-deleted",
-        async (_ctx: TestContext) => {
-          const task = await db.tasks.get(deletedTaskId);
-          expect(task).toBeUndefined();
-        },
-      );
-
-      And(
-        "last_known_purge_revision is set to 5",
-        async (_ctx: TestContext) => {
-          expect(repositories.syncMetaRepository.setValue).toHaveBeenCalledWith(
-            SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
-            5,
-          );
-        },
-      );
+      andLocalSoftDeletedRecordsAreHardDeleted(And, getTaskId);
+      andLastKnownPurgeRevisionIsSetTo(And, 5);
 
       And("pull is executed after purge", async (_ctx: TestContext) => {
         expect(syncAdapter.pull).toHaveBeenCalled();
       });
+    },
+  );
+
+  // @spec-sync-protocol @FR6
+  f.Scenario(
+    "Purge does not delete records that are not soft-deleted",
+    ({ Given, And, When, Then }) => {
+      const activeTaskId = crypto.randomUUID();
+      const deletedTaskId = crypto.randomUUID();
+
+      Given(
+        'client has task "t1" with is_deleted false',
+        async (_ctx: TestContext) => {
+          await db.tasks.put(
+            makeTask({
+              id: activeTaskId,
+              name: "t1",
+              is_deleted: false,
+              revision: 1,
+            }),
+          );
+        },
+      );
+
+      And(
+        'client has task "t2" with is_deleted true',
+        async (_ctx: TestContext) => {
+          await db.tasks.put(
+            makeTask({
+              id: deletedTaskId,
+              name: "t2",
+              is_deleted: true,
+              revision: 1,
+            }),
+          );
+        },
+      );
+
+      andServerPurgeWillSucceed(And, 5, 15);
+      whenPurgeIsCalled(When);
+
+      Then('task "t1" still exists', async (_ctx: TestContext) => {
+        const task = await db.tasks.get(activeTaskId);
+        expect(task).toBeDefined();
+        expect(task?.name).toBe("t1");
+        expect(task?.is_deleted).toBe(false);
+      });
+
+      And('task "t2" is hard-deleted', async (_ctx: TestContext) => {
+        const task = await db.tasks.get(deletedTaskId);
+        expect(task).toBeUndefined();
+      });
+    },
+  );
+
+  // @spec-sync-protocol @FR6
+  f.Scenario(
+    "Full sync resets needsSync to false before pulling",
+    ({ Given, And, When, Then }) => {
+      const taskId = crypto.randomUUID();
+
+      Given(
+        'client has task "t1" with needsSync true',
+        async (_ctx: TestContext) => {
+          await db.tasks.put(
+            makeTask({
+              id: taskId,
+              name: "t1",
+              needsSync: true,
+              revision: 1,
+            }),
+          );
+        },
+      );
+
+      And(
+        "server will respond to pull with tasks",
+        async (_ctx: TestContext) => {
+          syncAdapter = createMockSyncAdapter({
+            pull: vi
+              .fn()
+              .mockResolvedValue(
+                makePullResponse({ purge_revision: 0, current_revision: 10 }),
+              ),
+          });
+        },
+      );
+
+      When("resetAndPull is called", async (_ctx: TestContext) => {
+        const service = createSyncService(syncAdapter, repositories);
+        await service.resetAndPull();
+      });
+
+      Then(
+        'task "t1" has needsSync false before pull executes',
+        async (_ctx: TestContext) => {
+          const task = await db.tasks.get(taskId);
+          expect(task).toBeDefined();
+          expect(task?.needsSync).toBe(false);
+        },
+      );
     },
   );
 });

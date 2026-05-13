@@ -203,6 +203,41 @@ export function createMockRepositories() {
   };
 }
 
+export function mockAllRepositoriesGetAll(
+  repositories: ReturnType<typeof createMockRepositories>,
+  overrides: {
+    tasks?: Task[];
+    goals?: Goal[];
+    contexts?: unknown[];
+    categories?: unknown[];
+    checklists?: unknown[];
+    ideas?: unknown[];
+    settings?: unknown[];
+  } = {},
+): void {
+  (
+    repositories.taskRepository.getAll as ReturnType<typeof vi.fn>
+  ).mockResolvedValue(overrides.tasks ?? []);
+  (
+    repositories.goalRepository.getAll as ReturnType<typeof vi.fn>
+  ).mockResolvedValue(overrides.goals ?? []);
+  (
+    repositories.contextRepository.getAll as ReturnType<typeof vi.fn>
+  ).mockResolvedValue(overrides.contexts ?? []);
+  (
+    repositories.categoryRepository.getAll as ReturnType<typeof vi.fn>
+  ).mockResolvedValue(overrides.categories ?? []);
+  (
+    repositories.checklistRepository.getAll as ReturnType<typeof vi.fn>
+  ).mockResolvedValue(overrides.checklists ?? []);
+  (
+    repositories.ideaRepository.getAll as ReturnType<typeof vi.fn>
+  ).mockResolvedValue(overrides.ideas ?? []);
+  (
+    repositories.settingsRepository.getAll as ReturnType<typeof vi.fn>
+  ).mockResolvedValue(overrides.settings ?? []);
+}
+
 export function createSyncService(
   syncAdapter: SyncAdapter,
   repositories: ReturnType<typeof createMockRepositories>,
