@@ -239,7 +239,30 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Pull detects server purge and cleans local records",
     ({ Given, And, When, Then }) => {
-      const getTaskId = givenDeletedTask(Given);
+      const deletedTaskId = crypto.randomUUID();
+      const activeTaskId = crypto.randomUUID();
+
+      Given(
+        "client has local records with is_deleted true",
+        async (_ctx: TestContext) => {
+          await db.tasks.put(
+            makeTask({
+              id: deletedTaskId,
+              name: "Deleted task",
+              is_deleted: true,
+              revision: 1,
+            }),
+          );
+          await db.tasks.put(
+            makeTask({
+              id: activeTaskId,
+              name: "Active task",
+              is_deleted: false,
+              revision: 1,
+            }),
+          );
+        },
+      );
       andLastKnownPurgeRevisionIs(And, 2);
       andServerWillRespondToPullWithPurgeRevision(And, 3, 10);
       whenPullIsCalled(When);
@@ -247,8 +270,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Then(
         "local soft-deleted records are hard-deleted",
         async (_ctx: TestContext) => {
-          const task = await db.tasks.get(getTaskId());
-          expect(task).toBeUndefined();
+          const deletedTask = await db.tasks.get(deletedTaskId);
+          expect(deletedTask).toBeUndefined();
+
+          // Verify non-deleted records survive purge (kills () => undefined mutant)
+          const activeTask = await db.tasks.get(activeTaskId);
+          expect(activeTask).toBeDefined();
+          expect(activeTask?.is_deleted).toBe(false);
+          expect(activeTask?.name).toBe("Active task");
         },
       );
 
@@ -260,7 +289,48 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Pull does not purge when purge_revision unchanged",
     ({ Given, And, When, Then }) => {
-      const getTaskId = givenDeletedTask(Given);
+      const taskId = crypto.randomUUID();
+      const goalId = crypto.randomUUID();
+      const contextId = crypto.randomUUID();
+
+      Given(
+        "client has local records with is_deleted true",
+        async (_ctx: TestContext) => {
+          await db.tasks.put(
+            makeTask({
+              id: taskId,
+              name: "Deleted task",
+              is_deleted: true,
+              revision: 1,
+            }),
+          );
+          await db.goals.put({
+            id: goalId,
+            name: "Deleted goal",
+            description: "",
+            cover_file_id: "",
+            status: "planning",
+            sort_order: 0,
+            is_deleted: true,
+            revision: 1,
+            created_at: "2025-01-01T00:00:00.000Z",
+            updated_at: "2025-01-01T00:00:00.000Z",
+            version: 1,
+            needsSync: false,
+          });
+          await db.contexts.put({
+            id: contextId,
+            name: "Deleted context",
+            sort_order: 0,
+            is_deleted: true,
+            revision: 1,
+            created_at: "2025-01-01T00:00:00.000Z",
+            updated_at: "2025-01-01T00:00:00.000Z",
+            version: 1,
+            needsSync: false,
+          });
+        },
+      );
       andLastKnownPurgeRevisionIs(And, 2);
       andServerWillRespondToPullWithPurgeRevision(And, 2, 10);
       whenPullIsCalled(When);
@@ -268,9 +338,18 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Then(
         "local soft-deleted records are not hard-deleted",
         async (_ctx: TestContext) => {
-          const task = await db.tasks.get(getTaskId());
+          // Verify all entity tables still contain soft-deleted records
+          const task = await db.tasks.get(taskId);
           expect(task).toBeDefined();
           expect(task?.is_deleted).toBe(true);
+
+          const goal = await db.goals.get(goalId);
+          expect(goal).toBeDefined();
+          expect(goal?.is_deleted).toBe(true);
+
+          const context = await db.contexts.get(contextId);
+          expect(context).toBeDefined();
+          expect(context?.is_deleted).toBe(true);
         },
       );
     },

@@ -114,10 +114,10 @@ Source: `mutation-analysis.md` (SyncService 85.6%, CoverSyncService 80.1%). Targ
 
 ### 7.1 Type A: strengthen assertions in existing scenarios
 
-- [ ] 7.1.1 `sync_soft_delete.feature`: "Pull does not purge when purge_revision unchanged" — assert specific tables, not just generic "not hard-deleted"
-- [ ] 7.1.2 `sync_soft_delete.feature`: "Pull detects server purge" — assert non-deleted records survive purge (kills `() => undefined` mutant)
-- [ ] 7.1.3 `cover_upload.feature`: "Duplicate cover detected by hash" — assert reupload does NOT happen, not just that file_id matches
-- [ ] 7.1.4 `cover_lifecycle.feature`: "Full sync reupload updates goal" — assert exact version value (`version = old + 1`), not just "incremented"
+- [x] 7.1.1 `sync_soft_delete.feature`: "Pull does not purge when purge_revision unchanged" — assert specific tables, not just generic "not hard-deleted"
+- [x] 7.1.2 `sync_soft_delete.feature`: "Pull detects server purge" — assert non-deleted records survive purge (kills `() => undefined` mutant)
+- [x] 7.1.3 `cover_upload.feature`: "Duplicate cover detected by hash" — assert reupload does NOT happen, not just that file_id matches
+- [x] 7.1.4 `cover_lifecycle.feature`: "Full sync reupload updates goal" — assert exact version value (`version = old + 1`), not just "incremented"
 
 ### 7.2 Type B: new scenarios for SyncService (11 scenarios)
 

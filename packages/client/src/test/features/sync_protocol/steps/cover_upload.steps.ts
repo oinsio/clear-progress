@@ -239,6 +239,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
               cover_file_id: "existing-server-file",
             }),
           );
+
+          // Assert reupload does NOT happen — cover.save should not be called
+          // because the cover already exists on server (kills ConditionalExpression mutant)
+          expect(deps.coverRepository.save).not.toHaveBeenCalled();
         },
       );
     },

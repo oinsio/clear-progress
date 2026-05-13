@@ -702,8 +702,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       );
 
       And("goal version is incremented", async (_ctx: TestContext) => {
+        // Assert exact version value: old version (5) + 1 = 6
+        // This kills the ArithmeticOperator mutant (goal.version - 1)
         expect(deps.goalRepository.update).toHaveBeenCalledWith(
           expect.objectContaining({ version: 6 }),
+        );
+        // Explicitly verify it's NOT decremented
+        expect(deps.goalRepository.update).not.toHaveBeenCalledWith(
+          expect.objectContaining({ version: 4 }),
         );
       });
 
