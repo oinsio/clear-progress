@@ -83,19 +83,23 @@ export function syncAdapterContract(
       await teardown?.();
     });
 
+    // @spec-sync-protocol FR12: Init and ping lifecycle
     describe("Lifecycle", () => {
       it("should return ok:true and initialized:false before init", async () => {
+        // @spec-sync-protocol FR12: ping before init shows uninitialized
         const response = await adapter.ping();
         expect(response.ok).toBe(true);
         expect(response.initialized).toBe(false);
       });
 
       it("should return ok:true on init", async () => {
+        // @spec-sync-protocol FR12: init creates Meta sheet and returns success
         const response = await adapter.init();
         expect(response.ok).toBe(true);
       });
 
       it("should return initialized:true after init", async () => {
+        // @spec-sync-protocol FR12: ping after init shows initialized
         await adapter.init();
         const response = await adapter.ping();
         expect(response.initialized).toBe(true);

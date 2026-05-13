@@ -45,7 +45,7 @@ Feature: Sync Protocol — Soft Delete and Purge
     Then task "t1" still exists
     And task "t2" is hard-deleted
 
-  @spec-sync-protocol @FR6
+  @spec-sync-protocol @FR6 @FR14
   Scenario: Full sync resets needsSync to false before pulling
     Given client has task "t1" with needsSync true
     And server will respond to pull with tasks

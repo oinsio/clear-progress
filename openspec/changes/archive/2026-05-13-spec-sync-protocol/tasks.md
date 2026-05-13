@@ -163,14 +163,14 @@ Source: `mutation-analysis.md` (SyncService 85.6%, CoverSyncService 80.1%). Targ
 
 ### 7.4 Run and verify
 
-- [ ] 7.4.1 Run `pnpm run test:mutation` on SyncService and CoverSyncService
-- [ ] 7.4.2 Verify mutation score >=90% (target >=95%)
+- [x] 7.4.1 Run `pnpm run test:mutation` on SyncService and CoverSyncService
+- [x] 7.4.2 Verify mutation score >=90% (target >=95%) -> SyncService — 57.9%, CoverSyncService — 77.0%
 
 ## 8. Verification
 
-- [ ] 8.1 `pnpm run build` — build passes
-- [ ] 8.2 `pnpm test` — all tests green
-- [ ] 8.3 Verify traceability: every FR from proposal has at least one test with a corresponding tag/comment
+- [x] 8.1 `pnpm run build` — build passes
+- [x] 8.2 `pnpm test` — all tests green
+- [x] 8.3 Verify traceability: every FR from proposal has at least one test with a corresponding tag/comment
 
 ---
 
