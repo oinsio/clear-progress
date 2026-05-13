@@ -6,9 +6,12 @@ const config = {
     configFile: "vitest.config.ts",
   },
   mutate: ["src/**/*.ts", "!src/**/*.test.ts", "!src/types/**/*.ts"],
-  reporters: ["html", "clear-text", "progress"],
+  reporters: ["html", "json", "clear-text", "progress"],
   htmlReporter: {
     fileName: "reports/mutation/index.html",
+  },
+  jsonReporter: {
+    fileName: "reports/mutation/mutation-report.json",
   },
   thresholds: {
     high: 80,
@@ -16,7 +19,6 @@ const config = {
     break: null,
   },
   timeoutMS: 10000,
-  concurrency: 4,
 };
 
 export default config;

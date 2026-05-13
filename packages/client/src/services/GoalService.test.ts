@@ -472,6 +472,49 @@ describe("GoalService", () => {
       const upserted = getUpsertedGoals();
       expect(upserted[0].updated_at).toBe(upserted[1].updated_at);
     });
+
+    // FR18: Reorder optimization — needsSync only for changed records
+    it("should not call bulkUpsert when order has not changed", async () => {
+      const goalA = buildGoal({ sort_order: 0 });
+      const goalB = buildGoal({ sort_order: 1 });
+      const goalC = buildGoal({ sort_order: 2 });
+      const goalService = new GoalService(mockGoalRepository);
+      await goalService.reorderGoals([goalA, goalB, goalC]);
+      expect(mockGoalRepository.bulkUpsert).not.toHaveBeenCalled();
+    });
+
+    it("should set needsSync to false for goals that did not change position", async () => {
+      const goalA = buildGoal({ sort_order: 0, needsSync: true });
+      const goalB = buildGoal({ sort_order: 2, needsSync: true });
+      const goalService = new GoalService(mockGoalRepository);
+      await goalService.reorderGoals([goalA, goalB]);
+      const upserted = getUpsertedGoals();
+      expect(upserted[0].needsSync).toBe(false); // не изменился
+      expect(upserted[1].needsSync).toBe(true); // изменился с 2 на 1
+    });
+
+    it("should not increment version for goals that did not change position", async () => {
+      const goalA = buildGoal({ sort_order: 0, version: 3 });
+      const goalB = buildGoal({ sort_order: 2, version: 5 });
+      const goalService = new GoalService(mockGoalRepository);
+      await goalService.reorderGoals([goalA, goalB]);
+      const upserted = getUpsertedGoals();
+      expect(upserted[0].version).toBe(3); // не изменился
+      expect(upserted[1].version).toBe(6); // изменился с 2 на 1
+    });
+
+    it("should not update updated_at for goals that did not change position", async () => {
+      const oldTimestamp = toISOTimestamp(
+        Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
+      );
+      const goalA = buildGoal({ sort_order: 0, updated_at: oldTimestamp });
+      const goalB = buildGoal({ sort_order: 2, updated_at: oldTimestamp });
+      const goalService = new GoalService(mockGoalRepository);
+      await goalService.reorderGoals([goalA, goalB]);
+      const upserted = getUpsertedGoals();
+      expect(upserted[0].updated_at).toBe(oldTimestamp); // не изменился
+      expect(upserted[1].updated_at).not.toBe(oldTimestamp); // изменился
+    });
   });
 
   describe("searchByName - edge cases", () => {

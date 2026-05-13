@@ -35,3 +35,7 @@ export const MAX_FOCUSED_GOALS = 2;
 
 export const MAX_COVER_SIZE_BYTES = 2 * 1024 * 1024;
 export const MAX_COVER_BATCH_SIZE = 10;
+
+export const SYNC_ERRORS = {
+  LOCK_TIMEOUT: "SYNC_LOCK_TIMEOUT",
+} as const;

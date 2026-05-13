@@ -123,6 +123,7 @@ export const SYNC_DEBOUNCE_MS = 15 * 1000;
 export const PING_INTERVAL_MS = 30 * 1000;
 export const MAX_SILENT_REFRESH_ATTEMPTS = 3;
 export const MAX_PING_ATTEMPTS = 20; // 10 minutes (20 × 30s)
+export const PUSH_CHUNK_SIZE = 200;
 
 export const BACKEND_CONNECTION_EVENT = "backend_connection_changed";
 export const GOOGLE_CLIENT_ID_CHANGED_EVENT = "google_client_id_changed";

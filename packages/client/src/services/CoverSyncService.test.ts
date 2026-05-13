@@ -139,6 +139,26 @@ function createPendingCover(
   };
 }
 
+function createGoalWithCover(
+  goalId: string,
+  coverFileId: string,
+  overrides: Record<string, unknown> = {},
+) {
+  return {
+    id: goalId,
+    name: "Test Goal",
+    description: "",
+    cover_file_id: coverFileId,
+    status: "in_progress" as const,
+    sort_order: 0,
+    is_deleted: false,
+    created_at: toISOTimestamp(),
+    updated_at: toISOTimestamp(),
+    version: 1,
+    ...overrides,
+  };
+}
+
 describe("CoverSyncService", () => {
   let mockSyncAdapter: SyncAdapter;
   let mockPendingCoverRepository: PendingCoverRepository;
@@ -213,18 +233,10 @@ describe("CoverSyncService", () => {
     it("should upload pending covers and update goal cover_file_id", async () => {
       const pendingCover = createPendingCover();
       const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
-      const matchingGoal = {
-        id: pendingCover.goal_id,
-        name: "Test Goal",
-        description: "",
-        cover_file_id: localFileId,
-        status: "in_progress" as const,
-        sort_order: 0,
-        is_deleted: false,
-        created_at: toISOTimestamp(),
-        updated_at: toISOTimestamp(),
-        version: 1,
-      };
+      const matchingGoal = createGoalWithCover(
+        pendingCover.goal_id,
+        localFileId,
+      );
       mockPendingCoverRepository = createMockPendingCoverRepository({
         getAll: vi.fn().mockResolvedValue([pendingCover]),
       });
@@ -381,18 +393,11 @@ describe("CoverSyncService", () => {
 
     it("should not update goal if cover_file_id no longer matches", async () => {
       const pendingCover = createPendingCover({ local_id: "changed-local-id" });
-      const goalWithDifferentCover = {
-        id: pendingCover.goal_id,
-        name: "Test Goal",
-        description: "",
-        cover_file_id: "some-other-remote-file-id",
-        status: "in_progress" as const,
-        sort_order: 0,
-        is_deleted: false,
-        created_at: toISOTimestamp(),
-        updated_at: toISOTimestamp(),
-        version: 2,
-      };
+      const goalWithDifferentCover = createGoalWithCover(
+        pendingCover.goal_id,
+        "some-other-remote-file-id",
+        { version: 2 },
+      );
       mockPendingCoverRepository = createMockPendingCoverRepository({
         getAll: vi.fn().mockResolvedValue([pendingCover]),
       });
@@ -409,19 +414,11 @@ describe("CoverSyncService", () => {
     it("should mark goal as needsSync after updating cover_file_id", async () => {
       const pendingCover = createPendingCover();
       const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
-      const matchingGoal = {
-        id: pendingCover.goal_id,
-        name: "Test Goal",
-        description: "",
-        cover_file_id: localFileId,
-        status: "in_progress" as const,
-        sort_order: 0,
-        is_deleted: false,
-        created_at: toISOTimestamp(),
-        updated_at: toISOTimestamp(),
-        version: 1,
-        needsSync: false,
-      };
+      const matchingGoal = createGoalWithCover(
+        pendingCover.goal_id,
+        localFileId,
+        { needsSync: false },
+      );
       mockPendingCoverRepository = createMockPendingCoverRepository({
         getAll: vi.fn().mockResolvedValue([pendingCover]),
       });
@@ -437,35 +434,71 @@ describe("CoverSyncService", () => {
       );
     });
 
+    // FR8: test deduplication handling (reused: true response)
+    describe("when server returns reused: true (deduplication)", () => {
+      function setupDeduplicationScenario(localId: string) {
+        const pendingCover = createPendingCover({ local_id: localId });
+        const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
+        const existingServerId = "existing-server-file-id";
+        const matchingGoal = createGoalWithCover(
+          pendingCover.goal_id,
+          localFileId,
+        );
+        mockPendingCoverRepository = createMockPendingCoverRepository({
+          getAll: vi.fn().mockResolvedValue([pendingCover]),
+        });
+        mockGoalRepository = createMockGoalRepository({
+          getActive: vi.fn().mockResolvedValue([matchingGoal]),
+        });
+        mockSyncAdapter = createMockSyncAdapter({
+          uploadCovers: vi.fn().mockResolvedValue({
+            ok: true,
+            results: [
+              {
+                local_id: pendingCover.local_id,
+                goal_id: pendingCover.goal_id,
+                file_id: existingServerId,
+                reused: true,
+              },
+            ],
+          }),
+        });
+        return { pendingCover, existingServerId };
+      }
+
+      it("should update goal with existing file_id", async () => {
+        const { existingServerId } =
+          setupDeduplicationScenario("dedup-local-id");
+        const service = createService();
+
+        await service.sync();
+
+        expect(mockGoalRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({
+            cover_file_id: existingServerId,
+          }),
+        );
+      });
+
+      it("should delete pending cover after deduplication", async () => {
+        setupDeduplicationScenario("dedup-delete-id");
+        const service = createService();
+
+        await service.sync();
+
+        expect(mockPendingCoverRepository.delete).toHaveBeenCalledWith(
+          "dedup-delete-id",
+        );
+      });
+    });
+
     it("should update all goals that share the same local cover file_id", async () => {
       const pendingCover = createPendingCover({ local_id: "shared-local-id" });
       const localFileId = `${LOCAL_COVER_ID_PREFIX}shared-local-id`;
 
-      const baseGoal = {
-        name: "Test Goal",
-        description: "",
-        status: "in_progress" as const,
-        sort_order: 0,
-        is_deleted: false,
-        created_at: toISOTimestamp(),
-        updated_at: toISOTimestamp(),
-        version: 1,
-      };
-      const goal1 = {
-        ...baseGoal,
-        id: "goal-shared-1",
-        cover_file_id: localFileId,
-      };
-      const goal2 = {
-        ...baseGoal,
-        id: "goal-shared-2",
-        cover_file_id: localFileId,
-      };
-      const goalOther = {
-        ...baseGoal,
-        id: "goal-other",
-        cover_file_id: "other-file-id",
-      };
+      const goal1 = createGoalWithCover("goal-shared-1", localFileId);
+      const goal2 = createGoalWithCover("goal-shared-2", localFileId);
+      const goalOther = createGoalWithCover("goal-other", "other-file-id");
 
       mockPendingCoverRepository = createMockPendingCoverRepository({
         getAll: vi.fn().mockResolvedValue([pendingCover]),
