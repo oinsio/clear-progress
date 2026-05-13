@@ -6,6 +6,7 @@ export {
   MAX_FOCUSED_GOALS,
   PUSH_RESULT_STATUS,
   SETTINGS_KEYS,
+  SYNC_ERRORS,
   SYNC_META_KEYS,
 } from "./constants";
 // Domain types (re-exported from schemas)

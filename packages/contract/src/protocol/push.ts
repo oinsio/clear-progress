@@ -52,4 +52,5 @@ export interface PushResponse {
     settings?: PushSettingResult[];
   };
   server_time: string;
+  error?: string;
 }

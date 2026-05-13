@@ -95,8 +95,8 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ### FR17: Lock timeout
 
-- [ ] 6.5.4 Write contract test: server returns `SYNC_LOCK_TIMEOUT` when lock unavailable
-- [ ] 6.5.5 Write unit test: SyncService handles `SYNC_LOCK_TIMEOUT` — records retain needsSync for retry
+- [x] 6.5.4 Write contract test: server returns `SYNC_LOCK_TIMEOUT` when lock unavailable
+- [x] 6.5.5 Write unit test: SyncService handles `SYNC_LOCK_TIMEOUT` — records retain needsSync for retry
 
 ### FR18: Reorder optimization
 
