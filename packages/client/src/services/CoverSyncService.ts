@@ -90,7 +90,11 @@ export class CoverSyncService {
         if (result.error || !result.file_id) continue;
         const pendingCover = pendingByLocalId.get(result.local_id);
         if (!pendingCover) continue;
-        await this.handleSuccessfulUpload(pendingCover, result.file_id);
+        await this.handleSuccessfulUpload(
+          pendingCover,
+          result.file_id,
+          result.reused ?? false,
+        );
       }
     }
   }
@@ -373,6 +377,7 @@ export class CoverSyncService {
   private async handleSuccessfulUpload(
     pendingCover: PendingCoverRecord,
     fileId: string,
+    reused: boolean = false,
   ): Promise<void> {
     const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
     const allGoals = await this.goalRepository.getActive();
@@ -390,11 +395,13 @@ export class CoverSyncService {
       });
     }
 
-    await this.coverRepository.save({
-      file_id: fileId,
-      data_hash: pendingCover.data_hash,
-      data: pendingCover.data,
-    });
+    if (!reused) {
+      await this.coverRepository.save({
+        file_id: fileId,
+        data_hash: pendingCover.data_hash,
+        data: pendingCover.data,
+      });
+    }
 
     await this.pendingCoverRepository.delete(pendingCover.local_id);
     localCoverCache.transfer(pendingCover.local_id, fileId);
