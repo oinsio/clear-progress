@@ -1,6 +1,7 @@
 import type { PushResponse, SyncAdapter } from "@clear-progress/contract";
 import {
   LOCAL_COVER_ID_PREFIX,
+  PUSH_CHUNK_SIZE,
   PUSH_RESULT_STATUS,
   STORAGE_KEYS,
   SYNC_META_KEYS,
@@ -198,32 +199,197 @@ export class SyncService {
         : goal,
     );
 
-    const pushResponse = await this.syncAdapter.push({
-      tasks: stripDirty(tasks) as Task[],
-      goals: stripDirty(goalsForPush) as Goal[],
-      contexts: stripDirty(contexts) as Context[],
-      categories: stripDirty(categories) as Category[],
-      checklist_items: stripDirty(checklist_items) as ChecklistItem[],
-      ideas: stripDirty(ideas) as Idea[],
-      settings: stripDirty(settings) as Setting[],
-    });
-
-    if (!pushResponse.ok) {
-      throw new Error("Push failed");
-    }
-
-    await this._applyPushResults(
-      pushResponse.results,
-      sentVersions,
-      pushResponse.revision,
+    // Split into chunks
+    const chunks = this._createPushChunks(
+      tasks,
+      goalsForPush,
+      contexts,
+      categories,
+      checklist_items,
+      ideas,
+      settings,
     );
 
-    if (pushResponse.revision !== undefined) {
-      await this.syncMetaRepository.setValue(
-        SYNC_META_KEYS.LAST_KNOWN_REVISION,
+    let lastRevision: number | undefined;
+
+    // Send chunks sequentially
+    for (const chunk of chunks) {
+      const pushResponse = await this.syncAdapter.push({
+        tasks: stripDirty(chunk.tasks) as Task[],
+        goals: stripDirty(chunk.goals) as Goal[],
+        contexts: stripDirty(chunk.contexts) as Context[],
+        categories: stripDirty(chunk.categories) as Category[],
+        checklist_items: stripDirty(chunk.checklist_items) as ChecklistItem[],
+        ideas: stripDirty(chunk.ideas) as Idea[],
+        settings: stripDirty(chunk.settings) as Setting[],
+      });
+
+      if (!pushResponse.ok) {
+        throw new Error("Push failed");
+      }
+
+      await this._applyPushResults(
+        pushResponse.results,
+        sentVersions,
         pushResponse.revision,
       );
+
+      if (pushResponse.revision !== undefined) {
+        lastRevision = pushResponse.revision;
+      }
     }
+
+    if (lastRevision !== undefined) {
+      await this.syncMetaRepository.setValue(
+        SYNC_META_KEYS.LAST_KNOWN_REVISION,
+        lastRevision,
+      );
+    }
+  }
+
+  private _createPushChunks(
+    tasks: Task[],
+    goals: Goal[],
+    contexts: Context[],
+    categories: Category[],
+    checklist_items: ChecklistItem[],
+    ideas: Idea[],
+    settings: Setting[],
+  ): Array<{
+    tasks: Task[];
+    goals: Goal[];
+    contexts: Context[];
+    categories: Category[];
+    checklist_items: ChecklistItem[];
+    ideas: Idea[];
+    settings: Setting[];
+  }> {
+    const allRecords = [
+      ...tasks,
+      ...goals,
+      ...contexts,
+      ...categories,
+      ...checklist_items,
+      ...ideas,
+      ...settings,
+    ];
+
+    const totalCount = allRecords.length;
+
+    if (totalCount <= PUSH_CHUNK_SIZE) {
+      return [
+        {
+          tasks,
+          goals,
+          contexts,
+          categories,
+          checklist_items,
+          ideas,
+          settings,
+        },
+      ];
+    }
+
+    const chunks: Array<{
+      tasks: Task[];
+      goals: Goal[];
+      contexts: Context[];
+      categories: Category[];
+      checklist_items: ChecklistItem[];
+      ideas: Idea[];
+      settings: Setting[];
+    }> = [];
+
+    const remainingTasks = [...tasks];
+    const remainingGoals = [...goals];
+    const remainingContexts = [...contexts];
+    const remainingCategories = [...categories];
+    const remainingChecklistItems = [...checklist_items];
+    const remainingIdeas = [...ideas];
+    const remainingSettings = [...settings];
+
+    while (
+      remainingTasks.length > 0 ||
+      remainingGoals.length > 0 ||
+      remainingContexts.length > 0 ||
+      remainingCategories.length > 0 ||
+      remainingChecklistItems.length > 0 ||
+      remainingIdeas.length > 0 ||
+      remainingSettings.length > 0
+    ) {
+      const chunk = {
+        tasks: [] as Task[],
+        goals: [] as Goal[],
+        contexts: [] as Context[],
+        categories: [] as Category[],
+        checklist_items: [] as ChecklistItem[],
+        ideas: [] as Idea[],
+        settings: [] as Setting[],
+      };
+
+      let chunkSize = 0;
+
+      // Fill chunk with records from each type
+      const takeFromArray = <T>(arr: T[], remaining: number): T[] => {
+        const toTake = Math.min(arr.length, remaining);
+        return arr.splice(0, toTake);
+      };
+
+      chunk.tasks = takeFromArray(remainingTasks, PUSH_CHUNK_SIZE - chunkSize);
+      chunkSize += chunk.tasks.length;
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.goals = takeFromArray(
+          remainingGoals,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.goals.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.contexts = takeFromArray(
+          remainingContexts,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.contexts.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.categories = takeFromArray(
+          remainingCategories,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.categories.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.checklist_items = takeFromArray(
+          remainingChecklistItems,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.checklist_items.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.ideas = takeFromArray(
+          remainingIdeas,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.ideas.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.settings = takeFromArray(
+          remainingSettings,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.settings.length;
+      }
+
+      chunks.push(chunk);
+    }
+
+    return chunks;
   }
 
   private async _applyPushResults(

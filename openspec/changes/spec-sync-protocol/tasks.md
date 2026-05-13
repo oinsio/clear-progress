@@ -84,9 +84,14 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ### FR16: Chunked push
 
-- [ ] 6.5.1 Verify SyncService chunked push implementation exists — check `SyncService.ts` for chunk splitting logic
-- [ ] 6.5.2 Write unit tests: push splits into chunks when >200 records, single request when <=200
-- [ ] 6.5.3 Write unit test: chunk failure stops remaining chunks, failed records retain needsSync
+- [x] 6.5.1 Verify SyncService chunked push implementation exists — check `SyncService.ts` for chunk splitting logic
+  - Result: chunked push NOT implemented — current code sends all records in single request
+- [x] 6.5.2 Write unit tests: push splits into chunks when >200 records, single request when <=200
+  - Created `sync_chunked_push.feature` with 5 scenarios
+  - Created `sync_chunked_push.steps.ts` with step definitions
+  - Tests are RED (failing as expected) — 6 failures, 13 passes
+- [x] 6.5.3 Write unit test: chunk failure stops remaining chunks, failed records retain needsSync
+  - Covered in scenario "Chunk failure stops remaining chunks"
 
 ### FR17: Lock timeout
 
