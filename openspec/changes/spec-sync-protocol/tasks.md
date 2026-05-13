@@ -100,13 +100,13 @@ Retrospective documentation — the code is already implemented. Tasks focus on 
 
 ### FR18: Reorder optimization
 
-- [ ] 6.5.6 Verify reorder methods (reorderTasks, reorderGoals) compare sort_order before marking needsSync
-- [ ] 6.5.7 Write unit tests: only changed sort_order records are marked dirty; no-op reorder writes nothing
+- [x] 6.5.6 Verify reorder methods (reorderTasks, reorderGoals) compare sort_order before marking needsSync
+- [x] 6.5.7 Write unit tests: only changed sort_order records are marked dirty; no-op reorder writes nothing
 
 ### FR19: Settings no-op optimization
 
-- [ ] 6.5.8 Verify SettingsRepository.set() compares before writing
-- [ ] 6.5.9 Write unit tests: same value skips put(), changed value triggers put() and needsSync
+- [x] 6.5.8 Verify SettingsRepository.set() compares before writing
+- [x] 6.5.9 Write unit tests: same value skips put(), changed value triggers put() and needsSync
 
 ## 7. Mutation testing — kill survived mutants
 

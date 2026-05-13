@@ -952,6 +952,32 @@ describe("TaskService", () => {
       expect(upserted[0].updated_at).toBe(oldTimestamp); // не изменился
       expect(upserted[1].updated_at).not.toBe(oldTimestamp); // изменился
     });
+
+    // FR18: Reorder optimization — needsSync only for changed records
+    it("should set needsSync to false for tasks that did not change position", async () => {
+      const taskA = buildTask({ sort_order: 0, needsSync: true });
+      const taskB = buildTask({ sort_order: 2, needsSync: true });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.reorderTasks([taskA, taskB]);
+      const upserted = getUpsertedTasks();
+      expect(upserted[0].needsSync).toBe(false); // не изменился
+      expect(upserted[1].needsSync).toBe(true); // изменился с 2 на 1
+    });
+
+    it("should not call bulkUpsert when all tasks keep their positions", async () => {
+      const taskA = buildTask({ sort_order: 0, needsSync: false });
+      const taskB = buildTask({ sort_order: 1, needsSync: false });
+      const taskC = buildTask({ sort_order: 2, needsSync: false });
+      const taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+      );
+      await taskService.reorderTasks([taskA, taskB, taskC]);
+      expect(mockTaskRepository.bulkUpsert).not.toHaveBeenCalled();
+    });
   });
 
   describe("getCompleted", () => {

@@ -105,6 +105,61 @@ describe("SettingsRepository", () => {
       );
       expect(updatedAt <= maxAllowed).toBe(true);
     });
+
+    // FR19: Settings no-op optimization
+    it("should not update when value is unchanged", async () => {
+      await db.settings.add(
+        buildSetting({
+          key: "default_box",
+          value: "inbox",
+          updated_at: toISOTimestamp(
+            Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+          ),
+        }),
+      );
+
+      await settingsRepository.set("default_box", "inbox");
+
+      const setting = await db.settings.get({ key: "default_box" });
+      expect(setting?.value).toBe("inbox");
+      expect(setting?.updated_at).toBe(
+        toISOTimestamp(Temporal.Instant.from("2026-01-01T00:00:00.000Z")),
+      );
+    });
+
+    it("should update when value changes", async () => {
+      const oldTimestamp = toISOTimestamp(
+        Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
+      );
+      await db.settings.add(
+        buildSetting({
+          key: "default_box",
+          value: "inbox",
+          updated_at: oldTimestamp,
+        }),
+      );
+
+      await settingsRepository.set("default_box", "today");
+
+      const setting = await db.settings.get({ key: "default_box" });
+      expect(setting?.value).toBe("today");
+      expect(setting?.updated_at).not.toBe(oldTimestamp);
+    });
+
+    it("should set needsSync to true when value changes", async () => {
+      await db.settings.add(
+        buildSetting({
+          key: "default_box",
+          value: "inbox",
+          needsSync: false,
+        }),
+      );
+
+      await settingsRepository.set("default_box", "today");
+
+      const setting = await db.settings.get({ key: "default_box" });
+      expect(setting?.needsSync).toBe(true);
+    });
   });
 
   describe("bulkUpsert", () => {
