@@ -12,6 +12,7 @@ import type { PendingCoverRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { CoverSyncService } from "./CoverSyncService";
 import { localCoverCache } from "./LocalCoverCache";
+import { createMockSyncAdapter } from "./SyncService.test-helpers";
 
 // jsdom does not implement Blob.prototype.arrayBuffer — polyfill for tests
 Object.defineProperty(Blob.prototype, "arrayBuffer", {
@@ -49,42 +50,6 @@ function createMockGetCoversNotFound(fileId: string) {
     ok: true,
     covers: [{ file_id: fileId, error: "FILE_NOT_FOUND" }],
   });
-}
-
-function createMockSyncAdapter(
-  overrides: Partial<SyncAdapter> = {},
-): SyncAdapter {
-  return {
-    uploadCover: vi.fn().mockResolvedValue({
-      ok: true,
-      file_id: "uploaded-file-id",
-      reused: false,
-    }),
-    uploadCovers: vi
-      .fn()
-      .mockImplementation(
-        (request: { covers: Array<{ local_id: string; goal_id: string }> }) =>
-          Promise.resolve({
-            ok: true,
-            results: request.covers.map((cover) => ({
-              local_id: cover.local_id,
-              goal_id: cover.goal_id,
-              file_id: "uploaded-file-id",
-              reused: false,
-            })),
-          }),
-      ),
-    deleteCover: vi
-      .fn()
-      .mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
-    getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
-    ping: vi.fn(),
-    init: vi.fn(),
-    pull: vi.fn(),
-    push: vi.fn(),
-    purge: vi.fn(),
-    ...overrides,
-  } as SyncAdapter;
 }
 
 function createMockPendingCoverRepository(

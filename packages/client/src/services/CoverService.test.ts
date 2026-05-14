@@ -10,6 +10,7 @@ import {
   getCoverDisplayUrl,
 } from "./CoverService";
 import { localCoverCache } from "./LocalCoverCache";
+import { createMockSyncAdapter } from "./SyncService.test-helpers";
 
 const FAKE_ARRAY_BUFFER = new TextEncoder().encode("fake image content")
   .buffer as ArrayBuffer;
@@ -56,29 +57,6 @@ function createMockPendingCoverRepository(
     delete: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   } as PendingCoverRepository;
-}
-
-function createMockSyncAdapter(
-  overrides: Partial<SyncAdapter> = {},
-): SyncAdapter {
-  return {
-    uploadCover: vi.fn().mockResolvedValue({
-      ok: true,
-      file_id: "new-file-id",
-      reused: false,
-    }),
-    deleteCover: vi
-      .fn()
-      .mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
-    ping: vi.fn(),
-    init: vi.fn(),
-    pull: vi.fn(),
-    push: vi.fn(),
-    uploadCovers: vi.fn(),
-    getCover: vi.fn(),
-    purge: vi.fn(),
-    ...overrides,
-  } as SyncAdapter;
 }
 
 describe("buildCoverFilename", () => {
