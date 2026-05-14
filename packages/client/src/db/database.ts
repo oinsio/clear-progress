@@ -16,11 +16,11 @@ import { DB_SCHEMA, DB_SCHEMA_V4 } from "./schema";
 
 const V1_SCHEMA = {
   tasks:
-    "id, box, goal_id, context_id, category_id, is_completed, is_deleted, sort_order, version, updated_at",
-  goals: "id, status, is_deleted, sort_order, version, updated_at",
-  contexts: "id, is_deleted, sort_order, version, updated_at",
-  categories: "id, is_deleted, sort_order, version, updated_at",
-  checklist_items: "id, task_id, is_deleted, sort_order, version, updated_at",
+    "id, box, goal_id, context_id, category_id, is_completed, is_deleted, sort_order, updated_at",
+  goals: "id, status, is_deleted, sort_order, updated_at",
+  contexts: "id, is_deleted, sort_order, updated_at",
+  categories: "id, is_deleted, sort_order, updated_at",
+  checklist_items: "id, task_id, is_deleted, sort_order, updated_at",
   settings: "key, updated_at",
 };
 

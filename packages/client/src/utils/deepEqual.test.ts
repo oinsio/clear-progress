@@ -8,7 +8,6 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         description: "Old description",
-        version: 1,
         updated_at: "2024-01-01T00:00:00.000Z",
         needsSync: false,
       };
@@ -26,7 +25,6 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         description: "Description",
-        version: 1,
         updated_at: "2024-01-01T00:00:00.000Z",
         needsSync: false,
       };
@@ -43,7 +41,6 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         description: "Description",
-        version: 1,
         updated_at: "2024-01-01T00:00:00.000Z",
         needsSync: false,
         revision: 0,
@@ -51,7 +48,6 @@ describe("hasEntityChanged", () => {
 
       const updated = {
         ...existing,
-        version: 2,
         updated_at: "2024-01-02T00:00:00.000Z",
         needsSync: true,
         revision: 1,
@@ -67,14 +63,12 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         description: "",
-        version: 1,
       };
 
       const updated = {
         id: "1",
         name: "Task 1",
         description: undefined as string | undefined,
-        version: 1,
       };
 
       expect(hasEntityChanged(existing, updated)).toBe(false);
@@ -85,14 +79,12 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         description: undefined as string | undefined,
-        version: 1,
       };
 
       const updated = {
         id: "1",
         name: "Task 1",
         description: "",
-        version: 1,
       };
 
       expect(hasEntityChanged(existing, updated)).toBe(false);
@@ -103,14 +95,12 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         description: null as string | null,
-        version: 1,
       };
 
       const updated = {
         id: "1",
         name: "Task 1",
         description: "",
-        version: 1,
       };
 
       expect(hasEntityChanged(existing, updated)).toBe(false);
@@ -121,14 +111,12 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         description: "",
-        version: 1,
       };
 
       const updated = {
         id: "1",
         name: "Task 1",
         description: "New description",
-        version: 1,
       };
 
       expect(hasEntityChanged(existing, updated)).toBe(true);
@@ -142,7 +130,6 @@ describe("hasEntityChanged", () => {
         name: "Task 1",
         description: "Description",
         is_completed: false,
-        version: 1,
       };
 
       const updated = {
@@ -160,7 +147,6 @@ describe("hasEntityChanged", () => {
         name: "Task 1",
         description: "Description",
         is_completed: false,
-        version: 1,
       };
 
       const updated = {
@@ -177,7 +163,6 @@ describe("hasEntityChanged", () => {
       const existing = {
         id: "1",
         is_completed: false,
-        version: 1,
       };
 
       const updated = {
@@ -192,7 +177,6 @@ describe("hasEntityChanged", () => {
       const existing = {
         id: "1",
         sort_order: 0,
-        version: 1,
       };
 
       const updated = {
@@ -207,7 +191,6 @@ describe("hasEntityChanged", () => {
       const existing = {
         id: "1",
         is_completed: true,
-        version: 1,
       };
 
       const updated = {
@@ -225,7 +208,6 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         custom_field: "old",
-        version: 1,
       };
 
       const updated = {
@@ -233,9 +215,9 @@ describe("hasEntityChanged", () => {
         custom_field: "new",
       };
 
-      expect(
-        hasEntityChanged(existing, updated, ["id", "version", "custom_field"]),
-      ).toBe(false);
+      expect(hasEntityChanged(existing, updated, ["id", "custom_field"])).toBe(
+        false,
+      );
     });
 
     it("should detect changes in non-excluded fields", () => {
@@ -243,7 +225,6 @@ describe("hasEntityChanged", () => {
         id: "1",
         name: "Task 1",
         custom_field: "old",
-        version: 1,
       };
 
       const updated = {
@@ -252,9 +233,9 @@ describe("hasEntityChanged", () => {
         custom_field: "new",
       };
 
-      expect(
-        hasEntityChanged(existing, updated, ["id", "version", "custom_field"]),
-      ).toBe(true);
+      expect(hasEntityChanged(existing, updated, ["id", "custom_field"])).toBe(
+        true,
+      );
     });
   });
 });

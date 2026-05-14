@@ -315,7 +315,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             revision: 1,
             created_at: "2025-01-01T00:00:00.000Z",
             updated_at: "2025-01-01T00:00:00.000Z",
-            version: 1,
             needsSync: false,
           });
           await db.contexts.put({
@@ -326,7 +325,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             revision: 1,
             created_at: "2025-01-01T00:00:00.000Z",
             updated_at: "2025-01-01T00:00:00.000Z",
-            version: 1,
             needsSync: false,
           });
         },

@@ -154,7 +154,6 @@ function createGoalWithCover(
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     ...overrides,
   };
 }
@@ -396,7 +395,6 @@ describe("CoverSyncService", () => {
       const goalWithDifferentCover = createGoalWithCover(
         pendingCover.goal_id,
         "some-other-remote-file-id",
-        { version: 2 },
       );
       mockPendingCoverRepository = createMockPendingCoverRepository({
         getAll: vi.fn().mockResolvedValue([pendingCover]),
@@ -543,7 +541,6 @@ describe("CoverSyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 3,
         ...overrides,
       };
     }
@@ -899,20 +896,6 @@ describe("CoverSyncService", () => {
         );
       });
 
-      it("should increment goal version", async () => {
-        const goalWithVersion = createGoalWithServerCover({ version: 5 });
-        mockGoalRepository = createMockGoalRepository({
-          getActive: vi.fn().mockResolvedValue([goalWithVersion]),
-        });
-        const service = createService();
-
-        await service.reuploadLocalCovers();
-
-        expect(mockGoalRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ version: 6 }),
-        );
-      });
-
       it("should save new CoverRecord", async () => {
         const service = createService();
 
@@ -980,7 +963,6 @@ describe("CoverSyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 1,
       };
     }
 

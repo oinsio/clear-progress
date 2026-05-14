@@ -104,7 +104,6 @@ export function createGoal(overrides: Record<string, unknown> = {}) {
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     needsSync: false,
     ...overrides,
   };
@@ -140,7 +139,6 @@ export function createCoverRecord(
 export function setupGoalWithCoverBlob(opts: {
   goalId: string;
   fileId: string;
-  version?: number;
 }) {
   const coverRecord = createCoverRecord(opts.fileId);
   const goalRepository = createMockGoalRepository({
@@ -148,7 +146,6 @@ export function setupGoalWithCoverBlob(opts: {
       createGoal({
         id: opts.goalId,
         cover_file_id: opts.fileId,
-        version: opts.version ?? 1,
       }),
     ]),
   });

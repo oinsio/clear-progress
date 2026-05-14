@@ -19,7 +19,6 @@ function rowToItem(row: unknown[]): ChecklistItem {
     is_deleted: coerceSheetBool(row[COLS.is_deleted]),
     created_at: toISOStringValue(row[COLS.created_at]),
     updated_at: toISOStringValue(row[COLS.updated_at]),
-    version: Number(row[COLS.version] ?? 1),
     revision: Number(row[COLS.revision] ?? 0),
   };
 }

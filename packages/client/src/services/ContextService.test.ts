@@ -83,10 +83,6 @@ describe("ContextService", () => {
       expect(createdContext.is_deleted).toBe(false);
     });
 
-    it("should create context with version 1", () => {
-      expect(createdContext.version).toBe(1);
-    });
-
     it("should create context with a UUID id", () => {
       expect(createdContext.id).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -119,16 +115,6 @@ describe("ContextService", () => {
       const contextService = new ContextService(mockContextRepository);
       const updated = await contextService.update(context.id, "New name");
       expect(updated.name).toBe("New name");
-    });
-
-    it("should increment version on update", async () => {
-      const context = buildContext({ version: 2 });
-      mockContextRepository = createMockContextRepository({
-        getById: vi.fn().mockResolvedValue(context),
-      });
-      const contextService = new ContextService(mockContextRepository);
-      const updated = await contextService.update(context.id, "X");
-      expect(updated.version).toBe(3);
     });
 
     it("should update updated_at timestamp", async () => {
@@ -196,16 +182,6 @@ describe("ContextService", () => {
       expect(deleted.is_deleted).toBe(true);
     });
 
-    it("should increment version on soft delete", async () => {
-      const context = buildContext({ version: 3 });
-      mockContextRepository = createMockContextRepository({
-        getById: vi.fn().mockResolvedValue(context),
-      });
-      const contextService = new ContextService(mockContextRepository);
-      const deleted = await contextService.softDelete(context.id);
-      expect(deleted.version).toBe(4);
-    });
-
     it("should throw when context not found", async () => {
       const contextService = new ContextService(mockContextRepository);
       await expect(contextService.softDelete("nonexistent-id")).rejects.toThrow(
@@ -223,16 +199,6 @@ describe("ContextService", () => {
       const contextService = new ContextService(mockContextRepository);
       const restored = await contextService.restore(context.id);
       expect(restored.is_deleted).toBe(false);
-    });
-
-    it("should increment version on restore", async () => {
-      const context = buildContext({ is_deleted: true, version: 5 });
-      mockContextRepository = createMockContextRepository({
-        getById: vi.fn().mockResolvedValue(context),
-      });
-      const contextService = new ContextService(mockContextRepository);
-      const restored = await contextService.restore(context.id);
-      expect(restored.version).toBe(6);
     });
 
     it("should throw when context not found", async () => {
@@ -258,16 +224,6 @@ describe("ContextService", () => {
       expect(upserted[0].sort_order).toBe(0);
       expect(upserted[1].sort_order).toBe(1);
       expect(upserted[2].sort_order).toBe(2);
-    });
-
-    it("should increment version for each reordered context", async () => {
-      const contextA = buildContext({ version: 3 });
-      const contextB = buildContext({ version: 5 });
-      const contextService = new ContextService(mockContextRepository);
-      await contextService.reorderContexts([contextA, contextB]);
-      const upserted = getUpsertedContexts();
-      expect(upserted[0].version).toBe(4);
-      expect(upserted[1].version).toBe(6);
     });
 
     it("should update updated_at for each reordered context", async () => {

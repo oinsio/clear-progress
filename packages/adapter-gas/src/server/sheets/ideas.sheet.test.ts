@@ -24,7 +24,6 @@ function makeIdeaRow(
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
     revision: 0,
   };
   const merged = { ...defaults, ...overrides };
@@ -111,17 +110,16 @@ describe("getAllIdeas", () => {
     expect(idea.updated_at).toBe("2025-06-01T00:00:00.000Z");
   });
 
-  it("should map numeric fields sort_order, version, and revision", () => {
+  it("should map numeric fields sort_order and revision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         IDEA_HEADERS,
-        makeIdeaRow({ sort_order: 2, version: 9, revision: 5 }),
+        makeIdeaRow({ sort_order: 2, revision: 5 }),
       ]) as never,
     );
 
     const [idea] = getAllIdeas();
     expect(idea.sort_order).toBe(2);
-    expect(idea.version).toBe(9);
     expect(idea.revision).toBe(5);
   });
 
@@ -410,7 +408,6 @@ describe("upsertIdeas", () => {
       is_deleted: false,
       created_at: "2025-01-01T00:00:00.000Z",
       updated_at: "2025-01-01T00:00:00.000Z",
-      version: 1,
       revision: 0,
     };
     upsertIdeas([newIdea]);

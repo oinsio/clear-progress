@@ -26,7 +26,6 @@ export class HiddenTaskService {
         ...task,
         is_hidden: false,
         updated_at: now,
-        version: task.version + 1,
         needsSync: true,
       };
 

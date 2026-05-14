@@ -25,7 +25,6 @@ export function buildTask(overrides: Partial<Task> = {}): Task {
     is_deleted: false,
     created_at: now,
     updated_at: now,
-    version: 1,
     revision: 0,
     needsSync: false,
     ...overrides,

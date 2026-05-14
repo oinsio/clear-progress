@@ -148,7 +148,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Chunk failure stops remaining chunks",
     ({ Given, And, When, Then }) => {
       const dirtyTasks = Array.from({ length: 450 }, (_, i) =>
-        makeTask({ id: `t${i}`, needsSync: true, version: 1 }),
+        makeTask({ id: `t${i}`, needsSync: true }),
       );
 
       Given("client has 450 dirty tasks", async (_ctx: TestContext) => {
@@ -287,7 +287,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Chunk success clears dirty flags for accepted records",
     ({ Given, And, When, Then }) => {
       const dirtyTasks = Array.from({ length: 250 }, (_, i) =>
-        makeTask({ id: `t${i}`, needsSync: true, version: 1 }),
+        makeTask({ id: `t${i}`, needsSync: true }),
       );
 
       Given("client has 250 dirty tasks", async (_ctx: TestContext) => {

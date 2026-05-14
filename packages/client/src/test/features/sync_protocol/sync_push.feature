@@ -34,16 +34,16 @@ Feature: Sync Protocol — Push
     Then no PushRequest is sent to server
 
   @spec-sync-protocol @FR15
-  Scenario: Created result clears dirty flag when version unchanged
-    Given client has a dirty task with id "t1" and version 3
+  Scenario: Created result clears dirty flag when unchanged during push
+    Given client has a dirty task with id "t1"
     And server will respond with status "created" for "t1" and revision 7
     When push is called
     Then task "t1" has needsSync false and revision 7
 
   @spec-sync-protocol @FR15
-  Scenario: Accepted result keeps dirty flag when version changed locally
-    Given client has a dirty task with id "t1" and version 3
-    And local version will change to 4 during push
+  Scenario: Accepted result keeps dirty flag when changed during push
+    Given client has a dirty task with id "t1"
+    And local task will change during push
     And server will respond with status "accepted" for "t1" and revision 8
     When push is called
     Then task "t1" has needsSync true and revision 8

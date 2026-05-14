@@ -64,7 +64,6 @@ export const SHEET_HEADERS: Record<string, string[]> = {
     "is_deleted",
     "created_at",
     "updated_at",
-    "version",
     "revision",
   ],
   [SHEET_NAMES.GOALS]: [
@@ -77,7 +76,6 @@ export const SHEET_HEADERS: Record<string, string[]> = {
     "is_deleted",
     "created_at",
     "updated_at",
-    "version",
     "revision",
   ],
   [SHEET_NAMES.CONTEXTS]: [
@@ -87,7 +85,6 @@ export const SHEET_HEADERS: Record<string, string[]> = {
     "is_deleted",
     "created_at",
     "updated_at",
-    "version",
     "revision",
   ],
   [SHEET_NAMES.CATEGORIES]: [
@@ -97,7 +94,6 @@ export const SHEET_HEADERS: Record<string, string[]> = {
     "is_deleted",
     "created_at",
     "updated_at",
-    "version",
     "revision",
   ],
   [SHEET_NAMES.CHECKLIST_ITEMS]: [
@@ -109,7 +105,6 @@ export const SHEET_HEADERS: Record<string, string[]> = {
     "is_deleted",
     "created_at",
     "updated_at",
-    "version",
     "revision",
   ],
   [SHEET_NAMES.IDEAS]: [
@@ -120,7 +115,6 @@ export const SHEET_HEADERS: Record<string, string[]> = {
     "is_deleted",
     "created_at",
     "updated_at",
-    "version",
     "revision",
   ],
   [SHEET_NAMES.SETTINGS]: ["key", "value", "updated_at"],

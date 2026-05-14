@@ -25,7 +25,6 @@ function makeItemRow(
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
   };
   const merged = { ...defaults, ...overrides };
   return ITEM_HEADERS.map((col) => merged[col]);
@@ -113,17 +112,13 @@ describe("getAllChecklistItems", () => {
     expect(item.updated_at).toBe("2025-06-01T00:00:00.000Z");
   });
 
-  it("should map numeric fields sort_order and version", () => {
+  it("should map numeric field sort_order", () => {
     vi.mocked(getSheet).mockReturnValue(
-      makeSheetMock([
-        ITEM_HEADERS,
-        makeItemRow({ sort_order: 3, version: 7 }),
-      ]) as never,
+      makeSheetMock([ITEM_HEADERS, makeItemRow({ sort_order: 3 })]) as never,
     );
 
     const [item] = getAllChecklistItems();
     expect(item.sort_order).toBe(3);
-    expect(item.version).toBe(7);
   });
 
   it('should coerce string "TRUE" for is_completed', () => {
@@ -215,7 +210,7 @@ describe("getChecklistItemsByRevision", () => {
     vi.clearAllMocks();
   });
 
-  it("should return items with version strictly greater than minVersion", () => {
+  it("should return items with revision strictly greater than minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         ITEM_HEADERS,
@@ -228,7 +223,7 @@ describe("getChecklistItemsByRevision", () => {
     expect(items.map((i) => i.id)).toEqual(["item-1", "item-2"]);
   });
 
-  it("should not return items with version equal to minVersion", () => {
+  it("should not return items with revision equal to minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([ITEM_HEADERS, makeItemRow({ revision: 5 })]) as never,
     );
@@ -236,7 +231,7 @@ describe("getChecklistItemsByRevision", () => {
     expect(getChecklistItemsByRevision(5)).toHaveLength(0);
   });
 
-  it("should not return items with version less than minVersion", () => {
+  it("should not return items with revision less than minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([ITEM_HEADERS, makeItemRow({ revision: 3 })]) as never,
     );
@@ -244,7 +239,7 @@ describe("getChecklistItemsByRevision", () => {
     expect(getChecklistItemsByRevision(5)).toHaveLength(0);
   });
 
-  it("should return all items when minVersion is 0", () => {
+  it("should return all items when minRevision is 0", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         ITEM_HEADERS,
@@ -401,7 +396,6 @@ describe("upsertChecklistItems", () => {
       is_deleted: false,
       created_at: "2025-01-01T00:00:00.000Z",
       updated_at: "2025-01-01T00:00:00.000Z",
-      version: 1,
       revision: 0,
     };
     upsertChecklistItems([newItem]);

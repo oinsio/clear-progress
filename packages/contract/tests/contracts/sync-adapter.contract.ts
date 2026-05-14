@@ -29,7 +29,6 @@ function createWireTask(overrides: Partial<WireTask> = {}): WireTask {
     is_deleted: false,
     created_at: now,
     updated_at: now,
-    version: 1,
     revision: 0,
     ...overrides,
   };
@@ -47,7 +46,6 @@ function createWireGoal(overrides: Partial<WireGoal> = {}): WireGoal {
     is_deleted: false,
     created_at: now,
     updated_at: now,
-    version: 1,
     revision: 0,
     ...overrides,
   };
@@ -62,7 +60,6 @@ function createWireContext(overrides: Partial<WireContext> = {}): WireContext {
     is_deleted: false,
     created_at: now,
     updated_at: now,
-    version: 1,
     revision: 0,
     ...overrides,
   };

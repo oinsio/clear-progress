@@ -68,11 +68,6 @@ describe("colMap", () => {
   it("should map id column to index 0 for Goals sheet", () => {
     expect(colMap(SHEET_NAMES.GOALS).id).toBe(0);
   });
-
-  it("should map version to the last column for Goals sheet", () => {
-    const goalsMap = colMap(SHEET_NAMES.GOALS);
-    expect(goalsMap.version).toBe(9);
-  });
 });
 
 describe("coerceSheetGoalStatus", () => {

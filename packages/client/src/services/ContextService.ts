@@ -27,7 +27,6 @@ export class ContextService {
       is_deleted: false,
       created_at: now,
       updated_at: now,
-      version: 1,
       revision: 0,
       needsSync: true,
     };
@@ -65,7 +64,6 @@ export class ContextService {
         ...context,
         sort_order: index,
         updated_at: orderChanged ? now : context.updated_at,
-        version: orderChanged ? context.version + 1 : context.version,
         needsSync: orderChanged,
       };
     });
@@ -95,9 +93,6 @@ export class ContextService {
     const updatedContext: Context = {
       ...candidateContext,
       updated_at: hasChanged ? toISOTimestamp() : existingContext.updated_at,
-      version: hasChanged
-        ? existingContext.version + 1
-        : existingContext.version,
       needsSync: hasChanged,
     };
 

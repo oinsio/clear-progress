@@ -83,10 +83,6 @@ describe("CategoryService", () => {
       expect(createdCategory.is_deleted).toBe(false);
     });
 
-    it("should create category with version 1", () => {
-      expect(createdCategory.version).toBe(1);
-    });
-
     it("should create category with a UUID id", () => {
       expect(createdCategory.id).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -121,16 +117,6 @@ describe("CategoryService", () => {
       const categoryService = new CategoryService(mockCategoryRepository);
       const updated = await categoryService.update(category.id, "New name");
       expect(updated.name).toBe("New name");
-    });
-
-    it("should increment version on update", async () => {
-      const category = buildCategory({ version: 2 });
-      mockCategoryRepository = createMockCategoryRepository({
-        getById: vi.fn().mockResolvedValue(category),
-      });
-      const categoryService = new CategoryService(mockCategoryRepository);
-      const updated = await categoryService.update(category.id, "X");
-      expect(updated.version).toBe(3);
     });
 
     it("should update updated_at timestamp", async () => {
@@ -198,16 +184,6 @@ describe("CategoryService", () => {
       expect(deleted.is_deleted).toBe(true);
     });
 
-    it("should increment version on soft delete", async () => {
-      const category = buildCategory({ version: 3 });
-      mockCategoryRepository = createMockCategoryRepository({
-        getById: vi.fn().mockResolvedValue(category),
-      });
-      const categoryService = new CategoryService(mockCategoryRepository);
-      const deleted = await categoryService.softDelete(category.id);
-      expect(deleted.version).toBe(4);
-    });
-
     it("should throw when category not found", async () => {
       const categoryService = new CategoryService(mockCategoryRepository);
       await expect(
@@ -225,16 +201,6 @@ describe("CategoryService", () => {
       const categoryService = new CategoryService(mockCategoryRepository);
       const restored = await categoryService.restore(category.id);
       expect(restored.is_deleted).toBe(false);
-    });
-
-    it("should increment version on restore", async () => {
-      const category = buildCategory({ is_deleted: true, version: 5 });
-      mockCategoryRepository = createMockCategoryRepository({
-        getById: vi.fn().mockResolvedValue(category),
-      });
-      const categoryService = new CategoryService(mockCategoryRepository);
-      const restored = await categoryService.restore(category.id);
-      expect(restored.version).toBe(6);
     });
 
     it("should throw when category not found", async () => {
@@ -264,16 +230,6 @@ describe("CategoryService", () => {
       expect(upserted[0].sort_order).toBe(0);
       expect(upserted[1].sort_order).toBe(1);
       expect(upserted[2].sort_order).toBe(2);
-    });
-
-    it("should increment version for each reordered category", async () => {
-      const categoryA = buildCategory({ version: 3 });
-      const categoryB = buildCategory({ version: 5 });
-      const categoryService = new CategoryService(mockCategoryRepository);
-      await categoryService.reorderCategories([categoryA, categoryB]);
-      const upserted = getUpsertedCategories();
-      expect(upserted[0].version).toBe(4);
-      expect(upserted[1].version).toBe(6);
     });
 
     it("should update updated_at for each reordered category", async () => {

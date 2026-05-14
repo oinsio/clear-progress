@@ -82,12 +82,6 @@ describe("ChecklistService", () => {
       expect(item.is_deleted).toBe(false);
     });
 
-    it("should create item with version 1", async () => {
-      const { service } = createService();
-      const item = await service.create("task-1", "Do something");
-      expect(item.version).toBe(1);
-    });
-
     it("should create item with sort_order 0 when task has no existing items", async () => {
       const { service } = createService();
       const item = await service.create("task-1", "Do something");
@@ -130,15 +124,6 @@ describe("ChecklistService", () => {
       });
       const updated = await service.update(item.id, { name: "New name" });
       expect(updated.name).toBe("New name");
-    });
-
-    it("should increment version on update", async () => {
-      const item = buildChecklistItem({ version: 2 });
-      const { service } = createService({
-        getById: vi.fn().mockResolvedValue(item),
-      });
-      const updated = await service.update(item.id, { name: "New name" });
-      expect(updated.version).toBe(3);
     });
 
     it("should update updated_at timestamp on update", async () => {
@@ -201,15 +186,6 @@ describe("ChecklistService", () => {
       expect(deleted.is_deleted).toBe(true);
     });
 
-    it("should increment version on soft delete", async () => {
-      const item = buildChecklistItem({ version: 3 });
-      const { service } = createService({
-        getById: vi.fn().mockResolvedValue(item),
-      });
-      const deleted = await service.softDelete(item.id);
-      expect(deleted.version).toBe(4);
-    });
-
     it("should throw when item not found", async () => {
       const { service } = createService();
       await expect(service.softDelete("nonexistent-id")).rejects.toThrow(
@@ -226,15 +202,6 @@ describe("ChecklistService", () => {
       });
       const restored = await service.restore(item.id);
       expect(restored.is_deleted).toBe(false);
-    });
-
-    it("should increment version on restore", async () => {
-      const item = buildChecklistItem({ is_deleted: true, version: 2 });
-      const { service } = createService({
-        getById: vi.fn().mockResolvedValue(item),
-      });
-      const restored = await service.restore(item.id);
-      expect(restored.version).toBe(3);
     });
 
     it("should throw when item not found", async () => {
@@ -265,19 +232,6 @@ describe("ChecklistService", () => {
       expect(updatedItems[0].sort_order).toBe(0);
       expect(updatedItems[1].sort_order).toBe(1);
       expect(updatedItems[2].sort_order).toBe(2);
-    });
-
-    it("should increment version for each item", async () => {
-      const items = [
-        buildChecklistItem({ version: 3 }),
-        buildChecklistItem({ version: 5 }),
-      ];
-      const { service, repository } = createService();
-      await service.reorderItems(items);
-      const updatedItems = (repository.bulkUpsert as ReturnType<typeof vi.fn>)
-        .mock.calls[0][0] as ChecklistItem[];
-      expect(updatedItems[0].version).toBe(4);
-      expect(updatedItems[1].version).toBe(6);
     });
 
     it("should update updated_at for each item", async () => {

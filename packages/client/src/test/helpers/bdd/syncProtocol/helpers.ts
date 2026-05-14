@@ -13,7 +13,7 @@ import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { SyncService } from "@/services/SyncService";
-import type { Goal, ISOTimestamp, Task } from "@/types/entities";
+import type { Goal, Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 
 export function makePullResponse(
@@ -86,7 +86,6 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     revision: 0,
     needsSync: false,
     ...overrides,
@@ -104,25 +103,7 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     revision: 0,
-    needsSync: false,
-    ...overrides,
-  };
-}
-
-export function makeSetting(
-  overrides: Partial<{
-    key: string;
-    value: string;
-    updated_at: ISOTimestamp;
-    needsSync: boolean;
-  }> = {},
-) {
-  return {
-    key: "test_key",
-    value: "test_value",
-    updated_at: toISOTimestamp(),
     needsSync: false,
     ...overrides,
   };

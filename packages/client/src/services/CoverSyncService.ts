@@ -180,7 +180,6 @@ export class CoverSyncService {
         await this.goalRepository.update({
           ...entry.goal,
           cover_file_id: result.file_id,
-          version: entry.goal.version + 1,
           updated_at: now,
           needsSync: true,
         });
@@ -389,7 +388,6 @@ export class CoverSyncService {
       await this.goalRepository.update({
         ...goal,
         cover_file_id: fileId,
-        version: goal.version + 1,
         updated_at: now,
         needsSync: true,
       });

@@ -27,7 +27,6 @@ export class IdeaService {
       is_deleted: false,
       created_at: now,
       updated_at: now,
-      version: 1,
       revision: 0,
       needsSync: true,
     };
@@ -55,7 +54,6 @@ export class IdeaService {
     const updatedIdea: Idea = {
       ...candidateIdea,
       updated_at: hasChanged ? toISOTimestamp() : existingIdea.updated_at,
-      version: hasChanged ? existingIdea.version + 1 : existingIdea.version,
       needsSync: hasChanged,
     };
 
@@ -106,7 +104,6 @@ export class IdeaService {
         ...idea,
         sort_order: index,
         updated_at: orderChanged ? now : idea.updated_at,
-        version: orderChanged ? idea.version + 1 : idea.version,
         needsSync: orderChanged,
       };
     });

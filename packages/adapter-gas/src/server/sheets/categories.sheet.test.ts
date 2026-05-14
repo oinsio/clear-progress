@@ -23,7 +23,6 @@ function makeCategoryRow(
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
   };
   const merged = { ...defaults, ...overrides };
   return CAT_HEADERS.map((col) => merged[col]);
@@ -109,17 +108,13 @@ describe("getAllCategories", () => {
     expect(category.updated_at).toBe("2025-06-01T00:00:00.000Z");
   });
 
-  it("should map numeric fields sort_order and version", () => {
+  it("should map numeric field sort_order", () => {
     vi.mocked(getSheet).mockReturnValue(
-      makeSheetMock([
-        CAT_HEADERS,
-        makeCategoryRow({ sort_order: 4, version: 6 }),
-      ]) as never,
+      makeSheetMock([CAT_HEADERS, makeCategoryRow({ sort_order: 4 })]) as never,
     );
 
     const [category] = getAllCategories();
     expect(category.sort_order).toBe(4);
-    expect(category.version).toBe(6);
   });
 
   it('should coerce string "TRUE" for is_deleted', () => {
@@ -183,7 +178,7 @@ describe("getCategoriesByRevision", () => {
     vi.clearAllMocks();
   });
 
-  it("should return categories with version strictly greater than minVersion", () => {
+  it("should return categories with revision strictly greater than minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         CAT_HEADERS,
@@ -196,7 +191,7 @@ describe("getCategoriesByRevision", () => {
     expect(categories.map((c) => c.id)).toEqual(["cat-1", "cat-2"]);
   });
 
-  it("should not return categories with version equal to minVersion", () => {
+  it("should not return categories with revision equal to minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([CAT_HEADERS, makeCategoryRow({ revision: 5 })]) as never,
     );
@@ -204,7 +199,7 @@ describe("getCategoriesByRevision", () => {
     expect(getCategoriesByRevision(5)).toHaveLength(0);
   });
 
-  it("should not return categories with version less than minVersion", () => {
+  it("should not return categories with revision less than minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([CAT_HEADERS, makeCategoryRow({ revision: 3 })]) as never,
     );
@@ -212,7 +207,7 @@ describe("getCategoriesByRevision", () => {
     expect(getCategoriesByRevision(5)).toHaveLength(0);
   });
 
-  it("should return all categories when minVersion is 0", () => {
+  it("should return all categories when minRevision is 0", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         CAT_HEADERS,
@@ -367,7 +362,6 @@ describe("upsertCategories", () => {
       is_deleted: false,
       created_at: "2025-01-01T00:00:00.000Z",
       updated_at: "2025-01-01T00:00:00.000Z",
-      version: 1,
       revision: 0,
     };
     upsertCategories([newCategory]);

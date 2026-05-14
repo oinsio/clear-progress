@@ -94,10 +94,6 @@ export class TaskRepository {
     await db.tasks.bulkPut(tasks);
   }
 
-  async getByMinVersion(minVersion: number): Promise<Task[]> {
-    return db.tasks.where("version").above(minVersion).toArray();
-  }
-
   async getCompleted(): Promise<Task[]> {
     return db.tasks
       .filter(

@@ -86,7 +86,6 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     revision: 0,
     needsSync: true,
     ...overrides,
@@ -104,7 +103,6 @@ function makeGoal(overrides: Partial<Goal> = {}): Goal {
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     revision: 0,
     needsSync: true,
     ...overrides,
@@ -424,7 +422,6 @@ describe("SyncService", () => {
         is_deleted: true,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 1,
         revision: 1,
         needsSync: false,
       });
@@ -637,7 +634,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 2,
         revision: 1,
         needsSync: true,
       };
@@ -659,7 +655,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 2,
         revision: 1,
         needsSync: true,
       };
@@ -683,7 +678,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 2,
         revision: 1,
         needsSync: true,
       };
@@ -818,7 +812,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 2,
         revision: 1,
         needsSync: true,
       };
@@ -855,7 +848,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 2,
         revision: 1,
         needsSync: true,
       };
@@ -894,7 +886,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 2,
         revision: 1,
         needsSync: true,
       };
@@ -937,15 +928,19 @@ describe("SyncService", () => {
     });
 
     describe("applyPushResults — created/accepted", () => {
-      it("should clear needsSync and set revision when version is unchanged", async () => {
-        const task = makeTask({ id: "t1", version: 3, needsSync: true });
+      it("should clear needsSync and set revision when updated_at is unchanged", async () => {
+        const task = makeTask({
+          id: "t1",
+          updated_at: "2026-01-01T10:00:00.000Z",
+          needsSync: true,
+        });
         (
           taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([task]);
-        // version same as when sent
+        // updated_at same as when sent
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({
           ...task,
-          version: 3,
+          updated_at: "2026-01-01T10:00:00.000Z",
         });
         mockSyncAdapter = createMockSyncAdapter({
           push: vi
@@ -963,15 +958,19 @@ describe("SyncService", () => {
         );
       });
 
-      it("should keep needsSync and set revision when version changed during push", async () => {
-        const task = makeTask({ id: "t1", version: 3, needsSync: true });
+      it("should keep needsSync and set revision when updated_at changed during push", async () => {
+        const task = makeTask({
+          id: "t1",
+          updated_at: "2026-01-01T10:00:00.000Z",
+          needsSync: true,
+        });
         (
           taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([task]);
-        // version has bumped since sending
+        // updated_at has changed since sending (concurrent edit)
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({
           ...task,
-          version: 4,
+          updated_at: "2026-01-01T10:00:01.000Z",
         });
         mockSyncAdapter = createMockSyncAdapter({
           push: vi
@@ -1143,14 +1142,18 @@ describe("SyncService", () => {
       });
 
       it("should not enter conflict branch for created record even if server_record is present", async () => {
-        const task = makeTask({ id: "t1", version: 3, needsSync: true });
+        const task = makeTask({
+          id: "t1",
+          updated_at: "2026-01-01T10:00:00.000Z",
+          needsSync: true,
+        });
         const serverTask = makeTask({ id: "t1", name: "Server Version" });
         (
           taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
         ).mockResolvedValue([task]);
         (taskRepository.getById as ReturnType<typeof vi.fn>).mockResolvedValue({
           ...task,
-          version: 3,
+          updated_at: "2026-01-01T10:00:00.000Z",
         });
         mockSyncAdapter = createMockSyncAdapter({
           push: vi.fn().mockResolvedValue(
@@ -1228,7 +1231,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 1,
         revision: 1,
         needsSync: true,
       });
@@ -1252,7 +1254,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 1,
         revision: 1,
         needsSync: true,
       });
@@ -1273,7 +1274,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 1,
         revision: 1,
         needsSync: true,
       });
@@ -1294,7 +1294,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 1,
         revision: 1,
         needsSync: true,
       });
@@ -1318,7 +1317,6 @@ describe("SyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 1,
         revision: 1,
         needsSync: true,
       });

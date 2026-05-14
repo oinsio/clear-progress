@@ -18,7 +18,6 @@ const mockIdea: Idea = {
   is_deleted: false,
   created_at: toISOTimestamp(),
   updated_at: toISOTimestamp(),
-  version: 1,
   revision: 0,
   needsSync: false,
 };

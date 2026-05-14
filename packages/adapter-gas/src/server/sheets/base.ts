@@ -14,7 +14,6 @@ export type NamedEntity = {
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
-  version: number;
   revision: number;
 };
 
@@ -29,7 +28,6 @@ export function rowToNamedEntity(
     is_deleted: coerceSheetBool(row[cols.is_deleted]),
     created_at: toISOStringValue(row[cols.created_at]),
     updated_at: toISOStringValue(row[cols.updated_at]),
-    version: Number(row[cols.version] ?? 1),
     revision: Number(row[cols.revision] ?? 0),
   };
 }

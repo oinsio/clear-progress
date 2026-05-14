@@ -79,12 +79,10 @@ function pushAcceptedTaskScenario(): void {
   const serverTask = makeTask({
     id: "11111111-1111-4111-a111-111111111111",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 5,
   });
   const clientTask = makeTask({
     id: "11111111-1111-4111-a111-111111111111",
     updated_at: "2025-01-02T00:00:00.000Z",
-    version: 3,
   });
   vi.mocked(getAllTasks).mockReturnValue([serverTask]);
   push({ tasks: [clientTask] });
@@ -94,12 +92,10 @@ function pushConflictTaskScenario(): { serverTask: Task } {
   const serverTask = makeTask({
     id: "11111111-1111-4111-a111-111111111111",
     updated_at: "2025-01-02T00:00:00.000Z",
-    version: 3,
   });
   const clientTask = makeTask({
     id: "11111111-1111-4111-a111-111111111111",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
   });
   vi.mocked(getAllTasks).mockReturnValue([serverTask]);
   push({ tasks: [clientTask] });
@@ -160,7 +156,6 @@ describe("push", () => {
     it("should return status: created for a new task", () => {
       const newTask = makeTask({
         id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
-        version: 1,
       });
 
       push({ tasks: [newTask] });
@@ -186,16 +181,18 @@ describe("push", () => {
       );
     });
 
-    it("should return the client version for a created record", () => {
+    it("should return created status for a new record", () => {
       const newTask = makeTask({
         id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
-        version: 3,
       });
 
       push({ tasks: [newTask] });
 
       const results = getResults();
-      expect(results.tasks![0]).toMatchObject({ version: 3 });
+      expect(results.tasks![0]).toMatchObject({
+        id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
+        status: PUSH_STATUSES.CREATED,
+      });
     });
   });
 
@@ -204,12 +201,10 @@ describe("push", () => {
       const serverTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: "2025-01-01T00:00:00.000Z",
-        version: 2,
       });
       const clientTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: "2025-01-02T00:00:00.000Z",
-        version: 1,
       });
       vi.mocked(getAllTasks).mockReturnValue([serverTask]);
 
@@ -222,19 +217,26 @@ describe("push", () => {
       });
     });
 
-    it("should save task with incremented server version", () => {
+    it("should save accepted task to the sheet", () => {
       pushAcceptedTaskScenario();
 
       expect(upsertTasks).toHaveBeenCalledWith(
-        expect.arrayContaining([expect.objectContaining({ version: 6 })]),
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "11111111-1111-4111-a111-111111111111",
+          }),
+        ]),
       );
     });
 
-    it("should return new version (serverVersion + 1) in accepted result", () => {
+    it("should return accepted status in result", () => {
       pushAcceptedTaskScenario();
 
       const results = getResults();
-      expect(results.tasks![0]).toMatchObject({ version: 6 });
+      expect(results.tasks![0]).toMatchObject({
+        id: "11111111-1111-4111-a111-111111111111",
+        status: PUSH_STATUSES.ACCEPTED,
+      });
     });
 
     it("should treat equal updated_at as accepted (last-write-wins, client >= server)", () => {
@@ -242,12 +244,10 @@ describe("push", () => {
       const serverTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: sameTime,
-        version: 2,
       });
       const clientTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: sameTime,
-        version: 1,
       });
       vi.mocked(getAllTasks).mockReturnValue([serverTask]);
 
@@ -286,15 +286,13 @@ describe("push", () => {
   });
 
   describe("find correct server record by id", () => {
-    it("should use the matching server record version when multiple records exist", () => {
+    it("should use the matching server record when multiple records exist", () => {
       const serverTask1 = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
-        version: 5,
         updated_at: "2025-01-01T00:00:00.000Z",
       });
       const serverTask2 = makeTask({
         id: "22222222-2222-4222-a222-222222222222",
-        version: 10,
         updated_at: "2025-01-01T00:00:00.000Z",
       });
       vi.mocked(getAllTasks).mockReturnValue([serverTask1, serverTask2]);
@@ -306,23 +304,23 @@ describe("push", () => {
       push({ tasks: [clientTask] });
 
       const results = getResults();
-      // serverTask2.version (10) + 1 = 11; if find() matched serverTask1, version would be 6
-      expect(results.tasks![0]).toMatchObject({ version: 11 });
+      expect(results.tasks![0]).toMatchObject({
+        id: "22222222-2222-4222-a222-222222222222",
+        status: PUSH_STATUSES.ACCEPTED,
+      });
     });
   });
 
   describe("multiple records in one push", () => {
-    it("should return results for all records in the array", () => {
+    it("should return multiple records in one push", () => {
       const newTask = makeTask({ id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" });
       const serverTask = makeTask({
         id: "bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb",
         updated_at: "2025-01-01T00:00:00.000Z",
-        version: 2,
       });
       const clientExisting = makeTask({
         id: "bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb",
         updated_at: "2025-01-02T00:00:00.000Z",
-        version: 1,
       });
       vi.mocked(getAllTasks).mockReturnValue([serverTask]);
 
@@ -606,7 +604,6 @@ describe("push", () => {
             {
               id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
               status: "created",
-              version: 1,
             },
           ],
         },
@@ -654,12 +651,10 @@ describe("push", () => {
       const serverTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: "2025-01-02T00:00:00.000Z",
-        version: 3,
       });
       const clientTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: "2025-01-01T00:00:00.000Z",
-        version: 1,
       });
       vi.mocked(getAllTasks).mockReturnValue([serverTask]);
 
@@ -1332,12 +1327,10 @@ describe("push", () => {
       const serverTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: "2025-01-02T00:00:00.000Z",
-        version: 3,
       });
       const conflictTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: "2025-01-01T00:00:00.000Z",
-        version: 1,
       });
       const newTask = makeTask({ id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" });
       vi.mocked(getAllTasks).mockReturnValue([serverTask]);
@@ -1352,12 +1345,10 @@ describe("push", () => {
       const serverTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: "2025-01-02T00:00:00.000Z",
-        version: 3,
       });
       const conflictTask = makeTask({
         id: "11111111-1111-4111-a111-111111111111",
         updated_at: "2025-01-01T00:00:00.000Z",
-        version: 1,
       });
       vi.mocked(getAllTasks).mockReturnValue([serverTask]);
 

@@ -28,22 +28,22 @@ Feature: Sync Protocol — Dirty Flag Lifecycle
 
   @spec-sync-protocol @FR4
   Scenario: Service fields are excluded from comparison
-    Given a task exists with version 1
-    When compared to same task with version 2
+    Given a task exists
+    When compared to same task with different updated_at
     Then hasEntityChanged returns false
 
   @spec-sync-protocol @FR4
-  Scenario: Created/accepted clears dirty flag if version unchanged
-    Given a dirty task with version 3 was pushed
+  Scenario: Created result clears dirty flag when unchanged during push
+    Given a dirty task was pushed
     And server returned created status
-    And local version is still 3
+    And local task is unchanged during push
     When push results are applied
     Then needsSync is set to false
 
   @spec-sync-protocol @FR4
-  Scenario: Created/accepted keeps dirty flag if version changed locally
-    Given a dirty task with version 3 was pushed
+  Scenario: Accepted result keeps dirty flag when changed during push
+    Given a dirty task was pushed
     And server returned accepted status
-    And local version changed to 4 during push
+    And local task changed during push
     When push results are applied
     Then needsSync remains true
