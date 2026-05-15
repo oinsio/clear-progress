@@ -192,6 +192,7 @@ paths:
                         value: green
                         updated_at: "2026-03-04T10:00:00.000Z"
                     current_revision: 42
+                    purge_revision: 0
                     server_time: "2026-03-04T11:10:00.000Z"
                 not_initialized:
                   summary: Error — init was not called
@@ -285,6 +286,7 @@ paths:
                         is_hidden: false
                         next_date: ""
                         appear_date: ""
+                        original_task_id: ""
                         sort_order: 4000
                         is_deleted: false
                         created_at: "2026-03-04T13:00:00.000Z"
@@ -314,6 +316,7 @@ paths:
                         is_hidden: false
                         next_date: ""
                         appear_date: ""
+                        original_task_id: ""
                         sort_order: 3000
                         is_deleted: true
                         created_at: "2026-03-04T07:00:00.000Z"
@@ -343,6 +346,7 @@ paths:
                         is_hidden: false
                         next_date: "2026-04-14"
                         appear_date: "2026-04-14"
+                        original_task_id: ""
                         sort_order: 1000
                         is_deleted: false
                         created_at: "2026-04-13T10:00:00.000Z"
@@ -372,6 +376,7 @@ paths:
                         is_hidden: true
                         next_date: "2026-04-17"
                         appear_date: "2026-04-17"
+                        original_task_id: ""
                         sort_order: 2000
                         is_deleted: false
                         created_at: "2026-04-13T14:30:00.000Z"
@@ -922,6 +927,7 @@ components:
         - is_deleted
         - created_at
         - updated_at
+        - revision
       properties:
         id:
           type: string
@@ -1378,6 +1384,13 @@ components:
           minimum: 0
           description: Last known revision from server. 0 = initial pull (fetch all data)
           example: 42
+        settings_updated_at:
+          type: string
+          format: date-time
+          description: |
+            If provided, server returns only settings with `updated_at` > this value.
+            Omit for full settings fetch (e.g. on initial pull).
+          example: "2026-03-04T10:00:00.000Z"
 
     PushRequest:
       type: object
@@ -1517,7 +1530,7 @@ components:
 
     PullResponse:
       type: object
-      required: [ok, data, settings, current_revision, server_time]
+      required: [ok, data, settings, current_revision, purge_revision, server_time]
       properties:
         ok:
           type: boolean
@@ -1534,6 +1547,13 @@ components:
           minimum: 0
           description: Current server revision (next_revision - 1). Client should save this value.
           example: 42
+        purge_revision:
+          type: integer
+          minimum: 0
+          description: |
+            Current server purge revision. If greater than client's `last_known_purge_revision`,
+            client must hard-delete all local records with `is_deleted: true`.
+          example: 0
         server_time:
           type: string
           format: date-time
