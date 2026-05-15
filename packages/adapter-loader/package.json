@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@clear-progress/adapter-gas": "workspace:*",
+    "@clear-progress/adapter-supabase": "workspace:*",
     "@clear-progress/contract": "workspace:*"
   },
   "devDependencies": {

@@ -1,0 +1,158 @@
+-- implements FR7, FR12, FR13, FR14 of add-supabase-adapter
+-- Entity tables, sync_meta, settings, covers + helper functions
+
+-- ─── Helper functions ───────────────────────────────────────────────────────
+
+-- Serialize TIMESTAMPTZ → ISO 8601 with Z suffix; NULL → ''
+CREATE OR REPLACE FUNCTION format_timestamptz(p_ts TIMESTAMPTZ)
+RETURNS TEXT LANGUAGE plpgsql IMMUTABLE AS $$
+BEGIN
+  IF p_ts IS NULL THEN RETURN ''; END IF;
+  RETURN to_char(p_ts AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+END;
+$$;
+
+-- Parse optional TIMESTAMPTZ: '' / NULL → NULL
+CREATE OR REPLACE FUNCTION parse_timestamptz(p_val TEXT)
+RETURNS TIMESTAMPTZ LANGUAGE plpgsql IMMUTABLE AS $$
+BEGIN
+  IF p_val IS NULL OR p_val = '' THEN RETURN NULL; END IF;
+  RETURN p_val::TIMESTAMPTZ;
+END;
+$$;
+
+-- Parse optional DATE: '' / NULL → NULL
+CREATE OR REPLACE FUNCTION parse_date(p_val TEXT)
+RETURNS DATE LANGUAGE plpgsql IMMUTABLE AS $$
+BEGIN
+  IF p_val IS NULL OR p_val = '' THEN RETURN NULL; END IF;
+  RETURN p_val::DATE;
+END;
+$$;
+
+-- ─── Entity tables ──────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS tasks (
+  id               UUID        PRIMARY KEY,
+  user_id          UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name             TEXT        NOT NULL,
+  description      TEXT        NOT NULL DEFAULT '',
+  box              TEXT        NOT NULL CHECK (box IN ('inbox', 'today', 'week', 'later')),
+  goal_id          TEXT        NOT NULL DEFAULT '',
+  context_id       TEXT        NOT NULL DEFAULT '',
+  category_id      TEXT        NOT NULL DEFAULT '',
+  is_completed     BOOLEAN     NOT NULL DEFAULT FALSE,
+  completed_at     TIMESTAMPTZ,
+  repeat_rule      TEXT        NOT NULL DEFAULT '',
+  is_hidden        BOOLEAN     NOT NULL DEFAULT FALSE,
+  next_date        DATE,
+  appear_date      DATE,
+  original_task_id TEXT        NOT NULL DEFAULT '',
+  sort_order       INTEGER     NOT NULL DEFAULT 0,
+  is_deleted       BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at       TIMESTAMPTZ NOT NULL,
+  updated_at       TIMESTAMPTZ NOT NULL,
+  revision         BIGINT      NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_tasks_user_revision ON tasks (user_id, revision);
+
+CREATE TABLE IF NOT EXISTS goals (
+  id           UUID        PRIMARY KEY,
+  user_id      UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name         TEXT        NOT NULL,
+  description  TEXT        NOT NULL DEFAULT '',
+  cover_file_id TEXT       NOT NULL DEFAULT '',
+  status       TEXT        NOT NULL CHECK (status IN ('planning', 'in_progress', 'paused', 'completed', 'cancelled')),
+  sort_order   INTEGER     NOT NULL DEFAULT 0,
+  is_deleted   BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at   TIMESTAMPTZ NOT NULL,
+  updated_at   TIMESTAMPTZ NOT NULL,
+  revision     BIGINT      NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_goals_user_revision ON goals (user_id, revision);
+
+CREATE TABLE IF NOT EXISTS ideas (
+  id          UUID        PRIMARY KEY,
+  user_id     UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name        TEXT        NOT NULL,
+  description TEXT        NOT NULL DEFAULT '',
+  sort_order  INTEGER     NOT NULL DEFAULT 0,
+  is_deleted  BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at  TIMESTAMPTZ NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL,
+  revision    BIGINT      NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_ideas_user_revision ON ideas (user_id, revision);
+
+CREATE TABLE IF NOT EXISTS contexts (
+  id         UUID        PRIMARY KEY,
+  user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name       TEXT        NOT NULL,
+  sort_order INTEGER     NOT NULL DEFAULT 0,
+  is_deleted BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL,
+  revision   BIGINT      NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_contexts_user_revision ON contexts (user_id, revision);
+
+CREATE TABLE IF NOT EXISTS categories (
+  id         UUID        PRIMARY KEY,
+  user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name       TEXT        NOT NULL,
+  sort_order INTEGER     NOT NULL DEFAULT 0,
+  is_deleted BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL,
+  revision   BIGINT      NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_categories_user_revision ON categories (user_id, revision);
+
+CREATE TABLE IF NOT EXISTS checklist_items (
+  id           UUID        PRIMARY KEY,
+  user_id      UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  task_id      UUID        NOT NULL,
+  name         TEXT        NOT NULL,
+  is_completed BOOLEAN     NOT NULL DEFAULT FALSE,
+  sort_order   INTEGER     NOT NULL DEFAULT 0,
+  is_deleted   BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at   TIMESTAMPTZ NOT NULL,
+  updated_at   TIMESTAMPTZ NOT NULL,
+  revision     BIGINT      NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_checklist_items_user_revision ON checklist_items (user_id, revision);
+
+-- ─── Settings table (FR7) ───────────────────────────────────────────────────
+-- No revision — uses updated_at for incremental pull and conflict detection
+
+CREATE TABLE IF NOT EXISTS settings (
+  user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  key        TEXT        NOT NULL,
+  value      TEXT        NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (user_id, key)
+);
+
+-- ─── Sync meta table (FR3) ──────────────────────────────────────────────────
+-- Per-user key-value store for revision counters (next_revision, purge_revision)
+
+CREATE TABLE IF NOT EXISTS sync_meta (
+  user_id UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  key     TEXT   NOT NULL,
+  value   BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, key)
+);
+
+-- ─── Covers metadata table (FR10) ───────────────────────────────────────────
+-- File data lives in Storage bucket; this table tracks metadata and ref counts
+
+CREATE TABLE IF NOT EXISTS covers (
+  file_id      UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  filename     TEXT    NOT NULL,
+  mime_type    TEXT    NOT NULL,
+  data_hash    TEXT    NOT NULL,
+  storage_path TEXT    NOT NULL,
+  ref_count    INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_covers_user_hash ON covers (user_id, data_hash);
