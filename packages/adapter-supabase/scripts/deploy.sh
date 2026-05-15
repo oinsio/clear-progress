@@ -18,11 +18,31 @@ error() { echo "[deploy] ERROR: $*" >&2; exit 1; }
 command -v supabase >/dev/null 2>&1 || error "supabase CLI not found. Install: https://supabase.com/docs/guides/cli"
 
 # ---------------------------------------------------------------------------
+# Load .env
+# ---------------------------------------------------------------------------
+
+ENV_FILE="${PACKAGE_DIR}/.env"
+[[ -f "${ENV_FILE}" ]] || error ".env file not found at ${ENV_FILE}"
+set -a
+# shellcheck source=../.env
+source "${ENV_FILE}"
+set +a
+
+[[ -n "${SUPABASE_PROJECT_REF:-}" ]] || error "SUPABASE_PROJECT_REF is not set in .env"
+
+# ---------------------------------------------------------------------------
+# Link project
+# ---------------------------------------------------------------------------
+
+log "Linking to project ${SUPABASE_PROJECT_REF}..."
+cd "${PACKAGE_DIR}"
+supabase link --project-ref "${SUPABASE_PROJECT_REF}"
+
+# ---------------------------------------------------------------------------
 # 1. Apply migrations
 # ---------------------------------------------------------------------------
 
 log "Applying database migrations..."
-cd "${PACKAGE_DIR}"
 supabase db push
 
 log "Migrations applied."

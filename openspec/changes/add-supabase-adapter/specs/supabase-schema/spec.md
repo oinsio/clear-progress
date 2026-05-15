@@ -5,7 +5,7 @@ The database SHALL have tables for `tasks`, `goals`, `ideas`, `contexts`, `categ
 
 #### Scenario: Task table schema
 - **WHEN** migration is applied
-- **THEN** `tasks` table exists with columns: `id` (UUID PK), `user_id` (UUID FK to auth.users), `name` (TEXT NOT NULL), `description` (TEXT DEFAULT ''), `box` (TEXT NOT NULL CHECK in inbox/today/week/later), `goal_id` (TEXT DEFAULT ''), `context_id` (TEXT DEFAULT ''), `category_id` (TEXT DEFAULT ''), `is_completed` (BOOLEAN DEFAULT false), `completed_at` (TIMESTAMPTZ), `repeat_rule` (TEXT DEFAULT ''), `is_hidden` (BOOLEAN DEFAULT false), `next_date` (DATE), `appear_date` (DATE), `original_task_id` (TEXT DEFAULT ''), `sort_order` (INTEGER DEFAULT 0), `is_deleted` (BOOLEAN DEFAULT false), `created_at` (TIMESTAMPTZ NOT NULL), `updated_at` (TIMESTAMPTZ NOT NULL), `revision` (BIGINT DEFAULT 0)
+- **THEN** `tasks` table exists with columns: `id` (UUID PK), `user_id` (UUID FK to auth.users), `name` (TEXT NOT NULL), `description` (TEXT DEFAULT ''), `box` (TEXT NOT NULL CHECK in inbox/today/week/later), `goal_id` (TEXT DEFAULT ''), `context_id` (TEXT DEFAULT ''), `category_id` (TEXT DEFAULT ''), `is_completed` (BOOLEAN DEFAULT false), `completed_at` (TIMESTAMPTZ), `repeat_rule` (JSONB, nullable), `is_hidden` (BOOLEAN DEFAULT false), `next_date` (DATE), `appear_date` (DATE), `original_task_id` (TEXT DEFAULT ''), `sort_order` (INTEGER DEFAULT 0), `is_deleted` (BOOLEAN DEFAULT false), `created_at` (TIMESTAMPTZ NOT NULL), `updated_at` (TIMESTAMPTZ NOT NULL), `revision` (BIGINT DEFAULT 0)
 
 #### Scenario: Goals table schema
 - **WHEN** migration is applied

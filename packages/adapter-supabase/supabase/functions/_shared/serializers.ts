@@ -16,7 +16,7 @@ export function serializeTaskRow(row: DbRow) {
     category_id: row.category_id as string,
     is_completed: row.is_completed as boolean,
     completed_at: serializeTimestamptz(row.completed_at),
-    repeat_rule: row.repeat_rule as string,
+    repeat_rule: row.repeat_rule ? JSON.stringify(row.repeat_rule) : "",
     is_hidden: row.is_hidden as boolean,
     next_date: serializeDateOnly(row.next_date),
     appear_date: serializeDateOnly(row.appear_date),

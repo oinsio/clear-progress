@@ -26,6 +26,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
     "@types/node": "^25.6.0",
+    "supabase": "^2.98.2",
     "typescript": "^5.0.0",
     "vitest": "^4.0.18"
   }

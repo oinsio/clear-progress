@@ -30,6 +30,15 @@ BEGIN
 END;
 $$;
 
+-- Parse optional repeat_rule: '' / NULL → NULL, valid JSON → JSONB
+CREATE OR REPLACE FUNCTION parse_repeat_rule(p_val TEXT)
+RETURNS JSONB LANGUAGE plpgsql IMMUTABLE AS $$
+BEGIN
+  IF p_val IS NULL OR p_val = '' THEN RETURN NULL; END IF;
+  RETURN p_val::JSONB;
+END;
+$$;
+
 -- ─── Entity tables ──────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS tasks (
@@ -43,7 +52,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   category_id      TEXT        NOT NULL DEFAULT '',
   is_completed     BOOLEAN     NOT NULL DEFAULT FALSE,
   completed_at     TIMESTAMPTZ,
-  repeat_rule      TEXT        NOT NULL DEFAULT '',
+  repeat_rule      JSONB,
   is_hidden        BOOLEAN     NOT NULL DEFAULT FALSE,
   next_date        DATE,
   appear_date      DATE,
