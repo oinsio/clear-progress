@@ -329,30 +329,17 @@ export class SyncService {
 
       let chunkSize = 0;
 
-      // Fill chunk with records from each type
+      // Fill chunk in dependency order (FR19): contexts → categories → goals → ideas → tasks → checklist_items → settings
       const takeFromArray = <T>(arr: T[], remaining: number): T[] => {
         const toTake = Math.min(arr.length, remaining);
         return arr.splice(0, toTake);
       };
 
-      chunk.tasks = takeFromArray(remainingTasks, PUSH_CHUNK_SIZE - chunkSize);
-      chunkSize += chunk.tasks.length;
-
-      if (chunkSize < PUSH_CHUNK_SIZE) {
-        chunk.goals = takeFromArray(
-          remainingGoals,
-          PUSH_CHUNK_SIZE - chunkSize,
-        );
-        chunkSize += chunk.goals.length;
-      }
-
-      if (chunkSize < PUSH_CHUNK_SIZE) {
-        chunk.contexts = takeFromArray(
-          remainingContexts,
-          PUSH_CHUNK_SIZE - chunkSize,
-        );
-        chunkSize += chunk.contexts.length;
-      }
+      chunk.contexts = takeFromArray(
+        remainingContexts,
+        PUSH_CHUNK_SIZE - chunkSize,
+      );
+      chunkSize += chunk.contexts.length;
 
       if (chunkSize < PUSH_CHUNK_SIZE) {
         chunk.categories = takeFromArray(
@@ -363,11 +350,11 @@ export class SyncService {
       }
 
       if (chunkSize < PUSH_CHUNK_SIZE) {
-        chunk.checklist_items = takeFromArray(
-          remainingChecklistItems,
+        chunk.goals = takeFromArray(
+          remainingGoals,
           PUSH_CHUNK_SIZE - chunkSize,
         );
-        chunkSize += chunk.checklist_items.length;
+        chunkSize += chunk.goals.length;
       }
 
       if (chunkSize < PUSH_CHUNK_SIZE) {
@@ -376,6 +363,22 @@ export class SyncService {
           PUSH_CHUNK_SIZE - chunkSize,
         );
         chunkSize += chunk.ideas.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.tasks = takeFromArray(
+          remainingTasks,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.tasks.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.checklist_items = takeFromArray(
+          remainingChecklistItems,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.checklist_items.length;
       }
 
       if (chunkSize < PUSH_CHUNK_SIZE) {

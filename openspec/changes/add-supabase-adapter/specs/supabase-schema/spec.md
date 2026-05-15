@@ -5,11 +5,11 @@ The database SHALL have tables for `tasks`, `goals`, `ideas`, `contexts`, `categ
 
 #### Scenario: Task table schema
 - **WHEN** migration is applied
-- **THEN** `tasks` table exists with columns: `id` (UUID PK), `user_id` (UUID FK to auth.users), `name` (TEXT NOT NULL), `description` (TEXT DEFAULT ''), `box` (TEXT NOT NULL CHECK in inbox/today/week/later), `goal_id` (TEXT DEFAULT ''), `context_id` (TEXT DEFAULT ''), `category_id` (TEXT DEFAULT ''), `is_completed` (BOOLEAN DEFAULT false), `completed_at` (TIMESTAMPTZ), `repeat_rule` (JSONB, nullable), `is_hidden` (BOOLEAN DEFAULT false), `next_date` (DATE), `appear_date` (DATE), `original_task_id` (TEXT DEFAULT ''), `sort_order` (INTEGER DEFAULT 0), `is_deleted` (BOOLEAN DEFAULT false), `created_at` (TIMESTAMPTZ NOT NULL), `updated_at` (TIMESTAMPTZ NOT NULL), `revision` (BIGINT DEFAULT 0)
+- **THEN** `tasks` table exists with columns: `id` (UUID PK), `user_id` (UUID FK to auth.users), `name` (TEXT NOT NULL), `description` (TEXT DEFAULT ''), `box` (TEXT NOT NULL CHECK in inbox/today/week/later), `goal_id` (UUID FK to goals ON DELETE SET NULL, DEFERRABLE), `context_id` (UUID FK to contexts ON DELETE SET NULL, DEFERRABLE), `category_id` (UUID FK to categories ON DELETE SET NULL, DEFERRABLE), `is_completed` (BOOLEAN DEFAULT false), `completed_at` (TIMESTAMPTZ), `repeat_rule` (JSONB, nullable), `is_hidden` (BOOLEAN DEFAULT false), `next_date` (DATE), `appear_date` (DATE), `original_task_id` (UUID FK to tasks ON DELETE SET NULL, DEFERRABLE), `sort_order` (INTEGER DEFAULT 0), `is_deleted` (BOOLEAN DEFAULT false), `created_at` (TIMESTAMPTZ NOT NULL), `updated_at` (TIMESTAMPTZ NOT NULL), `revision` (BIGINT DEFAULT 0)
 
 #### Scenario: Goals table schema
 - **WHEN** migration is applied
-- **THEN** `goals` table exists with columns: `id` (UUID PK), `user_id` (UUID FK), `name` (TEXT NOT NULL), `description` (TEXT DEFAULT ''), `cover_file_id` (TEXT DEFAULT ''), `status` (TEXT NOT NULL CHECK in planning/in_progress/paused/completed/cancelled), `sort_order` (INTEGER DEFAULT 0), `is_deleted` (BOOLEAN DEFAULT false), `created_at` (TIMESTAMPTZ NOT NULL), `updated_at` (TIMESTAMPTZ NOT NULL), `revision` (BIGINT DEFAULT 0)
+- **THEN** `goals` table exists with columns: `id` (UUID PK), `user_id` (UUID FK), `name` (TEXT NOT NULL), `description` (TEXT DEFAULT ''), `cover_file_id` (UUID FK to covers ON DELETE SET NULL, DEFERRABLE), `status` (TEXT NOT NULL CHECK in planning/in_progress/paused/completed/cancelled), `sort_order` (INTEGER DEFAULT 0), `is_deleted` (BOOLEAN DEFAULT false), `created_at` (TIMESTAMPTZ NOT NULL), `updated_at` (TIMESTAMPTZ NOT NULL), `revision` (BIGINT DEFAULT 0)
 
 #### Scenario: Index on user_id + revision
 - **WHEN** migration is applied
@@ -37,8 +37,26 @@ The `covers` table SHALL store metadata for uploaded cover images. The actual fi
 - **THEN** `covers` table exists with columns: `file_id` (UUID PK DEFAULT gen_random_uuid()), `user_id` (UUID FK to auth.users), `filename` (TEXT NOT NULL), `mime_type` (TEXT NOT NULL), `data_hash` (TEXT NOT NULL), `storage_path` (TEXT NOT NULL), `ref_count` (INTEGER DEFAULT 1)
 - **AND** index `idx_covers_user_hash ON covers (user_id, data_hash)` exists
 
+### Requirement: FK constraints on reference fields
+FK reference fields SHALL use `UUID` type with `DEFERRABLE INITIALLY DEFERRED` constraints. Nullable FK fields store `NULL` when unset. Tables SHALL be created in dependency order: contexts, categories, covers, goals, ideas, tasks, checklist_items.
+
+#### Scenario: Task FK fields reference parent tables
+- **WHEN** migration is applied
+- **THEN** `tasks.goal_id` has FK to `goals(id)` ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED
+- **AND** `tasks.context_id` has FK to `contexts(id)` ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED
+- **AND** `tasks.category_id` has FK to `categories(id)` ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED
+- **AND** `tasks.original_task_id` has FK to `tasks(id)` ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED
+
+#### Scenario: Goal FK field references covers
+- **WHEN** migration is applied
+- **THEN** `goals.cover_file_id` has FK to `covers(file_id)` ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED
+
+#### Scenario: Checklist item FK field references tasks
+- **WHEN** migration is applied
+- **THEN** `checklist_items.task_id` has FK to `tasks(id)` ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+
 ### Requirement: Push RPC function
-The database SHALL have a PostgreSQL function `push_records` callable via `supabase.rpc('push_records', ...)`. The function SHALL accept user_id and entity arrays (tasks, goals, contexts, categories, ideas, checklist_items, settings). It SHALL acquire a `FOR UPDATE` lock on the user's `next_revision` row in `sync_meta` (with 10-second timeout), assign the current revision to all accepted records, upsert records into entity tables, increment `next_revision`, and return per-record results with status (`accepted`, `conflict`, `rejected`).
+The database SHALL have a PostgreSQL function `push_records` callable via `supabase.rpc('push_records', ...)`. The function SHALL accept user_id and entity arrays (tasks, goals, contexts, categories, ideas, checklist_items, settings). It SHALL acquire a `FOR UPDATE` lock on the user's `next_revision` row in `sync_meta` (with 10-second timeout), assign the current revision to all accepted records, upsert records into entity tables in dependency order (contexts, categories, goals, ideas, tasks, checklist_items, settings), increment `next_revision`, and return per-record results with status (`accepted`, `conflict`, `rejected`). FK reference fields SHALL be deserialized from wire format (`'' → NULL`) using `NULLIF(..., '')::UUID` and serialized back (`NULL → ''`) using `COALESCE(...::text, '')`.
 
 #### Scenario: RPC function acquires lock and assigns revision
 - **WHEN** `push_records` is called with 3 tasks

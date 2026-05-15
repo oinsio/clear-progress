@@ -131,6 +131,17 @@ registerAdapter("supabase", (url, getAccessToken) =>
 
 **Rationale**: With 9 Edge Functions sharing auth extraction, client init, error formatting, and datetime serialization, duplication would be a maintenance burden and a source of inconsistencies. Supabase officially supports shared modules via `import_map.json`. Driven by D7 (separate functions per action).
 
+### D10: DEFERRABLE FK constraints with dependency-ordered processing
+
+**Choice**: FK reference fields (`goal_id`, `context_id`, `category_id`, `original_task_id` in tasks; `cover_file_id` in goals; `task_id` in checklist_items) use `UUID` type with `DEFERRABLE INITIALLY DEFERRED` FK constraints. Nullable FK fields store `NULL` instead of empty string. Push RPC and client-side chunking process entities in dependency order: contexts → categories → goals → ideas → tasks → checklist_items → settings.
+
+**Alternatives considered**:
+- *TEXT fields with empty string (status quo)*: No referential integrity, 36 bytes vs 16 bytes per UUID, slower string comparison.
+- *IMMEDIATE FK constraints*: Would require strict processing order in RPC with no tolerance for future reordering. DEFERRABLE checks at COMMIT, providing a safety net if order is accidentally changed.
+- *Pre-check validation in RPC*: Extra SELECT queries before each INSERT to verify FK targets exist. Over-engineering for current scale.
+
+**Rationale**: DEFERRABLE provides double safety — correct order guarantees FK satisfaction in normal flow, deferred check catches edge cases (client bugs, race conditions). `UUID` type saves storage (16 vs 36 bytes) and enables faster indexed lookups. `NULL` is semantically correct for "no value" in PostgreSQL and enables proper FK constraints. Wire protocol unchanged — serializers convert `NULL ↔ ''`. Driven by FR18, FR19.
+
 ## Risks / Trade-offs
 
 - **[Risk] Edge Function cold starts** may add 200-500ms latency on first request after idle period. Mitigation: Supabase keeps functions warm for ~60s; ping on app open pre-warms.

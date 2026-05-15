@@ -206,23 +206,23 @@ describe("SyncService — push chunks", () => {
     return asMock(ctx.mockSyncAdapter.push).mock.calls;
   }
 
-  it("should fit only one goal in first chunk when tasks leave exactly one remaining slot", async () => {
+  it("should fill goals before tasks and split tasks across chunks", async () => {
     const pushCalls = await setupTasksAndGoalsThenPush(PUSH_CHUNK_SIZE - 1, 5);
 
     expect(pushCalls).toHaveLength(2);
-    expect(pushCalls[0][0].tasks).toHaveLength(PUSH_CHUNK_SIZE - 1);
-    expect(pushCalls[0][0].goals).toHaveLength(1);
-    expect(pushCalls[1][0].tasks).toHaveLength(0);
-    expect(pushCalls[1][0].goals).toHaveLength(4);
+    expect(pushCalls[0][0].goals).toHaveLength(5);
+    expect(pushCalls[0][0].tasks).toHaveLength(PUSH_CHUNK_SIZE - 5);
+    expect(pushCalls[1][0].goals).toHaveLength(0);
+    expect(pushCalls[1][0].tasks).toHaveLength(4);
   });
 
-  it("should split goals across chunks when tasks partially fill a chunk", async () => {
+  it("should place all goals in first chunk and split remaining tasks", async () => {
     const pushCalls = await setupTasksAndGoalsThenPush(190, 20);
 
     expect(pushCalls).toHaveLength(2);
-    expect(pushCalls[0][0].tasks).toHaveLength(190);
-    expect(pushCalls[0][0].goals).toHaveLength(10);
-    expect(pushCalls[1][0].goals).toHaveLength(10);
+    expect(pushCalls[0][0].goals).toHaveLength(20);
+    expect(pushCalls[0][0].tasks).toHaveLength(180);
+    expect(pushCalls[1][0].tasks).toHaveLength(10);
   });
 
   it("should not exceed PUSH_CHUNK_SIZE in any chunk with many mixed entities", async () => {
@@ -300,7 +300,7 @@ describe("SyncService — push chunks", () => {
   // implements NFR-R2 of remove-version-field
   it.each([
     {
-      description: "goals push contexts into second chunk",
+      description: "extra contexts overflow into second chunk",
       setupOverrides: () => {
         ctx.contextRepository = withNeedingSync(
           ctx.contextRepository,
@@ -315,7 +315,7 @@ describe("SyncService — push chunks", () => {
       },
     },
     {
-      description: "contexts push categories into second chunk",
+      description: "contexts and categories together exceed chunk size",
       setupOverrides: () => {
         ctx.contextRepository = withNeedingSync(
           ctx.contextRepository,
@@ -348,7 +348,7 @@ describe("SyncService — push chunks", () => {
       },
     },
     {
-      description: "categories push checklist_items into second chunk",
+      description: "extra checklist_items push tasks into second chunk",
       setupOverrides: () => {
         ctx.categoryRepository = withNeedingSync(ctx.categoryRepository, [
           makeCategory({ id: "cat1", name: "Work" }),
@@ -374,7 +374,7 @@ describe("SyncService — push chunks", () => {
       },
     },
     {
-      description: "checklist_items push ideas into second chunk",
+      description: "extra ideas push tasks into second chunk",
       setupOverrides: () => {
         ctx.checklistRepository = withNeedingSync(ctx.checklistRepository, [
           makeChecklistItem({ id: "ci1", task_id: "t0", name: "Item" }),
@@ -392,7 +392,7 @@ describe("SyncService — push chunks", () => {
       },
     },
     {
-      description: "ideas push settings into second chunk",
+      description: "settings overflow into second chunk",
       setupOverrides: () => {
         ctx.settingsRepository = withNeedingSync(ctx.settingsRepository, [
           {
@@ -411,8 +411,7 @@ describe("SyncService — push chunks", () => {
       },
     },
     {
-      description:
-        "ideas assignment undercounts allowing settings into second chunk",
+      description: "ideas and settings together exceed chunk size",
       setupOverrides: () => {
         ctx.ideaRepository = withNeedingSync(ctx.ideaRepository, [makeIdea()]);
         ctx.settingsRepository = withNeedingSync(ctx.settingsRepository, [

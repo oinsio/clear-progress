@@ -1,9 +1,12 @@
--- implements FR3, D1, D3 of add-supabase-adapter
+-- implements FR3, D1, D3, FR18, FR19 of add-supabase-adapter
 -- PostgreSQL RPC function: push_records
 --
 -- Security model: called by Edge Function using service role after validating the
 -- user JWT. p_user_id is always set to the authenticated user's ID by the Edge Function.
 -- The function enforces data isolation by using p_user_id in all WHERE clauses.
+--
+-- Processing order follows dependency graph (FR19):
+-- contexts → categories → goals → ideas → tasks → checklist_items → settings
 
 CREATE OR REPLACE FUNCTION push_records(
   p_user_id        UUID,
@@ -24,11 +27,11 @@ DECLARE
   v_rec_id           UUID;
   v_server_rec       JSONB;
   v_existing_ts      TIMESTAMPTZ;
-  v_task_results     JSONB := '[]';
-  v_goal_results     JSONB := '[]';
   v_context_results  JSONB := '[]';
   v_category_results JSONB := '[]';
+  v_goal_results     JSONB := '[]';
   v_idea_results     JSONB := '[]';
+  v_task_results     JSONB := '[]';
   v_checklist_results JSONB := '[]';
   v_setting_results  JSONB := '[]';
 BEGIN
@@ -43,135 +46,6 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'USER_NOT_INITIALIZED';
   END IF;
-
-  -- ── Tasks ────────────────────────────────────────────────────────────────
-  FOR v_rec IN SELECT value FROM jsonb_array_elements(p_tasks) AS value LOOP
-    v_rec_id := (v_rec->>'id')::UUID;
-    SELECT updated_at INTO v_existing_ts FROM tasks WHERE id = v_rec_id AND user_id = p_user_id;
-
-    IF NOT FOUND THEN
-      INSERT INTO tasks (id, user_id, name, description, box, goal_id, context_id, category_id,
-        is_completed, completed_at, repeat_rule, is_hidden, next_date, appear_date,
-        original_task_id, sort_order, is_deleted, created_at, updated_at, revision)
-      VALUES (
-        v_rec_id, p_user_id,
-        v_rec->>'name',            COALESCE(v_rec->>'description', ''),
-        v_rec->>'box',             COALESCE(v_rec->>'goal_id', ''),
-        COALESCE(v_rec->>'context_id', ''),  COALESCE(v_rec->>'category_id', ''),
-        (v_rec->>'is_completed')::BOOLEAN,   parse_timestamptz(v_rec->>'completed_at'),
-        parse_repeat_rule(v_rec->>'repeat_rule'), (v_rec->>'is_hidden')::BOOLEAN,
-        parse_date(v_rec->>'next_date'),     parse_date(v_rec->>'appear_date'),
-        COALESCE(v_rec->>'original_task_id', ''),
-        (v_rec->>'sort_order')::INTEGER,     (v_rec->>'is_deleted')::BOOLEAN,
-        (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ,
-        v_revision
-      );
-      v_task_results := v_task_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'created'));
-
-    ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
-      UPDATE tasks SET
-        name = v_rec->>'name',                      description = COALESCE(v_rec->>'description', ''),
-        box = v_rec->>'box',                         goal_id = COALESCE(v_rec->>'goal_id', ''),
-        context_id = COALESCE(v_rec->>'context_id', ''), category_id = COALESCE(v_rec->>'category_id', ''),
-        is_completed = (v_rec->>'is_completed')::BOOLEAN, completed_at = parse_timestamptz(v_rec->>'completed_at'),
-        repeat_rule = parse_repeat_rule(v_rec->>'repeat_rule'), is_hidden = (v_rec->>'is_hidden')::BOOLEAN,
-        next_date = parse_date(v_rec->>'next_date'), appear_date = parse_date(v_rec->>'appear_date'),
-        original_task_id = COALESCE(v_rec->>'original_task_id', ''),
-        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
-        updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
-      WHERE id = v_rec_id AND user_id = p_user_id;
-      v_task_results := v_task_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'accepted'));
-
-    ELSE
-      SELECT jsonb_build_object(
-        'id', id::text, 'name', name, 'description', description, 'box', box,
-        'goal_id', goal_id, 'context_id', context_id, 'category_id', category_id,
-        'is_completed', is_completed, 'completed_at', format_timestamptz(completed_at),
-        'repeat_rule', COALESCE(repeat_rule::text, ''), 'is_hidden', is_hidden,
-        'next_date', COALESCE(next_date::text, ''), 'appear_date', COALESCE(appear_date::text, ''),
-        'original_task_id', original_task_id, 'sort_order', sort_order,
-        'is_deleted', is_deleted, 'created_at', format_timestamptz(created_at),
-        'updated_at', format_timestamptz(updated_at), 'revision', revision
-      ) INTO v_server_rec FROM tasks WHERE id = v_rec_id AND user_id = p_user_id;
-      v_task_results := v_task_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'conflict', 'server_record', v_server_rec));
-    END IF;
-  END LOOP;
-
-  -- ── Goals ────────────────────────────────────────────────────────────────
-  FOR v_rec IN SELECT value FROM jsonb_array_elements(p_goals) AS value LOOP
-    v_rec_id := (v_rec->>'id')::UUID;
-    SELECT updated_at INTO v_existing_ts FROM goals WHERE id = v_rec_id AND user_id = p_user_id;
-
-    IF NOT FOUND THEN
-      INSERT INTO goals (id, user_id, name, description, cover_file_id, status, sort_order, is_deleted, created_at, updated_at, revision)
-      VALUES (
-        v_rec_id, p_user_id, v_rec->>'name', COALESCE(v_rec->>'description', ''),
-        COALESCE(v_rec->>'cover_file_id', ''), v_rec->>'status',
-        (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
-        (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
-      );
-      v_goal_results := v_goal_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'created'));
-
-    ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
-      UPDATE goals SET
-        name = v_rec->>'name', description = COALESCE(v_rec->>'description', ''),
-        cover_file_id = COALESCE(v_rec->>'cover_file_id', ''), status = v_rec->>'status',
-        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
-        updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
-      WHERE id = v_rec_id AND user_id = p_user_id;
-      v_goal_results := v_goal_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'accepted'));
-
-    ELSE
-      SELECT jsonb_build_object(
-        'id', id::text, 'name', name, 'description', description, 'cover_file_id', cover_file_id,
-        'status', status, 'sort_order', sort_order, 'is_deleted', is_deleted,
-        'created_at', format_timestamptz(created_at), 'updated_at', format_timestamptz(updated_at),
-        'revision', revision
-      ) INTO v_server_rec FROM goals WHERE id = v_rec_id AND user_id = p_user_id;
-      v_goal_results := v_goal_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'conflict', 'server_record', v_server_rec));
-    END IF;
-  END LOOP;
-
-  -- ── Ideas ────────────────────────────────────────────────────────────────
-  FOR v_rec IN SELECT value FROM jsonb_array_elements(p_ideas) AS value LOOP
-    v_rec_id := (v_rec->>'id')::UUID;
-    SELECT updated_at INTO v_existing_ts FROM ideas WHERE id = v_rec_id AND user_id = p_user_id;
-
-    IF NOT FOUND THEN
-      INSERT INTO ideas (id, user_id, name, description, sort_order, is_deleted, created_at, updated_at, revision)
-      VALUES (
-        v_rec_id, p_user_id, v_rec->>'name', COALESCE(v_rec->>'description', ''),
-        (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
-        (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
-      );
-      v_idea_results := v_idea_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'created'));
-
-    ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
-      UPDATE ideas SET
-        name = v_rec->>'name', description = COALESCE(v_rec->>'description', ''),
-        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
-        updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
-      WHERE id = v_rec_id AND user_id = p_user_id;
-      v_idea_results := v_idea_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'accepted'));
-
-    ELSE
-      SELECT jsonb_build_object(
-        'id', id::text, 'name', name, 'description', description, 'sort_order', sort_order,
-        'is_deleted', is_deleted, 'created_at', format_timestamptz(created_at),
-        'updated_at', format_timestamptz(updated_at), 'revision', revision
-      ) INTO v_server_rec FROM ideas WHERE id = v_rec_id AND user_id = p_user_id;
-      v_idea_results := v_idea_results || jsonb_build_array(
-        jsonb_build_object('id', v_rec->>'id', 'status', 'conflict', 'server_record', v_server_rec));
-    END IF;
-  END LOOP;
 
   -- ── Contexts ─────────────────────────────────────────────────────────────
   FOR v_rec IN SELECT value FROM jsonb_array_elements(p_contexts) AS value LOOP
@@ -239,6 +113,137 @@ BEGIN
         'revision', revision
       ) INTO v_server_rec FROM categories WHERE id = v_rec_id AND user_id = p_user_id;
       v_category_results := v_category_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'conflict', 'server_record', v_server_rec));
+    END IF;
+  END LOOP;
+
+  -- ── Goals ────────────────────────────────────────────────────────────────
+  FOR v_rec IN SELECT value FROM jsonb_array_elements(p_goals) AS value LOOP
+    v_rec_id := (v_rec->>'id')::UUID;
+    SELECT updated_at INTO v_existing_ts FROM goals WHERE id = v_rec_id AND user_id = p_user_id;
+
+    IF NOT FOUND THEN
+      INSERT INTO goals (id, user_id, name, description, cover_file_id, status, sort_order, is_deleted, created_at, updated_at, revision)
+      VALUES (
+        v_rec_id, p_user_id, v_rec->>'name', COALESCE(v_rec->>'description', ''),
+        NULLIF(v_rec->>'cover_file_id', '')::UUID, v_rec->>'status',
+        (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
+        (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
+      );
+      v_goal_results := v_goal_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'created'));
+
+    ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
+      UPDATE goals SET
+        name = v_rec->>'name', description = COALESCE(v_rec->>'description', ''),
+        cover_file_id = NULLIF(v_rec->>'cover_file_id', '')::UUID, status = v_rec->>'status',
+        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
+      WHERE id = v_rec_id AND user_id = p_user_id;
+      v_goal_results := v_goal_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'accepted'));
+
+    ELSE
+      SELECT jsonb_build_object(
+        'id', id::text, 'name', name, 'description', description,
+        'cover_file_id', COALESCE(cover_file_id::text, ''),
+        'status', status, 'sort_order', sort_order, 'is_deleted', is_deleted,
+        'created_at', format_timestamptz(created_at), 'updated_at', format_timestamptz(updated_at),
+        'revision', revision
+      ) INTO v_server_rec FROM goals WHERE id = v_rec_id AND user_id = p_user_id;
+      v_goal_results := v_goal_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'conflict', 'server_record', v_server_rec));
+    END IF;
+  END LOOP;
+
+  -- ── Ideas ────────────────────────────────────────────────────────────────
+  FOR v_rec IN SELECT value FROM jsonb_array_elements(p_ideas) AS value LOOP
+    v_rec_id := (v_rec->>'id')::UUID;
+    SELECT updated_at INTO v_existing_ts FROM ideas WHERE id = v_rec_id AND user_id = p_user_id;
+
+    IF NOT FOUND THEN
+      INSERT INTO ideas (id, user_id, name, description, sort_order, is_deleted, created_at, updated_at, revision)
+      VALUES (
+        v_rec_id, p_user_id, v_rec->>'name', COALESCE(v_rec->>'description', ''),
+        (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
+        (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
+      );
+      v_idea_results := v_idea_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'created'));
+
+    ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
+      UPDATE ideas SET
+        name = v_rec->>'name', description = COALESCE(v_rec->>'description', ''),
+        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
+      WHERE id = v_rec_id AND user_id = p_user_id;
+      v_idea_results := v_idea_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'accepted'));
+
+    ELSE
+      SELECT jsonb_build_object(
+        'id', id::text, 'name', name, 'description', description, 'sort_order', sort_order,
+        'is_deleted', is_deleted, 'created_at', format_timestamptz(created_at),
+        'updated_at', format_timestamptz(updated_at), 'revision', revision
+      ) INTO v_server_rec FROM ideas WHERE id = v_rec_id AND user_id = p_user_id;
+      v_idea_results := v_idea_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'conflict', 'server_record', v_server_rec));
+    END IF;
+  END LOOP;
+
+  -- ── Tasks ────────────────────────────────────────────────────────────────
+  FOR v_rec IN SELECT value FROM jsonb_array_elements(p_tasks) AS value LOOP
+    v_rec_id := (v_rec->>'id')::UUID;
+    SELECT updated_at INTO v_existing_ts FROM tasks WHERE id = v_rec_id AND user_id = p_user_id;
+
+    IF NOT FOUND THEN
+      INSERT INTO tasks (id, user_id, name, description, box, goal_id, context_id, category_id,
+        is_completed, completed_at, repeat_rule, is_hidden, next_date, appear_date,
+        original_task_id, sort_order, is_deleted, created_at, updated_at, revision)
+      VALUES (
+        v_rec_id, p_user_id,
+        v_rec->>'name',            COALESCE(v_rec->>'description', ''),
+        v_rec->>'box',             NULLIF(v_rec->>'goal_id', '')::UUID,
+        NULLIF(v_rec->>'context_id', '')::UUID,  NULLIF(v_rec->>'category_id', '')::UUID,
+        (v_rec->>'is_completed')::BOOLEAN,   parse_timestamptz(v_rec->>'completed_at'),
+        parse_repeat_rule(v_rec->>'repeat_rule'), (v_rec->>'is_hidden')::BOOLEAN,
+        parse_date(v_rec->>'next_date'),     parse_date(v_rec->>'appear_date'),
+        NULLIF(v_rec->>'original_task_id', '')::UUID,
+        (v_rec->>'sort_order')::INTEGER,     (v_rec->>'is_deleted')::BOOLEAN,
+        (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ,
+        v_revision
+      );
+      v_task_results := v_task_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'created'));
+
+    ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
+      UPDATE tasks SET
+        name = v_rec->>'name',                      description = COALESCE(v_rec->>'description', ''),
+        box = v_rec->>'box',                         goal_id = NULLIF(v_rec->>'goal_id', '')::UUID,
+        context_id = NULLIF(v_rec->>'context_id', '')::UUID, category_id = NULLIF(v_rec->>'category_id', '')::UUID,
+        is_completed = (v_rec->>'is_completed')::BOOLEAN, completed_at = parse_timestamptz(v_rec->>'completed_at'),
+        repeat_rule = parse_repeat_rule(v_rec->>'repeat_rule'), is_hidden = (v_rec->>'is_hidden')::BOOLEAN,
+        next_date = parse_date(v_rec->>'next_date'), appear_date = parse_date(v_rec->>'appear_date'),
+        original_task_id = NULLIF(v_rec->>'original_task_id', '')::UUID,
+        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
+      WHERE id = v_rec_id AND user_id = p_user_id;
+      v_task_results := v_task_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'accepted'));
+
+    ELSE
+      SELECT jsonb_build_object(
+        'id', id::text, 'name', name, 'description', description, 'box', box,
+        'goal_id', COALESCE(goal_id::text, ''), 'context_id', COALESCE(context_id::text, ''),
+        'category_id', COALESCE(category_id::text, ''),
+        'is_completed', is_completed, 'completed_at', format_timestamptz(completed_at),
+        'repeat_rule', COALESCE(repeat_rule::text, ''), 'is_hidden', is_hidden,
+        'next_date', COALESCE(next_date::text, ''), 'appear_date', COALESCE(appear_date::text, ''),
+        'original_task_id', COALESCE(original_task_id::text, ''), 'sort_order', sort_order,
+        'is_deleted', is_deleted, 'created_at', format_timestamptz(created_at),
+        'updated_at', format_timestamptz(updated_at), 'revision', revision
+      ) INTO v_server_rec FROM tasks WHERE id = v_rec_id AND user_id = p_user_id;
+      v_task_results := v_task_results || jsonb_build_array(
         jsonb_build_object('id', v_rec->>'id', 'status', 'conflict', 'server_record', v_server_rec));
     END IF;
   END LOOP;

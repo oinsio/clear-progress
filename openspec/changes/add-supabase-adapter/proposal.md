@@ -55,6 +55,8 @@ Clear Progress currently depends on a single backend — Google Apps Script + Go
 - FR15: Database schema SHALL be created via Supabase CLI migrations, not dynamically
 - FR16: Adapter SHALL be registered in `adapter-loader` as `registerAdapter("supabase", factory)`
 - FR17: Deployment scripts SHALL automate: migrations apply, Edge Functions deploy, Storage bucket creation
+- FR18: FK reference fields (`goal_id`, `context_id`, `category_id`, `original_task_id`, `cover_file_id`, `task_id`) SHALL use `UUID` type with `DEFERRABLE INITIALLY DEFERRED` FK constraints; nullable fields use `NULL` (not empty string) when unset
+- FR19: Push RPC function and client-side chunking SHALL process entities in dependency order: contexts, categories, goals, ideas, tasks, checklist_items, settings
 
 ### Non-Functional
 
