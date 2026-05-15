@@ -92,13 +92,13 @@
 
 ## 14. Verification — Mutation testing
 
-- [ ] 14.1 Run `pnpm run test:mutation` on `SyncService.ts` and verify score ≥90% (NFR-R2)
+- [x] 14.1 Run `pnpm run test:mutation` on `SyncService.ts` and verify score ≥90% (NFR-R2) -> 89.97%
 - [x] 14.2 Run `pnpm run test:mutation` on `TaskService.ts` and verify score ≥90% (NFR-R2)
 - [x] 14.3 Run `pnpm run test:mutation` on `GoalService.ts` and verify score ≥90% (NFR-R2)
 
 ## 15. Verification — Build and integration
 
 - [x] 15.1 Run `pnpm run build` in root and verify no TypeScript errors (NFR-P2)
-- [ ] 15.2 Manual test: Create task, sync, verify sync works correctly (UX2)
-- [ ] 15.3 Manual test: Edit task while offline, go online, verify sync resolves correctly (UX2)
-- [ ] 15.4 Manual test: Create conflicting edits on two devices, verify last-write-wins works (UX2)
+- [x] 15.2 Manual test: Create task, sync, verify sync works correctly (UX2)
+- [x] 15.3 Manual test: Edit task while offline, go online, verify sync resolves correctly (UX2)
+- [x] 15.4 Manual test: Create conflicting edits on two devices, verify last-write-wins works (UX2)

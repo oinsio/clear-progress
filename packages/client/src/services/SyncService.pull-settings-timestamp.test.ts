@@ -160,4 +160,31 @@ describe("SyncService — pull settings_updated_at", () => {
 
     expect(localStorage.getItem("settings_updated_at")).toBe(sharedTimestamp);
   });
+
+  it("should keep first timestamp when two settings represent the same instant with different precision", async () => {
+    localStorage.removeItem("settings_updated_at");
+    // Both represent the same instant, but with different string formats.
+    // Temporal.Instant.compare returns 0 (equal), so the first value must be kept.
+    const withMilliseconds = "2026-04-15T10:00:00.000Z" as ISOTimestamp;
+    const withoutMilliseconds = "2026-04-15T10:00:00Z" as ISOTimestamp;
+    const serverSettings = [
+      { key: "s1", value: "a", updated_at: withMilliseconds, needsSync: false },
+      {
+        key: "s2",
+        value: "b",
+        updated_at: withoutMilliseconds,
+        needsSync: false,
+      },
+    ];
+    ctx.mockSyncAdapter = createMockSyncAdapter({
+      pull: vi
+        .fn()
+        .mockResolvedValue(makePullResponse({ settings: serverSettings })),
+    });
+    const service = createService(ctx);
+
+    await service.pull();
+
+    expect(localStorage.getItem("settings_updated_at")).toBe(withMilliseconds);
+  });
 });

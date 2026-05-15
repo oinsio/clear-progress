@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PUSH_CHUNK_SIZE } from "@/constants";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import {
   asMock,
@@ -24,6 +25,9 @@ describe("SyncService — push chunks", () => {
 
   beforeEach(() => {
     ctx = setupSyncTestContext();
+    ctx.mockSyncAdapter = createMockSyncAdapter({
+      push: vi.fn().mockResolvedValue(makePushResponse({}, 10)),
+    });
   });
 
   function setupBaselineEntities() {
@@ -51,9 +55,6 @@ describe("SyncService — push chunks", () => {
       withNeedingSync(ctx.taskRepository, tasks),
       tasks,
     );
-    ctx.mockSyncAdapter = createMockSyncAdapter({
-      push: vi.fn().mockResolvedValue(makePushResponse({}, 10)),
-    });
   }
 
   it("should call apiClient.push twice when total records exceed chunk size", async () => {
@@ -64,9 +65,6 @@ describe("SyncService — push chunks", () => {
       withNeedingSync(ctx.taskRepository, tasks),
       tasks,
     );
-    ctx.mockSyncAdapter = createMockSyncAdapter({
-      push: vi.fn().mockResolvedValue(makePushResponse({}, 10)),
-    });
     const service = createService(ctx);
 
     await service.push();
@@ -122,9 +120,6 @@ describe("SyncService — push chunks", () => {
       withNeedingSync(ctx.goalRepository, goals),
       goals,
     );
-    ctx.mockSyncAdapter = createMockSyncAdapter({
-      push: vi.fn().mockResolvedValue(makePushResponse({}, 20)),
-    });
     const service = createService(ctx);
 
     await service.push();
@@ -171,6 +166,135 @@ describe("SyncService — push chunks", () => {
     await service.push(true);
 
     expect(ctx.mockSyncAdapter.push).toHaveBeenCalledTimes(1);
+  });
+
+  it("should include all entities in one chunk when totalCount equals PUSH_CHUNK_SIZE", async () => {
+    const tasks = Array.from({ length: 100 }, (_, i) =>
+      makeTask({ id: `task-${i}` }),
+    );
+    const goals = Array.from({ length: 100 }, (_, i) =>
+      makeGoal({ id: `goal-${i}` }),
+    );
+    ctx.taskRepository = withNeedingSync(ctx.taskRepository, tasks);
+    ctx.goalRepository = withNeedingSync(ctx.goalRepository, goals);
+    const service = createService(ctx);
+
+    await service.push();
+
+    const pushCalls = asMock(ctx.mockSyncAdapter.push).mock.calls;
+    expect(pushCalls).toHaveLength(1);
+    expect(pushCalls[0][0].tasks).toHaveLength(100);
+    expect(pushCalls[0][0].goals).toHaveLength(100);
+  });
+
+  async function setupTasksAndGoalsThenPush(
+    taskCount: number,
+    goalCount: number,
+  ) {
+    const tasks = Array.from({ length: taskCount }, (_, i) =>
+      makeTask({ id: `task-${i}` }),
+    );
+    const goals = Array.from({ length: goalCount }, (_, i) =>
+      makeGoal({ id: `goal-${i}` }),
+    );
+    ctx.taskRepository = withNeedingSync(ctx.taskRepository, tasks);
+    ctx.goalRepository = withNeedingSync(ctx.goalRepository, goals);
+    const service = createService(ctx);
+
+    await service.push();
+
+    return asMock(ctx.mockSyncAdapter.push).mock.calls;
+  }
+
+  it("should fit only one goal in first chunk when tasks leave exactly one remaining slot", async () => {
+    const pushCalls = await setupTasksAndGoalsThenPush(PUSH_CHUNK_SIZE - 1, 5);
+
+    expect(pushCalls).toHaveLength(2);
+    expect(pushCalls[0][0].tasks).toHaveLength(PUSH_CHUNK_SIZE - 1);
+    expect(pushCalls[0][0].goals).toHaveLength(1);
+    expect(pushCalls[1][0].tasks).toHaveLength(0);
+    expect(pushCalls[1][0].goals).toHaveLength(4);
+  });
+
+  it("should split goals across chunks when tasks partially fill a chunk", async () => {
+    const pushCalls = await setupTasksAndGoalsThenPush(190, 20);
+
+    expect(pushCalls).toHaveLength(2);
+    expect(pushCalls[0][0].tasks).toHaveLength(190);
+    expect(pushCalls[0][0].goals).toHaveLength(10);
+    expect(pushCalls[1][0].goals).toHaveLength(10);
+  });
+
+  it("should not exceed PUSH_CHUNK_SIZE in any chunk with many mixed entities", async () => {
+    const tasks = Array.from({ length: 150 }, (_, i) =>
+      makeTask({ id: `task-${i}` }),
+    );
+    const goals = Array.from({ length: 100 }, (_, i) =>
+      makeGoal({ id: `goal-${i}` }),
+    );
+    const contexts = Array.from({ length: 60 }, (_, i) =>
+      makeContext({ id: `ctx-${i}`, name: `Context ${i}`, sort_order: i }),
+    );
+    ctx.taskRepository = withNeedingSync(ctx.taskRepository, tasks);
+    ctx.goalRepository = withNeedingSync(ctx.goalRepository, goals);
+    ctx.contextRepository = withNeedingSync(ctx.contextRepository, contexts);
+    const service = createService(ctx);
+
+    await service.push();
+
+    const pushCalls = asMock(ctx.mockSyncAdapter.push).mock.calls;
+    for (const [payload] of pushCalls) {
+      const totalInChunk =
+        payload.tasks.length +
+        payload.goals.length +
+        payload.contexts.length +
+        payload.categories.length +
+        payload.checklist_items.length +
+        payload.ideas.length +
+        payload.settings.length;
+      expect(totalInChunk).toBeLessThanOrEqual(PUSH_CHUNK_SIZE);
+    }
+  });
+
+  it("should accumulate chunkSize correctly across all entity types in one chunk", async () => {
+    const tasks = Array.from({ length: 10 }, (_, i) =>
+      makeTask({ id: `task-${i}` }),
+    );
+    const goals = Array.from({ length: 5 }, (_, i) =>
+      makeGoal({ id: `goal-${i}` }),
+    );
+    const settings = [
+      {
+        key: "theme",
+        value: "dark",
+        updated_at: toISOTimestamp(),
+        needsSync: true,
+      },
+      {
+        key: "lang",
+        value: "en",
+        updated_at: toISOTimestamp(),
+        needsSync: true,
+      },
+      {
+        key: "tz",
+        value: "UTC",
+        updated_at: toISOTimestamp(),
+        needsSync: true,
+      },
+    ];
+    ctx.taskRepository = withNeedingSync(ctx.taskRepository, tasks);
+    ctx.goalRepository = withNeedingSync(ctx.goalRepository, goals);
+    ctx.settingsRepository = withNeedingSync(ctx.settingsRepository, settings);
+    const service = createService(ctx);
+
+    await service.push();
+
+    const pushCalls = asMock(ctx.mockSyncAdapter.push).mock.calls;
+    expect(pushCalls).toHaveLength(1);
+    expect(pushCalls[0][0].tasks).toHaveLength(10);
+    expect(pushCalls[0][0].goals).toHaveLength(5);
+    expect(pushCalls[0][0].settings).toHaveLength(3);
   });
 
   // implements NFR-R2 of remove-version-field
@@ -311,9 +435,6 @@ describe("SyncService — push chunks", () => {
     setupOverrides,
   }) => {
     setupBaselineEntities();
-    ctx.mockSyncAdapter = createMockSyncAdapter({
-      push: vi.fn().mockResolvedValue(makePushResponse({}, 10)),
-    });
     setupOverrides();
     const service = createService(ctx);
 
