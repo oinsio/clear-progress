@@ -23,7 +23,6 @@ info:
     - All dates are ISO 8601 UTC (`2026-03-04T12:00:00.000Z`)
     - Date-only fields: `next_date`, `appear_date` use ISO 8601 date format (`2026-04-20`)
     - Optional string fields use `""` instead of `null`
-    - `version` is an integer starting at 1, incremented by 1 on every client change
     - `revision` is a server-side monotonic counter assigned during push
     - Conflicts are resolved using **last-write-wins** strategy (`updated_at`)
 
@@ -219,7 +218,7 @@ paths:
         The server applies last-write-wins by `updated_at` and returns
         a status per record:
         - `created` — new record was inserted, assigned `revision`
-        - `accepted` — change was applied, `version` was incremented, assigned `revision`
+        - `accepted` — change was applied, assigned `revision`
         - `conflict` — server record is newer; response includes `server_record`
         - `rejected` — record was not saved; response includes `reason`
 
@@ -290,7 +289,6 @@ paths:
                         is_deleted: false
                         created_at: "2026-03-04T13:00:00.000Z"
                         updated_at: "2026-03-04T13:00:00.000Z"
-                        version: 1
                     goals: []
                     contexts: []
                     categories: []
@@ -320,7 +318,6 @@ paths:
                         is_deleted: true
                         created_at: "2026-03-04T07:00:00.000Z"
                         updated_at: "2026-03-04T16:00:00.000Z"
-                        version: 4
                     goals: []
                     contexts: []
                     categories: []
@@ -350,7 +347,6 @@ paths:
                         is_deleted: false
                         created_at: "2026-04-13T10:00:00.000Z"
                         updated_at: "2026-04-13T10:00:00.000Z"
-                        version: 1
                     goals: []
                     contexts: []
                     categories: []
@@ -380,7 +376,6 @@ paths:
                         is_deleted: false
                         created_at: "2026-04-13T14:30:00.000Z"
                         updated_at: "2026-04-13T14:30:00.000Z"
-                        version: 1
                     goals: []
                     contexts: []
                     categories: []
@@ -403,7 +398,6 @@ paths:
                       tasks:
                         - id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
                           status: created
-                          version: 1
                       goals: []
                       contexts: []
                       categories: []
@@ -437,7 +431,6 @@ paths:
                             is_deleted: false
                             created_at: "2026-03-04T08:30:00.000Z"
                             updated_at: "2026-03-04T14:30:00.000Z"
-                            version: 3
                             revision: 40
                       goals: []
                       contexts: []
@@ -604,7 +597,6 @@ paths:
                       tasks:
                         - id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
                           status: created
-                          version: 1
                       goals:
                         - id: b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e
                           status: rejected
@@ -930,7 +922,6 @@ components:
         - is_deleted
         - created_at
         - updated_at
-        - version
       properties:
         id:
           type: string
@@ -1045,11 +1036,6 @@ components:
           format: date-time
           description: ISO 8601 UTC. Used for last-write-wins conflict resolution
           example: "2026-03-04T08:30:00.000Z"
-        version:
-          type: integer
-          minimum: 1
-          description: Version counter for sync. Incremented by 1 on every change
-          example: 1
         revision:
           type: integer
           minimum: 0
@@ -1068,7 +1054,6 @@ components:
         - is_deleted
         - created_at
         - updated_at
-        - version
         - revision
       properties:
         id:
@@ -1104,10 +1089,6 @@ components:
           type: string
           format: date-time
           example: "2026-03-02T16:30:00.000Z"
-        version:
-          type: integer
-          minimum: 1
-          example: 5
         revision:
           type: integer
           minimum: 0
@@ -1116,7 +1097,7 @@ components:
 
     Context:
       type: object
-      required: [id, name, sort_order, is_deleted, created_at, updated_at, version, revision]
+      required: [id, name, sort_order, is_deleted, created_at, updated_at, revision]
       properties:
         id:
           type: string
@@ -1140,10 +1121,6 @@ components:
           type: string
           format: date-time
           example: "2026-02-01T10:00:00.000Z"
-        version:
-          type: integer
-          minimum: 1
-          example: 1
         revision:
           type: integer
           minimum: 0
@@ -1152,7 +1129,7 @@ components:
 
     Category:
       type: object
-      required: [id, name, sort_order, is_deleted, created_at, updated_at, version, revision]
+      required: [id, name, sort_order, is_deleted, created_at, updated_at, revision]
       properties:
         id:
           type: string
@@ -1176,10 +1153,6 @@ components:
           type: string
           format: date-time
           example: "2026-02-01T10:00:00.000Z"
-        version:
-          type: integer
-          minimum: 1
-          example: 1
         revision:
           type: integer
           minimum: 0
@@ -1188,7 +1161,7 @@ components:
 
     ChecklistItem:
       type: object
-      required: [id, task_id, title, is_completed, sort_order, is_deleted, created_at, updated_at, version, revision]
+      required: [id, task_id, title, is_completed, sort_order, is_deleted, created_at, updated_at, revision]
       properties:
         id:
           type: string
@@ -1219,10 +1192,6 @@ components:
           type: string
           format: date-time
           example: "2026-03-04T08:30:00.000Z"
-        version:
-          type: integer
-          minimum: 1
-          example: 1
         revision:
           type: integer
           minimum: 0
@@ -1268,14 +1237,10 @@ components:
           enum: [created, accepted, conflict, rejected]
           description: |
             - `created` — new record was inserted on the server, assigned `revision`
-            - `accepted` — change was applied, `version` was incremented, assigned `revision`
+            - `accepted` — change was applied, assigned `revision`
             - `conflict` — server record is newer; see `server_record`
             - `rejected` — record failed validation; see `reason`. Record was NOT saved
           example: accepted
-        version:
-          type: integer
-          description: Present for `created` and `accepted` statuses
-          example: 3
         server_record:
           description: Present for `conflict` status. Client must overwrite its local copy. Includes `revision` field.
           oneOf:
