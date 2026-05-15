@@ -124,16 +124,6 @@ describe("GoalService", () => {
       expect(restored.is_deleted).toBe(false);
     });
 
-    it("should increment version on restore", async () => {
-      const goal = buildGoal({ is_deleted: true, version: 3 });
-      mockGoalRepository = createMockGoalRepository({
-        getById: vi.fn().mockResolvedValue(goal),
-      });
-      const goalService = new GoalService(mockGoalRepository);
-      const restored = await goalService.restore(goal.id);
-      expect(restored.version).toBe(4);
-    });
-
     it("should throw when goal not found", async () => {
       const goalService = new GoalService(mockGoalRepository);
       await expect(goalService.restore("nonexistent-id")).rejects.toThrow(
@@ -212,10 +202,6 @@ describe("GoalService", () => {
       expect(createdGoal.is_deleted).toBe(false);
     });
 
-    it("should create goal with version 1", () => {
-      expect(createdGoal.version).toBe(1);
-    });
-
     it("should create goal with a UUID id", () => {
       expect(createdGoal.id).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -275,16 +261,6 @@ describe("GoalService", () => {
       const goalService = new GoalService(mockGoalRepository);
       const updated = await goalService.update(goal.id, { name: "New name" });
       expect(updated.name).toBe("New name");
-    });
-
-    it("should increment version on update", async () => {
-      const goal = buildGoal({ version: 2 });
-      mockGoalRepository = createMockGoalRepository({
-        getById: vi.fn().mockResolvedValue(goal),
-      });
-      const goalService = new GoalService(mockGoalRepository);
-      const updated = await goalService.update(goal.id, { name: "X" });
-      expect(updated.version).toBe(3);
     });
 
     it("should update updated_at timestamp", async () => {
@@ -352,16 +328,6 @@ describe("GoalService", () => {
       expect(updated.status).toBe("in_progress");
     });
 
-    it("should increment version when updating status", async () => {
-      const goal = buildGoal({ status: "planning", version: 2 });
-      mockGoalRepository = createMockGoalRepository({
-        getById: vi.fn().mockResolvedValue(goal),
-      });
-      const goalService = new GoalService(mockGoalRepository);
-      const updated = await goalService.updateStatus(goal.id, "completed");
-      expect(updated.version).toBe(3);
-    });
-
     it("should throw when goal not found", async () => {
       const goalService = new GoalService(mockGoalRepository);
       await expect(
@@ -379,16 +345,6 @@ describe("GoalService", () => {
       const goalService = new GoalService(mockGoalRepository);
       const deleted = await goalService.softDelete(goal.id);
       expect(deleted.is_deleted).toBe(true);
-    });
-
-    it("should increment version on soft delete", async () => {
-      const goal = buildGoal({ version: 3 });
-      mockGoalRepository = createMockGoalRepository({
-        getById: vi.fn().mockResolvedValue(goal),
-      });
-      const goalService = new GoalService(mockGoalRepository);
-      const deleted = await goalService.softDelete(goal.id);
-      expect(deleted.version).toBe(4);
     });
 
     it("should throw when goal not found", async () => {
@@ -414,16 +370,6 @@ describe("GoalService", () => {
       expect(upserted[0].sort_order).toBe(0);
       expect(upserted[1].sort_order).toBe(1);
       expect(upserted[2].sort_order).toBe(2);
-    });
-
-    it("should increment version for each reordered goal", async () => {
-      const goalA = buildGoal({ version: 3 });
-      const goalB = buildGoal({ version: 5 });
-      const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA, goalB]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].version).toBe(4);
-      expect(upserted[1].version).toBe(6);
     });
 
     it("should update updated_at for each reordered goal", async () => {
@@ -491,16 +437,6 @@ describe("GoalService", () => {
       const upserted = getUpsertedGoals();
       expect(upserted[0].needsSync).toBe(false); // не изменился
       expect(upserted[1].needsSync).toBe(true); // изменился с 2 на 1
-    });
-
-    it("should not increment version for goals that did not change position", async () => {
-      const goalA = buildGoal({ sort_order: 0, version: 3 });
-      const goalB = buildGoal({ sort_order: 2, version: 5 });
-      const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA, goalB]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].version).toBe(3); // не изменился
-      expect(upserted[1].version).toBe(6); // изменился с 2 на 1
     });
 
     it("should not update updated_at for goals that did not change position", async () => {

@@ -12,6 +12,7 @@ import type { PendingCoverRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { CoverSyncService } from "./CoverSyncService";
 import { localCoverCache } from "./LocalCoverCache";
+import { createMockSyncAdapter } from "./SyncService.test-helpers";
 
 // jsdom does not implement Blob.prototype.arrayBuffer — polyfill for tests
 Object.defineProperty(Blob.prototype, "arrayBuffer", {
@@ -49,42 +50,6 @@ function createMockGetCoversNotFound(fileId: string) {
     ok: true,
     covers: [{ file_id: fileId, error: "FILE_NOT_FOUND" }],
   });
-}
-
-function createMockSyncAdapter(
-  overrides: Partial<SyncAdapter> = {},
-): SyncAdapter {
-  return {
-    uploadCover: vi.fn().mockResolvedValue({
-      ok: true,
-      file_id: "uploaded-file-id",
-      reused: false,
-    }),
-    uploadCovers: vi
-      .fn()
-      .mockImplementation(
-        (request: { covers: Array<{ local_id: string; goal_id: string }> }) =>
-          Promise.resolve({
-            ok: true,
-            results: request.covers.map((cover) => ({
-              local_id: cover.local_id,
-              goal_id: cover.goal_id,
-              file_id: "uploaded-file-id",
-              reused: false,
-            })),
-          }),
-      ),
-    deleteCover: vi
-      .fn()
-      .mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
-    getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
-    ping: vi.fn(),
-    init: vi.fn(),
-    pull: vi.fn(),
-    push: vi.fn(),
-    purge: vi.fn(),
-    ...overrides,
-  } as SyncAdapter;
 }
 
 function createMockPendingCoverRepository(
@@ -154,7 +119,6 @@ function createGoalWithCover(
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     ...overrides,
   };
 }
@@ -396,7 +360,6 @@ describe("CoverSyncService", () => {
       const goalWithDifferentCover = createGoalWithCover(
         pendingCover.goal_id,
         "some-other-remote-file-id",
-        { version: 2 },
       );
       mockPendingCoverRepository = createMockPendingCoverRepository({
         getAll: vi.fn().mockResolvedValue([pendingCover]),
@@ -543,7 +506,6 @@ describe("CoverSyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 3,
         ...overrides,
       };
     }
@@ -899,20 +861,6 @@ describe("CoverSyncService", () => {
         );
       });
 
-      it("should increment goal version", async () => {
-        const goalWithVersion = createGoalWithServerCover({ version: 5 });
-        mockGoalRepository = createMockGoalRepository({
-          getActive: vi.fn().mockResolvedValue([goalWithVersion]),
-        });
-        const service = createService();
-
-        await service.reuploadLocalCovers();
-
-        expect(mockGoalRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ version: 6 }),
-        );
-      });
-
       it("should save new CoverRecord", async () => {
         const service = createService();
 
@@ -980,7 +928,6 @@ describe("CoverSyncService", () => {
         is_deleted: false,
         created_at: toISOTimestamp(),
         updated_at: toISOTimestamp(),
-        version: 1,
       };
     }
 

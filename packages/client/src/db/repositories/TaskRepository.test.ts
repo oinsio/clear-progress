@@ -245,27 +245,6 @@ describe("TaskRepository", () => {
     });
   });
 
-  describe("getByMinVersion", () => {
-    it("should return tasks with version greater than minVersion", async () => {
-      const taskV1 = buildTask({ version: 1 });
-      const taskV2 = buildTask({ version: 2 });
-      const taskV5 = buildTask({ version: 5 });
-      await db.tasks.bulkAdd([taskV1, taskV2, taskV5]);
-
-      const tasks = await taskRepository.getByMinVersion(2);
-      expect(tasks).toHaveLength(1);
-      expect(tasks[0].id).toBe(taskV5.id);
-    });
-
-    it("should return empty array when no tasks exceed minVersion", async () => {
-      const task = buildTask({ version: 3 });
-      await db.tasks.add(task);
-
-      const tasks = await taskRepository.getByMinVersion(5);
-      expect(tasks).toEqual([]);
-    });
-  });
-
   describe("getCompleted", () => {
     it("should return only non-deleted completed tasks", async () => {
       const completedTask = buildTask({

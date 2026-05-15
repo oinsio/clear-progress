@@ -146,10 +146,6 @@ describe("TaskService", () => {
       expect(createdTask.is_deleted).toBe(false);
     });
 
-    it("should create task with version 1", () => {
-      expect(createdTask.version).toBe(1);
-    });
-
     it("should create task with a UUID id", () => {
       expect(createdTask.id).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -201,19 +197,6 @@ describe("TaskService", () => {
       );
       const updated = await taskService.update(task.id, { name: "New name" });
       expect(updated.name).toBe("New name");
-    });
-
-    it("should increment version on update", async () => {
-      const task = buildTask({ version: 2 });
-      mockTaskRepository = createMockTaskRepository({
-        getById: vi.fn().mockResolvedValue(task),
-      });
-      const taskService = new TaskService(
-        mockTaskRepository,
-        mockChecklistRepository,
-      );
-      const updated = await taskService.update(task.id, { name: "X" });
-      expect(updated.version).toBe(3);
     });
 
     it("should throw when task not found", async () => {
@@ -530,29 +513,6 @@ describe("TaskService", () => {
       expect(mockTaskRepository.update).not.toHaveBeenCalled();
     });
 
-    it("should create recurring copy with version 1", async () => {
-      const task = buildTask({
-        version: 5,
-        repeat_rule: JSON.stringify({
-          type: "fixed",
-          frequency: "daily",
-          interval: 1,
-          target_box: "today",
-          advance_days: 0,
-        }),
-      });
-      mockTaskRepository = createMockTaskRepository({
-        getById: vi.fn().mockResolvedValue(task),
-      });
-      const taskService = new TaskService(
-        mockTaskRepository,
-        mockChecklistRepository,
-      );
-      await taskService.complete(task.id);
-      const createdTask = getCreatedTask();
-      expect(createdTask.version).toBe(1);
-    });
-
     it("should preserve repeat_rule in the recurring copy", async () => {
       const repeatRule = JSON.stringify({
         type: "fixed",
@@ -801,19 +761,6 @@ describe("TaskService", () => {
       expect(restored.is_deleted).toBe(false);
     });
 
-    it("should increment version on restore", async () => {
-      const task = buildTask({ is_deleted: true, version: 5 });
-      mockTaskRepository = createMockTaskRepository({
-        getById: vi.fn().mockResolvedValue(task),
-      });
-      const taskService = new TaskService(
-        mockTaskRepository,
-        mockChecklistRepository,
-      );
-      const restored = await taskService.restore(task.id);
-      expect(restored.version).toBe(6);
-    });
-
     it("should throw when task not found", async () => {
       const taskService = new TaskService(
         mockTaskRepository,
@@ -858,19 +805,6 @@ describe("TaskService", () => {
       expect(upserted[0].sort_order).toBe(0);
       expect(upserted[1].sort_order).toBe(1);
       expect(upserted[2].sort_order).toBe(2);
-    });
-
-    it("should increment version for each reordered task", async () => {
-      const taskA = buildTask({ version: 3 });
-      const taskB = buildTask({ version: 5 });
-      const taskService = new TaskService(
-        mockTaskRepository,
-        mockChecklistRepository,
-      );
-      await taskService.reorderTasks([taskA, taskB]);
-      const upserted = getUpsertedTasks();
-      expect(upserted[0].version).toBe(4);
-      expect(upserted[1].version).toBe(6);
     });
 
     it("should update updated_at for each reordered task", async () => {
@@ -922,19 +856,6 @@ describe("TaskService", () => {
       );
       await taskService.reorderTasks([taskA, taskB, taskC]);
       expect(mockTaskRepository.bulkUpsert).not.toHaveBeenCalled();
-    });
-
-    it("should not increment version for tasks that did not change position", async () => {
-      const taskA = buildTask({ sort_order: 0, version: 3 });
-      const taskB = buildTask({ sort_order: 2, version: 5 });
-      const taskService = new TaskService(
-        mockTaskRepository,
-        mockChecklistRepository,
-      );
-      await taskService.reorderTasks([taskA, taskB]);
-      const upserted = getUpsertedTasks();
-      expect(upserted[0].version).toBe(3); // не изменился
-      expect(upserted[1].version).toBe(6); // изменился с 2 на 1
     });
 
     it("should not update updated_at for tasks that did not change position", async () => {

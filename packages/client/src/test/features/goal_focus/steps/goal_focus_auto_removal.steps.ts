@@ -167,7 +167,6 @@ describeFeature(
             const updatedGoal: Goal = {
               ...goal,
               is_deleted: true,
-              version: goal.version + 1,
             };
             await goalRepository.update(updatedGoal);
 
@@ -223,7 +222,6 @@ describeFeature(
             const updatedGoal: Goal = {
               ...goal,
               status: "completed",
-              version: goal.version + 1,
             };
             await goalRepository.update(updatedGoal);
 
@@ -252,7 +250,6 @@ describeFeature(
             const updatedGoal: Goal = {
               ...goal,
               status: "cancelled",
-              version: goal.version + 1,
             };
             await goalRepository.update(updatedGoal);
 
@@ -358,7 +355,6 @@ describeFeature(
           const updatedGoal: Goal = {
             ...goal,
             status: f.context.editedStatus,
-            version: goal.version + 1,
           };
           await goalRepository.update(updatedGoal);
 

@@ -83,10 +83,6 @@ describe("IdeaService", () => {
       expect(createdIdea.is_deleted).toBe(false);
     });
 
-    it("should create idea with version 1", () => {
-      expect(createdIdea.version).toBe(1);
-    });
-
     it("should create idea with a UUID id", () => {
       expect(createdIdea.id).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -138,16 +134,6 @@ describe("IdeaService", () => {
       const ideaService = new IdeaService(mockIdeaRepository);
       const updated = await ideaService.update(idea.id, { name: "New name" });
       expect(updated.name).toBe("New name");
-    });
-
-    it("should increment version on update", async () => {
-      const idea = buildIdea({ version: 2 });
-      mockIdeaRepository = createMockIdeaRepository({
-        getById: vi.fn().mockResolvedValue(idea),
-      });
-      const ideaService = new IdeaService(mockIdeaRepository);
-      const updated = await ideaService.update(idea.id, { name: "X" });
-      expect(updated.version).toBe(3);
     });
 
     it("should update updated_at timestamp", async () => {
@@ -215,16 +201,6 @@ describe("IdeaService", () => {
       expect(deleted.is_deleted).toBe(true);
     });
 
-    it("should increment version on soft delete", async () => {
-      const idea = buildIdea({ version: 3 });
-      mockIdeaRepository = createMockIdeaRepository({
-        getById: vi.fn().mockResolvedValue(idea),
-      });
-      const ideaService = new IdeaService(mockIdeaRepository);
-      const deleted = await ideaService.softDelete(idea.id);
-      expect(deleted.version).toBe(4);
-    });
-
     it("should throw when idea not found", async () => {
       const ideaService = new IdeaService(mockIdeaRepository);
       await expect(ideaService.softDelete("nonexistent-id")).rejects.toThrow(
@@ -242,16 +218,6 @@ describe("IdeaService", () => {
       const ideaService = new IdeaService(mockIdeaRepository);
       const restored = await ideaService.restore(idea.id);
       expect(restored.is_deleted).toBe(false);
-    });
-
-    it("should increment version on restore", async () => {
-      const idea = buildIdea({ is_deleted: true, version: 5 });
-      mockIdeaRepository = createMockIdeaRepository({
-        getById: vi.fn().mockResolvedValue(idea),
-      });
-      const ideaService = new IdeaService(mockIdeaRepository);
-      const restored = await ideaService.restore(idea.id);
-      expect(restored.version).toBe(6);
     });
 
     it("should throw when idea not found", async () => {
@@ -277,16 +243,6 @@ describe("IdeaService", () => {
       expect(upserted[0].sort_order).toBe(0);
       expect(upserted[1].sort_order).toBe(1);
       expect(upserted[2].sort_order).toBe(2);
-    });
-
-    it("should increment version for each reordered idea", async () => {
-      const ideaA = buildIdea({ version: 3 });
-      const ideaB = buildIdea({ version: 5 });
-      const ideaService = new IdeaService(mockIdeaRepository);
-      await ideaService.reorderIdeas([ideaA, ideaB]);
-      const upserted = getUpsertedIdeas();
-      expect(upserted[0].version).toBe(4);
-      expect(upserted[1].version).toBe(6);
     });
 
     it("should update updated_at for each reordered idea", async () => {

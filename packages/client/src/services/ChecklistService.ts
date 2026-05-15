@@ -32,7 +32,6 @@ export class ChecklistService {
       is_deleted: false,
       created_at: now,
       updated_at: now,
-      version: 1,
       revision: 0,
       needsSync: true,
     };
@@ -80,7 +79,6 @@ export class ChecklistService {
       return {
         ...item,
         sort_order: index,
-        version: orderChanged ? item.version + 1 : item.version,
         updated_at: orderChanged ? now : item.updated_at,
         needsSync: orderChanged,
       };
@@ -119,7 +117,6 @@ export class ChecklistService {
     const updatedItem: ChecklistItem = {
       ...candidateItem,
       updated_at: hasChanged ? toISOTimestamp() : existingItem.updated_at,
-      version: hasChanged ? existingItem.version + 1 : existingItem.version,
       needsSync: hasChanged,
     };
 

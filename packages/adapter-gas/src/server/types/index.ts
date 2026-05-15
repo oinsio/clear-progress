@@ -14,7 +14,6 @@ interface BaseEntity {
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
-  version: number;
   revision: number;
 }
 
@@ -72,7 +71,6 @@ export interface Setting {
 export interface PushItemResult {
   id: string;
   status: PushItemStatus;
-  version?: number;
   server_record?: Task | Goal | Context | Category | Idea | ChecklistItem;
   reason?: string;
 }

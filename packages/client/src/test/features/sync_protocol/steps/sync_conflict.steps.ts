@@ -174,7 +174,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       const task = makeTask({
         id: "t1",
         name: "Original name",
-        version: 3,
         needsSync: true,
       });
       const serverTask = makeTask({
@@ -182,19 +181,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         name: "Server version",
       });
 
-      Given(
-        'client pushed task "t1" with version 3',
-        async (_ctx: TestContext) => {
-          (
-            repositories.taskRepository.getNeedingSync as ReturnType<
-              typeof vi.fn
-            >
-          ).mockResolvedValue([task]);
-          (
-            repositories.taskRepository.getById as ReturnType<typeof vi.fn>
-          ).mockResolvedValue({ ...task, version: 3 });
-        },
-      );
+      Given('client pushed task "t1"', async (_ctx: TestContext) => {
+        (
+          repositories.taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
+        (
+          repositories.taskRepository.getById as ReturnType<typeof vi.fn>
+        ).mockResolvedValue({ ...task });
+      });
 
       And(
         'server responded with status "created" and server_record present',

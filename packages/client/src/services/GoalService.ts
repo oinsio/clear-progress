@@ -30,7 +30,6 @@ export class GoalService {
       is_deleted: false,
       created_at: now,
       updated_at: now,
-      version: 1,
       revision: 0,
       needsSync: true,
     };
@@ -58,7 +57,6 @@ export class GoalService {
     const updatedGoal: Goal = {
       ...candidateGoal,
       updated_at: hasChanged ? toISOTimestamp() : existingGoal.updated_at,
-      version: hasChanged ? existingGoal.version + 1 : existingGoal.version,
       needsSync: hasChanged,
     };
 
@@ -116,7 +114,6 @@ export class GoalService {
         ...goal,
         sort_order: index,
         updated_at: orderChanged ? now : goal.updated_at,
-        version: orderChanged ? goal.version + 1 : goal.version,
         needsSync: orderChanged,
       };
     });

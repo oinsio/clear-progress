@@ -127,14 +127,19 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Service fields are excluded from comparison",
     ({ Given, When, Then }) => {
-      Given("a task exists with version 1", async (_ctx: TestContext) => {
-        existingTask = makeTask({ version: 1 });
+      Given("a task exists", async (_ctx: TestContext) => {
+        existingTask = makeTask();
       });
 
       When(
-        "compared to same task with version 2",
+        "compared to same task with different updated_at",
         async (_ctx: TestContext) => {
-          updatedTask = { ...existingTask, version: 2 };
+          updatedTask = {
+            ...existingTask,
+            updated_at: "2024-01-02T00:00:00.000Z",
+            needsSync: true,
+            revision: 5,
+          };
           changeResult = hasEntityChanged(existingTask, updatedTask);
         },
       );
@@ -147,20 +152,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @spec-sync-protocol @FR4
   f.Scenario(
-    "Created/accepted clears dirty flag if version unchanged",
+    "Created result clears dirty flag when unchanged during push",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", version: 3, needsSync: true });
+      const task = makeTask({ id: "t1", needsSync: true });
 
-      Given(
-        "a dirty task with version 3 was pushed",
-        async (_ctx: TestContext) => {
-          (
-            repositories.taskRepository.getNeedingSync as ReturnType<
-              typeof vi.fn
-            >
-          ).mockResolvedValue([task]);
-        },
-      );
+      Given("a dirty task was pushed", async (_ctx: TestContext) => {
+        (
+          repositories.taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
+      });
 
       And("server returned created status", async (_ctx: TestContext) => {
         syncAdapter = createMockSyncAdapter({
@@ -172,10 +172,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         });
       });
 
-      And("local version is still 3", async (_ctx: TestContext) => {
+      And("local task is unchanged during push", async (_ctx: TestContext) => {
         (
           repositories.taskRepository.getById as ReturnType<typeof vi.fn>
-        ).mockResolvedValue({ ...task, version: 3 });
+        ).mockResolvedValue({ ...task });
       });
 
       When("push results are applied", async (_ctx: TestContext) => {
@@ -193,20 +193,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @spec-sync-protocol @FR4
   f.Scenario(
-    "Created/accepted keeps dirty flag if version changed locally",
+    "Accepted result keeps dirty flag when changed during push",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", version: 3, needsSync: true });
+      const task = makeTask({ id: "t1", needsSync: true });
 
-      Given(
-        "a dirty task with version 3 was pushed",
-        async (_ctx: TestContext) => {
-          (
-            repositories.taskRepository.getNeedingSync as ReturnType<
-              typeof vi.fn
-            >
-          ).mockResolvedValue([task]);
-        },
-      );
+      Given("a dirty task was pushed", async (_ctx: TestContext) => {
+        (
+          repositories.taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
+        ).mockResolvedValue([task]);
+      });
 
       And("server returned accepted status", async (_ctx: TestContext) => {
         syncAdapter = createMockSyncAdapter({
@@ -221,14 +216,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         });
       });
 
-      And(
-        "local version changed to 4 during push",
-        async (_ctx: TestContext) => {
-          (
-            repositories.taskRepository.getById as ReturnType<typeof vi.fn>
-          ).mockResolvedValue({ ...task, version: 4 });
-        },
-      );
+      And("local task changed during push", async (_ctx: TestContext) => {
+        (
+          repositories.taskRepository.getById as ReturnType<typeof vi.fn>
+        ).mockResolvedValue({
+          ...task,
+          name: "Changed name",
+          updated_at: "2026-05-13T16:00:00.000Z",
+        });
+      });
 
       When("push results are applied", async (_ctx: TestContext) => {
         const service = createSyncService(syncAdapter, repositories);

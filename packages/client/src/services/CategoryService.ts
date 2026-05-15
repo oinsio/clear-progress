@@ -27,7 +27,6 @@ export class CategoryService {
       is_deleted: false,
       created_at: now,
       updated_at: now,
-      version: 1,
       revision: 0,
       needsSync: true,
     };
@@ -65,7 +64,6 @@ export class CategoryService {
         ...category,
         sort_order: index,
         updated_at: orderChanged ? now : category.updated_at,
-        version: orderChanged ? category.version + 1 : category.version,
         needsSync: orderChanged,
       };
     });
@@ -95,9 +93,6 @@ export class CategoryService {
     const updatedCategory: Category = {
       ...candidateCategory,
       updated_at: hasChanged ? toISOTimestamp() : existingCategory.updated_at,
-      version: hasChanged
-        ? existingCategory.version + 1
-        : existingCategory.version,
       needsSync: hasChanged,
     };
 

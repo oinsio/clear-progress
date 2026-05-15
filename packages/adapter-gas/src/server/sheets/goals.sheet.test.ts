@@ -27,7 +27,6 @@ function makeGoalRow(
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
   };
   const merged = { ...defaults, ...overrides };
   return GOAL_HEADERS.map((col) => merged[col]);
@@ -139,17 +138,13 @@ describe("getAllGoals", () => {
     expect(goal.updated_at).toBe("");
   });
 
-  it("should map numeric fields sort_order and version", () => {
+  it("should map numeric field sort_order", () => {
     vi.mocked(getSheet).mockReturnValue(
-      makeSheetMock([
-        GOAL_HEADERS,
-        makeGoalRow({ sort_order: 3, version: 8 }),
-      ]) as never,
+      makeSheetMock([GOAL_HEADERS, makeGoalRow({ sort_order: 3 })]) as never,
     );
 
     const [goal] = getAllGoals();
     expect(goal.sort_order).toBe(3);
-    expect(goal.version).toBe(8);
   });
 
   it('should coerce string "TRUE" for is_deleted', () => {
@@ -223,7 +218,7 @@ describe("getGoalsByRevision", () => {
     vi.clearAllMocks();
   });
 
-  it("should return goals with version strictly greater than minVersion", () => {
+  it("should return goals with revision strictly greater than minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         GOAL_HEADERS,
@@ -236,7 +231,7 @@ describe("getGoalsByRevision", () => {
     expect(goals.map((g) => g.id)).toEqual(["goal-1", "goal-2"]);
   });
 
-  it("should not return goals with version equal to minVersion", () => {
+  it("should not return goals with revision equal to minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([GOAL_HEADERS, makeGoalRow({ revision: 5 })]) as never,
     );
@@ -244,7 +239,7 @@ describe("getGoalsByRevision", () => {
     expect(getGoalsByRevision(5)).toHaveLength(0);
   });
 
-  it("should not return goals with version less than minVersion", () => {
+  it("should not return goals with revision less than minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([GOAL_HEADERS, makeGoalRow({ revision: 3 })]) as never,
     );
@@ -252,7 +247,7 @@ describe("getGoalsByRevision", () => {
     expect(getGoalsByRevision(5)).toHaveLength(0);
   });
 
-  it("should return all goals when minVersion is 0", () => {
+  it("should return all goals when minRevision is 0", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         GOAL_HEADERS,
@@ -493,7 +488,6 @@ describe("upsertGoals", () => {
       is_deleted: false,
       created_at: "2025-01-01T00:00:00.000Z",
       updated_at: "2025-01-01T00:00:00.000Z",
-      version: 1,
       revision: 0,
     };
     upsertGoals([newGoal]);

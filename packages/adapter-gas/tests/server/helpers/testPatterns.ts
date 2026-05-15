@@ -76,7 +76,6 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
     revision: 0,
     ...overrides,
   };
@@ -93,7 +92,6 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
     revision: 0,
     ...overrides,
   };
@@ -107,7 +105,6 @@ export function makeContext(overrides: Partial<Context> = {}): Context {
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
     revision: 0,
     ...overrides,
   };
@@ -121,7 +118,6 @@ export function makeCategory(overrides: Partial<Category> = {}): Category {
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
     revision: 0,
     ...overrides,
   };
@@ -139,7 +135,6 @@ export function makeChecklistItem(
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
     revision: 0,
     ...overrides,
   };

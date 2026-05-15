@@ -28,7 +28,6 @@ export const WireTaskSchema = z.object({
   is_deleted: z.boolean(),
   created_at: ISOTimestampSchema,
   updated_at: ISOTimestampSchema,
-  version: z.number().int().nonnegative(),
   revision: z.number().int().nonnegative(),
 });
 export type WireTask = z.infer<typeof WireTaskSchema>;
@@ -43,7 +42,6 @@ export const WireGoalSchema = z.object({
   is_deleted: z.boolean(),
   created_at: ISOTimestampSchema,
   updated_at: ISOTimestampSchema,
-  version: z.number().int().nonnegative(),
   revision: z.number().int().nonnegative(),
 });
 export type WireGoal = z.infer<typeof WireGoalSchema>;
@@ -56,7 +54,6 @@ export const WireIdeaSchema = z.object({
   is_deleted: z.boolean(),
   created_at: ISOTimestampSchema,
   updated_at: ISOTimestampSchema,
-  version: z.number().int().nonnegative(),
   revision: z.number().int().nonnegative(),
 });
 export type WireIdea = z.infer<typeof WireIdeaSchema>;
@@ -68,7 +65,6 @@ export const WireContextSchema = z.object({
   is_deleted: z.boolean(),
   created_at: ISOTimestampSchema,
   updated_at: ISOTimestampSchema,
-  version: z.number().int().nonnegative(),
   revision: z.number().int().nonnegative(),
 });
 export type WireContext = z.infer<typeof WireContextSchema>;
@@ -80,7 +76,6 @@ export const WireCategorySchema = z.object({
   is_deleted: z.boolean(),
   created_at: ISOTimestampSchema,
   updated_at: ISOTimestampSchema,
-  version: z.number().int().nonnegative(),
   revision: z.number().int().nonnegative(),
 });
 export type WireCategory = z.infer<typeof WireCategorySchema>;
@@ -94,7 +89,6 @@ export const WireChecklistItemSchema = z.object({
   is_deleted: z.boolean(),
   created_at: ISOTimestampSchema,
   updated_at: ISOTimestampSchema,
-  version: z.number().int().nonnegative(),
   revision: z.number().int().nonnegative(),
 });
 export type WireChecklistItem = z.infer<typeof WireChecklistItemSchema>;

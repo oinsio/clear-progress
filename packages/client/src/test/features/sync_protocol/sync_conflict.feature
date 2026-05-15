@@ -21,7 +21,7 @@ Feature: Sync Protocol — Conflict Resolution
 
   @spec-sync-protocol @FR3
   Scenario: Created record is not treated as conflict even with server_record
-    Given client pushed task "t1" with version 3
+    Given client pushed task "t1"
     And server responded with status "created" and server_record present
     When push results are applied
     Then local task "t1" retains original name

@@ -58,7 +58,6 @@ export class TaskService {
       is_deleted: false,
       created_at: now,
       updated_at: now,
-      version: 1,
       revision: 0,
       needsSync: true,
     };
@@ -86,7 +85,6 @@ export class TaskService {
     const updatedTask: Task = {
       ...candidateTask,
       updated_at: hasChanged ? toISOTimestamp() : existingTask.updated_at,
-      version: hasChanged ? existingTask.version + 1 : existingTask.version,
       needsSync: hasChanged,
     };
 
@@ -178,7 +176,6 @@ export class TaskService {
   ): Promise<Task> {
     const {
       id: _id,
-      version: _version,
       created_at: _created_at,
       updated_at: _updated_at,
       is_completed: _is_completed,
@@ -186,7 +183,6 @@ export class TaskService {
       ...taskProps
     } = task;
     void _id;
-    void _version;
     void _created_at;
     void _updated_at;
     void _is_completed;
@@ -220,7 +216,6 @@ export class TaskService {
         is_completed: false,
         created_at: now,
         updated_at: now,
-        version: 1,
         revision: 0,
         needsSync: true,
       };
@@ -303,7 +298,6 @@ export class TaskService {
         ...task,
         sort_order: index,
         updated_at: orderChanged ? now : task.updated_at,
-        version: orderChanged ? task.version + 1 : task.version,
         needsSync: orderChanged,
       };
     });

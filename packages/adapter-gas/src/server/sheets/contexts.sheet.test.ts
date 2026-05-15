@@ -23,7 +23,6 @@ function makeContextRow(
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
   };
   const merged = { ...defaults, ...overrides };
   return CTX_HEADERS.map((col) => merged[col]);
@@ -109,17 +108,13 @@ describe("getAllContexts", () => {
     expect(ctx.updated_at).toBe("2025-06-01T00:00:00.000Z");
   });
 
-  it("should map numeric fields sort_order and version", () => {
+  it("should map numeric field sort_order", () => {
     vi.mocked(getSheet).mockReturnValue(
-      makeSheetMock([
-        CTX_HEADERS,
-        makeContextRow({ sort_order: 2, version: 9 }),
-      ]) as never,
+      makeSheetMock([CTX_HEADERS, makeContextRow({ sort_order: 2 })]) as never,
     );
 
     const [ctx] = getAllContexts();
     expect(ctx.sort_order).toBe(2);
-    expect(ctx.version).toBe(9);
   });
 
   it('should coerce string "TRUE" for is_deleted', () => {
@@ -183,7 +178,7 @@ describe("getContextsByRevision", () => {
     vi.clearAllMocks();
   });
 
-  it("should return contexts with version strictly greater than minVersion", () => {
+  it("should return contexts with revision strictly greater than minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         CTX_HEADERS,
@@ -196,7 +191,7 @@ describe("getContextsByRevision", () => {
     expect(contexts.map((c) => c.id)).toEqual(["ctx-1", "ctx-2"]);
   });
 
-  it("should not return contexts with version equal to minVersion", () => {
+  it("should not return contexts with revision equal to minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([CTX_HEADERS, makeContextRow({ revision: 5 })]) as never,
     );
@@ -204,7 +199,7 @@ describe("getContextsByRevision", () => {
     expect(getContextsByRevision(5)).toHaveLength(0);
   });
 
-  it("should not return contexts with version less than minVersion", () => {
+  it("should not return contexts with revision less than minRevision", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([CTX_HEADERS, makeContextRow({ revision: 3 })]) as never,
     );
@@ -212,7 +207,7 @@ describe("getContextsByRevision", () => {
     expect(getContextsByRevision(5)).toHaveLength(0);
   });
 
-  it("should return all contexts when minVersion is 0", () => {
+  it("should return all contexts when minRevision is 0", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         CTX_HEADERS,
@@ -367,7 +362,6 @@ describe("upsertContexts", () => {
       is_deleted: false,
       created_at: "2025-01-01T00:00:00.000Z",
       updated_at: "2025-01-01T00:00:00.000Z",
-      version: 1,
       revision: 0,
     };
     upsertContexts([newContext]);

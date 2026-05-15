@@ -31,7 +31,6 @@ function makeTaskRow(
     is_deleted: false,
     created_at: "2025-01-01T00:00:00.000Z",
     updated_at: "2025-01-01T00:00:00.000Z",
-    version: 1,
   };
   const merged = { ...defaults, ...overrides };
   return TASK_HEADERS.map((col) => merged[col]);
@@ -123,16 +122,15 @@ describe("getAllTasks", () => {
     expect(task.updated_at).toBe("2025-03-01T00:00:00.000Z");
   });
 
-  it("should map numeric fields sort_order and version", () => {
+  it("should map numeric field sort_order", () => {
     const sheetMock = makeSheetMock([
       TASK_HEADERS,
-      makeTaskRow({ sort_order: 5, version: 7 }),
+      makeTaskRow({ sort_order: 5 }),
     ]);
     vi.mocked(getSheet).mockReturnValue(sheetMock as never);
 
     const [task] = getAllTasks();
     expect(task.sort_order).toBe(5);
-    expect(task.version).toBe(7);
   });
 
   it("should coerce boolean true for is_completed", () => {
@@ -238,7 +236,7 @@ describe("getTasksByRevision", () => {
     vi.clearAllMocks();
   });
 
-  it("should return tasks with version strictly greater than minVersion", () => {
+  it("should return tasks with revision strictly greater than minRevision", () => {
     const sheetMock = makeSheetMock([
       TASK_HEADERS,
       makeTaskRow({ id: "task-1", revision: 3 }),
@@ -250,7 +248,7 @@ describe("getTasksByRevision", () => {
     expect(tasks.map((t) => t.id)).toEqual(["task-1", "task-2"]);
   });
 
-  it("should not return tasks with version equal to minVersion", () => {
+  it("should not return tasks with revision equal to minRevision", () => {
     const sheetMock = makeSheetMock([
       TASK_HEADERS,
       makeTaskRow({ id: "task-1", revision: 5 }),
@@ -260,7 +258,7 @@ describe("getTasksByRevision", () => {
     expect(getTasksByRevision(5)).toHaveLength(0);
   });
 
-  it("should not return tasks with version less than minVersion", () => {
+  it("should not return tasks with revision less than minRevision", () => {
     const sheetMock = makeSheetMock([
       TASK_HEADERS,
       makeTaskRow({ id: "task-1", revision: 3 }),
@@ -270,7 +268,7 @@ describe("getTasksByRevision", () => {
     expect(getTasksByRevision(5)).toHaveLength(0);
   });
 
-  it("should return all tasks when minVersion is 0", () => {
+  it("should return all tasks when minRevision is 0", () => {
     const sheetMock = makeSheetMock([
       TASK_HEADERS,
       makeTaskRow({ id: "task-1", revision: 1 }),
@@ -437,7 +435,6 @@ describe("upsertTasks", () => {
       is_deleted: false,
       created_at: "2025-01-01T00:00:00.000Z",
       updated_at: "2025-01-01T00:00:00.000Z",
-      version: 1,
       revision: 0,
     };
     upsertTasks([newTask]);

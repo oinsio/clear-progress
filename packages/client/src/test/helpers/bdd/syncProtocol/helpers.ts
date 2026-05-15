@@ -1,8 +1,4 @@
-import type {
-  PullResponse,
-  PushResponse,
-  SyncAdapter,
-} from "@clear-progress/contract";
+import type { SyncAdapter } from "@clear-progress/contract";
 import { vi } from "vitest";
 import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
@@ -13,58 +9,15 @@ import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { SyncService } from "@/services/SyncService";
-import type { Goal, ISOTimestamp, Task } from "@/types/entities";
+import {
+  createMockSyncAdapter,
+  makePullResponse,
+  makePushResponse,
+} from "@/services/SyncService.test-helpers";
+import type { Goal, Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 
-export function makePullResponse(
-  overrides: Partial<PullResponse> = {},
-): PullResponse {
-  return {
-    ok: true,
-    tasks: [],
-    goals: [],
-    ideas: [],
-    contexts: [],
-    categories: [],
-    checklist_items: [],
-    settings: [],
-    current_revision: 10,
-    purge_revision: 0,
-    server_time: "2026-03-04T11:00:00.000Z",
-    ...overrides,
-  };
-}
-
-export function makePushResponse(
-  resultOverrides: PushResponse["results"] = {},
-  revision?: number,
-): PushResponse {
-  return {
-    ok: true,
-    ...(revision !== undefined ? { revision } : {}),
-    results: {
-      ...resultOverrides,
-    },
-    server_time: "2026-03-04T11:00:00.000Z",
-  };
-}
-
-export function createMockSyncAdapter(
-  overrides: Partial<SyncAdapter> = {},
-): SyncAdapter {
-  return {
-    uploadCover: vi.fn(),
-    uploadCovers: vi.fn(),
-    deleteCover: vi.fn(),
-    getCover: vi.fn(),
-    ping: vi.fn(),
-    init: vi.fn(),
-    pull: vi.fn().mockResolvedValue(makePullResponse()),
-    push: vi.fn().mockResolvedValue(makePushResponse()),
-    purge: vi.fn(),
-    ...overrides,
-  } as SyncAdapter;
-}
+export { createMockSyncAdapter, makePullResponse, makePushResponse };
 
 export function makeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -86,7 +39,6 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     revision: 0,
     needsSync: false,
     ...overrides,
@@ -104,25 +56,7 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
-    version: 1,
     revision: 0,
-    needsSync: false,
-    ...overrides,
-  };
-}
-
-export function makeSetting(
-  overrides: Partial<{
-    key: string;
-    value: string;
-    updated_at: ISOTimestamp;
-    needsSync: boolean;
-  }> = {},
-) {
-  return {
-    key: "test_key",
-    value: "test_value",
-    updated_at: toISOTimestamp(),
     needsSync: false,
     ...overrides,
   };

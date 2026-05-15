@@ -104,10 +104,10 @@ export class SyncService {
       this.settingsRepository.bulkUpsert(pullResponse.settings),
     ]);
 
-    // Обновить settings_updated_at
-    // Используем числовое сравнение через Temporal.Instant.compare вместо
-    // лексикографического, т.к. ISO 8601 строки могут иметь разное количество
-    // десятичных знаков (0 vs 3), что ломает строковое сравнение.
+    // Update settings_updated_at
+    // Use numeric comparison via Temporal.Instant.compare instead of
+    // lexicographic comparison, since ISO 8601 strings can have different numbers
+    // of decimal places (0 vs. 3), which breaks string comparison.
     if (pullResponse.settings.length > 0) {
       const maxUpdatedAt = pullResponse.settings.reduce((max, setting) => {
         if (!max) return setting.updated_at;
@@ -172,19 +172,19 @@ export class SyncService {
       if (!hasChanges) return;
     }
 
-    const sentVersions = new Map<string, number>([
-      ...tasks.map((task) => [task.id, task.version] as [string, number]),
-      ...goals.map((goal) => [goal.id, goal.version] as [string, number]),
+    const sentTimestamps = new Map<string, string>([
+      ...tasks.map((task) => [task.id, task.updated_at] as [string, string]),
+      ...goals.map((goal) => [goal.id, goal.updated_at] as [string, string]),
       ...contexts.map(
-        (context) => [context.id, context.version] as [string, number],
+        (context) => [context.id, context.updated_at] as [string, string],
       ),
       ...categories.map(
-        (category) => [category.id, category.version] as [string, number],
+        (category) => [category.id, category.updated_at] as [string, string],
       ),
       ...checklist_items.map(
-        (item) => [item.id, item.version] as [string, number],
+        (item) => [item.id, item.updated_at] as [string, string],
       ),
-      ...ideas.map((idea) => [idea.id, idea.version] as [string, number]),
+      ...ideas.map((idea) => [idea.id, idea.updated_at] as [string, string]),
     ]);
 
     const stripDirty = <T extends { needsSync?: boolean }>(
@@ -230,7 +230,7 @@ export class SyncService {
 
       await this._applyPushResults(
         pushResponse.results,
-        sentVersions,
+        sentTimestamps,
         pushResponse.revision,
       );
 
@@ -394,43 +394,43 @@ export class SyncService {
 
   private async _applyPushResults(
     results: PushResponse["results"],
-    sentVersions: Map<string, number>,
+    sentTimestamps: Map<string, string>,
     pushRevision: number | undefined,
   ): Promise<void> {
     await Promise.all([
       this._applyEntityPushResults(
         results.tasks ?? [],
-        sentVersions,
+        sentTimestamps,
         this.taskRepository,
         pushRevision,
       ),
       this._applyEntityPushResults(
         results.goals ?? [],
-        sentVersions,
+        sentTimestamps,
         this.goalRepository,
         pushRevision,
       ),
       this._applyEntityPushResults(
         results.contexts ?? [],
-        sentVersions,
+        sentTimestamps,
         this.contextRepository,
         pushRevision,
       ),
       this._applyEntityPushResults(
         results.categories ?? [],
-        sentVersions,
+        sentTimestamps,
         this.categoryRepository,
         pushRevision,
       ),
       this._applyEntityPushResults(
         results.checklist_items ?? [],
-        sentVersions,
+        sentTimestamps,
         this.checklistRepository,
         pushRevision,
       ),
       this._applyEntityPushResults(
         results.ideas ?? [],
-        sentVersions,
+        sentTimestamps,
         this.ideaRepository,
         pushRevision,
       ),
@@ -460,12 +460,12 @@ export class SyncService {
     T extends {
       id: string;
       needsSync: boolean;
-      version: number;
+      updated_at: string;
       revision: number;
     },
   >(
     results: PushResponse["results"]["tasks"],
-    sentVersions: Map<string, number>,
+    sentTimestamps: Map<string, string>,
     repository: {
       getById(id: string): Promise<T | undefined>;
       update(record: T): Promise<void>;
@@ -493,13 +493,13 @@ export class SyncService {
         const currentRecord = await repository.getById(result.id);
         if (!currentRecord) continue;
 
-        const sentVersion = sentVersions.get(result.id) ?? 0;
-        const versionUnchanged = currentRecord.version === sentVersion;
+        const sentTimestamp = sentTimestamps.get(result.id) ?? "";
+        const timestampUnchanged = currentRecord.updated_at === sentTimestamp;
 
         await repository.update({
           ...currentRecord,
           revision: pushRevision ?? currentRecord.revision,
-          needsSync: !versionUnchanged,
+          needsSync: !timestampUnchanged,
         });
       }
     }

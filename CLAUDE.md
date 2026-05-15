@@ -3,6 +3,8 @@
 Personal app suitable for working with the GTD method. Client-first architecture.
 
 IMPORTANT: Read existing code, tests, and patterns before generating new code.
+ 
+NEVER run mutation tests yourself. Instead, ask the user to run them for you. Analyze mutation test reports instead of running Stryker tests.
 
 ## Code Style
 
@@ -59,20 +61,20 @@ Active changes: `openspec/changes/`. Archived: `openspec/changes/archive/`. Stab
 
 ## Process Rules (`.claude/rules/`)
 
-| Rule file               | Scope                             | What it covers                                            |
-|-------------------------|-----------------------------------|-----------------------------------------------------------|
-| `traceability.md`       | global                            | Requirement IDs and traceability links in all artifacts   |
-| `process-invariants.md` | global                            | Immutability, file size, module boundaries, change naming |
-| `antipatterns.md`       | global                            | Common mistakes to avoid (process, code, UI)              |
-| `test-planning.md`      | global                            | Maximize automated tests in task decomposition            |
-| `tdd-workflow.md`       | global                            | Red-Green-Refactor cycle, mutation testing thresholds     |
-| `proposal-format.md`    | `openspec/**/proposal.md`         | Required sections and format for PRD                      |
-| `delta-specs.md`        | `openspec/**/specs/**`            | Delta spec format with ADDED/MODIFIED/REMOVED             |
-| `design-decisions.md`   | `openspec/**/design.md`           | When and how to write local ADR                           |
-| `gherkin.md`            | `**/features/**/*.feature`        | Intentions not clicks, tagging conventions                |
-| `bdd-unit.md`           | `**/*.feature`, `**/*.steps.ts`   | vitest-cucumber conventions, step definition pattern      |
-| `bdd-e2e.md`            | `**/*_e2e.feature`, `**/*_e2e.steps.ts` | playwright-bdd conventions, config, scripts         |
-| `contracts.md`          | `**/application/**`, `**/ports*`  | Port interfaces and contract test patterns                |
-| `ui-states.md`          | `**/components/**`, `**/pages/**` | UI states, a11y, design system, optimistic updates        |
-| `adr.md`                | `docs/adr/**`                     | Global ADR format and lifecycle                           |
-| `ia.md`                 | `docs/ia/**`                      | Information Architecture document format                  |
+| Rule file               | Scope                                   | What it covers                                            |
+|-------------------------|-----------------------------------------|-----------------------------------------------------------|
+| `traceability.md`       | global                                  | Requirement IDs and traceability links in all artifacts   |
+| `process-invariants.md` | global                                  | Immutability, file size, module boundaries, change naming |
+| `antipatterns.md`       | global                                  | Common mistakes to avoid (process, code, UI)              |
+| `test-planning.md`      | global                                  | Maximize automated tests in task decomposition            |
+| `tdd-workflow.md`       | global                                  | Red-Green-Refactor cycle, mutation testing thresholds     |
+| `proposal-format.md`    | `openspec/**/proposal.md`               | Required sections and format for PRD                      |
+| `delta-specs.md`        | `openspec/**/specs/**`                  | Delta spec format with ADDED/MODIFIED/REMOVED             |
+| `design-decisions.md`   | `openspec/**/design.md`                 | When and how to write local ADR                           |
+| `gherkin.md`            | `**/features/**/*.feature`              | Intentions not clicks, tagging conventions                |
+| `bdd-unit.md`           | `**/*.feature`, `**/*.steps.ts`         | vitest-cucumber conventions, step definition pattern      |
+| `bdd-e2e.md`            | `**/*_e2e.feature`, `**/*_e2e.steps.ts` | playwright-bdd conventions, config, scripts               |
+| `contracts.md`          | `**/application/**`, `**/ports*`        | Port interfaces and contract test patterns                |
+| `ui-states.md`          | `**/components/**`, `**/pages/**`       | UI states, a11y, design system, optimistic updates        |
+| `adr.md`                | `docs/adr/**`                           | Global ADR format and lifecycle                           |
+| `ia.md`                 | `docs/ia/**`                            | Information Architecture document format                  |

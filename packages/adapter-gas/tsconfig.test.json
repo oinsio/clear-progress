@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "noUncheckedIndexedAccess": false,
     "types": ["node", "google-apps-script", "vitest/globals"]
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"],

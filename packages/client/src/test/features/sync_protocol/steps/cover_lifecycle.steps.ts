@@ -430,17 +430,16 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
     },
   );
 
-  // @spec-sync-protocol @FR11
+  // @spec-sync-protocol @FR11 @FR8
   f.Scenario(
-    "Full sync reupload version is incremented not decremented",
+    "Full sync reupload updates goal when server returns different file_id",
     ({ Given, And, When, Then }) => {
       Given(
-        'a goal has server cover "reupload-file" with version 5',
+        'a goal has server cover "old-file" with local blob',
         async (_ctx: TestContext) => {
           const setup = setupGoalWithCoverBlob({
             goalId: "goal-version-test",
-            fileId: "reupload-file",
-            version: 5,
+            fileId: "old-file",
           });
           deps.goalRepository = setup.goalRepository;
           deps.coverRepository = setup.coverRepository;
@@ -448,7 +447,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       );
 
       And(
-        'server will respond with new file_id "reupload-new"',
+        'server will respond with new file_id "new-file"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
             uploadCovers: vi.fn().mockResolvedValue({
@@ -457,7 +456,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
                 {
                   local_id: "goal-version-test",
                   goal_id: "goal-version-test",
-                  file_id: "reupload-new",
+                  file_id: "new-file",
                   reused: false,
                 },
               ],
@@ -471,15 +470,23 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         await service.reuploadLocalCovers();
       });
 
-      Then("goal version is 6", async (_ctx: TestContext) => {
-        expect(deps.goalRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ version: 6 }),
-        );
-      });
+      Then(
+        'goal cover_file_id is updated to "new-file"',
+        async (_ctx: TestContext) => {
+          expect(deps.goalRepository.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+              id: "goal-version-test",
+              cover_file_id: "new-file",
+            }),
+          );
+        },
+      );
 
-      And("goal version is not 4", async (_ctx: TestContext) => {
-        expect(deps.goalRepository.update).not.toHaveBeenCalledWith(
-          expect.objectContaining({ version: 4 }),
+      And("goal is marked as needsSync", async (_ctx: TestContext) => {
+        expect(deps.goalRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({
+            needsSync: true,
+          }),
         );
       });
     },
@@ -611,7 +618,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
           const setup = setupGoalWithCoverBlob({
             goalId: "goal-reup",
             fileId: "server-file-1",
-            version: 3,
           });
           deps.goalRepository = setup.goalRepository;
           deps.coverRepository = setup.coverRepository;
@@ -661,7 +667,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
           const setup = setupGoalWithCoverBlob({
             goalId: "goal-reup",
             fileId: "old-file",
-            version: 5,
           });
           deps.goalRepository = setup.goalRepository;
           deps.coverRepository = setup.coverRepository;
@@ -700,18 +705,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
           );
         },
       );
-
-      And("goal version is incremented", async (_ctx: TestContext) => {
-        // Assert exact version value: old version (5) + 1 = 6
-        // This kills the ArithmeticOperator mutant (goal.version - 1)
-        expect(deps.goalRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ version: 6 }),
-        );
-        // Explicitly verify it's NOT decremented
-        expect(deps.goalRepository.update).not.toHaveBeenCalledWith(
-          expect.objectContaining({ version: 4 }),
-        );
-      });
 
       And("goal is marked as needsSync", async (_ctx: TestContext) => {
         expect(deps.goalRepository.update).toHaveBeenCalledWith(

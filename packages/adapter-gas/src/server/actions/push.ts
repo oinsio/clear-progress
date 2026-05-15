@@ -125,7 +125,6 @@ function processRecords<T extends AnyEntity>(
       return {
         id: record.id,
         status: PUSH_STATUSES.CREATED,
-        version: record.version,
       };
     }
 
@@ -134,16 +133,13 @@ function processRecords<T extends AnyEntity>(
       serverRecord.updated_at,
     );
     if (resolution === CONFLICT_RESOLUTION.ACCEPT) {
-      const updatedVersion = serverRecord.version + 1;
       recordsToUpsert.push({
         ...record,
-        version: updatedVersion,
         revision: pushRevision,
       });
       return {
         id: record.id,
         status: PUSH_STATUSES.ACCEPTED,
-        version: updatedVersion,
       };
     }
 

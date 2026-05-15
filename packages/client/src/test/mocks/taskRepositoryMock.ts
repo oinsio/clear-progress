@@ -19,7 +19,6 @@ export function createMockTaskRepository(
       create: vi.fn().mockResolvedValue(undefined),
       update: vi.fn().mockResolvedValue(undefined),
       bulkUpsert: vi.fn().mockResolvedValue(undefined),
-      getByMinVersion: vi.fn().mockResolvedValue([]),
       getChangedSince: vi.fn().mockResolvedValue([]),
       getNeedingSync: vi.fn().mockResolvedValue([]),
       getTasksToReveal: vi.fn().mockResolvedValue([]),

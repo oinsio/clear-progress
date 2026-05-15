@@ -4,6 +4,7 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
 import { expect, type TestContext, vi } from "vitest";
 import { SYNC_META_KEYS } from "@/constants";
+import { fakeClock } from "@/lib/temporal";
 import {
   createMockRepositories,
   createMockSyncAdapter,
@@ -14,6 +15,7 @@ import {
   mockAllRepositoriesGetAll,
 } from "@/test/helpers/bdd/syncProtocol/helpers";
 import type { SyncProtocolTestContext } from "@/test/helpers/bdd/syncProtocol/types";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 const feature = await loadFeature("../sync_push.feature");
 
@@ -201,12 +203,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @spec-sync-protocol @FR15
   f.Scenario(
-    "Created result clears dirty flag when version unchanged",
+    "Created result clears dirty flag when unchanged during push",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", version: 3, needsSync: true });
+      const task = makeTask({ id: "t1", needsSync: true });
 
       Given(
-        'client has a dirty task with id "t1" and version 3',
+        'client has a dirty task with id "t1"',
         async (_ctx: TestContext) => {
           (
             repositories.taskRepository.getNeedingSync as ReturnType<
@@ -215,7 +217,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           ).mockResolvedValue([task]);
           (
             repositories.taskRepository.getById as ReturnType<typeof vi.fn>
-          ).mockResolvedValue({ ...task, version: 3 });
+          ).mockResolvedValue({ ...task });
         },
       );
 
@@ -257,12 +259,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @spec-sync-protocol @FR15
   f.Scenario(
-    "Accepted result keeps dirty flag when version changed locally",
+    "Accepted result keeps dirty flag when changed during push",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", version: 3, needsSync: true });
+      const task = makeTask({ id: "t1", needsSync: true });
 
       Given(
-        'client has a dirty task with id "t1" and version 3',
+        'client has a dirty task with id "t1"',
         async (_ctx: TestContext) => {
           (
             repositories.taskRepository.getNeedingSync as ReturnType<
@@ -272,14 +274,17 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      And(
-        "local version will change to 4 during push",
-        async (_ctx: TestContext) => {
-          (
-            repositories.taskRepository.getById as ReturnType<typeof vi.fn>
-          ).mockResolvedValue({ ...task, version: 4 });
-        },
-      );
+      And("local task will change during push", async (_ctx: TestContext) => {
+        const clock = fakeClock("2026-05-13T17:16:34.040Z");
+        const laterTime = clock.instant().add({ seconds: 1 });
+        (
+          repositories.taskRepository.getById as ReturnType<typeof vi.fn>
+        ).mockResolvedValue({
+          ...task,
+          name: "Changed name",
+          updated_at: toISOTimestamp(laterTime),
+        });
+      });
 
       And(
         'server will respond with status "accepted" for "t1" and revision 8',

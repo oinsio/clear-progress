@@ -106,16 +106,7 @@ Feature: Cover Sync Protocol — Lifecycle
     And server will respond with new file_id "new-file"
     When reuploadLocalCovers is called
     Then goal cover_file_id is updated to "new-file"
-    And goal version is incremented
     And goal is marked as needsSync
-
-  @spec-sync-protocol @FR11
-  Scenario: Full sync reupload version is incremented not decremented
-    Given a goal has server cover "reupload-file" with version 5
-    And server will respond with new file_id "reupload-new"
-    When reuploadLocalCovers is called
-    Then goal version is 6
-    And goal version is not 4
 
   @spec-sync-protocol @FR11
   Scenario: Full sync ensureServerCoversAreCached downloads missing covers

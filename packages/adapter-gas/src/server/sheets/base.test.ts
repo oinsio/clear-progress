@@ -66,11 +66,10 @@ describe("recordToRow", () => {
   });
 
   it("should place field values at correct column indices", () => {
-    const record = { id: "abc", name: "Hello", version: 5 };
+    const record = { id: "abc", name: "Hello" };
     const row = recordToRow(SHEET_NAMES.TASKS, record);
     expect(row[TASK_COL.id]).toBe("abc");
     expect(row[TASK_COL.name]).toBe("Hello");
-    expect(row[TASK_COL.version]).toBe(5);
   });
 
   it("should place undefined for fields not present in record", () => {
@@ -87,7 +86,6 @@ describe("rowToNamedEntity", () => {
     const row = new Array(numCols).fill("");
     row[cols.id] = null;
     row[cols.name] = "Work";
-    row[cols.version] = 1;
 
     const result = rowToNamedEntity(row, cols);
     expect(result.id).toBe("");
@@ -179,13 +177,11 @@ describe("upsertRecord", () => {
     upsertRecord(SHEET_NAMES.TASKS, {
       id: "new-id",
       name: "My task",
-      version: 3,
     });
 
     const appendedRow = sheetMock.appendRow.mock.calls[0][0] as unknown[];
     expect(appendedRow[TASK_COL.id]).toBe("new-id");
     expect(appendedRow[TASK_COL.name]).toBe("My task");
-    expect(appendedRow[TASK_COL.version]).toBe(3);
   });
 
   it("should call getRange and setValues when id already exists", () => {
@@ -343,14 +339,11 @@ describe("upsertRecords", () => {
   it("should append new rows with correct data", () => {
     const sheetMock = setupSheet([TASK_HEADERS]);
 
-    upsertRecords(SHEET_NAMES.TASKS, [
-      { id: "task-new", name: "My new task", version: 7 },
-    ]);
+    upsertRecords(SHEET_NAMES.TASKS, [{ id: "task-new", name: "My new task" }]);
 
     const appendedRow = sheetMock.appendRow.mock.calls[0][0] as unknown[];
     expect(appendedRow[TASK_COL.id]).toBe("task-new");
     expect(appendedRow[TASK_COL.name]).toBe("My new task");
-    expect(appendedRow[TASK_COL.version]).toBe(7);
   });
 
   it("should call getSheet with the given sheet name", () => {
