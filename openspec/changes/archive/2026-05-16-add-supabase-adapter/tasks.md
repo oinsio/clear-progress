@@ -73,17 +73,17 @@
 - [x] 11.2 Create `README.md`: prerequisites, Supabase project setup, env vars, deploy steps, client configuration, troubleshooting (M4)
 - [x] 11.3 Create `.env.example` with required environment variables (D7)
 
-## 13. FK constraints optimization
+## 12. FK constraints optimization
 
-- [ ] 13.1 Update `001_create_tables.sql`: reorder CREATE TABLE to dependency order (contexts, categories, covers, goals, ideas, tasks, checklist_items); change FK fields from TEXT to UUID with DEFERRABLE FK constraints (FR18)
-- [ ] 13.2 Update `003_create_push_rpc.sql`: reorder processing to dependency order; use `NULLIF(..., '')::UUID` for FK deserialization, `COALESCE(...::text, '')` for conflict serialization (FR18, FR19)
-- [ ] 13.3 Update `_shared/serializers.ts`: handle NULL FK fields with `?? ''` for wire compatibility (FR18)
-- [ ] 13.4 Update `SyncService.ts`: change chunk fill order to dependency order (FR19)
-- [ ] 13.5 Update `SyncService.push-chunks.test.ts`: adjust test expectations for new chunk order (FR19)
+- [x] 12.1 Update `001_create_tables.sql`: reorder CREATE TABLE to dependency order (contexts, categories, covers, goals, ideas, tasks, checklist_items); change FK fields from TEXT to UUID with DEFERRABLE FK constraints (FR18)
+- [x] 12.2 Update `003_create_push_rpc.sql`: reorder processing to dependency order; use `NULLIF(..., '')::UUID` for FK deserialization, `COALESCE(...::text, '')` for conflict serialization (FR18, FR19)
+- [x] 12.3 Update `_shared/serializers.ts`: handle NULL FK fields with `?? ''` for wire compatibility (FR18)
+- [x] 12.4 Update `SyncService.ts`: change chunk fill order to dependency order (FR19)
+- [x] 12.5 Update `SyncService.push-chunks.test.ts`: adjust test expectations for new chunk order (FR19)
 
-## 12. Integration verification
+## 13. Integration verification
 
-- [ ] 12.1 Run `pnpm build` — verify TypeScript compiles across all packages (FR1)
-- [ ] 12.2 Run `pnpm lint` — verify no linting errors (FR1)
-- [ ] 12.3 Deploy to test Supabase instance, run contract tests against it (FR2, M1)
-- [ ] 12.4 Manual smoke test: connect client to Supabase backend, create task, verify sync round-trip (M1)
+- [x] 13.1 Run `pnpm build` — verify TypeScript compiles across all packages (FR1)
+- [x] 13.2 Run `pnpm lint` — verify no linting errors (FR1)
+- [x] 13.3 Deploy to test Supabase instance, run contract tests against it (FR2, M1)
+- [x] 13.4 Manual smoke test: connect client to Supabase backend, create task, verify sync round-trip (M1)
