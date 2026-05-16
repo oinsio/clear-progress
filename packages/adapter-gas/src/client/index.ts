@@ -1,1 +1,2 @@
-export { ApiAuthError, GasSyncAdapter } from "./gas-sync-adapter";
+export { ApiAuthError, ApiValidationError } from "@clear-progress/contract";
+export { createGasAdapter, GasSyncAdapter } from "./gas-sync-adapter";

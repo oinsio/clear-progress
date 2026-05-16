@@ -77,8 +77,14 @@ if (
     let adapterB: SupabaseSyncAdapter;
 
     beforeEach(async () => {
-      adapterA = new SupabaseSyncAdapter(supabaseFunctionsUrl, () => tokenA);
-      adapterB = new SupabaseSyncAdapter(supabaseFunctionsUrl, () => tokenB);
+      const clientA = createClient(supabaseProjectUrl, serviceKey, {
+        accessToken: async () => tokenA,
+      });
+      const clientB = createClient(supabaseProjectUrl, serviceKey, {
+        accessToken: async () => tokenB,
+      });
+      adapterA = new SupabaseSyncAdapter(clientA);
+      adapterB = new SupabaseSyncAdapter(clientB);
       await teardownUser(userAId);
       await teardownUser(userBId);
       await adapterA.init();

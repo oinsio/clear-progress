@@ -1,3 +1,5 @@
+// Errors
+
 // Constants
 export {
   API_ACTIONS,
@@ -29,6 +31,7 @@ export type {
   WireSetting,
   WireTask,
 } from "./domain";
+export { ApiAuthError, ApiValidationError } from "./errors";
 // Ports
 export type { SyncAdapter } from "./ports";
 // Protocol types
@@ -54,8 +57,6 @@ export type {
   UploadCoversRequest,
   UploadCoversResponse,
 } from "./protocol";
-// Registry
-export { createAdapter, registerAdapter } from "./registry/adapterRegistry";
 // Schemas
 export {
   BackendTypeSchema,

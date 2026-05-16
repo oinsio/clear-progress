@@ -9,11 +9,17 @@ import {
   useRef,
   useState,
 } from "react";
-import { GOOGLE_CLIENT_ID_CHANGED_EVENT, STORAGE_KEYS } from "@/constants";
+import {
+  BACKEND_CONNECTION_EVENT,
+  GOOGLE_CLIENT_ID_CHANGED_EVENT,
+  STORAGE_KEYS,
+} from "@/constants";
 import { Temporal } from "@/lib/temporal";
 import { getConnectionConfig } from "@/services/connectionService";
+import { getSupabaseClient } from "@/services/supabaseClientManager";
 import { setAccessToken } from "@/services/tokenManager";
 import { GoogleAuthSync } from "./GoogleAuthSync";
+import { SupabaseAuthSync } from "./SupabaseAuthSync";
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -33,7 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const config = getConnectionConfig();
     return config?.type === "gas" ? (config.clientId ?? null) : null;
   });
+  const [isSupabaseBackend, setIsSupabaseBackend] = useState<boolean>(() => {
+    const config = getConnectionConfig();
+    return config?.type === "supabase";
+  });
   const [accessToken, setAccessTokenState] = useState<string | null>(() => {
+    const config = getConnectionConfig();
+    // For Supabase, the Supabase client initializes its session asynchronously.
+    // Pre-populating from our localStorage creates a race: sync starts before
+    // client.auth.getSession() is ready, causing 401s. We wait for onAuthStateChange
+    // (INITIAL_SESSION or SIGNED_IN) to set the token instead.
+    if (config?.type === "supabase") {
+      return null;
+    }
     const storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
     const storedExpiresAt = localStorage.getItem(
       STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
@@ -70,6 +88,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
     return () =>
       window.removeEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
+  }, []);
+
+  useEffect(() => {
+    const handleBackendChange = () => {
+      const config = getConnectionConfig();
+      setIsSupabaseBackend(config?.type === "supabase");
+    };
+    window.addEventListener(BACKEND_CONNECTION_EVENT, handleBackendChange);
+    return () =>
+      window.removeEventListener(BACKEND_CONNECTION_EVENT, handleBackendChange);
   }, []);
 
   const handleTokenUpdate = useCallback((token: string, expiresIn: number) => {
@@ -150,6 +178,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             silentRefreshRef={silentRefreshRef}
           />
         </GoogleOAuthProvider>
+      )}
+      {isSupabaseBackend && (
+        <SupabaseAuthSync
+          supabaseClient={getSupabaseClient()}
+          onTokenUpdate={handleTokenUpdate}
+          onClear={handleClear}
+          signInRef={signInRef}
+          signOutRef={signOutRef}
+          silentRefreshRef={silentRefreshRef}
+        />
       )}
       {children}
     </AuthContext.Provider>

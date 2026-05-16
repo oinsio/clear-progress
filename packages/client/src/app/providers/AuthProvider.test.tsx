@@ -19,6 +19,24 @@ vi.mock("@/services/connectionService", () => ({
   getConnectionConfig: () => mockGetConnectionConfig(),
 }));
 
+const mockSupabaseClient = {
+  auth: {
+    onAuthStateChange: vi.fn(() => ({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    })),
+    signInWithOAuth: vi.fn().mockResolvedValue({ error: null }),
+    signOut: vi.fn().mockResolvedValue({ error: null }),
+    refreshSession: vi.fn().mockResolvedValue({
+      data: { session: null },
+      error: null,
+    }),
+  },
+};
+
+vi.mock("@/services/supabaseClientManager", () => ({
+  getSupabaseClient: () => mockSupabaseClient,
+}));
+
 import { setAccessToken } from "@/services/tokenManager";
 import { AuthProvider, useAuth } from "./AuthProvider";
 
@@ -364,5 +382,52 @@ describe("AuthProvider", () => {
     expect(screen.getByTestId("token").textContent).toBe("null");
     // No Google login should be attempted
     expect(mockGoogleLogin).not.toHaveBeenCalled();
+  });
+
+  describe("backend type detection", () => {
+    it("should subscribe to Supabase auth when connection type is supabase", () => {
+      mockGetConnectionConfig.mockReturnValue({
+        type: "supabase",
+        url: "https://test-project.supabase.co",
+        anonKey: "test-anon-key",
+        isActive: true,
+      });
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+      expect(mockSupabaseClient.auth.onAuthStateChange).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(mockGoogleLogin).not.toHaveBeenCalled();
+    });
+
+    it("should not subscribe to Supabase auth when connection type is gas", () => {
+      mockGetConnectionConfig.mockReturnValue({
+        type: "gas",
+        url: "https://script.google.com/macros/s/test/exec",
+        clientId: "test-client-id",
+        isActive: true,
+      });
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+      expect(mockSupabaseClient.auth.onAuthStateChange).not.toHaveBeenCalled();
+      expect(mockGoogleLogin).toHaveBeenCalledTimes(1);
+    });
+
+    it("should render neither auth mechanism when no config exists", () => {
+      mockGetConnectionConfig.mockReturnValue(null);
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+      expect(mockGoogleLogin).not.toHaveBeenCalled();
+      expect(mockSupabaseClient.auth.onAuthStateChange).not.toHaveBeenCalled();
+    });
   });
 });

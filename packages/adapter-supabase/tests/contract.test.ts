@@ -39,10 +39,12 @@ if (supabaseFunctionsUrl && testToken && supabaseProjectUrl && serviceKey) {
     }
   }
 
-  syncAdapterContract(
-    async () => new SupabaseSyncAdapter(supabaseFunctionsUrl, () => testToken),
-    teardown,
-  );
+  syncAdapterContract(async () => {
+    const userClient = createClient(supabaseProjectUrl, serviceKey, {
+      accessToken: async () => testToken,
+    });
+    return new SupabaseSyncAdapter(userClient);
+  }, teardown);
 } else {
   describe.skip("Supabase adapter contract tests (requires TEST_SUPABASE_URL, TEST_SUPABASE_TOKEN, TEST_SUPABASE_PROJECT_URL, TEST_SUPABASE_SERVICE_KEY)", () => {
     it("skipped", () => {});

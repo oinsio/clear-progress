@@ -1,9 +1,8 @@
 import type { SyncAdapter } from "@clear-progress/contract";
-import { registerAdapter } from "@clear-progress/contract";
 import { vi } from "vitest";
 
 export function setupMockAdapter(): SyncAdapter {
-  const mockAdapter: SyncAdapter = {
+  return {
     ping: vi.fn().mockResolvedValue({ ok: true, initialized: true }),
     init: vi.fn().mockResolvedValue({ ok: true }),
     pull: vi.fn().mockResolvedValue({
@@ -41,7 +40,4 @@ export function setupMockAdapter(): SyncAdapter {
     getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
     deleteCover: vi.fn().mockResolvedValue({ ok: true }),
   };
-
-  registerAdapter("gas", () => mockAdapter);
-  return mockAdapter;
 }

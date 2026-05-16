@@ -16,7 +16,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "biome check .",
-    "lint:fix": "biome check . --write"
+    "lint:fix": "biome check . --write",
+    "test:mutation": "stryker run"
   },
   "dependencies": {
     "@clear-progress/contract": "workspace:*",
@@ -25,6 +26,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
+    "@stryker-mutator/core": "^9.6.0",
+    "@stryker-mutator/vitest-runner": "^9.6.0",
     "@types/node": "^25.6.0",
     "supabase": "^2.98.2",
     "typescript": "^5.0.0",

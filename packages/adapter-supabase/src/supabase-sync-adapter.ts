@@ -1,4 +1,4 @@
-// implements FR1, FR6 of add-supabase-adapter
+// implements FR8 of add-supabase-ui
 import type {
   DeleteCoverRequest,
   DeleteCoverResponse,
@@ -18,6 +18,8 @@ import type {
   UploadCoversResponse,
 } from "@clear-progress/contract";
 import {
+  ApiAuthError,
+  ApiValidationError,
   DeleteCoverResponseSchema,
   GetCoverResponseSchema,
   InitResponseSchema,
@@ -28,139 +30,124 @@ import {
   UploadCoverResponseSchema,
   UploadCoversResponseSchema,
 } from "@clear-progress/contract";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ZodType } from "zod";
 
-const API_TIMEOUT_MS = 30000;
+const HTTP_STATUS_UNAUTHORIZED = 401;
 
-type GetAccessToken = () => string | null;
-
-export class ApiAuthError extends Error {
-  constructor() {
-    super("Authentication required: token is missing, expired, or invalid");
-    this.name = "ApiAuthError";
-  }
-}
-
-export class ApiValidationError extends Error {
-  constructor(endpoint: string, cause: unknown) {
-    super(`Invalid API response for "${endpoint}"`);
-    this.name = "ApiValidationError";
-    this.cause = cause;
-  }
-}
-
-// implements FR1 of add-supabase-adapter
+// implements FR8 of add-supabase-ui
 export class SupabaseSyncAdapter implements SyncAdapter {
-  private readonly url: string;
-  private readonly getAccessToken: GetAccessToken;
+  private readonly client: SupabaseClient;
 
-  constructor(url: string, getAccessToken: GetAccessToken) {
-    this.url = url;
-    this.getAccessToken = getAccessToken;
+  constructor(client: SupabaseClient) {
+    this.client = client;
   }
 
-  private async request<TResponse>(
-    endpoint: string,
+  private async invoke<TResponse>(
+    functionName: string,
     body: object,
     schema: ZodType<TResponse>,
   ): Promise<TResponse> {
-    const token = this.getAccessToken();
-    if (!token) {
+    // Get a fresh session token. getSession() returns cached data — the token
+    // may be expired. If expired or close to expiry, force a refresh first.
+    const { data: sessionData } = await this.client.auth.getSession();
+    if (!sessionData?.session?.access_token) {
       throw new ApiAuthError();
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(`${this.url}/${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-
-      if (response.status === 401) {
+    let accessToken = sessionData.session.access_token;
+    const expiresAt = sessionData.session.expires_at;
+    const isExpiredOrExpiringSoon =
+      expiresAt !== undefined && expiresAt - Math.floor(Date.now() / 1000) < 30;
+    if (isExpiredOrExpiringSoon) {
+      const { data: refreshData, error: refreshError } =
+        await this.client.auth.refreshSession();
+      if (refreshError || !refreshData.session?.access_token) {
         throw new ApiAuthError();
       }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
-
-      const parsed = (await response.json()) as unknown;
-      const result = schema.safeParse(parsed);
-      if (!result.success) {
-        throw new ApiValidationError(endpoint, result.error);
-      }
-
-      return result.data;
-    } finally {
-      clearTimeout(timeoutId);
+      accessToken = refreshData.session.access_token;
     }
+
+    // Explicitly pass the access token in headers to bypass the SDK's internal
+    // token resolution which may fall back to the anon key.
+    const { data, error } = await this.client.functions.invoke(functionName, {
+      body,
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (error) {
+      if (this.isAuthError(error)) {
+        throw new ApiAuthError();
+      }
+      const errorMessage =
+        typeof error === "object" && "message" in error
+          ? (error as { message: string }).message
+          : String(error);
+      throw new Error(errorMessage);
+    }
+
+    const result = schema.safeParse(data);
+    if (!result.success) {
+      throw new ApiValidationError(functionName, result.error);
+    }
+
+    return result.data;
   }
 
-  // implements FR6 of add-supabase-adapter
+  private isAuthError(error: unknown): boolean {
+    if (typeof error !== "object") return false;
+    const errorObj = error as Record<string, unknown>;
+    if (errorObj.status === HTTP_STATUS_UNAUTHORIZED) return true;
+    const context = errorObj.context;
+    return (
+      typeof context === "object" &&
+      context !== null &&
+      (context as Record<string, unknown>).status === HTTP_STATUS_UNAUTHORIZED
+    );
+  }
+
   async ping(): Promise<PingResponse> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(`${this.url}/ping`, {
-        method: "GET",
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
-
-      const parsed = (await response.json()) as unknown;
-      const result = PingResponseSchema.safeParse(parsed);
-      if (!result.success) {
-        throw new ApiValidationError("ping", result.error);
-      }
-
-      return result.data;
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    return this.invoke("ping", {}, PingResponseSchema);
   }
 
   async init(): Promise<InitResponse> {
-    return this.request("init", {}, InitResponseSchema);
+    return this.invoke("init", {}, InitResponseSchema);
   }
 
   async pull(request: PullRequest): Promise<PullResponse> {
-    return this.request("pull", request, PullResponseSchema);
+    return this.invoke("pull", request, PullResponseSchema);
   }
 
   async push(request: PushRequest): Promise<PushResponse> {
-    return this.request("push", request, PushResponseSchema);
+    return this.invoke("push", request, PushResponseSchema);
   }
 
   async uploadCover(request: UploadCoverRequest): Promise<UploadCoverResponse> {
-    return this.request("upload-cover", request, UploadCoverResponseSchema);
+    return this.invoke("upload-cover", request, UploadCoverResponseSchema);
   }
 
   async uploadCovers(
     request: UploadCoversRequest,
   ): Promise<UploadCoversResponse> {
-    return this.request("upload-covers", request, UploadCoversResponseSchema);
+    return this.invoke("upload-covers", request, UploadCoversResponseSchema);
   }
 
   async getCover(request: GetCoverRequest): Promise<GetCoverResponse> {
-    return this.request("get-cover", request, GetCoverResponseSchema);
+    return this.invoke("get-cover", request, GetCoverResponseSchema);
   }
 
   async deleteCover(request: DeleteCoverRequest): Promise<DeleteCoverResponse> {
-    return this.request("delete-cover", request, DeleteCoverResponseSchema);
+    return this.invoke("delete-cover", request, DeleteCoverResponseSchema);
   }
 
   async purge(): Promise<PurgeResponse> {
-    return this.request("purge", {}, PurgeResponseSchema);
+    return this.invoke("purge", {}, PurgeResponseSchema);
   }
+}
+
+// implements FR9 of add-supabase-ui
+export function createSupabaseAdapter(
+  supabaseClient: SupabaseClient,
+): SyncAdapter {
+  return new SupabaseSyncAdapter(supabaseClient);
 }

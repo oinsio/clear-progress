@@ -1,5 +1,6 @@
+import { createGasAdapter } from "@clear-progress/adapter-gas";
+import { createSupabaseAdapter } from "@clear-progress/adapter-supabase";
 import type { SyncAdapter } from "@clear-progress/contract";
-import { createAdapter } from "@clear-progress/contract";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -16,15 +17,22 @@ import { getConnectionConfig } from "./connectionService";
 import { GoalService } from "./GoalService";
 import { IdeaService } from "./IdeaService";
 import { SyncService } from "./SyncService";
+import { getSupabaseClient } from "./supabaseClientManager";
 import { TaskService } from "./TaskService";
 import { getAccessToken } from "./tokenManager";
 
+// implements FR9, D3 of add-supabase-ui
 function createSyncAdapter(): SyncAdapter {
   const config = getConnectionConfig();
   if (!config) {
     throw new Error("No backend configured");
   }
-  return createAdapter(config.type, config.url, getAccessToken);
+  switch (config.type) {
+    case "gas":
+      return createGasAdapter(config.url, getAccessToken);
+    case "supabase":
+      return createSupabaseAdapter(getSupabaseClient());
+  }
 }
 
 let _defaultSyncAdapter: SyncAdapter | null = null;

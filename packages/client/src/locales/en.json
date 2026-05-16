@@ -268,7 +268,20 @@
     "awaitingSignin": "Connection established. Sign in with Google to start syncing.",
     "notInitializedNeedClientId": "Client ID is required for initialization",
     "backToInput": "Back",
-    "backendType": "Server type"
+    "backendType": "Server type",
+    "supabase": {
+      "section": "Supabase",
+      "urlLabel": "Supabase Project URL or ID",
+      "urlPlaceholder": "https://xxxxx.supabase.co or project ID",
+      "anonKeyLabel": "Anon Key",
+      "anonKeyPlaceholder": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "connecting": "Connecting...",
+      "connect": "Connect",
+      "errorConnection": "Could not connect. Please check the URL and Anon Key.",
+      "errorOAuth": "OAuth sign-in failed. Please try again.",
+      "noProviders": "No OAuth providers configured. Enable providers in Supabase Dashboard → Authentication → Providers.",
+      "signInWith": "Sign in with"
+    }
   },
   "selector": {
     "goal": "Goal",
