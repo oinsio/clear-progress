@@ -48,31 +48,8 @@ export class SupabaseSyncAdapter implements SyncAdapter {
     body: object,
     schema: ZodType<TResponse>,
   ): Promise<TResponse> {
-    // Get a fresh session token. getSession() returns cached data — the token
-    // may be expired. If expired or close to expiry, force a refresh first.
-    const { data: sessionData } = await this.client.auth.getSession();
-    if (!sessionData?.session?.access_token) {
-      throw new ApiAuthError();
-    }
-
-    let accessToken = sessionData.session.access_token;
-    const expiresAt = sessionData.session.expires_at;
-    const isExpiredOrExpiringSoon =
-      expiresAt !== undefined && expiresAt - Math.floor(Date.now() / 1000) < 30;
-    if (isExpiredOrExpiringSoon) {
-      const { data: refreshData, error: refreshError } =
-        await this.client.auth.refreshSession();
-      if (refreshError || !refreshData.session?.access_token) {
-        throw new ApiAuthError();
-      }
-      accessToken = refreshData.session.access_token;
-    }
-
-    // Explicitly pass the access token in headers to bypass the SDK's internal
-    // token resolution which may fall back to the anon key.
     const { data, error } = await this.client.functions.invoke(functionName, {
       body,
-      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
     if (error) {
