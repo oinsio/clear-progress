@@ -65,18 +65,33 @@ CREATE POLICY covers_user_isolation ON covers
 -- Bucket is private; users can only access files under their own prefix path.
 -- Storage path format: {user_id[0:2]}/{user_id}/{data_hash[0:2]}/{file_id}.{ext}
 -- The second folder component (index 2 in 1-based Postgres arrays) is the full user_id.
+-- NOTE: storage.buckets/objects are created by storage-api at runtime.
+-- In Docker integration tests, this is handled by db-migrations-storage service.
+-- In Supabase CLI (supabase db push), storage schema already exists.
 
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('covers', 'covers', FALSE)
-ON CONFLICT (id) DO NOTHING;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'buckets') THEN
+    INSERT INTO storage.buckets (id, name, public)
+    VALUES ('covers', 'covers', FALSE)
+    ON CONFLICT (id) DO NOTHING;
+  END IF;
+END $$;
 
-CREATE POLICY covers_storage_user_isolation ON storage.objects
-  FOR ALL TO authenticated
-  USING (
-    bucket_id = 'covers'
-    AND (storage.foldername(name))[2] = auth.uid()::text
-  )
-  WITH CHECK (
-    bucket_id = 'covers'
-    AND (storage.foldername(name))[2] = auth.uid()::text
-  );
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'objects') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'covers_storage_user_isolation') THEN
+      CREATE POLICY covers_storage_user_isolation ON storage.objects
+        FOR ALL TO authenticated
+        USING (
+          bucket_id = 'covers'
+          AND (storage.foldername(name))[2] = auth.uid()::text
+        )
+        WITH CHECK (
+          bucket_id = 'covers'
+          AND (storage.foldername(name))[2] = auth.uid()::text
+        );
+    END IF;
+  END IF;
+END $$;

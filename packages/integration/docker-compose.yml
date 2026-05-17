@@ -1,0 +1,203 @@
+# implements FR1, FR9, FR10, FR11, D1-D6 of add-supabase-integration-tests
+# Full Supabase stack for integration testing
+#
+# Startup order:
+#   db (healthy) → auth (healthy, creates auth schema) → db-migrations (runs our SQL)
+#   → rest, storage, edge-functions → kong
+
+name: clear-progress-integration
+
+services:
+  db:
+    image: supabase/postgres:15.14.1.122
+    restart: unless-stopped
+    healthcheck:
+      # supabase/postgres image creates supabase_admin, not postgres
+      test: ["CMD-SHELL", "pg_isready -U supabase_admin -d postgres -h localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      # zz- prefix ensures these run AFTER the image's own migrate.sh (m < z)
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/zz-roles.sql:ro
+      - ./db/jwt.sql:/docker-entrypoint-initdb.d/zz-jwt.sql:ro
+
+  auth:
+    # supabase/gotrue was renamed to supabase/auth; env vars remain GOTRUE_* prefixed
+    image: supabase/auth:v2.189.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9999/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: "9999"
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      API_EXTERNAL_URL: http://kong:8000
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_URI_ALLOW_LIST: "*"
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: "3600"
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMTP_HOST: ""
+      GOTRUE_SMTP_PORT: "587"
+      GOTRUE_SMTP_USER: fake
+      GOTRUE_SMTP_PASS: fake
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@example.com
+      GOTRUE_SMTP_SENDER_NAME: Supabase Test
+
+  # implements FR9, D4 — runs our migrations AFTER auth has created the auth schema
+  db-migrations:
+    image: supabase/postgres:15.14.1.122
+    restart: "no"
+    depends_on:
+      auth:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command:
+      - bash
+      - -c
+      - |
+        for f in $$(ls /migrations/*.sql | sort); do
+          echo "Applying migration: $$f"
+          psql -h db -U supabase_admin -d postgres -f "$$f" || exit 1
+        done
+        echo "All migrations applied successfully."
+    volumes:
+      - ../adapter-supabase/supabase/migrations:/migrations:ro
+
+  rest:
+    image: postgrest/postgrest:latest
+    restart: unless-stopped
+    depends_on:
+      db-migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '(echo > /dev/tcp/localhost/3000) 2>/dev/null'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage,graphql_public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: "3600"
+
+  storage:
+    image: supabase/storage-api:latest
+    restart: unless-stopped
+    depends_on:
+      db-migrations:
+        condition: service_completed_successfully
+      rest:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:5000/status || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      FILE_SIZE_LIMIT: "52428800"
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - storage_data:/var/lib/storage
+
+  # implements FR10, FR11 — storage bucket/policy after storage-api creates its tables
+  db-migrations-storage:
+    image: supabase/postgres:15.14.1.122
+    restart: "no"
+    depends_on:
+      storage:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command:
+      - bash
+      - -c
+      - |
+        echo "Applying storage migration..."
+        psql -h db -U supabase_admin -d postgres -f /migrations/init-storage.sql
+        echo "Storage migration applied."
+    volumes:
+      - ./db/init-storage.sql:/migrations/init-storage.sql:ro
+
+  # implements D5 — mount edge functions from adapter-supabase
+  # supabase/edge-runtime does not publish a :latest tag — pinned to latest released version
+  edge-functions:
+    image: supabase/edge-runtime:v1.74.0
+    restart: unless-stopped
+    depends_on:
+      auth:
+        condition: service_healthy
+      db-migrations:
+        condition: service_completed_successfully
+    command: ["start", "--main-service", "/home/deno/functions/main"]
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+      VERIFY_JWT: "true"
+    volumes:
+      - ../adapter-supabase/supabase/functions:/home/deno/functions
+      - ./functions/main:/home/deno/functions/main
+
+  # implements D6 — Kong as API gateway (single entry point for all services)
+  kong:
+    image: kong:2.8.1
+    restart: unless-stopped
+    depends_on:
+      auth:
+        condition: service_healthy
+      rest:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+    ports:
+      - "0:8000"
+    volumes:
+      - ./kong.yml:/home/kong/kong.yml:ro
+
+volumes:
+  db_data:
+  storage_data:

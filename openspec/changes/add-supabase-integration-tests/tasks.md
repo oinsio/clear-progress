@@ -1,17 +1,17 @@
 ## 1. Package Scaffolding
 
-- [ ] 1.1 Create `packages/integration/package.json` with dependencies: `@playwright/test`, `testcontainers`, `@supabase/supabase-js`
-- [ ] 1.2 Create `packages/integration/tsconfig.json` extending root config
-- [ ] 1.3 Add `packages/integration` to `pnpm-workspace.yaml` (verify it's covered by `packages/*` glob)
-- [ ] 1.4 Run `pnpm install` to link the new package
+- [x] 1.1 Create `packages/integration/package.json` with dependencies: `@playwright/test`, `testcontainers`, `@supabase/supabase-js`
+- [x] 1.2 Create `packages/integration/tsconfig.json` extending root config
+- [x] 1.3 Add `packages/integration` to `pnpm-workspace.yaml` (verify it's covered by `packages/*` glob)
+- [x] 1.4 Run `pnpm install` to link the new package
 
 ## 2. Docker Compose Stack
 
-- [ ] 2.1 Create `packages/integration/.env.test` with static JWT secrets (JWT_SECRET, ANON_KEY, SERVICE_ROLE_KEY — Supabase local dev defaults)
-- [ ] 2.2 Create `packages/integration/docker-compose.yml` with services: db, auth, rest, storage, edge-functions, kong
-- [ ] 2.3 Configure db volume mount: `../adapter-supabase/supabase/migrations/` → `/docker-entrypoint-initdb.d/`
-- [ ] 2.4 Configure edge-functions volume mount: `../adapter-supabase/supabase/functions/` → `/home/deno/functions/`
-- [ ] 2.5 Verify stack starts manually: `docker compose --env-file .env.test up` (smoke test)
+- [x] 2.1 Create `packages/integration/.env.test` with static JWT secrets (JWT_SECRET, ANON_KEY, SERVICE_ROLE_KEY — Supabase local dev defaults)
+- [x] 2.2 Create `packages/integration/docker-compose.yml` with services: db, auth, rest, storage, edge-functions, kong
+- [x] 2.3 Configure db volume mount: `../adapter-supabase/supabase/migrations/` → `/docker-entrypoint-initdb.d/`
+- [x] 2.4 Configure edge-functions volume mount: `../adapter-supabase/supabase/functions/` → `/home/deno/functions/`
+- [x] 2.5 Verify stack starts manually: `docker compose --env-file .env.test up` (smoke test)
 
 ## 3. Testcontainers Integration
 
