@@ -5,10 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
+    "test:headed": "playwright test --headed",
     "test:setup": "playwright test --project=setup"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.105.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",

@@ -1,6 +1,16 @@
+## 0. Mock OAuth Infrastructure
+
+- [x] 0.1 Create `packages/integration/mock-oauth/nginx.conf` — maps GoTrue keycloak paths to navikt issuer paths
+- [x] 0.2 Update `.env.test` — add `KONG_HOST_PORT`, `MOCK_OAUTH_PORT`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
+- [x] 0.3 Update `docker-compose.yml` — add `mock-oauth` and `mock-oauth-adapter` services, fix Kong port, add keycloak env vars to auth
+- [x] 0.4 Update `src/config.ts` — narrow `SupabaseTestConfig` to `supabaseUrl`, `anonKey`, `serviceRoleKey`
+- [x] 0.5 Simplify `src/global-setup.ts` — remove password auth (`createTestUser`, `signInTestUser`), use `serviceRoleKey` for edge functions check
+- [x] 0.6 Rewrite `src/tests/tasks-sync.spec.ts` — replace password auth with real OAuth flow via mock server
+- [x] 0.7 Remove `@supabase/supabase-js` dependency from `package.json` (no longer imported)
+
 ## 1. Package Scaffolding
 
-- [x] 1.1 Create `packages/integration/package.json` with dependencies: `@playwright/test`, `testcontainers`, `@supabase/supabase-js`
+- [x] 1.1 Create `packages/integration/package.json` with dependencies: `@playwright/test`, `testcontainers`
 - [x] 1.2 Create `packages/integration/tsconfig.json` extending root config
 - [x] 1.3 Add `packages/integration` to `pnpm-workspace.yaml` (verify it's covered by `packages/*` glob)
 - [x] 1.4 Run `pnpm install` to link the new package
@@ -15,30 +25,30 @@
 
 ## 3. Testcontainers Integration
 
-- [ ] 3.1 Implement `src/config.ts` — types and config reading (test config JSON schema)
-- [ ] 3.2 Implement `src/supabase-environment.ts` — DockerComposeEnvironment wrapper with wait strategies
-- [ ] 3.3 Implement `src/global-setup.ts` — start environment, create test user via GoTrue admin API, write `.supabase-test-config.json`
-- [ ] 3.4 Implement `src/global-teardown.ts` — stop environment, clean up config file
+- [x] 3.1 Implement `src/config.ts` — types (`supabaseUrl`, `anonKey`, `serviceRoleKey`) and config reading
+- [x] 3.2 Implement `src/supabase-environment.ts` — DockerComposeEnvironment wrapper with wait strategies
+- [x] 3.3 Implement `src/global-setup.ts` — start environment, wait for edge functions via `serviceRoleKey`, write `.supabase-test-config.json`
+- [x] 3.4 Implement `src/global-teardown.ts` — stop environment, clean up config file
 
 ## 4. Playwright Configuration
 
-- [ ] 4.1 Create `packages/integration/playwright.config.ts` with globalSetup/globalTeardown, webServer (client dev), baseURL, timeout 120s
-- [ ] 4.2 Install Playwright browsers: `pnpm --filter integration exec playwright install chromium`
+- [x] 4.1 Create `packages/integration/playwright.config.ts` with globalSetup/globalTeardown, webServer (client dev), baseURL, timeout 120s
+- [x] 4.2 Install Playwright browsers: `pnpm --filter integration exec playwright install chromium`
 
 ## 5. Integration Tests
 
 Tests are written sequentially — each builds on the previous. All in `src/tests/`.
 
 ### 5.1 Connection flow (`connection.spec.ts`)
-- [ ] 5.1.1 Connect with valid URL + anon key → verify connected status
-- [ ] 5.1.2 Connect with invalid URL → verify error state
-- [ ] 5.1.3 Connect with invalid key → verify error state
+- [x] 5.1.1 Connect with valid URL + anon key → verify connected status
+- [x] 5.1.2 Connect with invalid URL → verify error state
+- [x] 5.1.3 Connect with invalid key → verify error state
 
 ### 5.2 Tasks sync (`tasks-sync.spec.ts`)
-- [ ] 5.2.1 Create task locally → push → verify task exists on server (pull returns it)
-- [ ] 5.2.2 Modify task (title, status) locally → push → pull on fresh state → verify changes
-- [ ] 5.2.3 Soft-delete task locally → push → pull → verify is_deleted=true on server
-- [ ] 5.2.4 Create recurring task → push → verify repeat rule persisted
+- [x] 5.2.1 Create task locally → push → verify task exists on server (pull returns it)
+- [x] 5.2.2 Modify task (title, status) locally → push → pull on fresh state → verify changes
+- [x] 5.2.3 Soft-delete task locally → push → pull → verify is_deleted=true on server
+- [x] 5.2.4 Create recurring task → push → verify repeat rule persisted
 
 ### 5.3 Goals sync (`goals-sync.spec.ts`)
 - [ ] 5.3.1 Create goal → push → pull → verify goal data

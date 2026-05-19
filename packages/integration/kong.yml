@@ -14,6 +14,14 @@ services:
           - /auth/v1/
     plugins:
       - name: cors
+        config:
+          origins:
+            - "*"
+          headers:
+            - Content-Type
+            - Authorization
+            - apikey
+            - x-client-info
 
   - name: rest-v1
     url: http://rest:3000
@@ -24,6 +32,15 @@ services:
           - /rest/v1/
     plugins:
       - name: cors
+        config:
+          origins:
+            - "*"
+          headers:
+            - Content-Type
+            - Authorization
+            - apikey
+            - x-client-info
+            - Prefer
 
   - name: storage-v1
     url: http://storage:5000
@@ -34,6 +51,14 @@ services:
           - /storage/v1/
     plugins:
       - name: cors
+        config:
+          origins:
+            - "*"
+          headers:
+            - Content-Type
+            - Authorization
+            - apikey
+            - x-client-info
 
   - name: functions-v1
     url: http://edge-functions:9000
@@ -44,3 +69,11 @@ services:
           - /functions/v1/
     plugins:
       - name: cors
+        config:
+          origins:
+            - "*"
+          headers:
+            - Content-Type
+            - Authorization
+            - apikey
+            - x-client-info

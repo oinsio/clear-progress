@@ -10,23 +10,26 @@ Autonomous integration testing of the full Supabase stack using Docker Compose +
 
 The integration test environment runs the following services:
 
-| Service        | Image                        | Internal Port | Purpose                          |
-|----------------|------------------------------|---------------|----------------------------------|
-| db             | supabase/postgres:15.8.1.060 | 5432          | PostgreSQL with extensions       |
-| auth           | supabase/gotrue              | 9999          | GoTrue authentication            |
-| rest           | postgrest/postgrest          | 3000          | PostgREST API                    |
-| storage        | supabase/storage-api         | 5000          | Storage API                      |
-| edge-functions | supabase/edge-runtime        | 54321         | Deno Edge Functions              |
-| kong           | kong:latest                  | 8000          | API Gateway (single entry point) |
+| Service            | Image                                    | Internal Port | Purpose                          |
+|--------------------|------------------------------------------|---------------|----------------------------------|
+| db                 | supabase/postgres:15.14.1.122            | 5432          | PostgreSQL with extensions       |
+| auth               | supabase/auth:v2.189.0                   | 9999          | GoTrue authentication            |
+| rest               | postgrest/postgrest:latest               | 3000          | PostgREST API                    |
+| storage            | supabase/storage-api:latest              | 5000          | Storage API                      |
+| edge-functions     | supabase/edge-runtime:v1.74.0            | 54321         | Deno Edge Functions              |
+| kong               | kong:2.8.1                               | 8000          | API Gateway (single entry point) |
+| mock-oauth         | ghcr.io/navikt/mock-oauth2-server:2.1.10 | 8080          | Mock OAuth2/OIDC server          |
+| mock-oauth-adapter | nginx:alpine                             | 8443          | Path adapter (keycloak → navikt) |
 
-All ports are mapped dynamically via Testcontainers to avoid conflicts.
+Kong: fixed port 54321. OAuth adapter: fixed port 8443. Other ports mapped dynamically.
 
 ### Lifecycle Management
 
 - **Start**: `DockerComposeEnvironment.up()` in Playwright `globalSetup`
 - **Health check**: `Wait.forHttp("/", 8000)` on Kong (waits for gateway to be ready)
-- **Test user**: Created via GoTrue admin API after stack is healthy
-- **Config**: Written to `.supabase-test-config.json` (supabaseUrl, anonKey, testUserToken)
+- **Edge Functions**: Verified via ping with `serviceRoleKey` (bypasses JWT verification)
+- **Config**: Written to `.supabase-test-config.json` (supabaseUrl, anonKey, serviceRoleKey)
+- **Auth**: Test authenticates via mock OAuth flow in Playwright (no pre-created users)
 - **Stop**: `environment.down()` in Playwright `globalTeardown`
 
 ### Test Flow Requirements
@@ -59,23 +62,34 @@ packages/integration/
 ├── playwright.config.ts
 ├── docker-compose.yml
 ├── .env.test
+├── kong.yml
+├── mock-oauth/
+│   └── nginx.conf
+├── db/
+│   ├── roles.sql
+│   ├── jwt.sql
+│   └── init-storage.sql
+├── functions/
+│   └── main/
+│       └── index.ts
 ├── src/
 │   ├── global-setup.ts
 │   ├── global-teardown.ts
 │   ├── supabase-environment.ts
+│   ├── environment-store.ts
 │   ├── config.ts
 │   └── tests/
-│       └── supabase-full-flow.spec.ts
+│       ├── connection.spec.ts
+│       └── tasks-sync.spec.ts
 ```
 
 ### Dependencies
 
 - `@playwright/test` ^1.49.1
-- `testcontainers` ^10.0.0
-- `@supabase/supabase-js` ^2.49.0
+- `testcontainers` ^10.22.0
 
 ### Prerequisites
 
 - Docker daemon running
-- Ports dynamically allocated (no fixed port requirements)
+- Kong: fixed port 54321, OAuth adapter: fixed port 8443; other ports dynamic
 - `packages/client` buildable (used as webServer)

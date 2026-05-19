@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   is_hidden        BOOLEAN     NOT NULL DEFAULT FALSE,
   next_date        DATE,
   appear_date      DATE,
-  original_task_id UUID        REFERENCES tasks(id) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
+  original_task_id UUID,
   sort_order       INTEGER     NOT NULL DEFAULT 0,
   is_deleted       BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at       TIMESTAMPTZ NOT NULL,

@@ -29,4 +29,9 @@ describe("parseSupabaseInput", () => {
   it("should trim whitespace from full URL", () => {
     expect(parseSupabaseInput(`  ${FULL_URL}  `)).toBe(FULL_URL);
   });
+
+  it("should pass through http:// URL unchanged (local dev)", () => {
+    const localUrl = "http://localhost:54321";
+    expect(parseSupabaseInput(localUrl)).toBe(localUrl);
+  });
 });

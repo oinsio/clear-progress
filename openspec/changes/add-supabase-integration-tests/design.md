@@ -11,7 +11,7 @@ Current Supabase contract tests depend on a live cloud instance configured via e
 
 **Non-Goals:**
 - CI pipeline integration (requires Docker-in-Docker, deferred)
-- Testing auth flows beyond pre-created test user
+- Testing with real third-party OAuth providers
 - Performance testing of containers
 
 ## Decisions
@@ -57,16 +57,35 @@ Same principle — no copies, always the current source.
 
 Kong provides a single URL entry point (`http://localhost:<port>`) that routes to all services, matching the real Supabase architecture. Tests use this URL as `supabaseUrl`.
 
-### D7: Test user via GoTrue admin API
+### D7: Test user via mock OAuth flow
 
-In `globalSetup`, after containers are healthy:
-1. Create user via GoTrue admin endpoint using `SERVICE_ROLE_KEY`
-2. Sign in to get access token
-3. Write credentials to `.supabase-test-config.json`
+No pre-created users. The test authenticates via the real OAuth flow:
+1. Playwright enters Supabase URL + anon key in Setup UI
+2. Clicks "Sign in with Keycloak" → redirected to mock OAuth login form
+3. Fills username → GoTrue callback → JWT issued → app navigates to /tasks
+4. Access token extracted from localStorage for server-side verification
 
-Playwright tests read this config file for connection parameters.
+`globalSetup` only writes `supabaseUrl`, `anonKey`, `serviceRoleKey` to `.supabase-test-config.json`. No user creation or password auth.
 
-### D8: Playwright webServer starts the client
+### D8: navikt/mock-oauth2-server + nginx adapter
+
+GoTrue's `keycloak` provider uses hardcoded paths (`/protocol/openid-connect/auth`, `/token`, `/userinfo`). navikt/mock-oauth2-server uses standard OIDC issuer paths (`/keycloak/authorize`, `/token`, `/userinfo`). An nginx reverse proxy maps between them.
+
+The userinfo response format is standard OIDC (`sub`, `email`, `email_verified`, `name`) — matches both GoTrue keycloak provider expectations and navikt output. No response body transformation needed.
+
+### D9: Docker networking via `hostname: host.docker.internal`
+
+GoTrue needs a single URL for the OAuth provider that works both from the browser (redirect) and from inside Docker (token exchange). Setting `hostname: host.docker.internal` on the nginx adapter container makes:
+- Docker DNS resolve `host.docker.internal` → adapter container IP (for server-to-server calls)
+- macOS Docker Desktop resolve `host.docker.internal` → `127.0.0.1` (for browser redirects)
+
+With matching port mapping (`8443:8443`), one URL works from both worlds.
+
+### D10: Fixed ports for Kong and OAuth adapter
+
+GoTrue's `API_EXTERNAL_URL` and `GOTRUE_EXTERNAL_KEYCLOAK_URL` must be known at container start time (browser-accessible URLs). Testcontainers' dynamic port mapping doesn't work here. Fixed ports: Kong on `54321`, adapter on `8443`.
+
+### D11: Playwright webServer starts the client
 
 ```typescript
 webServer: {
@@ -84,6 +103,9 @@ The client app runs on its normal dev server; integration tests interact with it
 |----------------------------------------|-------------------------------------------------------------------------------------|
 | Docker not installed on dev machine    | Document requirement, fail fast with clear error message                            |
 | First run slow (image pulls)           | Document expected first-run time; `latest` tags cached after first pull             |
-| Port conflicts with local Supabase CLI | Use testcontainers port mapping (random available ports)                            |
+| Fixed ports (54321, 8443) conflict     | Acceptable for integration tests; document in README                                |
 | `latest` images may break              | Intentional: detect upstream breaking changes early (same as production would face) |
 | Flaky container startup                | Use `Wait.forHttp()` health checks with generous timeout (120s)                     |
+| `hostname: host.docker.internal`       | Overrides Docker Desktop default; no other service in stack uses it                 |
+| Linux CI: host.docker.internal         | Needs `echo "127.0.0.1 host.docker.internal" >> /etc/hosts` in CI script            |
+| navikt login form selectors            | Pin navikt image to `2.1.10` to prevent HTML changes breaking selectors             |

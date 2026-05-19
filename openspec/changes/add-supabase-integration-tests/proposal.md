@@ -9,7 +9,7 @@ Current contract tests for `adapter-supabase` require manual cloud Supabase setu
 - **ADDED**: New `packages/integration` package with Docker Compose-based Supabase stack
 - **ADDED**: Testcontainers lifecycle management (auto start/stop)
 - **ADDED**: Playwright integration test covering full UI flow: connect → init → push → pull
-- **ADDED**: Test user creation via GoTrue admin API in test setup
+- **ADDED**: Mock OAuth server (navikt/mock-oauth2-server + nginx adapter) for real OAuth flow in tests
 
 ## Capabilities
 
@@ -35,7 +35,7 @@ _(none)_
 ## Non-Goals
 
 - NG1: Replacing existing contract tests (they remain for fast feedback)
-- NG2: Testing authentication flows (login/signup) — only pre-created test user
+- NG2: Testing with real third-party OAuth providers (Google, GitHub) — mock OAuth server is used instead
 - NG3: Performance benchmarking of the Supabase stack
 - NG4: Running integration tests in CI (future improvement — Docker-in-Docker needed)
 
@@ -50,7 +50,7 @@ _(none)_
 
 - FR1: Integration test package starts a full Supabase stack via Docker Compose (postgres, auth, rest, edge-runtime, kong)
 - FR2: Testcontainers manages container lifecycle (start in globalSetup, stop in globalTeardown)
-- FR3: Test creates a user via GoTrue admin API and obtains access token
+- FR3: Test authenticates via mock OAuth flow (navikt login form → GoTrue callback → JWT)
 - FR4: Playwright test connects to Supabase via UI (enter URL + anon key)
 - FR5: Playwright test verifies successful connection (status indicator visible)
 - FR6: Playwright test creates, pushes, modifies, and pulls each entity type (tasks, goals, categories, contexts, ideas, checklists, settings)
@@ -63,6 +63,7 @@ _(none)_
 - FR13: Conflict resolution test — both devices modify same entity offline, then sync; verify last-write-wins by updated_at
 - FR14: Recurring task sync between devices — completing recurring task on one device creates new occurrence; other device receives it via pull without duplication
 - FR15: Pull protects dirty records — local unsaved changes are not overwritten by incoming server data
+- FR16: Mock OAuth server (navikt/mock-oauth2-server) with nginx adapter enables real OAuth flow without external providers
 
 ### Non-Functional
 
