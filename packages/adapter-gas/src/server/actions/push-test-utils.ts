@@ -79,7 +79,7 @@ export function describeCommonRejectionTests(
   it("should include reason field in rejected result", () => {
     push({ tasks: [makeInvalidTask()] });
     const results = getResults();
-    expect(results.tasks![0]).toHaveProperty("reason");
+    expect(results.tasks?.[0]).toHaveProperty("reason");
   });
 
   it("should process valid records alongside rejected ones in same array", () => {
@@ -104,7 +104,7 @@ export function assertTaskStatus(
   const task = makeTask(taskOverrides);
   push({ tasks: [task] });
   const results = getResults();
-  expect(results.tasks![0]).toMatchObject({ status: expectedStatus });
+  expect(results.tasks?.[0]).toMatchObject({ status: expectedStatus });
 }
 
 export function assertChecklistItemStatus(
@@ -114,14 +114,16 @@ export function assertChecklistItemStatus(
   const item = makeChecklistItem(itemOverrides);
   push({ checklist_items: [item] });
   const results = getResults();
-  expect(results.checklist_items![0]).toMatchObject({ status: expectedStatus });
+  expect(results.checklist_items?.[0]).toMatchObject({
+    status: expectedStatus,
+  });
 }
 
 export function assertTaskHasReason(taskOverrides: Partial<Task>): void {
   const task = makeTask(taskOverrides);
   push({ tasks: [task] });
   const results = getResults();
-  expect(results.tasks![0]).toHaveProperty("reason");
+  expect(results.tasks?.[0]).toHaveProperty("reason");
 }
 
 export function assertChecklistItemHasReason(
@@ -130,7 +132,7 @@ export function assertChecklistItemHasReason(
   const item = makeChecklistItem(itemOverrides);
   push({ checklist_items: [item] });
   const results = getResults();
-  expect(results.checklist_items![0]).toHaveProperty("reason");
+  expect(results.checklist_items?.[0]).toHaveProperty("reason");
 }
 
 export function pushAcceptedTaskScenario(): void {
