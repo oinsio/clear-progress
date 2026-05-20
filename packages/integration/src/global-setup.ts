@@ -1,7 +1,7 @@
 // implements FR1, D2, D3, D7 of add-supabase-integration-tests
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { writeTestConfig } from "./config.js";
 import { setStartedEnvironment } from "./environment-store.js";
@@ -20,15 +20,16 @@ const EDGE_FUNCTIONS_MAX_RETRIES = 15;
 
 function parseEnvFile(filePath: string): Record<string, string> {
   const lines = readFileSync(filePath, "utf-8").split("\n");
-  return lines.reduce<Record<string, string>>((accumulator, line) => {
+  const result: Record<string, string> = {};
+  for (const line of lines) {
     const trimmedLine = line.trim();
-    if (!trimmedLine || trimmedLine.startsWith("#")) return accumulator;
+    if (!trimmedLine || trimmedLine.startsWith("#")) continue;
     const separatorIndex = trimmedLine.indexOf("=");
-    if (separatorIndex === -1) return accumulator;
+    if (separatorIndex === -1) continue;
     const key = trimmedLine.substring(0, separatorIndex).trim();
-    const value = trimmedLine.substring(separatorIndex + 1).trim();
-    return { ...accumulator, [key]: value };
-  }, {});
+    result[key] = trimmedLine.substring(separatorIndex + 1).trim();
+  }
+  return result;
 }
 
 async function waitForEdgeFunctions(
@@ -70,8 +71,8 @@ async function waitForEdgeFunctions(
 
 export default async function globalSetup(): Promise<void> {
   const envVars = parseEnvFile(ENV_FILE_PATH);
-  const anonKey = envVars["ANON_KEY"] ?? "";
-  const serviceRoleKey = envVars["SERVICE_ROLE_KEY"] ?? "";
+  const anonKey = envVars.ANON_KEY ?? "";
+  const serviceRoleKey = envVars.SERVICE_ROLE_KEY ?? "";
 
   const environment = await startSupabaseEnvironment();
   setStartedEnvironment(environment);

@@ -127,6 +127,26 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     pingAttemptsRef.current = 0;
   }, []);
 
+  const handleSyncError = useCallback(
+    (error: unknown): void => {
+      if (error instanceof Error && error.name === API_AUTH_ERROR_NAME) {
+        silentRefreshAttemptsRef.current += 1;
+        if (silentRefreshAttemptsRef.current >= MAX_SILENT_REFRESH_ATTEMPTS) {
+          silentRefreshAttemptsRef.current = 0;
+          setSyncStatus("unauthorized");
+          signOut();
+          window.dispatchEvent(new Event(AUTH_REQUIRED_EVENT));
+          return;
+        }
+        setSyncStatus("unauthorized");
+        silentRefresh();
+        return;
+      }
+      setSyncStatus("error");
+    },
+    [signOut, silentRefresh],
+  );
+
   const sync = useCallback(async (): Promise<void> => {
     // Mutex: skip if a sync is already running
     if (isSyncingRef.current) return;
@@ -142,24 +162,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       silentRefreshAttemptsRef.current = 0;
       stopPingInterval();
     } catch (error) {
-      if (error instanceof Error && error.name === API_AUTH_ERROR_NAME) {
-        silentRefreshAttemptsRef.current += 1;
-        if (silentRefreshAttemptsRef.current >= MAX_SILENT_REFRESH_ATTEMPTS) {
-          silentRefreshAttemptsRef.current = 0;
-          setSyncStatus("unauthorized");
-          signOut();
-          window.dispatchEvent(new Event(AUTH_REQUIRED_EVENT));
-          return;
-        }
-        setSyncStatus("unauthorized");
-        silentRefresh();
-        return;
-      }
-      setSyncStatus("error");
+      handleSyncError(error);
     } finally {
       isSyncingRef.current = false;
     }
-  }, [accessToken, applySyncResult, stopPingInterval, signOut, silentRefresh]);
+  }, [accessToken, applySyncResult, stopPingInterval, handleSyncError]);
 
   const schedulePush = useCallback(() => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -240,12 +247,41 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     );
   }, [performPing]);
 
+  const ensureInitializedAndSync = useCallback(async (): Promise<void> => {
+    if (!accessToken) return;
+    if (!navigator.onLine) {
+      setSyncStatus("offline");
+      return;
+    }
+    isSyncingRef.current = true;
+    setSyncStatus("syncing");
+    try {
+      const pingResult = await defaultSyncAdapter.ping();
+      if (!pingResult.initialized) {
+        await defaultSyncAdapter.init();
+      }
+    } catch {
+      setSyncStatus("offline");
+      isSyncingRef.current = false;
+      return;
+    }
+    try {
+      await applySyncResult();
+      silentRefreshAttemptsRef.current = 0;
+      stopPingInterval();
+    } catch (error) {
+      handleSyncError(error);
+    } finally {
+      isSyncingRef.current = false;
+    }
+  }, [accessToken, applySyncResult, stopPingInterval, handleSyncError]);
+
   useEffect(() => {
     if (!accessToken || !config) return;
 
     void defaultCoverSyncService.initializeLocalCovers();
     void defaultCoverSyncService.sync();
-    void sync();
+    void ensureInitializedAndSync();
     intervalRef.current = setInterval(() => void sync(), SYNC_INTERVAL_MS);
 
     const handleOnline = () => {
@@ -265,7 +301,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [accessToken, config, sync, performPing, stopPingInterval]);
+  }, [
+    accessToken,
+    config,
+    ensureInitializedAndSync,
+    sync,
+    performPing,
+    stopPingInterval,
+  ]);
 
   useEffect(() => {
     if (syncStatus === "offline" || syncStatus === "error") {

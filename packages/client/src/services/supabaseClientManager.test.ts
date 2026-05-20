@@ -52,6 +52,7 @@ describe("supabaseClientManager", () => {
       expect(createClient).toHaveBeenCalledWith(
         "https://test.supabase.co",
         "test-anon-key",
+        { auth: { flowType: "implicit" } },
       );
     });
 

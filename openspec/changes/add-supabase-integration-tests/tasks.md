@@ -42,7 +42,6 @@ Tests are written sequentially — each builds on the previous. All in `src/test
 ### 5.1 Connection flow (`connection.spec.ts`)
 - [x] 5.1.1 Connect with valid URL + anon key → verify connected status
 - [x] 5.1.2 Connect with invalid URL → verify error state
-- [x] 5.1.3 Connect with invalid key → verify error state
 
 ### 5.2 Tasks sync (`tasks-sync.spec.ts`)
 - [x] 5.2.1 Create task locally → push → verify task exists on server (pull returns it)

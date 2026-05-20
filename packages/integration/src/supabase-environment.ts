@@ -1,12 +1,12 @@
 // implements FR1, D2, D6 of add-supabase-integration-tests
 
-import { dirname, join } from "path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   DockerComposeEnvironment,
   type StartedDockerComposeEnvironment,
   Wait,
 } from "testcontainers";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
