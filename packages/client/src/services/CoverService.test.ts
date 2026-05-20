@@ -9,6 +9,10 @@ import {
   CoverService,
   getCoverDisplayUrl,
 } from "./CoverService";
+import {
+  createMockCoverRepository,
+  createMockPendingCoverRepository,
+} from "./CoverSyncService-test-utils";
 import { localCoverCache } from "./LocalCoverCache";
 import { createMockSyncAdapter } from "./SyncService.test-helpers";
 
@@ -32,31 +36,6 @@ function createImageFile(
     ? new Uint8Array(size)
     : new TextEncoder().encode("fake image content");
   return new File([content], name, { type });
-}
-
-function createMockCoverRepository(
-  overrides: Partial<Record<keyof CoverRepository, unknown>> = {},
-): CoverRepository {
-  return {
-    getByHash: vi.fn().mockResolvedValue(undefined),
-    getByFileId: vi.fn().mockResolvedValue(undefined),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  } as CoverRepository;
-}
-
-function createMockPendingCoverRepository(
-  overrides: Partial<Record<keyof PendingCoverRepository, unknown>> = {},
-): PendingCoverRepository {
-  return {
-    getAll: vi.fn().mockResolvedValue([]),
-    getById: vi.fn().mockResolvedValue(undefined),
-    getByHash: vi.fn().mockResolvedValue(undefined),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  } as PendingCoverRepository;
 }
 
 describe("buildCoverFilename", () => {

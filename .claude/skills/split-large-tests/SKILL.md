@@ -21,17 +21,17 @@ Read the full test file. Identify:
 - All `vi.mock(...)` calls and what they mock.
 - The total count of `it`/`test` cases (this is the number you must preserve).
 
-### 2. Propose a split structure and WAIT for confirmation
+### 2. Plan the split
 
-Before creating or modifying ANY file, present the proposed plan to the user and stop. Do not start writing files until the user confirms. The plan should show:
+Decide on the split structure before writing files. Briefly state the plan so it's visible in the output, then proceed — no need to wait for approval. The plan should cover:
 - Each new file name and the logical unit it covers.
 - What shared code goes into a shared module.
 - The original test count and how many tests land in each new file.
 
-Present it concisely, for example:
+State it concisely, for example:
 
 ```
-Proposed split (original: 42 tests):
+Split plan (original: 42 tests):
 - LoginForm.test.tsx        — 11 tests (form validation + submit)
 - useAuth.test.ts           — 9 tests (auth hook states)
 - AuthProvider.test.tsx     — 14 tests (context/provider behavior)
@@ -39,11 +39,9 @@ Proposed split (original: 42 tests):
 - test-utils.tsx (shared)   — renderWithProviders, mock factories
 ```
 
-Then ask the user to confirm or adjust. Only proceed after they say yes.
-
 ### 3. Apply the split
 
-Once confirmed, create the files following these rules.
+Create the files following these rules.
 
 **Sizing:**
 - Target ~100 lines per file, 200 max.
@@ -78,7 +76,6 @@ After the split, check for duplicated code across the new files — repeated imp
 ## Done criteria
 
 The task is complete only when all of these hold:
-1. The user confirmed the split structure before any file changes.
-2. Every original test exists in exactly one new file (verified by count + mapping).
-3. `vitest run` passes with the same number of tests as before.
-4. No duplicated code remains across the new files.
+1. Every original test exists in exactly one new file (verified by count + mapping).
+2. `vitest run` passes with the same number of tests as before.
+3. No duplicated code remains across the new files.
