@@ -4,8 +4,8 @@ import { pull } from "./pull";
 import {
   expectErrorResponse,
   getAllSettings,
-  getGoalsByRevision,
   getContextsByRevision,
+  getGoalsByRevision,
   getTasksByRevision,
   makeGoal,
   makeTask,
