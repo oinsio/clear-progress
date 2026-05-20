@@ -25,9 +25,9 @@ export function setupHiddenTasksRevealMocks(
     vi.clearAllMocks();
     mockRevealHiddenTasks.mockResolvedValue([]);
     // eslint-disable-next-line prefer-arrow-callback
-    MockHiddenTaskService.mockImplementation(function () {
-      return { revealHiddenTasks: mockRevealHiddenTasks };
-    });
+    MockHiddenTaskService.mockImplementation(() => ({
+      revealHiddenTasks: mockRevealHiddenTasks,
+    }));
   });
 
   afterEach(() => {
