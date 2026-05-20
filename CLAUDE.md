@@ -43,7 +43,7 @@ NEVER run mutation tests yourself. Instead, ask the user to run them for you. An
 - Every requirement in `proposal.md` MUST have an ID (`FR1`, `NFR-P1`, `UX1`, `M1`, etc.)
 - Every code/test artifact MUST reference its requirement via `# implements FR-X of <change-name>`
 - Archived changes (`openspec/changes/archive/`) are immutable — create a new change to correct
-- Files must stay under 400 lines for AI context quality
+- Files must stay under 200 lines for AI context quality
 - Imports only through `index.ts` of a module, never from sibling internals
 - Changes named `kebab-case-descriptive` — no generic names (`update`, `wip`)
 - UI must handle ALL states: loading, error, empty, offline — not just happy path
