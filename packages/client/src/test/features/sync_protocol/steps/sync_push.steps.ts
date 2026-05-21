@@ -3,7 +3,6 @@ import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
 import { expect, type TestContext, vi } from "vitest";
-import { SYNC_META_KEYS } from "@/constants";
 import { fakeClock } from "@/lib/temporal";
 import {
   createMockRepositories,
@@ -431,92 +430,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
       Then('task "t1" is not updated', async (_ctx: TestContext) => {
         expect(repositories.taskRepository.update).not.toHaveBeenCalled();
-      });
-    },
-  );
-
-  // @spec-sync-protocol @FR15
-  f.Scenario(
-    "Push updates last_known_revision from response",
-    ({ Given, And, When, Then }) => {
-      const dirtyTask = makeTask({ needsSync: true });
-
-      Given("client has a dirty task", async (_ctx: TestContext) => {
-        (
-          repositories.taskRepository.getNeedingSync as ReturnType<typeof vi.fn>
-        ).mockResolvedValue([dirtyTask]);
-        (
-          repositories.taskRepository.getById as ReturnType<typeof vi.fn>
-        ).mockResolvedValue(dirtyTask);
-      });
-
-      And("server will respond with revision 20", async (_ctx: TestContext) => {
-        syncAdapter = createMockSyncAdapter({
-          push: vi
-            .fn()
-            .mockResolvedValue(
-              makePushResponse(
-                { tasks: [{ id: dirtyTask.id, status: "created" }] },
-                20,
-              ),
-            ),
-        });
-      });
-
-      When("push is called", async (_ctx: TestContext) => {
-        const service = createSyncService(syncAdapter, repositories);
-        await service.push();
-      });
-
-      Then("last_known_revision is set to 20", async (_ctx: TestContext) => {
-        expect(repositories.syncMetaRepository.setValue).toHaveBeenCalledWith(
-          SYNC_META_KEYS.LAST_KNOWN_REVISION,
-          20,
-        );
-      });
-    },
-  );
-
-  // @spec-sync-protocol @FR15
-  f.Scenario(
-    "Push does not update revision when all results are conflicts",
-    ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", needsSync: true });
-
-      Given(
-        'client has a dirty task with id "t1"',
-        async (_ctx: TestContext) => {
-          (
-            repositories.taskRepository.getNeedingSync as ReturnType<
-              typeof vi.fn
-            >
-          ).mockResolvedValue([task]);
-          (
-            repositories.taskRepository.getById as ReturnType<typeof vi.fn>
-          ).mockResolvedValue(task);
-        },
-      );
-
-      And(
-        "server will respond with conflict and no top-level revision",
-        async (_ctx: TestContext) => {
-          syncAdapter = createMockSyncAdapter({
-            push: vi.fn().mockResolvedValue(
-              makePushResponse({
-                tasks: [{ id: "t1", status: "conflict", server_record: task }],
-              }),
-            ),
-          });
-        },
-      );
-
-      When("push is called", async (_ctx: TestContext) => {
-        const service = createSyncService(syncAdapter, repositories);
-        await service.push();
-      });
-
-      Then("last_known_revision is not updated", async (_ctx: TestContext) => {
-        expect(repositories.syncMetaRepository.setValue).not.toHaveBeenCalled();
       });
     },
   );

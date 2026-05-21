@@ -105,8 +105,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applySyncResult = useCallback(async (): Promise<void> => {
+    console.log("[SyncProvider] applySyncResult: starting push");
     await syncService.push();
+    console.log("[SyncProvider] applySyncResult: push done, starting pull");
     await syncService.pull();
+    console.log(
+      "[SyncProvider] applySyncResult: pull done, starting cover sync",
+    );
     // Cover sync runs after entities — errors are caught separately so they don't
     // roll back the already-completed entity sync.
     try {
@@ -114,6 +119,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     } catch (coverError) {
       console.error("[SyncProvider] Cover sync failed:", coverError);
     }
+    console.log(
+      "[SyncProvider] applySyncResult: all done, persisting lastSync",
+    );
 
     // Timestamp taken AFTER all sync operations so that lastSyncedAt is always
     // >= every entity's updated_at received during pull.
@@ -142,6 +150,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         silentRefresh();
         return;
       }
+      console.error("[SyncProvider] sync error:", error);
       setSyncStatus("error");
     },
     [signOut, silentRefresh],
@@ -234,7 +243,8 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         await defaultSyncAdapter.init();
       }
       await applySyncResult();
-    } catch {
+    } catch (pingError) {
+      console.warn("[SyncProvider] ping failed:", pingError);
       // Still unreachable — keep pinging until MAX_PING_ATTEMPTS
     }
   }, [accessToken, applySyncResult, stopPingInterval]);
@@ -260,7 +270,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       if (!pingResult.initialized) {
         await defaultSyncAdapter.init();
       }
-    } catch {
+    } catch (initError) {
+      console.warn(
+        "[SyncProvider] init ping failed, going offline:",
+        initError,
+      );
       setSyncStatus("offline");
       isSyncingRef.current = false;
       return;
@@ -279,8 +293,22 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!accessToken || !config) return;
 
-    void defaultCoverSyncService.initializeLocalCovers();
-    void defaultCoverSyncService.sync();
+    defaultCoverSyncService
+      .initializeLocalCovers()
+      .catch((coverInitError) =>
+        console.error(
+          "[SyncProvider] cover initializeLocalCovers error:",
+          coverInitError,
+        ),
+      );
+    defaultCoverSyncService
+      .sync()
+      .catch((coverSyncError) =>
+        console.error(
+          "[SyncProvider] cover sync on mount error:",
+          coverSyncError,
+        ),
+      );
     void ensureInitializedAndSync();
     intervalRef.current = setInterval(() => void sync(), SYNC_INTERVAL_MS);
 

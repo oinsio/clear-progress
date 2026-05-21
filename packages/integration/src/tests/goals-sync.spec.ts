@@ -1,43 +1,24 @@
 // implements FR6, FR8 of add-supabase-integration-tests
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
-  closeAuthenticatedPage,
-  createAuthenticatedPage,
+  createGoal,
+  deleteGoalFromDetail,
+  navigateToGoals,
+  openGoalDetail,
+} from "../page-actions.js";
+import {
+  pullFromServer,
+  setupSingleDeviceTest,
   triggerSyncAndWait,
 } from "../test-helpers.js";
 
-test.describe.configure({ mode: "serial" });
-
-let page: Page;
-let accessToken: string;
-let supabaseUrl: string;
-let anonKey: string;
+const { getPage, getCredentials } = setupSingleDeviceTest();
 
 // State carried between sequential tests (5.3.1 → 5.3.2 → 5.3.3)
 let createdGoalName: string;
 let createdGoalId: string;
 
-test.beforeAll(async ({ browser: b }) => {
-  const auth = await createAuthenticatedPage(b);
-  page = auth.page;
-  accessToken = auth.accessToken;
-  supabaseUrl = auth.supabaseUrl;
-  anonKey = auth.anonKey;
-});
-
-test.afterAll(async () => {
-  await closeAuthenticatedPage(page);
-});
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Calls the pull Edge Function from Node.js to verify server-side state.
- * Uses since_revision=0 to receive the full dataset.
- */
-async function pullFromServer(): Promise<{
+interface GoalsPullResponse {
   ok: boolean;
   goals: Array<{
     id: string;
@@ -48,60 +29,25 @@ async function pullFromServer(): Promise<{
     sort_order: number;
     is_deleted: boolean;
   }>;
-}> {
-  const response = await fetch(`${supabaseUrl}/functions/v1/pull`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      apikey: anonKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ since_revision: 0 }),
-  });
-  if (!response.ok) {
-    throw new Error(`pull failed: ${response.status} ${await response.text()}`);
-  }
-  return (await response.json()) as Promise<{
-    ok: boolean;
-    goals: Array<{
-      id: string;
-      name: string;
-      description: string;
-      status: string;
-      cover_file_id: string;
-      sort_order: number;
-      is_deleted: boolean;
-    }>;
-  }>;
 }
 
 // ---------------------------------------------------------------------------
 // 5.3.1 — Create goal locally → push → verify goal exists on server
 // ---------------------------------------------------------------------------
 test("create goal locally → push → verify goal exists on server", async () => {
+  const page = getPage();
   createdGoalName = `Sync Test Goal ${Date.now()}`;
 
-  // Navigate to Goals page
-  await page.goto("/goals");
-  await page.waitForSelector('[data-testid="goals-page"]');
-
-  // Add a goal via the UI
-  await page.getByTestId("add-goal-button").first().click();
-  await page.getByTestId("add-goal-input").fill(createdGoalName);
-  await page.getByTestId("add-goal-input").press("Enter");
-
-  // Wait for the goal to appear in the list
-  await page
-    .locator('[data-testid="goal-item"]')
-    .filter({
-      has: page.locator(`text=${createdGoalName}`),
-    })
-    .waitFor({ state: "visible" });
+  // Navigate to Goals page and add a goal
+  await navigateToGoals(page);
+  await createGoal(page, createdGoalName);
 
   // Trigger push + pull immediately instead of waiting for the debounce process
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<GoalsPullResponse>(
+    getCredentials(),
+  );
   expect(pullResponse.ok).toBe(true);
 
   const serverGoal = pullResponse.goals.find(
@@ -119,19 +65,12 @@ test("create goal locally → push → verify goal exists on server", async () =
 // 5.3.2 — Modify goal (title, status) → push → pull → verify changes
 // ---------------------------------------------------------------------------
 test("modify goal (title, status) → push → pull → verify changes", async () => {
+  const page = getPage();
   // Navigate to the goal detail page
-  await page
-    .locator('[data-testid="goal-item"]')
-    .filter({ has: page.locator(`text=${createdGoalName}`) })
-    .locator('[data-testid="goal-navigate-button"]')
-    .click();
+  await openGoalDetail(page, createdGoalName);
 
-  await page.waitForSelector('[data-testid="goal-detail-page"]');
-
-  // Enter edit mode
+  // Enter edit mode and change name + status
   await page.getByTestId("edit-goal-button").click();
-
-  // Change the name
   const updatedGoalName = `Updated Goal ${Date.now()}`;
   await page.getByTestId("goal-name-input").fill(updatedGoalName);
 
@@ -152,7 +91,9 @@ test("modify goal (title, status) → push → pull → verify changes", async (
   await triggerSyncAndWait(page);
 
   // Verify server-side state
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<GoalsPullResponse>(
+    getCredentials(),
+  );
   expect(pullResponse.ok).toBe(true);
 
   const serverGoal = pullResponse.goals.find(
@@ -165,41 +106,25 @@ test("modify goal (title, status) → push → pull → verify changes", async (
   expect(serverGoal.is_deleted).toBe(false);
 
   // Navigate back to /goals for subsequent tests
-  await page.goto("/goals");
-  await page.waitForSelector('[data-testid="goals-page"]');
+  await navigateToGoals(page);
 });
 
 // ---------------------------------------------------------------------------
 // 5.3.3 — Soft-delete goal → push → pull → verify is_deleted
 // ---------------------------------------------------------------------------
 test("soft-delete goal → push → pull → verify is_deleted", async () => {
-  // Navigate to the goal detail page
-  await page
-    .locator('[data-testid="goal-item"]')
-    .filter({ has: page.locator(`text=${createdGoalName}`) })
-    .locator('[data-testid="goal-navigate-button"]')
-    .click();
-
-  await page.waitForSelector('[data-testid="goal-detail-page"]');
-
-  // Enter edit mode
-  await page.getByTestId("edit-goal-button").click();
-
-  // Click delete button
-  await page.getByTestId("goal-delete-button").click();
-
-  // Wait for delete confirmation dialog and confirm
-  await page.waitForSelector('[data-testid="goal-delete-confirm"]');
-  await page.getByTestId("goal-delete-confirm-btn").click();
-
-  // After deletion, the app navigates back to /goals
-  await page.waitForSelector('[data-testid="goals-page"]');
+  const page = getPage();
+  // Navigate to the goal detail page and delete
+  await openGoalDetail(page, createdGoalName);
+  await deleteGoalFromDetail(page);
 
   // Push changes to server
   await triggerSyncAndWait(page);
 
   // Verify server-side state — goal should be soft-deleted
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<GoalsPullResponse>(
+    getCredentials(),
+  );
   const serverGoal = pullResponse.goals.find(
     (goal) => goal.id === createdGoalId,
   );

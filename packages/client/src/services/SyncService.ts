@@ -95,13 +95,66 @@ export class SyncService {
     }
 
     await Promise.all([
-      this.taskRepository.applyServerRecords(pullResponse.tasks),
-      this.goalRepository.applyServerRecords(pullResponse.goals),
-      this.contextRepository.applyServerRecords(pullResponse.contexts),
-      this.categoryRepository.applyServerRecords(pullResponse.categories),
-      this.checklistRepository.applyServerRecords(pullResponse.checklist_items),
-      this.ideaRepository.applyServerRecords(pullResponse.ideas),
-      this.settingsRepository.bulkUpsert(pullResponse.settings),
+      this.taskRepository
+        .applyServerRecords(pullResponse.tasks)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords tasks failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.goalRepository
+        .applyServerRecords(pullResponse.goals)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords goals failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.contextRepository
+        .applyServerRecords(pullResponse.contexts)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords contexts failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.categoryRepository
+        .applyServerRecords(pullResponse.categories)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords categories failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.checklistRepository
+        .applyServerRecords(pullResponse.checklist_items)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords checklist_items failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.ideaRepository
+        .applyServerRecords(pullResponse.ideas)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords ideas failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.settingsRepository
+        .bulkUpsert(pullResponse.settings)
+        .catch((error) => {
+          console.error("[SyncService] bulkUpsert settings failed:", error);
+          throw error;
+        }),
     ]);
 
     // Update settings_updated_at
@@ -109,16 +162,28 @@ export class SyncService {
     // lexicographic comparison, since ISO 8601 strings can have different numbers
     // of decimal places (0 vs. 3), which breaks string comparison.
     if (pullResponse.settings.length > 0) {
-      const maxUpdatedAt = pullResponse.settings.reduce((max, setting) => {
-        if (!max) return setting.updated_at;
-        return Temporal.Instant.compare(
-          Temporal.Instant.from(setting.updated_at),
-          Temporal.Instant.from(max),
-        ) > 0
-          ? setting.updated_at
-          : max;
-      }, settingsUpdatedAt ?? "");
-      localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
+      try {
+        const maxUpdatedAt = pullResponse.settings.reduce((max, setting) => {
+          if (!max) return setting.updated_at;
+          return Temporal.Instant.compare(
+            Temporal.Instant.from(setting.updated_at),
+            Temporal.Instant.from(max),
+          ) > 0
+            ? setting.updated_at
+            : max;
+        }, settingsUpdatedAt ?? "");
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
+      } catch (temporalError) {
+        console.error(
+          "[SyncService] Temporal.Instant.from failed in settings_updated_at:",
+          temporalError,
+          {
+            settingsUpdatedAt,
+            settings: pullResponse.settings.map((s) => s.updated_at),
+          },
+        );
+        throw temporalError;
+      }
     }
 
     await this.syncMetaRepository.setValue(

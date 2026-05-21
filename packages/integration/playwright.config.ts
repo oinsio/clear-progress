@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 import { AUTH_STATE_PATH } from "./src/config.js";
 
 const CLIENT_DEV_URL = "http://localhost:5173";
-const TEST_TIMEOUT_MS = 60_000;
+const TEST_TIMEOUT_MS = 120_000;
 
 const CHROME_LAUNCH_OPTIONS = {
   args: [

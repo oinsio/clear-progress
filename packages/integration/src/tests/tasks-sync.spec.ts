@@ -1,43 +1,24 @@
 // implements FR6, FR8, FR16 of add-supabase-integration-tests
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
-  closeAuthenticatedPage,
-  createAuthenticatedPage,
+  createTask,
+  deleteTaskFromDetail,
+  openTaskDetail,
+  updateTaskName,
+} from "../page-actions.js";
+import {
+  pullFromServer,
+  setupSingleDeviceTest,
   triggerSyncAndWait,
 } from "../test-helpers.js";
 
-test.describe.configure({ mode: "serial" });
-
-let page: Page;
-let accessToken: string;
-let supabaseUrl: string;
-let anonKey: string;
+const { getPage, getCredentials } = setupSingleDeviceTest();
 
 // State carried between sequential tests (5.2.1 → 5.2.2 → 5.2.3)
 let createdTaskName: string;
 let createdTaskId: string;
 
-test.beforeAll(async ({ browser: b }) => {
-  const auth = await createAuthenticatedPage(b);
-  page = auth.page;
-  accessToken = auth.accessToken;
-  supabaseUrl = auth.supabaseUrl;
-  anonKey = auth.anonKey;
-});
-
-test.afterAll(async () => {
-  await closeAuthenticatedPage(page);
-});
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Calls the pull Edge Function from Node.js to verify server-side state.
- * Uses since_revision=0 to receive the full dataset.
- */
-async function pullFromServer(): Promise<{
+interface TasksPullResponse {
   ok: boolean;
   tasks: Array<{
     id: string;
@@ -46,46 +27,24 @@ async function pullFromServer(): Promise<{
     is_completed: boolean;
     repeat_rule: string;
   }>;
-}> {
-  const response = await fetch(`${supabaseUrl}/functions/v1/pull`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      apikey: anonKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ since_revision: 0 }),
-  });
-  if (!response.ok) {
-    throw new Error(`pull failed: ${response.status} ${await response.text()}`);
-  }
-  return (await response.json()) as Promise<{
-    ok: boolean;
-    tasks: Array<{
-      id: string;
-      name: string;
-      is_deleted: boolean;
-      is_completed: boolean;
-      repeat_rule: string;
-    }>;
-  }>;
 }
 
 // ---------------------------------------------------------------------------
 // 5.2.1 — Create task locally → push → verify task exists on server
 // ---------------------------------------------------------------------------
 test("create task locally → push → verify task exists on server", async () => {
+  const page = getPage();
   createdTaskName = `Sync Test Task ${Date.now()}`;
 
   // Add a task via the UI (creates in Today box by default)
-  await page.getByTestId("add-task-button").click();
-  await page.getByTestId("add-task-input").fill(createdTaskName);
-  await page.getByTestId("add-task-input").press("Enter");
+  await createTask(page, createdTaskName);
 
   // Trigger push + pull immediately instead of waiting for the 15-second debounce
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<TasksPullResponse>(
+    getCredentials(),
+  );
   expect(pullResponse.ok).toBe(true);
 
   const serverTask = pullResponse.tasks.find(
@@ -103,29 +62,18 @@ test("create task locally → push → verify task exists on server", async () =
 // Builds on 5.2.1: createdTaskName and createdTaskId are set.
 // ---------------------------------------------------------------------------
 test("modify task title locally → push → verify changes on server", async () => {
+  const page = getPage();
   const updatedName = `Updated Task ${Date.now()}`;
 
-  // Click the task item body to open the detail panel (desktop: single click)
-  await page
-    .locator('[data-testid="task-item"]')
-    .filter({
-      has: page.locator('[data-testid="task-item-name"]', {
-        hasText: createdTaskName,
-      }),
-    })
-    .locator('[data-testid="task-item-body"]')
-    .click();
-
-  await page.waitForSelector('[data-testid="task-detail-panel"]');
-
-  // Clear and type the new name
-  await page.getByTestId("task-detail-name").fill(updatedName);
-  // Blur to commit the change (name is saved on blur)
-  await page.getByTestId("task-detail-name").blur();
+  // Open detail panel and change name
+  await openTaskDetail(page, createdTaskName);
+  await updateTaskName(page, updatedName);
 
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<TasksPullResponse>(
+    getCredentials(),
+  );
   const serverTask = pullResponse.tasks.find(
     (task) => task.id === createdTaskId,
   );
@@ -142,20 +90,15 @@ test("modify task title locally → push → verify changes on server", async ()
 // Builds on 5.2.2: task detail panel is open with the updated task.
 // ---------------------------------------------------------------------------
 test("soft-delete task locally → push → verify is_deleted=true on server", async () => {
+  const page = getPage();
   // The task detail panel should still be open from 5.2.2.
-  // Click the delete (trash) icon in the panel header.
-  await page
-    .getByTestId("task-detail-panel")
-    .getByRole("button", { name: /delete task/i })
-    .click();
-
-  // A confirmation dialog always appears — confirm the deletion.
-  await page.waitForSelector('[data-testid="task-detail-delete-confirm-btn"]');
-  await page.getByTestId("task-detail-delete-confirm-btn").click();
+  await deleteTaskFromDetail(page);
 
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<TasksPullResponse>(
+    getCredentials(),
+  );
   const serverTask = pullResponse.tasks.find(
     (task) => task.id === createdTaskId,
   );
@@ -168,25 +111,12 @@ test("soft-delete task locally → push → verify is_deleted=true on server", a
 // Starts fresh: does not depend on the deleted task from 5.2.3.
 // ---------------------------------------------------------------------------
 test("create recurring task → push → verify repeat rule persisted", async () => {
+  const page = getPage();
   const recurringTaskName = `Recurring Task ${Date.now()}`;
 
-  // Create a new task
-  await page.getByTestId("add-task-button").click();
-  await page.getByTestId("add-task-input").fill(recurringTaskName);
-  await page.getByTestId("add-task-input").press("Enter");
-
-  // Open the task detail panel
-  await page
-    .locator('[data-testid="task-item"]')
-    .filter({
-      has: page.locator('[data-testid="task-item-name"]', {
-        hasText: recurringTaskName,
-      }),
-    })
-    .locator('[data-testid="task-item-body"]')
-    .click();
-
-  await page.waitForSelector('[data-testid="task-detail-panel"]');
+  // Create a new task and open detail panel
+  await createTask(page, recurringTaskName);
+  await openTaskDetail(page, recurringTaskName);
 
   // Open the Repeat selector — the DrillDownRow button contains label "Repeat"
   await page
@@ -218,7 +148,9 @@ test("create recurring task → push → verify repeat rule persisted", async ()
   // Trigger sync to push the recurring task to the server
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<TasksPullResponse>(
+    getCredentials(),
+  );
   const serverTask = pullResponse.tasks.find(
     (task) => task.name === recurringTaskName && !task.is_deleted,
   );

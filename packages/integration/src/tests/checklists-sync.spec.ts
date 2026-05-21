@@ -1,17 +1,13 @@
 // implements FR6, FR8 of add-supabase-integration-tests
 import { expect, type Page, test } from "@playwright/test";
+import { createTask, openTaskDetail } from "../page-actions.js";
 import {
-  closeAuthenticatedPage,
-  createAuthenticatedPage,
+  pullFromServer,
+  setupSingleDeviceTest,
   triggerSyncAndWait,
 } from "../test-helpers.js";
 
-test.describe.configure({ mode: "serial" });
-
-let page: Page;
-let accessToken: string;
-let supabaseUrl: string;
-let anonKey: string;
+const { getPage, getCredentials } = setupSingleDeviceTest();
 
 // State carried between sequential tests (5.7.1 → 5.7.2 → 5.7.3)
 let hostTaskName: string;
@@ -19,23 +15,11 @@ let hostTaskId: string;
 let createdChecklistItemName: string;
 let createdChecklistItemId: string;
 
-test.beforeAll(async ({ browser: b }) => {
-  const auth = await createAuthenticatedPage(b);
-  page = auth.page;
-  accessToken = auth.accessToken;
-  supabaseUrl = auth.supabaseUrl;
-  anonKey = auth.anonKey;
-});
-
-test.afterAll(async () => {
-  await closeAuthenticatedPage(page);
-});
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function pullFromServer(): Promise<{
+interface ChecklistsPullResponse {
   ok: boolean;
   tasks: Array<{
     id: string;
@@ -49,35 +33,6 @@ async function pullFromServer(): Promise<{
     is_completed: boolean;
     sort_order: number;
     is_deleted: boolean;
-  }>;
-}> {
-  const response = await fetch(`${supabaseUrl}/functions/v1/pull`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      apikey: anonKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ since_revision: 0 }),
-  });
-  if (!response.ok) {
-    throw new Error(`pull failed: ${response.status} ${await response.text()}`);
-  }
-  return (await response.json()) as Promise<{
-    ok: boolean;
-    tasks: Array<{
-      id: string;
-      name: string;
-      is_deleted: boolean;
-    }>;
-    checklist_items: Array<{
-      id: string;
-      task_id: string;
-      name: string;
-      is_completed: boolean;
-      sort_order: number;
-      is_deleted: boolean;
-    }>;
   }>;
 }
 
@@ -96,24 +51,11 @@ async function switchToChecklistTab(testPage: Page): Promise<void> {
 // 5.7.1 — Create checklist item → push → verify on server
 // ---------------------------------------------------------------------------
 test("create checklist item → push → verify on server", async () => {
+  const page = getPage();
   // Create a host task for the checklist
   hostTaskName = `Checklist Host Task ${Date.now()}`;
-  await page.getByTestId("add-task-button").click();
-  await page.getByTestId("add-task-input").fill(hostTaskName);
-  await page.getByTestId("add-task-input").press("Enter");
-
-  // Open the host task detail panel
-  await page
-    .locator('[data-testid="task-item"]')
-    .filter({
-      has: page.locator('[data-testid="task-item-name"]', {
-        hasText: hostTaskName,
-      }),
-    })
-    .locator('[data-testid="task-item-body"]')
-    .click();
-
-  await page.waitForSelector('[data-testid="task-detail-panel"]');
+  await createTask(page, hostTaskName);
+  await openTaskDetail(page, hostTaskName);
 
   // Switch to the Checklist tab
   await switchToChecklistTab(page);
@@ -135,7 +77,9 @@ test("create checklist item → push → verify on server", async () => {
   // Sync and verify on server
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<ChecklistsPullResponse>(
+    getCredentials(),
+  );
   expect(pullResponse.ok).toBe(true);
 
   // Find the host task to get its server-side ID
@@ -168,6 +112,7 @@ test("create checklist item → push → verify on server", async () => {
 // Builds on 5.7.1: detail panel is open on Checklist tab.
 // ---------------------------------------------------------------------------
 test("modify checklist item name → push → verify on server", async () => {
+  const page = getPage();
   // Click on item name to enter edit mode
   await page
     .getByTestId(`checklist-item-name-${createdChecklistItemId}`)
@@ -186,7 +131,9 @@ test("modify checklist item name → push → verify on server", async () => {
   // Sync and verify on server
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<ChecklistsPullResponse>(
+    getCredentials(),
+  );
   const serverItem = pullResponse.checklist_items.find(
     (item) => item.id === createdChecklistItemId,
   );
@@ -202,6 +149,7 @@ test("modify checklist item name → push → verify on server", async () => {
 // Builds on 5.7.2: detail panel is open, item is in active section.
 // ---------------------------------------------------------------------------
 test("soft-delete checklist item → push → verify is_deleted=true on server", async () => {
+  const page = getPage();
   // Click on item name to enter edit mode (exposes delete button)
   await page
     .getByTestId(`checklist-item-name-${createdChecklistItemId}`)
@@ -215,7 +163,9 @@ test("soft-delete checklist item → push → verify is_deleted=true on server",
   // Sync and verify on server
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<ChecklistsPullResponse>(
+    getCredentials(),
+  );
   const serverItem = pullResponse.checklist_items.find(
     (item) => item.id === createdChecklistItemId,
   );

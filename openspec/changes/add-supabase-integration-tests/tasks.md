@@ -125,6 +125,6 @@ Both apps edit the same entity offline, then sync.
 
 ## 6. Verification
 
-- [ ] 6.1 Run full test suite: `pnpm --filter integration test` — verify pass with Docker running
-- [ ] 6.2 Verify clean teardown: no orphaned containers after test run
-- [ ] 6.3 Verify idempotency: run tests twice in a row without manual cleanup
+- [x] 6.1 Run full test suite: `pnpm --filter integration test` — verify pass with Docker running
+- [x] 6.2 Verify clean teardown: no orphaned containers after test run
+- [x] 6.3 Verify idempotency: run tests twice in a row without manual cleanup

@@ -5,27 +5,7 @@ import { SYNC_INTERVAL_MS } from "@/constants";
 vi.mock("@/app/providers/AuthProvider");
 vi.mock("@/services/SyncService");
 vi.mock("@/services/defaultServices");
-vi.mock("@/db/repositories/TaskRepository", () => ({
-  TaskRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/GoalRepository", () => ({
-  GoalRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/ContextRepository", () => ({
-  ContextRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/CategoryRepository", () => ({
-  CategoryRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/ChecklistRepository", () => ({
-  ChecklistRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/SettingsRepository", () => ({
-  SettingsRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/SyncMetaRepository", () => ({
-  SyncMetaRepository: vi.fn(),
-}));
+import "@/test/helpers/mockRepositories";
 
 import { SyncProvider } from "./SyncProvider";
 import {

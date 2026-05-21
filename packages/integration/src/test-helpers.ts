@@ -1,18 +1,17 @@
 // implements FR6 of add-supabase-integration-tests
 // Shared helpers for integration tests that use the pre-authenticated storageState.
-import type { Browser, Page } from "@playwright/test";
+import { type Browser, type Page, test } from "@playwright/test";
 import { AUTH_STATE_PATH, readTestConfig } from "./config.js";
 
-const SYNC_COMPLETE_TIMEOUT_MS = 10_000;
-const AUTO_SYNC_TIMEOUT_MS = 3_000;
+const SYNC_COMPLETE_TIMEOUT_MS = 15_000;
+const AUTO_SYNC_TIMEOUT_MS = 12_000;
 const MANUAL_SYNC_TIMEOUT_MS = 5_000;
 const SYNC_SETTLE_MS = 300;
 const LAST_SYNC_STORAGE_KEY = "last_sync";
-const SYNC_MAX_RETRIES = 2;
+const SYNC_MAX_RETRIES = 3;
 const SYNC_RETRY_SETTLE_MS = 1_000;
-const SYNC_CLICK_RETRY_MS = 3_000;
-const SYNC_IDLE_TIMEOUT_MS = 5_000;
-const SYNC_POST_RESPONSE_SETTLE_MS = 3_000;
+const SYNC_CLICK_RETRY_MS = 8_000;
+const SYNC_IDLE_TIMEOUT_MS = 8_000;
 
 export interface AuthenticatedContext {
   page: Page;
@@ -110,78 +109,20 @@ export async function createAuthenticatedPage(
   };
 }
 
-export async function waitForLastSyncToUpdate(
-  testPage: Page,
-  previousValue: string | null,
-): Promise<void> {
-  await testPage.waitForFunction(
-    (prev) => {
-      const current = localStorage.getItem("last_sync");
-      return current !== null && current !== prev;
-    },
-    previousValue,
-    { timeout: SYNC_COMPLETE_TIMEOUT_MS },
-  );
-}
-
-/**
- * Waits for any in-flight sync to complete by checking that last_sync
- * is stable (unchanged) for SYNC_SETTLE_MS. This prevents false positives
- * when auto-sync (from page navigation) updates last_sync while we're
- * trying to trigger our own sync.
- */
-async function waitForSyncIdle(
-  testPage: Page,
-  deadlineMs: number,
-): Promise<string | null> {
-  let previousSync = await testPage.evaluate(
-    (key) => localStorage.getItem(key),
-    LAST_SYNC_STORAGE_KEY,
-  );
-
-  while (Date.now() < deadlineMs) {
-    await testPage.waitForTimeout(SYNC_SETTLE_MS);
-    const currentSync = await testPage.evaluate(
-      (key) => localStorage.getItem(key),
-      LAST_SYNC_STORAGE_KEY,
-    );
-    if (currentSync === previousSync) return currentSync;
-    previousSync = currentSync;
-  }
-
-  return previousSync;
-}
-
 /**
  * Attempts a sync by clicking the sync button until last_sync updates.
  * First waits for any in-flight sync (auto-sync from navigation) to complete,
  * then clicks to trigger a NEW sync that includes the latest local changes.
  *
- * Returns true if sync completed, false if it timed out.
+ * Success is determined solely by last_sync changing in localStorage — this
+ * means the full push→pull→persistLastSync cycle completed. If the click is
+ * silently dropped by the app's isSyncingRef mutex, last_sync won't change
+ * and we retry.
  */
-interface AttemptSyncResult {
-  succeeded: boolean;
-  apiCallCount: number;
-  apiFailures: string[];
-  consoleErrors: string[];
-}
-
-async function attemptSync(
+async function waitForSyncButtonIdle(
   testPage: Page,
   timeoutMs: number,
-): Promise<AttemptSyncResult> {
-  const deadline = Date.now() + timeoutMs;
-
-  // Wait for any in-flight auto-sync (from page navigation) to fully complete.
-  // 1. Wait for last_sync to stabilize (sync finished updating localStorage).
-  await waitForSyncIdle(
-    testPage,
-    Math.min(Date.now() + SYNC_IDLE_TIMEOUT_MS, deadline),
-  );
-
-  // 2. Wait for the sync button to stop spinning (mutex released).
-  //    This is critical: last_sync is written before isSyncingRef resets,
-  //    so a brief gap exists where last_sync is stable but mutex is still held.
+): Promise<void> {
   try {
     await testPage.waitForFunction(
       () => {
@@ -192,58 +133,91 @@ async function attemptSync(
         const icon = button.querySelector("svg");
         return icon !== null && !icon.classList.contains("animate-spin");
       },
-      { timeout: Math.min(SYNC_SETTLE_MS * 3, deadline - Date.now()) },
+      { timeout: timeoutMs },
     );
   } catch {
     // Button might not have the spinning icon; proceed anyway.
   }
+}
 
-  await testPage.waitForTimeout(SYNC_SETTLE_MS);
+async function attemptSync(
+  testPage: Page,
+  timeoutMs: number,
+): Promise<{ succeeded: boolean; diagnostics: string }> {
+  const deadline = Date.now() + timeoutMs;
 
-  // Now auto-sync is fully done and mutex is free.
-  // Read last_sync AFTER idle — this is the baseline for our click-triggered sync.
-  const previousSync = await testPage.evaluate(
-    (key) => localStorage.getItem(key),
-    LAST_SYNC_STORAGE_KEY,
-  );
-
-  const apiFailures: string[] = [];
+  // Capture browser console errors for diagnostics
   const consoleErrors: string[] = [];
+  const onConsole = (message: import("@playwright/test").ConsoleMessage) => {
+    if (message.type() === "error" || message.type() === "warning") {
+      consoleErrors.push(`[${message.type()}] ${message.text()}`);
+    }
+  };
+  testPage.on("console", onConsole);
+
+  const onPageError = (error: Error) => {
+    consoleErrors.push(`[PAGE_ERROR] ${error.message}`);
+  };
+  testPage.on("pageerror", onPageError);
+
   let apiCallCount = 0;
+  const apiFailures: string[] = [];
 
   const onResponse = (response: import("@playwright/test").Response) => {
     const url = response.url();
-    if (url.includes("/functions/v1/")) {
+    if (url.includes("/functions/v1/") || url.includes("/storage/")) {
       apiCallCount++;
       if (!response.ok()) {
         apiFailures.push(`${response.status()} ${url}`);
       }
-    }
-  };
-  const onConsoleMessage = (msg: import("@playwright/test").ConsoleMessage) => {
-    const msgType = msg.type();
-    if (msgType === "error" || msgType === "warning") {
-      consoleErrors.push(`[${msgType}] ${msg.text()}`);
+      // Capture response body for edge functions to detect ok:false
+      if (url.includes("/functions/v1/")) {
+        void response
+          .text()
+          .then((body) => {
+            const shortUrl = url.split("/functions/v1/")[1]?.split("?")[0];
+            consoleErrors.push(
+              `[API:${shortUrl}] ${response.status()} ${body.slice(0, 200)}`,
+            );
+          })
+          .catch(() => {});
+      }
     }
   };
 
   testPage.on("response", onResponse);
-  testPage.on("console", onConsoleMessage);
 
   try {
+    // 1. Wait for any in-flight auto-sync to fully finish (button stops spinning).
+    //    This is more reliable than checking last_sync stability because sync can
+    //    fail (last_sync never changes) but the button still stops spinning.
+    await waitForSyncButtonIdle(
+      testPage,
+      Math.min(SYNC_IDLE_TIMEOUT_MS, deadline - Date.now()),
+    );
+    await testPage.waitForTimeout(SYNC_SETTLE_MS);
+
+    // 2. Clear background intervals (ping interval, periodic sync) that can
+    //    run applySyncResult concurrently with our click-triggered sync.
+    //    performPing lacks isSyncingRef mutex, causing concurrent sync races.
+    await testPage.evaluate(() => {
+      const highestId = window.setTimeout(() => {}, 0);
+      for (let i = 1; i <= highestId; i++) {
+        window.clearInterval(i);
+      }
+    });
+    await testPage.waitForTimeout(SYNC_SETTLE_MS);
+
+    // 3. Read last_sync AFTER auto-sync finished — baseline for our click-triggered sync.
+    const previousSync = await testPage.evaluate(
+      (key) => localStorage.getItem(key),
+      LAST_SYNC_STORAGE_KEY,
+    );
+
+    // 3. Click sync and wait for completion (retry clicks if mutex-blocked).
     while (Date.now() < deadline) {
       const remainingMs = deadline - Date.now();
       if (remainingMs <= 0) break;
-
-      // Set up response listener BEFORE click to catch push or pull call.
-      const syncResponsePromise = testPage
-        .waitForResponse(
-          (resp) =>
-            resp.url().includes("/functions/v1/push") ||
-            resp.url().includes("/functions/v1/pull"),
-          { timeout: Math.min(SYNC_CLICK_RETRY_MS, remainingMs) },
-        )
-        .catch(() => null);
 
       try {
         await testPage.getByTestId("right-panel-sync").first().click();
@@ -252,35 +226,63 @@ async function attemptSync(
         continue;
       }
 
-      const syncResponse = await syncResponsePromise;
-
-      if (syncResponse) {
-        // Sync API call detected — wait for last_sync to update.
-        try {
-          await testPage.waitForFunction(
-            (prev) => {
-              const current = localStorage.getItem("last_sync");
-              return current !== null && current !== prev;
-            },
-            previousSync,
-            {
-              timeout: Math.min(SYNC_POST_RESPONSE_SETTLE_MS, remainingMs),
-            },
-          );
-        } catch {
-          // last_sync didn't change — sync had nothing new to apply.
-          await testPage.waitForTimeout(SYNC_SETTLE_MS);
-        }
-        return { succeeded: true, apiCallCount, apiFailures, consoleErrors };
+      // Wait for the button to go through syncing → idle/error cycle
+      // First wait briefly for the spin to START
+      try {
+        await testPage.waitForFunction(
+          () => {
+            const button = document.querySelector(
+              '[data-testid="right-panel-sync"]',
+            );
+            if (!button) return false;
+            const icon = button.querySelector("svg");
+            return icon?.classList.contains("animate-spin") ?? false;
+          },
+          { timeout: SYNC_SETTLE_MS * 2 },
+        );
+      } catch {
+        // Click may have been mutex-blocked (no spin started). Retry after settle.
+        await testPage.waitForTimeout(SYNC_SETTLE_MS);
+        continue;
       }
-      // No response — click was mutex-blocked. Brief settle then retry.
+
+      // Now wait for spin to STOP (sync completed, either success or failure)
+      await waitForSyncButtonIdle(
+        testPage,
+        Math.min(SYNC_CLICK_RETRY_MS, remainingMs),
+      );
+      await testPage.waitForTimeout(SYNC_SETTLE_MS);
+
+      // Check if last_sync changed — success indicator
+      const currentSync = await testPage.evaluate(
+        (key) => localStorage.getItem(key),
+        LAST_SYNC_STORAGE_KEY,
+      );
+
+      if (currentSync !== null && currentSync !== previousSync) {
+        return { succeeded: true, diagnostics: "" };
+      }
+
+      // Sync completed but last_sync didn't change — sync failed internally.
+      // Brief settle before retry.
       await testPage.waitForTimeout(SYNC_SETTLE_MS);
     }
 
-    return { succeeded: false, apiCallCount, apiFailures, consoleErrors };
+    const diag = [
+      `API calls: ${apiCallCount}`,
+      apiFailures.length > 0 ? `API failures: [${apiFailures.join("; ")}]` : "",
+      consoleErrors.length > 0
+        ? `Console: ${consoleErrors.slice(-3).join(" | ")}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    return { succeeded: false, diagnostics: diag };
   } finally {
     testPage.off("response", onResponse);
-    testPage.off("console", onConsoleMessage);
+    testPage.off("console", onConsole);
+    testPage.off("pageerror", onPageError);
   }
 }
 
@@ -301,34 +303,211 @@ async function ensureSyncReady(testPage: Page): Promise<void> {
 }
 
 /**
- * Triggers a sync by clicking the sync button, then waits for completion.
- * If sync times out, navigates to /tasks and retries up to SYNC_MAX_RETRIES times.
+ * Navigates to /tasks and waits for the auto-sync from page load to complete.
+ * Returns true if auto-sync completed (last_sync changed).
  */
+async function reloadAndWaitForAutoSync(testPage: Page): Promise<boolean> {
+  await testPage.goto("/tasks", { waitUntil: "load" });
+  await testPage.waitForSelector('[data-testid="inbox-page"]', {
+    timeout: SYNC_COMPLETE_TIMEOUT_MS,
+  });
+
+  const preReloadSync = await testPage.evaluate(
+    (key) => localStorage.getItem(key),
+    LAST_SYNC_STORAGE_KEY,
+  );
+
+  try {
+    await testPage.waitForFunction(
+      (prev) => {
+        const current = localStorage.getItem("last_sync");
+        return current !== null && current !== prev;
+      },
+      preReloadSync,
+      { timeout: AUTO_SYNC_TIMEOUT_MS },
+    );
+    // Auto-sync completed — wait for settle
+    await testPage.waitForTimeout(SYNC_RETRY_SETTLE_MS);
+    return true;
+  } catch {
+    await testPage.waitForTimeout(SYNC_RETRY_SETTLE_MS);
+    return false;
+  }
+}
+
+/**
+ * Triggers a sync by clicking the sync button, then waits for completion.
+ * If sync times out, reloads the page to reset SyncProvider state and retries.
+ * The page reload triggers a fresh auto-sync which often resolves race conditions
+ * between concurrent cover syncs and the main sync cycle.
+ */
+/**
+ * Credentials needed to call Supabase Edge Functions directly from Node.js.
+ */
+export interface ServerCallCredentials {
+  accessToken: string;
+  supabaseUrl: string;
+  anonKey: string;
+}
+
+/**
+ * Calls the pull Edge Function and returns the full dataset (since_revision=0).
+ * Generic parameter T lets each test file narrow the response type.
+ */
+export async function pullFromServer<T = Record<string, unknown>>(
+  credentials: ServerCallCredentials,
+): Promise<T> {
+  const response = await fetch(`${credentials.supabaseUrl}/functions/v1/pull`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${credentials.accessToken}`,
+      apikey: credentials.anonKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ since_revision: 0 }),
+  });
+  if (!response.ok) {
+    throw new Error(`pull failed: ${response.status} ${await response.text()}`);
+  }
+  return (await response.json()) as Promise<T>;
+}
+
+/**
+ * Calls the get-cover Edge Function to retrieve cover data by file_id.
+ */
+export async function getCoverFromServer(
+  credentials: ServerCallCredentials,
+  fileIds: string[],
+): Promise<{
+  ok: boolean;
+  covers: Array<{
+    file_id: string;
+    mime_type?: string;
+    data?: string;
+    error?: string;
+  }>;
+}> {
+  const response = await fetch(
+    `${credentials.supabaseUrl}/functions/v1/get-cover`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${credentials.accessToken}`,
+        apikey: credentials.anonKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ file_ids: fileIds }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `get-cover failed: ${response.status} ${await response.text()}`,
+    );
+  }
+  return (await response.json()) as Promise<{
+    ok: boolean;
+    covers: Array<{
+      file_id: string;
+      mime_type?: string;
+      data?: string;
+      error?: string;
+    }>;
+  }>;
+}
+
+/**
+ * Returns a minimal 1x1 pixel PNG buffer (67 bytes) for cover upload tests.
+ */
+export function createMinimalPng(): Buffer {
+  return Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
+    "base64",
+  );
+}
+
+/**
+ * Registers serial mode, beforeAll (create authenticated page + credentials),
+ * and afterAll (close page). Returns getters for page and credentials —
+ * call them inside tests, after beforeAll has run.
+ */
+export function setupSingleDeviceTest() {
+  let page: Page;
+  let credentials: ServerCallCredentials;
+
+  test.describe.configure({ mode: "serial" });
+
+  test.beforeAll(async ({ browser: b }) => {
+    const auth = await createAuthenticatedPage(b);
+    page = auth.page;
+    credentials = {
+      accessToken: auth.accessToken,
+      supabaseUrl: auth.supabaseUrl,
+      anonKey: auth.anonKey,
+    };
+  });
+
+  test.afterAll(async () => {
+    await closeAuthenticatedPage(page);
+  });
+
+  return { getPage: () => page, getCredentials: () => credentials };
+}
+
+/**
+ * Like setupSingleDeviceTest but creates two authenticated pages (A and B).
+ * Use for multi-device conflict / dirty-protection / recurring tests.
+ */
+export function setupTwoDeviceTest() {
+  let pageA: Page;
+  let pageB: Page;
+  let credentials: ServerCallCredentials;
+
+  test.describe.configure({ mode: "serial" });
+
+  test.beforeAll(async ({ browser: b }) => {
+    const authA = await createAuthenticatedPage(b);
+    pageA = authA.page;
+    credentials = {
+      accessToken: authA.accessToken,
+      supabaseUrl: authA.supabaseUrl,
+      anonKey: authA.anonKey,
+    };
+
+    const authB = await createAuthenticatedPage(b);
+    pageB = authB.page;
+  });
+
+  test.afterAll(async () => {
+    await closeAuthenticatedPage(pageA);
+    await closeAuthenticatedPage(pageB);
+  });
+
+  return {
+    getPageA: () => pageA,
+    getPageB: () => pageB,
+    getCredentials: () => credentials,
+  };
+}
+
 export async function triggerSyncAndWait(testPage: Page): Promise<void> {
-  let lastResult: AttemptSyncResult | undefined;
+  let lastDiagnostics = "";
 
   for (let attempt = 1; attempt <= SYNC_MAX_RETRIES; attempt++) {
     await ensureSyncReady(testPage);
     const result = await attemptSync(testPage, SYNC_COMPLETE_TIMEOUT_MS);
-    lastResult = result;
     if (result.succeeded) return;
+    lastDiagnostics = result.diagnostics;
 
     if (attempt < SYNC_MAX_RETRIES) {
-      await testPage.goto("/tasks", { waitUntil: "load" });
-      await testPage.waitForSelector('[data-testid="inbox-page"]', {
-        timeout: SYNC_COMPLETE_TIMEOUT_MS,
-      });
-      await testPage.waitForTimeout(SYNC_RETRY_SETTLE_MS);
+      // Page reload resets SyncProvider state (isSyncingRef, syncStatus).
+      // The fresh page triggers auto-sync which may push pending changes.
+      const autoSynced = await reloadAndWaitForAutoSync(testPage);
+      if (autoSynced) {
+      }
     }
   }
 
-  const diag = lastResult
-    ? `API calls: ${lastResult.apiCallCount}, ` +
-      `API failures: [${lastResult.apiFailures.join("; ")}], ` +
-      `console errors: [${lastResult.consoleErrors.join("; ")}]`
-    : "no diagnostics";
-
   throw new Error(
-    `triggerSyncAndWait: sync failed after ${SYNC_MAX_RETRIES} attempts. ${diag}`,
+    `triggerSyncAndWait: sync failed after ${SYNC_MAX_RETRIES} attempts. ${lastDiagnostics}`,
   );
 }

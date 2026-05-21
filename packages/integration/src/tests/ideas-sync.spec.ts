@@ -1,43 +1,20 @@
 // implements FR6, FR8 of add-supabase-integration-tests
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
-  closeAuthenticatedPage,
-  createAuthenticatedPage,
+  pullFromServer,
+  setupSingleDeviceTest,
   triggerSyncAndWait,
 } from "../test-helpers.js";
 
-test.describe.configure({ mode: "serial" });
-
-let page: Page;
-let accessToken: string;
-let supabaseUrl: string;
-let anonKey: string;
+const { getPage, getCredentials } = setupSingleDeviceTest();
 
 // State carried between sequential tests (5.6.1 → ...)
 let createdIdeaName: string;
 let createdIdeaId: string;
 
-test.beforeAll(async ({ browser: b }) => {
-  const auth = await createAuthenticatedPage(b);
-  page = auth.page;
-  accessToken = auth.accessToken;
-  supabaseUrl = auth.supabaseUrl;
-  anonKey = auth.anonKey;
-});
-
-test.afterAll(async () => {
-  await closeAuthenticatedPage(page);
-});
-
-// ---------------------------------------------------------------------------
-// Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Calls the pull Edge Function from Node.js to verify server-side state.
- * Uses since_revision=0 to receive the full dataset.
- */
-async function pullFromServer(): Promise<{
+interface IdeasPullResponse {
   ok: boolean;
   ideas: Array<{
     id: string;
@@ -46,35 +23,13 @@ async function pullFromServer(): Promise<{
     sort_order: number;
     is_deleted: boolean;
   }>;
-}> {
-  const response = await fetch(`${supabaseUrl}/functions/v1/pull`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      apikey: anonKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ since_revision: 0 }),
-  });
-  if (!response.ok) {
-    throw new Error(`pull failed: ${response.status} ${await response.text()}`);
-  }
-  return (await response.json()) as Promise<{
-    ok: boolean;
-    ideas: Array<{
-      id: string;
-      name: string;
-      description: string;
-      sort_order: number;
-      is_deleted: boolean;
-    }>;
-  }>;
 }
 
 // ---------------------------------------------------------------------------
 // 5.6.1 — Create idea locally → push → verify idea exists on server
 // ---------------------------------------------------------------------------
 test("create idea locally → push → verify idea exists on server", async () => {
+  const page = getPage();
   createdIdeaName = `Sync Test Idea ${Date.now()}`;
 
   // Navigate to Ideas page
@@ -92,7 +47,9 @@ test("create idea locally → push → verify idea exists on server", async () =
   // Trigger push + pull immediately instead of waiting for the debounce process
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<IdeasPullResponse>(
+    getCredentials(),
+  );
   expect(pullResponse.ok).toBe(true);
 
   const serverIdea = pullResponse.ideas.find(
@@ -109,6 +66,7 @@ test("create idea locally → push → verify idea exists on server", async () =
 // 5.6.2 — Modify idea → push → pull → verify
 // ---------------------------------------------------------------------------
 test("modify idea → push → pull → verify", async () => {
+  const page = getPage();
   // Open idea detail panel by clicking edit on the matching idea item
   await page
     .locator('[data-testid="idea-item"]')
@@ -128,7 +86,9 @@ test("modify idea → push → pull → verify", async () => {
   // Trigger sync and verify on server
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<IdeasPullResponse>(
+    getCredentials(),
+  );
   const serverIdea = pullResponse.ideas.find(
     (idea) => idea.id === createdIdeaId,
   );
@@ -141,6 +101,7 @@ test("modify idea → push → pull → verify", async () => {
 // 5.6.3 — Soft-delete idea → push → pull → verify
 // ---------------------------------------------------------------------------
 test("soft-delete idea → push → pull → verify", async () => {
+  const page = getPage();
   // Open idea detail panel by clicking edit on the matching idea item
   await page
     .locator('[data-testid="idea-item"]')
@@ -161,7 +122,9 @@ test("soft-delete idea → push → pull → verify", async () => {
   // Trigger sync and verify on server
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<IdeasPullResponse>(
+    getCredentials(),
+  );
   const serverIdea = pullResponse.ideas.find(
     (idea) => idea.id === createdIdeaId,
   );

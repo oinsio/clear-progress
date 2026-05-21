@@ -1,43 +1,20 @@
 // implements FR6, FR8 of add-supabase-integration-tests
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
-  closeAuthenticatedPage,
-  createAuthenticatedPage,
+  pullFromServer,
+  setupSingleDeviceTest,
   triggerSyncAndWait,
 } from "../test-helpers.js";
 
-test.describe.configure({ mode: "serial" });
-
-let page: Page;
-let accessToken: string;
-let supabaseUrl: string;
-let anonKey: string;
+const { getPage, getCredentials } = setupSingleDeviceTest();
 
 // State carried between sequential tests (5.5.1 → ...)
 let createdContextName: string;
 let createdContextId: string;
 
-test.beforeAll(async ({ browser: b }) => {
-  const auth = await createAuthenticatedPage(b);
-  page = auth.page;
-  accessToken = auth.accessToken;
-  supabaseUrl = auth.supabaseUrl;
-  anonKey = auth.anonKey;
-});
-
-test.afterAll(async () => {
-  await closeAuthenticatedPage(page);
-});
-
-// ---------------------------------------------------------------------------
-// Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Calls the pull Edge Function from Node.js to verify server-side state.
- * Uses since_revision=0 to receive the full dataset.
- */
-async function pullFromServer(): Promise<{
+interface ContextsPullResponse {
   ok: boolean;
   contexts: Array<{
     id: string;
@@ -45,34 +22,13 @@ async function pullFromServer(): Promise<{
     sort_order: number;
     is_deleted: boolean;
   }>;
-}> {
-  const response = await fetch(`${supabaseUrl}/functions/v1/pull`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      apikey: anonKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ since_revision: 0 }),
-  });
-  if (!response.ok) {
-    throw new Error(`pull failed: ${response.status} ${await response.text()}`);
-  }
-  return (await response.json()) as Promise<{
-    ok: boolean;
-    contexts: Array<{
-      id: string;
-      name: string;
-      sort_order: number;
-      is_deleted: boolean;
-    }>;
-  }>;
 }
 
 // ---------------------------------------------------------------------------
 // 5.5.1 — Create context locally → push → verify context exists on server
 // ---------------------------------------------------------------------------
 test("create context locally → push → verify context exists on server", async () => {
+  const page = getPage();
   createdContextName = `Sync Test Context ${Date.now()}`;
 
   // Navigate to Contexts page
@@ -92,7 +48,9 @@ test("create context locally → push → verify context exists on server", asyn
   // Trigger push + pull immediately instead of waiting for the debounce process
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<ContextsPullResponse>(
+    getCredentials(),
+  );
   expect(pullResponse.ok).toBe(true);
 
   const serverContext = pullResponse.contexts.find(
@@ -109,6 +67,7 @@ test("create context locally → push → verify context exists on server", asyn
 // 5.5.2 — Modify context → push → pull → verify
 // ---------------------------------------------------------------------------
 test("modify context → push → pull → verify", async () => {
+  const page = getPage();
   // Navigate to context detail page
   await page.locator(`text=${createdContextName}`).click();
   await page.waitForSelector('[data-testid="context-detail-page"]');
@@ -129,7 +88,9 @@ test("modify context → push → pull → verify", async () => {
   // Trigger sync and verify on server
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<ContextsPullResponse>(
+    getCredentials(),
+  );
   const serverContext = pullResponse.contexts.find(
     (context) => context.id === createdContextId,
   );
@@ -146,6 +107,7 @@ test("modify context → push → pull → verify", async () => {
 // 5.5.3 — Soft-delete context → push → pull → verify
 // ---------------------------------------------------------------------------
 test("soft-delete context → push → pull → verify", async () => {
+  const page = getPage();
   // Navigate to context detail page
   await page.locator(`text=${createdContextName}`).click();
   await page.waitForSelector('[data-testid="context-detail-page"]');
@@ -165,7 +127,9 @@ test("soft-delete context → push → pull → verify", async () => {
   // Trigger sync and verify on server
   await triggerSyncAndWait(page);
 
-  const pullResponse = await pullFromServer();
+  const pullResponse = await pullFromServer<ContextsPullResponse>(
+    getCredentials(),
+  );
   const serverContext = pullResponse.contexts.find(
     (context) => context.id === createdContextId,
   );

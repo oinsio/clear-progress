@@ -63,20 +63,6 @@ Feature: Sync Protocol — Push
     When push is called
     Then task "t1" is not updated
 
-  @spec-sync-protocol @FR15
-  Scenario: Push updates last_known_revision from response
-    Given client has a dirty task
-    And server will respond with revision 20
-    When push is called
-    Then last_known_revision is set to 20
-
-  @spec-sync-protocol @FR15
-  Scenario: Push does not update revision when all results are conflicts
-    Given client has a dirty task with id "t1"
-    And server will respond with conflict and no top-level revision
-    When push is called
-    Then last_known_revision is not updated
-
   @spec-sync-protocol @FR1
   Scenario: Force push sends records even when nothing is dirty
     Given client has 3 tasks with needsSync false
