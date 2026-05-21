@@ -30,8 +30,6 @@ interface DirtyProtectionPullResponse {
 test("App B dirty record is preserved when App A pushes update and App B pulls", async () => {
   const pageA = getPageA();
   const pageB = getPageB();
-  // beforeAll creates 2 pages (each waits for auto-sync) + this test runs 3 syncs
-  test.setTimeout(90_000);
   // Setup: A creates task, both sync
   const taskName = `Dirty Protection Task ${Date.now()}`;
   await createTask(pageA, taskName);

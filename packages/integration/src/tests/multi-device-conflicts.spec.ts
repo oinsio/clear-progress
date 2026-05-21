@@ -16,11 +16,7 @@ import {
   triggerSyncAndWait,
 } from "../test-helpers.js";
 
-const MULTI_DEVICE_TEST_TIMEOUT_MS = 120_000;
-
 const { getPageA, getPageB, getCredentials } = setupTwoDeviceTest();
-
-test.describe.configure({ timeout: MULTI_DEVICE_TEST_TIMEOUT_MS });
 
 // ---------------------------------------------------------------------------
 // Helpers

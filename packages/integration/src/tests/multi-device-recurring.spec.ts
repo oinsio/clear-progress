@@ -143,7 +143,6 @@ test("App A completes recurring → push → original completed + new occurrence
 test("Both complete same recurring offline → push both → consistent state", async () => {
   const pageA = getPageA();
   const pageB = getPageB();
-  test.setTimeout(120_000);
   const conflictTaskName = `Recurring Conflict ${Date.now()}`;
   await createRecurringTask(pageA, conflictTaskName);
   await triggerSyncAndWait(pageA);
