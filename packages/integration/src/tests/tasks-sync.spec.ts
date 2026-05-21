@@ -1,14 +1,13 @@
 // implements FR6, FR8, FR16 of add-supabase-integration-tests
-import { type Browser, expect, type Page, test } from "@playwright/test";
-import { readTestConfig } from "../config.js";
-
-const SYNC_COMPLETE_TIMEOUT_MS = 30_000;
-const CONNECTION_CHECK_TIMEOUT_MS = 10_000;
-const LAST_SYNC_STORAGE_KEY = "last_sync";
+import { expect, type Page, test } from "@playwright/test";
+import {
+  closeAuthenticatedPage,
+  createAuthenticatedPage,
+  triggerSyncAndWait,
+} from "../test-helpers.js";
 
 test.describe.configure({ mode: "serial" });
 
-let browser: Browser;
 let page: Page;
 let accessToken: string;
 let supabaseUrl: string;
@@ -19,94 +18,20 @@ let createdTaskName: string;
 let createdTaskId: string;
 
 test.beforeAll(async ({ browser: b }) => {
-  const config = readTestConfig();
-  supabaseUrl = config.supabaseUrl;
-  anonKey = config.anonKey;
-
-  browser = b;
-  const context = await browser.newContext();
-  page = await context.newPage();
-
-  // --- Step 1: Connect via Setup UI (as a real user would) ---
-  await page.goto("/setup");
-  await page.waitForLoadState("networkidle");
-
-  await page.getByTestId("setup-supabase-section-toggle").click();
-  await page.getByTestId("setup-supabase-url-input").fill(supabaseUrl);
-  await page.getByTestId("setup-supabase-anon-key-input").fill(anonKey);
-  await page.getByTestId("setup-supabase-connect-button").click();
-
-  // Wait for connection to succeed — shows OAuth buttons
-  const oauthButtons = page.getByTestId("setup-supabase-oauth-buttons");
-  await expect(oauthButtons).toBeVisible({
-    timeout: CONNECTION_CHECK_TIMEOUT_MS,
-  });
-
-  // --- Step 2: Sign in via mock OAuth (keycloak provider) ---
-  await page.getByTestId("setup-supabase-oauth-keycloak").click();
-
-  // navikt/mock-oauth2-server login form (server-rendered HTML)
-  await page.waitForSelector('input[name="username"]', {
-    timeout: SYNC_COMPLETE_TIMEOUT_MS,
-  });
-  await page.fill('input[name="username"]', "test@example.com");
-  await page.locator('input[type="submit"][value="Sign-in"]').click();
-
-  // --- Step 3: App handles callback → navigates to /tasks ---
-  await page.waitForURL("**/tasks", { timeout: SYNC_COMPLETE_TIMEOUT_MS });
-  await page.waitForSelector('[data-testid="inbox-page"]');
-
-  // --- Step 4: Extract access token for server-side verification (pullFromServer) ---
-  await page.waitForFunction(
-    () => localStorage.getItem("access_token") !== null,
-    undefined,
-    { timeout: SYNC_COMPLETE_TIMEOUT_MS },
-  );
-
-  accessToken = await page.evaluate(
-    () => localStorage.getItem("access_token") ?? "",
-  );
-
-  // --- Step 5: Wait for initial sync (ping → init → push/pull) ---
-  await waitForLastSyncToUpdate(page, null);
+  const auth = await createAuthenticatedPage(b);
+  page = auth.page;
+  accessToken = auth.accessToken;
+  supabaseUrl = auth.supabaseUrl;
+  anonKey = auth.anonKey;
 });
 
 test.afterAll(async () => {
-  await page.close();
+  await closeAuthenticatedPage(page);
 });
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-async function waitForLastSyncToUpdate(
-  testPage: Page,
-  previousValue: string | null,
-): Promise<void> {
-  await testPage.waitForFunction(
-    (prev) => {
-      const current = localStorage.getItem("last_sync");
-      return current !== null && current !== prev;
-    },
-    previousValue,
-    { timeout: SYNC_COMPLETE_TIMEOUT_MS },
-  );
-}
-
-/**
- * Clicks the sync button to immediately push + pull, then waits for
- * last_sync to update in localStorage — confirming sync completion.
- */
-async function triggerSyncAndWait(testPage: Page): Promise<void> {
-  const previousSync = await testPage.evaluate(
-    (key) => localStorage.getItem(key),
-    LAST_SYNC_STORAGE_KEY,
-  );
-  // The sync button is rendered in both the open and collapsed panel states.
-  // Use .first() in case both are present in DOM simultaneously.
-  await testPage.getByTestId("right-panel-sync").first().click();
-  await waitForLastSyncToUpdate(testPage, previousSync);
-}
 
 /**
  * Calls the pull Edge Function from Node.js to verify server-side state.

@@ -50,3 +50,7 @@ npm-debug.log
 
 # Supabase
 .temp
+
+# Integration tests
+.auth/
+.supabase-test-config.json

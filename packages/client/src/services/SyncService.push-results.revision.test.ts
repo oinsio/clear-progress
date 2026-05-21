@@ -10,14 +10,14 @@ import {
   setupSyncTestContext,
 } from "./SyncService.test-helpers";
 
-describe("SyncService — push results > last_known_revision update after push", () => {
+describe("SyncService — push results > last_known_revision NOT updated after push", () => {
   let ctx: SyncTestContext;
 
   beforeEach(() => {
     ctx = setupSyncTestContext();
   });
 
-  it("should update last_known_revision using response.revision (top-level)", async () => {
+  it("should not update last_known_revision after push (pull handles it)", async () => {
     const task = makeTask({ id: "t1" });
     asMock(ctx.taskRepository.getNeedingSync).mockResolvedValue([task]);
     asMock(ctx.taskRepository.getById).mockResolvedValue(task);
@@ -32,13 +32,13 @@ describe("SyncService — push results > last_known_revision update after push",
 
     await service.push();
 
-    expect(ctx.syncMetaRepository.setValue).toHaveBeenCalledWith(
+    expect(ctx.syncMetaRepository.setValue).not.toHaveBeenCalledWith(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
-      20,
+      expect.anything(),
     );
   });
 
-  it("should not update last_known_revision if push response has no top-level revision (all conflict)", async () => {
+  it("should not update last_known_revision on conflict either", async () => {
     const task = makeTask({ id: "t1" });
     asMock(ctx.taskRepository.getNeedingSync).mockResolvedValue([task]);
     asMock(ctx.taskRepository.getById).mockResolvedValue(task);

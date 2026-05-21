@@ -9,6 +9,7 @@ const __dirname = dirname(__filename);
 const CONFIG_FILE_NAME = ".supabase-test-config.json";
 
 export const CONFIG_FILE_PATH = join(__dirname, "..", CONFIG_FILE_NAME);
+export const AUTH_STATE_PATH = join(__dirname, "..", ".auth", "user.json");
 
 export interface SupabaseTestConfig {
   supabaseUrl: string;

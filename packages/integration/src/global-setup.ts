@@ -15,7 +15,7 @@ const __dirname = dirname(__filename);
 
 const ENV_FILE_PATH = join(__dirname, "..", ".env.test");
 const PING_FUNCTION_PATH = "/functions/v1/ping";
-const EDGE_FUNCTIONS_RETRY_INTERVAL_MS = 2000;
+const EDGE_FUNCTIONS_RETRY_INTERVAL_MS = 1000;
 const EDGE_FUNCTIONS_MAX_RETRIES = 15;
 
 function parseEnvFile(filePath: string): Record<string, string> {

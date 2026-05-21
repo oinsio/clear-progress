@@ -59,7 +59,7 @@ describe("SyncService — push chunks — basic", () => {
     expect(ctx.mockSyncAdapter.push).toHaveBeenCalledTimes(1);
   });
 
-  it("should preserve revision from first chunk when second chunk has no revision", async () => {
+  it("should not update last_known_revision in push (pull handles it)", async () => {
     const tasks = Array.from({ length: 201 }, (_, i) =>
       makeTask({ id: `task-${i}`, updated_at: "2026-01-01T10:00:00.000Z" }),
     );
@@ -77,9 +77,9 @@ describe("SyncService — push chunks — basic", () => {
 
     await service.push();
 
-    expect(ctx.syncMetaRepository.setValue).toHaveBeenCalledWith(
+    expect(ctx.syncMetaRepository.setValue).not.toHaveBeenCalledWith(
       "last_known_revision",
-      10,
+      expect.anything(),
     );
   });
 
