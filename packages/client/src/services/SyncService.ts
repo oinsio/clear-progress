@@ -210,8 +210,6 @@ export class SyncService {
       settings,
     );
 
-    let lastRevision: number | undefined;
-
     // Send chunks sequentially
     for (const chunk of chunks) {
       const pushResponse = await this.syncAdapter.push({
@@ -233,18 +231,13 @@ export class SyncService {
         sentTimestamps,
         pushResponse.revision,
       );
-
-      if (pushResponse.revision !== undefined) {
-        lastRevision = pushResponse.revision;
-      }
     }
 
-    if (lastRevision !== undefined) {
-      await this.syncMetaRepository.setValue(
-        SYNC_META_KEYS.LAST_KNOWN_REVISION,
-        lastRevision,
-      );
-    }
+    // Do NOT update last_known_revision here. The subsequent _pull will set it
+    // via current_revision from the server. If we updated it now, _pull would
+    // use the push revision as since_revision, skipping any server records
+    // created between the old revision and the push revision (e.g. records
+    // pushed by another device that we haven't pulled yet).
   }
 
   private _createPushChunks(
