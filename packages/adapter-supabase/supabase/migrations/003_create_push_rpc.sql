@@ -123,10 +123,10 @@ BEGIN
     SELECT updated_at INTO v_existing_ts FROM goals WHERE id = v_rec_id AND user_id = p_user_id;
 
     IF NOT FOUND THEN
-      INSERT INTO goals (id, user_id, name, description, cover_file_id, status, sort_order, is_deleted, created_at, updated_at, revision)
+      INSERT INTO goals (id, user_id, name, description, cover_hash, status, sort_order, is_deleted, created_at, updated_at, revision)
       VALUES (
         v_rec_id, p_user_id, v_rec->>'name', COALESCE(v_rec->>'description', ''),
-        NULLIF(v_rec->>'cover_file_id', '')::UUID, v_rec->>'status',
+        COALESCE(v_rec->>'cover_hash', ''), v_rec->>'status',
         (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
         (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
       );
@@ -136,7 +136,7 @@ BEGIN
     ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
       UPDATE goals SET
         name = v_rec->>'name', description = COALESCE(v_rec->>'description', ''),
-        cover_file_id = NULLIF(v_rec->>'cover_file_id', '')::UUID, status = v_rec->>'status',
+        cover_hash = COALESCE(v_rec->>'cover_hash', ''), status = v_rec->>'status',
         sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
         updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
       WHERE id = v_rec_id AND user_id = p_user_id;
@@ -146,7 +146,7 @@ BEGIN
     ELSE
       SELECT jsonb_build_object(
         'id', id::text, 'name', name, 'description', description,
-        'cover_file_id', COALESCE(cover_file_id::text, ''),
+        'cover_hash', cover_hash,
         'status', status, 'sort_order', sort_order, 'is_deleted', is_deleted,
         'created_at', format_timestamptz(created_at), 'updated_at', format_timestamptz(updated_at),
         'revision', revision

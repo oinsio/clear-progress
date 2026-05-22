@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS goals (
   user_id       UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name          TEXT        NOT NULL,
   description   TEXT        NOT NULL DEFAULT '',
-  cover_file_id UUID        REFERENCES covers(file_id) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
+  cover_hash    TEXT        NOT NULL DEFAULT '',
   status        TEXT        NOT NULL CHECK (status IN ('planning', 'in_progress', 'paused', 'completed', 'cancelled')),
   sort_order    INTEGER     NOT NULL DEFAULT 0,
   is_deleted    BOOLEAN     NOT NULL DEFAULT FALSE,
