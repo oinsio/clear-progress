@@ -62,15 +62,24 @@ Before sending push data to the server, the system SHALL detect checklist_items 
 - **WHEN** push collects checklist items and all have valid task_id references
 - **THEN** no items are removed and no warnings are logged
 
-### Requirement: ChecklistRepository provides getByTaskId method
-The ChecklistRepository SHALL provide a method `getByTaskId(taskId: string)` that returns all checklist_items (including soft-deleted) for the given task.
+### Requirement: ChecklistRepository provides getAllByTaskId and getActiveByTaskId methods
+The ChecklistRepository SHALL provide two methods for retrieving checklist_items by task:
+- `getAllByTaskId(taskId: string)` — returns all checklist_items (including soft-deleted) for the given task. Used by cascade operations (FR1, FR2).
+- `getActiveByTaskId(taskId: string)` — returns only non-deleted checklist_items for the given task. Used by UI and copy operations.
 
-#### Scenario: Get checklist items by task ID
-- **WHEN** `getByTaskId("T1")` is called
+The existing `getByTaskId` method SHALL be renamed to `getActiveByTaskId` (preserving its current filtering behavior), and the new `getAllByTaskId` method SHALL be added without the `is_deleted` filter.
+
+#### Scenario: getAllByTaskId returns all items including soft-deleted
+- **WHEN** `getAllByTaskId("T1")` is called
 - **AND** T1 has checklist items C1 (`is_deleted = false`) and C2 (`is_deleted = true`)
 - **THEN** result contains both C1 and C2
 
-#### Scenario: Get checklist items for task with none
-- **WHEN** `getByTaskId("T1")` is called
+#### Scenario: getAllByTaskId returns empty array for task with no items
+- **WHEN** `getAllByTaskId("T1")` is called
 - **AND** T1 has no checklist items
 - **THEN** result is an empty array
+
+#### Scenario: getActiveByTaskId returns only non-deleted items
+- **WHEN** `getActiveByTaskId("T1")` is called
+- **AND** T1 has checklist items C1 (`is_deleted = false`) and C2 (`is_deleted = true`)
+- **THEN** result contains only C1

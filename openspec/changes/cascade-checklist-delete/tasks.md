@@ -1,14 +1,14 @@
 ## 1. Repository Layer (FR4)
 
-- [ ] 1.1 TDD: Add `getByTaskId(taskId)` method to ChecklistRepository — returns all checklist_items (including soft-deleted) for a given task_id
-- [ ] 1.2 Unit tests for `getByTaskId`: returns items, returns empty array for unknown task, includes soft-deleted items
+- [ ] 1.1 Rename existing `getByTaskId` to `getActiveByTaskId` (keeps `!is_deleted` filter) and add new `getAllByTaskId` (no filter, returns all including soft-deleted). Update all consumers: `TaskService.copyChecklistItems` and `ChecklistService` → use `getActiveByTaskId`
+- [ ] 1.2 Unit tests for `getAllByTaskId`: returns items, returns empty array for unknown task, includes soft-deleted items. Unit tests for `getActiveByTaskId`: returns only non-deleted items
 
 ## 2. Cascading Soft-Delete (FR1)
 
-- [ ] 2.1 TDD: Add ChecklistRepository dependency to TaskService constructor (D4)
+- [ ] 2.1 ~~TDD: Add ChecklistRepository dependency to TaskService constructor (D4)~~ — already done, ChecklistRepository is already injected into TaskService constructor
 - [ ] 2.2 TDD: Extend `TaskService.softDelete()` to cascade `is_deleted = true` to all checklist_items of the task
 - [ ] 2.3 Unit tests: cascade to items, cascade with no items, cascade with already-deleted items, cascade preserves recurring chain logic
-- [ ] 2.4 Update existing TaskService tests to pass ChecklistRepository dependency
+- [ ] 2.4 Update mock factory `createMockChecklistRepository` to include `getAllByTaskId` and `getActiveByTaskId`, update existing TaskService tests if needed
 
 ## 3. Cascading Restore (FR2)
 
