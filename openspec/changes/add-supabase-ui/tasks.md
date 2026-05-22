@@ -72,4 +72,4 @@
 
 - [x] 9.1 VERIFY: Full GAS connection flow E2E still works — M2
 - [x] 9.2 VERIFY: `pnpm run build` succeeds with no errors
-- [ ] 9.3 VERIFY: Mutation testing across all new code — target >=95%, minimum >=90% — M3
+- [x] 9.3 VERIFY: Mutation testing across all new code — target >=95%, minimum >=90% — M3
