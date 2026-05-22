@@ -65,4 +65,4 @@
 
 - [x] 8.1 Update `docs/architecture/data-model-and-sync.md`: `cover_hash` in Goal entity
 - [x] 8.2 Update API docs and Bruno collections
-- [ ] 8.3 Sync delta specs to main specs: `/opsx:sync`
+- [x] 8.3 Sync delta specs to main specs: `/opsx:sync`
