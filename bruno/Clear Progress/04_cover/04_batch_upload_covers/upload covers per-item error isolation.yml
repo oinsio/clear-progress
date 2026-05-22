@@ -50,7 +50,7 @@ runtime:
       operator: isTruthy
     - expression: res.body.results[0].error
       operator: isDefined
-    - expression: res.body.results[1].file_id
+    - expression: res.body.results[1].hash
       operator: isDefined
 
 settings:
@@ -61,5 +61,5 @@ settings:
 
 docs: |
   upload_covers called with 2 covers: first has invalid mime_type (application/pdf), second is valid.
-  Expected: ok: true (top-level success), results[0] has per-item error, results[1] has file_id.
+  Expected: ok: true (top-level success), results[0] has per-item error, results[1] has hash.
   Verifies that a per-item error does not fail the entire batch.

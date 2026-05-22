@@ -57,7 +57,7 @@ runtime:
       value: "200"
     - expression: res.body.ok
       operator: isTruthy
-    - expression: res.body.file_id
+    - expression: res.body.hash
       operator: isDefined
     - expression: res.body.reused
       operator: isDefined
@@ -73,7 +73,7 @@ runtime:
     - type: set-variable
       phase: after-response
       selector:
-        expression: res.body.file_id
+        expression: res.body.hash
         method: jsonq
       variable:
         name: fileId

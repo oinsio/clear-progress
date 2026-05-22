@@ -24,7 +24,7 @@ http:
               "id": "{{$randomUUID}}",
               "title": "Goal with Cover {{$randomInt}}",
               "description": "Testing full cover lifecycle",
-              "cover_file_id": "",
+              "cover_hash": "",
               "status": "in_progress",
               "sort_order": 1000,
               "is_deleted": false,

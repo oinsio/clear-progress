@@ -244,7 +244,7 @@ paths:
              Rejected with `reason: "foreign key must be empty or a valid UUID v4"`.
            - `task_id` (ChecklistItem) — required; must be a valid UUID v4, empty string is not allowed.
              Rejected with `reason: "task_id is required and must be a valid UUID v4"`.
-           - `cover_file_id` (Goal) — Google Drive file ID, not validated as UUID.
+           - `cover_hash` (Goal) — SHA-256 content hash, not validated as UUID.
 
         5. **`repeat_rule`** (Task only) — if not empty, must be valid JSON matching the structure:
            - `type` must be "fixed" or "after_completion"
@@ -629,7 +629,7 @@ paths:
         The `data` field is required — omitting it returns `INVALID_PAYLOAD`.
 
         **Deduplication:** the server computes a SHA-256 hash and checks whether
-        an identical file already exists. If it does, the existing `file_id` is
+        an identical file already exists. If it does, the existing `hash` is
         returned without creating a duplicate (`reused: true`).
 
         Files are named by the first 12 characters of SHA-256: `{hash_prefix}.{ext}`.
@@ -659,13 +659,13 @@ paths:
                   summary: New file uploaded
                   value:
                     ok: true
-                    file_id: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
+                    hash: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
                     reused: false
                 reused:
                   summary: Duplicate file — existing file reused
                   value:
                     ok: true
-                    file_id: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
+                    hash: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
                     reused: true
                 too_large:
                   summary: Error — file exceeds 2 MB
@@ -706,7 +706,7 @@ paths:
             example:
               action: delete_cover
               access_token: ya29.a0AfH6SMBx...
-              file_id: 1MnOpQrStUvWxYzAbCdEfGhIjKlMnOp
+              hash: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
       responses:
         '200':
           description: Deletion result
@@ -744,12 +744,12 @@ paths:
     post:
       operationId: getCover
       tags: [Covers]
-      summary: Fetch cover image(s) by file ID
+      summary: Fetch cover image(s) by hash
       description: |
         Downloads one or more cover images from Backend and returns them as
-        base64-encoded bytes. Supports batch retrieval (up to 10 files per request).
+        base64-encoded bytes. Supports batch retrieval (up to 10 hashes per request).
 
-        **Partial success:** if some file IDs are invalid or not found, the response
+        **Partial success:** if some hashes are invalid or not found, the response
         still returns `ok: true` — each item in `covers` contains either `data` or
         `error`. The client should check each item individually.
 
@@ -768,16 +768,16 @@ paths:
                 value:
                   action: get_cover
                   access_token: ya29.a0AfH6SMBx...
-                  file_ids: ["1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ"]
+                  hashes: ["a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"]
               batch:
                 summary: Fetch multiple covers
                 value:
                   action: get_cover
                   access_token: ya29.a0AfH6SMBx...
-                  file_ids:
-                    - "1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ"
-                    - "1MnOpQrStUvWxYzAbCdEfGhIjKlMnOp"
-                    - "1AbCdEfGhIjKlMnOpQrStUvWxYzAbCd"
+                  hashes:
+                    - "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                    - "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3"
+                    - "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
       responses:
         '200':
           description: Fetch result (partial success is possible)
@@ -791,7 +791,7 @@ paths:
                   value:
                     ok: true
                     covers:
-                      - file_id: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
+                      - hash: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
                         mime_type: image/jpeg
                         data: /9j/4AAQSkZJRgABAQEASABIAAD...
                 partial:
@@ -799,23 +799,23 @@ paths:
                   value:
                     ok: true
                     covers:
-                      - file_id: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
+                      - hash: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
                         mime_type: image/jpeg
                         data: /9j/4AAQSkZJRgABAQEASABIAAD...
-                      - file_id: 1NONEXISTENT_ID
+                      - hash: 0000000000000000000000000000000000000000000000000000000000000000
                         error: FILE_NOT_FOUND
-                empty_ids:
-                  summary: Error — file_ids is empty or missing
+                empty_hashes:
+                  summary: Error — hashes is empty or missing
                   value:
                     ok: false
                     error: INVALID_PAYLOAD
-                    message: file_ids must be a non-empty array
+                    message: hashes must be a non-empty array
                 too_many:
-                  summary: Error — too many file IDs in one request
+                  summary: Error — too many hashes in one request
                   value:
                     ok: false
                     error: INVALID_PAYLOAD
-                    message: file_ids must contain at most 10 items
+                    message: hashes must contain at most 10 items
                 unauthorized:
                   summary: Error — token missing or invalid
                   value:
@@ -1054,7 +1054,7 @@ components:
         - id
         - title
         - description
-        - cover_file_id
+        - cover_hash
         - status
         - sort_order
         - is_deleted
@@ -1073,10 +1073,10 @@ components:
           type: string
           description: Goal description. Empty string if no description
           example: Ship the MVP mobile app by end of Q2 2026
-        cover_file_id:
+        cover_hash:
           type: string
-          description: File ID on Google Drive. Empty string if no cover
-          example: 1AbCdEfGhIjKlMnOpQrStUvWxYz
+          description: SHA-256 content hash of the cover image. Empty string if no cover
+          example: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
         status:
           type: string
           enum: [not_started, in_progress, paused, completed, cancelled]
@@ -1438,7 +1438,7 @@ components:
 
     DeleteCoverRequest:
       type: object
-      required: [action, access_token, file_id]
+      required: [action, access_token, hash]
       properties:
         action:
           type: string
@@ -1447,14 +1447,14 @@ components:
           type: string
           description: OAuth 2.0 access token from Google
           example: ya29.a0AfH6SMBx...
-        file_id:
+        hash:
           type: string
-          description: File ID on Google Drive
-          example: 1MnOpQrStUvWxYzAbCdEfGhIjKlMnOp
+          description: SHA-256 content hash of the cover image
+          example: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
 
     GetCoverRequest:
       type: object
-      required: [action, access_token, file_ids]
+      required: [action, access_token, hashes]
       properties:
         action:
           type: string
@@ -1463,14 +1463,14 @@ components:
           type: string
           description: OAuth 2.0 access token from Google
           example: ya29.a0AfH6SMBx...
-        file_ids:
+        hashes:
           type: array
           items:
             type: string
           minItems: 1
           maxItems: 10
-          description: List of Google Drive file IDs to fetch (max 10 per request)
-          example: ["1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ", "1MnOpQrStUvWxYzAbCdEfGhIjKlMnOp"]
+          description: List of SHA-256 content hashes to fetch (max 10 per request)
+          example: ["a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2", "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3"]
 
     PurgeRequest:
       type: object
@@ -1583,15 +1583,15 @@ components:
 
     UploadCoverResponse:
       type: object
-      required: [ok, file_id, reused]
+      required: [ok, hash, reused]
       properties:
         ok:
           type: boolean
           example: true
-        file_id:
+        hash:
           type: string
-          description: File ID on Google Drive
-          example: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
+          description: SHA-256 content hash of the uploaded image
+          example: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
         reused:
           type: boolean
           description: true if a file with the same SHA-256 already existed — no duplicate created
@@ -1615,12 +1615,12 @@ components:
 
     GetCoverResult:
       type: object
-      required: [file_id]
+      required: [hash]
       properties:
-        file_id:
+        hash:
           type: string
-          description: Google Drive file ID
-          example: 1XyZ_aBcDeFgHiJkLmNoPqRsTuVwXyZ
+          description: SHA-256 content hash of the cover image
+          example: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
         mime_type:
           type: string
           description: MIME type of the image (present on success)
@@ -1648,7 +1648,7 @@ components:
           items:
             $ref: '#/components/schemas/GetCoverResult'
           description: |
-            One entry per requested file_id. Each entry contains either image data
+            One entry per requested hash. Each entry contains either image data
             (success) or an `error` field (failure). Partial success is possible.
 
     PurgeResponse:

@@ -24,7 +24,7 @@ http:
               "id": "{{lifecycleGoalId}}",
               "title": "Abandoned goal",
               "description": "",
-              "cover_file_id": "",
+              "cover_hash": "",
               "status": "cancelled",
               "sort_order": 2000,
               "is_deleted": true,

@@ -32,7 +32,7 @@ runtime:
         bru.setVar("coverBase64Data", base64Data);
     - type: after-response
       code: |-
-        bru.setVar("lifecycleCoverFileId", res.body.file_id);
+        bru.setVar("lifecycleCoverFileId", res.body.hash);
         bru.setVar("lifecycleCoverUrl", res.body.thumbnail_url);
   assertions:
     - expression: res.status
@@ -40,7 +40,7 @@ runtime:
       value: "200"
     - expression: res.body.ok
       operator: isTruthy
-    - expression: res.body.file_id
+    - expression: res.body.hash
       operator: isDefined
     - expression: res.body.reused
       operator: isDefined

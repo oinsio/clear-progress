@@ -39,7 +39,7 @@ runtime:
       operator: isTruthy
     - expression: res.body.reused
       operator: isTruthy
-    - expression: res.body.file_id
+    - expression: res.body.hash
       operator: eq
       value: "{{dedupFileId}}"
 
