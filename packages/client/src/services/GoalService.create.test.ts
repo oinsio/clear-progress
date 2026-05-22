@@ -34,7 +34,7 @@ describe("GoalService", () => {
 
     it("should create goal with empty string defaults for optional fields", () => {
       expect(createdGoal.description).toBe("");
-      expect(createdGoal.cover_file_id).toBe("");
+      expect(createdGoal.cover_hash).toBe("");
     });
 
     it("should create goal with status planning by default", () => {

@@ -308,7 +308,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             id: goalId,
             name: "Deleted goal",
             description: "",
-            cover_file_id: "",
+            cover_hash: "",
             status: "planning",
             sort_order: 0,
             is_deleted: true,

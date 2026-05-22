@@ -10,7 +10,7 @@ export function buildGoal(overrides: Partial<Goal> = {}): Goal {
     id: crypto.randomUUID(),
     name: `Goal ${goalCounter}`,
     description: "",
-    cover_file_id: "",
+    cover_hash: "",
     status: "planning",
     sort_order: goalCounter,
     is_deleted: false,

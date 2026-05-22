@@ -132,9 +132,7 @@ if (
       });
 
       expect(uploadResult.ok).toBe(true);
-      const fileId = uploadResult.file_id;
-
-      const coverResponse = await adapterA.getCover({ file_ids: [fileId] });
+      const coverResponse = await adapterA.getCover({ hashes: [dataHash] });
 
       // User A should not be able to retrieve User B's cover
       const coverResult = coverResponse.covers[0];

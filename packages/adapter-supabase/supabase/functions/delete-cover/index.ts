@@ -1,4 +1,5 @@
 // implements FR1 of add-supabase-adapter
+// implements FR4 of content-addressable-covers
 // POST /delete-cover — decrement ref_count; delete file+row when ref_count reaches 0
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
@@ -7,7 +8,7 @@ import { COVERS_BUCKET, ErrorCode } from "../_shared/constants.ts";
 import { createAuthHandler, parseJsonBody } from "../_shared/handler.ts";
 
 interface DeleteCoverPayload {
-  file_id: string;
+  hash: string;
   goal_id: string;
 }
 
@@ -15,7 +16,7 @@ function isValidPayload(body: unknown): body is DeleteCoverPayload {
   if (!body || typeof body !== "object") return false;
   const payload = body as Record<string, unknown>;
   return (
-    typeof payload.file_id === "string" && typeof payload.goal_id === "string"
+    typeof payload.hash === "string" && typeof payload.goal_id === "string"
   );
 }
 
@@ -30,15 +31,15 @@ Deno.serve(
       if (!isValidPayload(body)) {
         return errorResponse(
           ErrorCode.INVALID_PAYLOAD,
-          "Required fields: file_id, goal_id",
+          "Required fields: hash, goal_id",
         );
       }
 
-      // Fetch cover metadata
+      // Fetch cover metadata by (user_id, data_hash)
       const { data: coverRows, error: lookupError } = await serviceClient
         .from("covers")
         .select("file_id, storage_path, ref_count")
-        .eq("file_id", body.file_id)
+        .eq("data_hash", body.hash)
         .eq("user_id", userId)
         .limit(1);
 

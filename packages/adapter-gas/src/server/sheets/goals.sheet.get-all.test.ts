@@ -65,7 +65,7 @@ describe("getAllGoals", () => {
           id: "goal-abc",
           name: "My goal",
           description: "Some description",
-          cover_file_id: "drive-file-id",
+          cover_hash: "drive-file-hash",
           created_at: "2025-01-01T00:00:00.000Z",
           updated_at: "2025-03-01T00:00:00.000Z",
         }),
@@ -76,7 +76,7 @@ describe("getAllGoals", () => {
     expect(goal.id).toBe("goal-abc");
     expect(goal.name).toBe("My goal");
     expect(goal.description).toBe("Some description");
-    expect(goal.cover_file_id).toBe("drive-file-id");
+    expect(goal.cover_hash).toBe("drive-file-hash");
     expect(goal.created_at).toBe("2025-01-01T00:00:00.000Z");
     expect(goal.updated_at).toBe("2025-03-01T00:00:00.000Z");
   });
@@ -88,7 +88,7 @@ describe("getAllGoals", () => {
         makeGoalRow({
           name: null,
           description: null,
-          cover_file_id: null,
+          cover_hash: null,
           created_at: null,
           updated_at: null,
         }),
@@ -98,7 +98,7 @@ describe("getAllGoals", () => {
     const [goal] = getAllGoals();
     expect(goal.name).toBe("");
     expect(goal.description).toBe("");
-    expect(goal.cover_file_id).toBe("");
+    expect(goal.cover_hash).toBe("");
     expect(goal.created_at).toBe("");
     expect(goal.updated_at).toBe("");
   });

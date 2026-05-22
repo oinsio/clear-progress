@@ -11,19 +11,14 @@ describe("getCoverDisplayUrl", () => {
     expect(getCoverDisplayUrl("")).toBeNull();
   });
 
-  it("should return object URL from cache for local:* fileId", () => {
-    localCoverCache.set("some-local-id", "blob:http://localhost/test");
-    const result = getCoverDisplayUrl("local:some-local-id");
+  it("should return object URL from cache for hash in cache", () => {
+    localCoverCache.set("some-hash", "blob:http://localhost/test");
+    const result = getCoverDisplayUrl("some-hash");
     expect(result).toBe("blob:http://localhost/test");
   });
 
-  it("should return null for local:* fileId not in cache", () => {
-    const result = getCoverDisplayUrl("local:nonexistent-id");
-    expect(result).toBeNull();
-  });
-
-  it("should return null for regular remote fileId not in cache", () => {
-    const result = getCoverDisplayUrl("remote-file-id");
+  it("should return null for hash not in cache", () => {
+    const result = getCoverDisplayUrl("nonexistent-hash");
     expect(result).toBeNull();
   });
 

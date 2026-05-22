@@ -25,15 +25,15 @@ interface CoverPullResponse {
   goals: Array<{
     id: string;
     name: string;
-    cover_file_id: string;
+    cover_hash: string;
     is_deleted: boolean;
   }>;
 }
 
 // ---------------------------------------------------------------------------
-// 5.9.1 — Upload cover for a goal → push → verify cover_file_id on server
+// 5.9.1 — Upload cover for a goal → push → verify cover_hash on server
 // ---------------------------------------------------------------------------
-test("upload cover for a goal → push → verify cover_file_id on server", async () => {
+test("upload cover for a goal → push → verify cover_hash on server", async () => {
   const page = getPage();
   coverGoalName = `Cover Test Goal ${Date.now()}`;
 
@@ -65,7 +65,7 @@ test("upload cover for a goal → push → verify cover_file_id on server", asyn
   // Trigger sync to push the cover to server
   await triggerSyncAndWait(page);
 
-  // Verify server-side state — cover_file_id must be non-empty
+  // Verify server-side state — cover_hash must be non-empty
   const pullResponse = await pullFromServer<CoverPullResponse>(
     getCredentials(),
   );
@@ -75,10 +75,10 @@ test("upload cover for a goal → push → verify cover_file_id on server", asyn
     (goal) => goal.name === coverGoalName,
   );
   expect(serverGoal).toBeDefined();
-  expect(serverGoal?.cover_file_id).not.toBe("");
+  expect(serverGoal?.cover_hash).not.toBe("");
 
   coverGoalId = serverGoal?.id ?? "";
-  coverFileId = serverGoal?.cover_file_id ?? "";
+  coverFileId = serverGoal?.cover_hash ?? "";
 });
 
 // ---------------------------------------------------------------------------
@@ -94,7 +94,7 @@ test("retrieve cover from server → verify image data is accessible", async () 
 
   const coverResult = coverResponse.covers[0];
   expect(coverResult).toBeDefined();
-  expect(coverResult?.file_id).toBe(coverFileId);
+  expect(coverResult?.hash).toBe(coverFileId);
   expect(coverResult?.mime_type).toContain("image");
   expect(coverResult?.data).toBeDefined();
   expect(coverResult?.error).toBeUndefined();
@@ -105,9 +105,9 @@ test("retrieve cover from server → verify image data is accessible", async () 
 });
 
 // ---------------------------------------------------------------------------
-// 5.9.3 — Delete cover → push → verify cover_file_id is empty on server
+// 5.9.3 — Delete cover → push → verify cover_hash is empty on server
 // ---------------------------------------------------------------------------
-test("delete cover → push → verify cover_file_id is empty on server", async () => {
+test("delete cover → push → verify cover_hash is empty on server", async () => {
   const page = getPage();
   // Should still be on the goal detail page from 5.9.1
   // Enter edit mode
@@ -125,7 +125,7 @@ test("delete cover → push → verify cover_file_id is empty on server", async 
   // Trigger sync to push the removal to server
   await triggerSyncAndWait(page);
 
-  // Verify server-side state — cover_file_id must be empty
+  // Verify server-side state — cover_hash must be empty
   const pullResponse = await pullFromServer<CoverPullResponse>(
     getCredentials(),
   );
@@ -133,5 +133,5 @@ test("delete cover → push → verify cover_file_id is empty on server", async 
 
   const serverGoal = pullResponse.goals.find((goal) => goal.id === coverGoalId);
   expect(serverGoal).toBeDefined();
-  expect(serverGoal?.cover_file_id).toBe("");
+  expect(serverGoal?.cover_hash).toBe("");
 });

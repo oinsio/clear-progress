@@ -8,8 +8,6 @@ import {
   createMockGoalRepository,
   createMockSyncAdapter,
   EXISTING_SERVER_FILE_ID,
-  localCoverCache,
-  NEW_SERVER_FILE_ID,
   setupCoverSyncTests,
   setupReuploadDefaults,
 } from "./CoverSyncService-test-utils";
@@ -28,7 +26,7 @@ describe("CoverSyncService", () => {
           getActive: vi.fn().mockResolvedValue([createGoalWithServerCover()]),
         });
         ctx.mockCoverRepository = createMockCoverRepository({
-          getByFileId: vi
+          getByHash: vi
             .fn()
             .mockResolvedValueOnce(undefined) // first call: no record
             .mockResolvedValueOnce(createCoverRecord()), // second call: after cacheFromServer
@@ -38,9 +36,8 @@ describe("CoverSyncService", () => {
             ok: true,
             results: [
               {
-                local_id: "goal-reupload",
+                data_hash: EXISTING_SERVER_FILE_ID,
                 goal_id: "goal-reupload",
-                file_id: EXISTING_SERVER_FILE_ID,
                 reused: true,
               },
             ],
@@ -65,7 +62,7 @@ describe("CoverSyncService", () => {
 
       it("should save fetched blob to coverRepository", async () => {
         ctx.mockCoverRepository = createMockCoverRepository({
-          getByFileId: vi.fn().mockResolvedValue(undefined),
+          getByHash: vi.fn().mockResolvedValue(undefined),
         });
         ctx.mockSyncAdapter = createMockSyncAdapter({
           getCover: createMockGetCoversSuccess(EXISTING_SERVER_FILE_ID),
@@ -76,7 +73,7 @@ describe("CoverSyncService", () => {
 
         expect(ctx.mockCoverRepository.save).toHaveBeenCalledWith(
           expect.objectContaining({
-            file_id: EXISTING_SERVER_FILE_ID,
+            data_hash: EXISTING_SERVER_FILE_ID,
             data: expect.any(Blob),
           }),
         );
@@ -84,7 +81,7 @@ describe("CoverSyncService", () => {
 
       it("should skip cover gracefully when getCover fails", async () => {
         ctx.mockCoverRepository = createMockCoverRepository({
-          getByFileId: vi.fn().mockResolvedValue(undefined),
+          getByHash: vi.fn().mockResolvedValue(undefined),
         });
         ctx.mockSyncAdapter = createMockSyncAdapter({
           uploadCovers: vi.fn(),
@@ -98,22 +95,21 @@ describe("CoverSyncService", () => {
       });
     });
 
-    describe("when server returns a different file_id", () => {
+    describe("when server confirms upload (reused: false)", () => {
       let coverRecord: ReturnType<typeof createCoverRecord>;
 
       beforeEach(() => {
         coverRecord = createCoverRecord();
         ctx.mockCoverRepository = createMockCoverRepository({
-          getByFileId: vi.fn().mockResolvedValue(coverRecord),
+          getByHash: vi.fn().mockResolvedValue(coverRecord),
         });
         ctx.mockSyncAdapter = createMockSyncAdapter({
           uploadCovers: vi.fn().mockResolvedValue({
             ok: true,
             results: [
               {
-                local_id: "goal-reupload",
+                data_hash: coverRecord.data_hash,
                 goal_id: "goal-reupload",
-                file_id: NEW_SERVER_FILE_ID,
                 reused: false,
               },
             ],
@@ -121,65 +117,25 @@ describe("CoverSyncService", () => {
         });
       });
 
-      it("should update goal cover_file_id (file was lost)", async () => {
-        const service = ctx.createService();
-
-        await service.reuploadLocalCovers();
-
-        expect(ctx.mockGoalRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ cover_file_id: NEW_SERVER_FILE_ID }),
-        );
-      });
-
-      it("should save new CoverRecord", async () => {
+      it("should save CoverRecord with blob data", async () => {
         const service = ctx.createService();
 
         await service.reuploadLocalCovers();
 
         expect(ctx.mockCoverRepository.save).toHaveBeenCalledWith(
           expect.objectContaining({
-            file_id: NEW_SERVER_FILE_ID,
-            data: coverRecord.data,
             data_hash: coverRecord.data_hash,
+            data: coverRecord.data,
           }),
         );
       });
 
-      it("should delete old CoverRecord", async () => {
+      it("should not update goal (cover_hash is content-addressable, unchanged)", async () => {
         const service = ctx.createService();
 
         await service.reuploadLocalCovers();
 
-        expect(ctx.mockCoverRepository.delete).toHaveBeenCalledWith(
-          EXISTING_SERVER_FILE_ID,
-        );
-      });
-
-      it("should mark goal as needsSync after updating cover_file_id", async () => {
-        const goalWithCleanDirty = createGoalWithServerCover({
-          needsSync: false,
-        });
-        ctx.mockGoalRepository = createMockGoalRepository({
-          getActive: vi.fn().mockResolvedValue([goalWithCleanDirty]),
-        });
-        const service = ctx.createService();
-
-        await service.reuploadLocalCovers();
-
-        expect(ctx.mockGoalRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ needsSync: true }),
-        );
-      });
-
-      it("should transfer localCoverCache entry", async () => {
-        const originalUrl = "blob:http://localhost/cover-original";
-        localCoverCache.set(EXISTING_SERVER_FILE_ID, originalUrl);
-        const service = ctx.createService();
-
-        await service.reuploadLocalCovers();
-
-        expect(localCoverCache.get(NEW_SERVER_FILE_ID)).toBe(originalUrl);
-        expect(localCoverCache.get(EXISTING_SERVER_FILE_ID)).toBeUndefined();
+        expect(ctx.mockGoalRepository.update).not.toHaveBeenCalled();
       });
     });
   });

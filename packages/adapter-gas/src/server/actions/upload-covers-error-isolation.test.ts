@@ -39,7 +39,7 @@ describe("uploadCovers", () => {
       expect(parseResponse().ok).toBe(true);
       const results = parseResults();
       expect(results[0].error).toBeDefined();
-      expect(results[1].file_id).toBeDefined();
+      expect(results[1].data_hash).toBeDefined();
     });
 
     it("should return per-item error for oversized file without failing the whole batch", () => {

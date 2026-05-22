@@ -6,9 +6,10 @@ export interface UploadCoverRequest {
   data_hash: string;
 }
 
+// implements FR2 of content-addressable-covers
 export interface UploadCoverResponse {
   ok: boolean;
-  file_id: string;
+  data_hash: string;
   reused: boolean;
 }
 
@@ -28,7 +29,7 @@ export interface UploadCoversRequest {
 export interface UploadCoverBatchResult {
   local_id: string;
   goal_id: string;
-  file_id?: string;
+  data_hash?: string;
   reused?: boolean;
   error?: string;
 }
@@ -38,24 +39,27 @@ export interface UploadCoversResponse {
   results: UploadCoverBatchResult[];
 }
 
+// implements FR3 of content-addressable-covers
 export interface GetCoverRequest {
-  file_ids: string[];
+  hashes: string[];
 }
 
 export interface GetCoverResult {
-  file_id: string;
+  hash: string;
   mime_type?: string;
   data?: string; // base64
   error?: string;
 }
 
+// implements FR3 of content-addressable-covers
 export interface GetCoverResponse {
   ok: boolean;
   covers: GetCoverResult[];
 }
 
+// implements FR4 of content-addressable-covers
 export interface DeleteCoverRequest {
-  file_id: string;
+  hash: string;
   goal_id: string;
 }
 

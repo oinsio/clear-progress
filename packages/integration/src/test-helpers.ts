@@ -373,15 +373,15 @@ export async function pullFromServer<T = Record<string, unknown>>(
 }
 
 /**
- * Calls the get-cover Edge Function to retrieve cover data by file_id.
+ * Calls the get-cover Edge Function to retrieve cover data by hash.
  */
 export async function getCoverFromServer(
   credentials: ServerCallCredentials,
-  fileIds: string[],
+  hashes: string[],
 ): Promise<{
   ok: boolean;
   covers: Array<{
-    file_id: string;
+    hash: string;
     mime_type?: string;
     data?: string;
     error?: string;
@@ -396,7 +396,7 @@ export async function getCoverFromServer(
         apikey: credentials.anonKey,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ file_ids: fileIds }),
+      body: JSON.stringify({ hashes }),
     },
   );
   if (!response.ok) {
@@ -407,7 +407,7 @@ export async function getCoverFromServer(
   return (await response.json()) as Promise<{
     ok: boolean;
     covers: Array<{
-      file_id: string;
+      hash: string;
       mime_type?: string;
       data?: string;
       error?: string;

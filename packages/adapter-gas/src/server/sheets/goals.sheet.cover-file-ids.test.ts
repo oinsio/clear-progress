@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getSheet } from "./client";
-import { getCoverFileIds } from "./goals.sheet";
+import { getCoverHashes } from "./goals.sheet";
 import {
   GOAL_HEADERS,
   makeGoalRow,
@@ -9,84 +9,78 @@ import {
 
 vi.mock("./client", () => ({ getSheet: vi.fn() }));
 
-describe("getCoverFileIds", () => {
+describe("getCoverHashes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should return empty array when no goals have cover_file_id", () => {
+  it("should return empty array when no goals have cover_hash", () => {
     vi.mocked(getSheet).mockReturnValue(
-      makeSheetMock([
-        GOAL_HEADERS,
-        makeGoalRow({ cover_file_id: "" }),
-      ]) as never,
+      makeSheetMock([GOAL_HEADERS, makeGoalRow({ cover_hash: "" })]) as never,
     );
 
-    expect(getCoverFileIds()).toEqual([]);
+    expect(getCoverHashes()).toEqual([]);
   });
 
-  it("should return cover_file_id values of goals that have one", () => {
+  it("should return cover_hash values of goals that have one", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         GOAL_HEADERS,
-        makeGoalRow({ id: "goal-1", cover_file_id: "file-abc" }),
-        makeGoalRow({ id: "goal-2", cover_file_id: "file-xyz" }),
+        makeGoalRow({ id: "goal-1", cover_hash: "hash-abc" }),
+        makeGoalRow({ id: "goal-2", cover_hash: "hash-xyz" }),
       ]) as never,
     );
 
-    expect(getCoverFileIds()).toEqual(["file-abc", "file-xyz"]);
+    expect(getCoverHashes()).toEqual(["hash-abc", "hash-xyz"]);
   });
 
-  it("should filter out goals without cover_file_id", () => {
+  it("should filter out goals without cover_hash", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         GOAL_HEADERS,
-        makeGoalRow({ id: "goal-1", cover_file_id: "file-abc" }),
-        makeGoalRow({ id: "goal-2", cover_file_id: "" }),
+        makeGoalRow({ id: "goal-1", cover_hash: "hash-abc" }),
+        makeGoalRow({ id: "goal-2", cover_hash: "" }),
       ]) as never,
     );
 
-    expect(getCoverFileIds()).toEqual(["file-abc"]);
+    expect(getCoverHashes()).toEqual(["hash-abc"]);
   });
 
-  it("should return duplicate file ids when multiple goals share the same cover", () => {
+  it("should return duplicate hashes when multiple goals share the same cover", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         GOAL_HEADERS,
-        makeGoalRow({ id: "goal-1", cover_file_id: "file-shared" }),
-        makeGoalRow({ id: "goal-2", cover_file_id: "file-shared" }),
+        makeGoalRow({ id: "goal-1", cover_hash: "hash-shared" }),
+        makeGoalRow({ id: "goal-2", cover_hash: "hash-shared" }),
       ]) as never,
     );
 
-    expect(getCoverFileIds()).toEqual(["file-shared", "file-shared"]);
+    expect(getCoverHashes()).toEqual(["hash-shared", "hash-shared"]);
   });
 
   it("should return empty array when sheet has no goals", () => {
     vi.mocked(getSheet).mockReturnValue(makeSheetMock([GOAL_HEADERS]) as never);
 
-    expect(getCoverFileIds()).toEqual([]);
+    expect(getCoverHashes()).toEqual([]);
   });
 
-  it("should exclude goals with null cover_file_id cell value", () => {
+  it("should exclude goals with null cover_hash cell value", () => {
+    vi.mocked(getSheet).mockReturnValue(
+      makeSheetMock([GOAL_HEADERS, makeGoalRow({ cover_hash: null })]) as never,
+    );
+
+    expect(getCoverHashes()).toEqual([]);
+  });
+
+  it("should return only non-empty cover_hashes when mixing null and valid values", () => {
     vi.mocked(getSheet).mockReturnValue(
       makeSheetMock([
         GOAL_HEADERS,
-        makeGoalRow({ cover_file_id: null }),
+        makeGoalRow({ id: "goal-1", cover_hash: "hash-123" }),
+        makeGoalRow({ id: "goal-2", cover_hash: null }),
       ]) as never,
     );
 
-    expect(getCoverFileIds()).toEqual([]);
-  });
-
-  it("should return only non-empty cover_file_ids when mixing null and valid values", () => {
-    vi.mocked(getSheet).mockReturnValue(
-      makeSheetMock([
-        GOAL_HEADERS,
-        makeGoalRow({ id: "goal-1", cover_file_id: "file-123" }),
-        makeGoalRow({ id: "goal-2", cover_file_id: null }),
-      ]) as never,
-    );
-
-    expect(getCoverFileIds()).toEqual(["file-123"]);
+    expect(getCoverHashes()).toEqual(["hash-123"]);
   });
 });

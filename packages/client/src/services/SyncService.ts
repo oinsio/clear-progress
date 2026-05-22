@@ -1,6 +1,5 @@
 import type { PushResponse, SyncAdapter } from "@clear-progress/contract";
 import {
-  LOCAL_COVER_ID_PREFIX,
   PUSH_CHUNK_SIZE,
   PUSH_RESULT_STATUS,
   STORAGE_KEYS,
@@ -258,16 +257,10 @@ export class SyncService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       records.map(({ needsSync: _, ...rest }) => rest as Omit<T, "needsSync">);
 
-    const goalsForPush = goals.map((goal) =>
-      goal.cover_file_id.startsWith(LOCAL_COVER_ID_PREFIX)
-        ? { ...goal, cover_file_id: "" }
-        : goal,
-    );
-
     // Split into chunks
     const chunks = this._createPushChunks(
       tasks,
-      goalsForPush,
+      goals,
       contexts,
       categories,
       checklist_items,

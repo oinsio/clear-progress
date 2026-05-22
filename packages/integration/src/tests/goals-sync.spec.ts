@@ -25,7 +25,7 @@ interface GoalsPullResponse {
     name: string;
     description: string;
     status: string;
-    cover_file_id: string;
+    cover_hash: string;
     sort_order: number;
     is_deleted: boolean;
   }>;

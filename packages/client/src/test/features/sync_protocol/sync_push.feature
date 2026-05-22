@@ -1,7 +1,7 @@
 Feature: Sync Protocol — Push
   Implements spec-sync-protocol push scenarios: collecting dirty records,
-  force push, stripping needsSync, sanitizing local cover IDs, and
-  applying push results (created/accepted/conflict/rejected).
+  force push, stripping needsSync, and applying push results
+  (created/accepted/conflict/rejected).
 
   @spec-sync-protocol @FR1
   Scenario: Regular push collects only dirty records
@@ -20,12 +20,6 @@ Feature: Sync Protocol — Push
     Given client has a dirty task
     When push is called
     Then no record in PushRequest contains the needsSync field
-
-  @spec-sync-protocol @FR1
-  Scenario: Goals with local cover IDs are sanitized
-    Given client has a dirty goal with cover_file_id "local:abc-123"
-    When push is called
-    Then PushRequest sends cover_file_id "" for that goal
 
   @spec-sync-protocol @FR1
   Scenario: Push skips when no dirty records exist

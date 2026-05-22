@@ -12,7 +12,7 @@ import type {
   SyncMeta,
   Task,
 } from "@/types/entities";
-import { DB_SCHEMA, DB_SCHEMA_V4 } from "./schema";
+import { DB_SCHEMA, DB_SCHEMA_V4, DB_SCHEMA_V5 } from "./schema";
 
 const V1_SCHEMA = {
   tasks:
@@ -32,8 +32,9 @@ export class ClearProgressDatabase extends Dexie {
   checklist_items!: EntityTable<ChecklistItem, "id">;
   ideas!: EntityTable<Idea, "id">;
   settings!: EntityTable<Setting, "key">;
-  covers!: EntityTable<CoverRecord, "file_id">;
-  pending_covers!: EntityTable<PendingCoverRecord, "local_id">;
+  // implements FR8 of content-addressable-covers
+  covers!: EntityTable<CoverRecord, "data_hash">;
+  pending_covers!: EntityTable<PendingCoverRecord, "data_hash">;
   sync_meta!: EntityTable<SyncMeta, "key">;
 
   constructor() {
@@ -117,6 +118,13 @@ export class ClearProgressDatabase extends Dexie {
               delete record._dirty;
             });
         }
+      });
+    // implements FR8 of content-addressable-covers
+    this.version(9)
+      .stores(DB_SCHEMA_V5)
+      .upgrade(async (tx) => {
+        await tx.table("covers").clear();
+        await tx.table("pending_covers").clear();
       });
   }
 }

@@ -19,15 +19,14 @@ describe("CoverSyncService", () => {
 
       await service.ensureCoverCached(FILE_ID);
 
-      expect(ctx.mockCoverRepository.getByFileId).not.toHaveBeenCalled();
+      expect(ctx.mockCoverRepository.getByHash).not.toHaveBeenCalled();
     });
 
     it("should create object URL from existing IndexedDB blob without calling getCover", async () => {
       const existingBlob = new Blob(["img"], { type: "image/jpeg" });
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue({
-          file_id: FILE_ID,
-          data_hash: "hash-abc",
+        getByHash: vi.fn().mockResolvedValue({
+          data_hash: FILE_ID,
           data: existingBlob,
         }),
       });
@@ -44,14 +43,14 @@ describe("CoverSyncService", () => {
         getCover: createMockGetCoversSuccess(FILE_ID),
       });
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(undefined),
+        getByHash: vi.fn().mockResolvedValue(undefined),
       });
       const service = ctx.createService();
 
       await service.ensureCoverCached(FILE_ID);
 
       expect(ctx.mockCoverRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({ file_id: FILE_ID, data: expect.any(Blob) }),
+        expect.objectContaining({ data_hash: FILE_ID, data: expect.any(Blob) }),
       );
     });
 
@@ -60,7 +59,7 @@ describe("CoverSyncService", () => {
         getCover: createMockGetCoversSuccess(FILE_ID),
       });
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(undefined),
+        getByHash: vi.fn().mockResolvedValue(undefined),
       });
       const service = ctx.createService();
 
@@ -74,7 +73,7 @@ describe("CoverSyncService", () => {
         getCover: vi.fn().mockRejectedValue(new Error("Network error")),
       });
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(undefined),
+        getByHash: vi.fn().mockResolvedValue(undefined),
       });
       const service = ctx.createService();
 
@@ -85,9 +84,8 @@ describe("CoverSyncService", () => {
 
     it("should not save to coverRepository when blob already exists in IndexedDB", async () => {
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue({
-          file_id: FILE_ID,
-          data_hash: "hash-abc",
+        getByHash: vi.fn().mockResolvedValue({
+          data_hash: FILE_ID,
           data: new Blob(["img"], { type: "image/jpeg" }),
         }),
       });
@@ -103,7 +101,7 @@ describe("CoverSyncService", () => {
         getCover: createMockGetCoversSuccess(FILE_ID),
       });
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(undefined),
+        getByHash: vi.fn().mockResolvedValue(undefined),
       });
       const service = ctx.createService();
 

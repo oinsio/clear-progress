@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LOCAL_COVER_ID_PREFIX } from "@/constants";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import {
   createMockCoverRepository,
@@ -11,14 +10,14 @@ import {
   setupCoverSyncTests,
 } from "./CoverSyncService-test-utils";
 
-const REMOTE_FILE_ID = "remote-file-id-abc";
+const REMOTE_HASH = "remote-file-id-abc";
 
-function createActiveGoal(coverFileId: string) {
+function createActiveGoal(coverHash: string) {
   return {
     id: "goal-1",
     name: "Goal",
     description: "",
-    cover_file_id: coverFileId,
+    cover_hash: coverHash,
     status: "in_progress" as const,
     sort_order: 0,
     is_deleted: false,
@@ -31,7 +30,7 @@ describe("CoverSyncService", () => {
   const ctx = setupCoverSyncTests();
 
   describe("fullSync — ensureServerCoversAreCached", () => {
-    it("should skip goals with empty cover_file_id", async () => {
+    it("should skip goals with empty cover_hash", async () => {
       ctx.mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue([createActiveGoal("")]),
       });
@@ -39,30 +38,13 @@ describe("CoverSyncService", () => {
 
       await service.fullSync();
 
-      expect(ctx.mockCoverRepository.getByFileId).not.toHaveBeenCalled();
-    });
-
-    it("should skip goals with local: cover_file_id", async () => {
-      ctx.mockGoalRepository = createMockGoalRepository({
-        getActive: vi
-          .fn()
-          .mockResolvedValue([
-            createActiveGoal(`${LOCAL_COVER_ID_PREFIX}some-uuid`),
-          ]),
-      });
-      const service = ctx.createService();
-
-      await service.fullSync();
-
-      expect(ctx.mockCoverRepository.getByFileId).not.toHaveBeenCalled();
+      expect(ctx.mockCoverRepository.getByHash).not.toHaveBeenCalled();
     });
 
     it("should skip cover if already in localCoverCache", async () => {
-      localCoverCache.set(REMOTE_FILE_ID, "blob:http://localhost/cached");
+      localCoverCache.set(REMOTE_HASH, "blob:http://localhost/cached");
       ctx.mockGoalRepository = createMockGoalRepository({
-        getActive: vi
-          .fn()
-          .mockResolvedValue([createActiveGoal(REMOTE_FILE_ID)]),
+        getActive: vi.fn().mockResolvedValue([createActiveGoal(REMOTE_HASH)]),
       });
       const service = ctx.createService();
 
@@ -74,17 +56,14 @@ describe("CoverSyncService", () => {
     describe("when CoverRecord with blob already exists in repository", () => {
       beforeEach(() => {
         const existingCover = {
-          file_id: REMOTE_FILE_ID,
-          data_hash: "existing-hash",
+          data_hash: REMOTE_HASH,
           data: new Blob(["img"], { type: "image/jpeg" }),
         };
         ctx.mockGoalRepository = createMockGoalRepository({
-          getActive: vi
-            .fn()
-            .mockResolvedValue([createActiveGoal(REMOTE_FILE_ID)]),
+          getActive: vi.fn().mockResolvedValue([createActiveGoal(REMOTE_HASH)]),
         });
         ctx.mockCoverRepository = createMockCoverRepository({
-          getByFileId: vi.fn().mockResolvedValue(existingCover),
+          getByHash: vi.fn().mockResolvedValue(existingCover),
         });
       });
 
@@ -93,7 +72,7 @@ describe("CoverSyncService", () => {
 
         await service.fullSync();
 
-        expect(localCoverCache.get(REMOTE_FILE_ID)).toBeDefined();
+        expect(localCoverCache.get(REMOTE_HASH)).toBeDefined();
       });
 
       it("should not call getCover when blob exists in IndexedDB", async () => {
@@ -108,18 +87,16 @@ describe("CoverSyncService", () => {
     describe("when CoverRecord is missing from repository", () => {
       beforeEach(() => {
         ctx.mockGoalRepository = createMockGoalRepository({
-          getActive: vi
-            .fn()
-            .mockResolvedValue([createActiveGoal(REMOTE_FILE_ID)]),
+          getActive: vi.fn().mockResolvedValue([createActiveGoal(REMOTE_HASH)]),
         });
         ctx.mockCoverRepository = createMockCoverRepository({
-          getByFileId: vi.fn().mockResolvedValue(undefined),
+          getByHash: vi.fn().mockResolvedValue(undefined),
         });
       });
 
       it("should call getCover API to fetch cover", async () => {
         ctx.mockSyncAdapter = createMockSyncAdapter({
-          getCover: createMockGetCoversSuccess(REMOTE_FILE_ID),
+          getCover: createMockGetCoversSuccess(REMOTE_HASH),
         });
         const service = ctx.createService();
 
@@ -130,7 +107,7 @@ describe("CoverSyncService", () => {
 
       it("should save downloaded blob to coverRepository when getCover succeeds", async () => {
         ctx.mockSyncAdapter = createMockSyncAdapter({
-          getCover: createMockGetCoversSuccess(REMOTE_FILE_ID),
+          getCover: createMockGetCoversSuccess(REMOTE_HASH),
         });
         const service = ctx.createService();
 
@@ -138,7 +115,7 @@ describe("CoverSyncService", () => {
 
         expect(ctx.mockCoverRepository.save).toHaveBeenCalledWith(
           expect.objectContaining({
-            file_id: REMOTE_FILE_ID,
+            data_hash: REMOTE_HASH,
             data: expect.any(Blob),
           }),
         );
@@ -146,13 +123,13 @@ describe("CoverSyncService", () => {
 
       it("should add cover to localCoverCache after successful download", async () => {
         ctx.mockSyncAdapter = createMockSyncAdapter({
-          getCover: createMockGetCoversSuccess(REMOTE_FILE_ID),
+          getCover: createMockGetCoversSuccess(REMOTE_HASH),
         });
         const service = ctx.createService();
 
         await service.fullSync();
 
-        expect(localCoverCache.get(REMOTE_FILE_ID)).toBeDefined();
+        expect(localCoverCache.get(REMOTE_HASH)).toBeDefined();
       });
 
       it("should not save to coverRepository when getCover fails", async () => {
@@ -174,12 +151,12 @@ describe("CoverSyncService", () => {
 
         await service.fullSync();
 
-        expect(localCoverCache.get(REMOTE_FILE_ID)).toBeUndefined();
+        expect(localCoverCache.get(REMOTE_HASH)).toBeUndefined();
       });
 
       it("should not save to coverRepository when getCover returns FILE_NOT_FOUND", async () => {
         ctx.mockSyncAdapter = createMockSyncAdapter({
-          getCover: createMockGetCoversNotFound(REMOTE_FILE_ID),
+          getCover: createMockGetCoversNotFound(REMOTE_HASH),
         });
         const service = ctx.createService();
 

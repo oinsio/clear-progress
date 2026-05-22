@@ -27,14 +27,14 @@ export const MOCK_BASE64 = btoa("fake image content");
 export const MOCK_MIME_TYPE = "image/jpeg";
 
 export function createMockGetCoversSuccess(
-  fileId: string,
+  hash: string,
   overrides: Record<string, unknown> = {},
 ) {
   return vi.fn().mockResolvedValue({
     ok: true,
     covers: [
       {
-        file_id: fileId,
+        hash,
         mime_type: MOCK_MIME_TYPE,
         data: MOCK_BASE64,
         ...overrides,
@@ -43,10 +43,10 @@ export function createMockGetCoversSuccess(
   });
 }
 
-export function createMockGetCoversNotFound(fileId: string) {
+export function createMockGetCoversNotFound(hash: string) {
   return vi.fn().mockResolvedValue({
     ok: true,
-    covers: [{ file_id: fileId, error: "FILE_NOT_FOUND" }],
+    covers: [{ hash, error: "FILE_NOT_FOUND" }],
   });
 }
 
@@ -54,7 +54,6 @@ export function createPendingCover(
   overrides: Partial<PendingCoverRecord> = {},
 ): PendingCoverRecord {
   return {
-    local_id: "test-local-id",
     goal_id: "test-goal-id",
     data: new Blob(["fake image content"], { type: "image/jpeg" }),
     filename: "cover.jpg",
@@ -67,14 +66,14 @@ export function createPendingCover(
 
 export function createGoalWithCover(
   goalId: string,
-  coverFileId: string,
+  coverHash: string,
   overrides: Record<string, unknown> = {},
 ) {
   return {
     id: goalId,
     name: "Test Goal",
     description: "",
-    cover_file_id: coverFileId,
+    cover_hash: coverHash,
     status: "in_progress" as const,
     sort_order: 0,
     is_deleted: false,
@@ -122,23 +121,21 @@ export function setupCoverSyncTests(): CoverSyncTestContext {
 }
 
 export const EXISTING_SERVER_FILE_ID = "existing-server-file-id";
-export const NEW_SERVER_FILE_ID = "new-server-file-id";
 
 export function setupReuploadDefaults(ctx: CoverSyncTestContext) {
   ctx.mockGoalRepository = createMockGoalRepository({
     getActive: vi.fn().mockResolvedValue([createGoalWithServerCover()]),
   });
   ctx.mockCoverRepository = createMockCoverRepository({
-    getByFileId: vi.fn().mockResolvedValue(createCoverRecord()),
+    getByHash: vi.fn().mockResolvedValue(createCoverRecord()),
   });
   ctx.mockSyncAdapter = createMockSyncAdapter({
     uploadCovers: vi.fn().mockResolvedValue({
       ok: true,
       results: [
         {
-          local_id: "goal-reupload",
+          data_hash: EXISTING_SERVER_FILE_ID,
           goal_id: "goal-reupload",
-          file_id: EXISTING_SERVER_FILE_ID,
           reused: true,
         },
       ],
@@ -156,10 +153,9 @@ export function createGoalWithServerCover(
   );
 }
 
-export function createCoverRecord(fileId = EXISTING_SERVER_FILE_ID) {
+export function createCoverRecord(dataHash = "cover-hash-xyz") {
   return {
-    file_id: fileId,
-    data_hash: "cover-hash-xyz",
+    data_hash: dataHash,
     data: new Blob(["img data"], { type: "image/jpeg" }),
   };
 }

@@ -2,13 +2,10 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext, vi } from "vitest";
-import { LOCAL_COVER_ID_PREFIX, MAX_COVER_BATCH_SIZE } from "@/constants";
-import { localCoverCache } from "@/services/LocalCoverCache";
+import { MAX_COVER_BATCH_SIZE } from "@/constants";
 import {
   type CoverSyncDeps,
   createCoverSyncScaffold,
-  createGoal,
-  createMockGoalRepository,
   createMockPendingCoverRepository,
   createMockSyncAdapter,
   createPendingCover,
@@ -21,72 +18,26 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
 
   // @spec-sync-protocol @FR8
   f.Scenario(
-    "Pending cover is uploaded and goal is updated with server file_id",
-    ({ Given, And, When, Then }) => {
-      const pendingCover = createPendingCover({
-        local_id: "local-1",
-        goal_id: "goal-1",
-      });
-      const localFileId = `${LOCAL_COVER_ID_PREFIX}local-1`;
-
-      Given(
-        'a pending cover exists for goal "goal-1"',
-        async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue([pendingCover]),
-          });
-        },
-      );
-
-      And(
-        'the goal "goal-1" has cover_file_id with local: prefix',
-        async (_ctx: TestContext) => {
-          deps.goalRepository = createMockGoalRepository({
-            getActive: vi
-              .fn()
-              .mockResolvedValue([
-                createGoal({ id: "goal-1", cover_file_id: localFileId }),
-              ]),
-          });
-        },
-      );
-
-      When("cover sync runs", async (_ctx: TestContext) => {
-        const service = createService();
-        await service.sync();
-      });
-
-      Then(
-        'goal "goal-1" cover_file_id is updated to the server file_id',
-        async (_ctx: TestContext) => {
-          expect(deps.goalRepository.update).toHaveBeenCalledWith(
-            expect.objectContaining({
-              id: "goal-1",
-              cover_file_id: "uploaded-file-id",
-            }),
-          );
-        },
-      );
-
-      And('goal "goal-1" is marked as needsSync', async (_ctx: TestContext) => {
-        expect(deps.goalRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ needsSync: true }),
-        );
-      });
-    },
-  );
-
-  // @spec-sync-protocol @FR8
-  f.Scenario(
     "Pending cover is deleted after successful upload",
     ({ Given, When, Then }) => {
-      Given('a pending cover "local-abc" exists', async (_ctx: TestContext) => {
-        deps.pendingCoverRepository = createMockPendingCoverRepository({
-          getAll: vi
-            .fn()
-            .mockResolvedValue([createPendingCover({ local_id: "local-abc" })]),
-        });
-      });
+      Given(
+        'a pending cover with hash "hash-abc" exists',
+        async (_ctx: TestContext) => {
+          deps.pendingCoverRepository = createMockPendingCoverRepository({
+            getAll: vi
+              .fn()
+              .mockResolvedValue([
+                createPendingCover({ data_hash: "hash-abc" }),
+              ]),
+          });
+          deps.syncAdapter = createMockSyncAdapter({
+            uploadCovers: vi.fn().mockResolvedValue({
+              ok: true,
+              results: [{ data_hash: "hash-abc", reused: false }],
+            }),
+          });
+        },
+      );
 
       When("cover sync runs", async (_ctx: TestContext) => {
         const service = createService();
@@ -94,10 +45,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then(
-        'pending cover "local-abc" is removed from repository',
+        'pending cover "hash-abc" is removed from repository',
         async (_ctx: TestContext) => {
           expect(deps.pendingCoverRepository.delete).toHaveBeenCalledWith(
-            "local-abc",
+            "hash-abc",
           );
         },
       );
@@ -108,13 +59,22 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
   f.Scenario(
     "Cover blob is saved to cover repository after upload",
     ({ Given, When, Then }) => {
-      const pendingCover = createPendingCover({ goal_id: "goal-1" });
+      const pendingCover = createPendingCover({
+        data_hash: "hash-upload",
+        goal_id: "goal-1",
+      });
 
       Given(
-        'a pending cover exists for goal "goal-1"',
+        'a pending cover with hash "hash-upload" exists for goal "goal-1"',
         async (_ctx: TestContext) => {
           deps.pendingCoverRepository = createMockPendingCoverRepository({
             getAll: vi.fn().mockResolvedValue([pendingCover]),
+          });
+          deps.syncAdapter = createMockSyncAdapter({
+            uploadCovers: vi.fn().mockResolvedValue({
+              ok: true,
+              results: [{ data_hash: "hash-upload", reused: false }],
+            }),
           });
         },
       );
@@ -125,13 +85,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then(
-        "cover repository contains a record with server file_id",
+        'cover repository contains a record with data_hash "hash-upload"',
         async (_ctx: TestContext) => {
           expect(deps.coverRepository.save).toHaveBeenCalledWith(
             expect.objectContaining({
-              file_id: "uploaded-file-id",
+              data_hash: "hash-upload",
               data: pendingCover.data,
-              data_hash: pendingCover.data_hash,
             }),
           );
         },
@@ -141,85 +100,28 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
 
   // @spec-sync-protocol @FR8
   f.Scenario(
-    "Cache entry is transferred from local_id to server file_id",
-    ({ Given, When, Then, And }) => {
-      const originalUrl = "blob:http://localhost/original";
-
+    "Duplicate cover detected by hash is not saved again (reused: true)",
+    ({ Given, And, When, Then }) => {
       Given(
-        'a pending cover "local-transfer" has a cached blob URL',
+        'a pending cover with hash "hash-reused" exists',
         async (_ctx: TestContext) => {
-          localCoverCache.set("local-transfer", originalUrl);
           deps.pendingCoverRepository = createMockPendingCoverRepository({
             getAll: vi
               .fn()
               .mockResolvedValue([
-                createPendingCover({ local_id: "local-transfer" }),
-              ]),
-          });
-        },
-      );
-
-      When("cover sync runs", async (_ctx: TestContext) => {
-        const service = createService();
-        await service.sync();
-      });
-
-      Then(
-        "local cover cache maps server file_id to the original blob URL",
-        async (_ctx: TestContext) => {
-          expect(localCoverCache.get("uploaded-file-id")).toBe(originalUrl);
-        },
-      );
-
-      And(
-        'local cover cache no longer maps "local-transfer"',
-        async (_ctx: TestContext) => {
-          expect(localCoverCache.get("local-transfer")).toBeUndefined();
-        },
-      );
-    },
-  );
-
-  // @spec-sync-protocol @FR8
-  f.Scenario(
-    "Duplicate cover detected by hash returns reused file_id",
-    ({ Given, And, When, Then }) => {
-      const pendingCover = createPendingCover({
-        local_id: "dedup-local",
-        goal_id: "goal-1",
-      });
-      const localFileId = `${LOCAL_COVER_ID_PREFIX}dedup-local`;
-
-      Given(
-        'a pending cover exists for goal "goal-1"',
-        async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue([pendingCover]),
-          });
-          deps.goalRepository = createMockGoalRepository({
-            getActive: vi
-              .fn()
-              .mockResolvedValue([
-                createGoal({ id: "goal-1", cover_file_id: localFileId }),
+                createPendingCover({ data_hash: "hash-reused" }),
               ]),
           });
         },
       );
 
       And(
-        "server will respond with reused true and existing file_id",
+        'server will respond with reused true for "hash-reused"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
             uploadCovers: vi.fn().mockResolvedValue({
               ok: true,
-              results: [
-                {
-                  local_id: "dedup-local",
-                  goal_id: "goal-1",
-                  file_id: "existing-server-file",
-                  reused: true,
-                },
-              ],
+              results: [{ data_hash: "hash-reused", reused: true }],
             }),
           });
         },
@@ -230,19 +132,16 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         await service.sync();
       });
 
-      Then(
-        'goal "goal-1" cover_file_id is updated to the existing file_id',
-        async (_ctx: TestContext) => {
-          expect(deps.goalRepository.update).toHaveBeenCalledWith(
-            expect.objectContaining({
-              id: "goal-1",
-              cover_file_id: "existing-server-file",
-            }),
-          );
+      Then("cover repository save is not called", async (_ctx: TestContext) => {
+        expect(deps.coverRepository.save).not.toHaveBeenCalled();
+      });
 
-          // Assert reupload does NOT happen — cover.save should not be called
-          // because the cover already exists on server (kills ConditionalExpression mutant)
-          expect(deps.coverRepository.save).not.toHaveBeenCalled();
+      And(
+        'pending cover "hash-reused" is removed from repository',
+        async (_ctx: TestContext) => {
+          expect(deps.pendingCoverRepository.delete).toHaveBeenCalledWith(
+            "hash-reused",
+          );
         },
       );
     },
@@ -257,7 +156,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         async (_ctx: TestContext) => {
           const pendingCovers = Array.from(
             { length: MAX_COVER_BATCH_SIZE + 1 },
-            (_, i) => createPendingCover({ local_id: `cover-${i}` }),
+            (_, i) => createPendingCover({ data_hash: `hash-${i}` }),
           );
           deps.pendingCoverRepository = createMockPendingCoverRepository({
             getAll: vi.fn().mockResolvedValue(pendingCovers),
@@ -278,40 +177,134 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
 
   // @spec-sync-protocol @FR9
   f.Scenario(
+    "Batch does not produce extra empty iteration on exact boundary",
+    ({ Given, When, Then, And }) => {
+      Given(
+        "exactly MAX_COVER_BATCH_SIZE pending covers exist",
+        async (_ctx: TestContext) => {
+          const pendingCovers = Array.from(
+            { length: MAX_COVER_BATCH_SIZE },
+            (_, i) => createPendingCover({ data_hash: `hash-${i}` }),
+          );
+          deps.pendingCoverRepository = createMockPendingCoverRepository({
+            getAll: vi.fn().mockResolvedValue(pendingCovers),
+          });
+        },
+      );
+
+      When("cover sync runs", async (_ctx: TestContext) => {
+        const service = createService();
+        await service.sync();
+      });
+
+      Then("uploadCovers is called exactly once", async (_ctx: TestContext) => {
+        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledTimes(1);
+      });
+
+      And("no empty batch is processed", async (_ctx: TestContext) => {
+        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledWith(
+          expect.objectContaining({
+            covers: expect.arrayContaining([
+              expect.objectContaining({ data_hash: expect.any(String) }),
+            ]),
+          }),
+        );
+        const callArgs = vi.mocked(deps.syncAdapter.uploadCovers).mock.calls[0];
+        expect(callArgs[0].covers).toHaveLength(MAX_COVER_BATCH_SIZE);
+      });
+    },
+  );
+
+  // @spec-sync-protocol @FR9
+  f.Scenario(
     "Per-item error does not block other items in same chunk",
     ({ Given, And, When, Then }) => {
       Given(
-        'two pending covers exist: "bad-id" and "ok-id"',
+        'two pending covers exist: "hash-bad" and "hash-ok"',
         async (_ctx: TestContext) => {
           deps.pendingCoverRepository = createMockPendingCoverRepository({
             getAll: vi.fn().mockResolvedValue([
               createPendingCover({
-                local_id: "bad-id",
+                data_hash: "hash-bad",
                 goal_id: "bad-goal",
               }),
-              createPendingCover({ local_id: "ok-id", goal_id: "ok-goal" }),
+              createPendingCover({
+                data_hash: "hash-ok",
+                goal_id: "ok-goal",
+              }),
             ]),
           });
         },
       );
 
       And(
-        'server will respond with error for "bad-id" and success for "ok-id"',
+        'server will respond with error for "hash-bad" and success for "hash-ok"',
+        async (_ctx: TestContext) => {
+          deps.syncAdapter = createMockSyncAdapter({
+            uploadCovers: vi.fn().mockResolvedValue({
+              ok: true,
+              results: [
+                { data_hash: "hash-bad", error: "FILE_TOO_LARGE" },
+                { data_hash: "hash-ok", reused: false },
+              ],
+            }),
+          });
+        },
+      );
+
+      When("cover sync runs", async (_ctx: TestContext) => {
+        const service = createService();
+        await service.sync();
+      });
+
+      Then(
+        'pending cover "hash-ok" is removed from repository',
+        async (_ctx: TestContext) => {
+          expect(deps.pendingCoverRepository.delete).toHaveBeenCalledWith(
+            "hash-ok",
+          );
+        },
+      );
+
+      And(
+        'pending cover "hash-bad" is not removed from repository',
+        async (_ctx: TestContext) => {
+          expect(deps.pendingCoverRepository.delete).not.toHaveBeenCalledWith(
+            "hash-bad",
+          );
+        },
+      );
+    },
+  );
+
+  // @spec-sync-protocol @FR9
+  f.Scenario(
+    "Upload skips result with error flag even when data_hash is present",
+    ({ Given, And, When, Then }) => {
+      Given(
+        'a pending cover with hash "hash-error" exists',
+        async (_ctx: TestContext) => {
+          deps.pendingCoverRepository = createMockPendingCoverRepository({
+            getAll: vi.fn().mockResolvedValue([
+              createPendingCover({
+                data_hash: "hash-error",
+                goal_id: "goal-1",
+              }),
+            ]),
+          });
+        },
+      );
+
+      And(
+        'server will respond with error flag true for "hash-error"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
             uploadCovers: vi.fn().mockResolvedValue({
               ok: true,
               results: [
                 {
-                  local_id: "bad-id",
-                  goal_id: "bad-goal",
-                  error: "FILE_TOO_LARGE",
-                },
-                {
-                  local_id: "ok-id",
-                  goal_id: "ok-goal",
-                  file_id: "ok-file-id",
-                  reused: false,
+                  data_hash: "hash-error",
+                  error: "VALIDATION_FAILED",
                 },
               ],
             }),
@@ -325,19 +318,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then(
-        'pending cover "ok-id" is removed from repository',
-        async (_ctx: TestContext) => {
-          expect(deps.pendingCoverRepository.delete).toHaveBeenCalledWith(
-            "ok-id",
-          );
-        },
-      );
-
-      And(
-        'pending cover "bad-id" is not removed from repository',
+        'pending cover "hash-error" is not removed from repository',
         async (_ctx: TestContext) => {
           expect(deps.pendingCoverRepository.delete).not.toHaveBeenCalledWith(
-            "bad-id",
+            "hash-error",
           );
         },
       );
@@ -353,7 +337,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         async (_ctx: TestContext) => {
           const pendingCovers = Array.from(
             { length: MAX_COVER_BATCH_SIZE + 1 },
-            (_, i) => createPendingCover({ local_id: `cover-${i}` }),
+            (_, i) => createPendingCover({ data_hash: `hash-${i}` }),
           );
           deps.pendingCoverRepository = createMockPendingCoverRepository({
             getAll: vi.fn().mockResolvedValue(pendingCovers),
@@ -377,209 +361,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
 
       Then("uploadCovers is called only once", async (_ctx: TestContext) => {
         expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledTimes(1);
-      });
-    },
-  );
-
-  // @spec-sync-protocol @FR8
-  f.Scenario(
-    "Goal is not updated when cover_file_id no longer matches local prefix",
-    ({ Given, And, When, Then }) => {
-      Given(
-        'a pending cover "changed-id" exists for goal "goal-1"',
-        async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue([
-              createPendingCover({
-                local_id: "changed-id",
-                goal_id: "goal-1",
-              }),
-            ]),
-          });
-        },
-      );
-
-      And(
-        'goal "goal-1" has a different cover_file_id',
-        async (_ctx: TestContext) => {
-          deps.goalRepository = createMockGoalRepository({
-            getActive: vi.fn().mockResolvedValue([
-              createGoal({
-                id: "goal-1",
-                cover_file_id: "some-other-remote-file-id",
-              }),
-            ]),
-          });
-        },
-      );
-
-      When("cover sync runs", async (_ctx: TestContext) => {
-        const service = createService();
-        await service.sync();
-      });
-
-      Then('goal "goal-1" is not updated', async (_ctx: TestContext) => {
-        expect(deps.goalRepository.update).not.toHaveBeenCalled();
-      });
-    },
-  );
-
-  // @spec-sync-protocol @FR8
-  f.Scenario(
-    "Multiple goals sharing the same local cover are all updated",
-    ({ Given, When, Then }) => {
-      const localFileId = `${LOCAL_COVER_ID_PREFIX}shared-local`;
-
-      Given(
-        'two goals share the same local cover "shared-local"',
-        async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue([
-              createPendingCover({
-                local_id: "shared-local",
-                goal_id: "goal-a",
-              }),
-            ]),
-          });
-          deps.goalRepository = createMockGoalRepository({
-            getActive: vi
-              .fn()
-              .mockResolvedValue([
-                createGoal({ id: "goal-a", cover_file_id: localFileId }),
-                createGoal({ id: "goal-b", cover_file_id: localFileId }),
-              ]),
-          });
-        },
-      );
-
-      When("cover sync runs", async (_ctx: TestContext) => {
-        const service = createService();
-        await service.sync();
-      });
-
-      Then(
-        "both goals are updated with the server file_id",
-        async (_ctx: TestContext) => {
-          expect(deps.goalRepository.update).toHaveBeenCalledTimes(2);
-          expect(deps.goalRepository.update).toHaveBeenCalledWith(
-            expect.objectContaining({
-              id: "goal-a",
-              cover_file_id: "uploaded-file-id",
-            }),
-          );
-          expect(deps.goalRepository.update).toHaveBeenCalledWith(
-            expect.objectContaining({
-              id: "goal-b",
-              cover_file_id: "uploaded-file-id",
-            }),
-          );
-        },
-      );
-    },
-  );
-
-  // @spec-sync-protocol @FR9
-  f.Scenario(
-    "Batch does not produce extra empty iteration on exact boundary",
-    ({ Given, When, Then, And }) => {
-      Given(
-        "exactly MAX_COVER_BATCH_SIZE pending covers exist",
-        async (_ctx: TestContext) => {
-          const pendingCovers = Array.from(
-            { length: MAX_COVER_BATCH_SIZE },
-            (_, i) => createPendingCover({ local_id: `cover-${i}` }),
-          );
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue(pendingCovers),
-          });
-        },
-      );
-
-      When("cover sync runs", async (_ctx: TestContext) => {
-        const service = createService();
-        await service.sync();
-      });
-
-      Then("uploadCovers is called exactly once", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledTimes(1);
-      });
-
-      And("no empty batch is processed", async (_ctx: TestContext) => {
-        // Verify the single call has exactly MAX_COVER_BATCH_SIZE items
-        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledWith(
-          expect.objectContaining({
-            covers: expect.arrayContaining([
-              expect.objectContaining({ local_id: expect.any(String) }),
-            ]),
-          }),
-        );
-        const callArgs = vi.mocked(deps.syncAdapter.uploadCovers).mock.calls[0];
-        expect(callArgs[0].covers).toHaveLength(MAX_COVER_BATCH_SIZE);
-      });
-    },
-  );
-
-  // @spec-sync-protocol @FR9
-  f.Scenario(
-    "Upload skips result with error flag even when file_id is present",
-    ({ Given, And, When, Then }) => {
-      Given(
-        'a pending cover "error-with-id" exists',
-        async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue([
-              createPendingCover({
-                local_id: "error-with-id",
-                goal_id: "goal-error",
-              }),
-            ]),
-          });
-        },
-      );
-
-      And(
-        'server will respond with error flag true and file_id for "error-with-id"',
-        async (_ctx: TestContext) => {
-          deps.goalRepository = createMockGoalRepository({
-            getActive: vi.fn().mockResolvedValue([
-              createGoal({
-                id: "goal-error",
-                cover_file_id: `${LOCAL_COVER_ID_PREFIX}error-with-id`,
-              }),
-            ]),
-          });
-          deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockResolvedValue({
-              ok: true,
-              results: [
-                {
-                  local_id: "error-with-id",
-                  goal_id: "goal-error",
-                  file_id: "some-file-id", // file_id present
-                  error: "VALIDATION_FAILED", // but error flag is set
-                },
-              ],
-            }),
-          });
-        },
-      );
-
-      When("cover sync runs", async (_ctx: TestContext) => {
-        const service = createService();
-        await service.sync();
-      });
-
-      Then(
-        'pending cover "error-with-id" is not removed from repository',
-        async (_ctx: TestContext) => {
-          expect(deps.pendingCoverRepository.delete).not.toHaveBeenCalledWith(
-            "error-with-id",
-          );
-        },
-      );
-
-      And("goal is not updated with the file_id", async (_ctx: TestContext) => {
-        expect(deps.goalRepository.update).not.toHaveBeenCalled();
       });
     },
   );

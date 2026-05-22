@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  FALLBACK_COVER_MIME_TYPE,
-  LOCAL_COVER_ID_PREFIX,
-  MAX_COVER_BATCH_SIZE,
-} from "@/constants";
+import { FALLBACK_COVER_MIME_TYPE, MAX_COVER_BATCH_SIZE } from "@/constants";
 import {
   createCoverRecord,
   createGoalWithServerCover,
@@ -24,28 +20,11 @@ describe("CoverSyncService", () => {
       setupReuploadDefaults(ctx);
     });
 
-    it("should skip goals with empty cover_file_id", async () => {
+    it("should skip goals with empty cover_hash", async () => {
       ctx.mockGoalRepository = createMockGoalRepository({
         getActive: vi
           .fn()
-          .mockResolvedValue([
-            createGoalWithServerCover({ cover_file_id: "" }),
-          ]),
-      });
-      const service = ctx.createService();
-
-      await service.reuploadLocalCovers();
-
-      expect(ctx.mockSyncAdapter.uploadCovers).not.toHaveBeenCalled();
-    });
-
-    it("should skip goals with local: cover_file_id prefix", async () => {
-      ctx.mockGoalRepository = createMockGoalRepository({
-        getActive: vi.fn().mockResolvedValue([
-          createGoalWithServerCover({
-            cover_file_id: `${LOCAL_COVER_ID_PREFIX}some-uuid`,
-          }),
-        ]),
+          .mockResolvedValue([createGoalWithServerCover({ cover_hash: "" })]),
       });
       const service = ctx.createService();
 
@@ -68,7 +47,7 @@ describe("CoverSyncService", () => {
 
     it("should skip goals with no CoverRecord at all when server fetch also fails", async () => {
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(undefined),
+        getByHash: vi.fn().mockResolvedValue(undefined),
       });
       ctx.mockSyncAdapter = createMockSyncAdapter({
         getCover: createMockGetCoversNotFound(EXISTING_SERVER_FILE_ID),
@@ -115,7 +94,7 @@ describe("CoverSyncService", () => {
         data: new Blob(["img"], { type: "image/png" }),
       };
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(coverWithType),
+        getByHash: vi.fn().mockResolvedValue(coverWithType),
       });
       const service = ctx.createService();
 
@@ -136,7 +115,7 @@ describe("CoverSyncService", () => {
         data: new Blob(["img"], { type: "" }),
       };
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(coverWithEmptyType),
+        getByHash: vi.fn().mockResolvedValue(coverWithEmptyType),
       });
       const service = ctx.createService();
 
@@ -151,7 +130,7 @@ describe("CoverSyncService", () => {
       );
     });
 
-    it("should not update goal when server returns the same file_id (file still alive)", async () => {
+    it("should not update goal when server returns the same data_hash (file still alive)", async () => {
       const service = ctx.createService();
 
       await service.reuploadLocalCovers();
@@ -163,29 +142,28 @@ describe("CoverSyncService", () => {
       const goals = [
         createGoalWithServerCover({
           id: "goal-fail",
-          cover_file_id: "file-fail",
+          cover_hash: "hash-fail",
         }),
-        createGoalWithServerCover({ id: "goal-ok", cover_file_id: "file-ok" }),
+        createGoalWithServerCover({ id: "goal-ok", cover_hash: "hash-ok" }),
       ];
       ctx.mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(goals),
       });
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(createCoverRecord("file-fail")),
+        getByHash: vi.fn().mockResolvedValue(createCoverRecord("hash-fail")),
       });
       ctx.mockSyncAdapter = createMockSyncAdapter({
         uploadCovers: vi.fn().mockResolvedValue({
           ok: true,
           results: [
             {
-              local_id: "goal-fail",
+              data_hash: "hash-fail",
               goal_id: "goal-fail",
               error: "FILE_TOO_LARGE",
             },
             {
-              local_id: "goal-ok",
+              data_hash: "hash-ok",
               goal_id: "goal-ok",
-              file_id: "file-ok",
               reused: true,
             },
           ],
@@ -214,14 +192,14 @@ describe("CoverSyncService", () => {
       const goals = Array.from({ length: MAX_COVER_BATCH_SIZE + 1 }, (_, i) =>
         createGoalWithServerCover({
           id: `goal-${i}`,
-          cover_file_id: `file-${i}`,
+          cover_hash: `hash-${i}`,
         }),
       );
       ctx.mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(goals),
       });
       ctx.mockCoverRepository = createMockCoverRepository({
-        getByFileId: vi.fn().mockResolvedValue(createCoverRecord()),
+        getByHash: vi.fn().mockResolvedValue(createCoverRecord()),
       });
       ctx.mockSyncAdapter = createMockSyncAdapter({
         uploadCovers: vi

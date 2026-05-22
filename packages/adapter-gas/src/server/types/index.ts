@@ -44,7 +44,7 @@ export interface Task extends SortableEntity {
 export interface Goal extends SortableEntity {
   name: string;
   description: string;
-  cover_file_id: string;
+  cover_hash: string;
   status: GoalStatus;
 }
 

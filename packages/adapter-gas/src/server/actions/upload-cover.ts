@@ -23,10 +23,11 @@ export interface SingleCoverInput {
   data: string; // base64
 }
 
+// implements FR2 of content-addressable-covers
 export interface SingleCoverResult {
   local_id?: string;
   goal_id: string;
-  file_id?: string;
+  data_hash?: string;
   reused?: boolean;
   error?: string;
   errorMessage?: string;
@@ -81,7 +82,7 @@ export function uploadSingleCover(
 
   for (const file of existingFiles) {
     if (file.description === hash) {
-      return { goal_id, local_id, file_id: file.id, reused: true };
+      return { goal_id, local_id, data_hash: hash, reused: true };
     }
   }
 
@@ -103,7 +104,7 @@ export function uploadSingleCover(
     newFileId,
   );
 
-  return { goal_id, local_id, file_id: newFileId, reused: false };
+  return { goal_id, local_id, data_hash: hash, reused: false };
 }
 
 export function uploadCover(payload: {
@@ -130,5 +131,5 @@ export function uploadCover(payload: {
   if (result.error) {
     return jsonError(result.error, result.errorMessage ?? "");
   }
-  return jsonOk({ file_id: result.file_id, reused: result.reused });
+  return jsonOk({ data_hash: result.data_hash, reused: result.reused });
 }

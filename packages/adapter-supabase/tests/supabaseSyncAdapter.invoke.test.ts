@@ -111,7 +111,7 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
       };
       const client = createMockSupabaseClient({
         invokeResult: {
-          data: { ok: true, file_id: "file-1", reused: false },
+          data: { ok: true, data_hash: "hash123", reused: false },
           error: null,
         },
       });
@@ -142,7 +142,7 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
           data: {
             ok: true,
             results: [
-              { local_id: "local-1", goal_id: "goal-1", file_id: "file-1" },
+              { local_id: "local-1", goal_id: "goal-1", data_hash: "hash123" },
             ],
           },
           error: null,
@@ -158,7 +158,7 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
     });
 
     it("should call functions.invoke('get-cover') for getCover()", async () => {
-      const request = { file_ids: ["file-1"] };
+      const request = { hashes: ["hash123"] };
       const client = createMockSupabaseClient({
         invokeResult: {
           data: { ok: true, covers: [] },
@@ -175,7 +175,7 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
     });
 
     it("should call functions.invoke('delete-cover') for deleteCover()", async () => {
-      const request = { file_id: "file-1", goal_id: "goal-1" };
+      const request = { hash: "hash123", goal_id: "goal-1" };
       const client = createMockSupabaseClient({
         invokeResult: {
           data: { ok: true, deleted: true, ref_count: 0 },

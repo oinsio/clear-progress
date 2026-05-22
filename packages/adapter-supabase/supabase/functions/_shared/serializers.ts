@@ -34,7 +34,7 @@ export function serializeGoalRow(row: DbRow) {
     id: row.id as string,
     name: row.name as string,
     description: row.description as string,
-    cover_file_id: (row.cover_file_id as string) ?? "",
+    cover_hash: (row.cover_hash as string) ?? "",
     status: row.status as string,
     sort_order: row.sort_order as number,
     is_deleted: row.is_deleted as boolean,

@@ -117,7 +117,7 @@ describe("upsertGoals", () => {
       id: "goal-new",
       name: "Learn TypeScript",
       description: "",
-      cover_file_id: "",
+      cover_hash: "",
       status: "planning",
       sort_order: 0,
       is_deleted: false,

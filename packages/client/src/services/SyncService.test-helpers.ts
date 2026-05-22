@@ -60,19 +60,18 @@ export function createMockSyncAdapter(
   return {
     uploadCover: vi.fn().mockResolvedValue({
       ok: true,
-      file_id: "new-file-id",
+      data_hash: "new-data-hash",
       reused: false,
     }),
     uploadCovers: vi
       .fn()
       .mockImplementation(
-        (request: { covers: Array<{ local_id: string; goal_id: string }> }) =>
+        (request: { covers: Array<{ data_hash: string; goal_id: string }> }) =>
           Promise.resolve({
             ok: true,
             results: request.covers.map((cover) => ({
-              local_id: cover.local_id,
+              data_hash: cover.data_hash,
               goal_id: cover.goal_id,
-              file_id: "uploaded-file-id",
               reused: false,
             })),
           }),
@@ -121,7 +120,7 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     id: "goal-id",
     name: "Test Goal",
     description: "",
-    cover_file_id: "",
+    cover_hash: "",
     status: "in_progress",
     sort_order: 0,
     is_deleted: false,

@@ -32,11 +32,12 @@ export const WireTaskSchema = z.object({
 });
 export type WireTask = z.infer<typeof WireTaskSchema>;
 
+// implements FR1 of content-addressable-covers
 export const WireGoalSchema = z.object({
   id: UUIDSchema,
   name: z.string(),
   description: z.string(),
-  cover_file_id: z.string(),
+  cover_hash: z.string(),
   status: GoalStatusSchema,
   sort_order: z.number(),
   is_deleted: z.boolean(),

@@ -9,7 +9,6 @@ export function createMockCoverRepository(
     {
       getAll: vi.fn().mockResolvedValue([]),
       getByHash: vi.fn().mockResolvedValue(undefined),
-      getByFileId: vi.fn().mockResolvedValue(undefined),
       save: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
     },

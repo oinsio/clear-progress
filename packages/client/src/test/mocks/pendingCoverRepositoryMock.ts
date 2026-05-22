@@ -8,7 +8,6 @@ export function createMockPendingCoverRepository(
   return createMock<PendingCoverRepository>(
     {
       getAll: vi.fn().mockResolvedValue([]),
-      getById: vi.fn().mockResolvedValue(undefined),
       getByHash: vi.fn().mockResolvedValue(undefined),
       save: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),

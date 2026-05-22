@@ -1,23 +1,17 @@
+// implements FR5 of content-addressable-covers
 const urlCache = new Map<string, string>();
 
 export const localCoverCache = {
-  set(localId: string, url: string): void {
-    urlCache.set(localId, url);
+  set(hash: string, url: string): void {
+    urlCache.set(hash, url);
   },
-  get(localId: string): string | undefined {
-    return urlCache.get(localId);
+  get(hash: string): string | undefined {
+    return urlCache.get(hash);
   },
-  delete(id: string): void {
-    const url = urlCache.get(id);
+  delete(hash: string): void {
+    const url = urlCache.get(hash);
     if (url) URL.revokeObjectURL(url);
-    urlCache.delete(id);
-  },
-  transfer(fromId: string, toId: string): void {
-    const url = urlCache.get(fromId);
-    if (url) {
-      urlCache.set(toId, url);
-      urlCache.delete(fromId);
-    }
+    urlCache.delete(hash);
   },
   clear(): void {
     for (const url of urlCache.values()) {

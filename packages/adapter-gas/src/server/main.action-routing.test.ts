@@ -103,11 +103,11 @@ describe("doPost — action routing", () => {
     globals.doPost?.(
       makeAuthenticatedPostEvent({
         action: ACTIONS.DELETE_COVER,
-        file_id: "file-abc",
+        hash: "hash-abc",
       }),
     );
 
-    expect(deleteCover).toHaveBeenCalledWith({ file_id: "file-abc" });
+    expect(deleteCover).toHaveBeenCalledWith({ hash: "hash-abc" });
   });
 
   it("should call uploadCovers() with payload fields (excluding action and access_token)", () => {
@@ -147,11 +147,11 @@ describe("doPost — action routing", () => {
     globals.doPost?.(
       makeAuthenticatedPostEvent({
         action: ACTIONS.GET_COVER,
-        file_ids: ["file-1"],
+        hashes: ["hash-1"],
       }),
     );
 
-    expect(getCover).toHaveBeenCalledWith({ file_ids: ["file-1"] });
+    expect(getCover).toHaveBeenCalledWith({ hashes: ["hash-1"] });
   });
 
   it("should return the result of getCover()", () => {

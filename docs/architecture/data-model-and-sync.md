@@ -6,7 +6,7 @@
 Fields: `id` (UUID v4), `name`, `description`, `box` (inbox | today | week | later), `goal_id`, `context_id`, `category_id`, `is_completed`, `completed_at`, `repeat_rule`, `is_hidden`, `next_date`, `appear_date`, `original_task_id`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `revision`
 
 **Goals** — objectives
-Fields: `id`, `name`, `description?`, `cover_file_id?` (Google Drive), `status` (planning | in_progress | paused | completed | cancelled), `sort_order`, `is_deleted`, `created_at`, `updated_at`, `revision`
+Fields: `id`, `name`, `description?`, `cover_hash?` (SHA-256 hex string, content-addressable), `status` (planning | in_progress | paused | completed | cancelled), `sort_order`, `is_deleted`, `created_at`, `updated_at`, `revision`
 
 **Ideas** — user ideas
 Fields: `id`, `name`, `description`, `sort_order`, `is_deleted`, `created_at`, `updated_at`, `revision`
@@ -77,7 +77,7 @@ Routing via `action` field in request body. Format: JSON.
 Client-side boolean flag on every entity in IndexedDB. Tracks which records have local changes not yet confirmed by the server.
 
 **Lifecycle:**
-1. **Set `true`** — on create, update, delete (soft), complete/uncomplete. Only if data actually changed (`hasEntityChanged()` from `utils/deepEqual.ts` compares fields, ignoring `id`, `updated_at`, `created_at`, `needsSync`, `revision`).
+1. **Set `true`** — on create, update, delete (soft), complete/non-complete. Only if data actually changed (`hasEntityChanged()` from `utils/deepEqual.ts` compares fields, ignoring `id`, `updated_at`, `created_at`, `needsSync`, `revision`).
 2. **Push** — `getNeedingSync()` in each repository collects records with `needsSync = true`. Field is stripped before sending to API.
 3. **Set `false`** — after server confirms (`created`/`accepted`). On `conflict` — server record overwrites local, `needsSync = false`.
 4. **Pull protection** — server records overwrite local only if local `needsSync = false`. If `needsSync = true`, the local version is preserved (it will be pushed later).

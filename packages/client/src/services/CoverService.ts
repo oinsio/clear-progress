@@ -1,8 +1,8 @@
+// implements FR5 of content-addressable-covers
 import type { SyncAdapter } from "@clear-progress/contract";
 import {
   COVER_HASH_PREFIX_LENGTH,
   DEFAULT_COVER_EXTENSION,
-  LOCAL_COVER_ID_PREFIX,
   MAX_COVER_SIZE_BYTES,
 } from "@/constants";
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
@@ -43,13 +43,9 @@ export function buildCoverFilename(dataHash: string, mimeType: string): string {
   return `${dataHash.substring(0, COVER_HASH_PREFIX_LENGTH)}.${ext}`;
 }
 
-export function getCoverDisplayUrl(fileId: string): string | null {
-  if (!fileId) return null;
-  if (fileId.startsWith(LOCAL_COVER_ID_PREFIX)) {
-    const localId = fileId.slice(LOCAL_COVER_ID_PREFIX.length);
-    return localCoverCache.get(localId) ?? null;
-  }
-  return localCoverCache.get(fileId) ?? null;
+export function getCoverDisplayUrl(dataHash: string): string | null {
+  if (!dataHash) return null;
+  return localCoverCache.get(dataHash) ?? null;
 }
 
 export class CoverService {
@@ -59,7 +55,10 @@ export class CoverService {
     private readonly pendingCoverRepository: PendingCoverRepository,
   ) {}
 
-  async uploadCover(file: File, goalId: string): Promise<{ file_id: string }> {
+  async uploadCover(
+    file: File,
+    goalId: string,
+  ): Promise<{ data_hash: string }> {
     if (!file.type.startsWith("image/")) {
       throw new Error(COVER_ERROR.INVALID_TYPE);
     }
@@ -73,17 +72,17 @@ export class CoverService {
     const existingPending =
       await this.pendingCoverRepository.getByHash(dataHash);
     if (existingPending) {
-      return { file_id: `${LOCAL_COVER_ID_PREFIX}${existingPending.local_id}` };
+      return { data_hash: dataHash };
     }
 
     const existingRemote = await this.coverRepository.getByHash(dataHash);
     if (existingRemote) {
-      return { file_id: existingRemote.file_id };
+      return { data_hash: dataHash };
     }
 
     try {
       const base64Data = arrayBufferToBase64(buffer);
-      const response = await this.syncAdapter.uploadCover({
+      await this.syncAdapter.uploadCover({
         goal_id: goalId,
         filename: file.name,
         mime_type: file.type,
@@ -93,14 +92,13 @@ export class CoverService {
 
       const blob = new Blob([buffer], { type: file.type });
       await this.coverRepository.save({
-        file_id: response.file_id,
         data_hash: dataHash,
         data: blob,
       });
       const blobUrl = URL.createObjectURL(blob);
-      localCoverCache.set(response.file_id, blobUrl);
+      localCoverCache.set(dataHash, blobUrl);
 
-      return { file_id: response.file_id };
+      return { data_hash: dataHash };
     } catch (error) {
       if (
         error instanceof Error &&
@@ -111,10 +109,8 @@ export class CoverService {
         throw error;
       }
 
-      const localId = crypto.randomUUID();
       const blob = new Blob([buffer], { type: file.type });
       await this.pendingCoverRepository.save({
-        local_id: localId,
         goal_id: goalId,
         data: blob,
         filename: file.name,
@@ -124,26 +120,26 @@ export class CoverService {
       });
 
       const objectUrl = URL.createObjectURL(blob);
-      localCoverCache.set(localId, objectUrl);
+      localCoverCache.set(dataHash, objectUrl);
 
-      return { file_id: `${LOCAL_COVER_ID_PREFIX}${localId}` };
+      return { data_hash: dataHash };
     }
   }
 
-  async deleteCover(fileId: string, goalId: string): Promise<void> {
-    if (fileId.startsWith(LOCAL_COVER_ID_PREFIX)) {
-      const localId = fileId.slice(LOCAL_COVER_ID_PREFIX.length);
-      await this.pendingCoverRepository.delete(localId);
-      localCoverCache.delete(localId);
+  async deleteCover(dataHash: string, goalId: string): Promise<void> {
+    const pendingCover = await this.pendingCoverRepository.getByHash(dataHash);
+    if (pendingCover) {
+      await this.pendingCoverRepository.delete(dataHash);
+      localCoverCache.delete(dataHash);
       return;
     }
     const response = await this.syncAdapter.deleteCover({
-      file_id: fileId,
+      hash: dataHash,
       goal_id: goalId,
     });
     if (response.deleted) {
-      await this.coverRepository.delete(fileId);
-      localCoverCache.delete(fileId);
+      await this.coverRepository.delete(dataHash);
+      localCoverCache.delete(dataHash);
     }
   }
 }

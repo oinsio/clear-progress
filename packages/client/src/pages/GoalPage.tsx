@@ -39,7 +39,7 @@ export default function GoalPage({
   const { t } = useTranslation();
   const { goal, isLoading, updateGoal, updateGoalStatus, deleteGoal } =
     useGoal(goalId);
-  const { url: existingCoverUrl } = useCoverUrl(goal?.cover_file_id ?? "");
+  const { url: existingCoverUrl } = useCoverUrl(goal?.cover_hash ?? "");
 
   const [name, setName] = useState<string | undefined>(undefined);
   const [description, setDescription] = useState<string | undefined>(undefined);
@@ -74,12 +74,12 @@ export default function GoalPage({
     setIsSaving(true);
     setSaveError(null);
     try {
-      const originalCoverFileId = goal?.cover_file_id ?? "";
+      const originalCoverFileId = goal?.cover_hash ?? "";
       let newCoverFileId = originalCoverFileId;
 
       if (pendingCoverFile) {
         const result = await coverService.uploadCover(pendingCoverFile, goalId);
-        newCoverFileId = result.file_id;
+        newCoverFileId = result.data_hash;
         if (originalCoverFileId && originalCoverFileId !== newCoverFileId) {
           void coverService.deleteCover(originalCoverFileId, goalId);
         }
@@ -93,7 +93,7 @@ export default function GoalPage({
       await updateGoal({
         name: currentName.trim(),
         description: currentDescription.trim(),
-        cover_file_id: newCoverFileId,
+        cover_hash: newCoverFileId,
       });
       onClose();
     } catch {

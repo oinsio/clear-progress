@@ -36,7 +36,6 @@ const MAX_COVER_BATCH_SIZE = 10;
 const VALID_IMAGE_MIME_PREFIXES = ["image/"];
 
 interface CoverMetadata {
-  file_id: string;
   filename: string;
   mime_type: string;
   data: string;
@@ -60,8 +59,7 @@ export class InMemorySyncAdapter implements SyncAdapter {
   private ideas = new Map<string, WireIdea>();
   private checklistItems = new Map<string, WireChecklistItem>();
   private settings = new Map<string, WireSetting>();
-  private covers = new Map<string, CoverMetadata>();
-  private coverHashIndex = new Map<string, string>(); // data_hash → file_id
+  private covers = new Map<string, CoverMetadata>(); // data_hash → metadata
 
   private nextRevision = 1;
   private purgeRevision = 0;
@@ -252,28 +250,22 @@ export class InMemorySyncAdapter implements SyncAdapter {
   }
 
   async uploadCover(request: UploadCoverRequest): Promise<UploadCoverResponse> {
-    const existingFileId = this.coverHashIndex.get(request.data_hash);
-    if (existingFileId) {
-      const existing = this.covers.get(existingFileId);
-      if (existing) {
-        existing.ref_count++;
-        return { ok: true, file_id: existingFileId, reused: true };
-      }
+    const existing = this.covers.get(request.data_hash);
+    if (existing) {
+      existing.ref_count++;
+      return { ok: true, data_hash: request.data_hash, reused: true };
     }
 
-    const fileId = crypto.randomUUID();
     const metadata: CoverMetadata = {
-      file_id: fileId,
       filename: request.filename,
       mime_type: request.mime_type,
       data: request.data,
       data_hash: request.data_hash,
       ref_count: 1,
     };
-    this.covers.set(fileId, metadata);
-    this.coverHashIndex.set(request.data_hash, fileId);
+    this.covers.set(request.data_hash, metadata);
 
-    return { ok: true, file_id: fileId, reused: false };
+    return { ok: true, data_hash: request.data_hash, reused: false };
   }
 
   async uploadCovers(
@@ -296,36 +288,30 @@ export class InMemorySyncAdapter implements SyncAdapter {
         };
       }
 
-      const existingFileId = this.coverHashIndex.get(cover.data_hash);
-      if (existingFileId) {
-        const existing = this.covers.get(existingFileId);
-        if (existing) {
-          existing.ref_count++;
-          return {
-            local_id: cover.local_id,
-            goal_id: cover.goal_id,
-            file_id: existingFileId,
-            reused: true,
-          };
-        }
+      const existing = this.covers.get(cover.data_hash);
+      if (existing) {
+        existing.ref_count++;
+        return {
+          local_id: cover.local_id,
+          goal_id: cover.goal_id,
+          data_hash: cover.data_hash,
+          reused: true,
+        };
       }
 
-      const fileId = crypto.randomUUID();
       const metadata: CoverMetadata = {
-        file_id: fileId,
         filename: cover.filename,
         mime_type: cover.mime_type,
         data: cover.data,
         data_hash: cover.data_hash,
         ref_count: 1,
       };
-      this.covers.set(fileId, metadata);
-      this.coverHashIndex.set(cover.data_hash, fileId);
+      this.covers.set(cover.data_hash, metadata);
 
       return {
         local_id: cover.local_id,
         goal_id: cover.goal_id,
-        file_id: fileId,
+        data_hash: cover.data_hash,
         reused: false,
       };
     });
@@ -334,16 +320,16 @@ export class InMemorySyncAdapter implements SyncAdapter {
   }
 
   async getCover(request: GetCoverRequest): Promise<GetCoverResponse> {
-    const covers = request.file_ids.map((fileId) => {
-      const metadata = this.covers.get(fileId);
+    const covers = request.hashes.map((hash) => {
+      const metadata = this.covers.get(hash);
       if (!metadata) {
         return {
-          file_id: fileId,
+          hash,
           error: "File not found",
         };
       }
       return {
-        file_id: fileId,
+        hash,
         mime_type: metadata.mime_type,
         data: metadata.data,
       };
@@ -356,7 +342,7 @@ export class InMemorySyncAdapter implements SyncAdapter {
   }
 
   async deleteCover(request: DeleteCoverRequest): Promise<DeleteCoverResponse> {
-    const metadata = this.covers.get(request.file_id);
+    const metadata = this.covers.get(request.hash);
     if (!metadata) {
       return { ok: true, deleted: true, ref_count: 0 };
     }
@@ -364,8 +350,7 @@ export class InMemorySyncAdapter implements SyncAdapter {
     metadata.ref_count--;
 
     if (metadata.ref_count <= 0) {
-      this.covers.delete(request.file_id);
-      this.coverHashIndex.delete(metadata.data_hash);
+      this.covers.delete(request.hash);
       return { ok: true, deleted: true, ref_count: 0 };
     }
 

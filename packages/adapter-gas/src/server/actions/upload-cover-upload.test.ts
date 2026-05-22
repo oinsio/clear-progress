@@ -24,12 +24,12 @@ describe("uploadCover", () => {
       expect(parseResponse().reused).toBe(true);
     });
 
-    it("should return existing file_id when duplicate found", () => {
+    it("should return existing data_hash when duplicate found", () => {
       mockExistingCover();
 
       uploadCover(validPayload);
 
-      expect(parseResponse().file_id).toBe("existing-file-id");
+      expect(parseResponse().data_hash).toBeDefined();
     });
 
     it("should not create a new file when duplicate found", () => {
@@ -76,12 +76,12 @@ describe("uploadCover", () => {
       expect(parseResponse().reused).toBe(false);
     });
 
-    it("should return file_id of newly created file", () => {
+    it("should return data_hash of newly created file", () => {
       vi.mocked(Drive.Files.create).mockReturnValue({ id: "new-file-id" });
 
       uploadCover(validPayload);
 
-      expect(parseResponse().file_id).toBe("new-file-id");
+      expect(parseResponse().data_hash).toBe(MOCK_HASH);
     });
 
     it("should upload new file to the covers folder", () => {

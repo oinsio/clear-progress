@@ -27,14 +27,14 @@ export interface SyncMeta {
   value: number;
 }
 
+// implements FR5, FR6 of content-addressable-covers
 export interface CoverRecord {
-  file_id: string;
   data_hash: string;
   data?: Blob;
 }
 
+// implements FR5, FR6 of content-addressable-covers
 export interface PendingCoverRecord {
-  local_id: string;
   goal_id: string;
   data: Blob;
   filename: string;

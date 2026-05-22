@@ -1,4 +1,4 @@
-// implements FR10 of add-supabase-adapter
+// implements FR10 of add-supabase-adapter, FR2 of content-addressable-covers
 // POST /upload-cover — upload a single cover file with hash deduplication
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
@@ -49,7 +49,7 @@ Deno.serve(
       // Check for existing cover with same hash for this user
       const { data: existingCovers, error: lookupError } = await serviceClient
         .from("covers")
-        .select("file_id, ref_count")
+        .select("file_id, data_hash, ref_count")
         .eq("user_id", userId)
         .eq("data_hash", body.data_hash)
         .limit(1);
@@ -65,6 +65,7 @@ Deno.serve(
       if (existingCovers && existingCovers.length > 0) {
         const existingCover = existingCovers[0] as {
           file_id: string;
+          data_hash: string;
           ref_count: number;
         };
 
@@ -83,7 +84,7 @@ Deno.serve(
 
         return okResponse({
           ok: true,
-          file_id: existingCover.file_id,
+          data_hash: existingCover.data_hash,
           reused: true,
         });
       }
@@ -133,7 +134,7 @@ Deno.serve(
         );
       }
 
-      return okResponse({ ok: true, file_id: fileId, reused: false });
+      return okResponse({ ok: true, data_hash: body.data_hash, reused: false });
     },
   ),
 );

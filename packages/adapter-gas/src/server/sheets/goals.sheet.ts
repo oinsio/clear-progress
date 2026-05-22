@@ -15,7 +15,7 @@ function rowToGoal(row: unknown[]): Goal {
     id: String(row[COLS.id] ?? ""),
     name: String(row[COLS.name] ?? ""),
     description: String(row[COLS.description] ?? ""),
-    cover_file_id: String(row[COLS.cover_file_id] ?? ""),
+    cover_hash: String(row[COLS.cover_hash] ?? ""),
     status: coerceSheetGoalStatus(row[COLS.status]),
     sort_order: Number(row[COLS.sort_order] ?? 0),
     is_deleted: coerceSheetBool(row[COLS.is_deleted]),
@@ -35,7 +35,7 @@ export const upsertGoals = (goals: Goal[]): void =>
   upsertRecords(SHEET_NAMES.GOALS, goals);
 export const deleteGoalsByIds = (ids: string[]): number =>
   deleteRecordsByIds(SHEET_NAMES.GOALS, ids);
-export const getCoverFileIds = (): string[] =>
+export const getCoverHashes = (): string[] =>
   getAllGoals()
-    .map((goal) => goal.cover_file_id)
+    .map((goal) => goal.cover_hash)
     .filter(Boolean);

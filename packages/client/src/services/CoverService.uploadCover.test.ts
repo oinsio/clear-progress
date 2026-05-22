@@ -50,7 +50,7 @@ describe("CoverService — uploadCover", () => {
   });
 
   it("should return cached cover without API call if same hash exists in DB", async () => {
-    const cached = { file_id: "cached-id", data_hash: "any-hash" };
+    const cached = { data_hash: "any-hash" };
     const mockCoverRepository = createMockCoverRepository({
       getByHash: vi.fn().mockResolvedValue(cached),
     });
@@ -58,7 +58,7 @@ describe("CoverService — uploadCover", () => {
 
     const result = await service.uploadCover(createImageFile(), "goal-1");
 
-    expect(result.file_id).toBe("cached-id");
+    expect(result.data_hash).toBeDefined();
     expect(mocks.mockSyncAdapter.uploadCover).not.toHaveBeenCalled();
   });
 
@@ -84,7 +84,6 @@ describe("CoverService — uploadCover", () => {
 
     expect(mocks.mockCoverRepository.save).toHaveBeenCalledWith(
       expect.objectContaining({
-        file_id: "new-file-id",
         data_hash: expect.any(String),
       }),
     );
@@ -105,17 +104,18 @@ describe("CoverService — uploadCover", () => {
   it("should add blob URL to localCoverCache after successful online upload", async () => {
     const service = createService();
 
-    await service.uploadCover(createImageFile(), "goal-1");
+    const result = await service.uploadCover(createImageFile(), "goal-1");
 
-    expect(localCoverCache.get("new-file-id")).toBeDefined();
+    expect(localCoverCache.get(result.data_hash)).toBeDefined();
   });
 
-  it("should return file_id from API response", async () => {
+  it("should return data_hash from upload", async () => {
     const service = createService();
 
     const result = await service.uploadCover(createImageFile(), "goal-1");
 
-    expect(result.file_id).toBe("new-file-id");
+    expect(result.data_hash).toBeDefined();
+    expect(typeof result.data_hash).toBe("string");
   });
 
   it("should not save to DB when reusing cached cover", async () => {
@@ -148,7 +148,7 @@ describe("CoverService — uploadCover", () => {
     );
   });
 
-  it("should return local:* file_id when saved locally", async () => {
+  it("should return data_hash when saved locally after network error", async () => {
     const mockSyncAdapter = createMockSyncAdapter({
       uploadCover: vi.fn().mockRejectedValue(new Error("Network error")),
     });
@@ -156,7 +156,8 @@ describe("CoverService — uploadCover", () => {
 
     const result = await service.uploadCover(createImageFile(), "goal-1");
 
-    expect(result.file_id).toMatch(/^local:/);
+    expect(result.data_hash).toBeDefined();
+    expect(typeof result.data_hash).toBe("string");
   });
 
   it("should not save locally for INVALID_TYPE error", async () => {
@@ -181,18 +182,17 @@ describe("CoverService — uploadCover", () => {
     expect(mocks.mockPendingCoverRepository.save).not.toHaveBeenCalled();
   });
 
-  it("should return existing local cover when same hash in pendingCoverRepository", async () => {
-    const existingLocalId = "existing-local-uuid";
+  it("should return existing data_hash when same hash in pendingCoverRepository", async () => {
+    const existingDataHash = "some-hash";
     const existingObjectUrl = "blob:http://localhost/existing";
-    localCoverCache.set(existingLocalId, existingObjectUrl);
+    localCoverCache.set(existingDataHash, existingObjectUrl);
     const mockPendingCoverRepository = createMockPendingCoverRepository({
       getByHash: vi.fn().mockResolvedValue({
-        local_id: existingLocalId,
         goal_id: "goal-1",
         data: new Blob(["fake"]),
         filename: "cover.jpg",
         mime_type: "image/jpeg",
-        data_hash: "some-hash",
+        data_hash: existingDataHash,
         created_at: toISOTimestamp(),
       }),
     });
@@ -200,7 +200,7 @@ describe("CoverService — uploadCover", () => {
 
     const result = await service.uploadCover(createImageFile(), "goal-1");
 
-    expect(result.file_id).toBe(`local:${existingLocalId}`);
+    expect(result.data_hash).toBeDefined();
     expect(mocks.mockSyncAdapter.uploadCover).not.toHaveBeenCalled();
   });
 });

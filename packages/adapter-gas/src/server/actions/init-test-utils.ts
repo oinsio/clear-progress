@@ -72,3 +72,94 @@ export function resetAndClear() {
   vi.clearAllMocks();
   resetScriptProperties();
 }
+
+type MockFnAny = ReturnType<typeof vi.fn>;
+
+/**
+ * Sets up SpreadsheetApp.openById to return a spreadsheet with a Goals sheet
+ * that either has the legacy `cover_file_id` header (withLegacyHeader=true)
+ * or a modern `cover_hash` header (withLegacyHeader=false).
+ * Returns mock references for assertion in tests.
+ * implements FR7 of content-addressable-covers
+ */
+export function setupAlreadyInitializedWithLegacyGoalsSheet(
+  dataRows: string[][],
+  withLegacyHeader = true,
+): {
+  goalsSheetMock: {
+    getRange: MockFnAny;
+    getLastColumn: MockFnAny;
+    getLastRow: MockFnAny;
+    getSheetByName: MockFnAny;
+  };
+  headerCellMock: { setValue: MockFnAny };
+  dataCellMock: { getValues: MockFnAny; setValues: MockFnAny };
+} {
+  const headers = withLegacyHeader
+    ? [
+        "id",
+        "name",
+        "description",
+        "cover_file_id",
+        "status",
+        "sort_order",
+        "is_deleted",
+        "created_at",
+        "updated_at",
+        "revision",
+      ]
+    : [
+        "id",
+        "name",
+        "description",
+        "cover_hash",
+        "status",
+        "sort_order",
+        "is_deleted",
+        "created_at",
+        "updated_at",
+        "revision",
+      ];
+
+  const headerRangeMock = {
+    getValues: vi.fn().mockReturnValue([headers]),
+  };
+
+  const headerCellMock = { setValue: vi.fn() };
+
+  const dataCellMock = {
+    getValues: vi.fn().mockReturnValue(dataRows),
+    setValues: vi.fn(),
+  };
+
+  const goalsSheetMock = {
+    getLastColumn: vi.fn().mockReturnValue(headers.length),
+    getLastRow: vi
+      .fn()
+      .mockReturnValue(dataRows.length > 0 ? dataRows.length + 1 : 1),
+    getRange: vi
+      .fn()
+      .mockImplementation(
+        (row: number, _col: number, numRows?: number, numCols?: number) => {
+          if (numRows === undefined && numCols === undefined) {
+            // Single cell — for setValue (header rename)
+            return headerCellMock;
+          }
+          if (row === 1) return headerRangeMock;
+          return dataCellMock;
+        },
+      ),
+  };
+
+  const spreadsheetMock = {
+    getSheetByName: vi.fn().mockReturnValue(goalsSheetMock),
+  };
+
+  vi.mocked(SpreadsheetApp.openById).mockReturnValue(spreadsheetMock as never);
+
+  return {
+    goalsSheetMock: goalsSheetMock as never,
+    headerCellMock,
+    dataCellMock,
+  };
+}

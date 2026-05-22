@@ -61,11 +61,11 @@ describe("uploadCovers", () => {
   });
 
   describe("successful upload", () => {
-    it("should return file_id and reused: false for new upload", () => {
+    it("should return data_hash and reused: false for new upload", () => {
       uploadCovers({ covers: [validCover] });
 
       const results = parseResults();
-      expect(results[0].file_id).toBe("new-file-id");
+      expect(results[0].data_hash).toBe(MOCK_HASH);
       expect(results[0].reused).toBe(false);
     });
 
@@ -78,7 +78,7 @@ describe("uploadCovers", () => {
 
       const results = parseResults();
       expect(results[0].reused).toBe(true);
-      expect(results[0].file_id).toBe("existing-file-id");
+      expect(results[0].data_hash).toBe(MOCK_HASH);
     });
 
     it("should name new file using hash prefix and extension", () => {

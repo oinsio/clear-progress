@@ -26,7 +26,7 @@ interface CoverItem {
 interface CoverResult {
   goal_id: string;
   ok: boolean;
-  file_id?: string;
+  data_hash?: string;
   reused?: boolean;
   error?: string;
 }
@@ -79,7 +79,7 @@ async function processSingleCover(
     return {
       goal_id: item.goal_id,
       ok: true,
-      file_id: existingCover.file_id,
+      data_hash: item.data_hash,
       reused: true,
     };
   }
@@ -127,7 +127,12 @@ async function processSingleCover(
     return { goal_id: item.goal_id, ok: false, error: insertError.message };
   }
 
-  return { goal_id: item.goal_id, ok: true, file_id: fileId, reused: false };
+  return {
+    goal_id: item.goal_id,
+    ok: true,
+    data_hash: item.data_hash,
+    reused: false,
+  };
 }
 
 Deno.serve(

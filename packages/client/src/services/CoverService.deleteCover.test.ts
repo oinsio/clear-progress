@@ -3,6 +3,7 @@ import { CoverService } from "./CoverService";
 import {
   type CoverServiceMocks,
   createCoverServiceMocks,
+  createMockPendingCoverRepository,
   createMockSyncAdapter,
 } from "./CoverService.test-utils";
 import { localCoverCache } from "./LocalCoverCache";
@@ -28,13 +29,13 @@ describe("CoverService — deleteCover", () => {
     );
   }
 
-  it("should call API deleteCover with the file_id", async () => {
+  it("should call API deleteCover with the hash", async () => {
     const service = createService();
 
-    await service.deleteCover("file-abc", "goal-1");
+    await service.deleteCover("hash-abc", "goal-1");
 
     expect(mocks.mockSyncAdapter.deleteCover).toHaveBeenCalledWith({
-      file_id: "file-abc",
+      hash: "hash-abc",
       goal_id: "goal-1",
     });
   });
@@ -42,9 +43,9 @@ describe("CoverService — deleteCover", () => {
   it("should remove local record from DB when backend confirms deletion", async () => {
     const service = createService();
 
-    await service.deleteCover("file-abc", "goal-1");
+    await service.deleteCover("hash-abc", "goal-1");
 
-    expect(mocks.mockCoverRepository.delete).toHaveBeenCalledWith("file-abc");
+    expect(mocks.mockCoverRepository.delete).toHaveBeenCalledWith("hash-abc");
   });
 
   it("should keep local record when backend says not deleted (ref_count > 0)", async () => {
@@ -53,56 +54,86 @@ describe("CoverService — deleteCover", () => {
     });
     const service = createService({ mockSyncAdapter });
 
-    await service.deleteCover("file-abc", "goal-1");
+    await service.deleteCover("hash-abc", "goal-1");
 
     expect(mocks.mockCoverRepository.delete).not.toHaveBeenCalled();
   });
 
   it("should remove cover URL from localCoverCache when backend confirms deletion", async () => {
-    localCoverCache.set("file-abc", "blob:http://localhost/abc");
+    localCoverCache.set("hash-abc", "blob:http://localhost/abc");
     const service = createService();
 
-    await service.deleteCover("file-abc", "goal-1");
+    await service.deleteCover("hash-abc", "goal-1");
 
-    expect(localCoverCache.get("file-abc")).toBeUndefined();
+    expect(localCoverCache.get("hash-abc")).toBeUndefined();
   });
 
   it("should not remove cover from localCoverCache when backend says not deleted", async () => {
-    localCoverCache.set("file-abc", "blob:http://localhost/abc");
+    localCoverCache.set("hash-abc", "blob:http://localhost/abc");
     const mockSyncAdapter = createMockSyncAdapter({
       deleteCover: vi.fn().mockResolvedValue({ deleted: false, ref_count: 2 }),
     });
     const service = createService({ mockSyncAdapter });
 
-    await service.deleteCover("file-abc", "goal-1");
+    await service.deleteCover("hash-abc", "goal-1");
 
-    expect(localCoverCache.get("file-abc")).toBeDefined();
+    expect(localCoverCache.get("hash-abc")).toBeDefined();
   });
 
-  it("should delete pending cover from pendingCoverRepository when file_id starts with local:", async () => {
-    const service = createService();
+  it("should delete pending cover from pendingCoverRepository when pending cover exists for hash", async () => {
+    const mockPendingCoverRepository = createMockPendingCoverRepository({
+      getByHash: vi.fn().mockResolvedValue({
+        goal_id: "goal-1",
+        data: new Blob(["fake"]),
+        filename: "cover.jpg",
+        mime_type: "image/jpeg",
+        data_hash: "pending-hash",
+        created_at: "2026-01-01T00:00:00.000Z" as never,
+      }),
+    });
+    const service = createService({ mockPendingCoverRepository });
 
-    await service.deleteCover("local:some-local-uuid", "goal-1");
+    await service.deleteCover("pending-hash", "goal-1");
 
-    expect(mocks.mockPendingCoverRepository.delete).toHaveBeenCalledWith(
-      "some-local-uuid",
+    expect(mockPendingCoverRepository.delete).toHaveBeenCalledWith(
+      "pending-hash",
     );
   });
 
-  it("should not call API when file_id starts with local:", async () => {
-    const service = createService();
+  it("should not call API when pending cover exists for hash", async () => {
+    const mockPendingCoverRepository = createMockPendingCoverRepository({
+      getByHash: vi.fn().mockResolvedValue({
+        goal_id: "goal-1",
+        data: new Blob(["fake"]),
+        filename: "cover.jpg",
+        mime_type: "image/jpeg",
+        data_hash: "pending-hash",
+        created_at: "2026-01-01T00:00:00.000Z" as never,
+      }),
+    });
+    const service = createService({ mockPendingCoverRepository });
 
-    await service.deleteCover("local:some-local-uuid", "goal-1");
+    await service.deleteCover("pending-hash", "goal-1");
 
     expect(mocks.mockSyncAdapter.deleteCover).not.toHaveBeenCalled();
   });
 
-  it("should remove local cover from localCoverCache when file_id starts with local:", async () => {
-    localCoverCache.set("some-local-uuid", "blob:http://localhost/local");
-    const service = createService();
+  it("should remove cover from localCoverCache when pending cover exists for hash", async () => {
+    localCoverCache.set("pending-hash", "blob:http://localhost/local");
+    const mockPendingCoverRepository = createMockPendingCoverRepository({
+      getByHash: vi.fn().mockResolvedValue({
+        goal_id: "goal-1",
+        data: new Blob(["fake"]),
+        filename: "cover.jpg",
+        mime_type: "image/jpeg",
+        data_hash: "pending-hash",
+        created_at: "2026-01-01T00:00:00.000Z" as never,
+      }),
+    });
+    const service = createService({ mockPendingCoverRepository });
 
-    await service.deleteCover("local:some-local-uuid", "goal-1");
+    await service.deleteCover("pending-hash", "goal-1");
 
-    expect(localCoverCache.get("some-local-uuid")).toBeUndefined();
+    expect(localCoverCache.get("pending-hash")).toBeUndefined();
   });
 });

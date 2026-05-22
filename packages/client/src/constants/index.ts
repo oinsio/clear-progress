@@ -131,7 +131,6 @@ export const AUTH_REQUIRED_EVENT = "auth_required";
 
 export const DB_NAME = "clear-progress";
 export const DB_VERSION = 6;
-export const LOCAL_COVER_ID_PREFIX = "local:";
 
 export const SYNC_META_KEYS = {
   LAST_KNOWN_REVISION: "last_known_revision",

@@ -59,7 +59,7 @@ interface MultiDeviceSyncPullResponse {
     id: string;
     name: string;
     is_deleted: boolean;
-    cover_file_id: string;
+    cover_hash: string;
   }>;
   categories: Array<{ id: string; name: string; is_deleted: boolean }>;
 }
@@ -192,18 +192,18 @@ test("App A uploads cover on goal → push → App B pulls → cover accessible"
   await pageA.getByTestId("edit-goal-button").waitFor({ state: "visible" });
   await triggerSyncAndWait(pageA);
 
-  // Verify cover_file_id is set on server (via HTTP pull)
+  // Verify cover_hash is set on server (via HTTP pull)
   const pullResponse =
     await pullFromServer<MultiDeviceSyncPullResponse>(credentials);
   const serverGoal = pullResponse.goals.find(
     (goal) => goal.id === createdGoalId,
   );
   expect(serverGoal).toBeDefined();
-  expect(serverGoal?.cover_file_id).not.toBe("");
+  expect(serverGoal?.cover_hash).not.toBe("");
 
   // Verify cover is accessible via get-cover edge function
   const coverResponse = await getCoverFromServer(credentials, [
-    serverGoal?.cover_file_id ?? "",
+    serverGoal?.cover_hash ?? "",
   ]);
   expect(coverResponse.ok).toBe(true);
   expect(coverResponse.covers).toHaveLength(1);
@@ -212,7 +212,7 @@ test("App A uploads cover on goal → push → App B pulls → cover accessible"
   expect(coverResult).toBeDefined();
   if (!coverResult) return;
 
-  expect(coverResult.file_id).toBe(serverGoal?.cover_file_id);
+  expect(coverResult.hash).toBe(serverGoal?.cover_hash);
   expect(coverResult.mime_type).toContain("image");
   expect(coverResult.data).toBeDefined();
 

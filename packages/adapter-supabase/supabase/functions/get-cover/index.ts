@@ -1,5 +1,6 @@
 // implements FR1 of add-supabase-adapter
-// POST /get-cover — download covers by file_ids, return base64-encoded data
+// implements FR3 of content-addressable-covers
+// POST /get-cover — download covers by hashes, return base64-encoded data
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
 import { createUserClient } from "../_shared/client.ts";
@@ -7,26 +8,26 @@ import { COVERS_BUCKET, ErrorCode } from "../_shared/constants.ts";
 import { createAuthHandler, parseJsonBody } from "../_shared/handler.ts";
 
 interface CoverRecord {
-  file_id: string;
+  data_hash: string;
   storage_path: string;
   mime_type: string;
 }
 
 interface CoverFoundResult {
-  file_id: string;
+  hash: string;
   mime_type: string;
   data: string;
 }
 
 interface CoverErrorResult {
-  file_id: string;
+  hash: string;
   error: string;
 }
 
 type CoverGetResult = CoverFoundResult | CoverErrorResult;
 
 async function fetchCover(
-  fileId: string,
+  hash: string,
   cover: CoverRecord,
   accessToken: string,
 ): Promise<CoverGetResult> {
@@ -37,14 +38,14 @@ async function fetchCover(
     .download(cover.storage_path);
 
   if (downloadError || !fileData) {
-    return { file_id: fileId, error: "File not found" };
+    return { hash, error: "File not found" };
   }
 
   const arrayBuffer = await fileData.arrayBuffer();
   const bytes = new Uint8Array(arrayBuffer);
   const base64 = btoa(String.fromCharCode(...bytes));
 
-  return { file_id: fileId, mime_type: cover.mime_type, data: base64 };
+  return { hash, mime_type: cover.mime_type, data: base64 };
 }
 
 Deno.serve(
@@ -58,28 +59,28 @@ Deno.serve(
       if (
         !body ||
         typeof body !== "object" ||
-        !Array.isArray((body as Record<string, unknown>).file_ids)
+        !Array.isArray((body as Record<string, unknown>).hashes)
       ) {
         return errorResponse(
           ErrorCode.INVALID_PAYLOAD,
-          "Required field: file_ids (array)",
+          "Required field: hashes (array)",
         );
       }
 
-      const fileIds = (body as { file_ids: unknown[] }).file_ids.filter(
-        (id): id is string => typeof id === "string",
+      const hashes = (body as { hashes: unknown[] }).hashes.filter(
+        (hash): hash is string => typeof hash === "string",
       );
 
-      if (fileIds.length === 0) {
+      if (hashes.length === 0) {
         return okResponse({ ok: true, covers: [] });
       }
 
-      // Fetch covers metadata for this user
+      // Fetch covers metadata for this user by data_hash
       const { data: coverRows, error: lookupError } = await serviceClient
         .from("covers")
-        .select("file_id, storage_path, mime_type")
+        .select("data_hash, storage_path, mime_type")
         .eq("user_id", userId)
-        .in("file_id", fileIds);
+        .in("data_hash", hashes);
 
       if (lookupError) {
         return errorResponse(
@@ -92,19 +93,19 @@ Deno.serve(
       const coverMap = new Map<string, CoverRecord>();
       for (const row of coverRows ?? []) {
         const typedRow = row as CoverRecord;
-        coverMap.set(typedRow.file_id, typedRow);
+        coverMap.set(typedRow.data_hash, typedRow);
       }
 
       const covers: CoverGetResult[] = await Promise.all(
-        fileIds.map((fileId) => {
-          const cover = coverMap.get(fileId);
+        hashes.map((hash) => {
+          const cover = coverMap.get(hash);
           if (!cover) {
             return Promise.resolve<CoverGetResult>({
-              file_id: fileId,
+              hash,
               error: "File not found",
             });
           }
-          return fetchCover(fileId, cover, accessToken);
+          return fetchCover(hash, cover, accessToken);
         }),
       );
 

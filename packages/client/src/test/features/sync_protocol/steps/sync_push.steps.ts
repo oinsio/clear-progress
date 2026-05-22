@@ -144,45 +144,6 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @spec-sync-protocol @FR1
   f.Scenario(
-    "Goals with local cover IDs are sanitized",
-    ({ Given, When, Then }) => {
-      const dirtyGoal = makeGoal({
-        cover_file_id: "local:abc-123",
-        needsSync: true,
-      });
-
-      Given(
-        'client has a dirty goal with cover_file_id "local:abc-123"',
-        async (_ctx: TestContext) => {
-          (
-            repositories.goalRepository.getNeedingSync as ReturnType<
-              typeof vi.fn
-            >
-          ).mockResolvedValue([dirtyGoal]);
-          (
-            repositories.goalRepository.getById as ReturnType<typeof vi.fn>
-          ).mockResolvedValue(dirtyGoal);
-        },
-      );
-
-      When("push is called", async (_ctx: TestContext) => {
-        const service = createSyncService(syncAdapter, repositories);
-        await service.push();
-      });
-
-      Then(
-        'PushRequest sends cover_file_id "" for that goal',
-        async (_ctx: TestContext) => {
-          const pushCall = (syncAdapter.push as ReturnType<typeof vi.fn>).mock
-            .calls[0][0];
-          expect(pushCall.goals[0].cover_file_id).toBe("");
-        },
-      );
-    },
-  );
-
-  // @spec-sync-protocol @FR1
-  f.Scenario(
     "Push skips when no dirty records exist",
     ({ Given, When, Then }) => {
       Given("client has no dirty records", async (_ctx: TestContext) => {
