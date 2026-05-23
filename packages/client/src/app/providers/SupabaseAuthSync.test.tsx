@@ -73,12 +73,17 @@ function makeRefs() {
 
 describe("SupabaseAuthSync", () => {
   let onTokenUpdate: ReturnType<typeof vi.fn>;
+  let onUserEmailUpdate: ReturnType<typeof vi.fn>;
+  let onUserPictureUpdate: ReturnType<typeof vi.fn>;
   let onClear: ReturnType<typeof vi.fn>;
   let refs: ReturnType<typeof makeRefs>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.removeItem("user_picture");
     onTokenUpdate = vi.fn();
+    onUserEmailUpdate = vi.fn();
+    onUserPictureUpdate = vi.fn();
     onClear = vi.fn();
     refs = makeRefs();
   });
@@ -88,6 +93,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={supabaseClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -139,6 +146,137 @@ describe("SupabaseAuthSync", () => {
     });
 
     expect(setAccessToken).toHaveBeenCalledWith("test-access-token", 3600);
+  });
+
+  // FR2: profile extraction on SIGNED_IN
+  it("should call onUserEmailUpdate with session email on SIGNED_IN", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        id: "user-123",
+        aud: "authenticated",
+        role: "authenticated",
+        email: "user@google.com",
+        app_metadata: {},
+        user_metadata: {},
+        created_at: "2025-01-01T00:00:00.000Z",
+      },
+    });
+    act(() => {
+      fireAuthEvent("SIGNED_IN", session);
+    });
+
+    expect(onUserEmailUpdate).toHaveBeenCalledWith("user@google.com");
+  });
+
+  it("should call onUserPictureUpdate with avatar_url on SIGNED_IN", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        id: "user-123",
+        aud: "authenticated",
+        role: "authenticated",
+        email: "test@example.com",
+        app_metadata: {},
+        user_metadata: { avatar_url: "https://example.com/avatar.jpg" },
+        created_at: "2025-01-01T00:00:00.000Z",
+      },
+    });
+    act(() => {
+      fireAuthEvent("SIGNED_IN", session);
+    });
+
+    expect(onUserPictureUpdate).toHaveBeenCalledWith(
+      "https://example.com/avatar.jpg",
+    );
+  });
+
+  // FR2: fallback to user_metadata.picture
+  it("should fallback to user_metadata.picture when avatar_url is absent", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        ...createMockSession().user,
+        user_metadata: { picture: "https://example.com/fallback.jpg" },
+      },
+    } as Partial<Session>);
+    act(() => {
+      fireAuthEvent("SIGNED_IN", session);
+    });
+
+    expect(onUserPictureUpdate).toHaveBeenCalledWith(
+      "https://example.com/fallback.jpg",
+    );
+  });
+
+  // FR3: INITIAL_SESSION profile extraction
+  it("should extract profile on INITIAL_SESSION when no cached picture", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        ...createMockSession().user,
+        email: "initial@example.com",
+        user_metadata: { avatar_url: "https://example.com/initial-avatar.jpg" },
+      },
+    } as Partial<Session>);
+    act(() => {
+      fireAuthEvent("INITIAL_SESSION", session);
+    });
+
+    expect(onUserEmailUpdate).toHaveBeenCalledWith("initial@example.com");
+    expect(onUserPictureUpdate).toHaveBeenCalledWith(
+      "https://example.com/initial-avatar.jpg",
+    );
+  });
+
+  // FR3: INITIAL_SESSION with cached picture
+  it("should not call onUserPictureUpdate on INITIAL_SESSION when picture is cached", () => {
+    localStorage.setItem("user_picture", "https://cached.com/old.jpg");
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        ...createMockSession().user,
+        email: "cached@example.com",
+        user_metadata: { avatar_url: "https://example.com/new-avatar.jpg" },
+      },
+    } as Partial<Session>);
+    act(() => {
+      fireAuthEvent("INITIAL_SESSION", session);
+    });
+
+    expect(onUserEmailUpdate).toHaveBeenCalledWith("cached@example.com");
+    expect(onUserPictureUpdate).not.toHaveBeenCalled();
+  });
+
+  // FR4: TOKEN_REFRESHED skips profile extraction
+  it("should not call profile callbacks on TOKEN_REFRESHED", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        ...createMockSession().user,
+        email: "user@example.com",
+        user_metadata: { avatar_url: "https://example.com/avatar.jpg" },
+      },
+    } as Partial<Session>);
+    act(() => {
+      fireAuthEvent("TOKEN_REFRESHED", session);
+    });
+
+    expect(onUserEmailUpdate).not.toHaveBeenCalled();
+    expect(onUserPictureUpdate).not.toHaveBeenCalled();
+    expect(onTokenUpdate).toHaveBeenCalled();
   });
 
   it("should call onClear when SIGNED_OUT event fires", () => {
@@ -209,6 +347,20 @@ describe("SupabaseAuthSync", () => {
     });
 
     expect(mockClient.auth.signOut).toHaveBeenCalledTimes(1);
+  });
+
+  // FR5: signOut clears avatar cache
+  it("should remove USER_PICTURE from localStorage on signOut", async () => {
+    const { mockClient } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    localStorage.setItem("user_picture", "https://example.com/avatar.jpg");
+
+    await act(async () => {
+      refs.signOutRef.current();
+    });
+
+    expect(localStorage.getItem("user_picture")).toBeNull();
   });
 
   it("should populate silentRefreshRef with refresh function", async () => {
@@ -302,6 +454,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={firstClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -313,6 +467,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={secondClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -332,6 +488,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={mockClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -343,6 +501,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={mockClient as never}
         onTokenUpdate={newOnTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -362,6 +522,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={mockClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -373,6 +535,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={mockClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={newOnClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -392,6 +556,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={firstClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -403,6 +569,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={secondClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -426,6 +594,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={firstClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -437,6 +607,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={secondClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -460,6 +632,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={firstClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -471,6 +645,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={secondClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -494,6 +670,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={mockClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -509,6 +687,8 @@ describe("SupabaseAuthSync", () => {
       <SupabaseAuthSync
         supabaseClient={mockClient as never}
         onTokenUpdate={onTokenUpdate}
+        onUserEmailUpdate={onUserEmailUpdate}
+        onUserPictureUpdate={onUserPictureUpdate}
         onClear={newOnClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}

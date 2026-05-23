@@ -183,6 +183,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         <SupabaseAuthSync
           supabaseClient={getSupabaseClient()}
           onTokenUpdate={handleTokenUpdate}
+          onUserEmailUpdate={handleUserEmailUpdate}
+          onUserPictureUpdate={handleUserPictureUpdate}
           onClear={handleClear}
           signInRef={signInRef}
           signOutRef={signOutRef}

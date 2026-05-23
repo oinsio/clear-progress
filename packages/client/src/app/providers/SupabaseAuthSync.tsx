@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type React from "react";
 import { useCallback, useEffect } from "react";
+import { STORAGE_KEYS } from "@/constants";
 import { setAccessToken } from "@/services/tokenManager";
 
 /**
@@ -12,6 +13,8 @@ import { setAccessToken } from "@/services/tokenManager";
 export interface SupabaseAuthSyncProps {
   supabaseClient: SupabaseClient;
   onTokenUpdate: (token: string, expiresIn: number) => void;
+  onUserEmailUpdate: (email: string) => void;
+  onUserPictureUpdate: (picture: string | null) => void;
   onClear: () => void;
   signInRef: React.MutableRefObject<() => void>;
   signOutRef: React.MutableRefObject<() => void>;
@@ -21,6 +24,8 @@ export interface SupabaseAuthSyncProps {
 export function SupabaseAuthSync({
   supabaseClient,
   onTokenUpdate,
+  onUserEmailUpdate,
+  onUserPictureUpdate,
   onClear,
   signInRef,
   signOutRef,
@@ -36,6 +41,35 @@ export function SupabaseAuthSync({
       ) {
         onTokenUpdate(session.access_token, session.expires_in);
         setAccessToken(session.access_token, session.expires_in);
+
+        // Extract profile data — skip on TOKEN_REFRESHED (like GoogleAuthSync skips on silent refresh)
+        if (event !== "TOKEN_REFRESHED") {
+          const userEmail = session.user.email;
+          if (userEmail) {
+            onUserEmailUpdate(userEmail);
+          }
+
+          const hasCachedPicture = !!localStorage.getItem(
+            STORAGE_KEYS.USER_PICTURE,
+          );
+          // INITIAL_SESSION: only extract if not cached; SIGNED_IN: always extract
+          if (!hasCachedPicture || event === "SIGNED_IN") {
+            const metadata = session.user.user_metadata as Record<
+              string,
+              unknown
+            >;
+            const avatarUrl =
+              typeof metadata.avatar_url === "string"
+                ? metadata.avatar_url
+                : typeof metadata.picture === "string"
+                  ? metadata.picture
+                  : null;
+            if (avatarUrl) {
+              onUserPictureUpdate(avatarUrl);
+              localStorage.setItem(STORAGE_KEYS.USER_PICTURE, avatarUrl);
+            }
+          }
+        }
       } else if (event === "SIGNED_OUT") {
         setAccessToken(null);
         onClear();
@@ -45,7 +79,13 @@ export function SupabaseAuthSync({
     return () => {
       data.subscription.unsubscribe();
     };
-  }, [supabaseClient, onTokenUpdate, onClear]);
+  }, [
+    supabaseClient,
+    onTokenUpdate,
+    onUserEmailUpdate,
+    onUserPictureUpdate,
+    onClear,
+  ]);
 
   const doSignIn = useCallback(() => {
     void supabaseClient.auth.signInWithOAuth({
@@ -57,6 +97,7 @@ export function SupabaseAuthSync({
   }, [supabaseClient]);
 
   const doSignOut = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.USER_PICTURE);
     void supabaseClient.auth.signOut();
   }, [supabaseClient]);
 
