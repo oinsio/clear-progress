@@ -17,6 +17,8 @@ import type {
   UploadCoversResponse,
 } from "@clear-progress/contract";
 import {
+  ApiAuthError,
+  ApiValidationError,
   DeleteCoverResponseSchema,
   GetCoverResponseSchema,
   InitResponseSchema,
@@ -32,22 +34,14 @@ import type { ZodType } from "zod";
 const API_TIMEOUT_MS = 30000;
 const GAS_AUTH_ERROR_CODE = "UNAUTHORIZED";
 
-export class ApiAuthError extends Error {
-  constructor() {
-    super("Authentication required: token is missing, expired, or invalid");
-    this.name = "ApiAuthError";
-  }
-}
-
-export class ApiValidationError extends Error {
-  constructor(action: string, cause: unknown) {
-    super(`Invalid API response for "${action}"`);
-    this.name = "ApiValidationError";
-    this.cause = cause;
-  }
-}
-
 type GetAccessToken = () => string | null;
+
+export function createGasAdapter(
+  url: string,
+  getAccessToken: GetAccessToken,
+): SyncAdapter {
+  return new GasSyncAdapter(url, getAccessToken);
+}
 
 export class GasSyncAdapter implements SyncAdapter {
   private readonly url: string;

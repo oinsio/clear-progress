@@ -5,31 +5,31 @@ Feature: Cover Sync Protocol — Lifecycle
 
   @spec-sync-protocol @FR10
   Scenario: Successful cover download from server
-    Given a cover with file_id "remote-abc" is not in local cache or repository
+    Given a cover with hash "remote-abc" is not in local cache or repository
     And server has cover data for "remote-abc"
     When cacheFromServer is called for "remote-abc"
-    Then cover is saved to cover repository with file_id "remote-abc"
+    Then cover is saved to cover repository with data_hash "remote-abc"
     And cover is added to local cover cache
 
   @spec-sync-protocol @FR10
   Scenario: Missing cover on server does not populate cache
-    Given a cover with file_id "missing-id" is not in local cache or repository
+    Given a cover with hash "missing-id" is not in local cache or repository
     And server returns FILE_NOT_FOUND for "missing-id"
     When cacheFromServer is called for "missing-id"
     Then cover is not saved to cover repository
     And cover is not added to local cover cache
 
   @spec-sync-protocol @FR10
-  Scenario: Download skips when result has error flag despite having file_id
-    Given a cover with file_id "error-but-id" is not in local cache or repository
-    And server returns error flag true with file_id for "error-but-id"
+  Scenario: Download skips when result has error flag despite having hash
+    Given a cover with hash "error-but-id" is not in local cache or repository
+    And server returns error flag true with hash for "error-but-id"
     When cacheFromServer is called for "error-but-id"
     Then cover is not saved to cover repository
     And cover is not added to local cover cache
 
   @spec-sync-protocol @FR10
   Scenario: Download uses fallback MIME type when server omits mime_type
-    Given a cover with file_id "no-mime" is not in local cache or repository
+    Given a cover with hash "no-mime" is not in local cache or repository
     And server returns cover data without mime_type for "no-mime"
     When cacheFromServer is called for "no-mime"
     Then cover is saved with fallback MIME type
@@ -37,13 +37,13 @@ Feature: Cover Sync Protocol — Lifecycle
 
   @spec-sync-protocol @FR10
   Scenario: Batch download fetches covers in chunks
-    Given more uncached file IDs than MAX_COVER_BATCH_SIZE exist
+    Given more uncached hashes than MAX_COVER_BATCH_SIZE exist
     When batchCacheFromServer is called
     Then getCover API is called twice
 
   @spec-sync-protocol @FR10
   Scenario: Batch download continues after one chunk fails
-    Given more uncached file IDs than MAX_COVER_BATCH_SIZE exist
+    Given more uncached hashes than MAX_COVER_BATCH_SIZE exist
     And server will fail on the first getCover chunk
     When batchCacheFromServer is called
     Then getCover API is called twice
@@ -82,31 +82,30 @@ Feature: Cover Sync Protocol — Lifecycle
 
   @spec-sync-protocol @FR11
   Scenario: Local cover initialization loads pending covers into cache
-    Given pending cover repository has a cover with local_id "init-pending"
+    Given pending cover repository has a cover with data_hash "init-pending"
     When initializeLocalCovers is called
     Then cover "init-pending" is added to local cover cache
 
   @spec-sync-protocol @FR11
   Scenario: Initialization does not overwrite existing cache entries
     Given cover "already-cached" is already in local cover cache
-    And pending cover repository has a cover with local_id "already-cached"
+    And pending cover repository has a cover with data_hash "already-cached"
     When initializeLocalCovers is called
     Then cover "already-cached" retains its original cache URL
 
   @spec-sync-protocol @FR11 @FR8
-  Scenario: Full sync reupload with dedup returns same file_id
+  Scenario: Full sync reupload with dedup does not update goal
     Given a goal has server cover "server-file-1" with local blob
     And server will respond with reused true for "server-file-1"
     When reuploadLocalCovers is called
-    Then goal is not updated because file_id did not change
+    Then goal is not updated
 
   @spec-sync-protocol @FR11 @FR8
-  Scenario: Full sync reupload updates goal when server returns different file_id
-    Given a goal has server cover "old-file" with local blob
-    And server will respond with new file_id "new-file"
+  Scenario: Full sync reupload saves CoverRecord when server confirms upload
+    Given a goal has server cover "server-hash-1" with local blob
+    And server will respond with reused false for "server-hash-1"
     When reuploadLocalCovers is called
-    Then goal cover_file_id is updated to "new-file"
-    And goal is marked as needsSync
+    Then cover repository saves a record with data_hash "server-hash-1"
 
   @spec-sync-protocol @FR11
   Scenario: Full sync ensureServerCoversAreCached downloads missing covers
@@ -114,9 +113,3 @@ Feature: Cover Sync Protocol — Lifecycle
     And server has cover data for "missing-server-file"
     When fullSync is called
     Then cover "missing-server-file" is added to local cover cache
-
-  @spec-sync-protocol @FR11
-  Scenario: Full sync skips covers with local: prefix
-    Given a goal references cover with local: prefix
-    When ensureServerCoversAreCached is called
-    Then getCover API is not called

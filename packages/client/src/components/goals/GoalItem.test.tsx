@@ -58,8 +58,8 @@ describe("GoalItem", () => {
     expect(onNavigate).toHaveBeenCalledWith(goal.id);
   });
 
-  it("should show placeholder icon when no cover_file_id", () => {
-    const goal = buildGoal({ cover_file_id: "" });
+  it("should show placeholder icon when no cover_hash", () => {
+    const goal = buildGoal({ cover_hash: "" });
     renderGoalItem({ goal });
     expect(screen.getByTestId("goal-cover-placeholder")).toBeInTheDocument();
   });

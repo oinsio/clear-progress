@@ -22,7 +22,7 @@ export class GoalService {
     const now = toISOTimestamp();
     const goal: Goal = {
       description: "",
-      cover_file_id: "",
+      cover_hash: "",
       status: "planning",
       sort_order: existingGoals.length,
       ...partialGoal,

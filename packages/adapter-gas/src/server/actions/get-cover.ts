@@ -1,42 +1,83 @@
-import { ERROR_MESSAGES, MAX_COVER_BATCH_SIZE } from "../helpers/constants";
-import { ERROR_CODES, jsonError, jsonOk } from "../helpers/response";
+// implements FR3 of content-addressable-covers
+import {
+  buildFolderQuery,
+  DRIVE_QUERY_FIELDS,
+  ERROR_MESSAGES,
+  MAX_COVER_BATCH_SIZE,
+  PROPERTY_KEYS,
+} from "../helpers/constants";
+import {
+  ERROR_CODES,
+  jsonError,
+  jsonNotInitialized,
+  jsonOk,
+} from "../helpers/response";
 
 interface GetCoverResult {
-  file_id: string;
+  hash: string;
   mime_type?: string;
   data?: string;
   error?: string;
 }
 
+interface DriveFileEntry {
+  id?: string;
+  description?: string;
+}
+
 export function getCover(payload: {
-  file_ids: string[];
+  hashes: string[];
 }): GoogleAppsScript.Content.TextOutput {
-  const { file_ids } = payload;
+  const { hashes } = payload;
 
-  if (!Array.isArray(file_ids) || file_ids.length === 0) {
+  if (!Array.isArray(hashes) || hashes.length === 0) {
     return jsonError(
       ERROR_CODES.INVALID_PAYLOAD,
-      ERROR_MESSAGES.FILE_IDS_REQUIRED,
+      ERROR_MESSAGES.HASHES_REQUIRED,
     );
   }
 
-  if (file_ids.length > MAX_COVER_BATCH_SIZE) {
+  if (hashes.length > MAX_COVER_BATCH_SIZE) {
     return jsonError(
       ERROR_CODES.INVALID_PAYLOAD,
-      ERROR_MESSAGES.FILE_IDS_TOO_MANY,
+      ERROR_MESSAGES.HASHES_TOO_MANY,
     );
   }
 
-  const covers: GetCoverResult[] = file_ids.map((fileId) => {
+  const coversFolderId = PropertiesService.getScriptProperties().getProperty(
+    PROPERTY_KEYS.COVERS_FOLDER_ID,
+  );
+  if (!coversFolderId) {
+    return jsonNotInitialized();
+  }
+
+  const fileList = Drive.Files.list({
+    q: buildFolderQuery(coversFolderId),
+    fields: DRIVE_QUERY_FIELDS.COVER_FILES,
+  });
+  const existingFiles: DriveFileEntry[] = fileList.files ?? [];
+
+  const covers: GetCoverResult[] = hashes.map((hash) => {
+    const matchedFile = existingFiles.find(
+      (driveFile) => driveFile.description === hash,
+    );
+
+    if (!matchedFile?.id) {
+      return { hash, error: ERROR_CODES.FILE_NOT_FOUND };
+    }
+
     try {
-      const blob = DriveApp.getFileById(fileId).getBlob();
+      const blob = DriveApp.getFileById(matchedFile.id).getBlob();
       const bytes = blob.getBytes();
       const data = Utilities.base64Encode(bytes);
       const mimeType = blob.getContentType() ?? undefined;
-      return { file_id: fileId, mime_type: mimeType, data };
+      return { hash, mime_type: mimeType, data };
     } catch (error) {
-      console.error(`[get-cover] Failed to fetch file ${fileId}:`, error);
-      return { file_id: fileId, error: ERROR_CODES.FILE_NOT_FOUND };
+      console.error(
+        `[get-cover] Failed to fetch file for hash ${hash}:`,
+        error,
+      );
+      return { hash, error: ERROR_CODES.FILE_NOT_FOUND };
     }
   });
 

@@ -1,6 +1,5 @@
 import type { PushResponse, SyncAdapter } from "@clear-progress/contract";
 import {
-  LOCAL_COVER_ID_PREFIX,
   PUSH_CHUNK_SIZE,
   PUSH_RESULT_STATUS,
   STORAGE_KEYS,
@@ -95,13 +94,66 @@ export class SyncService {
     }
 
     await Promise.all([
-      this.taskRepository.applyServerRecords(pullResponse.tasks),
-      this.goalRepository.applyServerRecords(pullResponse.goals),
-      this.contextRepository.applyServerRecords(pullResponse.contexts),
-      this.categoryRepository.applyServerRecords(pullResponse.categories),
-      this.checklistRepository.applyServerRecords(pullResponse.checklist_items),
-      this.ideaRepository.applyServerRecords(pullResponse.ideas),
-      this.settingsRepository.bulkUpsert(pullResponse.settings),
+      this.taskRepository
+        .applyServerRecords(pullResponse.tasks)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords tasks failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.goalRepository
+        .applyServerRecords(pullResponse.goals)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords goals failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.contextRepository
+        .applyServerRecords(pullResponse.contexts)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords contexts failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.categoryRepository
+        .applyServerRecords(pullResponse.categories)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords categories failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.checklistRepository
+        .applyServerRecords(pullResponse.checklist_items)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords checklist_items failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.ideaRepository
+        .applyServerRecords(pullResponse.ideas)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords ideas failed:",
+            error,
+          );
+          throw error;
+        }),
+      this.settingsRepository
+        .bulkUpsert(pullResponse.settings)
+        .catch((error) => {
+          console.error("[SyncService] bulkUpsert settings failed:", error);
+          throw error;
+        }),
     ]);
 
     // Update settings_updated_at
@@ -109,16 +161,28 @@ export class SyncService {
     // lexicographic comparison, since ISO 8601 strings can have different numbers
     // of decimal places (0 vs. 3), which breaks string comparison.
     if (pullResponse.settings.length > 0) {
-      const maxUpdatedAt = pullResponse.settings.reduce((max, setting) => {
-        if (!max) return setting.updated_at;
-        return Temporal.Instant.compare(
-          Temporal.Instant.from(setting.updated_at),
-          Temporal.Instant.from(max),
-        ) > 0
-          ? setting.updated_at
-          : max;
-      }, settingsUpdatedAt ?? "");
-      localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
+      try {
+        const maxUpdatedAt = pullResponse.settings.reduce((max, setting) => {
+          if (!max) return setting.updated_at;
+          return Temporal.Instant.compare(
+            Temporal.Instant.from(setting.updated_at),
+            Temporal.Instant.from(max),
+          ) > 0
+            ? setting.updated_at
+            : max;
+        }, settingsUpdatedAt ?? "");
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
+      } catch (temporalError) {
+        console.error(
+          "[SyncService] Temporal.Instant.from failed in settings_updated_at:",
+          temporalError,
+          {
+            settingsUpdatedAt,
+            settings: pullResponse.settings.map((s) => s.updated_at),
+          },
+        );
+        throw temporalError;
+      }
     }
 
     await this.syncMetaRepository.setValue(
@@ -172,6 +236,43 @@ export class SyncService {
       if (!hasChanges) return;
     }
 
+    // Self-healing: remove orphaned checklist items before push (FR3 of cascade-checklist-delete)
+    let validChecklistItems = checklist_items;
+    if (checklist_items.length > 0) {
+      const taskIdsInPush = new Set(tasks.map((task) => task.id));
+      const uniqueTaskIds = [
+        ...new Set(
+          checklist_items
+            .map((item) => item.task_id)
+            .filter((taskId) => !taskIdsInPush.has(taskId)),
+        ),
+      ];
+
+      if (uniqueTaskIds.length > 0) {
+        const existingTasks = await db.tasks.bulkGet(uniqueTaskIds);
+        const missingTaskIds = new Set(
+          uniqueTaskIds.filter((_, index) => !existingTasks[index]),
+        );
+
+        if (missingTaskIds.size > 0) {
+          const orphanIds = checklist_items
+            .filter((item) => missingTaskIds.has(item.task_id))
+            .map((item) => item.id);
+
+          for (const orphanId of orphanIds) {
+            console.warn(
+              `[SyncService] Orphaned checklist item ${orphanId} references missing task, removing before push`,
+            );
+          }
+
+          await db.checklist_items.bulkDelete(orphanIds);
+          validChecklistItems = checklist_items.filter(
+            (item) => !missingTaskIds.has(item.task_id),
+          );
+        }
+      }
+    }
+
     const sentTimestamps = new Map<string, string>([
       ...tasks.map((task) => [task.id, task.updated_at] as [string, string]),
       ...goals.map((goal) => [goal.id, goal.updated_at] as [string, string]),
@@ -181,7 +282,7 @@ export class SyncService {
       ...categories.map(
         (category) => [category.id, category.updated_at] as [string, string],
       ),
-      ...checklist_items.map(
+      ...validChecklistItems.map(
         (item) => [item.id, item.updated_at] as [string, string],
       ),
       ...ideas.map((idea) => [idea.id, idea.updated_at] as [string, string]),
@@ -193,24 +294,16 @@ export class SyncService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       records.map(({ needsSync: _, ...rest }) => rest as Omit<T, "needsSync">);
 
-    const goalsForPush = goals.map((goal) =>
-      goal.cover_file_id.startsWith(LOCAL_COVER_ID_PREFIX)
-        ? { ...goal, cover_file_id: "" }
-        : goal,
-    );
-
     // Split into chunks
     const chunks = this._createPushChunks(
       tasks,
-      goalsForPush,
+      goals,
       contexts,
       categories,
-      checklist_items,
+      validChecklistItems,
       ideas,
       settings,
     );
-
-    let lastRevision: number | undefined;
 
     // Send chunks sequentially
     for (const chunk of chunks) {
@@ -233,18 +326,13 @@ export class SyncService {
         sentTimestamps,
         pushResponse.revision,
       );
-
-      if (pushResponse.revision !== undefined) {
-        lastRevision = pushResponse.revision;
-      }
     }
 
-    if (lastRevision !== undefined) {
-      await this.syncMetaRepository.setValue(
-        SYNC_META_KEYS.LAST_KNOWN_REVISION,
-        lastRevision,
-      );
-    }
+    // Do NOT update last_known_revision here. The subsequent _pull will set it
+    // via current_revision from the server. If we updated it now, _pull would
+    // use the push revision as since_revision, skipping any server records
+    // created between the old revision and the push revision (e.g. records
+    // pushed by another device that we haven't pulled yet).
   }
 
   private _createPushChunks(
@@ -329,30 +417,17 @@ export class SyncService {
 
       let chunkSize = 0;
 
-      // Fill chunk with records from each type
+      // Fill chunk in dependency order (FR19): contexts → categories → goals → ideas → tasks → checklist_items → settings
       const takeFromArray = <T>(arr: T[], remaining: number): T[] => {
         const toTake = Math.min(arr.length, remaining);
         return arr.splice(0, toTake);
       };
 
-      chunk.tasks = takeFromArray(remainingTasks, PUSH_CHUNK_SIZE - chunkSize);
-      chunkSize += chunk.tasks.length;
-
-      if (chunkSize < PUSH_CHUNK_SIZE) {
-        chunk.goals = takeFromArray(
-          remainingGoals,
-          PUSH_CHUNK_SIZE - chunkSize,
-        );
-        chunkSize += chunk.goals.length;
-      }
-
-      if (chunkSize < PUSH_CHUNK_SIZE) {
-        chunk.contexts = takeFromArray(
-          remainingContexts,
-          PUSH_CHUNK_SIZE - chunkSize,
-        );
-        chunkSize += chunk.contexts.length;
-      }
+      chunk.contexts = takeFromArray(
+        remainingContexts,
+        PUSH_CHUNK_SIZE - chunkSize,
+      );
+      chunkSize += chunk.contexts.length;
 
       if (chunkSize < PUSH_CHUNK_SIZE) {
         chunk.categories = takeFromArray(
@@ -363,11 +438,11 @@ export class SyncService {
       }
 
       if (chunkSize < PUSH_CHUNK_SIZE) {
-        chunk.checklist_items = takeFromArray(
-          remainingChecklistItems,
+        chunk.goals = takeFromArray(
+          remainingGoals,
           PUSH_CHUNK_SIZE - chunkSize,
         );
-        chunkSize += chunk.checklist_items.length;
+        chunkSize += chunk.goals.length;
       }
 
       if (chunkSize < PUSH_CHUNK_SIZE) {
@@ -376,6 +451,22 @@ export class SyncService {
           PUSH_CHUNK_SIZE - chunkSize,
         );
         chunkSize += chunk.ideas.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.tasks = takeFromArray(
+          remainingTasks,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.tasks.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.checklist_items = takeFromArray(
+          remainingChecklistItems,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.checklist_items.length;
       }
 
       if (chunkSize < PUSH_CHUNK_SIZE) {

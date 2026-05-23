@@ -1,6 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { LOCAL_COVER_ID_PREFIX } from "@/constants";
 import { localCoverCache } from "@/services/LocalCoverCache";
 import { useCoverUrl } from "./useCoverUrl";
 
@@ -53,12 +52,6 @@ describe("useCoverUrl", () => {
     expect(mockEnsureCoverCached).not.toHaveBeenCalled();
   });
 
-  it("should not call ensureCoverCached for local: fileId", () => {
-    renderHook(() => useCoverUrl(`${LOCAL_COVER_ID_PREFIX}some-uuid`));
-
-    expect(mockEnsureCoverCached).not.toHaveBeenCalled();
-  });
-
   it("should not call ensureCoverCached when cover already in localCoverCache", () => {
     localCoverCache.set("cached-remote-id", "blob:http://localhost/existing");
 
@@ -99,20 +92,10 @@ describe("useCoverUrl", () => {
     expect(result.current.url).toBe("blob:http://localhost/newly-cached");
   });
 
-  it("should return null for local: fileId not in cache", () => {
-    const { result } = renderHook(() =>
-      useCoverUrl(`${LOCAL_COVER_ID_PREFIX}nonexistent`),
-    );
+  it("should return cached blob URL for hash in cache", () => {
+    localCoverCache.set("some-hash", "blob:http://localhost/local");
 
-    expect(result.current.url).toBeNull();
-  });
-
-  it("should return cached blob URL for local: fileId in cache", () => {
-    localCoverCache.set("some-uuid", "blob:http://localhost/local");
-
-    const { result } = renderHook(() =>
-      useCoverUrl(`${LOCAL_COVER_ID_PREFIX}some-uuid`),
-    );
+    const { result } = renderHook(() => useCoverUrl("some-hash"));
 
     expect(result.current.url).toBe("blob:http://localhost/local");
   });

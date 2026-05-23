@@ -14,11 +14,12 @@
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@clear-progress/adapter-gas": "workspace:*",
+    "@clear-progress/adapter-supabase": "workspace:*",
     "@clear-progress/contract": "workspace:*"
   },
   "devDependencies": {

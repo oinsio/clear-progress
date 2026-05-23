@@ -40,7 +40,7 @@ function createWireGoal(overrides: Partial<WireGoal> = {}): WireGoal {
     id: crypto.randomUUID(),
     name: "Test goal",
     description: "",
-    cover_file_id: "",
+    cover_hash: "",
     status: "planning",
     sort_order: 0,
     is_deleted: false,
@@ -427,7 +427,7 @@ export function syncAdapterContract(
     });
 
     describe("Covers", () => {
-      it("should upload cover and return file_id", async () => {
+      it("should upload cover and return data_hash", async () => {
         await adapter.init();
         const response = await adapter.uploadCover({
           goal_id: "goal-1",
@@ -437,7 +437,7 @@ export function syncAdapterContract(
           data_hash: "abc123",
         });
         expect(response.ok).toBe(true);
-        expect(response.file_id).toBeDefined();
+        expect(response.data_hash).toBeDefined();
       });
 
       it("should get uploaded cover", async () => {
@@ -451,11 +451,11 @@ export function syncAdapterContract(
         });
 
         const getResponse = await adapter.getCover({
-          file_ids: [uploadResponse.file_id],
+          hashes: [uploadResponse.data_hash],
         });
         expect(getResponse.ok).toBe(true);
         expect(getResponse.covers).toHaveLength(1);
-        expect(getResponse.covers[0]?.file_id).toBe(uploadResponse.file_id);
+        expect(getResponse.covers[0]?.hash).toBe(uploadResponse.data_hash);
       });
 
       it("should delete cover", async () => {
@@ -469,7 +469,7 @@ export function syncAdapterContract(
         });
 
         const deleteResponse = await adapter.deleteCover({
-          file_id: uploadResponse.file_id,
+          hash: uploadResponse.data_hash,
           goal_id: "goal-1",
         });
         expect(deleteResponse.ok).toBe(true);
@@ -525,7 +525,7 @@ export function syncAdapterContract(
           data_hash: hash,
         });
         expect(upload2.reused).toBe(true);
-        expect(upload2.file_id).toBe(upload1.file_id);
+        expect(upload2.data_hash).toBe(upload1.data_hash);
       });
 
       // FR9: Partial batch failure (1 of N covers fails)
@@ -555,7 +555,7 @@ export function syncAdapterContract(
 
         expect(response.ok).toBe(true);
         expect(response.results).toHaveLength(2);
-        expect(response.results[0]?.file_id).toBeDefined();
+        expect(response.results[0]?.data_hash).toBeDefined();
         expect(response.results[1]?.error).toBeDefined();
       });
 
@@ -581,7 +581,7 @@ export function syncAdapterContract(
         await adapter.init();
 
         const response = await adapter.getCover({
-          file_ids: ["non-existent-file-id"],
+          hashes: ["non-existent-hash"],
         });
 
         expect(response.ok).toBe(true);
@@ -611,7 +611,7 @@ export function syncAdapterContract(
         });
 
         const deleteResponse = await adapter.deleteCover({
-          file_id: uploadResponse.file_id,
+          hash: uploadResponse.data_hash,
           goal_id: "goal-1",
         });
 
@@ -621,9 +621,9 @@ export function syncAdapterContract(
 
         // Cover should still be accessible
         const getResponse = await adapter.getCover({
-          file_ids: [uploadResponse.file_id],
+          hashes: [uploadResponse.data_hash],
         });
-        expect(getResponse.covers[0]?.file_id).toBe(uploadResponse.file_id);
+        expect(getResponse.covers[0]?.hash).toBe(uploadResponse.data_hash);
         expect(getResponse.covers[0]?.error).toBeUndefined();
       });
 
@@ -639,7 +639,7 @@ export function syncAdapterContract(
         });
 
         const deleteResponse = await adapter.deleteCover({
-          file_id: uploadResponse.file_id,
+          hash: uploadResponse.data_hash,
           goal_id: "goal-1",
         });
 

@@ -86,7 +86,7 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     id: "22222222-2222-4222-a222-222222222222",
     name: "Test goal",
     description: "",
-    cover_file_id: "",
+    cover_hash: "",
     status: "planning",
     sort_order: 0,
     is_deleted: false,

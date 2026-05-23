@@ -42,7 +42,7 @@ http:
               "id": "{{$randomUUID}}",
               "title": "Batch goal {{$randomAbbreviation}}",
               "description": "",
-              "cover_file_id": "",
+              "cover_hash": "",
               "status": "planning",
               "sort_order": 1000,
               "is_deleted": false,

@@ -24,7 +24,7 @@ http:
               "id": "{{conflictGoalId}}",
               "title": "Conflict test goal",
               "description": "Master the fundamentals and build a real project",
-              "cover_file_id": "",
+              "cover_hash": "",
               "status": "planning",
               "sort_order": 9999,
               "is_deleted": false,

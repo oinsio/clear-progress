@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LOCAL_COVER_ID_PREFIX } from "@/constants";
 import {
   asMock,
   createMockSyncAdapter,
@@ -101,18 +100,18 @@ describe("SyncService — push basics", () => {
     expect(pushCall.tasks[0].needsSync).toBeUndefined();
   });
 
-  it.each([
-    ["strips local cover_file_id", `${LOCAL_COVER_ID_PREFIX}local-uuid`, ""],
-    ["keeps remote cover_file_id", "remote-file-id", "remote-file-id"],
-  ])("should %s before sending goal to server", async (_, cover_file_id, expected) => {
-    const needsSyncGoal = makeGoal({ cover_file_id, needsSync: true });
+  it("should send goal cover_hash to server", async () => {
+    const needsSyncGoal = makeGoal({
+      cover_hash: "abc123hash",
+      needsSync: true,
+    });
     setupEntityForPush(ctx, "goal", needsSyncGoal);
     const service = createService(ctx);
 
     await service.push();
 
     const pushCall = getPushCallArg(ctx.mockSyncAdapter);
-    expect(pushCall.goals[0].cover_file_id).toBe(expected);
+    expect(pushCall.goals[0].cover_hash).toBe("abc123hash");
   });
 
   // implements FR6 of spec-sync-protocol

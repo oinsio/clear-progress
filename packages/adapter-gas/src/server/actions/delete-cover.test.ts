@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  resetScriptProperties,
+  setScriptProperty,
+} from "../../../tests/server/setup/gas-mocks";
+import { PROPERTY_KEYS } from "../helpers/constants";
 import { ERROR_CODES } from "../helpers/response";
 import { deleteCover } from "./delete-cover";
 
-vi.mock("../sheets/goals.sheet", () => ({ getCoverFileIds: vi.fn() }));
+vi.mock("../sheets/goals.sheet", () => ({ getCoverHashes: vi.fn() }));
 
-import { getCoverFileIds } from "../sheets/goals.sheet";
+import { getCoverHashes } from "../sheets/goals.sheet";
+
+const DEFAULT_COVERS_FOLDER_ID = "covers-folder-id";
+const MOCK_DRIVE_FILE_ID = "drive-file-id-abc";
 
 function parseResponse(): Record<string, unknown> {
   const calls = (ContentService.createTextOutput as ReturnType<typeof vi.fn>)
@@ -16,30 +24,35 @@ function parseResponse(): Record<string, unknown> {
 describe("deleteCover", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getCoverFileIds).mockReturnValue([]);
+    resetScriptProperties();
+    setScriptProperty(PROPERTY_KEYS.COVERS_FOLDER_ID, DEFAULT_COVERS_FOLDER_ID);
+    vi.mocked(getCoverHashes).mockReturnValue([]);
+    vi.mocked(Drive.Files.list).mockReturnValue({
+      files: [{ id: MOCK_DRIVE_FILE_ID, description: "hash-abc" }],
+    } as never);
   });
 
   describe("payload validation", () => {
-    it("should return INVALID_PAYLOAD error when file_id is empty string", () => {
-      deleteCover({ file_id: "" });
+    it("should return INVALID_PAYLOAD error when hash is empty string", () => {
+      deleteCover({ hash: "" });
 
       const response = parseResponse();
       expect(response.ok).toBe(false);
       expect(response.error).toBe(ERROR_CODES.INVALID_PAYLOAD);
     });
 
-    it("should not call getCoverFileIds when file_id is missing", () => {
-      deleteCover({ file_id: "" });
+    it("should not call getCoverHashes when hash is missing", () => {
+      deleteCover({ hash: "" });
 
-      expect(getCoverFileIds).not.toHaveBeenCalled();
+      expect(getCoverHashes).not.toHaveBeenCalled();
     });
   });
 
   describe("ref_count check (file still referenced)", () => {
-    it("should return deleted: false when file is referenced by one goal", () => {
-      vi.mocked(getCoverFileIds).mockReturnValue(["file-abc"]);
+    it("should return deleted: false when hash is referenced by one goal", () => {
+      vi.mocked(getCoverHashes).mockReturnValue(["hash-abc"]);
 
-      deleteCover({ file_id: "file-abc" });
+      deleteCover({ hash: "hash-abc" });
 
       expect(parseResponse()).toMatchObject({
         ok: true,
@@ -48,40 +61,40 @@ describe("deleteCover", () => {
       });
     });
 
-    it("should return correct ref_count when file is referenced by multiple goals", () => {
-      vi.mocked(getCoverFileIds).mockReturnValue([
-        "file-abc",
-        "file-abc",
-        "file-abc",
+    it("should return correct ref_count when hash is referenced by multiple goals", () => {
+      vi.mocked(getCoverHashes).mockReturnValue([
+        "hash-abc",
+        "hash-abc",
+        "hash-abc",
       ]);
 
-      deleteCover({ file_id: "file-abc" });
+      deleteCover({ hash: "hash-abc" });
 
       expect(parseResponse().ref_count).toBe(3);
     });
 
-    it("should not call Drive.Files.update when file is still referenced", () => {
-      vi.mocked(getCoverFileIds).mockReturnValue(["file-abc"]);
+    it("should not call Drive.Files.update when hash is still referenced", () => {
+      vi.mocked(getCoverHashes).mockReturnValue(["hash-abc"]);
 
-      deleteCover({ file_id: "file-abc" });
+      deleteCover({ hash: "hash-abc" });
 
       expect(Drive.Files.update).not.toHaveBeenCalled();
     });
 
-    it("should not count other file ids toward ref_count", () => {
-      vi.mocked(getCoverFileIds).mockReturnValue(["file-other", "file-abc"]);
+    it("should not count other hashes toward ref_count", () => {
+      vi.mocked(getCoverHashes).mockReturnValue(["hash-other", "hash-abc"]);
 
-      deleteCover({ file_id: "file-abc" });
+      deleteCover({ hash: "hash-abc" });
 
       expect(parseResponse().ref_count).toBe(1);
     });
   });
 
   describe("successful deletion (file not referenced)", () => {
-    it("should return deleted: true when file has no references", () => {
-      vi.mocked(getCoverFileIds).mockReturnValue([]);
+    it("should return deleted: true when hash has no references", () => {
+      vi.mocked(getCoverHashes).mockReturnValue([]);
 
-      deleteCover({ file_id: "file-abc" });
+      deleteCover({ hash: "hash-abc" });
 
       expect(parseResponse()).toMatchObject({
         ok: true,
@@ -91,20 +104,20 @@ describe("deleteCover", () => {
     });
 
     it("should call Drive.Files.update with trashed: true", () => {
-      deleteCover({ file_id: "file-abc" });
+      deleteCover({ hash: "hash-abc" });
 
       expect(Drive.Files.update).toHaveBeenCalledWith(
         { trashed: true },
-        "file-abc",
+        expect.any(String),
       );
     });
 
-    it("should trash the correct file", () => {
-      deleteCover({ file_id: "file-xyz" });
+    it("should trash the file matching the given hash", () => {
+      deleteCover({ hash: "hash-abc" });
 
       expect(Drive.Files.update).toHaveBeenCalledWith(
         expect.anything(),
-        "file-xyz",
+        MOCK_DRIVE_FILE_ID,
       );
     });
   });
@@ -115,21 +128,21 @@ describe("deleteCover", () => {
         throw new Error("Not found");
       });
 
-      deleteCover({ file_id: "file-abc" });
+      deleteCover({ hash: "hash-abc" });
 
       const response = parseResponse();
       expect(response.ok).toBe(false);
       expect(response.error).toBe(ERROR_CODES.FILE_NOT_FOUND);
     });
 
-    it("should include file_id in the error message when Drive throws", () => {
+    it("should include hash in the error message when Drive throws", () => {
       vi.mocked(Drive.Files.update).mockImplementation(() => {
         throw new Error("Not found");
       });
 
-      deleteCover({ file_id: "file-abc" });
+      deleteCover({ hash: "hash-abc" });
 
-      expect(parseResponse().message).toContain("file-abc");
+      expect(parseResponse().message).toContain("hash-abc");
     });
   });
 });

@@ -3,12 +3,6 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "exports": {
-    "./services/adapterRegistry": {
-      "types": "./src/services/adapterRegistry.ts",
-      "import": "./src/services/adapterRegistry.ts"
-    }
-  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -28,13 +22,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@clear-progress/adapter-loader": "workspace:*",
+    "@clear-progress/adapter-gas": "workspace:*",
+    "@clear-progress/adapter-supabase": "workspace:*",
     "@clear-progress/contract": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@radix-ui/react-slot": "^1.2.4",
     "@react-oauth/google": "^0.13.4",
+    "@supabase/supabase-js": "^2.105.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dexie": "^4.3.0",
@@ -53,6 +49,7 @@
   },
   "devDependencies": {
     "@amiceli/vitest-cucumber": "^5.2.1",
+    "@axe-core/playwright": "^4.11.3",
     "@biomejs/biome": "^2.4.13",
     "@clear-progress/adapter-inmemory": "workspace:*",
     "@playwright/test": "^1.49.1",

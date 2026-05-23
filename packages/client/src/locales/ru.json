@@ -268,7 +268,20 @@
     "awaitingSignin": "Подключение установлено. Войдите в Google для начала синхронизации.",
     "notInitializedNeedClientId": "Для инициализации необходим Client ID",
     "backToInput": "Назад",
-    "backendType": "Тип сервера"
+    "backendType": "Тип сервера",
+    "supabase": {
+      "section": "Supabase",
+      "urlLabel": "URL или ID проекта Supabase",
+      "urlPlaceholder": "https://xxxxx.supabase.co или ID проекта",
+      "anonKeyLabel": "Anon Key",
+      "anonKeyPlaceholder": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "connecting": "Подключаюсь...",
+      "connect": "Подключить",
+      "errorConnection": "Не удалось подключиться. Проверьте URL и Anon Key.",
+      "errorOAuth": "Ошибка OAuth-авторизации. Попробуйте ещё раз.",
+      "noProviders": "OAuth-провайдеры не настроены. Включите провайдеры в Supabase Dashboard → Authentication → Providers.",
+      "signInWith": "Войти через"
+    }
   },
   "selector": {
     "goal": "Цель",

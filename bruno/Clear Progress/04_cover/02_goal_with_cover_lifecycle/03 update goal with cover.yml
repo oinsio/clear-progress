@@ -24,7 +24,7 @@ http:
               "id": "{{lifecycleGoalId}}",
               "title": "Goal with Cover {{$randomInt}}",
               "description": "Testing full cover lifecycle",
-              "cover_file_id": "{{lifecycleCoverFileId}}",
+              "cover_hash": "{{lifecycleCoverFileId}}",
               "status": "in_progress",
               "sort_order": 1000,
               "is_deleted": false,

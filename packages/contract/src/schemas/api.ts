@@ -86,16 +86,18 @@ export const PushResponseSchema = z.object({
 
 // --- Covers ---
 
+// implements FR2 of content-addressable-covers
 export const UploadCoverResponseSchema = z.object({
   ok: z.boolean(),
-  file_id: z.string(),
+  data_hash: z.string(),
   reused: z.boolean(),
 });
 
+// implements FR2 of content-addressable-covers
 export const UploadCoverBatchResultSchema = z.object({
   local_id: z.string(),
   goal_id: z.string(),
-  file_id: z.string().optional(),
+  data_hash: z.string().optional(),
   reused: z.boolean().optional(),
   error: z.string().optional(),
 });
@@ -105,8 +107,9 @@ export const UploadCoversResponseSchema = z.object({
   results: z.array(UploadCoverBatchResultSchema),
 });
 
+// implements FR3 of content-addressable-covers
 export const GetCoverResultSchema = z.object({
-  file_id: z.string(),
+  hash: z.string(),
   mime_type: z.string().optional(),
   data: z.string().optional(),
   error: z.string().optional(),

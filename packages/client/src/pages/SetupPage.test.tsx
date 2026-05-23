@@ -32,12 +32,12 @@ const {
   mockCreateAdapter: vi.fn(),
 }));
 
-vi.mock("@clear-progress/contract", async (importOriginal) => {
+vi.mock("@clear-progress/adapter-gas", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("@clear-progress/contract")>();
+    await importOriginal<typeof import("@clear-progress/adapter-gas")>();
   return {
     ...actual,
-    createAdapter: mockCreateAdapter,
+    createGasAdapter: mockCreateAdapter,
   };
 });
 

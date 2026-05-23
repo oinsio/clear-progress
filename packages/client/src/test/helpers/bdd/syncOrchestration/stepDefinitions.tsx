@@ -35,10 +35,10 @@ const {
     mockPull: vi.fn(),
     mockPush: vi.fn(),
     mockResetAndPull: vi.fn(),
-    mockInitializeLocalCovers: vi.fn(),
-    mockCoverSync: vi.fn(),
-    mockEnsureServerCoversAreCached: vi.fn(),
-    mockReuploadLocalCovers: vi.fn(),
+    mockInitializeLocalCovers: vi.fn().mockResolvedValue(undefined),
+    mockCoverSync: vi.fn().mockResolvedValue(undefined),
+    mockEnsureServerCoversAreCached: vi.fn().mockResolvedValue(undefined),
+    mockReuploadLocalCovers: vi.fn().mockResolvedValue(undefined),
     mockSignOut: signOut,
     mockSilentRefresh: silentRefresh,
     STABLE_CONNECTION_CONFIG: {
@@ -67,13 +67,12 @@ vi.mock("@/hooks/useConnectionConfig", () => ({
 }));
 
 vi.mock("@/services/SyncService", () => {
-  return {
-    SyncService: vi.fn().mockImplementation(() => ({
-      pull: mockPull,
-      push: mockPush,
-      resetAndPull: mockResetAndPull,
-    })),
-  };
+  class MockSyncService {
+    pull = mockPull;
+    push = mockPush;
+    resetAndPull = mockResetAndPull;
+  }
+  return { SyncService: MockSyncService };
 });
 
 vi.mock("@/services/defaultServices", () => ({
@@ -89,30 +88,7 @@ vi.mock("@/services/defaultServices", () => ({
   },
 }));
 
-vi.mock("@/db/repositories/TaskRepository", () => ({
-  TaskRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/GoalRepository", () => ({
-  GoalRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/ContextRepository", () => ({
-  ContextRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/CategoryRepository", () => ({
-  CategoryRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/ChecklistRepository", () => ({
-  ChecklistRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/IdeaRepository", () => ({
-  IdeaRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/SettingsRepository", () => ({
-  SettingsRepository: vi.fn(),
-}));
-vi.mock("@/db/repositories/SyncMetaRepository", () => ({
-  SyncMetaRepository: vi.fn(),
-}));
+import "@/test/helpers/mockRepositories";
 
 function SyncStatusDisplay() {
   const { syncStatus } = useSync();
@@ -464,32 +440,6 @@ export function createWhenSteps(
       When("user clicks the sync indicator", async () => {
         const pullBtn = screen.getByTestId("pull-btn");
         pullBtn.click();
-        await vi.advanceTimersByTimeAsync(0);
-      });
-    },
-    whenTabBecomesVisible: (When: StepTest["When"]) => {
-      When("the tab becomes visible", async () => {
-        Object.defineProperty(document, "visibilityState", {
-          writable: true,
-          configurable: true,
-          value: "visible",
-        });
-        document.dispatchEvent(new Event("visibilitychange"));
-        await vi.advanceTimersByTimeAsync(0);
-      });
-    },
-    whenWindowReceivesFocus: (When: StepTest["When"]) => {
-      When("the window receives focus", async () => {
-        window.dispatchEvent(new Event("focus"));
-        await vi.advanceTimersByTimeAsync(0);
-      });
-    },
-    whenPageshowFiresWithPersistedTrue: (When: StepTest["When"]) => {
-      When("pageshow fires with persisted=true", async () => {
-        const event = new PageTransitionEvent("pageshow", {
-          persisted: true,
-        });
-        window.dispatchEvent(event);
         await vi.advanceTimersByTimeAsync(0);
       });
     },

@@ -24,7 +24,7 @@ http:
               "id": "{{goalId}}",
               "title": "Updated: Learn something great",
               "description": "Master the fundamentals and build a real project",
-              "cover_file_id": "",
+              "cover_hash": "",
               "status": "completed",
               "sort_order": 1000,
               "is_deleted": false,

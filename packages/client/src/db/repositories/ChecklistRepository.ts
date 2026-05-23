@@ -8,12 +8,16 @@ export class ChecklistRepository {
     return db.checklist_items.toArray();
   }
 
-  async getByTaskId(taskId: string): Promise<ChecklistItem[]> {
+  async getActiveByTaskId(taskId: string): Promise<ChecklistItem[]> {
     return db.checklist_items
       .where("task_id")
       .equals(taskId)
       .filter((item) => !item.is_deleted)
       .toArray();
+  }
+
+  async getAllByTaskId(taskId: string): Promise<ChecklistItem[]> {
+    return db.checklist_items.where("task_id").equals(taskId).toArray();
   }
 
   async getById(id: string): Promise<ChecklistItem | undefined> {

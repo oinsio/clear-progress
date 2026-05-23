@@ -50,7 +50,7 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     id: crypto.randomUUID(),
     name: "Test Goal",
     description: "",
-    cover_file_id: "",
+    cover_hash: "",
     status: "in_progress",
     sort_order: 0,
     is_deleted: false,

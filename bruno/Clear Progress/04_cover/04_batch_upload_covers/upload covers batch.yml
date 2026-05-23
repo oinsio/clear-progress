@@ -52,9 +52,9 @@ runtime:
       operator: isTruthy
     - expression: res.body.results
       operator: isDefined
-    - expression: res.body.results[0].file_id
+    - expression: res.body.results[0].hash
       operator: isDefined
-    - expression: res.body.results[1].file_id
+    - expression: res.body.results[1].hash
       operator: isDefined
 
 settings:
@@ -65,4 +65,4 @@ settings:
 
 docs: |
   upload_covers called with 2 valid covers (cover_1 and cover_2 from collection vars).
-  Expected: ok: true, results array with 2 entries, each having file_id.
+  Expected: ok: true, results array with 2 entries, each having hash.

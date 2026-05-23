@@ -24,7 +24,7 @@ http:
               "id": "{{$randomUUID}}",
               "title": "Learn {{$randomAbbreviation}}",
               "description": "Master the fundamentals and build a real project",
-              "cover_file_id": "",
+              "cover_hash": "",
               "status": "in_progress",
               "sort_order": 1000,
               "is_deleted": false,

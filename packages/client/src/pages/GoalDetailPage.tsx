@@ -79,7 +79,7 @@ export default function GoalDetailPage() {
     updateGoal,
     deleteGoal,
   } = useGoal(id ?? "");
-  const { url: existingCoverUrl } = useCoverUrl(goal?.cover_file_id ?? "");
+  const { url: existingCoverUrl } = useCoverUrl(goal?.cover_hash ?? "");
   const {
     tasks,
     completedTasks,
@@ -247,7 +247,7 @@ export default function GoalDetailPage() {
     setIsSaving(true);
     setSaveError(null);
     try {
-      const originalCoverFileId = goal?.cover_file_id ?? "";
+      const originalCoverFileId = goal?.cover_hash ?? "";
       let newCoverFileId = originalCoverFileId;
 
       if (pendingCoverFile) {
@@ -255,7 +255,7 @@ export default function GoalDetailPage() {
           pendingCoverFile,
           id,
         );
-        newCoverFileId = result.file_id;
+        newCoverFileId = result.data_hash;
         if (originalCoverFileId && originalCoverFileId !== newCoverFileId) {
           void defaultCoverService.deleteCover(originalCoverFileId, id);
         }
@@ -269,7 +269,7 @@ export default function GoalDetailPage() {
       await updateGoal({
         name: editName.trim(),
         description: editDescription.trim(),
-        cover_file_id: newCoverFileId,
+        cover_hash: newCoverFileId,
         status: editStatus,
       });
       void reloadGoal();

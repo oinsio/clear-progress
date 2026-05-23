@@ -1,0 +1,15 @@
+{
+  "name": "@clear-progress/integration",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:setup": "playwright test --project=setup"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "testcontainers": "^10.22.0"
+  }
+}

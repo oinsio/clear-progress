@@ -28,7 +28,7 @@ function buildMockCoverService(
   overrides: Partial<CoverService> = {},
 ): CoverService {
   return {
-    uploadCover: vi.fn().mockResolvedValue({ file_id: "file-123" }),
+    uploadCover: vi.fn().mockResolvedValue({ data_hash: "hash-123" }),
     deleteCover: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   } as unknown as CoverService;
@@ -192,7 +192,7 @@ describe("GoalPage", () => {
       const uploadCover = vi
         .fn()
         .mockRejectedValueOnce(new Error("Network error"))
-        .mockResolvedValue({ file_id: "file-123" });
+        .mockResolvedValue({ data_hash: "hash-123" });
       const coverService = buildMockCoverService({ uploadCover });
 
       renderWithCoverAndSave(coverService, onClose);

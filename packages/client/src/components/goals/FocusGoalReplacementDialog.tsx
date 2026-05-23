@@ -19,7 +19,7 @@ interface ReplaceGoalButtonProps {
 
 function ReplaceGoalButton({ goal, onReplace }: ReplaceGoalButtonProps) {
   const { t } = useTranslation();
-  const { url: coverUrl } = useCoverUrl(goal.cover_file_id);
+  const { url: coverUrl } = useCoverUrl(goal.cover_hash);
 
   return (
     <button

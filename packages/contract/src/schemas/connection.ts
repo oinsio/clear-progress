@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+const HttpUrlSchema = z.string().refine(
+  (value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  },
+  { message: "Invalid HTTP(S) URL" },
+);
+
 /**
  * BackendType
  */
@@ -12,7 +24,7 @@ export type BackendType = z.infer<typeof BackendTypeSchema>;
  */
 export const GasConnectionConfigSchema = z.object({
   type: z.literal("gas"),
-  url: z.httpUrl(),
+  url: HttpUrlSchema,
   clientId: z.string().optional(),
   isActive: z.boolean(),
 });
@@ -24,7 +36,7 @@ export type GasConnectionConfig = z.infer<typeof GasConnectionConfigSchema>;
  */
 export const SupabaseConnectionConfigSchema = z.object({
   type: z.literal("supabase"),
-  url: z.httpUrl(),
+  url: HttpUrlSchema,
   anonKey: z.string().min(1),
   isActive: z.boolean(),
 });

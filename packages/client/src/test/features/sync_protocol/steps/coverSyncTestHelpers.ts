@@ -34,7 +34,6 @@ export function createMockPendingCoverRepository(
 ): PendingCoverRepository {
   return {
     getAll: vi.fn().mockResolvedValue([]),
-    getById: vi.fn().mockResolvedValue(undefined),
     getByHash: vi.fn().mockResolvedValue(undefined),
     save: vi.fn().mockResolvedValue(undefined),
     delete: vi.fn().mockResolvedValue(undefined),
@@ -48,7 +47,6 @@ export function createMockCoverRepository(
   return {
     getAll: vi.fn().mockResolvedValue([]),
     getByHash: vi.fn().mockResolvedValue(undefined),
-    getByFileId: vi.fn().mockResolvedValue(undefined),
     save: vi.fn().mockResolvedValue(undefined),
     delete: vi.fn().mockResolvedValue(undefined),
     ...overrides,
@@ -71,7 +69,7 @@ export function createGoal(overrides: Record<string, unknown> = {}) {
     id: "goal-1",
     name: "Test Goal",
     description: "",
-    cover_file_id: "",
+    cover_hash: "",
     status: "in_progress" as const,
     sort_order: 0,
     is_deleted: false,
@@ -86,7 +84,6 @@ export function createPendingCover(
   overrides: Partial<PendingCoverRecord> = {},
 ): PendingCoverRecord {
   return {
-    local_id: "test-local-id",
     goal_id: "test-goal-id",
     data: new Blob(["fake image content"], { type: MOCK_MIME_TYPE }),
     filename: "cover.jpg",
@@ -98,12 +95,11 @@ export function createPendingCover(
 }
 
 export function createCoverRecord(
-  fileId: string,
+  dataHash: string,
   overrides: Record<string, unknown> = {},
 ) {
   return {
-    file_id: fileId,
-    data_hash: "cover-hash",
+    data_hash: dataHash,
     data: new Blob(["img"], { type: MOCK_MIME_TYPE }),
     ...overrides,
   };
@@ -111,32 +107,32 @@ export function createCoverRecord(
 
 export function setupGoalWithCoverBlob(opts: {
   goalId: string;
-  fileId: string;
+  coverHash: string;
 }) {
-  const coverRecord = createCoverRecord(opts.fileId);
+  const coverRecord = createCoverRecord(opts.coverHash);
   const goalRepository = createMockGoalRepository({
     getActive: vi.fn().mockResolvedValue([
       createGoal({
         id: opts.goalId,
-        cover_file_id: opts.fileId,
+        cover_hash: opts.coverHash,
       }),
     ]),
   });
   const coverRepository = createMockCoverRepository({
-    getByFileId: vi.fn().mockResolvedValue(coverRecord),
+    getByHash: vi.fn().mockResolvedValue(coverRecord),
   });
   return { goalRepository, coverRepository, coverRecord };
 }
 
 export function createMockGetCoversSuccess(
-  fileId: string,
+  hash: string,
   overrides: Record<string, unknown> = {},
 ) {
   return vi.fn().mockResolvedValue({
     ok: true,
     covers: [
       {
-        file_id: fileId,
+        hash,
         mime_type: MOCK_MIME_TYPE,
         data: MOCK_BASE64,
         ...overrides,
@@ -145,10 +141,10 @@ export function createMockGetCoversSuccess(
   });
 }
 
-export function createMockGetCoversNotFound(fileId: string) {
+export function createMockGetCoversNotFound(hash: string) {
   return vi.fn().mockResolvedValue({
     ok: true,
-    covers: [{ file_id: fileId, error: "FILE_NOT_FOUND" }],
+    covers: [{ hash, error: "FILE_NOT_FOUND" }],
   });
 }
 

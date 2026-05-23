@@ -2,21 +2,12 @@ import type {
   SyncAdapter,
   UploadCoverBatchItem,
 } from "@clear-progress/contract";
-import {
-  FALLBACK_COVER_MIME_TYPE,
-  LOCAL_COVER_ID_PREFIX,
-  MAX_COVER_BATCH_SIZE,
-} from "@/constants";
+import { FALLBACK_COVER_MIME_TYPE, MAX_COVER_BATCH_SIZE } from "@/constants";
 import type { CoverRepository } from "@/db/repositories/CoverRepository";
 import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
 import type { CoverRecord, PendingCoverRecord } from "@/types/entities";
-import { toISOTimestamp } from "@/utils/dateHelpers";
-import {
-  arrayBufferToBase64,
-  buildCoverFilename,
-  computeSha256Hex,
-} from "./CoverService";
+import { arrayBufferToBase64, buildCoverFilename } from "./CoverService";
 import { localCoverCache } from "./LocalCoverCache";
 
 /**
@@ -40,16 +31,16 @@ export class CoverSyncService {
     ]);
 
     for (const cover of covers) {
-      if (cover.data && !localCoverCache.get(cover.file_id)) {
+      if (cover.data && !localCoverCache.get(cover.data_hash)) {
         const url = URL.createObjectURL(cover.data);
-        localCoverCache.set(cover.file_id, url);
+        localCoverCache.set(cover.data_hash, url);
       }
     }
 
     for (const pendingCover of pendingCovers) {
-      if (!localCoverCache.get(pendingCover.local_id)) {
+      if (!localCoverCache.get(pendingCover.data_hash)) {
         const url = URL.createObjectURL(pendingCover.data);
-        localCoverCache.set(pendingCover.local_id, url);
+        localCoverCache.set(pendingCover.data_hash, url);
       }
     }
   }
@@ -82,19 +73,15 @@ export class CoverSyncService {
         break;
       }
 
-      const pendingByLocalId = new Map(
-        chunk.map((cover) => [cover.local_id, cover]),
+      const pendingByDataHash = new Map(
+        chunk.map((cover) => [cover.data_hash, cover]),
       );
 
       for (const result of response.results) {
-        if (result.error || !result.file_id) continue;
-        const pendingCover = pendingByLocalId.get(result.local_id);
+        if (result.error || !result.data_hash) continue;
+        const pendingCover = pendingByDataHash.get(result.data_hash);
         if (!pendingCover) continue;
-        await this.handleSuccessfulUpload(
-          pendingCover,
-          result.file_id,
-          result.reused ?? false,
-        );
+        await this.handleSuccessfulUpload(pendingCover, result.reused ?? false);
       }
     }
   }
@@ -116,20 +103,12 @@ export class CoverSyncService {
     const batchEntries: BatchEntry[] = [];
 
     for (const goal of activeGoals) {
-      if (
-        !goal.cover_file_id ||
-        goal.cover_file_id.startsWith(LOCAL_COVER_ID_PREFIX)
-      )
-        continue;
+      if (!goal.cover_hash) continue;
 
-      let existingCover = await this.coverRepository.getByFileId(
-        goal.cover_file_id,
-      );
+      let existingCover = await this.coverRepository.getByHash(goal.cover_hash);
       if (!existingCover?.data) {
-        await this.cacheFromServer(goal.cover_file_id);
-        existingCover = await this.coverRepository.getByFileId(
-          goal.cover_file_id,
-        );
+        await this.cacheFromServer(goal.cover_hash);
+        existingCover = await this.coverRepository.getByHash(goal.cover_hash);
       }
       if (!existingCover?.data) continue;
 
@@ -141,7 +120,7 @@ export class CoverSyncService {
         goal,
         cover: existingCover,
         item: {
-          local_id: goal.id,
+          local_id: existingCover.data_hash,
           goal_id: goal.id,
           filename: buildCoverFilename(existingCover.data_hash, mimeType),
           mime_type: mimeType,
@@ -167,56 +146,45 @@ export class CoverSyncService {
         continue; // best-effort: skip this chunk
       }
 
-      const entryByGoalId = new Map(
-        chunk.map((entry) => [entry.goal.id, entry]),
-      );
-
+      // implements FR5, FR7 of content-addressable-covers
       for (const result of response.results) {
-        if (result.error || !result.file_id) continue;
-        const entry = entryByGoalId.get(result.goal_id);
-        if (!entry || result.file_id === entry.goal.cover_file_id) continue;
+        if (result.error || !result.data_hash) continue;
+        const entry = chunk.find(
+          (batchEntry) => batchEntry.cover.data_hash === result.data_hash,
+        );
+        if (!entry || result.reused) continue;
 
-        const now = toISOTimestamp();
-        await this.goalRepository.update({
-          ...entry.goal,
-          cover_file_id: result.file_id,
-          updated_at: now,
-          needsSync: true,
-        });
         await this.coverRepository.save({
-          file_id: result.file_id,
           data_hash: entry.cover.data_hash,
           data: entry.cover.data,
         });
-        await this.coverRepository.delete(entry.goal.cover_file_id);
-        localCoverCache.transfer(entry.goal.cover_file_id, result.file_id);
       }
     }
   }
 
   private readonly inFlightCaches = new Map<string, Promise<void>>();
 
-  async ensureCoverCached(fileId: string): Promise<void> {
-    if (localCoverCache.get(fileId)) return;
+  async ensureCoverCached(hash: string): Promise<void> {
+    if (localCoverCache.get(hash)) return;
 
-    const inflightRequest = this.inFlightCaches.get(fileId);
+    const inflightRequest = this.inFlightCaches.get(hash);
     if (inflightRequest) return inflightRequest;
 
-    const cachePromise = this.fetchAndPopulateCache(fileId).finally(() => {
-      this.inFlightCaches.delete(fileId);
+    const cachePromise = this.fetchAndPopulateCache(hash).finally(() => {
+      this.inFlightCaches.delete(hash);
     });
-    this.inFlightCaches.set(fileId, cachePromise);
+    this.inFlightCaches.set(hash, cachePromise);
     return cachePromise;
   }
 
-  private async fetchAndPopulateCache(fileId: string): Promise<void> {
-    const existingCover = await this.coverRepository.getByFileId(fileId);
+  private async fetchAndPopulateCache(hash: string): Promise<void> {
+    const existingCover = await this.coverRepository.getByHash(hash);
     if (existingCover?.data) {
       const url = URL.createObjectURL(existingCover.data);
-      localCoverCache.set(fileId, url);
+      localCoverCache.set(hash, url);
       return;
     }
-    await this.cacheFromServer(fileId);
+    await this.cacheFromServer(hash);
   }
 
   async ensureServerCoversAreCached(): Promise<void> {
@@ -226,27 +194,23 @@ export class CoverSyncService {
       activeGoals.length,
     );
 
-    const uncachedFileIds = activeGoals
-      .map((goal) => goal.cover_file_id)
-      .filter(
-        (fileId) =>
-          fileId &&
-          !fileId.startsWith(LOCAL_COVER_ID_PREFIX) &&
-          !localCoverCache.get(fileId),
-      );
+    // implements FR5, FR7 of content-addressable-covers
+    const uncachedHashes = activeGoals
+      .map((goal) => goal.cover_hash)
+      .filter((hash) => hash && !localCoverCache.get(hash));
     console.log(
-      "[CoverSyncService] ensureServerCoversAreCached: uncached file IDs =",
-      uncachedFileIds,
+      "[CoverSyncService] ensureServerCoversAreCached: uncached hashes =",
+      uncachedHashes,
     );
 
     const missingFromDb: string[] = [];
-    for (const fileId of uncachedFileIds) {
-      const existingCover = await this.coverRepository.getByFileId(fileId);
+    for (const hash of uncachedHashes) {
+      const existingCover = await this.coverRepository.getByHash(hash);
       if (existingCover?.data) {
         const url = URL.createObjectURL(existingCover.data);
-        localCoverCache.set(fileId, url);
+        localCoverCache.set(hash, url);
       } else {
-        missingFromDb.push(fileId);
+        missingFromDb.push(hash);
       }
     }
     console.log(
@@ -262,36 +226,36 @@ export class CoverSyncService {
     }
   }
 
-  async cacheFromServer(fileId: string): Promise<void> {
-    const fetchedCover = await this.fetchFromServerAndStore(fileId);
+  async cacheFromServer(hash: string): Promise<void> {
+    const fetchedCover = await this.fetchFromServerAndStore(hash);
     if (fetchedCover?.data) {
       const url = URL.createObjectURL(fetchedCover.data);
-      localCoverCache.set(fileId, url);
+      localCoverCache.set(hash, url);
     }
   }
 
-  async batchCacheFromServer(fileIds: string[]): Promise<void> {
+  async batchCacheFromServer(hashes: string[]): Promise<void> {
     console.log(
-      "[CoverSyncService] batchCacheFromServer: total files =",
-      fileIds.length,
+      "[CoverSyncService] batchCacheFromServer: total hashes =",
+      hashes.length,
     );
 
     for (
       let offset = 0;
-      offset < fileIds.length;
+      offset < hashes.length;
       offset += MAX_COVER_BATCH_SIZE
     ) {
-      const chunk = fileIds.slice(offset, offset + MAX_COVER_BATCH_SIZE);
+      const chunk = hashes.slice(offset, offset + MAX_COVER_BATCH_SIZE);
       console.log(
         "[CoverSyncService] batchCacheFromServer: requesting chunk, size =",
         chunk.length,
-        "file_ids =",
+        "hashes =",
         chunk,
       );
 
       try {
         const response = await this.syncAdapter.getCover({
-          file_ids: chunk,
+          hashes: chunk,
         });
         console.log(
           "[CoverSyncService] batchCacheFromServer: received response, covers count =",
@@ -303,20 +267,17 @@ export class CoverSyncService {
           try {
             const mimeType = coverResult.mime_type ?? FALLBACK_COVER_MIME_TYPE;
             const blob = base64ToBlob(coverResult.data, mimeType);
-            const buffer = await blob.arrayBuffer();
-            const dataHash = await computeSha256Hex(buffer);
             const coverRecord: CoverRecord = {
-              file_id: coverResult.file_id,
-              data_hash: dataHash,
+              data_hash: coverResult.hash,
               data: blob,
             };
             await this.coverRepository.save(coverRecord);
             const url = URL.createObjectURL(blob);
-            localCoverCache.set(coverResult.file_id, url);
+            localCoverCache.set(coverResult.hash, url);
           } catch (coverError) {
             console.error(
               "[CoverSyncService] batchCacheFromServer: failed to process cover",
-              coverResult.file_id,
+              coverResult.hash,
               coverError,
             );
           }
@@ -332,22 +293,19 @@ export class CoverSyncService {
   }
 
   private async fetchFromServerAndStore(
-    fileId: string,
+    hash: string,
   ): Promise<CoverRecord | null> {
     try {
       const response = await this.syncAdapter.getCover({
-        file_ids: [fileId],
+        hashes: [hash],
       });
       const coverResult = response.covers[0];
       if (!coverResult || coverResult.error || !coverResult.data) return null;
 
       const mimeType = coverResult.mime_type ?? FALLBACK_COVER_MIME_TYPE;
       const blob = base64ToBlob(coverResult.data, mimeType);
-      const buffer = await blob.arrayBuffer();
-      const dataHash = await computeSha256Hex(buffer);
       const coverRecord: CoverRecord = {
-        file_id: fileId,
-        data_hash: dataHash,
+        data_hash: coverResult.hash,
         data: blob,
       };
       await this.coverRepository.save(coverRecord);
@@ -362,47 +320,29 @@ export class CoverSyncService {
   ): Promise<UploadCoverBatchItem> {
     const buffer = await pending.data.arrayBuffer();
     const base64Data = arrayBufferToBase64(buffer);
-    const dataHash = await computeSha256Hex(buffer);
     return {
-      local_id: pending.local_id,
+      local_id: pending.data_hash,
       goal_id: pending.goal_id,
       filename: pending.filename,
       mime_type: pending.mime_type,
       data: base64Data,
-      data_hash: dataHash,
+      data_hash: pending.data_hash,
     };
   }
 
+  // implements FR5, FR7 of content-addressable-covers
   private async handleSuccessfulUpload(
     pendingCover: PendingCoverRecord,
-    fileId: string,
     reused: boolean = false,
   ): Promise<void> {
-    const localFileId = `${LOCAL_COVER_ID_PREFIX}${pendingCover.local_id}`;
-    const allGoals = await this.goalRepository.getActive();
-    const matchingGoals = allGoals.filter(
-      (goal) => goal.cover_file_id === localFileId,
-    );
-    const now = toISOTimestamp();
-    for (const goal of matchingGoals) {
-      await this.goalRepository.update({
-        ...goal,
-        cover_file_id: fileId,
-        updated_at: now,
-        needsSync: true,
-      });
-    }
-
     if (!reused) {
       await this.coverRepository.save({
-        file_id: fileId,
         data_hash: pendingCover.data_hash,
         data: pendingCover.data,
       });
     }
 
-    await this.pendingCoverRepository.delete(pendingCover.local_id);
-    localCoverCache.transfer(pendingCover.local_id, fileId);
+    await this.pendingCoverRepository.delete(pendingCover.data_hash);
   }
 }
 

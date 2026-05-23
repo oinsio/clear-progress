@@ -33,7 +33,7 @@ export function GoalItem({
   const isFinished = FINISHED_GOAL_STATUSES.has(goal.status);
   const isUnsynced = useIsUnsynced(goal);
   const { panelSide } = usePanelSide();
-  const { url: coverUrl } = useCoverUrl(goal.cover_file_id);
+  const { url: coverUrl } = useCoverUrl(goal.cover_hash);
   return (
     <li
       ref={nodeRef}

@@ -12,7 +12,7 @@ http:
       {
         "action": "get_cover",
         "access_token": "{{access_token}}",
-        "file_ids": [
+        "hashes": [
           "{{fileId}}"
         ]
       }
@@ -30,7 +30,7 @@ runtime:
     - expression: res.body.covers.length
       operator: eq
       value: "1"
-    - expression: res.body.covers[0].file_id
+    - expression: res.body.covers[0].hash
       operator: eq
       value: "{{fileId}}"
     - expression: res.body.covers[0].mime_type

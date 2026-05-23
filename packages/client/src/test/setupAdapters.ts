@@ -1,9 +1,8 @@
 import type { SyncAdapter } from "@clear-progress/contract";
-import { registerAdapter } from "@clear-progress/contract";
 import { vi } from "vitest";
 
 export function setupMockAdapter(): SyncAdapter {
-  const mockAdapter: SyncAdapter = {
+  return {
     ping: vi.fn().mockResolvedValue({ ok: true, initialized: true }),
     init: vi.fn().mockResolvedValue({ ok: true }),
     pull: vi.fn().mockResolvedValue({
@@ -34,14 +33,11 @@ export function setupMockAdapter(): SyncAdapter {
     purge: vi.fn().mockResolvedValue({ ok: true }),
     uploadCover: vi.fn().mockResolvedValue({
       ok: true,
-      file_id: "test-file-id",
-      sha256: "test-sha256",
+      data_hash: "test-data-hash",
+      reused: false,
     }),
     uploadCovers: vi.fn().mockResolvedValue({ ok: true, results: [] }),
     getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
     deleteCover: vi.fn().mockResolvedValue({ ok: true }),
   };
-
-  registerAdapter("gas", () => mockAdapter);
-  return mockAdapter;
 }

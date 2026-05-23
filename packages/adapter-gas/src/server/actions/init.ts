@@ -3,11 +3,63 @@ import {
   DRIVE_MIME_TYPES,
   PROPERTY_KEYS,
   SHEET_HEADERS,
+  SHEET_NAMES,
 } from "../helpers/constants";
 import { driveFileExists } from "../helpers/drive";
 import { jsonOk } from "../helpers/response";
 import { initMetaSheet } from "../sheets/meta.sheet";
 import { initDefaults } from "../sheets/settings.sheet";
+
+const LEGACY_COVER_FILE_ID_HEADER = "cover_file_id";
+const COVER_HASH_HEADER = "cover_hash";
+const DRIVE_FILE_DESCRIPTION_FIELD = "description";
+
+/**
+ * Migrates the Goals sheet from legacy `cover_file_id` column to `cover_hash`.
+ * For each row with a non-empty file ID, reads the SHA-256 hash from the Drive
+ * file's description field and writes it to the cell. Then renames the header.
+ * implements FR7 of content-addressable-covers
+ */
+function migrateCoverFileIdToCoverHash(spreadsheetId: string): void {
+  const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+  const goalsSheet = spreadsheet.getSheetByName(SHEET_NAMES.GOALS);
+  if (!goalsSheet) return;
+
+  const lastColumn = goalsSheet.getLastColumn();
+  if (lastColumn === 0) return;
+
+  const headerRange = goalsSheet.getRange(1, 1, 1, lastColumn);
+  const headerValues = headerRange.getValues()[0] as string[];
+  const legacyColIndex = headerValues.indexOf(LEGACY_COVER_FILE_ID_HEADER);
+  if (legacyColIndex === -1) return;
+
+  const lastRow = goalsSheet.getLastRow();
+  if (lastRow > 1) {
+    const dataRange = goalsSheet.getRange(
+      2,
+      legacyColIndex + 1,
+      lastRow - 1,
+      1,
+    );
+    const cellValues = dataRange.getValues() as string[][];
+    const updatedValues = cellValues.map((row) => {
+      const fileId = row[0];
+      if (!fileId) return row;
+      try {
+        const driveFile = Drive.Files.get(fileId, {
+          fields: DRIVE_FILE_DESCRIPTION_FIELD,
+        });
+        const hash = driveFile.description ?? "";
+        return [hash];
+      } catch {
+        return [""];
+      }
+    });
+    dataRange.setValues(updatedValues);
+  }
+
+  goalsSheet.getRange(1, legacyColIndex + 1).setValue(COVER_HASH_HEADER);
+}
 
 export function init(): GoogleAppsScript.Content.TextOutput {
   const props = PropertiesService.getScriptProperties();
@@ -15,6 +67,7 @@ export function init(): GoogleAppsScript.Content.TextOutput {
 
   if (existingSpreadsheetId) {
     if (driveFileExists(existingSpreadsheetId)) {
+      migrateCoverFileIdToCoverHash(existingSpreadsheetId);
       return jsonOk({ created: false, spreadsheet_id: existingSpreadsheetId });
     }
     props.deleteAllProperties();

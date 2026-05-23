@@ -131,7 +131,6 @@ export const AUTH_REQUIRED_EVENT = "auth_required";
 
 export const DB_NAME = "clear-progress";
 export const DB_VERSION = 6;
-export const LOCAL_COVER_ID_PREFIX = "local:";
 
 export const SYNC_META_KEYS = {
   LAST_KNOWN_REVISION: "last_known_revision",
@@ -172,6 +171,10 @@ export const FOCUS_OPACITY_LEVELS = [50, 40, 30, 20, 10] as const;
 
 export const GOOGLE_USERINFO_URL =
   "https://www.googleapis.com/oauth2/v3/userinfo";
+
+export const SUPABASE_URL_SUFFIX = ".supabase.co";
+export const SUPABASE_SETTINGS_ENDPOINT = "/auth/v1/settings";
+export const SUPABASE_SETTINGS_TIMEOUT_MS = 5000;
 
 export const PANEL_SPLIT_DEFAULT_RATIO = 0.5;
 export const PANEL_SPLIT_MIN_RATIO = 0.2;

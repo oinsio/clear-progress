@@ -15,7 +15,7 @@ export function FocusedGoalNavItem({
   isActive,
   onClick,
 }: FocusedGoalNavItemProps) {
-  const { url: coverUrl } = useCoverUrl(goal.cover_file_id ?? "");
+  const { url: coverUrl } = useCoverUrl(goal.cover_hash ?? "");
 
   if (isExpanded) {
     return (
