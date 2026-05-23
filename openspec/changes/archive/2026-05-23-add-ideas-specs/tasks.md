@@ -27,6 +27,6 @@
 ## 5. Verification
 
 - [x] 5.1 All BDD unit tests green: `pnpm test`
-- [ ] 5.2 All BDD E2E tests green: `pnpm test:bdd` (requires running dev server)
+- [x] 5.2 All BDD E2E tests green: `pnpm test:bdd` (requires running dev server)
 - [x] 5.3 Build passes: `pnpm run build`
 - [x] 5.4 Traceability: every FR/NFR/UX has at least one BDD scenario
