@@ -10,25 +10,25 @@
 
 ## 2. BDD Unit Infrastructure
 
-- [ ] 2.1 Create `contexts_steps.helpers.ts` — createScenarioContext, seedContext (FR1-FR6)
-- [ ] 2.2 Create `categories_steps.helpers.ts` — createScenarioContext, seedCategory (FR1-FR6)
+- [x] 2.1 Create `contexts_steps.helpers.ts` — createScenarioContext, seedContext (FR1-FR6)
+- [x] 2.2 Create `categories_steps.helpers.ts` — createScenarioContext, seedCategory (FR1-FR6)
 
 ## 3. BDD Unit Features + Steps — Contexts
 
-- [ ] 3.1 `contexts_crud.feature` + `contexts_crud.steps.ts` (FR1, FR2, FR3)
-- [ ] 3.2 `contexts_soft_delete.feature` + `contexts_soft_delete.steps.ts` (FR4, FR5)
-- [ ] 3.3 `contexts_ordering.feature` + `contexts_ordering.steps.ts` (FR6)
-- [ ] 3.4 `contexts_dirty_flag.feature` + `contexts_dirty_flag.steps.ts` (FR3, FR6)
+- [x] 3.1 `contexts_crud.feature` + `contexts_crud.steps.ts` (FR1, FR2, FR3)
+- [x] 3.2 `contexts_soft_delete.feature` + `contexts_soft_delete.steps.ts` (FR4, FR5)
+- [x] 3.3 `contexts_ordering.feature` + `contexts_ordering.steps.ts` (FR6)
+- [x] 3.4 `contexts_dirty_flag.feature` + `contexts_dirty_flag.steps.ts` (FR3, FR6)
 
 ## 4. BDD Unit Features + Steps — Categories
 
-- [ ] 4.1 `categories_crud.feature` + `categories_crud.steps.ts` (FR1, FR2, FR3)
-- [ ] 4.2 `categories_soft_delete.feature` + `categories_soft_delete.steps.ts` (FR4, FR5)
-- [ ] 4.3 `categories_ordering.feature` + `categories_ordering.steps.ts` (FR6)
-- [ ] 4.4 `categories_dirty_flag.feature` + `categories_dirty_flag.steps.ts` (FR3, FR6)
+- [x] 4.1 `categories_crud.feature` + `categories_crud.steps.ts` (FR1, FR2, FR3)
+- [x] 4.2 `categories_soft_delete.feature` + `categories_soft_delete.steps.ts` (FR4, FR5)
+- [x] 4.3 `categories_ordering.feature` + `categories_ordering.steps.ts` (FR6)
+- [x] 4.4 `categories_dirty_flag.feature` + `categories_dirty_flag.steps.ts` (FR3, FR6)
 
 ## 5. Verification
 
-- [ ] 5.1 All BDD unit tests green: `pnpm test`
-- [ ] 5.2 Build passes: `pnpm run build`
-- [ ] 5.3 Traceability: every FR has at least one BDD scenario
+- [x] 5.1 All BDD unit tests green: `pnpm test`
+- [x] 5.2 Build passes: `pnpm run build`
+- [x] 5.3 Traceability: every FR has at least one BDD scenario
