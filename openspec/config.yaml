@@ -11,6 +11,7 @@ context: |
   - TypeScript, React, Vite, TailwindCSS
   - IndexedDB (Dexie) for local storage
   - Google Apps Script as backend (Google Sheets as DB)
+  - Supabase as backend (PostgreSQL + Edge Functions + Auth)
   - Hexagonal architecture: domain → application (ports) → infrastructure (adapters)
 
   ## Packages
@@ -18,11 +19,13 @@ context: |
   - `packages/contract` — shared types and port interfaces
   - `packages/adapter-gas` — Google Apps Script adapter
   - `packages/adapter-inmemory` — in-memory adapter (tests)
+  - `packages/adapter-supabase` — Supabase adapter (Edge Functions, PostgreSQL)
   - `packages/adapter-loader` — adapter loading/switching
+  - `packages/integration` — integration tests (Playwright + Testcontainers)
 
   ## Key Patterns
   - Client-first: all data in IndexedDB, sync to server asynchronously
-  - Soft delete (is_deleted flag), versioning (version field), optimistic UI
+  - Soft delete (is_deleted flag), optimistic UI
   - UUID v4 for IDs, generated client-side
   - Temporal API for date/time operations
   - TDD with mutation testing (Vitest, Stryker)
@@ -33,7 +36,7 @@ context: |
   Tasks (with recurring support), Goals, Ideas, Contexts, Categories, Checklist Items, Settings
 
   ## Sync
-  Pull/push protocol with Google Sheets backend. Last-write-wins conflict resolution.
+  Push/pull protocol with backend. Last-write-wins conflict resolution.
   Dirty flag (needsSync) tracks local changes. Revision-based sync.
 
 rules:
