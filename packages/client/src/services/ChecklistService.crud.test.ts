@@ -27,7 +27,7 @@ describe("ChecklistService", () => {
         buildChecklistItem({ task_id: taskId, sort_order: 2 }),
       ];
       const { service } = createService({
-        getByTaskId: vi.fn().mockResolvedValue(unsortedItems),
+        getActiveByTaskId: vi.fn().mockResolvedValue(unsortedItems),
       });
       const items = await service.getByTaskId(taskId);
       expect(items[0].sort_order).toBe(1);
@@ -38,7 +38,7 @@ describe("ChecklistService", () => {
     it("should call repository.getByTaskId with the taskId", async () => {
       const { service, repository } = createService();
       await service.getByTaskId("task-abc");
-      expect(repository.getByTaskId).toHaveBeenCalledWith("task-abc");
+      expect(repository.getActiveByTaskId).toHaveBeenCalledWith("task-abc");
     });
   });
 
@@ -92,7 +92,7 @@ describe("ChecklistService", () => {
         buildChecklistItem({ task_id: taskId, sort_order: 1 }),
       ];
       const { service } = createService({
-        getByTaskId: vi.fn().mockResolvedValue(existingItems),
+        getActiveByTaskId: vi.fn().mockResolvedValue(existingItems),
       });
       const item = await service.create(taskId, "Third item");
       expect(item.sort_order).toBe(2);
@@ -110,6 +110,12 @@ describe("ChecklistService", () => {
       const { service, repository } = createService();
       const item = await service.create("task-1", "Do something");
       expect(repository.create).toHaveBeenCalledWith(item);
+    });
+
+    it("should create item with needsSync true", async () => {
+      const { service } = createService();
+      const item = await service.create("task-1", "Do something");
+      expect(item.needsSync).toBe(true);
     });
   });
 });

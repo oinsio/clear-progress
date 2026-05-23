@@ -1,5 +1,6 @@
 import type { PushResponse } from "@clear-progress/contract";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/db/database";
 import {
   asMock,
   type createEntityRepoMock,
@@ -15,8 +16,11 @@ import {
 describe("SyncService — push results > accepted", () => {
   let ctx: SyncTestContext;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     ctx = setupSyncTestContext();
+    await db.tasks.clear();
+    await db.checklist_items.clear();
+    await db.tasks.put(makeTask({ id: "t1", needsSync: false }));
   });
 
   it.each(

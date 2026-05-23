@@ -51,6 +51,41 @@ describe("SyncService — push results > edge cases", () => {
         expect.objectContaining({ id: "server-id", needsSync: true }),
       );
     });
+
+    it("should set needsSync=false when result id is absent from sentTimestamps and updated_at is empty", async () => {
+      const pushedTask = makeTask({
+        id: "t1",
+        updated_at: "2026-01-01T10:00:00.000Z",
+        needsSync: true,
+      });
+      const localRecord = makeTask({
+        id: "server-assigned-id",
+        updated_at: "",
+        needsSync: false,
+        revision: 1,
+      });
+      asMock(ctx.taskRepository.getNeedingSync).mockResolvedValue([pushedTask]);
+      asMock(ctx.taskRepository.getById).mockImplementation((id: string) =>
+        Promise.resolve(id === "server-assigned-id" ? localRecord : undefined),
+      );
+      ctx.mockSyncAdapter = createMockSyncAdapter({
+        push: vi
+          .fn()
+          .mockResolvedValue(
+            makePushResponse(
+              { tasks: [{ id: "server-assigned-id", status: "accepted" }] },
+              5,
+            ),
+          ),
+      });
+      const service = createService(ctx);
+
+      await service.push();
+
+      expect(ctx.taskRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "server-assigned-id", needsSync: false }),
+      );
+    });
   });
 
   it("should skip update when getById returns undefined for created/accepted record", async () => {

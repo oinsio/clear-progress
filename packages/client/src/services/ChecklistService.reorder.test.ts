@@ -66,5 +66,34 @@ describe("ChecklistService", () => {
         (repository.bulkUpsert as ReturnType<typeof vi.fn>).mock.calls[0][0],
       ).toHaveLength(3);
     });
+
+    it("should not call bulkUpsert when items are already in correct order", async () => {
+      const items = [
+        buildChecklistItem({ sort_order: 0 }),
+        buildChecklistItem({ sort_order: 1 }),
+        buildChecklistItem({ sort_order: 2 }),
+      ];
+      const { service, repository } = createService();
+      await service.reorderItems(items);
+      expect(repository.bulkUpsert).not.toHaveBeenCalled();
+    });
+
+    it("should update updated_at only for items whose sort_order actually changed", async () => {
+      const oldTimestamp = toISOTimestamp(
+        Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
+      );
+      const items = [
+        buildChecklistItem({ sort_order: 0, updated_at: oldTimestamp }),
+        buildChecklistItem({ sort_order: 2, updated_at: oldTimestamp }),
+        buildChecklistItem({ sort_order: 1, updated_at: oldTimestamp }),
+      ];
+      const { service, repository } = createService();
+      await service.reorderItems(items);
+      const updatedItems = (repository.bulkUpsert as ReturnType<typeof vi.fn>)
+        .mock.calls[0][0] as ChecklistItem[];
+      expect(updatedItems[0].updated_at).toBe(oldTimestamp);
+      expect(updatedItems[1].updated_at).not.toBe(oldTimestamp);
+      expect(updatedItems[2].updated_at).not.toBe(oldTimestamp);
+    });
   });
 });

@@ -26,7 +26,7 @@ function setupRecurringTaskWithItem(
   });
   const context = createTestContext(
     { getById: vi.fn().mockResolvedValue(task) },
-    { getByTaskId: vi.fn().mockResolvedValue([originalItem]) },
+    { getActiveByTaskId: vi.fn().mockResolvedValue([originalItem]) },
   );
   return { task, originalItem, ...context };
 }
@@ -41,7 +41,7 @@ describe("TaskService", () => {
       ];
       const { taskService, mockChecklistRepository } = createTestContext(
         { getById: vi.fn().mockResolvedValue(task) },
-        { getByTaskId: vi.fn().mockResolvedValue(checklistItems) },
+        { getActiveByTaskId: vi.fn().mockResolvedValue(checklistItems) },
       );
       await taskService.complete(task.id);
       expect(mockChecklistRepository.create).toHaveBeenCalledTimes(2);
@@ -51,7 +51,7 @@ describe("TaskService", () => {
       const task = buildTask({ repeat_rule: DAILY_REPEAT_RULE });
       const { taskService, mockChecklistRepository } = createTestContext(
         { getById: vi.fn().mockResolvedValue(task) },
-        { getByTaskId: vi.fn().mockResolvedValue([]) },
+        { getActiveByTaskId: vi.fn().mockResolvedValue([]) },
       );
       await taskService.complete(task.id);
       expect(mockChecklistRepository.create).not.toHaveBeenCalled();
@@ -104,19 +104,21 @@ describe("TaskService", () => {
       const item = buildChecklistItem({ task_id: task.id });
       const { taskService, mockChecklistRepository } = createTestContext(
         { getById: vi.fn().mockResolvedValue(task) },
-        { getByTaskId: vi.fn().mockResolvedValue([item]) },
+        { getActiveByTaskId: vi.fn().mockResolvedValue([item]) },
       );
       await taskService.complete(task.id);
       expect(mockChecklistRepository.create).not.toHaveBeenCalled();
     });
 
-    it("should call getByTaskId when completing task with repeat_rule", async () => {
+    it("should call getActiveByTaskId when completing task with repeat_rule", async () => {
       const task = buildTask({ repeat_rule: DAILY_REPEAT_RULE });
       const { taskService, mockChecklistRepository } = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
       });
       await taskService.complete(task.id);
-      expect(mockChecklistRepository.getByTaskId).toHaveBeenCalledWith(task.id);
+      expect(mockChecklistRepository.getActiveByTaskId).toHaveBeenCalledWith(
+        task.id,
+      );
     });
   });
 });

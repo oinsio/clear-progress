@@ -26,7 +26,7 @@ describe("ChecklistService", () => {
         buildChecklistItem({ task_id: taskId, is_completed: false }),
       ];
       const { service } = createService({
-        getByTaskId: vi.fn().mockResolvedValue(items),
+        getActiveByTaskId: vi.fn().mockResolvedValue(items),
       });
       const progress = await service.getProgress(taskId);
       expect(progress.completed).toBe(0);
@@ -41,7 +41,7 @@ describe("ChecklistService", () => {
         buildChecklistItem({ task_id: taskId, is_completed: true }),
       ];
       const { service } = createService({
-        getByTaskId: vi.fn().mockResolvedValue(items),
+        getActiveByTaskId: vi.fn().mockResolvedValue(items),
       });
       const progress = await service.getProgress(taskId);
       expect(progress.completed).toBe(2);

@@ -236,6 +236,43 @@ export class SyncService {
       if (!hasChanges) return;
     }
 
+    // Self-healing: remove orphaned checklist items before push (FR3 of cascade-checklist-delete)
+    let validChecklistItems = checklist_items;
+    if (checklist_items.length > 0) {
+      const taskIdsInPush = new Set(tasks.map((task) => task.id));
+      const uniqueTaskIds = [
+        ...new Set(
+          checklist_items
+            .map((item) => item.task_id)
+            .filter((taskId) => !taskIdsInPush.has(taskId)),
+        ),
+      ];
+
+      if (uniqueTaskIds.length > 0) {
+        const existingTasks = await db.tasks.bulkGet(uniqueTaskIds);
+        const missingTaskIds = new Set(
+          uniqueTaskIds.filter((_, index) => !existingTasks[index]),
+        );
+
+        if (missingTaskIds.size > 0) {
+          const orphanIds = checklist_items
+            .filter((item) => missingTaskIds.has(item.task_id))
+            .map((item) => item.id);
+
+          for (const orphanId of orphanIds) {
+            console.warn(
+              `[SyncService] Orphaned checklist item ${orphanId} references missing task, removing before push`,
+            );
+          }
+
+          await db.checklist_items.bulkDelete(orphanIds);
+          validChecklistItems = checklist_items.filter(
+            (item) => !missingTaskIds.has(item.task_id),
+          );
+        }
+      }
+    }
+
     const sentTimestamps = new Map<string, string>([
       ...tasks.map((task) => [task.id, task.updated_at] as [string, string]),
       ...goals.map((goal) => [goal.id, goal.updated_at] as [string, string]),
@@ -245,7 +282,7 @@ export class SyncService {
       ...categories.map(
         (category) => [category.id, category.updated_at] as [string, string],
       ),
-      ...checklist_items.map(
+      ...validChecklistItems.map(
         (item) => [item.id, item.updated_at] as [string, string],
       ),
       ...ideas.map((idea) => [idea.id, idea.updated_at] as [string, string]),
@@ -263,7 +300,7 @@ export class SyncService {
       goals,
       contexts,
       categories,
-      checklist_items,
+      validChecklistItems,
       ideas,
       settings,
     );

@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/db/database";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import {
   asMock,
   createMockSyncAdapter,
   createService,
   ENTITY_TEST_CASES,
+  makeCategory,
+  makeContext,
   makeGoal,
+  makeIdea,
   makePushResponse,
   makeTask,
   type SyncTestContext,
@@ -18,11 +22,13 @@ import {
 describe("SyncService — push chunks — basic", () => {
   let ctx: SyncTestContext;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     ctx = setupSyncTestContext();
     ctx.mockSyncAdapter = createMockSyncAdapter({
       push: vi.fn().mockResolvedValue(makePushResponse({}, 10)),
     });
+    await db.tasks.clear();
+    await db.checklist_items.clear();
   });
 
   function setup200Tasks() {
@@ -114,6 +120,7 @@ describe("SyncService — push chunks — basic", () => {
     expectedIdOrKey,
   }) => {
     setup200Tasks();
+    await db.tasks.put(makeTask({ id: "t0", needsSync: false }));
     setupRepo(ctx, [makeEntity()]);
     const service = createService(ctx);
 
@@ -159,6 +166,60 @@ describe("SyncService — push chunks — basic", () => {
     expect(pushCalls).toHaveLength(1);
     expect(pushCalls[0][0].tasks).toHaveLength(100);
     expect(pushCalls[0][0].goals).toHaveLength(100);
+  });
+
+  it.each([
+    {
+      entityName: "goals",
+      payloadKey: "goals",
+      setupRepo: (context: SyncTestContext) => {
+        context.goalRepository = withNeedingSync(context.goalRepository, [
+          makeGoal({ id: "goal-only-1" }),
+        ]);
+      },
+    },
+    {
+      entityName: "contexts",
+      payloadKey: "contexts",
+      setupRepo: (context: SyncTestContext) => {
+        context.contextRepository = withNeedingSync(context.contextRepository, [
+          makeContext({ id: "ctx-only-1", name: "Home", sort_order: 0 }),
+        ]);
+      },
+    },
+    {
+      entityName: "categories",
+      payloadKey: "categories",
+      setupRepo: (context: SyncTestContext) => {
+        context.categoryRepository = withNeedingSync(
+          context.categoryRepository,
+          [makeCategory({ id: "cat-only-1", name: "Work" })],
+        );
+      },
+    },
+    {
+      entityName: "ideas",
+      payloadKey: "ideas",
+      setupRepo: (context: SyncTestContext) => {
+        context.ideaRepository = withNeedingSync(context.ideaRepository, [
+          makeIdea({ id: "idea-only-1" }),
+        ]);
+      },
+    },
+  ])("should send push when only $entityName need sync", async ({
+    payloadKey,
+    setupRepo,
+  }) => {
+    setupRepo(ctx);
+    const service = createService(ctx);
+
+    await service.push();
+
+    expect(ctx.mockSyncAdapter.push).toHaveBeenCalledOnce();
+    const pushPayload = asMock(ctx.mockSyncAdapter.push).mock.calls[0][0];
+    expect((pushPayload as Record<string, unknown[]>)[payloadKey]).toHaveLength(
+      1,
+    );
   });
 
   it("should accumulate chunkSize correctly across all entity types in one chunk", async () => {

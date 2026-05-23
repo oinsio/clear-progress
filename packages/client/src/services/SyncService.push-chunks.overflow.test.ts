@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PUSH_CHUNK_SIZE } from "@/constants";
+import { db } from "@/db/database";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import {
   asMock,
@@ -20,11 +21,15 @@ import {
 describe("SyncService — push chunks — overflow and ordering", () => {
   let ctx: SyncTestContext;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     ctx = setupSyncTestContext();
     ctx.mockSyncAdapter = createMockSyncAdapter({
       push: vi.fn().mockResolvedValue(makePushResponse({}, 10)),
     });
+    await db.tasks.clear();
+    await db.checklist_items.clear();
+    await db.tasks.put(makeTask({ id: "t0", needsSync: false }));
+    await db.tasks.put(makeTask({ id: "task-id", needsSync: false }));
   });
 
   function setupBaselineEntities() {
@@ -256,5 +261,40 @@ describe("SyncService — push chunks — overflow and ordering", () => {
     await service.push();
 
     expect(ctx.mockSyncAdapter.push).toHaveBeenCalledTimes(2);
+  });
+
+  it("should split settings into second chunk when checklist_items reduce remaining space", async () => {
+    const tasks = Array.from({ length: 198 }, (_, i) =>
+      makeTask({ id: `task-${i}` }),
+    );
+    ctx.taskRepository = withNeedingSync(ctx.taskRepository, tasks);
+    ctx.checklistRepository = withNeedingSync(ctx.checklistRepository, [
+      makeChecklistItem({ id: "ci-space", task_id: "t0", name: "Item" }),
+    ]);
+    ctx.settingsRepository = withNeedingSync(ctx.settingsRepository, [
+      {
+        key: "theme",
+        value: "dark",
+        updated_at: toISOTimestamp(),
+        needsSync: true,
+      },
+      {
+        key: "lang",
+        value: "en",
+        updated_at: toISOTimestamp(),
+        needsSync: true,
+      },
+    ]);
+    const service = createService(ctx);
+
+    await service.push();
+
+    const pushCalls = asMock(ctx.mockSyncAdapter.push).mock.calls;
+    expect(pushCalls).toHaveLength(2);
+
+    const firstChunkSettings = pushCalls[0][0].settings;
+    const secondChunkSettings = pushCalls[1][0].settings;
+    expect(firstChunkSettings.length + secondChunkSettings.length).toBe(2);
+    expect(secondChunkSettings.length).toBeGreaterThan(0);
   });
 });

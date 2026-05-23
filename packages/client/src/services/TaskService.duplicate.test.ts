@@ -17,7 +17,7 @@ describe("TaskService", () => {
       const originalTask = buildTask(taskOverrides);
       const context = createTestContext(
         { getById: vi.fn().mockResolvedValue(originalTask) },
-        { getByTaskId: vi.fn().mockResolvedValue(checklistItems) },
+        { getActiveByTaskId: vi.fn().mockResolvedValue(checklistItems) },
       );
       await context.taskService.duplicate(originalTask.id);
       return { originalTask, ...context };

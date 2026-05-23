@@ -18,7 +18,7 @@ export const setupCompletionMocks = (
   mockTaskRepository.findHiddenRecurringTask = vi
     .fn()
     .mockResolvedValue(undefined);
-  mockChecklistRepository.getByTaskId = vi
+  mockChecklistRepository.getActiveByTaskId = vi
     .fn()
     .mockResolvedValue(checklistItems);
 };
@@ -39,7 +39,7 @@ export const setupCreateTaskCapture = (
   mockTaskRepository.findHiddenRecurringTask = vi
     .fn()
     .mockResolvedValue(undefined);
-  mockChecklistRepository.getByTaskId = vi.fn().mockResolvedValue([]);
+  mockChecklistRepository.getActiveByTaskId = vi.fn().mockResolvedValue([]);
   return () => createdTask;
 };
 
@@ -63,6 +63,6 @@ export const setupUpdateTaskCapture = (
   mockTaskRepository.findHiddenRecurringTask = vi
     .fn()
     .mockResolvedValue(existingHiddenCopy);
-  mockChecklistRepository.getByTaskId = vi.fn().mockResolvedValue([]);
+  mockChecklistRepository.getActiveByTaskId = vi.fn().mockResolvedValue([]);
   return () => updatedCopyTask;
 };

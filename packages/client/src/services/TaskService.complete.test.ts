@@ -78,6 +78,15 @@ describe("TaskService", () => {
       expect(mockTaskRepository.create).not.toHaveBeenCalled();
     });
 
+    it("should not call findHiddenRecurringTask when repeat_rule is empty", async () => {
+      const task = buildTask({ repeat_rule: "" });
+      const { taskService, mockTaskRepository } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+      await taskService.complete(task.id);
+      expect(mockTaskRepository.findHiddenRecurringTask).not.toHaveBeenCalled();
+    });
+
     it("should create a recurring copy when repeat_rule is set", async () => {
       const task = buildTask({ repeat_rule: DAILY_REPEAT_RULE });
       const { taskService, mockTaskRepository } = createTestContext({

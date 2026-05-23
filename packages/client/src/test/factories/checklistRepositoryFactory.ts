@@ -6,7 +6,8 @@ export function createMockChecklistRepository(
 ): ChecklistRepository {
   return {
     getAll: vi.fn().mockResolvedValue([]),
-    getByTaskId: vi.fn().mockResolvedValue([]),
+    getActiveByTaskId: vi.fn().mockResolvedValue([]),
+    getAllByTaskId: vi.fn().mockResolvedValue([]),
     getById: vi.fn().mockResolvedValue(undefined),
     create: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockResolvedValue(undefined),

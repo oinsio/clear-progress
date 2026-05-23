@@ -10,6 +10,21 @@ import { toISODate, toISOTimestamp } from "@/utils/dateHelpers";
 import { TaskService } from "./TaskService";
 import { setupCompletionMocks } from "./TaskService.recurring-test-helpers";
 
+const DAILY_FIXED_RULE = {
+  type: "fixed" as const,
+  frequency: "daily" as const,
+  interval: 1,
+  target_box: "today" as const,
+  advance_days: 0,
+};
+
+const buildCompletedTask = (task: ReturnType<typeof buildTask>) =>
+  buildTask({
+    ...task,
+    is_completed: true,
+    completed_at: toISOTimestamp(),
+  });
+
 describe("TaskService - Recurring Tasks Integration", () => {
   let taskService: TaskService;
   let mockTaskRepository: TaskRepository;
@@ -24,19 +39,11 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
   describe("Creating recurring task", () => {
     it("should create task with repeat_rule", async () => {
-      const repeatRule = {
-        type: "fixed" as const,
-        frequency: "daily" as const,
-        interval: 1,
-        target_box: "today" as const,
-        advance_days: 0,
-      };
-
       const taskData = {
         name: "Daily review",
         description: "",
         box: "today" as const,
-        repeat_rule: JSON.stringify(repeatRule),
+        repeat_rule: JSON.stringify(DAILY_FIXED_RULE),
       };
 
       const createdTask = buildTask({
@@ -51,7 +58,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       const task = await taskService.create(taskData);
 
       expect(task).toBeDefined();
-      expect(task.repeat_rule).toBe(JSON.stringify(repeatRule));
+      expect(task.repeat_rule).toBe(JSON.stringify(DAILY_FIXED_RULE));
     });
   });
 
@@ -64,13 +71,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         clock,
       );
 
-      const repeatRule = {
-        type: "fixed" as const,
-        frequency: "daily" as const,
-        interval: 1,
-        target_box: "today" as const,
-        advance_days: 10,
-      };
+      const repeatRule = { ...DAILY_FIXED_RULE, advance_days: 10 };
 
       const existingTask = buildTask({
         id: "task-1",
@@ -81,11 +82,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         appear_date: toISODate("2026-05-01"),
       });
 
-      const completedTask = buildTask({
-        ...existingTask,
-        is_completed: true,
-        completed_at: toISOTimestamp(),
-      });
+      const completedTask = buildCompletedTask(existingTask);
 
       const recurringTask = buildTask({
         name: "Daily review",
@@ -124,11 +121,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         appear_date: "",
       });
 
-      const completedTask = buildTask({
-        ...existingTask,
-        is_completed: true,
-        completed_at: toISOTimestamp(),
-      });
+      const completedTask = buildCompletedTask(existingTask);
 
       mockTaskRepository.getById = vi.fn().mockResolvedValue(existingTask);
       mockTaskRepository.update = vi.fn().mockResolvedValue(completedTask);
@@ -157,11 +150,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         appear_date: "",
       });
 
-      const completedTask = buildTask({
-        ...existingTask,
-        is_completed: true,
-        completed_at: toISOTimestamp(),
-      });
+      const completedTask = buildCompletedTask(existingTask);
 
       const recurringTask = buildTask({
         name: "Water plants",
@@ -186,35 +175,23 @@ describe("TaskService - Recurring Tasks Integration", () => {
     });
 
     it("should not fail completion if recurring copy creation fails", async () => {
-      const repeatRule = {
-        type: "fixed" as const,
-        frequency: "daily" as const,
-        interval: 1,
-        target_box: "today" as const,
-        advance_days: 0,
-      };
-
       const existingTask = buildTask({
         id: "task-1",
         name: "Daily review",
-        repeat_rule: JSON.stringify(repeatRule),
+        repeat_rule: JSON.stringify(DAILY_FIXED_RULE),
         is_hidden: false,
         next_date: toISODate("2026-04-13"),
         appear_date: toISODate("2026-04-13"),
       });
 
-      const completedTask = buildTask({
-        ...existingTask,
-        is_completed: true,
-        completed_at: toISOTimestamp(),
-      });
+      const completedTask = buildCompletedTask(existingTask);
 
       mockTaskRepository.getById = vi.fn().mockResolvedValue(existingTask);
       mockTaskRepository.update = vi.fn().mockResolvedValue(completedTask);
       mockTaskRepository.create = vi
         .fn()
         .mockRejectedValue(new Error("DB error"));
-      mockChecklistRepository.getByTaskId = vi.fn().mockResolvedValue([]);
+      mockChecklistRepository.getActiveByTaskId = vi.fn().mockResolvedValue([]);
 
       const result = await taskService.complete("task-1");
 
@@ -245,11 +222,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         appear_date: toISODate("2026-04-14"),
       });
 
-      const completedTask = buildTask({
-        ...hiddenTask,
-        is_completed: true,
-        completed_at: toISOTimestamp(),
-      });
+      const completedTask = buildCompletedTask(hiddenTask);
 
       const newRecurringTask = buildTask({
         name: "Weekly review",
@@ -276,18 +249,10 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
   describe("Checklist items copying", () => {
     it("should copy checklist items to recurring clone", async () => {
-      const repeatRule = {
-        type: "fixed" as const,
-        frequency: "daily" as const,
-        interval: 1,
-        target_box: "today" as const,
-        advance_days: 0,
-      };
-
       const existingTask = buildTask({
         id: "task-1",
         name: "Daily review",
-        repeat_rule: JSON.stringify(repeatRule),
+        repeat_rule: JSON.stringify(DAILY_FIXED_RULE),
         is_hidden: false,
         next_date: toISODate("2026-04-13"),
         appear_date: toISODate("2026-04-13"),
@@ -302,16 +267,12 @@ describe("TaskService - Recurring Tasks Integration", () => {
         }),
       ];
 
-      const completedTask = buildTask({
-        ...existingTask,
-        is_completed: true,
-        completed_at: toISOTimestamp(),
-      });
+      const completedTask = buildCompletedTask(existingTask);
 
       const recurringTask = buildTask({
         id: "task-2",
         name: "Daily review",
-        repeat_rule: JSON.stringify(repeatRule),
+        repeat_rule: JSON.stringify(DAILY_FIXED_RULE),
         is_hidden: true,
       });
 

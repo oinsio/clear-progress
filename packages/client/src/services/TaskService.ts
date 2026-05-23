@@ -205,7 +205,7 @@ export class TaskService {
     targetTaskId: string,
   ): Promise<void> {
     const checklistItems =
-      await this.checklistRepository.getByTaskId(sourceTaskId);
+      await this.checklistRepository.getActiveByTaskId(sourceTaskId);
     if (checklistItems.length === 0) return;
     const now = toISOTimestamp();
     for (const item of checklistItems) {
@@ -255,11 +255,37 @@ export class TaskService {
       }
     }
 
+    // Cascade soft-delete to checklist items (FR1)
+    const checklistItems = await this.checklistRepository.getAllByTaskId(id);
+    if (checklistItems.length > 0) {
+      const now = toISOTimestamp();
+      const updatedItems = checklistItems.map((item) => ({
+        ...item,
+        is_deleted: true,
+        needsSync: true,
+        updated_at: now,
+      }));
+      await this.checklistRepository.bulkUpsert(updatedItems);
+    }
+
     // Удалить исходную задачу
     return this.update(id, { is_deleted: true });
   }
 
   async restore(id: string): Promise<Task> {
+    // Cascade restore to all checklist items (FR2)
+    const checklistItems = await this.checklistRepository.getAllByTaskId(id);
+    if (checklistItems.length > 0) {
+      const now = toISOTimestamp();
+      const updatedItems = checklistItems.map((item) => ({
+        ...item,
+        is_deleted: false,
+        needsSync: true,
+        updated_at: now,
+      }));
+      await this.checklistRepository.bulkUpsert(updatedItems);
+    }
+
     return this.update(id, { is_deleted: false });
   }
 

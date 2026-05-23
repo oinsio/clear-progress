@@ -12,7 +12,7 @@ export class ChecklistService {
   constructor(private readonly checklistRepository: ChecklistRepository) {}
 
   async getByTaskId(taskId: string): Promise<ChecklistItem[]> {
-    const items = await this.checklistRepository.getByTaskId(taskId);
+    const items = await this.checklistRepository.getActiveByTaskId(taskId);
     return items.sort((itemA, itemB) => itemA.sort_order - itemB.sort_order);
   }
 
@@ -21,7 +21,8 @@ export class ChecklistService {
   }
 
   async create(taskId: string, name: string): Promise<ChecklistItem> {
-    const existingItems = await this.checklistRepository.getByTaskId(taskId);
+    const existingItems =
+      await this.checklistRepository.getActiveByTaskId(taskId);
     const now = toISOTimestamp();
     const item: ChecklistItem = {
       id: crypto.randomUUID(),
@@ -87,7 +88,7 @@ export class ChecklistService {
   }
 
   async getProgress(taskId: string): Promise<ChecklistProgress> {
-    const items = await this.checklistRepository.getByTaskId(taskId);
+    const items = await this.checklistRepository.getActiveByTaskId(taskId);
     return {
       completed: items.filter((item) => item.is_completed).length,
       total: items.length,

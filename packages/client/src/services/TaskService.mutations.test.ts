@@ -96,6 +96,34 @@ describe("TaskService", () => {
         "task-1",
       );
     });
+
+    it("should throw error containing task id when task not found", async () => {
+      const { taskService } = createTestContext();
+      await expect(taskService.softDelete("task-abc-123")).rejects.toThrow(
+        "Task not found: task-abc-123",
+      );
+    });
+
+    it("should call update exactly once for is_deleted when no copies exist", async () => {
+      const task = buildTask({ is_deleted: false });
+      const { taskService, mockTaskRepository } = createTestContext(
+        {
+          getById: vi.fn().mockResolvedValue(task),
+          findByOriginalTaskId: vi.fn().mockResolvedValue([]),
+          update: vi
+            .fn()
+            .mockImplementation(async (updatedTask) => updatedTask),
+        },
+        {
+          getAllByTaskId: vi.fn().mockResolvedValue([]),
+        },
+      );
+      await taskService.softDelete(task.id);
+      expect(mockTaskRepository.update).toHaveBeenCalledTimes(1);
+      expect(mockTaskRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ is_deleted: true }),
+      );
+    });
   });
 
   describe("restore", () => {
