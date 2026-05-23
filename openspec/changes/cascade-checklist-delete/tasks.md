@@ -74,3 +74,7 @@
 - [x] 11.2 Test `update()` with invalid data — throws validation error
 - [x] 11.3 Test `bulkUpsert()` with invalid item in array — throws validation error
 - [x] 11.4 Add coverage for uncovered methods: `getAll`, `getChangedSince`, `getNeedingSync`, `applyServerRecords`
+
+## 12. Integration Test (FR1)
+
+- [x] 12.1 Playwright integration test `cascade-checklist-delete.spec.ts`: create task with 2 checklist items → sync → close detail panel via Close button → delete task → sync → verify server returns task and both items with `is_deleted = true`
