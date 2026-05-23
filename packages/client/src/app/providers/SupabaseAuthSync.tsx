@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type React from "react";
 import { useCallback, useEffect } from "react";
-import { ROUTES } from "@/constants";
 import { setAccessToken } from "@/services/tokenManager";
 
 /**
@@ -51,7 +50,9 @@ export function SupabaseAuthSync({
   const doSignIn = useCallback(() => {
     void supabaseClient.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}${ROUTES.SETUP}` },
+      options: {
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}setup`,
+      },
     });
   }, [supabaseClient]);
 

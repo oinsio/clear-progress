@@ -63,7 +63,7 @@ Feature: Supabase Setup — Connection Flow
   Scenario: OAuth sign-in initiated on button click
     Given OAuth providers are loaded with "google"
     When user clicks "Sign in with Google" button
-    Then signInWithOAuth is called with provider "google" and redirectTo "/setup"
+    Then signInWithOAuth is called with provider "google" and redirectTo containing "/setup"
 
   @add-supabase-ui @FR7
   Scenario: Successful OAuth callback navigates to inbox

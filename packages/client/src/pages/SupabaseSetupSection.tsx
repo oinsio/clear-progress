@@ -90,7 +90,9 @@ export function SupabaseSetupSection({
       const client = getSupabaseClient();
       await client.auth.signInWithOAuth({
         provider: provider as "google" | "github" | "apple" | "azure",
-        options: { redirectTo: "/setup" },
+        options: {
+          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}setup`,
+        },
       });
     } catch {
       setPhase("error");

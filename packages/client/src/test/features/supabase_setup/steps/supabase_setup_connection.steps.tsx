@@ -419,11 +419,13 @@ describeFeature(
         });
 
         Then(
-          "signInWithOAuth is called with provider {string} and redirectTo {string}",
-          (_ctx, provider: string, redirectTo: string) => {
+          "signInWithOAuth is called with provider {string} and redirectTo containing {string}",
+          (_ctx, provider: string, redirectToSubstring: string) => {
             expect(mockSignInWithOAuth).toHaveBeenCalledWith({
               provider,
-              options: expect.objectContaining({ redirectTo }),
+              options: expect.objectContaining({
+                redirectTo: expect.stringContaining(redirectToSubstring),
+              }),
             });
           },
         );

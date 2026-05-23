@@ -39,7 +39,9 @@ export function SupabaseConnectedSection({
     const client = getSupabaseClient();
     await client.auth.signInWithOAuth({
       provider: provider as "google" | "github" | "apple" | "azure",
-      options: { redirectTo: `${window.location.origin}${ROUTES.SETUP}` },
+      options: {
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}setup`,
+      },
     });
   };
 
