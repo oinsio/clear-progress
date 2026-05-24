@@ -63,7 +63,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
       Then("copy has is_hidden true", (_ctx: TestContext) => {
         expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring!.is_hidden).toBe(true);
+        expect(completionResult.recurring?.is_hidden).toBe(true);
       });
     },
   );
@@ -105,7 +105,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
       Then("copy has is_hidden false", (_ctx: TestContext) => {
         expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring!.is_hidden).toBe(false);
+        expect(completionResult.recurring?.is_hidden).toBe(false);
       });
     },
   );
@@ -147,7 +147,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
       Then("copy has is_hidden false", (_ctx: TestContext) => {
         expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring!.is_hidden).toBe(false);
+        expect(completionResult.recurring?.is_hidden).toBe(false);
       });
     },
   );

@@ -76,27 +76,27 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         "a new task is created with same name and repeat_rule",
         (_ctx: TestContext) => {
           expect(completionResult.recurring).not.toBeNull();
-          expect(completionResult.recurring!.name).toBe("Morning routine");
-          expect(completionResult.recurring!.repeat_rule).toBe(DAILY_RULE);
+          expect(completionResult.recurring?.name).toBe("Morning routine");
+          expect(completionResult.recurring?.repeat_rule).toBe(DAILY_RULE);
         },
       );
 
       And(
         "new task has a different ID and is_completed false",
         (_ctx: TestContext) => {
-          expect(completionResult.recurring!.id).not.toBe(TASK_A_ID);
-          expect(completionResult.recurring!.is_completed).toBe(false);
-          expect(completionResult.recurring!.completed_at).toBe("");
+          expect(completionResult.recurring?.id).not.toBe(TASK_A_ID);
+          expect(completionResult.recurring?.is_completed).toBe(false);
+          expect(completionResult.recurring?.completed_at).toBe("");
         },
       );
 
       And(
         "new task has calculated next_date and appear_date",
         (_ctx: TestContext) => {
-          expect(completionResult.recurring!.next_date).toMatch(
+          expect(completionResult.recurring?.next_date).toMatch(
             /^\d{4}-\d{2}-\d{2}$/,
           );
-          expect(completionResult.recurring!.appear_date).toMatch(
+          expect(completionResult.recurring?.appear_date).toMatch(
             /^\d{4}-\d{2}-\d{2}$/,
           );
         },
@@ -128,7 +128,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         "user completes task A producing copy B",
         async (_ctx: TestContext) => {
           const resultA = await taskService.complete(TASK_CHAIN_ID);
-          copyB = resultA.recurring!;
+          copyB = resultA.recurring as NonNullable<typeof resultA.recurring>;
         },
       );
 
@@ -137,7 +137,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await db.tasks.update(copyB.id, { is_hidden: false });
           const resultB = await taskService.complete(copyB.id);
-          copyC = resultB.recurring!;
+          copyC = resultB.recurring as NonNullable<typeof resultB.recurring>;
         },
       );
 
@@ -210,7 +210,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Then(
         "the recurring copy has 3 checklist items with new IDs",
         async (_ctx: TestContext) => {
-          const recurringId = completionResult.recurring!.id;
+          const recurringId = completionResult.recurring?.id as string;
           copiedItems = await db.checklist_items
             .where("task_id")
             .equals(recurringId)

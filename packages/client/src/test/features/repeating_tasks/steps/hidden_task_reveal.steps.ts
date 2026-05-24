@@ -51,8 +51,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         "task has is_hidden false and needsSync true",
         async (_ctx: TestContext) => {
           const task = await db.tasks.get(seededTaskId);
-          expect(task!.is_hidden).toBe(false);
-          expect(task!.needsSync).toBe(true);
+          expect(task?.is_hidden).toBe(false);
+          expect(task?.needsSync).toBe(true);
         },
       );
     },
@@ -86,7 +86,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
       Then("task remains hidden", async (_ctx: TestContext) => {
         const task = await db.tasks.get(seededTaskId);
-        expect(task!.is_hidden).toBe(true);
+        expect(task?.is_hidden).toBe(true);
       });
     },
   );

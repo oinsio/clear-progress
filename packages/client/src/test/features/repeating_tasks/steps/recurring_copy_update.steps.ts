@@ -82,8 +82,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           const updatedCopy = await db.tasks.get(HIDDEN_COPY_ID);
           expect(updatedCopy).toBeDefined();
-          expect(updatedCopy!.next_date).not.toBe("2026-01-14");
-          expect(updatedCopy!.next_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+          expect(updatedCopy?.next_date).not.toBe("2026-01-14");
+          expect(updatedCopy?.next_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         },
       );
 
