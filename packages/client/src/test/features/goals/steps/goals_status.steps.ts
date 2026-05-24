@@ -1,5 +1,8 @@
 // implements FR8 of add-goals-specs
-import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
+import type {
+  FeatureDescriibeCallbackParams,
+  StepTest,
+} from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
 import {
@@ -19,11 +22,7 @@ const GOAL_NAME = "Test Goal";
 
 function defineStatusTransitionSteps(
   ctx: ReturnType<typeof createScenarioContext>,
-  steps: {
-    When: (...args: never) => unknown;
-    Then: (...args: never) => unknown;
-    And: (...args: never) => unknown;
-  },
+  steps: Pick<StepTest, "When" | "Then" | "And">,
   targetStatus: GoalStatus,
 ) {
   let updatedGoal: Goal;
