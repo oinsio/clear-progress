@@ -113,7 +113,21 @@ The app is fully functional for CRUD operations even when no backend is configur
 - **AND** all data is persisted in IndexedDB
 - **AND** connection status shows `not_configured`
 
+### Requirement: Separation of PWA caching and offline data
+The PWA service worker handles asset caching (app shell, static files). Offline data availability is handled entirely by IndexedDB via Dexie. These are independent concerns: the service worker does NOT cache API responses or IndexedDB data.
+
+#### Scenario: Service worker caches assets, not data
+- **WHEN** the service worker precaches files
+- **THEN** only static assets (JS, CSS, HTML, icons) are cached
+- **AND** no API responses or data payloads are cached by the service worker
+
+#### Scenario: Data availability is independent of service worker
+- **WHEN** the service worker is not yet installed (first visit)
+- **THEN** data reads still work via IndexedDB
+- **AND** the app is functional for CRUD operations
+
 ## Relations
 
 - **sync-orchestration**: Covers triggers, recovery, cleanup, and full sync. This spec references offline detection (T5, preconditions) but does not duplicate it.
 - **sync-protocol**: Covers push/pull mechanics, dirty flag lifecycle, conflict resolution. This spec references `needsSync` behavior but does not redefine it.
+- **pwa**: PWA spec covers service worker lifecycle and asset caching. This spec clarifies that data availability is handled separately via IndexedDB.
