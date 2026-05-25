@@ -5,7 +5,14 @@ const config = {
   vitest: {
     configFile: "vitest.config.ts",
   },
-  mutate: ["src/**/*.ts", "!src/**/*.test.ts", "!src/types/**/*.ts"],
+  mutate: [
+    "src/**/*.ts",
+    "!src/**/*.test.ts",
+    "!src/test/**",
+    "!src/**/*-test-utils.ts",
+    "!src/**/make-sheet-mock.ts",
+    "!src/types/**/*.ts",
+  ],
   reporters: ["html", "json", "clear-text", "progress"],
   htmlReporter: {
     fileName: "reports/mutation/index.html",

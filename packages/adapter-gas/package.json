@@ -24,6 +24,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@amiceli/vitest-cucumber": "^6.5.0",
     "@biomejs/biome": "^2.4.13",
     "@stryker-mutator/core": "^9.6.0",
     "@stryker-mutator/vitest-runner": "^9.6.0",

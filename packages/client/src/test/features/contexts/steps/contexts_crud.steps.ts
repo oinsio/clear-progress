@@ -4,7 +4,7 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database";
 import { getIdOrThrow } from "@/test/helpers/getIdOrThrow";
-import type { Context as ContextEntity } from "@/types/entities";
+import type { Context as ContextEntity, ISOTimestamp } from "@/types/entities";
 import {
   createScenarioContext,
   getContext,
@@ -189,7 +189,9 @@ describeFeature(
       let originalUpdatedAt: string;
 
       Given('context "@home" exists', async (_ctx: TestContext) => {
-        await seedContext(ctx.contextIds, "@home");
+        await seedContext(ctx.contextIds, "@home", {
+          updated_at: "2020-01-01T00:00:00.000Z" as ISOTimestamp,
+        });
         const existingContext = await getContext(ctx.contextIds, "@home");
         originalUpdatedAt = existingContext.updated_at;
       });
