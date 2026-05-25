@@ -27,6 +27,8 @@ export {
   getAllGoals,
   getAllIdeas,
   getAllTasks,
+  readPurgeRevision,
+  savePurgeRevision,
 };
 
 export function resetAllMocks(): void {

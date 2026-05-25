@@ -150,7 +150,7 @@ Deleting a record SHALL set `is_deleted = true`. The record SHALL be pushed to t
 - **THEN** records with `is_deleted = true` and `needsSync = true` are included
 
 ### Requirement: Purge hard-deletes soft-deleted records
-The `purge()` operation SHALL hard-delete all records with `is_deleted = true` from the server and increment `purge_revision`.
+The `purge()` operation SHALL hard-delete all records with `is_deleted = true` from the server and increment `purge_revision`. Server-side validation, response structure, and deletion behavior are specified in the `purge` capability spec (`openspec/specs/purge/spec.md`).
 
 #### Scenario: Server purge removes soft-deleted records
 - **WHEN** `purge()` is called

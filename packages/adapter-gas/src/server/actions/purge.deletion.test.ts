@@ -28,7 +28,9 @@ import {
   getAllGoals,
   getAllIdeas,
   getAllTasks,
+  readPurgeRevision,
   resetAllMocks,
+  savePurgeRevision,
   setupAllEntitiesWithOneDeleted,
 } from "./purge-test-utils";
 
@@ -139,6 +141,27 @@ describe("purge — deletion", () => {
 
     purge({ confirm: true });
     expectInternalError();
+  });
+
+  it("should increment purge_revision after successful purge", () => {
+    vi.mocked(readPurgeRevision).mockReturnValue(2);
+    setupAllEntitiesWithOneDeleted();
+
+    purge({ confirm: true });
+    const response = expectSuccessResponse();
+
+    expect(savePurgeRevision).toHaveBeenCalledWith(3);
+    expect(response.purge_revision).toBe(3);
+  });
+
+  it("should increment purge_revision even with no soft-deleted records", () => {
+    vi.mocked(readPurgeRevision).mockReturnValue(5);
+
+    purge({ confirm: true });
+    const response = expectSuccessResponse();
+
+    expect(savePurgeRevision).toHaveBeenCalledWith(6);
+    expect(response.purge_revision).toBe(6);
   });
 
   it("should delete soft-deleted records for all entity types", () => {
