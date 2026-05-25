@@ -45,7 +45,8 @@ describe("purge — validation", () => {
     "true",
     {},
     [],
-  ])("should return error when confirm is %s (truthy but not true)", (value) => {
+    null,
+  ])("should return error when confirm is %s (non-boolean or null)", (value) => {
     purge({ confirm: value });
     expectInvalidPayloadError();
   });

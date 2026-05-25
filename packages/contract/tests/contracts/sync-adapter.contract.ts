@@ -2,8 +2,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type {
   Box,
   SyncAdapter,
+  WireCategory,
+  WireChecklistItem,
   WireContext,
   WireGoal,
+  WireIdea,
   WireTask,
 } from "../../src";
 import { SYNC_ERRORS } from "../../src";
@@ -56,6 +59,55 @@ function createWireContext(overrides: Partial<WireContext> = {}): WireContext {
   return {
     id: crypto.randomUUID(),
     name: "Test context",
+    sort_order: 0,
+    is_deleted: false,
+    created_at: now,
+    updated_at: now,
+    revision: 0,
+    ...overrides,
+  };
+}
+
+function createWireCategory(
+  overrides: Partial<WireCategory> = {},
+): WireCategory {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    name: "Test category",
+    sort_order: 0,
+    is_deleted: false,
+    created_at: now,
+    updated_at: now,
+    revision: 0,
+    ...overrides,
+  };
+}
+
+function createWireIdea(overrides: Partial<WireIdea> = {}): WireIdea {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    name: "Test idea",
+    description: "",
+    sort_order: 0,
+    is_deleted: false,
+    created_at: now,
+    updated_at: now,
+    revision: 0,
+    ...overrides,
+  };
+}
+
+function createWireChecklistItem(
+  overrides: Partial<WireChecklistItem> = {},
+): WireChecklistItem {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    task_id: crypto.randomUUID(),
+    name: "Test checklist item",
+    is_completed: false,
     sort_order: 0,
     is_deleted: false,
     created_at: now,
@@ -689,6 +741,57 @@ export function syncAdapterContract(
         const pullResponse = await adapter.pull({ since_revision: 0 });
         expect(pullResponse.tasks).toHaveLength(1);
         expect(pullResponse.tasks[0]?.name).toBe("Keep");
+      });
+
+      it("should remove soft-deleted records across all 6 entity types", async () => {
+        await adapter.init();
+
+        const taskToKeep = createWireTask({ is_deleted: false });
+        const taskToDelete = createWireTask({ is_deleted: true });
+        const goal = createWireGoal({ is_deleted: true });
+        const context = createWireContext({ is_deleted: true });
+        const category = createWireCategory({ is_deleted: true });
+        const idea = createWireIdea({ is_deleted: true });
+        const checklistItem = createWireChecklistItem({
+          task_id: taskToKeep.id,
+          is_deleted: true,
+        });
+
+        await adapter.push({
+          tasks: [taskToKeep, taskToDelete],
+          goals: [goal],
+          contexts: [context],
+          categories: [category],
+          ideas: [idea],
+          checklist_items: [checklistItem],
+        });
+
+        const purgeResponse = await adapter.purge();
+        expect(purgeResponse.ok).toBe(true);
+        expect(purgeResponse.purged.tasks).toBe(1);
+        expect(purgeResponse.purged.goals).toBe(1);
+        expect(purgeResponse.purged.contexts).toBe(1);
+        expect(purgeResponse.purged.categories).toBe(1);
+        expect(purgeResponse.purged.ideas).toBe(1);
+        expect(purgeResponse.purged.checklist_items).toBe(1);
+
+        const pullResponse = await adapter.pull({ since_revision: 0 });
+        expect(pullResponse.tasks).toHaveLength(1);
+        expect(pullResponse.goals).toHaveLength(0);
+        expect(pullResponse.contexts).toHaveLength(0);
+        expect(pullResponse.categories).toHaveLength(0);
+        expect(pullResponse.ideas).toHaveLength(0);
+        expect(pullResponse.checklist_items).toHaveLength(0);
+      });
+
+      it("should increment purge_revision even with no soft-deleted records", async () => {
+        await adapter.init();
+
+        const firstPurge = await adapter.purge();
+        expect(firstPurge.purge_revision).toBe(1);
+
+        const secondPurge = await adapter.purge();
+        expect(secondPurge.purge_revision).toBe(2);
       });
     });
   });
