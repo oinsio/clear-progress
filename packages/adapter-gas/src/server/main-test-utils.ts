@@ -18,6 +18,20 @@ export function parseResponse(): Record<string, unknown> {
   return JSON.parse(calls[calls.length - 1]?.[0] ?? "{}");
 }
 
+export function callDoGet(
+  event: GoogleAppsScript.Events.DoGet,
+): GoogleAppsScript.Content.TextOutput {
+  if (!globals.doGet) throw new Error("doGet is not initialized");
+  return globals.doGet(event);
+}
+
+export function callDoPost(
+  event: GoogleAppsScript.Events.DoPost,
+): GoogleAppsScript.Content.TextOutput {
+  if (!globals.doPost) throw new Error("doPost is not initialized");
+  return globals.doPost(event);
+}
+
 export function makeGetEvent(
   params: Record<string, string> = {},
 ): GoogleAppsScript.Events.DoGet {
