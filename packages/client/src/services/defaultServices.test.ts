@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import "@/test/helpers/mockDefaultServicesDeps";
 
 // implements FR9, D3 of add-supabase-ui
 
@@ -29,23 +30,6 @@ const mockGetAccessToken = vi.fn();
 vi.mock("./tokenManager", () => ({
   getAccessToken: mockGetAccessToken,
 }));
-
-vi.mock("@/db/repositories/TaskRepository");
-vi.mock("@/db/repositories/ChecklistRepository");
-vi.mock("@/db/repositories/GoalRepository");
-vi.mock("@/db/repositories/IdeaRepository");
-vi.mock("@/db/repositories/ContextRepository");
-vi.mock("@/db/repositories/CategoryRepository");
-vi.mock("@/db/repositories/CoverRepository");
-vi.mock("@/db/repositories/PendingCoverRepository");
-vi.mock("@/db/repositories/SettingsRepository");
-vi.mock("@/db/repositories/SyncMetaRepository");
-vi.mock("./CoverService");
-vi.mock("./CoverSyncService");
-vi.mock("./GoalService");
-vi.mock("./IdeaService");
-vi.mock("./SyncService");
-vi.mock("./TaskService");
 
 describe("defaultServices — createSyncAdapter", () => {
   beforeEach(() => {

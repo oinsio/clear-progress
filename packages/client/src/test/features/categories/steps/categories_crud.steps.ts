@@ -4,7 +4,7 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database";
 import { getIdOrThrow } from "@/test/helpers/getIdOrThrow";
-import type { Category } from "@/types/entities";
+import type { Category, ISOTimestamp } from "@/types/entities";
 import {
   createScenarioContext,
   getCategory,
@@ -186,7 +186,10 @@ describeFeature(
       let originalUpdatedAt: string;
 
       Given('category "Work" exists', async (_ctx: TestContext) => {
-        await seedCategory(ctx.categoryIds, "Work");
+        const pastTimestamp = "2020-01-01T00:00:00.000Z" as ISOTimestamp;
+        await seedCategory(ctx.categoryIds, "Work", {
+          updated_at: pastTimestamp,
+        });
         const existingCategory = await getCategory(ctx.categoryIds, "Work");
         originalUpdatedAt = existingCategory.updated_at;
       });
