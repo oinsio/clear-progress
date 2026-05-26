@@ -76,6 +76,30 @@ export function cleanupSwipeTest(element: HTMLElement) {
   document.body.removeChild(element);
 }
 
+export interface SwipeFeatureState {
+  swipeContext: SwipeTestContext;
+  onAction: ReturnType<typeof vi.fn>;
+  hookResult: ReturnType<typeof renderSwipeHook>;
+}
+
+export function setupSwipeFeature(f: {
+  BeforeEachScenario: (cb: () => Promise<void>) => void;
+  AfterEachScenario: (cb: () => Promise<void>) => void;
+}): SwipeFeatureState {
+  const state = {} as SwipeFeatureState;
+
+  f.BeforeEachScenario(async () => {
+    state.swipeContext = setupSwipeTest();
+    state.onAction = vi.fn();
+  });
+
+  f.AfterEachScenario(async () => {
+    cleanupSwipeTest(state.swipeContext.element);
+  });
+
+  return state;
+}
+
 export function renderSwipeHook(
   ref: React.RefObject<HTMLDivElement>,
   onAction?: () => void,
