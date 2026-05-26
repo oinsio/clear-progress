@@ -1,10 +1,14 @@
 import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
+import { type Clock, systemClock } from "@/lib/temporal";
 import type { Category } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class CategoryService {
-  constructor(private readonly categoryRepository: CategoryRepository) {}
+  constructor(
+    private readonly categoryRepository: CategoryRepository,
+    private readonly clock: Clock = systemClock,
+  ) {}
 
   async getAll(): Promise<Category[]> {
     const categories = await this.categoryRepository.getActive();
@@ -19,7 +23,7 @@ export class CategoryService {
 
   async create(name: string): Promise<Category> {
     const existingCategories = await this.categoryRepository.getActive();
-    const now = toISOTimestamp();
+    const now = toISOTimestamp(this.clock);
     const category: Category = {
       id: crypto.randomUUID(),
       name,
@@ -57,7 +61,7 @@ export class CategoryService {
       return; // Ничего не изменилось, не синхронизируем
     }
 
-    const now = toISOTimestamp();
+    const now = toISOTimestamp(this.clock);
     const updated = orderedCategories.map((category, index) => {
       const orderChanged = category.sort_order !== index;
       return {
@@ -92,7 +96,9 @@ export class CategoryService {
     // Применяем метаданные только если есть изменения
     const updatedCategory: Category = {
       ...candidateCategory,
-      updated_at: hasChanged ? toISOTimestamp() : existingCategory.updated_at,
+      updated_at: hasChanged
+        ? toISOTimestamp(this.clock)
+        : existingCategory.updated_at,
       needsSync: hasChanged,
     };
 
