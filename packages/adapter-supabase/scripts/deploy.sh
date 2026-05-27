@@ -6,14 +6,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+log() { echo "[deploy] $*"; }
+error() { echo "[deploy] ERROR: $*" >&2; exit 1; }
+
 # implements FR6 of setup-deployment-environments
 DEPLOY_ENV="${1:-}"
 [[ -n "${DEPLOY_ENV}" ]] || error "Environment argument is required. Usage: deploy.sh <dev|qa|prod>"
 
 COVERS_BUCKET="covers"
-
-log() { echo "[deploy] $*"; }
-error() { echo "[deploy] ERROR: $*" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
 # Prerequisites

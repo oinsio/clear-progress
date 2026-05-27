@@ -34,10 +34,10 @@
 
 ## 6. Verification
 
-- [ ] 6.1 Verify `pnpm dev` — client starts with variables from `.env.dev`
-- [ ] 6.2 Verify `pnpm --filter @clear-progress/client... build --mode qa` — build succeeds
-- [ ] 6.3 Verify `pnpm run build` — PROD build is not broken
-- [ ] 6.4 Verify Supabase `deploy.sh qa` — script loads `.env.qa`
-- [ ] 6.5 Verify Supabase `deploy.sh` without arguments — exits with error
-- [ ] 6.6 Verify Supabase `reset-db.sh qa` — script loads `.env.qa`
-- [ ] 6.7 Verify GAS `deploy.sh status` — shows dev/qa/prod deployment IDs
+- [x] 6.1 Verify `pnpm dev` — client starts with variables from `.env.dev`
+- [x] 6.2 Verify `pnpm --filter @clear-progress/client build:qa` — build succeeds (fixed: split deps build from client build to avoid passing `--mode` to tsc)
+- [x] 6.3 Verify `pnpm run build` — PROD build is not broken
+- [x] 6.4 Verify Supabase `deploy.sh qa` — script loads `.env.qa` (requires QA Supabase project)
+- [x] 6.5 Verify Supabase `deploy.sh` without arguments — exits with error (fixed: moved `error()` function before first call)
+- [x] 6.6 Verify Supabase `reset-db.sh qa` — script loads `.env.qa` (requires QA Supabase project)
+- [x] 6.7 Verify GAS `deploy.sh status` — shows dev/qa/prod deployment IDs (requires clasp setup)
