@@ -27,15 +27,14 @@ clasp create --name "Clear Progress Backend" --type webapp
 ### 3. Configure environment
 
 ```bash
-cp .env.example .env
+# Clone existing project (creates .clasp.json automatically)
+clasp clone <scriptId> --rootDir .
+
+# Or copy template and fill in scriptId manually
 cp .clasp.json.example .clasp.json
-```
 
-Fill in `SCRIPT_ID` in both files.
-
-If project already exists:
-```bash
-clasp clone <SCRIPT_ID> --rootDir .
+# Create .env for deployment IDs
+cp .env.example .env
 ```
 
 ### 4. First deployment
@@ -47,6 +46,10 @@ chmod +x deploy.sh
 # Create dev deployment
 ./deploy.sh deploy:new dev
 # → Copy deployment ID to .env → DEPLOY_ID_DEV
+
+# Create qa deployment
+./deploy.sh deploy:new qa
+# → Copy deployment ID to .env → DEPLOY_ID_QA
 
 # Create prod deployment
 ./deploy.sh deploy:new prod
@@ -99,6 +102,7 @@ backend/
 | Environment | Purpose                   | Variable         |
 |-------------|---------------------------|------------------|
 | dev         | Development and testing   | `DEPLOY_ID_DEV`  |
+| qa          | QA / PR review            | `DEPLOY_ID_QA`   |
 | prod        | Production                | `DEPLOY_ID_PROD` |
 
 Each environment is a separate deployment ID within a single Apps Script project.

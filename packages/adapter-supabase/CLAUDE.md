@@ -12,9 +12,14 @@ See root `CLAUDE.md` for data model, API protocol, shared conventions.
 ## Deploy
 
 ```bash
-SUPABASE_PROJECT_REF=your-ref bash scripts/deploy.sh   # migrations + functions + storage bucket
-bash scripts/reset-db.sh                                # wipe and re-apply migrations
+bash scripts/deploy.sh prod     # deploy to production
+bash scripts/deploy.sh qa       # deploy to QA
+bash scripts/deploy.sh dev      # deploy to dev
+bash scripts/reset-db.sh qa     # wipe and re-apply migrations for QA
+# Environment argument is required — no default to prevent accidental deploys
 ```
+
+Env files: copy `.env.{env}` → `.env.{env}.local` and fill in real values.
 
 ## Gotchas
 

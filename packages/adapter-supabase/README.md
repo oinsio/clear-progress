@@ -41,22 +41,22 @@ supabase link --project-ref your-project-ref
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in your values:
+Copy `.env.{env}` to `.env.{env}.local` and fill in your values:
 
 ```bash
-cp .env.example .env
+cp .env.prod .env.prod.local
 ```
 
-| Variable                    | Required for   | Description                                   |
-|-----------------------------|----------------|-----------------------------------------------|
-| `SUPABASE_URL`              | Edge Functions | Project URL                                   |
-| `SUPABASE_ANON_KEY`         | Edge Functions | Anon/public key (enforces RLS)                |
-| `SUPABASE_SERVICE_ROLE_KEY` | Edge Functions | Service role key (bypasses RLS — keep secret) |
-| `SUPABASE_PROJECT_REF`      | `deploy.sh`    | Project ref short ID                          |
-| `TEST_SUPABASE_URL`         | Contract tests | Edge Functions base URL                       |
-| `TEST_SUPABASE_TOKEN`       | Contract tests | JWT for the test user                         |
-| `TEST_SUPABASE_PROJECT_URL` | Contract tests | Project REST URL                              |
-| `TEST_SUPABASE_SERVICE_KEY` | Contract tests | Service role key (test teardown)              |
+| Variable                    | Required for   | Description                      |
+|-----------------------------|----------------|----------------------------------|
+| `SUPABASE_URL`              | `deploy.sh`    | Project URL                      |
+| `SUPABASE_ANON_KEY`         | `deploy.sh`    | Anon/public key (enforces RLS)   |
+| `SUPABASE_PROJECT_REF`      | `deploy.sh`    | Project ref short ID             |
+| `SUPABASE_ACCESS_TOKEN`     | `deploy.sh`    | Personal access token for CLI    |
+| `TEST_SUPABASE_URL`         | Contract tests | Edge Functions base URL          |
+| `TEST_SUPABASE_TOKEN`       | Contract tests | JWT for the test user            |
+| `TEST_SUPABASE_PROJECT_URL` | Contract tests | Project REST URL                 |
+| `TEST_SUPABASE_SERVICE_KEY` | Contract tests | Service role key (test teardown) |
 
 > `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are automatically available inside Edge Functions when deployed to Supabase — you do not need to set them manually in the Supabase dashboard.
 
@@ -93,7 +93,7 @@ The `SupabaseSyncAdapter` is registered in `adapter-loader` under the key `"supa
 
 ## Running Contract Tests
 
-Contract tests require a live Supabase instance. Set the test environment variables in `.env`, then:
+Contract tests require a live Supabase instance. Set the test environment variables in `.env.{env}.local`, then:
 
 ```bash
 pnpm test
@@ -113,7 +113,7 @@ If `TEST_SUPABASE_URL`, `TEST_SUPABASE_TOKEN`, `TEST_SUPABASE_PROJECT_URL`, and 
 | Data isolation | Row Level Security                | Each user sees only their own rows                |
 | Cover storage  | Supabase Storage                  | Binary files with CDN and user-scoped access      |
 
-See [`design.md`](../../openspec/changes/add-supabase-adapter/design.md) for architectural decisions.
+See [`design.md`](../../openspec/changes/archive/2026-05-16-add-supabase-adapter/design.md) for architectural decisions.
 
 ---
 
