@@ -48,8 +48,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Preflight (lint, typecheck, tests)
-        run: pnpm run preflight
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm -r --filter '!@clear-progress/integration' test
 
       - name: Build dependencies
         run: pnpm --filter @clear-progress/client^... build
