@@ -11,14 +11,27 @@ error() { echo "[reset-db] ERROR: $*" >&2; exit 1; }
 
 command -v supabase >/dev/null 2>&1 || error "supabase CLI not found. Install: https://supabase.com/docs/guides/cli"
 
-ENV_FILE="${PACKAGE_DIR}/.env"
-[[ -f "${ENV_FILE}" ]] || error ".env file not found at ${ENV_FILE}"
+# implements FR6 of setup-deployment-environments
+DEPLOY_ENV="${1:-}"
+[[ -n "${DEPLOY_ENV}" ]] || error "Environment argument is required. Usage: reset-db.sh <dev|qa|prod>"
+
+case "${DEPLOY_ENV}" in
+  dev|qa|prod) ;;
+  *) error "Unknown environment '${DEPLOY_ENV}'. Use 'dev', 'qa', or 'prod'." ;;
+esac
+
+ENV_FILE="${PACKAGE_DIR}/.env.${DEPLOY_ENV}"
+LOCAL_ENV_FILE="${ENV_FILE}.local"
+
+[[ -f "${ENV_FILE}" ]] || error "Environment file not found: ${ENV_FILE}"
 set -a
-# shellcheck source=../.env
+# shellcheck source=../.env.prod
 source "${ENV_FILE}"
+# shellcheck source=../.env.prod.local
+[[ -f "${LOCAL_ENV_FILE}" ]] && source "${LOCAL_ENV_FILE}"
 set +a
 
-[[ -n "${SUPABASE_PROJECT_REF:-}" ]] || error "SUPABASE_PROJECT_REF is not set in .env"
+[[ -n "${SUPABASE_PROJECT_REF:-}" ]] || error "SUPABASE_PROJECT_REF is not set in ${ENV_FILE}"
 
 log "This will DROP all tables and re-apply migrations for project ${SUPABASE_PROJECT_REF}."
 read -rp "[reset-db] Are you sure? (y/N): " confirm

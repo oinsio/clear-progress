@@ -62,8 +62,9 @@ get_deploy_id() {
   local env="$1"
   case "$env" in
     dev)  echo "${DEPLOY_ID_DEV:-}" ;;
+    qa)   echo "${DEPLOY_ID_QA:-}" ;;
     prod) echo "${DEPLOY_ID_PROD:-}" ;;
-    *)    die "Unknown environment: $env. Use 'dev' or 'prod'." ;;
+    *)    die "Unknown environment: $env. Use 'dev', 'qa', or 'prod'." ;;
   esac
 }
 
@@ -97,7 +98,7 @@ cmd_push() {
 
 cmd_deploy() {
   local env="${1:-}"
-  [[ -z "$env" ]] && die "Usage: deploy.sh deploy <dev|prod>"
+  [[ -z "$env" ]] && die "Usage: deploy.sh deploy <dev|qa|prod>"
 
   load_env
 
@@ -136,7 +137,7 @@ cmd_deploy() {
 
 cmd_deploy_new() {
   local env="${1:-}"
-  [[ -z "$env" ]] && die "Usage: deploy.sh deploy:new <dev|prod>"
+  [[ -z "$env" ]] && die "Usage: deploy.sh deploy:new <dev|qa|prod>"
 
   local description
   description="$env — $(date +%Y-%m-%d\ %H:%M:%S) [initial]"
@@ -169,13 +170,14 @@ cmd_status() {
     echo ""
     info "Configured deployment IDs:"
     echo "  dev:  ${DEPLOY_ID_DEV:-<not set>}"
+    echo "  qa:   ${DEPLOY_ID_QA:-<not set>}"
     echo "  prod: ${DEPLOY_ID_PROD:-<not set>}"
   fi
 }
 
 cmd_ping() {
   local env="${1:-}"
-  [[ -z "$env" ]] && die "Usage: deploy.sh ping <dev|prod>"
+  [[ -z "$env" ]] && die "Usage: deploy.sh ping <dev|qa|prod>"
 
   load_env
 
@@ -238,10 +240,10 @@ ${YELLOW}Usage:${NC}
 
 ${YELLOW}Commands:${NC}
   push                Push code to Apps Script (no deployment)
-  deploy <env>        Push + update existing deployment (dev|prod)
+  deploy <env>        Push + update existing deployment (dev|qa|prod)
   deploy:new <env>    Push + create a new deployment (first time only)
   status              List all deployments and configured IDs
-  ping <env>          Check backend availability (dev|prod)
+  ping <env>          Check backend availability (dev|qa|prod)
   open                Open Apps Script editor in browser
   logs                Show execution logs
 
@@ -253,12 +255,15 @@ ${YELLOW}Examples:${NC}
   ./deploy.sh ping prod         # Check if prod is alive
   ./deploy.sh status            # List deployments
 
+# Google Apps Script project ID
+# Find it in: https://script.google.com → Project Settings → Script ID
 ${YELLOW}Setup:${NC}
-  1. cp .env.example .env
-  2. Fill in SCRIPT_ID and run: clasp clone <SCRIPT_ID> --rootDir .
+  1. clasp clone <scriptId> --rootDir .   (creates .clasp.json)
+  2. cp .env.example .env
   3. ./deploy.sh deploy:new dev    → save deployment ID to .env
-  4. ./deploy.sh deploy:new prod   → save deployment ID to .env
-  5. ./deploy.sh deploy dev        → routine deploys
+  4. ./deploy.sh deploy:new qa     → save deployment ID to .env
+  5. ./deploy.sh deploy:new prod   → save deployment ID to .env
+  6. ./deploy.sh deploy dev        → routine deploys
 
 EOF
 }

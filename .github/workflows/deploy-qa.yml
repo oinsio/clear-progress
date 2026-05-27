@@ -1,0 +1,82 @@
+# implements FR4, FR7, NFR-P1 of setup-deployment-environments
+#
+# Required GitHub Secrets:
+#   QA_SUPABASE_URL       — Supabase project URL for QA environment
+#   QA_SUPABASE_ANON_KEY  — Supabase anon/public key for QA environment
+#   NETLIFY_AUTH_TOKEN     — Netlify personal access token
+#   NETLIFY_SITE_ID        — Netlify site ID for QA deploys
+
+name: Deploy QA to Netlify
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: qa-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-qa:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm -r --filter '!@clear-progress/integration' test
+
+      - name: Build dependencies
+        run: pnpm --filter @clear-progress/client^... build
+
+      - name: Build client (QA mode)
+        run: pnpm --filter @clear-progress/client build:qa
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.QA_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.QA_SUPABASE_ANON_KEY }}
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: packages/client/dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "PR #${{ github.event.number }}: ${{ github.event.pull_request.title }}"
+          enable-pull-request-comment: true
+          enable-commit-comment: false
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

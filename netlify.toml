@@ -1,0 +1,9 @@
+# implements FR5 of setup-deployment-environments
+[build]
+  command = "pnpm --filter @clear-progress/client... build --mode qa"
+  publish = "packages/client/dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
