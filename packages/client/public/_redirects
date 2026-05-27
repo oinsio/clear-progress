@@ -1,0 +1,3 @@
+# implements FR5 of setup-deployment-environments
+# Fallback for SPA routing on Netlify
+/*    /index.html   200
