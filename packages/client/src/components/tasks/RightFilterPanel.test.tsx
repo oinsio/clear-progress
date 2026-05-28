@@ -69,6 +69,20 @@ describe("RightFilterPanel — connection status", () => {
     expect(screen.getAllByTestId("right-panel-sync")[0]).toBeInTheDocument();
   });
 
+  // implements FR1 of split-error-offline-status
+  it("should display 'No connection' text when connectionStatus is offline", () => {
+    mockUseConnectionStatus.mockReturnValue("offline");
+    renderPanel();
+    expect(screen.getAllByText("Нет связи")[0]).toBeInTheDocument();
+  });
+
+  // implements FR2 of split-error-offline-status
+  it("should display 'Server error' text when connectionStatus is error", () => {
+    mockUseConnectionStatus.mockReturnValue("error");
+    renderPanel();
+    expect(screen.getAllByText("Ошибка сервера")[0]).toBeInTheDocument();
+  });
+
   it("should show error badge when connectionStatus is offline", () => {
     mockUseConnectionStatus.mockReturnValue("offline");
     renderPanel();

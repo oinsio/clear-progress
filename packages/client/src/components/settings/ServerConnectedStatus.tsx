@@ -99,8 +99,8 @@ export function ServerConnectedStatus({
               "size-2 rounded-full",
               connectionStatus === "synced" && "bg-green-500",
               connectionStatus === "syncing" && "bg-yellow-400 animate-pulse",
-              (connectionStatus === "error" ||
-                connectionStatus === "offline" ||
+              connectionStatus === "error" && "bg-orange-500",
+              (connectionStatus === "offline" ||
                 connectionStatus === "unauthorized") &&
                 "bg-red-500",
               (connectionStatus === "not_configured" ||

@@ -249,4 +249,22 @@ describe("ServerConnectedStatus", () => {
       screen.queryByTestId("server-signin-required"),
     ).not.toBeInTheDocument();
   });
+
+  // implements FR3 of split-error-offline-status
+  it("shows orange indicator when connectionStatus is error", () => {
+    mockUseConnectionStatus.mockReturnValue("error");
+    renderConnected(supabaseConfig);
+    const indicator = screen.getByTestId("server-connected-type")
+      .nextElementSibling as HTMLElement;
+    expect(indicator.className).toContain("bg-orange-500");
+  });
+
+  // implements FR3 of split-error-offline-status
+  it("shows red indicator when connectionStatus is offline", () => {
+    mockUseConnectionStatus.mockReturnValue("offline");
+    renderConnected(supabaseConfig);
+    const indicator = screen.getByTestId("server-connected-type")
+      .nextElementSibling as HTMLElement;
+    expect(indicator.className).toContain("bg-red-500");
+  });
 });

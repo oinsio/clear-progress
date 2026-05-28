@@ -451,6 +451,7 @@
     "syncing": "Обновляю...",
     "synced": "Обновлено",
     "noConnection": "Нет связи",
+    "serverError": "Ошибка сервера",
     "unauthorized": "Нет доступа",
     "ariaLabel": "Обновить"
   },
