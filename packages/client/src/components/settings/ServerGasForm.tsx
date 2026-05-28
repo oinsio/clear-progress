@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getSavedConnectionConfig } from "@/services/connectionService";
+import { getSavedConfigForType } from "@/services/connectionService";
 import { cn } from "@/shared/lib/cn";
 
 interface ServerGasFormProps {
@@ -22,7 +22,7 @@ export function ServerGasForm({
 }: ServerGasFormProps) {
   const { t } = useTranslation();
 
-  const savedConfig = getSavedConnectionConfig();
+  const savedConfig = getSavedConfigForType("gas");
   const savedUrl = savedConfig?.type === "gas" ? savedConfig.url : "";
   const savedClientId =
     savedConfig?.type === "gas" ? (savedConfig.clientId ?? "") : "";
@@ -52,8 +52,12 @@ export function ServerGasForm({
           type="text"
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
+          placeholder={t("settings.server.scriptUrlPlaceholder")}
           className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
         />
+        <p className="text-xs text-gray-400">
+          {t("settings.server.scriptUrlDescription")}
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -69,8 +73,12 @@ export function ServerGasForm({
           type="text"
           value={clientIdInput}
           onChange={(e) => setClientIdInput(e.target.value)}
+          placeholder={t("settings.server.clientIdPlaceholder")}
           className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
         />
+        <p className="text-xs text-gray-400">
+          {t("settings.server.clientIdDescription")}
+        </p>
       </div>
 
       {isLoading && (

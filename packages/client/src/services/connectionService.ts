@@ -13,6 +13,14 @@ export function connect(config: ConnectionConfig): void {
       STORAGE_KEYS.CONNECTION_CONFIG,
       JSON.stringify(activeConfig),
     );
+
+    // Persist type-specific config for cross-type switching
+    const savedKey =
+      config.type === "supabase"
+        ? STORAGE_KEYS.SAVED_SUPABASE_CONFIG
+        : STORAGE_KEYS.SAVED_GAS_CONFIG;
+    localStorage.setItem(savedKey, JSON.stringify(activeConfig));
+
     window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
 
     if (config.type === "gas" && config.clientId) {
@@ -89,6 +97,24 @@ export function getSavedConnectionConfig(): ConnectionConfig | null {
     return parseResult.data;
   } catch (error) {
     console.error("Failed to parse saved connection config:", error);
+    return null;
+  }
+}
+
+export function getSavedConfigForType(
+  type: BackendType,
+): ConnectionConfig | null {
+  try {
+    const savedKey =
+      type === "supabase"
+        ? STORAGE_KEYS.SAVED_SUPABASE_CONFIG
+        : STORAGE_KEYS.SAVED_GAS_CONFIG;
+    const raw = localStorage.getItem(savedKey);
+    if (!raw) return null;
+    const parseResult = ConnectionConfigSchema.safeParse(JSON.parse(raw));
+    if (!parseResult.success) return null;
+    return parseResult.data;
+  } catch {
     return null;
   }
 }

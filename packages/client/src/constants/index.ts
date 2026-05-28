@@ -138,6 +138,8 @@ export const SYNC_META_KEYS = {
 
 export const STORAGE_KEYS = {
   CONNECTION_CONFIG: "connection_config",
+  SAVED_SUPABASE_CONFIG: "saved_supabase_config",
+  SAVED_GAS_CONFIG: "saved_gas_config",
   GAS_URL: "gas_url", // @deprecated — use CONNECTION_CONFIG
   GOOGLE_CLIENT_ID: "google_client_id", // @deprecated — use CONNECTION_CONFIG
   BACKEND_CONNECTED: "backend_connected", // @deprecated — use CONNECTION_CONFIG

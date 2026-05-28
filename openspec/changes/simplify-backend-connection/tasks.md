@@ -86,3 +86,19 @@
 - [x] 10.3 Final build verification: `pnpm run build`
 - [x] 10.4 Final full test suite: `npx vitest run`
 - [x] 10.5 Verify M2: grep confirms zero references to `ROUTES.SETUP` or `/setup` path in source code
+
+## 11. UX polish: config persistence, placeholders, hints, account info
+
+- [x] 11.1 Add `SAVED_SUPABASE_CONFIG` and `SAVED_GAS_CONFIG` storage keys — FR17
+- [x] 11.2 Update `connect()` to persist type-specific config alongside main config — FR17
+- [x] 11.3 Add `getSavedConfigForType(type)` to connectionService — FR17
+- [x] 11.4 Update `ServerSupabaseForm` and `ServerGasForm` to read from type-specific saved config — FR17
+- [x] 11.5 Add placeholder attributes to all form inputs (URL, Anon Key, Client ID) — FR18
+- [x] 11.6 Add helper description text below each form input — FR19
+- [x] 11.7 Add i18n keys for placeholders, descriptions, hints, and account label — FR18, FR19, FR20
+- [x] 11.8 Add explanatory text above backend selection buttons — FR20
+- [x] 11.9 Equalize button styles in ServerBackendSelection (remove accent from Supabase) — FR20
+- [x] 11.10 Show user email in ServerConnectedStatus — FR10
+- [x] 11.11 Update serverSectionMocks.ts to export `getSavedConfigForType` mock
+- [x] 11.12 Verify build passes: `pnpm run build`
+- [x] 11.13 Verify server_connection tests pass: `npx vitest run`

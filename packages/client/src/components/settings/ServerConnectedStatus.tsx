@@ -31,7 +31,7 @@ export function ServerConnectedStatus({
 }: ServerConnectedStatusProps) {
   const { t } = useTranslation();
   const connectionStatus = useConnectionStatus();
-  const { accessToken, signIn } = useAuth();
+  const { accessToken, userEmail, signIn } = useAuth();
   const [providers, setProviders] = useState<string[]>([]);
 
   const isSupabaseNeedsAuth =
@@ -115,6 +115,14 @@ export function ServerConnectedStatus({
         >
           {displayUrl}
         </p>
+        {userEmail && (
+          <p
+            data-testid="server-connected-account"
+            className="text-xs text-gray-400"
+          >
+            {t("settings.server.account")}: {userEmail}
+          </p>
+        )}
       </div>
 
       {isSupabaseNeedsAuth && (

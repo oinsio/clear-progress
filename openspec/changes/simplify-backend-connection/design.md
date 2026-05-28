@@ -91,6 +91,22 @@ After successful connection check (Supabase or GAS), `connect()` has already bee
 
 **Alternative considered:** Return to selection directly — rejected because it forces the user to re-enter URL and key if they just want to retry authentication.
 
+### D9: Per-type config persistence in localStorage
+
+Driven by FR17: users switching between GAS and Supabase should not lose previously entered settings.
+
+**Decision:** Store per-type configs in separate localStorage keys (`saved_supabase_config`, `saved_gas_config`). On `connect()`, also write to the type-specific key. Forms read from `getSavedConfigForType(type)` instead of `getSavedConnectionConfig()`.
+
+**Alternative considered:** IndexedDB for more reliable storage — rejected because configs are tiny JSON objects, localStorage works synchronously (forms read during render), and adding async Dexie access would require significant refactoring. localStorage is perfectly reliable for this use case.
+
+**Alternative considered:** Single JSON object with both configs — rejected because it changes the shape of the existing `CONNECTION_CONFIG` key, potentially breaking backward compatibility.
+
+### D10: Equal button styles for backend selection
+
+Driven by FR20: accent color on Supabase button implies it is already connected or preferred, confusing users.
+
+**Decision:** Both buttons use the same secondary style (`border border-gray-200 text-gray-700`). An explanatory text above explains the choice.
+
 ## Risks / Trade-offs
 
 - [Risk] Settings page grows in complexity → Mitigation: decomposed into 7 small sub-components, each under 200 lines. ServerSection orchestrator delegates rendering.

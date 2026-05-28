@@ -7,6 +7,7 @@ import { vi } from "vitest";
 export const mockConnect = vi.fn();
 export const mockDisconnect = vi.fn();
 export const mockGetSavedConnectionConfig = vi.fn();
+export const mockGetSavedConfigForType = vi.fn();
 export const mockPing = vi.fn();
 export const mockInit = vi.fn();
 export const mockFetchSupabaseProviders = vi.fn().mockResolvedValue([]);
@@ -25,6 +26,7 @@ vi.mock("@/services/connectionService", () => ({
   disconnect: mockDisconnect,
   getConnectionConfig: vi.fn(),
   getSavedConnectionConfig: mockGetSavedConnectionConfig,
+  getSavedConfigForType: mockGetSavedConfigForType,
 }));
 vi.mock("@/services/supabaseConnection", () => ({
   fetchSupabaseProviders: mockFetchSupabaseProviders,

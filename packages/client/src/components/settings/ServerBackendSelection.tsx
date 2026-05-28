@@ -17,10 +17,13 @@ export function ServerBackendSelection({
 
   return (
     <div className="space-y-3">
+      <p className="text-sm text-gray-500">
+        {t("settings.server.chooseBackendHint")}
+      </p>
       <button
         data-testid="server-connect-supabase"
         onClick={onSelectSupabase}
-        className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors"
+        className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
       >
         {t("settings.server.connectSupabase")}
       </button>

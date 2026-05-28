@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getSavedConnectionConfig } from "@/services/connectionService";
+import { getSavedConfigForType } from "@/services/connectionService";
 import { cn } from "@/shared/lib/cn";
 
 interface ServerSupabaseFormProps {
@@ -22,7 +22,7 @@ export function ServerSupabaseForm({
 }: ServerSupabaseFormProps) {
   const { t } = useTranslation();
 
-  const savedConfig = getSavedConnectionConfig();
+  const savedConfig = getSavedConfigForType("supabase");
   const savedUrl = savedConfig?.type === "supabase" ? savedConfig.url : "";
   const savedAnonKey =
     savedConfig?.type === "supabase" ? savedConfig.anonKey : "";
@@ -52,8 +52,12 @@ export function ServerSupabaseForm({
           type="text"
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
+          placeholder={t("settings.server.projectUrlPlaceholder")}
           className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
         />
+        <p className="text-xs text-gray-400">
+          {t("settings.server.projectUrlDescription")}
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -69,8 +73,12 @@ export function ServerSupabaseForm({
           type="text"
           value={anonKeyInput}
           onChange={(e) => setAnonKeyInput(e.target.value)}
+          placeholder={t("settings.server.anonKeyPlaceholder")}
           className="w-full rounded-lg border border-gray-200 px-3 py-2 font-mono text-sm outline-none transition-colors focus:border-accent"
         />
+        <p className="text-xs text-gray-400">
+          {t("settings.server.anonKeyDescription")}
+        </p>
       </div>
 
       {isLoading && (
