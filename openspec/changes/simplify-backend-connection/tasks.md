@@ -81,8 +81,8 @@
 
 ## 10. Mutation testing and final verification
 
-- [ ] 10.1 Run mutation testing on new Server section components — target >= 95%, minimum >= 90% — M4
-- [ ] 10.2 Add tests to kill survived mutants if score < 95%
+- [x] 10.1 Run mutation testing on new Server section components — target >= 95%, minimum >= 90% — M4
+- [x] 10.2 Add tests to kill survived mutants if score < 95%
 - [x] 10.3 Final build verification: `pnpm run build`
 - [x] 10.4 Final full test suite: `npx vitest run`
 - [x] 10.5 Verify M2: grep confirms zero references to `ROUTES.SETUP` or `/setup` path in source code
