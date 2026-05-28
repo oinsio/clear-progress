@@ -120,6 +120,8 @@ The `ConnectionConfig` type is a Zod discriminated union on the `type` field. GA
 
 The `useConnectionStatus` hook SHALL derive a connection status from config, auth state, and sync status using strict priority: (1) `not_configured` if no config, (2) `no_auth` if GAS backend has clientId but no access token, (3) sync status mapping (`offline`, `error`, `unauthorized`, `syncing`), (4) `synced` as default.
 
+Note: For GAS, `no_auth` is always possible because Client ID is now required. The scenario "GAS without clientId" no longer occurs in normal flow but the hook still handles it defensively.
+
 #### Scenario: No config returns not_configured  # implements FR7 of connection-management-spec
 - **WHEN** no connection config exists
 - **THEN** the connection status is `"not_configured"`
