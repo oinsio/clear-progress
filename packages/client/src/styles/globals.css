@@ -11,22 +11,22 @@
   /* Interface scale variants */
   html[data-scale="small"] {
     --scale-factor: 0.875;
-    zoom: 0.875;
+    font-size: 87.5%;
   }
 
   html[data-scale="normal"] {
     --scale-factor: 1;
-    zoom: 1;
+    font-size: 100%;
   }
 
   html[data-scale="large"] {
     --scale-factor: 1.125;
-    zoom: 1.125;
+    font-size: 112.5%;
   }
 
   html[data-scale="xLarge"] {
     --scale-factor: 1.25;
-    zoom: 1.25;
+    font-size: 125%;
   }
 
   :root[data-accent="green"] {
@@ -74,7 +74,6 @@
   }
 
   body {
-    font-size: calc(1rem * var(--scale-factor));
     font-family:
       -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
       sans-serif;

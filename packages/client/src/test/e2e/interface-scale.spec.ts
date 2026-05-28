@@ -77,20 +77,20 @@ test.describe("Interface Scale", () => {
     expect(isPressed).toBe("true");
   });
 
-  test("should visually change body font-size based on scale", async ({
+  test("should visually change html font-size based on scale", async ({
     page,
   }) => {
     await page.click('[data-test-id="settings-scale-option-normal"]');
 
     const normalFontSize = await page.evaluate(() => {
-      const fontSize = getComputedStyle(document.body).fontSize;
+      const fontSize = getComputedStyle(document.documentElement).fontSize;
       return parseFloat(fontSize);
     });
 
     await page.click('[data-test-id="settings-scale-option-xLarge"]');
 
     const xLargeFontSize = await page.evaluate(() => {
-      const fontSize = getComputedStyle(document.body).fontSize;
+      const fontSize = getComputedStyle(document.documentElement).fontSize;
       return parseFloat(fontSize);
     });
 
