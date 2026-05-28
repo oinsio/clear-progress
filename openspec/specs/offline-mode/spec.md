@@ -126,6 +126,18 @@ The PWA service worker handles asset caching (app shell, static files). Offline 
 - **THEN** data reads still work via IndexedDB
 - **AND** the app is functional for CRUD operations
 
+### Requirement: Offline status displays dedicated UI text
+When connection status is `offline`, the UI SHALL display the `sync.noConnection` i18n key exclusively for this status. The text SHALL NOT be shared with the `error` status.
+
+#### Scenario: Offline status shows "No connection" text
+- **WHEN** connection status is `offline`
+- **THEN** the sync label displays `t("sync.noConnection")`
+- **AND** the text is "Нет связи" (ru) or "No connection" (en)
+
+#### Scenario: Offline status shows red indicator in settings
+- **WHEN** connection status is `offline`
+- **THEN** the status indicator in ServerConnectedStatus is red (`bg-red-500`)
+
 ## Relations
 
 - **sync-orchestration**: Covers triggers, recovery, cleanup, and full sync. This spec references offline detection (T5, preconditions) but does not duplicate it.
