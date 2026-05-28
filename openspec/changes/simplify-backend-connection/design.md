@@ -65,6 +65,20 @@ The `not_initialized` phase (where backend needs `init()` after first sign-in) i
 
 Change `type="password"` to `type="text"` for the Supabase Anon Key field. The key is public (documented by Supabase), and masking it makes copy-paste harder and implies false security.
 
+### D7: OAuth return detection for post-login redirect
+
+After OAuth redirect back to `/settings`, the app must navigate to inbox. The naive approach — detecting any `null → non-null` token transition — caused false redirects for already-authenticated users visiting Settings, because Supabase always initializes `accessToken` as `null` and sets it asynchronously via `onAuthStateChange`.
+
+**Solution:** Two-signal detection:
+- **Implicit flow** (hash fragment `#access_token=...`): `supabaseClientManager.ts` boot code sets a `sessionStorage` flag (`oauth_return_pending`) when it detects OAuth tokens in the hash. SettingsPage reads this flag via `isOauthReturn()` and clears it via `clearOauthReturnFlag()` only upon successful redirect.
+- **PKCE flow** (query param `?code=`): SettingsPage detects `?code=` in `location.search` and sets a local ref.
+
+The redirect useEffect fires only when one of these signals is present AND `accessToken` becomes non-null.
+
+**Why sessionStorage:** React StrictMode double-mounts components, so a consume-once in-memory flag gets consumed on the first mount and is lost for the second. `sessionStorage` survives remounts and is cleared explicitly.
+
+**Alternative considered:** `useRef` initialized from a module-level consume-once function — rejected because StrictMode re-initializes refs on second mount, consuming the flag prematurely.
+
 ## Risks / Trade-offs
 
 - [Risk] Settings page grows in complexity → Mitigation: decomposed into 7 small sub-components, each under 200 lines. ServerSection orchestrator delegates rendering.

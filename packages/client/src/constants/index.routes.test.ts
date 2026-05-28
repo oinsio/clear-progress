@@ -32,8 +32,4 @@ describe("ROUTES", () => {
   it("should define SETTINGS as /settings", () => {
     expect(ROUTES.SETTINGS).toBe("/settings");
   });
-
-  it("should define SETUP as /setup", () => {
-    expect(ROUTES.SETUP).toBe("/setup");
-  });
 });

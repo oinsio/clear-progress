@@ -41,7 +41,7 @@ describe("supabaseClientManager boot initialization", () => {
       value: {
         ...originalLocation,
         hash,
-        pathname: "/setup",
+        pathname: "/settings",
         search: "",
       },
       writable: true,
@@ -195,7 +195,7 @@ describe("supabaseClientManager boot initialization", () => {
     expect(window.history.replaceState).toHaveBeenCalledWith(
       null,
       "",
-      "/setup",
+      "/settings",
     );
   });
 

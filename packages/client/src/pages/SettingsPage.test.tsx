@@ -12,23 +12,28 @@ vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/usePanelAlwaysOpen");
 vi.mock("@/hooks/useFocusMode");
-vi.mock("@/hooks/useConnectionStatus");
 vi.mock("@/hooks/useFilterBarPosition");
 vi.mock("@/app/providers/InterfaceScaleProvider");
 vi.mock("@/components/tasks/RightFilterPanel");
 vi.mock("@/components/settings/MenuOrderSection");
-vi.mock("@/components/settings/ConfirmFullSyncDialog");
-vi.mock("@/app/providers/SyncProvider");
+vi.mock("@/app/providers/AuthProvider", () => ({
+  useAuth: vi.fn(),
+}));
+vi.mock("@/hooks/useConnectionConfig", () => ({
+  useConnectionConfig: vi.fn(),
+}));
+vi.mock("@/components/settings/ServerSection", () => ({
+  ServerSection: () => <div data-testid="server-section" />,
+}));
 vi.mock("@/i18n", () => ({ default: {} }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
+import { useAuth } from "@/app/providers/AuthProvider";
 import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
-import { useSync } from "@/app/providers/SyncProvider";
 import { useTheme } from "@/app/providers/ThemeProvider";
-import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
-import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -38,6 +43,8 @@ import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSettings } from "@/hooks/useSettings";
 import { localStorageMock } from "@/test/mocks/localStorageMock";
 
+const mockUseAuth = vi.mocked(useAuth);
+const mockUseConnectionConfig = vi.mocked(useConnectionConfig);
 const mockUseSettings = vi.mocked(useSettings);
 const mockUseTheme = vi.mocked(useTheme);
 const mockUseLanguage = vi.mocked(useLanguage);
@@ -47,9 +54,6 @@ const mockUsePanelAlwaysOpen = vi.mocked(usePanelAlwaysOpen);
 const mockUseFocusMode = vi.mocked(useFocusMode);
 const mockUseFilterBarPosition = vi.mocked(useFilterBarPosition);
 const mockUseInterfaceScale = vi.mocked(useInterfaceScale);
-const mockUseSync = vi.mocked(useSync);
-const mockUseConnectionStatus = vi.mocked(useConnectionStatus);
-const mockConfirmFullSyncDialog = vi.mocked(ConfirmFullSyncDialog);
 
 function buildSettingsHook(
   overrides: Partial<UseSettingsReturn> = {},
@@ -103,6 +107,15 @@ function renderPage() {
 describe("SettingsPage", () => {
   beforeEach(() => {
     localStorageMock.clear();
+    mockUseAuth.mockReturnValue({
+      accessToken: null,
+      userEmail: null,
+      userPicture: null,
+      signIn: vi.fn(),
+      signOut: vi.fn(),
+      silentRefresh: vi.fn(),
+    });
+    mockUseConnectionConfig.mockReturnValue(null);
     mockUseSettings.mockReturnValue(buildSettingsHook());
     mockUseTheme.mockReturnValue(buildThemeHook());
     mockUseLanguage.mockReturnValue(buildLanguageHook());
@@ -132,17 +145,6 @@ describe("SettingsPage", () => {
       interfaceScale: "normal",
       setInterfaceScale: vi.fn(),
     });
-    mockUseConnectionStatus.mockReturnValue("not_configured");
-    mockUseSync.mockReturnValue({
-      syncStatus: "idle",
-      syncVersion: 0,
-      lastSyncedAt: null,
-      pull: vi.fn(),
-      push: vi.fn(),
-      schedulePush: vi.fn(),
-      triggerFullSync: vi.fn().mockResolvedValue(undefined),
-    });
-    mockConfirmFullSyncDialog.mockReturnValue(null);
   });
 
   afterEach(() => {
@@ -296,92 +298,6 @@ describe("SettingsPage", () => {
     expect(
       screen.queryByTestId("settings-language-option-ru"),
     ).not.toBeInTheDocument();
-  });
-
-  describe("sync section", () => {
-    it("should render sync section", () => {
-      renderPage();
-      expect(screen.getByTestId("settings-sync")).toBeInTheDocument();
-    });
-
-    it("should show not connected status when no URL is configured", () => {
-      renderPage();
-      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent(
-        "settings.syncNotConnected",
-      );
-    });
-
-    it("should show connected status when backend is synced", () => {
-      mockUseConnectionStatus.mockReturnValue("synced");
-      renderPage();
-      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent(
-        "settings.syncConnected",
-      );
-    });
-
-    it("should show error status when sync is failing", () => {
-      mockUseConnectionStatus.mockReturnValue("error");
-      renderPage();
-      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent(
-        "sync.noConnection",
-      );
-    });
-
-    it("should show unauthorized status when token is expired", () => {
-      mockUseConnectionStatus.mockReturnValue("unauthorized");
-      renderPage();
-      expect(screen.getByTestId("settings-sync-status")).toHaveTextContent(
-        "sync.unauthorized",
-      );
-    });
-
-    it("should render configure button", () => {
-      renderPage();
-      expect(screen.getByTestId("settings-sync-connect")).toBeInTheDocument();
-    });
-
-    it("should not render full sync button when backend is not configured", () => {
-      renderPage();
-      expect(
-        screen.queryByTestId("settings-full-sync-btn"),
-      ).not.toBeInTheDocument();
-    });
-
-    it("should render full sync button when backend is configured", () => {
-      mockUseConnectionStatus.mockReturnValue("synced");
-      renderPage();
-      expect(screen.getByTestId("settings-full-sync-btn")).toBeInTheDocument();
-    });
-
-    it("should open ConfirmFullSyncDialog when full sync button is clicked", () => {
-      mockUseConnectionStatus.mockReturnValue("synced");
-      renderPage();
-      fireEvent.click(screen.getByTestId("settings-full-sync-btn"));
-      expect(mockConfirmFullSyncDialog).toHaveBeenCalledWith(
-        expect.objectContaining({ isOpen: true }),
-        expect.anything(),
-      );
-    });
-
-    it("should pass triggerFullSync as onSync to ConfirmFullSyncDialog", () => {
-      mockUseConnectionStatus.mockReturnValue("synced");
-      const triggerFullSync = vi.fn().mockResolvedValue(undefined);
-      mockUseSync.mockReturnValue({
-        syncStatus: "idle",
-        syncVersion: 0,
-        lastSyncedAt: null,
-        pull: vi.fn(),
-        push: vi.fn(),
-        schedulePush: vi.fn(),
-        triggerFullSync,
-      });
-      renderPage();
-      fireEvent.click(screen.getByTestId("settings-full-sync-btn"));
-      expect(mockConfirmFullSyncDialog).toHaveBeenCalledWith(
-        expect.objectContaining({ onSync: triggerFullSync }),
-        expect.anything(),
-      );
-    });
   });
 
   describe("focus mode section", () => {

@@ -7,15 +7,14 @@ import {
   Sun,
 } from "lucide-react";
 import type React from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
-import { useSync } from "@/app/providers/SyncProvider";
 import { useTheme } from "@/app/providers/ThemeProvider";
-import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
-import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
+import { ServerSection } from "@/components/settings/ServerSection";
 import {
   RightFilterPanel,
   type RightPanelMode,
@@ -35,7 +34,7 @@ import {
   PANEL_SIDES,
   ROUTES,
 } from "@/constants";
-import { useConnectionStatus } from "@/hooks/useConnectionStatus";
+import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -43,8 +42,11 @@ import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSettings } from "@/hooks/useSettings";
-import { disconnect } from "@/services/connectionService";
 import { getLocaleByCode, locales } from "@/services/localeRegistry";
+import {
+  clearOauthReturnFlag,
+  isOauthReturn,
+} from "@/services/supabaseClientManager";
 import { cn } from "@/shared/lib/cn";
 import type {
   AccentColor,
@@ -65,16 +67,69 @@ const PANEL_SIDE_ICONS: Record<PanelSide, React.FC<{ className?: string }>> = {
   right: ({ className }) => <PanelRight className={className} />,
 };
 
+/**
+ * Implements FR14 of simplify-backend-connection.
+ * Handles OAuth callback query params (?code=, ?error=) after redirect.
+ */
 export default function SettingsPage() {
   const { t } = useTranslation();
   const [filterMode, setFilterMode] = useState<RightPanelMode>(null);
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const [isFullSyncDialogOpen, setIsFullSyncDialogOpen] = useState(false);
-  const { triggerFullSync } = useSync();
   const [isLanguagePanelOpen, setLanguagePanelOpen] = useState(false);
   const [languageSearchQuery, setLanguageSearchQuery] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { accessToken } = useAuth();
+  const connectionConfig = useConnectionConfig();
+  const [oauthError, setOauthError] = useState("");
+  // Track whether we're in an OAuth callback flow (PKCE ?code= param)
+  const isPkceCallbackRef = useRef(false);
+
+  // Detect OAuth callback params (?code= or ?error=) — implements FR14 of simplify-backend-connection
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const code = searchParams.get("code");
+    const error = searchParams.get("error");
+    const errorDescription = searchParams.get("error_description");
+
+    if (code || error) {
+      // Clean query params from URL
+      window.history.replaceState({}, "", location.pathname);
+    }
+
+    if (code && connectionConfig?.type === "supabase") {
+      // SDK handles code exchange via onAuthStateChange.
+      // If token already present, navigate immediately.
+      if (accessToken) {
+        navigate(ROUTES.INBOX);
+      } else {
+        isPkceCallbackRef.current = true;
+      }
+    } else if (error && connectionConfig?.type === "supabase") {
+      setOauthError(errorDescription ?? error);
+    }
+  }, [
+    location.search,
+    connectionConfig,
+    accessToken,
+    navigate,
+    location.pathname,
+  ]);
+
+  // After OAuth sign-in succeeds: navigate to inbox
+  // Triggers for both implicit flow (isOauthReturn from sessionStorage) and PKCE flow (?code= ref)
+  useEffect(() => {
+    if (
+      (isPkceCallbackRef.current || isOauthReturn()) &&
+      accessToken !== null
+    ) {
+      isPkceCallbackRef.current = false;
+      clearOauthReturnFlag();
+      navigate(ROUTES.INBOX);
+    }
+  }, [accessToken, navigate]);
+
   const { defaultBox, setDefaultBox } = useSettings();
   const {
     accentColor,
@@ -154,31 +209,6 @@ export default function SettingsPage() {
   const handleLanguageSelect = (lang: string): void => {
     setLanguage(lang);
   };
-
-  const connectionStatus = useConnectionStatus();
-  const isBackendConfigured = connectionStatus !== "not_configured";
-  const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
-
-  const handleDisconnectRequest = useCallback((): void => {
-    setIsDisconnectDialogOpen(true);
-  }, []);
-
-  const handleDisconnectCancel = useCallback((): void => {
-    setIsDisconnectDialogOpen(false);
-  }, []);
-
-  const handleDisconnectConfirm = useCallback((): void => {
-    disconnect();
-    setIsDisconnectDialogOpen(false);
-  }, []);
-
-  const handleFullSyncOpen = useCallback((): void => {
-    setIsFullSyncDialogOpen(true);
-  }, []);
-
-  const handleFullSyncClose = useCallback((): void => {
-    setIsFullSyncDialogOpen(false);
-  }, []);
 
   return (
     <div
@@ -636,98 +666,11 @@ export default function SettingsPage() {
             {/* Menu order section */}
             <MenuOrderSection />
 
-            {/* Sync section */}
-            <section data-testid="settings-sync" className="space-y-3">
-              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                {t("settings.syncSection")}
-              </h2>
-              <div className="rounded-lg border border-gray-200 px-4 py-3 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "size-2 rounded-full",
-                      connectionStatus === "synced" && "bg-green-500",
-                      connectionStatus === "syncing" &&
-                        "bg-yellow-400 animate-pulse",
-                      (connectionStatus === "error" ||
-                        connectionStatus === "offline" ||
-                        connectionStatus === "unauthorized") &&
-                        "bg-red-500",
-                      (connectionStatus === "not_configured" ||
-                        connectionStatus === "no_auth") &&
-                        "bg-gray-300",
-                    )}
-                  />
-                  <span
-                    data-testid="settings-sync-status"
-                    className={cn(
-                      "text-sm font-medium",
-                      connectionStatus === "synced" && "text-green-600",
-                      connectionStatus === "syncing" && "text-yellow-600",
-                      (connectionStatus === "error" ||
-                        connectionStatus === "offline" ||
-                        connectionStatus === "unauthorized") &&
-                        "text-red-500",
-                      (connectionStatus === "not_configured" ||
-                        connectionStatus === "no_auth") &&
-                        "text-gray-400",
-                    )}
-                  >
-                    {connectionStatus === "synced" &&
-                      t("settings.syncConnected")}
-                    {connectionStatus === "syncing" && t("sync.syncing")}
-                    {connectionStatus === "error" && t("sync.noConnection")}
-                    {connectionStatus === "offline" && t("sync.noConnection")}
-                    {connectionStatus === "unauthorized" &&
-                      t("sync.unauthorized")}
-                    {connectionStatus === "no_auth" && t("settings.syncNoAuth")}
-                    {connectionStatus === "not_configured" &&
-                      t("settings.syncNotConnected")}
-                  </span>
-                </div>
-                {isBackendConfigured ? (
-                  <>
-                    <button
-                      data-testid="settings-full-sync-btn"
-                      onClick={handleFullSyncOpen}
-                      className="w-full rounded-lg bg-accent py-2 text-sm font-medium text-white transition-colors"
-                    >
-                      {t("settings.fullSync")}
-                    </button>
-                    <button
-                      data-testid="settings-sync-disconnect"
-                      onClick={handleDisconnectRequest}
-                      className="w-full rounded-lg border border-red-200 py-2 text-sm font-medium text-red-500 transition-colors hover:border-red-300 hover:bg-red-50"
-                    >
-                      {t("settings.syncDisconnect")}
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    data-testid="settings-sync-connect"
-                    onClick={() => navigate(ROUTES.SETUP)}
-                    className="w-full rounded-lg bg-accent py-2 text-sm font-medium text-white transition-colors"
-                  >
-                    {t("settings.syncConnect")}
-                  </button>
-                )}
-              </div>
-            </section>
+            {/* Server connection section */}
+            <ServerSection oauthError={oauthError} />
           </div>
         </main>
       </div>
-
-      <ConfirmFullSyncDialog
-        isOpen={isFullSyncDialogOpen}
-        onClose={handleFullSyncClose}
-        onSync={triggerFullSync}
-      />
-
-      <ConfirmDisconnectDialog
-        isOpen={isDisconnectDialogOpen}
-        onClose={handleDisconnectCancel}
-        onConfirm={handleDisconnectConfirm}
-      />
 
       {/* Right panel — same as on main page */}
       <RightFilterPanel

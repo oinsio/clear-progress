@@ -8,6 +8,18 @@ const MS_PER_SECOND = 1000;
 
 let supabaseClient: SupabaseClient | null = null;
 
+const OAUTH_RETURN_KEY = "oauth_return_pending";
+
+/** Returns true if the page loaded with an OAuth hash fragment (implicit flow). */
+export function isOauthReturn(): boolean {
+  return sessionStorage.getItem(OAUTH_RETURN_KEY) === "1";
+}
+
+/** Clears the OAuth return flag after successful redirect. */
+export function clearOauthReturnFlag(): void {
+  sessionStorage.removeItem(OAUTH_RETURN_KEY);
+}
+
 // Auto-initialize from localStorage on module load so that module-level code in
 // defaultServices.ts (evaluated after this module) can call getSupabaseClient() safely.
 // This covers the OAuth redirect case where the page reloads with a saved Supabase config.
@@ -28,6 +40,7 @@ if (bootConfig?.type === "supabase") {
   const hashRefreshToken = hashParams.get("refresh_token");
 
   if (hashAccessToken) {
+    sessionStorage.setItem(OAUTH_RETURN_KEY, "1");
     const expiresIn = Number(
       hashParams.get("expires_in") ?? DEFAULT_TOKEN_EXPIRY_S,
     );

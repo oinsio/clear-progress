@@ -213,7 +213,7 @@ export function RightFilterPanel({
       data-testid="right-panel-login"
       onClick={(e) => {
         e.stopPropagation();
-        navigate(ROUTES.SETUP);
+        navigate(ROUTES.SETTINGS);
       }}
       className="flex-1 flex items-center px-4 py-4 text-white hover:bg-black/15 transition-colors"
     >

@@ -1,42 +1,42 @@
-// Verifies FR6, FR7, UX5 of add-supabase-ui
+// Verifies FR3, FR8, FR14 of simplify-backend-connection
 import { expect } from "@playwright/test";
 import { createBdd } from "playwright-bdd";
 
 const { Given, When, Then } = createBdd();
 
-const SUPABASE_SECTION_TOGGLE_TIMEOUT_MS = 3000;
+const SUPABASE_BUTTON_TIMEOUT_MS = 3000;
 const OAUTH_BUTTONS_TIMEOUT_MS = 5000;
 
-// --- Scenario: User connects to Supabase and signs in via OAuth ---
+// --- Scenario: User connects to Supabase and initiates OAuth sign-in ---
 
-Given("user opens SetupPage with no connection", async ({ page }) => {
-  await page.goto("/setup");
+Given("user opens Settings with no connection", async ({ page }) => {
+  await page.goto("/settings");
   await page.waitForLoadState("networkidle");
 });
 
-When("user expands the Supabase section", async ({ page }) => {
-  const toggle = page.getByTestId("setup-supabase-section-toggle");
-  await toggle.waitFor({
+When("user selects Supabase backend", async ({ page }) => {
+  const connectButton = page.getByTestId("server-connect-supabase");
+  await connectButton.waitFor({
     state: "visible",
-    timeout: SUPABASE_SECTION_TOGGLE_TIMEOUT_MS,
+    timeout: SUPABASE_BUTTON_TIMEOUT_MS,
   });
-  await toggle.click();
+  await connectButton.click();
 });
 
 When(
   "user enters Supabase URL {string} and Anon Key {string}",
   async ({ page }, url: string, anonKey: string) => {
-    await page.getByTestId("setup-supabase-url-input").fill(url);
-    await page.getByTestId("setup-supabase-anon-key-input").fill(anonKey);
+    await page.getByTestId("server-supabase-url").fill(url);
+    await page.getByTestId("server-supabase-anon-key").fill(anonKey);
   },
 );
 
-When("user clicks the Supabase Connect button", async ({ page }) => {
-  await page.getByTestId("setup-supabase-connect-button").click();
+When("user submits the Supabase connection form", async ({ page }) => {
+  await page.getByTestId("server-supabase-connect").click();
 });
 
 Then("OAuth provider buttons are visible", async ({ page }) => {
-  const oauthButtons = page.getByTestId("setup-supabase-oauth-buttons");
+  const oauthButtons = page.getByTestId("server-oauth-buttons");
   await expect(oauthButtons).toBeVisible({
     timeout: OAUTH_BUTTONS_TIMEOUT_MS,
   });
@@ -52,11 +52,9 @@ When(
 Then(
   "OAuth flow is initiated with provider {string}",
   async ({ page }, _provider: string) => {
-    // In E2E, we can verify that the page navigated away or that
-    // signInWithOAuth was called by checking URL change or mock
-    // For now, verify the OAuth buttons section handled the click
+    // In E2E, we verify that the page navigated away from /settings
     // (actual OAuth redirect would leave the page)
-    await expect(page).not.toHaveURL(/\/setup$/);
+    await expect(page).not.toHaveURL(/\/settings$/);
   },
 );
 
@@ -76,7 +74,7 @@ Given("user has completed Supabase OAuth flow", async ({ page }) => {
       }),
     );
   });
-  await page.goto("/setup");
+  await page.goto("/settings");
   await page.waitForLoadState("networkidle");
 });
 
@@ -84,12 +82,7 @@ Then("user is on the inbox page", async ({ page }) => {
   await expect(page).toHaveURL(/\/inbox/);
 });
 
-Then("no extra confirmation step is shown", async ({ page }) => {
-  // Verify we went straight to inbox without an intermediate screen
-  await expect(page.getByTestId("setup-page")).not.toBeVisible();
-});
-
-// --- Scenario: OAuth error shows retry options ---
+// --- Scenario: OAuth error shows retry options on Settings page ---
 
 Given(
   "user returns from OAuth with error {string}",
@@ -105,17 +98,21 @@ Given(
         isActive: true,
       },
     );
-    await page.goto(`/setup?error=${error}&error_description=User+cancelled`);
+    await page.goto(
+      `/settings?error=${error}&error_description=User+cancelled`,
+    );
     await page.waitForLoadState("networkidle");
   },
 );
 
-Then("error message is visible on SetupPage", async ({ page }) => {
-  const errorElement = page.getByTestId("setup-supabase-error");
-  await expect(errorElement).toBeVisible({ timeout: OAUTH_BUTTONS_TIMEOUT_MS });
+Then("error message is visible on Settings page", async ({ page }) => {
+  const errorElement = page.getByTestId("server-supabase-error");
+  await expect(errorElement).toBeVisible({
+    timeout: OAUTH_BUTTONS_TIMEOUT_MS,
+  });
 });
 
 Then("OAuth buttons are still available for retry", async ({ page }) => {
-  const oauthButtons = page.getByTestId("setup-supabase-oauth-buttons");
+  const oauthButtons = page.getByTestId("server-oauth-buttons");
   await expect(oauthButtons).toBeVisible();
 });

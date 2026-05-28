@@ -22,7 +22,6 @@ export const ROUTES = {
   CONTEXT: "/contexts/:id",
   SEARCH: "/search",
   SETTINGS: "/settings",
-  SETUP: "/setup",
   DELETED: "/deleted",
 } as const;
 
