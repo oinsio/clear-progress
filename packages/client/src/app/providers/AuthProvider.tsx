@@ -14,10 +14,14 @@ import {
   GOOGLE_CLIENT_ID_CHANGED_EVENT,
   STORAGE_KEYS,
 } from "@/constants";
-import { Temporal } from "@/lib/temporal";
 import { getConnectionConfig } from "@/services/connectionService";
 import { getSupabaseClient } from "@/services/supabaseClientManager";
-import { setAccessToken } from "@/services/tokenManager";
+import {
+  configureTokenPersistence,
+  getAccessToken,
+  setAccessToken,
+} from "@/services/tokenManager";
+import { localStoragePersistence } from "@/services/tokenPersistence";
 import { GoogleAuthSync } from "./GoogleAuthSync";
 import { SupabaseAuthSync } from "./SupabaseAuthSync";
 
@@ -45,25 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [accessToken, setAccessTokenState] = useState<string | null>(() => {
     const config = getConnectionConfig();
-    // For Supabase, the Supabase client initializes its session asynchronously.
-    // Pre-populating from our localStorage creates a race: sync starts before
-    // client.auth.getSession() is ready, causing 401s. We wait for onAuthStateChange
-    // (INITIAL_SESSION or SIGNED_IN) to set the token instead.
-    if (config?.type === "supabase") {
-      return null;
+    // FR-7: Configure localStorage persistence for GAS backend before reading token.
+    // For Supabase (or no backend), noopPersistence remains active — getAccessToken() returns null.
+    if (config?.type === "gas") {
+      configureTokenPersistence(localStoragePersistence);
     }
-    const storedToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-    const storedExpiresAt = localStorage.getItem(
-      STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
-    );
-    if (
-      storedToken &&
-      storedExpiresAt &&
-      Temporal.Now.instant().epochMilliseconds < Number(storedExpiresAt)
-    ) {
-      return storedToken;
-    }
-    return null;
+    return getAccessToken();
   });
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userPicture, setUserPicture] = useState<string | null>(() =>
