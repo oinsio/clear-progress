@@ -19,4 +19,4 @@
 
 - [x] 4.1 `pnpm run build` — build succeeds
 - [x] 4.2 `npx vitest run` — all tests pass
-- [ ] 4.3 Mutation testing on changed files — target >=95%
+- [x] 4.3 Mutation testing on changed files — target >=95%
