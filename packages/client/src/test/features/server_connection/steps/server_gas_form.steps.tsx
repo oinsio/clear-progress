@@ -5,6 +5,7 @@ import { expect } from "vitest";
 import {
   fillGasForm,
   mockConnect,
+  mockDisconnect,
   mockPing,
   mockUseConnectionConfig,
   resetMocks,
@@ -202,6 +203,44 @@ describeFeature(feature, (f) => {
 
       And("user can retry", () => {
         expect(screen.getByTestId("server-gas-connect")).toBeInTheDocument();
+      });
+    },
+  );
+
+  // @simplify-backend-connection @FR16
+  f.Scenario(
+    "Cancel from GAS sign-in disconnects and returns to form",
+    ({ Given, And, When, Then }) => {
+      Given(
+        'user enters URL "https://script.google.com/macros/s/ABC/exec" and Client ID "123456789"',
+        () => {
+          fillGasForm(
+            "https://script.google.com/macros/s/ABC/exec",
+            "123456789",
+          );
+        },
+      );
+
+      And("user connects successfully to initialized backend", async () => {
+        mockPing.mockResolvedValue({ ok: true, initialized: true });
+        fireEvent.click(screen.getByTestId("server-gas-connect"));
+        await waitFor(() => {
+          expect(
+            screen.getByTestId("server-gas-signin-button"),
+          ).toBeInTheDocument();
+        });
+      });
+
+      When("user clicks Cancel on GAS sign-in", () => {
+        fireEvent.click(screen.getByTestId("server-gas-signin-cancel"));
+      });
+
+      Then("connection is disconnected", () => {
+        expect(mockDisconnect).toHaveBeenCalled();
+      });
+
+      And("GAS connection form is displayed", () => {
+        expect(screen.getByTestId("server-gas-url")).toBeInTheDocument();
       });
     },
   );

@@ -67,10 +67,22 @@
 - [x] 8.2 Update `auth.setup.ts`: full auth flow via `/settings` instead of `/setup` — FR14
 - [x] 8.3 Run integration tests to verify (requires Docker): `pnpm --filter integration test`
 
-## 9. Mutation testing and final verification
+## 9. FR16: Cancel button on OAuth/SignIn phases
 
-- [ ] 9.1 Run mutation testing on new Server section components — target >= 95%, minimum >= 90% — M4
-- [ ] 9.2 Add tests to kill survived mutants if score < 95%
-- [x] 9.3 Final build verification: `pnpm run build`
-- [x] 9.4 Final full test suite: `npx vitest run`
-- [x] 9.5 Verify M2: grep confirms zero references to `ROUTES.SETUP` or `/setup` path in source code
+- [x] 9.1 BDD feature: cancel from OAuth providers returns to Supabase form (disconnect + form) — FR16
+- [x] 9.2 BDD feature: cancel from GAS sign-in returns to GAS form (disconnect + form) — FR16
+- [x] 9.3 Add `onCancel` prop to `ServerOAuthProviders.tsx` — render Cancel button — FR16
+- [x] 9.4 Add `onCancel` prop to `ServerGasSignIn.tsx` — render Cancel button — FR16
+- [x] 9.5 Add cancel handlers in `ServerSection.tsx` for `supabase_providers` and `gas_awaiting_signin` phases — disconnect + return to form — FR16
+- [x] 9.6 Step definitions for new BDD scenarios (9.1-9.2) — FR16
+- [x] 9.7 Add i18n key for Cancel button if needed — FR16 (already exists: settings.server.cancel)
+- [x] 9.8 Verify all tests pass: `npx vitest run`
+- [x] 9.9 Verify build passes: `pnpm run build`
+
+## 10. Mutation testing and final verification
+
+- [ ] 10.1 Run mutation testing on new Server section components — target >= 95%, minimum >= 90% — M4
+- [ ] 10.2 Add tests to kill survived mutants if score < 95%
+- [x] 10.3 Final build verification: `pnpm run build`
+- [x] 10.4 Final full test suite: `npx vitest run`
+- [x] 10.5 Verify M2: grep confirms zero references to `ROUTES.SETUP` or `/setup` path in source code

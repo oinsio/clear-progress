@@ -79,6 +79,18 @@ The redirect useEffect fires only when one of these signals is present AND `acce
 
 **Alternative considered:** `useRef` initialized from a module-level consume-once function — rejected because StrictMode re-initializes refs on second mount, consuming the flag prematurely.
 
+### D8: Cancel from OAuth/SignIn phase disconnects and returns to form
+
+After successful connection check (Supabase or GAS), `connect()` has already been called and config is saved. If the user cannot authenticate (OAuth fails, no Google account, wrong provider), they are stuck — there's no way back.
+
+**Decision:** Add a "Cancel" button to both `ServerOAuthProviders` and `ServerGasSignIn`. On cancel: call `disconnect()` to clear the saved config, then return to the corresponding form phase (`supabase_form` or `gas_form`) so the user can adjust inputs or cancel further to selection.
+
+**Why disconnect:** Without disconnecting, the app would have a saved connection config pointing to a backend with no active session — a broken state.
+
+**Why form (not selection):** The user already entered valid URL/key — returning to the form preserves their input and lets them retry or cancel to selection from there. Going straight to selection would lose their entered data.
+
+**Alternative considered:** Return to selection directly — rejected because it forces the user to re-enter URL and key if they just want to retry authentication.
+
 ## Risks / Trade-offs
 
 - [Risk] Settings page grows in complexity → Mitigation: decomposed into 7 small sub-components, each under 200 lines. ServerSection orchestrator delegates rendering.

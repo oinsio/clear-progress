@@ -143,6 +143,20 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
     [t],
   );
 
+  const handleCancelFromProviders = useCallback((): void => {
+    disconnect();
+    setPhase("supabase_form");
+    setErrorMessage("");
+    setProviders([]);
+  }, []);
+
+  const handleCancelFromGasSignIn = useCallback((): void => {
+    disconnect();
+    setPhase("gas_form");
+    setErrorMessage("");
+    setNeedsGasInit(false);
+  }, []);
+
   const handleOAuthSignIn = useCallback(
     async (provider: string): Promise<void> => {
       try {
@@ -229,6 +243,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
         <ServerOAuthProviders
           providers={providers}
           onSignIn={(provider) => void handleOAuthSignIn(provider)}
+          onCancel={handleCancelFromProviders}
         />
       );
     }
@@ -239,6 +254,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
           needsInit={needsGasInit}
           onInitComplete={handleGasInitComplete}
           onInitError={handleGasInitError}
+          onCancel={handleCancelFromGasSignIn}
         />
       );
     }

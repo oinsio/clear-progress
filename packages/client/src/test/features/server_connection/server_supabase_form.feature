@@ -60,3 +60,17 @@ Feature: Server Connection — Supabase Form
     Given OAuth providers are loaded with "google"
     When user clicks the OAuth "google" button
     Then signInWithOAuth is called with provider "google"
+
+  @simplify-backend-connection @FR16
+  Scenario: Cancel from OAuth providers disconnects and returns to form
+    Given connection check succeeds with providers "google"
+    When user clicks Cancel on OAuth providers
+    Then connection is disconnected
+    And Supabase connection form is displayed
+
+  @simplify-backend-connection @FR16
+  Scenario: Cancel from no-providers message returns to form
+    Given connection check succeeds with no providers
+    When user clicks Cancel on OAuth providers
+    Then connection is disconnected
+    And Supabase connection form is displayed

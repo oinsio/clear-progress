@@ -107,6 +107,15 @@ When the backend is not initialized, after sign-in the app SHALL call `adapter.i
 - **WHEN** init is called and returns `ok: false`
 - **THEN** init error message is displayed inline
 
+### Requirement: Cancel from GAS sign-in returns to GAS form
+Clicking "Cancel" on the "Sign in with Google" phase SHALL call `disconnect()` to clear the saved config and return to the GAS connection form.
+
+#### Scenario: Cancel from GAS sign-in disconnects and returns to form
+- **WHEN** user is viewing "Sign in with Google" after successful GAS ping
+- **AND** user clicks "Cancel"
+- **THEN** connection config is cleared (disconnect)
+- **AND** GAS connection form is displayed
+
 ### Requirement: GAS connected state displays URL and Client ID
 When connected to GAS, the Server section SHALL display the backend type ("Google Apps Script") and deployment URL. Client ID is always present (required field).
 

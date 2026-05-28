@@ -52,6 +52,14 @@ Feature: Server Connection — GAS Form
     Then connection error is displayed inline
     And user can retry
 
+  @simplify-backend-connection @FR16
+  Scenario: Cancel from GAS sign-in disconnects and returns to form
+    Given user enters URL "https://script.google.com/macros/s/ABC/exec" and Client ID "123456789"
+    And user connects successfully to initialized backend
+    When user clicks Cancel on GAS sign-in
+    Then connection is disconnected
+    And GAS connection form is displayed
+
   @simplify-backend-connection @FR9 @FR15 @UX4
   Scenario: Connecting state disables form
     Given user enters URL "https://script.google.com/macros/s/ABC/exec" and Client ID "123456789"

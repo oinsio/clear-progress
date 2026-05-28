@@ -66,6 +66,21 @@ After successful connection check, the app SHALL parse the `/auth/v1/settings` r
 - **WHEN** settings response indicates no external OAuth providers are enabled
 - **THEN** informational message is displayed: configure OAuth providers in Supabase Dashboard
 
+### Requirement: Cancel from OAuth providers returns to Supabase form
+Clicking "Cancel" on the OAuth provider buttons phase SHALL call `disconnect()` to clear the saved config and return to the Supabase connection form.
+
+#### Scenario: Cancel from OAuth providers disconnects and returns to form
+- **WHEN** user is viewing OAuth provider buttons after successful Supabase connection
+- **AND** user clicks "Cancel"
+- **THEN** connection config is cleared (disconnect)
+- **AND** Supabase connection form is displayed
+
+#### Scenario: Cancel from no-providers message returns to form
+- **WHEN** user sees "no providers configured" message
+- **AND** user clicks "Cancel"
+- **THEN** connection config is cleared (disconnect)
+- **AND** Supabase connection form is displayed
+
 ### Requirement: Connected state displays project URL in Settings
 When connected to Supabase, the Server section SHALL display the backend type label ("Supabase") and project URL. Anon Key SHALL NOT be displayed in the connected state.
 

@@ -7,17 +7,20 @@ interface ServerGasSignInProps {
   needsInit: boolean;
   onInitComplete: () => void;
   onInitError: (message: string) => void;
+  onCancel: () => void;
 }
 
 /**
- * Implements FR3, NFR-A2 of simplify-backend-connection.
+ * Implements FR3, FR16, NFR-A2 of simplify-backend-connection.
  * "Sign in with Google" button. When token arrives and needsInit is true,
  * calls getDefaultSyncAdapter().init() to initialize the backend.
+ * Cancel button disconnects and returns to connection form.
  */
 export function ServerGasSignIn({
   needsInit,
   onInitComplete,
   onInitError,
+  onCancel,
 }: ServerGasSignInProps) {
   const { t } = useTranslation();
   const { signIn, accessToken } = useAuth();
@@ -74,6 +77,14 @@ export function ServerGasSignIn({
           </button>
         </>
       )}
+
+      <button
+        data-testid="server-gas-signin-cancel"
+        onClick={onCancel}
+        className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300"
+      >
+        {t("settings.server.cancel")}
+      </button>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { expect } from "vitest";
 import {
   fillSupabaseForm,
   mockConnect,
+  mockDisconnect,
   mockFetchSupabaseProviders,
   mockSignInWithOAuth,
   mockUseConnectionConfig,
@@ -246,6 +247,62 @@ describeFeature(feature, (f) => {
         expect(
           screen.queryByTestId("server-oauth-buttons"),
         ).not.toBeInTheDocument();
+      });
+    },
+  );
+
+  // @simplify-backend-connection @FR16
+  f.Scenario(
+    "Cancel from OAuth providers disconnects and returns to form",
+    ({ Given, When, Then, And }) => {
+      Given('connection check succeeds with providers "google"', async () => {
+        mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+        fillSupabaseForm("myproject", "test-key");
+        fireEvent.click(screen.getByTestId("server-supabase-connect"));
+        await waitFor(() => {
+          expect(
+            screen.getByTestId("server-oauth-buttons"),
+          ).toBeInTheDocument();
+        });
+      });
+
+      When("user clicks Cancel on OAuth providers", () => {
+        fireEvent.click(screen.getByTestId("server-oauth-cancel"));
+      });
+
+      Then("connection is disconnected", () => {
+        expect(mockDisconnect).toHaveBeenCalled();
+      });
+
+      And("Supabase connection form is displayed", () => {
+        expect(screen.getByTestId("server-supabase-url")).toBeInTheDocument();
+      });
+    },
+  );
+
+  // @simplify-backend-connection @FR16
+  f.Scenario(
+    "Cancel from no-providers message returns to form",
+    ({ Given, When, Then, And }) => {
+      Given("connection check succeeds with no providers", async () => {
+        mockFetchSupabaseProviders.mockResolvedValue([]);
+        fillSupabaseForm("myproject", "test-key");
+        fireEvent.click(screen.getByTestId("server-supabase-connect"));
+        await waitFor(() => {
+          expect(screen.getByTestId("server-no-providers")).toBeInTheDocument();
+        });
+      });
+
+      When("user clicks Cancel on OAuth providers", () => {
+        fireEvent.click(screen.getByTestId("server-oauth-cancel"));
+      });
+
+      Then("connection is disconnected", () => {
+        expect(mockDisconnect).toHaveBeenCalled();
+      });
+
+      And("Supabase connection form is displayed", () => {
+        expect(screen.getByTestId("server-supabase-url")).toBeInTheDocument();
       });
     },
   );

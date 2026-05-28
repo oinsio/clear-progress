@@ -56,6 +56,7 @@ The current backend connection flow requires a separate `/setup` page with multi
 - FR13: Right panel login button SHALL display "Configure server" text and navigate to `/settings`
 - FR14: OAuth redirect URL SHALL point to `/settings` instead of `/setup`
 - FR15: GAS connection SHALL require Client ID (not optional) — ping is still performed, but awaiting-signin phase always follows for GAS
+- FR16: OAuth provider buttons (Supabase) and "Sign in with Google" (GAS) phases SHALL display a "Cancel" button that disconnects and returns to the corresponding connection form
 
 ### Non-Functional
 
@@ -90,9 +91,9 @@ The current backend connection flow requires a separate `/setup` page with multi
 | Supabase form             | URL + Anon Key inputs, Connect + Cancel buttons                         |
 | GAS form                  | URL + Client ID inputs, Connect + Cancel buttons                        |
 | Connecting                | Form disabled, spinner, "Connecting..." text                            |
-| Supabase providers loaded | OAuth provider buttons                                                  |
-| Supabase no providers     | Info message: configure providers in dashboard                          |
-| GAS awaiting signin       | "Sign in with Google" button                                            |
+| Supabase providers loaded | OAuth provider buttons + Cancel button                                  |
+| Supabase no providers     | Info message: configure providers in dashboard + Cancel button           |
+| GAS awaiting signin       | "Sign in with Google" button + Cancel button                            |
 | GAS initializing          | Spinner, "Initializing..." text                                         |
 | GAS not initialized       | Warning + back button (edge case: ping ok but init needed without auth) |
 | Connection error          | Error message inline, form re-enabled for retry                         |
