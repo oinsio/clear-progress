@@ -1,4 +1,4 @@
-// implements FR6 of add-supabase-integration-tests
+// implements FR6 of simplify-backend-connection
 // Shared auth setup — runs OAuth once, saves storageState for all test files.
 
 import { mkdirSync } from "node:fs";
@@ -17,24 +17,22 @@ setup(
     // Ensure .auth directory exists
     mkdirSync(dirname(AUTH_STATE_PATH), { recursive: true });
 
-    // --- Step 1: Connect via Setup UI ---
-    await page.goto("/setup");
+    // --- Step 1: Connect via Settings UI ---
+    await page.goto("/settings");
     await page.waitForLoadState("networkidle");
 
-    await page.getByTestId("setup-supabase-section-toggle").click();
-    await page.getByTestId("setup-supabase-url-input").fill(config.supabaseUrl);
-    await page
-      .getByTestId("setup-supabase-anon-key-input")
-      .fill(config.anonKey);
-    await page.getByTestId("setup-supabase-connect-button").click();
+    await page.getByTestId("server-connect-supabase").click();
+    await page.getByTestId("server-supabase-url").fill(config.supabaseUrl);
+    await page.getByTestId("server-supabase-anon-key").fill(config.anonKey);
+    await page.getByTestId("server-supabase-connect").click();
 
-    const oauthButtons = page.getByTestId("setup-supabase-oauth-buttons");
+    const oauthButtons = page.getByTestId("server-oauth-buttons");
     await expect(oauthButtons).toBeVisible({
       timeout: CONNECTION_CHECK_TIMEOUT_MS,
     });
 
     // --- Step 2: Sign in via mock OAuth (keycloak provider) ---
-    await page.getByTestId("setup-supabase-oauth-keycloak").click();
+    await page.getByTestId("server-oauth-keycloak").click();
 
     await page.waitForSelector('input[name="username"]', {
       timeout: SYNC_COMPLETE_TIMEOUT_MS,

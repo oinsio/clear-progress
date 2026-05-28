@@ -441,7 +441,7 @@ describe("SupabaseAuthSync", () => {
 
     expect(mockClient.auth.signInWithOAuth).toHaveBeenCalledWith({
       provider: "google",
-      options: { redirectTo: expect.stringContaining("/setup") },
+      options: { redirectTo: expect.stringContaining("/settings") },
     });
   });
 

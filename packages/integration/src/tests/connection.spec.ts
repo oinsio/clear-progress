@@ -1,4 +1,4 @@
-// implements FR1, FR2 of add-supabase-integration-tests
+// implements FR1, FR2 of simplify-backend-connection
 import { type Browser, expect, type Page, test } from "@playwright/test";
 import { readTestConfig } from "../config.js";
 
@@ -17,7 +17,7 @@ test.beforeAll(async ({ browser: b }) => {
   page = await context.newPage();
 
   // Start from clean state: no saved connection
-  await page.goto("/setup");
+  await page.goto("/settings");
   await page.evaluate(
     (key) => localStorage.removeItem(key),
     CONNECTION_CONFIG_KEY,
@@ -34,14 +34,14 @@ test.afterAll(async () => {
 test("connect with valid URL + anon key → verify connected status", async () => {
   const { supabaseUrl, anonKey } = readTestConfig();
 
-  await page.getByTestId("setup-supabase-section-toggle").click();
-  await page.getByTestId("setup-supabase-url-input").fill(supabaseUrl);
-  await page.getByTestId("setup-supabase-anon-key-input").fill(anonKey);
-  await page.getByTestId("setup-supabase-connect-button").click();
+  await page.getByTestId("server-connect-supabase").click();
+  await page.getByTestId("server-supabase-url").fill(supabaseUrl);
+  await page.getByTestId("server-supabase-anon-key").fill(anonKey);
+  await page.getByTestId("server-supabase-connect").click();
 
   // Connection succeeds → either OAuth providers listed or "no providers" message
   const connectedStatus = page.locator(
-    "[data-testid='setup-supabase-oauth-buttons'], [data-testid='setup-supabase-no-providers']",
+    "[data-testid='server-oauth-buttons'], [data-testid='server-no-providers']",
   );
   await expect(connectedStatus).toBeVisible({
     timeout: CONNECTION_CHECK_TIMEOUT_MS,
@@ -50,9 +50,9 @@ test("connect with valid URL + anon key → verify connected status", async () =
 
 // 5.1.2 — builds on 5.1.1: connection is saved, navigate back to fresh setup form
 test("connect with invalid URL → verify error state", async () => {
-  // Reload /setup: localStorage now has connection_config → shows SupabaseConnectedSection.
+  // Reload /settings: localStorage now has connection_config → shows connected status.
   // Clear it so the setup form is accessible again.
-  await page.goto("/setup");
+  await page.goto("/settings");
   await page.evaluate(
     (key) => localStorage.removeItem(key),
     CONNECTION_CONFIG_KEY,
@@ -60,12 +60,12 @@ test("connect with invalid URL → verify error state", async () => {
   await page.reload();
   await page.waitForLoadState("networkidle");
 
-  await page.getByTestId("setup-supabase-section-toggle").click();
-  await page.getByTestId("setup-supabase-url-input").fill(INVALID_URL);
-  await page.getByTestId("setup-supabase-anon-key-input").fill("some-key");
-  await page.getByTestId("setup-supabase-connect-button").click();
+  await page.getByTestId("server-connect-supabase").click();
+  await page.getByTestId("server-supabase-url").fill(INVALID_URL);
+  await page.getByTestId("server-supabase-anon-key").fill("some-key");
+  await page.getByTestId("server-supabase-connect").click();
 
-  await expect(page.getByTestId("setup-supabase-error")).toBeVisible({
+  await expect(page.getByTestId("server-supabase-error")).toBeVisible({
     timeout: CONNECTION_CHECK_TIMEOUT_MS,
   });
 });

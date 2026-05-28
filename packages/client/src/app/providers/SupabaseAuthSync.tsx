@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type React from "react";
 import { useCallback, useEffect } from "react";
-import { STORAGE_KEYS } from "@/constants";
+import { ROUTES, STORAGE_KEYS } from "@/constants";
 import { setAccessToken } from "@/services/tokenManager";
 
 /**
@@ -91,7 +91,7 @@ export function SupabaseAuthSync({
     void supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}setup`,
+        redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}${ROUTES.SETTINGS.slice(1)}`,
       },
     });
   }, [supabaseClient]);

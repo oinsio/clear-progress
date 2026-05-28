@@ -121,11 +121,11 @@ describe("RightFilterPanel — connection status", () => {
     expect(mockSignIn).toHaveBeenCalledTimes(1);
   });
 
-  it("should navigate to setup when login button is clicked (not_configured)", async () => {
+  it("should navigate to settings when configure server button is clicked (not_configured)", async () => {
     const user = userEvent.setup();
     mockUseConnectionStatus.mockReturnValue("not_configured");
     renderPanel();
     await user.click(screen.getAllByTestId("right-panel-login")[0]);
-    expect(mockNavigate).toHaveBeenCalledWith("/setup");
+    expect(mockNavigate).toHaveBeenCalledWith("/settings");
   });
 });

@@ -5,11 +5,7 @@ import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database";
 import { getIdOrThrow } from "@/test/helpers/getIdOrThrow";
 import type { Idea } from "@/types/entities";
-import {
-  createScenarioContext,
-  getIdea,
-  seedIdea,
-} from "./ideas_steps.helpers";
+import { createScenarioContext, seedIdea } from "./ideas_steps.helpers";
 
 const feature = await loadFeature("../ideas_crud.feature");
 
@@ -206,9 +202,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let originalUpdatedAt: string;
 
     Given('idea "Learn Rust" exists', async (_ctx: TestContext) => {
-      await seedIdea(ctx.ideaIds, "Learn Rust");
-      const existingIdea = await getIdea(ctx.ideaIds, "Learn Rust");
-      originalUpdatedAt = existingIdea.updated_at;
+      const pastTimestamp =
+        "2020-01-01T00:00:00.000Z" as import("@/types/entities").ISOTimestamp;
+      await seedIdea(ctx.ideaIds, "Learn Rust", {
+        updated_at: pastTimestamp,
+      });
+      originalUpdatedAt = pastTimestamp;
     });
 
     When('user updates idea name to "Learn Go"', async (_ctx: TestContext) => {

@@ -15,7 +15,6 @@ import InboxPage from "@/pages/InboxPage";
 import LaterPage from "@/pages/LaterPage";
 import SearchPage from "@/pages/SearchPage";
 import SettingsPage from "@/pages/SettingsPage";
-import SetupPage from "@/pages/SetupPage";
 import TodayPage from "@/pages/TodayPage";
 import WeekPage from "@/pages/WeekPage";
 
@@ -47,7 +46,6 @@ export const router = createBrowserRouter(
       element: <AppLayout />,
       errorElement: <RouteErrorFallback />,
       children: [
-        { path: ROUTES.SETUP, element: <SetupPage /> },
         { path: ROUTES.INBOX, element: <InboxPage /> },
         { path: ROUTES.CATEGORIES, element: <CategoriesPage /> },
         { path: ROUTES.CATEGORY, element: <CategoryDetailPage /> },

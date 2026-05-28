@@ -3,7 +3,7 @@ const config = {
   testRunner: "vitest",
   plugins: ["@stryker-mutator/vitest-runner"],
   vitest: {
-    configFile: "vite.config.ts",
+    configFile: "vitest.config.ts",
   },
   mutate: [
     "src/**/*.ts",

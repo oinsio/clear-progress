@@ -2,22 +2,22 @@
 
 ## Purpose
 
-SetupPage UI for connecting to a Google Apps Script backend: entering the GAS deployment URL, optional Client ID, validating the connection via ping, initialization flow, and displaying connected state with disconnect option.
+Settings page Server section UI for connecting to a Google Apps Script backend: entering the GAS deployment URL and required Client ID, validating the connection via ping, initialization flow, and displaying connected state with disconnect and full sync options.
 
 ## Requirements
 
 ### Requirement: SetupPage displays GAS connection section
-SetupPage SHALL display a collapsible "Google Apps Script" section. The section SHALL be expandable/collapsible via a toggle button. When expanded, it SHALL show URL and Client ID input fields.
+Settings page Server section SHALL display a "Connect Google Apps Script" button (secondary style) when no backend is connected. Clicking it SHALL show an inline GAS connection form. The standalone `/setup` page no longer exists.
 
-#### Scenario: GAS section visible on SetupPage
-- **WHEN** user opens SetupPage with no active connection
-- **THEN** "Google Apps Script" section toggle is displayed
+#### Scenario: Connect GAS button visible when not connected
+- **WHEN** user opens Settings with no active connection
+- **THEN** "Connect Google Apps Script" button is displayed in the Server section
+- **AND** it appears after the "Connect Supabase" button
 
-#### Scenario: GAS section expands to show inputs
-- **WHEN** user expands the GAS section
-- **THEN** URL input field is displayed
-- **AND** Client ID input field is displayed
-- **AND** Connect button is displayed
+#### Scenario: Clicking Connect GAS shows inline form
+- **WHEN** user clicks "Connect Google Apps Script"
+- **THEN** an inline form with Script URL and Client ID fields is displayed
+- **AND** "Connect" and "Cancel" buttons are shown
 
 ### Requirement: GAS section has URL input with Deployment ID resolution
 The GAS section SHALL contain a URL input field. `parseGasInput()` SHALL accept either a full HTTPS URL or a plain Deployment ID string. A plain string (not starting with `https://`) SHALL be resolved to `https://script.google.com/macros/s/{input}/exec`. A full URL SHALL be passed through unchanged. Whitespace SHALL be trimmed.
@@ -35,7 +35,7 @@ The GAS section SHALL contain a URL input field. `parseGasInput()` SHALL accept 
 - **THEN** result is `https://script.google.com/macros/s/AKfycbx123/exec`
 
 ### Requirement: GAS section has optional Client ID input
-The GAS section SHALL contain an optional Client ID input field. `parseClientId()` SHALL append `.apps.googleusercontent.com` suffix if not already present. Whitespace SHALL be trimmed.
+The GAS section SHALL contain a **required** Client ID input field. `parseClientId()` SHALL append `.apps.googleusercontent.com` suffix if not already present. Whitespace SHALL be trimmed. The Connect button SHALL be disabled until both URL and Client ID are non-empty.
 
 #### Scenario: Plain Client ID gets suffix appended
 - **WHEN** input is `123456789`
@@ -45,55 +45,66 @@ The GAS section SHALL contain an optional Client ID input field. `parseClientId(
 - **WHEN** input is `123456789.apps.googleusercontent.com`
 - **THEN** result is `123456789.apps.googleusercontent.com`
 
-### Requirement: Connect button disabled when URL is empty
-The Connect button SHALL be disabled when the URL input is empty or contains only whitespace. The Connect button SHALL be enabled when URL has a non-empty value (Client ID is optional).
+#### Scenario: Connect disabled without Client ID
+- **WHEN** GAS form is displayed
+- **AND** Client ID field is empty
+- **THEN** Connect button is disabled
 
-#### Scenario: Connect disabled with empty URL
-- **WHEN** GAS section is expanded
+#### Scenario: Connect disabled without URL
+- **WHEN** GAS form is displayed
 - **AND** URL field is empty
 - **THEN** Connect button is disabled
 
-#### Scenario: Connect enabled with URL filled
-- **WHEN** user enters a URL value
+#### Scenario: Connect enabled with both fields filled
+- **WHEN** user enters values in both URL and Client ID fields
 - **THEN** Connect button is enabled
 
+### Requirement: Connect button disabled when URL is empty
+The Connect button SHALL be disabled when either the URL input or Client ID input is empty or contains only whitespace.
+
+#### Scenario: Connect disabled with empty URL
+- **WHEN** GAS form is displayed
+- **AND** URL field is empty
+- **THEN** Connect button is disabled
+
+#### Scenario: Connect enabled with both fields filled
+- **WHEN** user enters a URL and Client ID value
+- **THEN** Connect button is enabled
+
+### Requirement: Cancel returns to backend selection
+Clicking "Cancel" in the GAS form SHALL return the Server section to the backend selection view.
+
+#### Scenario: Cancel returns to selection
+- **WHEN** user is viewing the GAS connection form
+- **AND** user clicks "Cancel"
+- **THEN** the form is hidden
+- **AND** backend selection buttons are displayed
+
 ### Requirement: Connect validates via adapter ping
-On Connect, the app SHALL create a temporary GAS adapter with the resolved URL and call `ping()`. A successful ping response with `ok: true` SHALL save the connection config. A ping failure or exception SHALL display an error message.
-
-#### Scenario: Successful connection without Client ID to initialized backend
-- **WHEN** user clicks Connect with a valid URL and no Client ID
-- **AND** ping responds with `ok: true` and `initialized: true`
-- **THEN** connection config is saved with `type: "gas"` and `isActive: true`
-- **AND** app navigates to inbox
-
-#### Scenario: Successful connection without Client ID to uninitialized backend
-- **WHEN** user clicks Connect with a valid URL and no Client ID
-- **AND** ping responds with `ok: true` and `initialized: false`
-- **THEN** "not initialized" warning is displayed with instruction to provide Client ID
-- **AND** "Back to input" button is available
+On Connect, the app SHALL create a temporary GAS adapter with the resolved URL and call `ping()`. A successful ping SHALL save the connection config and transition to awaiting-signin phase (Client ID is always present).
 
 #### Scenario: Successful connection with Client ID to initialized backend
-- **WHEN** user clicks Connect with a valid URL and Client ID
+- **WHEN** user clicks Connect with valid URL and Client ID
 - **AND** ping responds with `ok: true` and `initialized: true`
 - **THEN** connection config is saved
-- **AND** awaiting sign-in state is shown with Sign In button
+- **AND** "Sign in with Google" button is displayed inline
 
 #### Scenario: Successful connection with Client ID to uninitialized backend
-- **WHEN** user clicks Connect with a valid URL and Client ID
+- **WHEN** user clicks Connect with valid URL and Client ID
 - **AND** ping responds with `ok: true` and `initialized: false`
-- **THEN** awaiting sign-in state is shown
+- **THEN** "Sign in with Google" button is displayed
 - **AND** after sign-in, auto-initialization is triggered
 
 #### Scenario: Connection ping failure
 - **WHEN** user clicks Connect
 - **AND** ping responds with `ok: false`
-- **THEN** connection error message is displayed
+- **THEN** connection error message is displayed inline
 - **AND** user can retry
 
 #### Scenario: Connection network error
 - **WHEN** user clicks Connect
 - **AND** ping throws a network error
-- **THEN** connection error message is displayed
+- **THEN** connection error message is displayed inline
 - **AND** user can retry
 
 ### Requirement: Loading states during connection and initialization
@@ -106,54 +117,55 @@ The app SHALL display a loading indicator during connection (ping) and initializ
 - **AND** Connect button is disabled
 
 ### Requirement: Initialization flow for uninitialized backends
-When the backend is not initialized and a Client ID is provided, after sign-in the app SHALL call `adapter.init()`. A successful init SHALL navigate to inbox. A failed init SHALL display an error.
+When the backend is not initialized, after sign-in the app SHALL call `adapter.init()`. A successful init SHALL transition to connected state. A failed init SHALL display an error.
 
 #### Scenario: Successful initialization after sign-in
-- **WHEN** user signs in after connecting to uninitialized backend with Client ID
+- **WHEN** user signs in after connecting to uninitialized backend
 - **THEN** init is called automatically
-- **AND** on success, app navigates to inbox
+- **AND** on success, Server section shows connected state
 
 #### Scenario: Init failure shows error
 - **WHEN** init is called and returns `ok: false`
-- **THEN** init error message is displayed
+- **THEN** init error message is displayed inline
+
+### Requirement: Cancel from GAS sign-in returns to GAS form
+Clicking "Cancel" on the "Sign in with Google" phase SHALL call `disconnect()` to clear the saved config and return to the GAS connection form.
+
+#### Scenario: Cancel from GAS sign-in disconnects and returns to form
+- **WHEN** user is viewing "Sign in with Google" after successful GAS ping
+- **AND** user clicks "Cancel"
+- **THEN** connection config is cleared (disconnect)
+- **AND** GAS connection form is displayed
 
 ### Requirement: GAS connected state displays URL and Client ID
-When connected to GAS, SetupPage SHALL display the deployment URL. If a Client ID was configured, it SHALL also be displayed.
+When connected to GAS, the Server section SHALL display the backend type ("Google Apps Script") and deployment URL. Client ID is always present (required field).
 
-#### Scenario: Connected state shows URL
-- **WHEN** user is connected to GAS at a URL
-- **THEN** the URL is displayed in the connected section
-
-#### Scenario: Connected state shows Client ID when configured
-- **WHEN** user is connected to GAS with a Client ID
-- **THEN** the Client ID is displayed
-
-#### Scenario: Connected state hides Client ID section when not configured
-- **WHEN** user is connected to GAS without a Client ID
-- **THEN** no Client ID section is displayed
+#### Scenario: Connected state shows type and URL
+- **WHEN** user is connected to GAS
+- **THEN** Server section displays "Google Apps Script" label and URL
 
 ### Requirement: GAS connected state shows sign-in prompt when unauthenticated
-When connected to GAS with a Client ID but no active access token, SetupPage SHALL display a sign-in prompt with a Sign In button.
+When connected to GAS but no active access token exists, the Server section SHALL display a sign-in prompt with a "Sign in with Google" button.
 
 #### Scenario: Sign-in prompt shown when token missing
 - **WHEN** user is connected to GAS with Client ID
 - **AND** no access token is present
 - **THEN** sign-in required message is displayed
-- **AND** Sign In button is available
+- **AND** "Sign in with Google" button is available
 
 #### Scenario: Sign-in prompt hidden when authenticated
 - **WHEN** user is connected to GAS with Client ID
 - **AND** access token is present
 - **THEN** sign-in prompt is not displayed
 
-### Requirement: GAS connected state has disconnect and navigation actions
-The connected state SHALL display a Disconnect button and a "Go to App" button. Disconnect SHALL clear the connection config and return to the setup form.
+### Requirement: GAS connected state has disconnect and full sync actions
+The connected state SHALL display a "Disconnect" button and a "Full sync" button. Disconnect SHALL clear the connection and return to backend selection. "Go to App" button is removed (user is already in the app on Settings page).
 
 #### Scenario: Disconnect clears connection
-- **WHEN** user clicks Disconnect
+- **WHEN** user clicks Disconnect and confirms
 - **THEN** connection config is cleared
-- **AND** setup form is displayed
+- **AND** backend selection is displayed
 
-#### Scenario: Go to App navigates to inbox
-- **WHEN** user clicks "Go to App"
-- **THEN** app navigates to inbox
+#### Scenario: Full sync triggers synchronization
+- **WHEN** user clicks "Full sync" and confirms
+- **THEN** full synchronization is triggered
