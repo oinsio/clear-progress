@@ -5,6 +5,7 @@ import {
   FileText,
   GripVertical,
   ListChecks,
+  Repeat,
   RotateCcw,
 } from "lucide-react";
 import type * as React from "react";
@@ -308,7 +309,7 @@ export function TaskItem({
                   </span>
                 )}
                 {task.repeat_rule && (
-                  <RotateCcw
+                  <Repeat
                     data-testid="repeat-rule-indicator"
                     size={10}
                     className="text-gray-400 flex-shrink-0"
