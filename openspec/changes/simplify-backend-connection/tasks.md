@@ -102,3 +102,12 @@
 - [x] 11.11 Update serverSectionMocks.ts to export `getSavedConfigForType` mock
 - [x] 11.12 Verify build passes: `pnpm run build`
 - [x] 11.13 Verify server_connection tests pass: `npx vitest run`
+
+## 12. Bugfixes: connecting phase and OAuth hint
+
+- [x] 12.1 Split shared `"connecting"` phase into `"supabase_connecting"` and `"gas_connecting"` so GAS form stays visible during GAS connection check — FR21
+- [x] 12.2 Fix BDD test `server_gas_form.steps.tsx` "Connecting state disables form" to assert GAS testids instead of Supabase — FR21
+- [x] 12.3 Add hint text above OAuth provider buttons in `ServerOAuthProviders.tsx` — FR22
+- [x] 12.4 Add i18n keys `chooseAuthMethod` to `en.json` and `ru.json` — FR22
+- [x] 12.5 Verify build passes: `pnpm run build`
+- [x] 12.6 Verify server_connection BDD tests pass: `npx vitest run`

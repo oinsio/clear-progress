@@ -262,14 +262,12 @@ describeFeature(feature, (f) => {
 
     Then("loading indicator is displayed", async () => {
       await waitFor(() => {
-        expect(
-          screen.getByTestId("server-supabase-loading"),
-        ).toBeInTheDocument();
+        expect(screen.getByTestId("server-gas-loading")).toBeInTheDocument();
       });
     });
 
     And("Connect button is disabled", () => {
-      expect(screen.getByTestId("server-supabase-connect")).toBeDisabled();
+      expect(screen.getByTestId("server-gas-connect")).toBeDisabled();
     });
   });
 });

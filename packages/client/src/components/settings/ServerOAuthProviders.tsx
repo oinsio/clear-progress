@@ -30,26 +30,31 @@ export function ServerOAuthProviders({
           {t("settings.server.noProviders")}
         </div>
       ) : (
-        <div
-          data-testid="server-oauth-buttons"
-          aria-live="polite"
-          className="flex flex-wrap gap-2"
-        >
-          {providers.map((provider) => {
-            const capitalizedProvider =
-              provider.charAt(0).toUpperCase() + provider.slice(1);
-            return (
-              <button
-                key={provider}
-                data-testid={`server-oauth-${provider}`}
-                onClick={() => onSignIn(provider)}
-                className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
-              >
-                {capitalizedProvider}
-              </button>
-            );
-          })}
-        </div>
+        <>
+          <p data-testid="server-oauth-hint" className="text-sm text-gray-500">
+            {t("settings.server.chooseAuthMethod")}
+          </p>
+          <div
+            data-testid="server-oauth-buttons"
+            aria-live="polite"
+            className="flex flex-wrap gap-2"
+          >
+            {providers.map((provider) => {
+              const capitalizedProvider =
+                provider.charAt(0).toUpperCase() + provider.slice(1);
+              return (
+                <button
+                  key={provider}
+                  data-testid={`server-oauth-${provider}`}
+                  onClick={() => onSignIn(provider)}
+                  className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
+                >
+                  {capitalizedProvider}
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {onCancel && (

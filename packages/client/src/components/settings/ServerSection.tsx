@@ -28,7 +28,8 @@ type ServerPhase =
   | "selection"
   | "supabase_form"
   | "gas_form"
-  | "connecting"
+  | "supabase_connecting"
+  | "gas_connecting"
   | "supabase_providers"
   | "gas_awaiting_signin"
   | "connected";
@@ -78,7 +79,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
       const resolvedUrl = parseSupabaseInput(urlRaw);
       setIsLoading(true);
       setErrorMessage("");
-      setPhase("connecting");
+      setPhase("supabase_connecting");
 
       try {
         const loadedProviders = await fetchSupabaseProviders(
@@ -112,7 +113,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
       const normalizedClientId = parseClientId(clientIdRaw);
       setIsLoading(true);
       setErrorMessage("");
-      setPhase("connecting");
+      setPhase("gas_connecting");
 
       try {
         const tempAdapter = createGasAdapter(resolvedUrl, getAccessToken);
@@ -216,7 +217,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
       );
     }
 
-    if (phase === "supabase_form" || phase === "connecting") {
+    if (phase === "supabase_form" || phase === "supabase_connecting") {
       return (
         <ServerSupabaseForm
           onConnect={(url, anonKey) => void handleSupabaseConnect(url, anonKey)}
@@ -227,7 +228,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
       );
     }
 
-    if (phase === "gas_form") {
+    if (phase === "gas_form" || phase === "gas_connecting") {
       return (
         <ServerGasForm
           onConnect={(url, clientId) => void handleGasConnect(url, clientId)}

@@ -22,7 +22,7 @@ Driven by: G1 (3-step connection), G2 (Supabase primary), G3 (show server info),
 
 Replace the current accordion-based two-component approach with a single `ServerSection` component that manages phases via a state enum.
 
-**Phases:** `selection` → `supabase_form` | `gas_form` → `connecting` → `supabase_providers` | `gas_awaiting_signin` → (connected state from `useConnectionStatus`)
+**Phases:** `selection` → `supabase_form` | `gas_form` → `supabase_connecting` | `gas_connecting` → `supabase_providers` | `gas_awaiting_signin` → (connected state from `useConnectionStatus`)
 
 **Alternative considered:** Separate route `/settings/connect` — rejected because it adds routing complexity and doesn't solve the dead-end problem, just moves it.
 
@@ -106,6 +106,14 @@ Driven by FR17: users switching between GAS and Supabase should not lose previou
 Driven by FR20: accent color on Supabase button implies it is already connected or preferred, confusing users.
 
 **Decision:** Both buttons use the same secondary style (`border border-gray-200 text-gray-700`). An explanatory text above explains the choice.
+
+### D11: Split connecting phase per backend type
+
+Driven by FR21: the shared `"connecting"` phase caused the Supabase form to render during GAS connection check, because the render condition `phase === "supabase_form" || phase === "connecting"` matched for both flows.
+
+**Decision:** Split into `"supabase_connecting"` and `"gas_connecting"` phases. Each connecting phase pairs with its corresponding form in the render logic: `supabase_form | supabase_connecting` → Supabase form, `gas_form | gas_connecting` → GAS form.
+
+**Alternative considered:** Track `connectingBackend` in a separate state variable — rejected because it adds a second source of truth. The phase enum already encodes the current state; splitting the phase is simpler and more explicit.
 
 ## Risks / Trade-offs
 

@@ -61,6 +61,8 @@ The current backend connection flow requires a separate `/setup` page with multi
 - FR18: Form fields SHALL display placeholder text showing example values (URL format, key format, Client ID format)
 - FR19: Form fields SHALL display helper descriptions below each input explaining where to find the value
 - FR20: Backend selection buttons SHALL have equal visual weight (no accent highlighting on either)
+- FR21: During GAS connection check (connecting phase), the GAS form SHALL remain visible — not the Supabase form
+- FR22: OAuth provider buttons (Supabase) SHALL display a hint text above buttons prompting the user to choose an authentication method
 
 ### Non-Functional
 
@@ -95,7 +97,7 @@ The current backend connection flow requires a separate `/setup` page with multi
 | Supabase form             | URL + Anon Key inputs (with placeholders, descriptions), pre-filled from saved config, Connect + Cancel  |
 | GAS form                  | URL + Client ID inputs (with placeholders, descriptions), pre-filled from saved config, Connect + Cancel |
 | Connecting                | Form disabled, spinner, "Connecting..." text                                                             |
-| Supabase providers loaded | OAuth provider buttons + Cancel button                                                                   |
+| Supabase providers loaded | Hint text + OAuth provider buttons + Cancel button                                                       |
 | Supabase no providers     | Info message: configure providers in dashboard + Cancel button                                           |
 | GAS awaiting signin       | "Sign in with Google" button + Cancel button                                                             |
 | GAS initializing          | Spinner, "Initializing..." text                                                                          |
