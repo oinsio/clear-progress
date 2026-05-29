@@ -60,14 +60,14 @@ function expectToggleBorder(borderClass: string) {
 
 function expectOrderFirstClass() {
   const toggle = screen.getByTestId("sidebar-toggle");
-  const outerWrapper = toggle.parentElement!;
+  const outerWrapper = toggle.parentElement as HTMLElement;
   expect(outerWrapper.className).toContain("order-first");
 }
 
 function getButtonOrder() {
   const syncButton = screen.getByTestId("sidebar-sync");
   const accountButton = screen.getByTestId("sidebar-account");
-  const parent = syncButton.parentElement!;
+  const parent = syncButton.parentElement as HTMLElement;
   const children = Array.from(parent.children);
   return {
     syncIndex: children.indexOf(syncButton),
