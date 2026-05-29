@@ -35,13 +35,14 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 ## Running tests
 
-Running multiple test suites at once (or relaunching before the previous run finishes) spikes memory usage and freezes the machine, forcing a reboot. To avoid this:
+Running test suites in parallel — or relaunching before the previous run finishes — spikes memory usage and freezes the machine, forcing a reboot. The TDD/BDD suites are especially prone to this. Strict rules:
 
-- Run ONE test command at a time. Always wait for it to finish completely before starting another — never relaunch a run while one is still in progress.
-- Don't run the full test suite (unit + integration + e2e + bdd together) for small changes. Scope runs to the specific file or suite affected, e.g. a single test file.
-- Integration tests are the slowest and heaviest — run them only when your changes directly affect integration behavior, or once at the end. Never run them in parallel with other suites.
-- Run the full suite only when explicitly asked, or once at the end after focused tests pass.
-- If you're unsure whether a run is still going, ask the user instead of launching another.
+- Run tests STRICTLY ONE AT A TIME. Issue exactly one test command, wait for its full output, and only then consider the next one.
+- NEVER run test commands in the background (no trailing `&`, no background execution mode). Tests must run in the foreground so the run blocks until it completes.
+- NEVER issue multiple test commands in a single batch of tool calls. One test command per turn — do not launch a second while the first is still running.
+- Do NOT run multiple suites (unit + integration + e2e + bdd) for small changes. Scope each run to the specific file or suite affected.
+- Integration tests are the slowest and heaviest — run them only when changes directly affect integration behavior, or once at the end. Never alongside other suites.
+- If unsure whether a run is still going, STOP and ask the user instead of launching another.
 
 ## Architecture
 
