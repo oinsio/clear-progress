@@ -28,7 +28,10 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 ## Mutation testing (Stryker)
 
-NEVER run Stryker yourself — it's slow. Ask the user to run it and share the report, then analyze the existing report. Give a ready-to-copy command scoped to the files you need, e.g. `npx stryker run --mutate 'src/services/tokenManager.ts,src/services/tokenPersistence.ts'`, or `npx stryker run` for the full suite.
+- NEVER run the full Stryker suite yourself — it's slow and spikes memory usage, freezing the machine and forcing a reboot. This includes `cd packages/client && npx stryker run` (without `--mutate`) and `pnpm run test:mutation` (runs all mutation tests in the project). When a full run is needed, ask the user to run it and share the report.
+- You MAY run Stryker scoped to specific files (up to 5 files at a time, never more), then analyze the resulting JSON report yourself. Code and tests live in separate packages; `packages/client` is the main one, so `cd` into it first and use paths relative to that package, e.g. `cd packages/client && npx stryker run --mutate 'src/services/tokenManager.ts,src/services/tokenPersistence.ts'`.
+- Read the report from the same package: `packages/client/reports/mutation/mutation-report.json`.
+- ALWAYS wait for a run to finish completely before starting another. Never relaunch while a run is still in progress — concurrent or back-to-back runs spike memory usage and freeze the machine.
 
 ## Running tests
 
