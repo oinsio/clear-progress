@@ -8,6 +8,7 @@ In view mode, task/goal/idea descriptions collapse newline characters (`\n`) int
 
 - MODIFIED: `LinkedText` component — add `whitespace-pre-line` CSS class to preserve newlines
 - MODIFIED: `IdeaItem` component — add `whitespace-pre-line` CSS class to the `<p>` element displaying idea description in list view
+- MODIFIED: `GoalDetailPage` component — remove `line-clamp-2` from goal description in view mode, add `whitespace-pre-wrap` to show full description
 
 ## Goals
 
@@ -30,6 +31,7 @@ In view mode, task/goal/idea descriptions collapse newline characters (`\n`) int
 - FR1: Newline characters (`\n`) in task descriptions are preserved in view mode (`TaskDetailPanel` → `EditableDescription` → `LinkedText`)
 - FR2: Newline characters in goal descriptions are preserved in the goal card (`GoalDetailPage`) and in the edit panel (`GoalPage` → `EditableDescription` → `LinkedText`)
 - FR3: Newline characters in idea descriptions are preserved in the detail panel (`IdeaDetailPanel` → `EditableDescription` → `LinkedText`) and in the ideas list (`IdeaItem`)
+- FR4: Goal description on detail page is displayed in full without truncation (`GoalDetailPage` view mode — remove `line-clamp-2`)
 
 ### Non-Functional
 
@@ -70,6 +72,7 @@ No new capabilities.
 
 - `packages/client/src/components/ui/LinkedText.tsx` — add `whitespace-pre-line`
 - `packages/client/src/components/ideas/IdeaItem.tsx` — add `whitespace-pre-line`
+- `packages/client/src/pages/GoalDetailPage.tsx` — remove `line-clamp-2`, add `whitespace-pre-wrap` for full description display
 - Indirectly affects all components using `LinkedText`: `EditableDescription`, `GoalDetailPage`
 
 ## Open Questions

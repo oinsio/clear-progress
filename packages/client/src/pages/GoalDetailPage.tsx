@@ -578,7 +578,7 @@ export default function GoalDetailPage() {
                         {goal.description && (
                           <LinkedText
                             text={goal.description}
-                            className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-snug"
+                            className="text-xs text-gray-500 mt-0.5 leading-snug whitespace-pre-wrap"
                           />
                         )}
                         <div className="mt-1">

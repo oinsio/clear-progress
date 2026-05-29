@@ -1,3 +1,4 @@
+import { cn } from "@/shared/lib/cn";
 import { extractLinks, shortenUrl } from "@/utils/linkify";
 
 interface LinkedTextProps {
@@ -7,13 +8,13 @@ interface LinkedTextProps {
 
 export function LinkedText({ text, className }: LinkedTextProps) {
   if (!text) {
-    return <span className={className}></span>;
+    return <span className={cn("whitespace-pre-line", className)}></span>;
   }
 
   const segments = extractLinks(text);
 
   return (
-    <span className={className}>
+    <span className={cn("whitespace-pre-line", className)}>
       {segments.map((segment) => {
         if (segment.type === "url") {
           return (

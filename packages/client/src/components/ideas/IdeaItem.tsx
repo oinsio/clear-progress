@@ -57,7 +57,7 @@ export function IdeaItem({
             {idea.name}
           </p>
           {idea.description && (
-            <p className="text-xs text-gray-500 mt-1 leading-snug break-words">
+            <p className="text-xs text-gray-500 mt-1 leading-snug break-words whitespace-pre-line">
               {idea.description}
             </p>
           )}
