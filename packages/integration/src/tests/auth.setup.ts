@@ -44,21 +44,14 @@ setup(
     await page.waitForURL("**/tasks", { timeout: SYNC_COMPLETE_TIMEOUT_MS });
     await page.waitForSelector('[data-testid="inbox-page"]');
 
-    // --- Step 4: Wait for access token ---
-    await page.waitForFunction(
-      () => localStorage.getItem("access_token") !== null,
-      undefined,
-      { timeout: SYNC_COMPLETE_TIMEOUT_MS },
-    );
-
-    // --- Step 5: Wait for initial sync to complete ---
+    // --- Step 4: Wait for initial sync to complete ---
     await page.waitForFunction(
       () => localStorage.getItem("last_sync") !== null,
       undefined,
       { timeout: SYNC_COMPLETE_TIMEOUT_MS },
     );
 
-    // --- Step 6: Save storageState (localStorage + cookies) ---
+    // --- Step 5: Save storageState (localStorage + cookies) ---
     await page.context().storageState({ path: AUTH_STATE_PATH });
   },
 );

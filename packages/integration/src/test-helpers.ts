@@ -97,9 +97,22 @@ export async function createAuthenticatedPage(
   // Brief settle time to ensure the sync mutex is fully released
   await page.waitForTimeout(SYNC_SETTLE_MS);
 
-  const accessToken = await page.evaluate(
-    () => localStorage.getItem("access_token") ?? "",
-  );
+  const accessToken = await page.evaluate(() => {
+    // Supabase SDK stores session under sb-<hostname>-auth-token
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("sb-") && key.endsWith("-auth-token")) {
+        try {
+          const session = JSON.parse(localStorage.getItem(key) ?? "");
+          if (session?.access_token) return session.access_token as string;
+        } catch {
+          // not valid JSON, skip
+        }
+      }
+    }
+    // Fallback: GAS backend stores token directly
+    return localStorage.getItem("access_token") ?? "";
+  });
 
   return {
     page,
