@@ -27,4 +27,4 @@
 
 - [x] 4.1 Run full test suite: `npx vitest run` — all green — M1, M2
 - [x] 4.2 Run build: `pnpm run build` — no errors
-- [ ] 4.3 Ask user to run mutation testing on tokenManager — M4
+- [x] 4.3 Ask user to run mutation testing on tokenManager — M4
