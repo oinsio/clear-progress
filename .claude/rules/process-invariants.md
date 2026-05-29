@@ -8,7 +8,7 @@ Never edit files in `openspec/changes/archive/`. If a change needs correction, c
 
 ## File size limit
 
-Keep files under 400 lines. Long files degrade AI context quality. One file = one thing.
+Target 100–200 lines per file; 300 is a hard cap, used only when splitting would hurt clarity. Long files degrade AI context quality. One file = one thing.
 
 ## Module boundaries
 
