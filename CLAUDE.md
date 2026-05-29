@@ -3,8 +3,6 @@
 Personal app suitable for working with the GTD method. Client-first architecture.
 
 IMPORTANT: Read existing code, tests, and patterns before generating new code.
- 
-NEVER run mutation tests yourself. Instead, ask the user to run them for you. Analyze mutation test reports instead of running Stryker tests.
 
 ## Code Style
 
@@ -27,6 +25,20 @@ NEVER run mutation tests yourself. Instead, ask the user to run them for you. An
 - **Mutation testing**: `npm run test:mutation` — target >=95%, minimum acceptable >=90%
 - **BDD Unit** (vitest-cucumber): .claude/rules/bdd-unit.md (scoped)
 - **BDD E2E** (playwright-bdd): .claude/rules/bdd-e2e.md (scoped), ADR: docs/adr/0003-bdd-e2e-via-playwright-bdd.md
+
+## Mutation testing (Stryker)
+
+NEVER run Stryker yourself — it's slow. Ask the user to run it and share the report, then analyze the existing report. Give a ready-to-copy command scoped to the files you need, e.g. `npx stryker run --mutate 'src/services/tokenManager.ts,src/services/tokenPersistence.ts'`, or `npx stryker run` for the full suite.
+
+## Running tests
+
+Running multiple test suites at once (or relaunching before the previous run finishes) spikes memory usage and freezes the machine, forcing a reboot. To avoid this:
+
+- Run ONE test command at a time. Always wait for it to finish completely before starting another — never relaunch a run while one is still in progress.
+- Don't run the full test suite (unit + integration + e2e + bdd together) for small changes. Scope runs to the specific file or suite affected, e.g. a single test file.
+- Integration tests are the slowest and heaviest — run them only when your changes directly affect integration behavior, or once at the end. Never run them in parallel with other suites.
+- Run the full suite only when explicitly asked, or once at the end after focused tests pass.
+- If you're unsure whether a run is still going, ask the user instead of launching another.
 
 ## Architecture
 

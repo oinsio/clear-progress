@@ -89,6 +89,18 @@ describe("LinkedText", () => {
     expect(link).toHaveAttribute("href", "https://example.com");
   });
 
+  // implements FR1, FR2, FR3 of fix-newline-display
+  it("should have whitespace-pre-line class to preserve newlines", () => {
+    const { container } = render(<LinkedText text="Line 1\nLine 2" />);
+    expect(container.firstChild).toHaveClass("whitespace-pre-line");
+  });
+
+  // implements FR1, FR2, FR3 of fix-newline-display
+  it("should have whitespace-pre-line class when text is empty", () => {
+    const { container } = render(<LinkedText text="" />);
+    expect(container.firstChild).toHaveClass("whitespace-pre-line");
+  });
+
   it("should handle URL at end of text", () => {
     render(<LinkedText text="Check this https://example.com" />);
 
