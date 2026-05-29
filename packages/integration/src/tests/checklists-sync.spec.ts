@@ -1,6 +1,10 @@
 // implements FR6, FR8 of add-supabase-integration-tests
-import { expect, type Page, test } from "@playwright/test";
-import { createTask, openTaskDetail } from "../page-actions.js";
+import { expect, test } from "@playwright/test";
+import {
+  createTask,
+  openTaskDetail,
+  switchToChecklistTab,
+} from "../page-actions.js";
 import {
   pullFromServer,
   setupSingleDeviceTest,
@@ -34,17 +38,6 @@ interface ChecklistsPullResponse {
     sort_order: number;
     is_deleted: boolean;
   }>;
-}
-
-/**
- * Opens the checklist tab inside the task detail panel.
- * Assumes the detail panel is already visible.
- */
-async function switchToChecklistTab(testPage: Page): Promise<void> {
-  const tabButtons = testPage
-    .getByTestId("task-detail-panel")
-    .locator(".flex.gap-2 button");
-  await tabButtons.nth(1).click();
 }
 
 // ---------------------------------------------------------------------------

@@ -114,7 +114,7 @@ export default function GoalDetailPage() {
   } = usePanelSplit();
 
   const { defaultBox } = useSettings();
-  const isUnsynced = useIsUnsynced(goal ?? { updated_at: "" });
+  const isUnsynced = useIsUnsynced(goal ?? { needsSync: false });
 
   // view state
   const [isEditing, setIsEditing] = useState(false);

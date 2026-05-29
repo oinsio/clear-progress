@@ -8,7 +8,6 @@ import { ArrowLeft, ChevronRight, Trash2, X } from "lucide-react";
 import type * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSync } from "@/app/providers/SyncProvider";
 import { EditableDescription } from "@/components/ui/EditableDescription";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useChecklist } from "@/hooks/useChecklist";
@@ -139,7 +138,6 @@ interface ChecklistSectionProps {
   items: ChecklistItem[];
   editingItemId: string | null;
   editingItemName: string;
-  lastSyncedAt: string | null;
   variant: ChecklistItemVariant;
   onDragEnd: (event: DragEndEvent) => void;
   onToggle: (id: string) => void;
@@ -160,7 +158,6 @@ function ChecklistSection({
   items,
   editingItemId,
   editingItemName,
-  lastSyncedAt,
   variant,
   onDragEnd,
   onToggle,
@@ -192,7 +189,6 @@ function ChecklistSection({
                 item={item}
                 isEditing={editingItemId === item.id}
                 editingName={editingItemName}
-                lastSyncedAt={lastSyncedAt}
                 variant={variant}
                 toggleAriaLabel={getToggleAriaLabel(item)}
                 deleteAriaLabel={getDeleteAriaLabel(item)}
@@ -265,8 +261,6 @@ export function TaskDetailPanel({
     commitItemEdit,
     handleItemEditKeyDown,
   } = useChecklistItemEditing(updateItem);
-  const { lastSyncedAt } = useSync();
-
   // Reset state when selected task changes
   useEffect(() => {
     setName(task.name);
@@ -484,6 +478,7 @@ export function TaskDetailPanel({
       <div className="flex px-4 pt-3 pb-1 gap-2 flex-shrink-0">
         <button
           type="button"
+          data-testid="tab-details"
           onClick={() => setActiveTab(ACTIVE_TAB.DETAILS)}
           className={cn(
             "flex-1 py-1.5 text-sm rounded-full border transition-colors",
@@ -496,6 +491,7 @@ export function TaskDetailPanel({
         </button>
         <button
           type="button"
+          data-testid="tab-checklist"
           onClick={() => setActiveTab(ACTIVE_TAB.CHECKLIST)}
           className={cn(
             "flex-1 py-1.5 text-sm rounded-full border transition-colors",
@@ -673,7 +669,6 @@ export function TaskDetailPanel({
               items={activeItems}
               editingItemId={editingItemId}
               editingItemName={editingItemName}
-              lastSyncedAt={lastSyncedAt}
               variant={CHECKLIST_ITEM_VARIANT.ACTIVE}
               onDragEnd={(event) => handleSectionDragEnd(activeItems, event)}
               onToggle={(id) => void toggleItem(id)}
@@ -719,7 +714,6 @@ export function TaskDetailPanel({
                 items={completedItems}
                 editingItemId={editingItemId}
                 editingItemName={editingItemName}
-                lastSyncedAt={lastSyncedAt}
                 variant={CHECKLIST_ITEM_VARIANT.COMPLETED}
                 onDragEnd={(event) =>
                   handleSectionDragEnd(completedItems, event)

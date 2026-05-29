@@ -14,7 +14,6 @@ export interface SortableChecklistItemProps {
   item: ChecklistItem;
   isEditing: boolean;
   editingName: string;
-  lastSyncedAt: string | null;
   variant: ChecklistItemVariant;
   toggleAriaLabel: string;
   deleteAriaLabel: string;
@@ -30,7 +29,6 @@ export function SortableChecklistItem({
   item,
   isEditing,
   editingName,
-  lastSyncedAt,
   variant,
   toggleAriaLabel,
   deleteAriaLabel,
@@ -84,9 +82,7 @@ export function SortableChecklistItem({
         <span
           className={cn(
             "w-0.5 h-5 rounded-sm transition-colors",
-            lastSyncedAt === null || item.updated_at > lastSyncedAt
-              ? "bg-amber-400"
-              : "bg-transparent",
+            item.needsSync ? "bg-amber-400" : "bg-transparent",
           )}
         />
         <button

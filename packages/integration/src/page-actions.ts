@@ -51,6 +51,29 @@ export async function deleteTaskFromDetail(page: Page): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Checklist actions
+// ---------------------------------------------------------------------------
+
+export async function switchToChecklistTab(page: Page): Promise<void> {
+  await page.getByTestId("tab-checklist").click();
+}
+
+export async function addChecklistItem(
+  page: Page,
+  itemName: string,
+): Promise<void> {
+  const checklistInput = page
+    .getByTestId("task-detail-panel")
+    .locator('input[type="text"]');
+  await checklistInput.fill(itemName);
+  await checklistInput.press("Enter");
+  await page
+    .getByTestId("task-detail-panel")
+    .locator(`text=${itemName}`)
+    .waitFor({ state: "visible" });
+}
+
+// ---------------------------------------------------------------------------
 // Goal actions
 // ---------------------------------------------------------------------------
 
