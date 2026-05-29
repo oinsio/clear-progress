@@ -33,7 +33,7 @@ export function useChecklist(
     total: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const { schedulePush, lastSyncedAt } = useSync();
+  const { schedulePush } = useSync();
 
   useEffect(() => {
     setIsLoading(true);
@@ -93,9 +93,7 @@ export function useChecklist(
     [checklistService, schedulePush],
   );
 
-  const hasUnsyncedItems = items.some(
-    (item) => lastSyncedAt === null || item.updated_at > lastSyncedAt,
-  );
+  const hasUnsyncedItems = items.some((item) => item.needsSync);
 
   const reload = useCallback(async () => {
     // liveQuery handles reactive updates automatically

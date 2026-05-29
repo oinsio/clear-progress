@@ -1,9 +1,11 @@
 // implements FR1 of cascade-checklist-delete
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
+  addChecklistItem,
   createTask,
   deleteTaskFromDetail,
   openTaskDetail,
+  switchToChecklistTab,
 } from "../page-actions.js";
 import {
   pullFromServer,
@@ -30,28 +32,6 @@ interface CascadeDeletePullResponse {
     name: string;
     is_deleted: boolean;
   }>;
-}
-
-async function switchToChecklistTab(testPage: Page): Promise<void> {
-  const tabButtons = testPage
-    .getByTestId("task-detail-panel")
-    .locator(".flex.gap-2 button");
-  await tabButtons.nth(1).click();
-}
-
-async function addChecklistItem(
-  testPage: Page,
-  itemName: string,
-): Promise<void> {
-  const checklistInput = testPage
-    .getByTestId("task-detail-panel")
-    .locator('input[type="text"]');
-  await checklistInput.fill(itemName);
-  await checklistInput.press("Enter");
-  await testPage
-    .getByTestId("task-detail-panel")
-    .locator(`text=${itemName}`)
-    .waitFor({ state: "visible" });
 }
 
 // ---------------------------------------------------------------------------

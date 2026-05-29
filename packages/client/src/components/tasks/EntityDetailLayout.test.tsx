@@ -57,7 +57,11 @@ function buildProps(
   overrides: Partial<EntityDetailLayoutProps> = {},
 ): EntityDetailLayoutProps {
   return {
-    entity: { name: "Работа", updated_at: "2025-01-01T00:00:00.000Z" },
+    entity: {
+      name: "Работа",
+      updated_at: "2025-01-01T00:00:00.000Z",
+      needsSync: false,
+    },
     isLoading: false,
     tasks: [],
     goals: [],

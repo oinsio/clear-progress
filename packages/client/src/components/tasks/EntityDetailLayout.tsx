@@ -31,7 +31,7 @@ interface EntityDetailLayoutI18nKeys {
 }
 
 export interface EntityDetailLayoutProps {
-  entity: { name: string; updated_at: string } | undefined;
+  entity: { name: string; updated_at: string; needsSync: boolean } | undefined;
   isLoading: boolean;
   tasks: Task[];
   goals: Goal[];
@@ -88,7 +88,7 @@ export function EntityDetailLayout({
     containerRef: splitContainerRef,
     handleResizeMouseDown,
   } = usePanelSplit();
-  const isUnsynced = useIsUnsynced(entity ?? { updated_at: "" });
+  const isUnsynced = useIsUnsynced(entity ?? { needsSync: false });
 
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
