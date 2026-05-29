@@ -1,11 +1,11 @@
 import { Search } from "lucide-react";
+import type React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import { FocusedGoalsBlock } from "./FocusedGoalsBlock";
 import type { FilterItem, SidebarMode } from "./Sidebar";
-import React from "react";
 
 interface SidebarFilterNavProps {
   isExpanded: boolean;

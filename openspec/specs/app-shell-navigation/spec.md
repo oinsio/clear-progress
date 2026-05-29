@@ -102,12 +102,12 @@ BottomNav SHALL be visible on mobile viewports (below md breakpoint) and hidden 
 - **WHEN** viewport is at or above md breakpoint
 - **THEN** BottomNav wrapper has md:hidden class
 
-### Requirement: Right panel login button navigates to Settings
+### Requirement: Sidebar login button navigates to Settings
 
-When no backend is configured, the right panel SHALL display a "Configure server" button that navigates to `/settings`. The button SHALL NOT navigate to `/setup`.
+When no backend is configured, the sidebar SHALL display a "Configure server" button that navigates to `/settings`. The button SHALL NOT navigate to `/setup`.
 
 #### Scenario: Configure server button visible when not connected
-- **WHEN** right panel is rendered
+- **WHEN** sidebar is rendered
 - **AND** no backend is configured
 - **THEN** a "Configure server" button is displayed
 
