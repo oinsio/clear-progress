@@ -76,7 +76,7 @@ export async function createAuthenticatedPage(
     // Use a shorter timeout; if this also fails, proceed anyway —
     // individual tests will sync via triggerSyncAndWait.
     try {
-      await page.getByTestId("right-panel-sync").first().click();
+      await page.getByTestId("sidebar-sync").first().click();
       await page.waitForFunction(
         (prev) => {
           const current = localStorage.getItem("last_sync");
@@ -139,9 +139,7 @@ async function waitForSyncButtonIdle(
   try {
     await testPage.waitForFunction(
       () => {
-        const button = document.querySelector(
-          '[data-testid="right-panel-sync"]',
-        );
+        const button = document.querySelector('[data-testid="sidebar-sync"]');
         if (!button) return false;
         const icon = button.querySelector("svg");
         return icon !== null && !icon.classList.contains("animate-spin");
@@ -233,7 +231,7 @@ async function attemptSync(
       if (remainingMs <= 0) break;
 
       try {
-        await testPage.getByTestId("right-panel-sync").first().click();
+        await testPage.getByTestId("sidebar-sync").first().click();
       } catch {
         await testPage.waitForTimeout(SYNC_SETTLE_MS);
         continue;
@@ -245,7 +243,7 @@ async function attemptSync(
         await testPage.waitForFunction(
           () => {
             const button = document.querySelector(
-              '[data-testid="right-panel-sync"]',
+              '[data-testid="sidebar-sync"]',
             );
             if (!button) return false;
             const icon = button.querySelector("svg");
@@ -304,7 +302,7 @@ async function attemptSync(
  * and navigates to /tasks if needed. Also verifies auth token exists.
  */
 async function ensureSyncReady(testPage: Page): Promise<void> {
-  const syncButton = testPage.getByTestId("right-panel-sync").first();
+  const syncButton = testPage.getByTestId("sidebar-sync").first();
   const isVisible = await syncButton.isVisible().catch(() => false);
 
   if (!isVisible) {

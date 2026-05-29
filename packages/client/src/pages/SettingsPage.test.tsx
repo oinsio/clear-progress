@@ -14,7 +14,7 @@ vi.mock("@/hooks/usePanelAlwaysOpen");
 vi.mock("@/hooks/useFocusMode");
 vi.mock("@/hooks/useFilterBarPosition");
 vi.mock("@/app/providers/InterfaceScaleProvider");
-vi.mock("@/components/tasks/RightFilterPanel");
+vi.mock("@/components/tasks/Sidebar");
 vi.mock("@/components/settings/MenuOrderSection");
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: vi.fn(),

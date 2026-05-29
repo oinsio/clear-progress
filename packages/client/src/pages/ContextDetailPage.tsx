@@ -2,7 +2,7 @@ import { MapPin } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { EntityDetailLayout } from "@/components/tasks/EntityDetailLayout";
-import type { RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import type { SidebarMode } from "@/components/tasks/Sidebar";
 import { ROUTES } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
@@ -56,7 +56,7 @@ export default function ContextDetailPage() {
   }, [id, deleteContext, navigate]);
 
   const handleModeChange = useCallback(
-    (newMode: RightPanelMode) => {
+    (newMode: SidebarMode) => {
       if (newMode === "categories") navigate(ROUTES.CATEGORIES);
       else if (
         newMode === "inbox" ||

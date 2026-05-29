@@ -20,7 +20,7 @@ import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
 import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
-import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
+import { Sidebar } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
 import { EditableDescription } from "@/components/ui/EditableDescription";
@@ -43,8 +43,8 @@ import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useSettings } from "@/hooks/useSettings";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { useTasksByBox } from "@/hooks/useTasksByBox";
 import {
   defaultCoverService,
@@ -330,7 +330,7 @@ export default function GoalDetailPage() {
     [goal, replaceGoalInFocus],
   );
 
-  const handleModeChange = useRightPanelNavigation();
+  const handleModeChange = useSidebarNavigation();
 
   if (!isLoading && !goal) {
     return (
@@ -772,7 +772,7 @@ export default function GoalDetailPage() {
       )}
 
       {/* Right filter panel */}
-      <RightFilterPanel
+      <Sidebar
         mode={isFocused && isFocusedGoalsVisible ? null : "goals"}
         isOpen={isPanelOpen}
         side={panelSide}

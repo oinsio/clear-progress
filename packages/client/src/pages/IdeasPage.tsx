@@ -10,7 +10,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
-import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
+import { Sidebar } from "@/components/tasks/Sidebar";
 import { BOX } from "@/constants";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useDndSensors } from "@/hooks/useDndSensors";
@@ -21,7 +21,7 @@ import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { useTasks } from "@/hooks/useTasks";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
@@ -115,7 +115,7 @@ export default function IdeasPage() {
 
   const activeIdeas = ideas.filter((idea) => !idea.is_deleted);
 
-  const handleModeChange = useRightPanelNavigation();
+  const handleModeChange = useSidebarNavigation();
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -351,7 +351,7 @@ export default function IdeasPage() {
       {/* end splitContainerRef */}
 
       {/* Right filter panel */}
-      <RightFilterPanel
+      <Sidebar
         mode="ideas"
         isOpen={isPanelOpen}
         side={panelSide}

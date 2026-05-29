@@ -26,7 +26,7 @@ vi.mock("@/hooks/useContexts");
 vi.mock("@/hooks/useCategories");
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
-vi.mock("@/hooks/useRightPanelNavigation");
+vi.mock("@/hooks/useSidebarNavigation");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
 vi.mock("@/hooks/useCoverUrl");
@@ -44,8 +44,8 @@ import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useSettings } from "@/hooks/useSettings";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 
 const mockUseGoal = vi.mocked(useGoal);
 const mockUseGoalTasks = vi.mocked(useGoalTasks);
@@ -54,7 +54,7 @@ const mockUseContexts = vi.mocked(useContexts);
 const mockUseCategories = vi.mocked(useCategories);
 const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
-const mockUseRightPanelNavigation = vi.mocked(useRightPanelNavigation);
+const mockUseSidebarNavigation = vi.mocked(useSidebarNavigation);
 const mockUseIsDesktop = vi.mocked(useIsDesktop);
 const mockUsePanelSplit = vi.mocked(usePanelSplit);
 const mockUseCoverUrl = vi.mocked(useCoverUrl);
@@ -160,7 +160,7 @@ describe("GoalDetailPage — inline task creation", () => {
       isPanelOpen: false,
       togglePanelOpen: vi.fn(),
     });
-    mockUseRightPanelNavigation.mockReturnValue(vi.fn());
+    mockUseSidebarNavigation.mockReturnValue(vi.fn());
     mockUseIsDesktop.mockReturnValue(false);
     mockUsePanelSplit.mockReturnValue({
       ratio: 0.5,

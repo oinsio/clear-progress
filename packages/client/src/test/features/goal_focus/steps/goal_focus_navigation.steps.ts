@@ -28,7 +28,7 @@ const DEFAULT_MENU_ORDER: MenuItemConfig[] = [
   { mode: "deleted", visible: false },
 ];
 
-type RightPanelMode =
+type SidebarMode =
   | "inbox"
   | "tasks"
   | "completed"
@@ -46,7 +46,7 @@ type FeatureContext = {
   menuOrder: MenuItemConfig[];
   navigatedUrl: string;
   currentGoalId: string | null;
-  rightPanelMode: RightPanelMode | null;
+  sidebarMode: SidebarMode | null;
   activeFocusedGoalId: string | undefined;
 };
 
@@ -75,11 +75,11 @@ function isFocusedGoalsBlockVisible(menuOrder: MenuItemConfig[]): boolean {
   return item?.visible ?? false;
 }
 
-function computeRightPanelState(
+function computeSidebarState(
   currentGoalId: string,
   focusedGoalIds: string[],
   menuOrder: MenuItemConfig[],
-): { mode: RightPanelMode | null; activeFocusedGoalId: string | undefined } {
+): { mode: SidebarMode | null; activeFocusedGoalId: string | undefined } {
   const isFocusedGoal = focusedGoalIds.includes(currentGoalId);
   const isFocusedGoalsVisible = menuOrder.some(
     (c) => c.mode === "focused_goals" && c.visible,
@@ -132,12 +132,12 @@ function createNavigationSteps(
       f.context.navigatedUrl = `/goals/${goal.id}`;
 
       const focusedIds = await getFocusedGoalIds(settingsRepository);
-      const state = computeRightPanelState(
+      const state = computeSidebarState(
         goal.id,
         focusedIds,
         f.context.menuOrder,
       );
-      f.context.rightPanelMode = state.mode;
+      f.context.sidebarMode = state.mode;
       f.context.activeFocusedGoalId = state.activeFocusedGoalId;
     },
 
@@ -149,12 +149,12 @@ function createNavigationSteps(
       f.context.currentGoalId = goal.id;
 
       const focusedIds = await getFocusedGoalIds(settingsRepository);
-      const state = computeRightPanelState(
+      const state = computeSidebarState(
         goal.id,
         focusedIds,
         f.context.menuOrder,
       );
-      f.context.rightPanelMode = state.mode;
+      f.context.sidebarMode = state.mode;
       f.context.activeFocusedGoalId = state.activeFocusedGoalId;
     },
 
@@ -178,14 +178,14 @@ function createNavigationSteps(
       _ctx: TestContext,
       _menuItem: string,
     ): Promise<void> => {
-      expect(f.context.rightPanelMode).toBe("goals");
+      expect(f.context.sidebarMode).toBe("goals");
     },
 
     assertMenuItemNotActive: async (
       _ctx: TestContext,
       _menuItem: string,
     ): Promise<void> => {
-      expect(f.context.rightPanelMode).not.toBe("goals");
+      expect(f.context.sidebarMode).not.toBe("goals");
     },
 
     assertFocusedGoalNavItemNotRendered: async (
@@ -231,7 +231,7 @@ describeFeature(
       f.context.menuOrder = [];
       f.context.navigatedUrl = "";
       f.context.currentGoalId = null;
-      f.context.rightPanelMode = null;
+      f.context.sidebarMode = null;
       f.context.activeFocusedGoalId = undefined;
     });
 
@@ -552,12 +552,12 @@ describeFeature(
 
             if (f.context.currentGoalId) {
               const focusedIds = await getFocusedGoalIds(settingsRepository);
-              const state = computeRightPanelState(
+              const state = computeSidebarState(
                 f.context.currentGoalId,
                 focusedIds,
                 f.context.menuOrder,
               );
-              f.context.rightPanelMode = state.mode;
+              f.context.sidebarMode = state.mode;
               f.context.activeFocusedGoalId = state.activeFocusedGoalId;
             }
           },
@@ -601,12 +601,12 @@ describeFeature(
 
             if (f.context.currentGoalId) {
               const focusedIds = await getFocusedGoalIds(settingsRepository);
-              const state = computeRightPanelState(
+              const state = computeSidebarState(
                 f.context.currentGoalId,
                 focusedIds,
                 f.context.menuOrder,
               );
-              f.context.rightPanelMode = state.mode;
+              f.context.sidebarMode = state.mode;
               f.context.activeFocusedGoalId = state.activeFocusedGoalId;
             }
           },

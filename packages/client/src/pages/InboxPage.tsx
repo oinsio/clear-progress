@@ -5,10 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
 import { BoxFilterBar } from "@/components/tasks/BoxFilterBar";
-import {
-  RightFilterPanel,
-  type RightPanelMode,
-} from "@/components/tasks/RightFilterPanel";
+import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
 import { BOX, BOX_FILTER_ALL } from "@/constants";
@@ -120,11 +117,10 @@ export default function InboxPage() {
   const { t } = useTranslation();
   const location = useLocation();
   const initialFilterMode =
-    (location.state as { filterMode?: RightPanelMode } | null)?.filterMode ??
+    (location.state as { filterMode?: SidebarMode } | null)?.filterMode ??
     "tasks";
   const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
-  const [filterMode, setFilterMode] =
-    useState<RightPanelMode>(initialFilterMode);
+  const [filterMode, setFilterMode] = useState<SidebarMode>(initialFilterMode);
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { filterBarPosition } = useFilterBarPosition();
   const [selectedContextId, setSelectedContextId] = useState<string | null>(
@@ -353,7 +349,7 @@ export default function InboxPage() {
   const handlePanelToggle = togglePanelOpen;
 
   const handleModeChange = useCallback(
-    (newMode: RightPanelMode) => {
+    (newMode: SidebarMode) => {
       setSelectedTaskId(null);
       setFilterMode(newMode);
       if (newMode !== "search") {
@@ -1015,7 +1011,7 @@ export default function InboxPage() {
       {/* end splitContainerRef */}
 
       {/* Right quick filter panel — always visible */}
-      <RightFilterPanel
+      <Sidebar
         mode={filterMode}
         isOpen={isPanelOpen}
         side={panelSide}

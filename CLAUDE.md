@@ -28,17 +28,21 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 ## Mutation testing (Stryker)
 
-NEVER run Stryker yourself — it's slow. Ask the user to run it and share the report, then analyze the existing report. Give a ready-to-copy command scoped to the files you need, e.g. `npx stryker run --mutate 'src/services/tokenManager.ts,src/services/tokenPersistence.ts'`, or `npx stryker run` for the full suite.
+- NEVER run the full Stryker suite yourself — it's slow and spikes memory usage, freezing the machine and forcing a reboot. This includes `cd packages/client && npx stryker run` (without `--mutate`) and `pnpm run test:mutation` (runs all mutation tests in the project). When a full run is needed, ask the user to run it and share the report.
+- You MAY run Stryker scoped to specific files (up to 5 files at a time, never more), then analyze the resulting JSON report yourself. Code and tests live in separate packages; `packages/client` is the main one, so `cd` into it first and use paths relative to that package, e.g. `cd packages/client && npx stryker run --mutate 'src/services/tokenManager.ts,src/services/tokenPersistence.ts'`.
+- Read the report from the same package: `packages/client/reports/mutation/mutation-report.json`.
+- ALWAYS wait for a run to finish completely before starting another. Never relaunch while a run is still in progress — concurrent or back-to-back runs spike memory usage and freeze the machine.
 
 ## Running tests
 
-Running multiple test suites at once (or relaunching before the previous run finishes) spikes memory usage and freezes the machine, forcing a reboot. To avoid this:
+Running test suites in parallel — or relaunching before the previous run finishes — spikes memory usage and freezes the machine, forcing a reboot. The TDD/BDD suites are especially prone to this. Strict rules:
 
-- Run ONE test command at a time. Always wait for it to finish completely before starting another — never relaunch a run while one is still in progress.
-- Don't run the full test suite (unit + integration + e2e + bdd together) for small changes. Scope runs to the specific file or suite affected, e.g. a single test file.
-- Integration tests are the slowest and heaviest — run them only when your changes directly affect integration behavior, or once at the end. Never run them in parallel with other suites.
-- Run the full suite only when explicitly asked, or once at the end after focused tests pass.
-- If you're unsure whether a run is still going, ask the user instead of launching another.
+- Run tests STRICTLY ONE AT A TIME. Issue exactly one test command, wait for its full output, and only then consider the next one.
+- NEVER run test commands in the background (no trailing `&`, no background execution mode). Tests must run in the foreground so the run blocks until it completes.
+- NEVER issue multiple test commands in a single batch of tool calls. One test command per turn — do not launch a second while the first is still running.
+- Do NOT run multiple suites (unit + integration + e2e + bdd) for small changes. Scope each run to the specific file or suite affected.
+- Integration tests are the slowest and heaviest — run them only when changes directly affect integration behavior, or once at the end. Never alongside other suites.
+- If unsure whether a run is still going, STOP and ask the user instead of launching another.
 
 ## Architecture
 

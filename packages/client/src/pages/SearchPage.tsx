@@ -6,10 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { GoalItem } from "@/components/goals/GoalItem";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
-import {
-  RightFilterPanel,
-  type RightPanelMode,
-} from "@/components/tasks/RightFilterPanel";
+import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
 import { ROUTES } from "@/constants";
@@ -155,7 +152,7 @@ export default function SearchPage() {
   );
 
   const handleModeChange = useCallback(
-    (newMode: RightPanelMode) => {
+    (newMode: SidebarMode) => {
       if (
         newMode === "inbox" ||
         newMode === "tasks" ||
@@ -318,7 +315,7 @@ export default function SearchPage() {
         })()}
 
       {/* Right filter panel */}
-      <RightFilterPanel
+      <Sidebar
         mode="search"
         isOpen={isPanelOpen}
         side={panelSide}

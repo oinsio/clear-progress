@@ -7,7 +7,7 @@ import {
 } from "@dnd-kit/sortable";
 import { GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { FILTER_ITEMS } from "@/components/tasks/RightFilterPanel";
+import { FILTER_ITEMS } from "@/components/tasks/Sidebar";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { cn } from "@/shared/lib/cn";

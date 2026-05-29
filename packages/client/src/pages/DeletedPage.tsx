@@ -7,14 +7,14 @@ import {
 import type React from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
+import { Sidebar } from "@/components/tasks/Sidebar";
 import { useDeletedEntities } from "@/hooks/useDeletedEntities";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePurge } from "@/hooks/usePurge";
 import { useRestoreEntity } from "@/hooks/useRestoreEntity";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { cn } from "@/shared/lib/cn";
 
 const SECTION_KEY_TASKS = "deleted-tasks";
@@ -124,7 +124,7 @@ export default function DeletedPage() {
     restoreCategory,
     restoreChecklistItem,
   } = useRestoreEntity();
-  const handleModeChange = useRightPanelNavigation();
+  const handleModeChange = useSidebarNavigation();
   const { purge, isPurging } = usePurge();
   const [showPurgeDialog, setShowPurgeDialog] = useState(false);
   const [purgeError, setPurgeError] = useState<string | null>(null);
@@ -329,7 +329,7 @@ export default function DeletedPage() {
         </main>
       </div>
 
-      <RightFilterPanel
+      <Sidebar
         mode={null}
         isOpen={isPanelOpen}
         side={panelSide}

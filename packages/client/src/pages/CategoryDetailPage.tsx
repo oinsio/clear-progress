@@ -2,7 +2,7 @@ import { Tag } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { EntityDetailLayout } from "@/components/tasks/EntityDetailLayout";
-import type { RightPanelMode } from "@/components/tasks/RightFilterPanel";
+import type { SidebarMode } from "@/components/tasks/Sidebar";
 import { ROUTES } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryTasks } from "@/hooks/useCategoryTasks";
@@ -56,7 +56,7 @@ export default function CategoryDetailPage() {
   }, [id, deleteCategory, navigate]);
 
   const handleModeChange = useCallback(
-    (newMode: RightPanelMode) => {
+    (newMode: SidebarMode) => {
       if (newMode === "inbox" || newMode === "tasks" || newMode === "completed")
         navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
     },

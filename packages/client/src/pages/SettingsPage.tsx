@@ -15,10 +15,7 @@ import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
 import { ServerSection } from "@/components/settings/ServerSection";
-import {
-  RightFilterPanel,
-  type RightPanelMode,
-} from "@/components/tasks/RightFilterPanel";
+import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
 import { BOX_ICONS } from "@/components/tasks/taskEditShared";
 import { OpacityBars } from "@/components/ui/OpacityBars";
 import {
@@ -73,7 +70,7 @@ const PANEL_SIDE_ICONS: Record<PanelSide, React.FC<{ className?: string }>> = {
  */
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const [filterMode, setFilterMode] = useState<RightPanelMode>(null);
+  const [filterMode, setFilterMode] = useState<SidebarMode>(null);
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const [isLanguagePanelOpen, setLanguagePanelOpen] = useState(false);
   const [languageSearchQuery, setLanguageSearchQuery] = useState("");
@@ -167,7 +164,7 @@ export default function SettingsPage() {
   const handlePanelToggle = togglePanelOpen;
 
   const handleModeChange = useCallback(
-    (newMode: RightPanelMode) => {
+    (newMode: SidebarMode) => {
       if (newMode !== null) {
         navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
       } else {
@@ -673,7 +670,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Right panel — same as on main page */}
-      <RightFilterPanel
+      <Sidebar
         mode={filterMode}
         isOpen={isPanelOpen}
         side={panelSide}

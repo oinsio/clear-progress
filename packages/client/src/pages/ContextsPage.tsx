@@ -9,10 +9,7 @@ import { GripVertical, MapPin, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-  RightFilterPanel,
-  type RightPanelMode,
-} from "@/components/tasks/RightFilterPanel";
+import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
 import { BOX, ROUTES } from "@/constants";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
@@ -156,7 +153,7 @@ export default function ContextsPage() {
   );
 
   const handleModeChange = useCallback(
-    (newMode: RightPanelMode) => {
+    (newMode: SidebarMode) => {
       if (newMode === "categories") navigate(ROUTES.CATEGORIES);
       else if (
         newMode === "inbox" ||
@@ -327,7 +324,7 @@ export default function ContextsPage() {
       </div>
 
       {/* Right filter panel */}
-      <RightFilterPanel
+      <Sidebar
         mode="contexts"
         isOpen={isPanelOpen}
         side={panelSide}
