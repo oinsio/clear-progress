@@ -48,6 +48,29 @@ describe("localStoragePersistence", () => {
       expect(localStoragePersistence.load()).toBeNull();
     });
 
+    it("should return null when only expiry key exists without token", () => {
+      localStorage.setItem(
+        STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+        String(Temporal.Now.instant().epochMilliseconds + 3600 * 1000),
+      );
+
+      expect(localStoragePersistence.load()).toBeNull();
+    });
+
+    it("should return null when token expires exactly now (boundary)", () => {
+      const exactlyNow = Temporal.Now.instant().epochMilliseconds;
+      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "boundary-token");
+      localStorage.setItem(
+        STORAGE_KEYS.ACCESS_TOKEN_EXPIRES_AT,
+        String(exactlyNow),
+      );
+
+      const result = localStoragePersistence.load();
+
+      expect(result).toBeNull();
+      expect(localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)).toBeNull();
+    });
+
     it("should return null and clean up when token is expired", () => {
       const expiredAt = Temporal.Now.instant().epochMilliseconds - 1000;
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "expired-token");
