@@ -5,10 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
-import {
-  RightFilterPanel,
-  type RightPanelMode,
-} from "@/components/tasks/RightFilterPanel";
+import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusMode } from "@/hooks/useFocusMode";
@@ -41,7 +38,7 @@ export interface EntityDetailLayoutProps {
   contexts: Context[];
   categories: Category[];
   icon: ComponentType<{ className?: string }>;
-  panelMode: RightPanelMode;
+  panelMode: SidebarMode;
   backRoute: string;
   testIdPrefix: string;
   i18nKeys: EntityDetailLayoutI18nKeys;
@@ -53,7 +50,7 @@ export interface EntityDetailLayoutProps {
   onMoveTask: (id: string, box: Box) => Promise<void>;
   onDeleteTask: (id: string) => void;
   onDuplicateTask: (id: string) => Promise<Task>;
-  onModeChange: (mode: RightPanelMode) => void;
+  onModeChange: (mode: SidebarMode) => void;
 }
 
 export function EntityDetailLayout({
@@ -398,8 +395,8 @@ export function EntityDetailLayout({
       </div>
       {/* end splitContainerRef */}
 
-      {/* Right filter panel — full height */}
-      <RightFilterPanel
+      {/* Sidebar — full height */}
+      <Sidebar
         mode={panelMode}
         isOpen={isPanelOpen}
         side={panelSide}

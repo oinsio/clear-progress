@@ -1,14 +1,14 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import type { RightPanelMode } from "@/components/tasks/RightFilterPanel";
-import { FILTER_ITEMS } from "@/components/tasks/RightFilterPanel";
+import type { SidebarMode } from "@/components/tasks/Sidebar";
+import { FILTER_ITEMS } from "@/components/tasks/Sidebar";
 import { ROUTES } from "@/constants";
 
-export function useRightPanelNavigation(): (newMode: RightPanelMode) => void {
+export function useSidebarNavigation(): (newMode: SidebarMode) => void {
   const navigate = useNavigate();
 
   return useCallback(
-    (newMode: RightPanelMode) => {
+    (newMode: SidebarMode) => {
       if (newMode === null) return;
       if (newMode === "search") {
         navigate(ROUTES.SEARCH);

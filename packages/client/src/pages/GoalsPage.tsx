@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { GoalItem } from "@/components/goals/GoalItem";
-import { RightFilterPanel } from "@/components/tasks/RightFilterPanel";
+import { Sidebar } from "@/components/tasks/Sidebar";
 import { BOX } from "@/constants";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
@@ -21,7 +21,7 @@ import { useGoals } from "@/hooks/useGoals";
 import { useInlineAdd } from "@/hooks/useInlineAdd";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
-import { useRightPanelNavigation } from "@/hooks/useRightPanelNavigation";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { useTasks } from "@/hooks/useTasks";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
@@ -124,7 +124,7 @@ export default function GoalsPage() {
     void defaultTaskService.getGoalTaskCounts().then(setGoalTaskCounts);
   }, []);
 
-  const handleModeChange = useRightPanelNavigation();
+  const handleModeChange = useSidebarNavigation();
 
   const handleGoalNavigate = useCallback(
     (id: string) => {
@@ -302,7 +302,7 @@ export default function GoalsPage() {
       </div>
 
       {/* Right filter panel */}
-      <RightFilterPanel
+      <Sidebar
         mode="goals"
         isOpen={isPanelOpen}
         side={panelSide}

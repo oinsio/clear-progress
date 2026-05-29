@@ -9,10 +9,7 @@ import { GripVertical, Plus, Tag } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-  RightFilterPanel,
-  type RightPanelMode,
-} from "@/components/tasks/RightFilterPanel";
+import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
 import { BOX, ROUTES } from "@/constants";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
@@ -159,7 +156,7 @@ export default function CategoriesPage() {
   );
 
   const handleModeChange = useCallback(
-    (newMode: RightPanelMode) => {
+    (newMode: SidebarMode) => {
       if (newMode === "inbox" || newMode === "tasks" || newMode === "completed")
         navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
     },
@@ -327,7 +324,7 @@ export default function CategoriesPage() {
       </div>
 
       {/* Right filter panel — full height */}
-      <RightFilterPanel
+      <Sidebar
         mode="categories"
         isOpen={isPanelOpen}
         side={panelSide}

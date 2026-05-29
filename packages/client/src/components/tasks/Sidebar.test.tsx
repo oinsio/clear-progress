@@ -34,14 +34,12 @@ vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
   usePanelAlwaysOpen: () => ({ isPanelAlwaysOpen: false }),
 }));
 
-import { RightFilterPanel } from "./RightFilterPanel";
+import { Sidebar } from "./Sidebar";
 
-function renderPanel(
-  overrides?: Partial<Parameters<typeof RightFilterPanel>[0]>,
-) {
+function renderPanel(overrides?: Partial<Parameters<typeof Sidebar>[0]>) {
   return render(
     <MemoryRouter>
-      <RightFilterPanel
+      <Sidebar
         mode={null}
         isOpen={true}
         onToggle={vi.fn()}
@@ -52,7 +50,7 @@ function renderPanel(
   );
 }
 
-describe("RightFilterPanel — connection status", () => {
+describe("Sidebar — connection status", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseConnectionStatus.mockReturnValue("synced");
@@ -60,13 +58,13 @@ describe("RightFilterPanel — connection status", () => {
 
   it("should show sync button when connectionStatus is synced", () => {
     renderPanel();
-    expect(screen.getAllByTestId("right-panel-sync")[0]).toBeInTheDocument();
+    expect(screen.getAllByTestId("sidebar-sync")[0]).toBeInTheDocument();
   });
 
   it("should show sync button when connectionStatus is syncing", () => {
     mockUseConnectionStatus.mockReturnValue("syncing");
     renderPanel();
-    expect(screen.getAllByTestId("right-panel-sync")[0]).toBeInTheDocument();
+    expect(screen.getAllByTestId("sidebar-sync")[0]).toBeInTheDocument();
   });
 
   // implements FR1 of split-error-offline-status
@@ -86,7 +84,7 @@ describe("RightFilterPanel — connection status", () => {
   it("should show error badge when connectionStatus is offline", () => {
     mockUseConnectionStatus.mockReturnValue("offline");
     renderPanel();
-    const syncBtn = screen.getAllByTestId("right-panel-sync")[0];
+    const syncBtn = screen.getAllByTestId("sidebar-sync")[0];
     expect(syncBtn).toBeInTheDocument();
     expect(syncBtn.querySelector(".bg-red-500")).toBeTruthy();
   });
@@ -94,36 +92,36 @@ describe("RightFilterPanel — connection status", () => {
   it("should show error badge when connectionStatus is error", () => {
     mockUseConnectionStatus.mockReturnValue("error");
     renderPanel();
-    const syncBtn = screen.getAllByTestId("right-panel-sync")[0];
+    const syncBtn = screen.getAllByTestId("sidebar-sync")[0];
     expect(syncBtn.querySelector(".bg-red-500")).toBeTruthy();
   });
 
   it("should show connect button when connectionStatus is not_configured", () => {
     mockUseConnectionStatus.mockReturnValue("not_configured");
     renderPanel();
-    expect(screen.getAllByTestId("right-panel-login")[0]).toBeInTheDocument();
-    expect(screen.queryByTestId("right-panel-sync")).toBeNull();
+    expect(screen.getAllByTestId("sidebar-login")[0]).toBeInTheDocument();
+    expect(screen.queryByTestId("sidebar-sync")).toBeNull();
   });
 
   it("should show sign-in button when connectionStatus is unauthorized", () => {
     mockUseConnectionStatus.mockReturnValue("unauthorized");
     renderPanel();
-    expect(screen.getAllByTestId("right-panel-sign-in")[0]).toBeInTheDocument();
-    expect(screen.queryByTestId("right-panel-sync")).toBeNull();
+    expect(screen.getAllByTestId("sidebar-sign-in")[0]).toBeInTheDocument();
+    expect(screen.queryByTestId("sidebar-sync")).toBeNull();
   });
 
   it("should show sign-in button when connectionStatus is no_auth", () => {
     mockUseConnectionStatus.mockReturnValue("no_auth");
     renderPanel();
-    expect(screen.getAllByTestId("right-panel-sign-in")[0]).toBeInTheDocument();
-    expect(screen.queryByTestId("right-panel-sync")).toBeNull();
+    expect(screen.getAllByTestId("sidebar-sign-in")[0]).toBeInTheDocument();
+    expect(screen.queryByTestId("sidebar-sync")).toBeNull();
   });
 
   it("should call signIn when sign-in button is clicked (unauthorized)", async () => {
     const user = userEvent.setup();
     mockUseConnectionStatus.mockReturnValue("unauthorized");
     renderPanel();
-    await user.click(screen.getAllByTestId("right-panel-sign-in")[0]);
+    await user.click(screen.getAllByTestId("sidebar-sign-in")[0]);
     expect(mockSignIn).toHaveBeenCalledTimes(1);
   });
 
@@ -131,7 +129,7 @@ describe("RightFilterPanel — connection status", () => {
     const user = userEvent.setup();
     mockUseConnectionStatus.mockReturnValue("no_auth");
     renderPanel();
-    await user.click(screen.getAllByTestId("right-panel-sign-in")[0]);
+    await user.click(screen.getAllByTestId("sidebar-sign-in")[0]);
     expect(mockSignIn).toHaveBeenCalledTimes(1);
   });
 
@@ -139,7 +137,7 @@ describe("RightFilterPanel — connection status", () => {
     const user = userEvent.setup();
     mockUseConnectionStatus.mockReturnValue("not_configured");
     renderPanel();
-    await user.click(screen.getAllByTestId("right-panel-login")[0]);
+    await user.click(screen.getAllByTestId("sidebar-login")[0]);
     expect(mockNavigate).toHaveBeenCalledWith("/settings");
   });
 });

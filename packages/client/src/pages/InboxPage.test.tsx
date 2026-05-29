@@ -144,8 +144,8 @@ function renderPage() {
   );
 }
 
-function openRightPanel() {
-  fireEvent.click(screen.getByTestId("right-panel-toggle"));
+function openSidebar() {
+  fireEvent.click(screen.getByTestId("sidebar-toggle"));
 }
 
 describe("InboxPage", () => {
@@ -170,8 +170,8 @@ describe("InboxPage", () => {
 
   it("should hide box filter bar and show only add button in inbox mode", () => {
     renderPage();
-    openRightPanel();
-    fireEvent.click(screen.getByTestId("right-filter-inbox"));
+    openSidebar();
+    fireEvent.click(screen.getByTestId("sidebar-filter-inbox"));
     expect(screen.queryByTestId("box-filter-toggle")).not.toBeInTheDocument();
     expect(screen.getByTestId("add-task-button")).toBeInTheDocument();
   });
@@ -181,20 +181,20 @@ describe("InboxPage", () => {
     expect(screen.getByTestId("add-task-button")).toBeInTheDocument();
   });
 
-  it("should render right panel toggle button", () => {
+  it("should render sidebar toggle button", () => {
     renderPage();
-    expect(screen.getByTestId("right-panel-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-toggle")).toBeInTheDocument();
   });
 
-  it("should show filter items when right panel is opened", () => {
+  it("should show filter items when sidebar is opened", () => {
     renderPage();
-    openRightPanel();
-    expect(screen.getByTestId("right-filter-goals")).toBeInTheDocument();
-    expect(screen.getByTestId("right-filter-search")).toBeInTheDocument();
-    expect(screen.getByTestId("right-filter-tasks")).toBeInTheDocument();
-    expect(screen.getByTestId("right-filter-completed")).toBeInTheDocument();
-    expect(screen.getByTestId("right-filter-contexts")).toBeInTheDocument();
-    expect(screen.getByTestId("right-filter-categories")).toBeInTheDocument();
+    openSidebar();
+    expect(screen.getByTestId("sidebar-filter-goals")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-filter-search")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-filter-tasks")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-filter-completed")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-filter-contexts")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-filter-categories")).toBeInTheDocument();
   });
 
   it("should show empty state in all-tasks sections when no tasks", () => {
@@ -223,8 +223,8 @@ describe("InboxPage", () => {
 
   it("should not show inline search input when search filter is clicked (navigates to search page)", () => {
     renderPage();
-    openRightPanel();
-    fireEvent.click(screen.getByTestId("right-filter-search"));
+    openSidebar();
+    fireEvent.click(screen.getByTestId("sidebar-filter-search"));
     expect(screen.queryByTestId("search-input")).not.toBeInTheDocument();
   });
 
@@ -232,8 +232,8 @@ describe("InboxPage", () => {
     const goals = [buildGoal({ name: "My Goal" })];
     mockUseGoals.mockReturnValue(buildGoalsHook({ goals }));
     renderPage();
-    openRightPanel();
-    fireEvent.click(screen.getByTestId("right-filter-goals"));
+    openSidebar();
+    fireEvent.click(screen.getByTestId("sidebar-filter-goals"));
     expect(screen.queryByText("My Goal")).not.toBeInTheDocument();
   });
 
@@ -241,8 +241,8 @@ describe("InboxPage", () => {
     const foundTasks = [buildTask({ name: "Found task" })];
     mockUseSearch.mockReturnValue(buildSearchHook({ tasks: foundTasks }));
     renderPage();
-    openRightPanel();
-    fireEvent.click(screen.getByTestId("right-filter-search"));
+    openSidebar();
+    fireEvent.click(screen.getByTestId("sidebar-filter-search"));
     expect(screen.queryByText("Found task")).not.toBeInTheDocument();
   });
 
@@ -254,8 +254,8 @@ describe("InboxPage", () => {
       buildCompletedTasksHook({ completedTasks: finishedTasks }),
     );
     renderPage();
-    openRightPanel();
-    fireEvent.click(screen.getByTestId("right-filter-completed"));
+    openSidebar();
+    fireEvent.click(screen.getByTestId("sidebar-filter-completed"));
     expect(screen.getByTestId("task-item")).toBeInTheDocument();
   });
 
@@ -265,8 +265,8 @@ describe("InboxPage", () => {
       buildTasksHook({ tasks: box === "inbox" ? inboxTasks : [] }),
     );
     renderPage();
-    openRightPanel();
-    fireEvent.click(screen.getByTestId("right-filter-inbox"));
+    openSidebar();
+    fireEvent.click(screen.getByTestId("sidebar-filter-inbox"));
     expect(screen.getByTestId("task-item")).toBeInTheDocument();
   });
 
@@ -276,15 +276,15 @@ describe("InboxPage", () => {
       buildCompletedTasksHook({ reload: mockReload }),
     );
     renderPage();
-    openRightPanel();
-    fireEvent.click(screen.getByTestId("right-filter-completed"));
+    openSidebar();
+    fireEvent.click(screen.getByTestId("sidebar-filter-completed"));
     expect(mockReload).toHaveBeenCalledOnce();
   });
 
-  it("should render account and login buttons in open panel", () => {
+  it("should render account and login buttons in open sidebar", () => {
     renderPage();
-    openRightPanel();
-    expect(screen.getByTestId("right-panel-account")).toBeInTheDocument();
-    expect(screen.getByTestId("right-panel-login")).toBeInTheDocument();
+    openSidebar();
+    expect(screen.getByTestId("sidebar-account")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-login")).toBeInTheDocument();
   });
 });
