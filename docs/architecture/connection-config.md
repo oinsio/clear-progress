@@ -66,22 +66,6 @@ Uses `useConnectionConfig()` instead of separate checks:
 - GAS + clientId + no token -> `"no_auth"`
 - Then maps to sync statuses
 
-## localStorage Migration
-
-One-time migration at app startup (`migrateLegacyConnection.ts`):
-- Reads old keys (`gas_url`, `google_client_id`, `backend_connected`)
-- Creates `ConnectionConfig` with `isActive: true` and saves to new key
-- Deletes old keys
-- If config is already in new format but without `isActive` — adds `isActive: true` (migration for users who updated to intermediate version)
-
-## Removed localStorage Keys
-
-| Old Key | Replacement |
-|---------|-------------|
-| `GAS_URL` | `CONNECTION_CONFIG.url` |
-| `GOOGLE_CLIENT_ID` | `CONNECTION_CONFIG.clientId` |
-| `BACKEND_CONNECTED` | presence of `CONNECTION_CONFIG` |
-
 ## Adding a New Backend
 
 1. Add new type to union `ConnectionConfig` (e.g., `SupabaseConnectionConfig`)
