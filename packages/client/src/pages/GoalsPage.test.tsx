@@ -1,9 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
-import type { UseGoalsReturn } from "@/hooks/useGoals";
+import { buildGoalsHook, buildTasksHook } from "@/test/builders/hookBuilders";
 import { buildGoal } from "@/test/factories/goalFactory";
-import type { Task } from "@/types/entities";
 import GoalsPage from "./GoalsPage";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
@@ -32,49 +31,12 @@ vi.mock("@/db/repositories/TaskRepository", () => ({
 import { useGoals } from "@/hooks/useGoals";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
-import type { UseTasksReturn } from "@/hooks/useTasks";
 import { useTasks } from "@/hooks/useTasks";
 
 const mockUseGoals = vi.mocked(useGoals);
 const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUseTasks = vi.mocked(useTasks);
-
-function buildGoalsHook(
-  overrides: Partial<UseGoalsReturn> = {},
-): UseGoalsReturn {
-  return {
-    goals: [],
-    isLoading: false,
-    reloadGoals: vi.fn().mockResolvedValue(undefined),
-    reorderGoals: vi.fn().mockResolvedValue(undefined),
-    createGoal: vi
-      .fn<UseGoalsReturn["createGoal"]>()
-      .mockResolvedValue(undefined),
-    updateGoal: vi.fn().mockResolvedValue(undefined),
-    updateGoalStatus: vi.fn().mockResolvedValue(undefined),
-    deleteGoal: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
-
-function buildTasksHook(
-  overrides: Partial<UseTasksReturn> = {},
-): UseTasksReturn {
-  return {
-    tasks: [],
-    isLoading: false,
-    createTask: vi.fn().mockResolvedValue(undefined),
-    completeTask: vi.fn().mockResolvedValue(undefined),
-    deleteTask: vi.fn().mockResolvedValue(undefined),
-    updateTask: vi.fn().mockResolvedValue(undefined),
-    moveTask: vi.fn().mockResolvedValue(undefined),
-    reorderTasks: vi.fn().mockResolvedValue(undefined),
-    duplicateTask: vi.fn().mockResolvedValue({} as Task),
-    reload: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
 
 function renderGoalsPage() {
   mockUsePanelSide.mockReturnValue({
