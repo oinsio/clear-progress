@@ -128,3 +128,17 @@ resolveEntityName SHALL return the entity name when the ID matches an entity in 
 - **GIVEN** entities contain {id: "a1", name: "Alpha"}
 - **WHEN** resolveEntityName is called with id "unknown"
 - **THEN** the result is the fallback string
+
+### Requirement: Completed tasks can be selected for detail view
+
+useTaskSelection SHALL allow selecting completed tasks regardless of Focus Mode state. The detail panel SHALL open for completed tasks with the same capabilities as for active tasks. Implements FR1, FR2 of fix-completed-task-detail.
+
+#### Scenario: Completed task selected in Focus Mode
+
+- **WHEN** Focus Mode is enabled and user selects a completed task
+- **THEN** the task is selected and detail panel opens with full editing capabilities
+
+#### Scenario: Completed task selected without Focus Mode
+
+- **WHEN** Focus Mode is disabled and user selects a completed task
+- **THEN** the task is selected and detail panel opens with full editing capabilities
