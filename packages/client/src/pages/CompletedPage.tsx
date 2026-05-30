@@ -41,7 +41,7 @@ export default function CompletedPage() {
     handleTaskSelect,
     handleTaskExpand,
     handleDetailPanelClose,
-  } = useTaskSelection({ taskArrays: [completedTasks], isFocusMode });
+  } = useTaskSelection({ taskArrays: [completedTasks] });
 
   const handleComplete = useTaskCompletion({
     completeFn: today.completeTask,

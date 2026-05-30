@@ -51,7 +51,6 @@ export default function InboxPage() {
     handleDetailPanelClose,
   } = useTaskSelection({
     taskArrays: [inboxTasks],
-    isFocusMode,
   });
 
   const handleCompleteInbox = useTaskCompletion({
