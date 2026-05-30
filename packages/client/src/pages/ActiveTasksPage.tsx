@@ -38,7 +38,6 @@ export default function ActiveTasksPage() {
 
   const selection = useTaskSelection({
     taskArrays: [today.tasks, week.tasks, later.tasks, completedTasks],
-    isFocusMode,
   });
 
   const {

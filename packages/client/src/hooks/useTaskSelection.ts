@@ -4,7 +4,6 @@ import type { Task } from "@/types/entities";
 
 interface UseTaskSelectionOptions {
   taskArrays: Task[][];
-  isFocusMode?: boolean;
 }
 
 interface UseTaskSelectionReturn {
@@ -26,7 +25,6 @@ interface UseTaskSelectionReturn {
  */
 export function useTaskSelection({
   taskArrays,
-  isFocusMode = false,
 }: UseTaskSelectionOptions): UseTaskSelectionReturn {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
@@ -55,9 +53,6 @@ export function useTaskSelection({
 
     if (foundTask) {
       setSelectedTask(foundTask);
-      if (isFocusMode && foundTask.is_completed) {
-        setSelectedTaskId(null);
-      }
     } else {
       void (async () => {
         const taskFromDatabase =
@@ -67,7 +62,7 @@ export function useTaskSelection({
         }
       })();
     }
-  }, [selectedTaskId, taskArrays, isFocusMode]);
+  }, [selectedTaskId, taskArrays]);
 
   return {
     selectedTaskId,

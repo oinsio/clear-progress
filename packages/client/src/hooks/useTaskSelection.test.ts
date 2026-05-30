@@ -186,45 +186,6 @@ describe("useTaskSelection", () => {
     });
   });
 
-  // FR-8: focus mode clears selection of completed tasks
-  it("should clear selection when completed task is selected in focus mode", async () => {
-    const completedTask = buildTask({ is_completed: true });
-    const { result } = renderHook(() =>
-      useTaskSelection({
-        taskArrays: [[completedTask]],
-        isFocusMode: true,
-      }),
-    );
-
-    act(() => {
-      result.current.handleTaskSelect(completedTask.id);
-    });
-
-    await waitFor(() => {
-      expect(result.current.selectedTaskId).toBeNull();
-    });
-  });
-
-  // FR-8: focus mode does NOT clear selection for non-completed tasks
-  it("should not clear selection for active task in focus mode", async () => {
-    const activeTask = buildTask({ is_completed: false });
-    const { result } = renderHook(() =>
-      useTaskSelection({
-        taskArrays: [[activeTask]],
-        isFocusMode: true,
-      }),
-    );
-
-    act(() => {
-      result.current.handleTaskSelect(activeTask.id);
-    });
-
-    await waitFor(() => {
-      expect(result.current.selectedTask).toEqual(activeTask);
-    });
-    expect(result.current.selectedTaskId).toBe(activeTask.id);
-  });
-
   // FR-8: setSelectedTaskId is exposed for external use
   it("should expose setSelectedTaskId for external consumers", () => {
     const task = buildTask();
@@ -250,8 +211,8 @@ describe("useTaskSelection", () => {
     expect(result.current.expandedTaskId).toBe("expanded-id");
   });
 
-  // FR-8: isFocusMode defaults to false — completed task stays selected
-  it("should not clear selection for completed task when isFocusMode is not provided", async () => {
+  // FR1: completed task stays selected
+  it("should keep completed task selected", async () => {
     const completedTask = buildTask({ is_completed: true });
     const { result } = renderHook(() =>
       useTaskSelection({ taskArrays: [[completedTask]] }),
