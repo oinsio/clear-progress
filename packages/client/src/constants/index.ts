@@ -128,7 +128,6 @@ export const GOOGLE_CLIENT_ID_CHANGED_EVENT = "google_client_id_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
 
 export const DB_NAME = "clear-progress";
-export const DB_VERSION = 6;
 
 export const SYNC_META_KEYS = {
   LAST_KNOWN_REVISION: "last_known_revision",
@@ -139,9 +138,6 @@ export const STORAGE_KEYS = {
   CONNECTION_CONFIG: "connection_config",
   SAVED_SUPABASE_CONFIG: "saved_supabase_config",
   SAVED_GAS_CONFIG: "saved_gas_config",
-  GAS_URL: "gas_url", // @deprecated — use CONNECTION_CONFIG
-  GOOGLE_CLIENT_ID: "google_client_id", // @deprecated — use CONNECTION_CONFIG
-  BACKEND_CONNECTED: "backend_connected", // @deprecated — use CONNECTION_CONFIG
   LAST_SYNC: "last_sync",
   ACCENT_COLOR: "accent_color",
   CUSTOM_ACCENT_LIGHT: "custom_accent_light",
