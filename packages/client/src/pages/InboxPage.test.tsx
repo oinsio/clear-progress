@@ -1,290 +1,271 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+/**
+ * Tests for InboxPage — inbox-only task page.
+ * Implements FR1 of refactor-task-pages
+ */
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { UseCategoriesReturn } from "@/hooks/useCategories";
-import type { UseCompletedTasksReturn } from "@/hooks/useCompletedTasks";
-import type { UseContextsReturn } from "@/hooks/useContexts";
-import type { UseGoalsReturn } from "@/hooks/useGoals";
-import type { UseSearchReturn } from "@/hooks/useSearch";
-import type { UseTasksReturn } from "@/hooks/useTasks";
-import { buildGoal } from "@/test/factories/goalFactory";
+import { BOX } from "@/constants";
 import { buildTask } from "@/test/factories/taskFactory";
 import type { Task } from "@/types/entities";
-import InboxPage from "./InboxPage";
 
-vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({
-    accessToken: null,
-    userEmail: null,
-    userPicture: null,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    silentRefresh: vi.fn(),
-  }),
-}));
-vi.mock("@/hooks/useTasks");
-vi.mock("@/hooks/useGoals");
-vi.mock("@/hooks/useSearch");
-vi.mock("@/hooks/useContexts");
-vi.mock("@/hooks/useCategories");
-vi.mock("@/hooks/useCompletedTasks");
-vi.mock("@/hooks/useShowHidden", () => ({
-  useShowHidden: () => ({
-    showHidden: false,
-    toggleShowHidden: vi.fn(),
-  }),
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-import { useCategories } from "@/hooks/useCategories";
-import { useCompletedTasks } from "@/hooks/useCompletedTasks";
-import { useContexts } from "@/hooks/useContexts";
-import { useGoals } from "@/hooks/useGoals";
-import { useSearch } from "@/hooks/useSearch";
+const mockCompleteTask = vi.fn();
+const mockDeleteTask = vi.fn();
+const mockCreateTask = vi.fn();
+const mockUpdateTask = vi.fn();
+const mockMoveTask = vi.fn();
+const mockReorderTasks = vi.fn();
+const mockDuplicateTask = vi.fn().mockResolvedValue({ id: "dup-1" } as Task);
+
+vi.mock("@/hooks/useTasks", () => ({
+  useTasks: vi.fn(() => ({
+    tasks: [],
+    isLoading: false,
+    completeTask: mockCompleteTask,
+    deleteTask: mockDeleteTask,
+    createTask: mockCreateTask,
+    updateTask: mockUpdateTask,
+    moveTask: mockMoveTask,
+    reorderTasks: mockReorderTasks,
+    duplicateTask: mockDuplicateTask,
+    reload: vi.fn(),
+  })),
+}));
+
+vi.mock("@/hooks/useGoals", () => ({
+  useGoals: () => ({ goals: [], isLoading: false }),
+}));
+vi.mock("@/hooks/useContexts", () => ({
+  useContexts: () => ({ contexts: [], isLoading: false }),
+}));
+vi.mock("@/hooks/useCategories", () => ({
+  useCategories: () => ({ categories: [], isLoading: false }),
+}));
+vi.mock("@/hooks/useFocusMode", () => ({
+  useFocusMode: () => ({ isFocusMode: false, focusOpacity: 1 }),
+}));
+
+const mockSetSelectedTaskId = vi.fn();
+vi.mock("@/hooks/useTaskSelection", () => ({
+  useTaskSelection: () => ({
+    selectedTaskId: null,
+    expandedTaskId: null,
+    selectedTask: null,
+    setSelectedTaskId: mockSetSelectedTaskId,
+    setExpandedTaskId: vi.fn(),
+    handleTaskSelect: vi.fn(),
+    handleTaskExpand: vi.fn(),
+    handleDetailPanelClose: vi.fn(),
+  }),
+}));
+
+const mockHandleComplete = vi.fn();
+vi.mock("@/hooks/useTaskCompletion", () => ({
+  useTaskCompletion: () => mockHandleComplete,
+}));
+
+let mockFilterBarPosition = "bottom";
+vi.mock("@/hooks/useFilterBarPosition", () => ({
+  useFilterBarPosition: () => ({
+    filterBarPosition: mockFilterBarPosition,
+    setFilterBarPosition: vi.fn(),
+  }),
+}));
+
+vi.mock("@/components/tasks/TaskPageLayout", () => ({
+  TaskPageLayout: ({
+    children,
+    sidebarMode,
+    topToolbar,
+    bottomToolbar,
+  }: {
+    children: React.ReactNode;
+    sidebarMode: string;
+    topToolbar?: React.ReactNode;
+    bottomToolbar?: React.ReactNode;
+  }) => (
+    <div data-testid="task-page-layout" data-sidebar-mode={sidebarMode}>
+      {topToolbar && <div data-testid="top-toolbar">{topToolbar}</div>}
+      {children}
+      {bottomToolbar && <div data-testid="bottom-toolbar">{bottomToolbar}</div>}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/tasks/TaskSection", () => ({
+  TaskSection: ({
+    tasks,
+    label,
+    onComplete,
+  }: {
+    tasks: Task[];
+    label: string;
+    onComplete: (id: string) => void;
+  }) => (
+    <div data-testid="task-section" data-label={label}>
+      {tasks.map((task) => (
+        <div key={task.id} data-testid="task-item" data-task-id={task.id}>
+          {task.name}
+          <button
+            data-testid={`complete-${task.id}`}
+            onClick={() => onComplete(task.id)}
+          />
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/tasks/AddTaskInput", () => ({
+  AddTaskInput: ({
+    onAdd,
+    onCancel,
+  }: {
+    onAdd: (name: string) => void;
+    onCancel: () => void;
+  }) => (
+    <div data-testid="add-task-input">
+      <button data-testid="submit-add" onClick={() => onAdd("New task")} />
+      <button data-testid="cancel-add" onClick={onCancel} />
+    </div>
+  ),
+}));
+
 import { useTasks } from "@/hooks/useTasks";
 
 const mockUseTasks = vi.mocked(useTasks);
-const mockUseGoals = vi.mocked(useGoals);
-const mockUseSearch = vi.mocked(useSearch);
-const mockUseContexts = vi.mocked(useContexts);
-const mockUseCategories = vi.mocked(useCategories);
-const mockUseCompletedTasks = vi.mocked(useCompletedTasks);
-
-function buildTasksHook(
-  overrides: Partial<UseTasksReturn> = {},
-): UseTasksReturn {
-  return {
-    tasks: [],
-    isLoading: false,
-    createTask: vi.fn(),
-    completeTask: vi.fn(),
-    deleteTask: vi.fn(),
-    updateTask: vi.fn(),
-    moveTask: vi.fn(),
-    reorderTasks: vi.fn(),
-    duplicateTask: vi.fn().mockResolvedValue({} as Task),
-    reload: vi.fn(),
-    ...overrides,
-  };
-}
-
-function buildGoalsHook(
-  overrides: Partial<UseGoalsReturn> = {},
-): UseGoalsReturn {
-  return {
-    goals: [],
-    isLoading: false,
-    reloadGoals: vi.fn(),
-    createGoal: vi.fn(),
-    updateGoal: vi.fn(),
-    updateGoalStatus: vi.fn(),
-    deleteGoal: vi.fn(),
-    reorderGoals: vi.fn(),
-    ...overrides,
-  };
-}
-
-function buildSearchHook(
-  overrides: Partial<UseSearchReturn> = {},
-): UseSearchReturn {
-  return {
-    tasks: [],
-    goals: [],
-    ideas: [],
-    isSearching: false,
-    search: vi.fn(),
-    clear: vi.fn(),
-    ...overrides,
-  };
-}
-
-function buildContextsHook(
-  overrides: Partial<UseContextsReturn> = {},
-): UseContextsReturn {
-  return {
-    contexts: [],
-    isLoading: false,
-    createContext: vi.fn(),
-    updateContext: vi.fn(),
-    deleteContext: vi.fn(),
-    reorderContexts: vi.fn(),
-    ...overrides,
-  };
-}
-
-function buildCategoriesHook(
-  overrides: Partial<UseCategoriesReturn> = {},
-): UseCategoriesReturn {
-  return {
-    categories: [],
-    isLoading: false,
-    createCategory: vi.fn(),
-    updateCategory: vi.fn(),
-    deleteCategory: vi.fn(),
-    reorderCategories: vi.fn(),
-    ...overrides,
-  };
-}
-
-function buildCompletedTasksHook(
-  overrides: Partial<UseCompletedTasksReturn> = {},
-): UseCompletedTasksReturn {
-  return {
-    completedTasks: [],
-    isLoading: false,
-    reload: vi.fn(),
-    ...overrides,
-  };
-}
 
 function renderPage() {
-  return render(
-    <MemoryRouter>
-      <InboxPage />
-    </MemoryRouter>,
-  );
+  return render(<InboxPage />);
 }
 
-function openSidebar() {
-  fireEvent.click(screen.getByTestId("sidebar-toggle"));
-}
+import type React from "react";
+import InboxPage from "./InboxPage";
 
 describe("InboxPage", () => {
   beforeEach(() => {
-    mockUseTasks.mockReturnValue(buildTasksHook());
-    mockUseGoals.mockReturnValue(buildGoalsHook());
-    mockUseSearch.mockReturnValue(buildSearchHook());
-    mockUseContexts.mockReturnValue(buildContextsHook());
-    mockUseCategories.mockReturnValue(buildCategoriesHook());
-    mockUseCompletedTasks.mockReturnValue(buildCompletedTasksHook());
+    vi.clearAllMocks();
+    mockFilterBarPosition = "bottom";
   });
 
-  it("should render the main page container", () => {
+  // FR-1: renders page container with correct testid
+  it("should render the page container", () => {
     renderPage();
     expect(screen.getByTestId("inbox-page")).toBeInTheDocument();
   });
 
-  it("should render box filter bar in tasks mode", () => {
+  // FR-1: passes sidebarMode="inbox" to TaskPageLayout
+  it("should render TaskPageLayout with sidebarMode inbox", () => {
     renderPage();
-    expect(screen.getByTestId("box-filter-toggle")).toBeInTheDocument();
+    const layout = screen.getByTestId("task-page-layout");
+    expect(layout).toHaveAttribute("data-sidebar-mode", "inbox");
   });
 
-  it("should hide box filter bar and show only add button in inbox mode", () => {
+  // FR-1: calls useTasks with BOX.INBOX
+  it("should call useTasks with inbox box", () => {
     renderPage();
-    openSidebar();
-    fireEvent.click(screen.getByTestId("sidebar-filter-inbox"));
-    expect(screen.queryByTestId("box-filter-toggle")).not.toBeInTheDocument();
-    expect(screen.getByTestId("add-task-button")).toBeInTheDocument();
+    expect(mockUseTasks).toHaveBeenCalledWith(BOX.INBOX);
   });
 
-  it("should render add task button", () => {
+  // FR-1: renders TaskSection with inbox tasks
+  it("should render TaskSection with inbox label", () => {
     renderPage();
-    expect(screen.getByTestId("add-task-button")).toBeInTheDocument();
+    const section = screen.getByTestId("task-section");
+    expect(section).toHaveAttribute("data-label", "section.inbox");
   });
 
-  it("should render sidebar toggle button", () => {
-    renderPage();
-    expect(screen.getByTestId("sidebar-toggle")).toBeInTheDocument();
-  });
-
-  it("should show filter items when sidebar is opened", () => {
-    renderPage();
-    openSidebar();
-    expect(screen.getByTestId("sidebar-filter-goals")).toBeInTheDocument();
-    expect(screen.getByTestId("sidebar-filter-search")).toBeInTheDocument();
-    expect(screen.getByTestId("sidebar-filter-tasks")).toBeInTheDocument();
-    expect(screen.getByTestId("sidebar-filter-completed")).toBeInTheDocument();
-    expect(screen.getByTestId("sidebar-filter-contexts")).toBeInTheDocument();
-    expect(screen.getByTestId("sidebar-filter-categories")).toBeInTheDocument();
-  });
-
-  it("should show empty state in all-tasks sections when no tasks", () => {
-    renderPage();
-    const emptySections = screen.getAllByTestId("task-list-empty");
-    expect(emptySections.length).toBeGreaterThan(0);
-  });
-
-  it("should show today tasks in today section in all-box view", () => {
-    const todayTasks = [
-      buildTask({ box: "today" }),
-      buildTask({ box: "today" }),
+  // FR-1: filters out completed tasks
+  it("should filter out completed tasks", () => {
+    const tasks = [
+      buildTask({ name: "Active", is_completed: false }),
+      buildTask({ name: "Done", is_completed: true }),
     ];
-    mockUseTasks.mockImplementation((box) =>
-      buildTasksHook({ tasks: box === "today" ? todayTasks : [] }),
-    );
+    mockUseTasks.mockReturnValue({
+      tasks,
+      isLoading: false,
+      completeTask: mockCompleteTask,
+      deleteTask: mockDeleteTask,
+      createTask: mockCreateTask,
+      updateTask: mockUpdateTask,
+      moveTask: mockMoveTask,
+      reorderTasks: mockReorderTasks,
+      duplicateTask: mockDuplicateTask,
+      reload: vi.fn(),
+    });
     renderPage();
-    expect(screen.getAllByTestId("task-item")).toHaveLength(2);
+    const items = screen.getAllByTestId("task-item");
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent("Active");
   });
 
-  it("should show add task input when add button is clicked", () => {
+  // FR-1: shows AddTaskInput when add button clicked
+  it("should show AddTaskInput when add button is clicked", () => {
     renderPage();
+    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("add-task-button"));
     expect(screen.getByTestId("add-task-input")).toBeInTheDocument();
   });
 
-  it("should not show inline search input when search filter is clicked (navigates to search page)", () => {
+  // FR-1: hides AddTaskInput after submit
+  it("should hide AddTaskInput after task is submitted", async () => {
     renderPage();
-    openSidebar();
-    fireEvent.click(screen.getByTestId("sidebar-filter-search"));
-    expect(screen.queryByTestId("search-input")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("add-task-button"));
+    fireEvent.click(screen.getByTestId("submit-add"));
+    await waitFor(() => {
+      expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
+    });
   });
 
-  it("should navigate to goals page when goals filter is clicked", () => {
-    const goals = [buildGoal({ name: "My Goal" })];
-    mockUseGoals.mockReturnValue(buildGoalsHook({ goals }));
+  // FR-1: hides AddTaskInput on cancel
+  it("should hide AddTaskInput on cancel", () => {
     renderPage();
-    openSidebar();
-    fireEvent.click(screen.getByTestId("sidebar-filter-goals"));
-    expect(screen.queryByText("My Goal")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("add-task-button"));
+    fireEvent.click(screen.getByTestId("cancel-add"));
+    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
   });
 
-  it("should not show search results inline when search filter is clicked (navigates to search page)", () => {
-    const foundTasks = [buildTask({ name: "Found task" })];
-    mockUseSearch.mockReturnValue(buildSearchHook({ tasks: foundTasks }));
+  // FR-1: add button in bottom toolbar when filterBarPosition is bottom
+  it("should render add button in bottom toolbar when position is bottom", () => {
+    mockFilterBarPosition = "bottom";
     renderPage();
-    openSidebar();
-    fireEvent.click(screen.getByTestId("sidebar-filter-search"));
-    expect(screen.queryByText("Found task")).not.toBeInTheDocument();
+    const bottomToolbar = screen.getByTestId("bottom-toolbar");
+    expect(
+      bottomToolbar.querySelector("[data-testid='add-task-button']"),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("top-toolbar")).not.toBeInTheDocument();
   });
 
-  it("should show completed tasks when completed filter is selected", () => {
-    const finishedTasks = [
-      buildTask({ name: "Done task", is_completed: true }),
-    ];
-    mockUseCompletedTasks.mockReturnValue(
-      buildCompletedTasksHook({ completedTasks: finishedTasks }),
-    );
+  // FR-1: add button in top toolbar when filterBarPosition is top
+  it("should render add button in top toolbar when position is top", () => {
+    mockFilterBarPosition = "top";
     renderPage();
-    openSidebar();
-    fireEvent.click(screen.getByTestId("sidebar-filter-completed"));
-    expect(screen.getByTestId("task-item")).toBeInTheDocument();
+    const topToolbar = screen.getByTestId("top-toolbar");
+    expect(
+      topToolbar.querySelector("[data-testid='add-task-button']"),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("bottom-toolbar")).not.toBeInTheDocument();
   });
 
-  it("should show inbox tasks when inbox filter is selected", () => {
-    const inboxTasks = [buildTask({ name: "Inbox task", box: "inbox" })];
-    mockUseTasks.mockImplementation((box) =>
-      buildTasksHook({ tasks: box === "inbox" ? inboxTasks : [] }),
-    );
+  // FR-1: handles task completion via onComplete
+  it("should call completion handler when task is completed", () => {
+    const task = buildTask({ name: "Test task", is_completed: false });
+    mockUseTasks.mockReturnValue({
+      tasks: [task],
+      isLoading: false,
+      completeTask: mockCompleteTask,
+      deleteTask: mockDeleteTask,
+      createTask: mockCreateTask,
+      updateTask: mockUpdateTask,
+      moveTask: mockMoveTask,
+      reorderTasks: mockReorderTasks,
+      duplicateTask: mockDuplicateTask,
+      reload: vi.fn(),
+    });
     renderPage();
-    openSidebar();
-    fireEvent.click(screen.getByTestId("sidebar-filter-inbox"));
-    expect(screen.getByTestId("task-item")).toBeInTheDocument();
-  });
-
-  it("should reload completed tasks when switching to completed mode", () => {
-    const mockReload = vi.fn().mockResolvedValue(undefined);
-    mockUseCompletedTasks.mockReturnValue(
-      buildCompletedTasksHook({ reload: mockReload }),
-    );
-    renderPage();
-    openSidebar();
-    fireEvent.click(screen.getByTestId("sidebar-filter-completed"));
-    expect(mockReload).toHaveBeenCalledOnce();
-  });
-
-  it("should render account and login buttons in open sidebar", () => {
-    renderPage();
-    openSidebar();
-    expect(screen.getByTestId("sidebar-account")).toBeInTheDocument();
-    expect(screen.getByTestId("sidebar-login")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(`complete-${task.id}`));
+    expect(mockHandleComplete).toHaveBeenCalledWith(task.id);
   });
 });

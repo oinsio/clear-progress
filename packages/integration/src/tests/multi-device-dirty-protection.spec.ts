@@ -45,7 +45,7 @@ test("App B dirty record is preserved when App A pushes update and App B pulls",
   // A modifies same task and pushes FIRST
   const nameFromA = `Updated by A ${Date.now()}`;
   await pageA.goto("/tasks");
-  await pageA.waitForSelector('[data-testid="inbox-page"]');
+  await pageA.waitForSelector('[data-testid="active-tasks-page"]');
   await openTaskDetail(pageA, taskName);
   await updateTaskName(pageA, nameFromA);
   await triggerSyncAndWait(pageA);
@@ -66,7 +66,7 @@ test("App B dirty record is preserved when App A pushes update and App B pulls",
 
   // Verify: B's UI shows dirtyNameB (B's newer modification was accepted)
   await pageB.goto("/tasks");
-  await pageB.waitForSelector('[data-testid="inbox-page"]');
+  await pageB.waitForSelector('[data-testid="active-tasks-page"]');
   const taskItemB = pageB.locator('[data-testid="task-item"]').filter({
     has: pageB.locator('[data-testid="task-item-name"]', {
       hasText: dirtyNameB,
@@ -114,7 +114,7 @@ test("App B unpushed new task survives pull that brings A's new task", async () 
   // before B creates its local task (avoids B's debounced sync
   // pulling from server before A's task is available).
   await pageA.goto("/tasks");
-  await pageA.waitForSelector('[data-testid="inbox-page"]');
+  await pageA.waitForSelector('[data-testid="active-tasks-page"]');
   await createTask(pageA, taskByA);
   await triggerSyncAndWait(pageA);
 

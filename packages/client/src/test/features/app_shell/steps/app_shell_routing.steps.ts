@@ -1,4 +1,4 @@
-// implements FR4, FR5, FR6 of app-shell-navigation-spec
+// implements FR4, FR5 of app-shell-navigation-spec
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
@@ -38,20 +38,11 @@ function getAppLayoutRoute(): RouteNode {
   return appLayoutRoute as RouteNode;
 }
 
-function getPageLayoutRoute(): RouteNode {
-  const appLayout = getAppLayoutRoute();
-  const pageLayoutRoute = appLayout.children?.find(
-    (route) => !route.path && route.children,
-  );
-  expect(pageLayoutRoute).toBeDefined();
-  return pageLayoutRoute as RouteNode;
-}
-
 describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
     // @app-shell-navigation-spec @FR4
-    f.Scenario("Root path redirects to Inbox", ({ When, Then }) => {
+    f.Scenario("Root path redirects to Tasks", ({ When, Then }) => {
       When("router is configured", (_ctx: TestContext) => {
         // router is already imported and configured
       });
@@ -78,77 +69,12 @@ describeFeature(
 
           const inboxRoute = findRouteByPath(children, ROUTES.INBOX);
           const goalsRoute = findRouteByPath(children, ROUTES.GOALS);
-          const todayRoute = findRouteByPath(children, ROUTES.TODAY);
+          const tasksRoute = findRouteByPath(children, ROUTES.TASKS);
           expect(inboxRoute).toBeDefined();
           expect(goalsRoute).toBeDefined();
-          expect(todayRoute).toBeDefined();
+          expect(tasksRoute).toBeDefined();
         },
       );
     });
-
-    // @app-shell-navigation-spec @FR6
-    f.Scenario(
-      "Time-box routes are nested under PageLayout",
-      ({ When, Then, And }) => {
-        When("router is configured", (_ctx: TestContext) => {
-          // router is already imported
-        });
-
-        Then("Today route is wrapped in PageShell", (_ctx: TestContext) => {
-          const pageLayout = getPageLayoutRoute();
-          const todayRoute = findRouteByPath(
-            pageLayout.children ?? [],
-            ROUTES.TODAY,
-          );
-          expect(todayRoute).toBeDefined();
-        });
-
-        And("Week route is wrapped in PageShell", (_ctx: TestContext) => {
-          const pageLayout = getPageLayoutRoute();
-          const weekRoute = findRouteByPath(
-            pageLayout.children ?? [],
-            ROUTES.WEEK,
-          );
-          expect(weekRoute).toBeDefined();
-        });
-
-        And("Later route is wrapped in PageShell", (_ctx: TestContext) => {
-          const pageLayout = getPageLayoutRoute();
-          const laterRoute = findRouteByPath(
-            pageLayout.children ?? [],
-            ROUTES.LATER,
-          );
-          expect(laterRoute).toBeDefined();
-        });
-      },
-    );
-
-    // @app-shell-navigation-spec @FR6
-    f.Scenario(
-      "Non-time-box routes are not in PageLayout",
-      ({ When, Then, And }) => {
-        When("router is configured", (_ctx: TestContext) => {
-          // router is already imported
-        });
-
-        Then("Inbox route is not wrapped in PageShell", (_ctx: TestContext) => {
-          const pageLayout = getPageLayoutRoute();
-          const inboxInPageLayout = findRouteByPath(
-            pageLayout.children ?? [],
-            ROUTES.INBOX,
-          );
-          expect(inboxInPageLayout).toBeUndefined();
-        });
-
-        And("Goals route is not wrapped in PageShell", (_ctx: TestContext) => {
-          const pageLayout = getPageLayoutRoute();
-          const goalsInPageLayout = findRouteByPath(
-            pageLayout.children ?? [],
-            ROUTES.GOALS,
-          );
-          expect(goalsInPageLayout).toBeUndefined();
-        });
-      },
-    );
   },
 );

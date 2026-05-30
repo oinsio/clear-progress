@@ -55,7 +55,7 @@ export async function createAuthenticatedPage(
     LAST_SYNC_STORAGE_KEY,
   );
 
-  await page.waitForSelector('[data-testid="inbox-page"]', {
+  await page.waitForSelector('[data-testid="active-tasks-page"]', {
     timeout: SYNC_COMPLETE_TIMEOUT_MS,
   });
 
@@ -307,7 +307,7 @@ async function ensureSyncReady(testPage: Page): Promise<void> {
 
   if (!isVisible) {
     await testPage.goto("/tasks");
-    await testPage.waitForSelector('[data-testid="inbox-page"]', {
+    await testPage.waitForSelector('[data-testid="active-tasks-page"]', {
       timeout: SYNC_COMPLETE_TIMEOUT_MS,
     });
   }
@@ -319,7 +319,7 @@ async function ensureSyncReady(testPage: Page): Promise<void> {
  */
 async function reloadAndWaitForAutoSync(testPage: Page): Promise<boolean> {
   await testPage.goto("/tasks", { waitUntil: "load" });
-  await testPage.waitForSelector('[data-testid="inbox-page"]', {
+  await testPage.waitForSelector('[data-testid="active-tasks-page"]', {
     timeout: SYNC_COMPLETE_TIMEOUT_MS,
   });
 

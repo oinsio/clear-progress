@@ -1,18 +1,18 @@
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { TaskList } from "@/components/tasks/TaskList";
-import { BOX, BOX_FILTER_LABELS } from "@/constants";
+import { BOX, BOX_FILTER_I18N_KEYS } from "@/constants";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
 import type { Box } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
 
 const BOX_SECTION_ORDER: Box[] = [BOX.INBOX, BOX.TODAY, BOX.WEEK, BOX.LATER];
 
-const BOX_SECTION_LABELS: Record<Box, string> = {
-  [BOX.INBOX]: BOX_FILTER_LABELS.inbox,
-  [BOX.TODAY]: BOX_FILTER_LABELS.today,
-  [BOX.WEEK]: BOX_FILTER_LABELS.week,
-  [BOX.LATER]: BOX_FILTER_LABELS.later,
+const BOX_SECTION_I18N_KEYS: Record<Box, string> = {
+  [BOX.INBOX]: BOX_FILTER_I18N_KEYS.inbox,
+  [BOX.TODAY]: BOX_FILTER_I18N_KEYS.today,
+  [BOX.WEEK]: BOX_FILTER_I18N_KEYS.week,
+  [BOX.LATER]: BOX_FILTER_I18N_KEYS.later,
 };
 
 const BOX_SECTION_KEYS: Record<Box, string> = {
@@ -24,6 +24,7 @@ const BOX_SECTION_KEYS: Record<Box, string> = {
 
 interface BoxSectionProps {
   box: Box;
+  label: string;
   tasks: Task[];
   goals: Goal[];
   contexts: Context[];
@@ -43,6 +44,7 @@ interface BoxSectionProps {
 
 function BoxSection({
   box,
+  label,
   tasks,
   goals,
   contexts,
@@ -70,7 +72,7 @@ function BoxSection({
         className="w-full flex items-center justify-between px-4 py-2 text-sm font-semibold text-accent bg-white border-b border-gray-100 sticky top-0 z-10"
       >
         <span>
-          {BOX_SECTION_LABELS[box]} ({tasks.length})
+          {label} ({tasks.length})
         </span>
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
@@ -165,6 +167,7 @@ export function BoxSectionList({
           <BoxSection
             key={box}
             box={box}
+            label={t(BOX_SECTION_I18N_KEYS[box])}
             tasks={boxTasks}
             goals={goals}
             contexts={contexts}

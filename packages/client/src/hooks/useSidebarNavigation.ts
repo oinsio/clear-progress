@@ -17,9 +17,8 @@ export function useSidebarNavigation(): (newMode: SidebarMode) => void {
       const filterItem = FILTER_ITEMS.find((item) => item.mode === newMode);
       if (filterItem?.route) {
         navigate(filterItem.route);
-      } else {
-        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
       }
+      // Modes without routes (e.g., focused_goals) are handled by parent via onModeChange prop
     },
     [navigate],
   );

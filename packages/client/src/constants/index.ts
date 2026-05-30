@@ -9,10 +9,9 @@ import type {
 } from "@/types/common";
 
 export const ROUTES = {
-  INBOX: "/tasks",
-  TODAY: "/today",
-  WEEK: "/week",
-  LATER: "/later",
+  INBOX: "/inbox",
+  TASKS: "/tasks",
+  COMPLETED: "/completed",
   GOALS: "/goals",
   GOAL: "/goals/:id",
   IDEAS: "/ideas",
@@ -36,12 +35,12 @@ export const BOX_ORDER: Box[] = ["inbox", "today", "week", "later"];
 
 export const BOX_FILTER_ALL = "all" as const satisfies BoxFilter;
 
-export const BOX_FILTER_LABELS: Record<BoxFilter, string> = {
-  all: "Все",
-  inbox: "Входящие",
-  today: "Сегодня",
-  week: "Неделя",
-  later: "Позже",
+export const BOX_FILTER_I18N_KEYS: Record<BoxFilter, string> = {
+  all: "box.all",
+  inbox: "box.inbox",
+  today: "box.today",
+  week: "box.week",
+  later: "box.later",
 };
 
 export const TASK_BOX_FILTER_ORDER: BoxFilter[] = [

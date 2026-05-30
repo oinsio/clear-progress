@@ -40,7 +40,7 @@ export interface FilterItem {
 }
 
 export const FILTER_ITEMS: FilterItem[] = [
-  { mode: "inbox", labelKey: "filter.inbox", Icon: Inbox },
+  { mode: "inbox", labelKey: "filter.inbox", Icon: Inbox, route: ROUTES.INBOX },
   {
     mode: "contexts",
     labelKey: "filter.contexts",
@@ -70,8 +70,18 @@ export const FILTER_ITEMS: FilterItem[] = [
     Icon: Lightbulb,
     route: ROUTES.IDEAS,
   },
-  { mode: "tasks", labelKey: "filter.tasks", Icon: CheckSquare },
-  { mode: "completed", labelKey: "filter.completed", Icon: CheckCheck },
+  {
+    mode: "tasks",
+    labelKey: "filter.tasks",
+    Icon: CheckSquare,
+    route: ROUTES.TASKS,
+  },
+  {
+    mode: "completed",
+    labelKey: "filter.completed",
+    Icon: CheckCheck,
+    route: ROUTES.COMPLETED,
+  },
   {
     mode: "deleted",
     labelKey: "filter.deleted",

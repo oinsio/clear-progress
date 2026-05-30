@@ -9,20 +9,16 @@ describe("ROUTES", () => {
     }
   });
 
-  it("should define INBOX as /tasks", () => {
-    expect(ROUTES.INBOX).toBe("/tasks");
+  it("should define INBOX as /inbox", () => {
+    expect(ROUTES.INBOX).toBe("/inbox");
   });
 
-  it("should define TODAY as /today", () => {
-    expect(ROUTES.TODAY).toBe("/today");
+  it("should define TASKS as /tasks", () => {
+    expect(ROUTES.TASKS).toBe("/tasks");
   });
 
-  it("should define WEEK as /week", () => {
-    expect(ROUTES.WEEK).toBe("/week");
-  });
-
-  it("should define LATER as /later", () => {
-    expect(ROUTES.LATER).toBe("/later");
+  it("should define COMPLETED as /completed", () => {
+    expect(ROUTES.COMPLETED).toBe("/completed");
   });
 
   it("should define GOALS as /goals", () => {

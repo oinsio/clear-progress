@@ -35,7 +35,7 @@ test("unsynced checklist item shows amber indicator until pushed", async () => {
 
   // After sync (which may reload the page), ensure we're on a clean /tasks page
   await page.goto("/tasks");
-  await page.waitForSelector('[data-testid="inbox-page"]');
+  await page.waitForSelector('[data-testid="active-tasks-page"]');
 
   // Re-open detail panel and switch to checklist
   await openTaskDetail(page, taskName);

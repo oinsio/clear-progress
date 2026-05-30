@@ -86,10 +86,10 @@ describeFeature(
 
     // @add-sidebar-specs @FR3
     f.Scenario(
-      "Selecting a mode activates it",
+      "Selecting a routed mode navigates to its route",
       ({ Given, When, Then, And }) => {
         Given("sidebar is expanded", (_ctx: TestContext) => {
-          // will render in When step
+          // will render in And step
         });
 
         And("no mode is active", (_ctx: TestContext) => {
@@ -106,15 +106,12 @@ describeFeature(
           },
         );
 
-        Then(
-          "{string} mode becomes active",
-          (_ctx: TestContext, filterMode: string) => {
-            expect(f.context.onModeChange).toHaveBeenCalledWith(filterMode);
-          },
-        );
+        Then("app navigates to the tasks route", (_ctx: TestContext) => {
+          expect(mockNavigate).toHaveBeenCalledWith("/tasks");
+        });
 
         And(
-          "the {string} filter button has aria-pressed {string}",
+          "the {string} filter button has aria-pressed {string} when mode is active",
           (_ctx: TestContext, _filterMode: string, _value: string) => {
             // Re-render with active mode to verify aria-pressed
             renderSidebar("tasks", f.context.onModeChange);
@@ -127,7 +124,7 @@ describeFeature(
 
     // @add-sidebar-specs @FR3
     f.Scenario(
-      "Clicking active mode deactivates it",
+      "Clicking active routed mode navigates again",
       ({ Given, When, Then, And }) => {
         Given("sidebar is expanded", (_ctx: TestContext) => {
           // will render after mode is set
@@ -150,19 +147,9 @@ describeFeature(
           },
         );
 
-        Then("mode is set to null", (_ctx: TestContext) => {
-          expect(f.context.onModeChange).toHaveBeenCalledWith(null);
+        Then("app navigates to the tasks route again", (_ctx: TestContext) => {
+          expect(mockNavigate).toHaveBeenCalledWith("/tasks");
         });
-
-        And(
-          "the {string} filter button has aria-pressed {string}",
-          (_ctx: TestContext, _filterMode: string, _value: string) => {
-            // Re-render with null mode to verify aria-pressed false
-            renderSidebar(null, f.context.onModeChange);
-            const button = screen.getByTestId("sidebar-filter-tasks");
-            expect(button).toHaveAttribute("aria-pressed", "false");
-          },
-        );
       },
     );
 

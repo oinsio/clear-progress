@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   BOX,
   BOX_FILTER_ALL,
-  BOX_FILTER_LABELS,
+  BOX_FILTER_I18N_KEYS,
   BOX_ORDER,
   TASK_BOX_FILTER_ORDER,
 } from "./index";
@@ -48,13 +48,13 @@ describe("BOX_FILTER_ALL", () => {
   });
 });
 
-describe("BOX_FILTER_LABELS", () => {
-  it("should have a label for each box filter", () => {
-    expect(BOX_FILTER_LABELS.all).toBeTruthy();
-    expect(BOX_FILTER_LABELS.inbox).toBeTruthy();
-    expect(BOX_FILTER_LABELS.today).toBeTruthy();
-    expect(BOX_FILTER_LABELS.week).toBeTruthy();
-    expect(BOX_FILTER_LABELS.later).toBeTruthy();
+describe("BOX_FILTER_I18N_KEYS", () => {
+  it("should have an i18n key for each box filter", () => {
+    expect(BOX_FILTER_I18N_KEYS.all).toBe("box.all");
+    expect(BOX_FILTER_I18N_KEYS.inbox).toBe("box.inbox");
+    expect(BOX_FILTER_I18N_KEYS.today).toBe("box.today");
+    expect(BOX_FILTER_I18N_KEYS.week).toBe("box.week");
+    expect(BOX_FILTER_I18N_KEYS.later).toBe("box.later");
   });
 });
 

@@ -2,12 +2,12 @@ import { MapPin } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { EntityDetailLayout } from "@/components/tasks/EntityDetailLayout";
-import type { SidebarMode } from "@/components/tasks/Sidebar";
 import { ROUTES } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
 import { useContextTasks } from "@/hooks/useContextTasks";
 import { useGoals } from "@/hooks/useGoals";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 
 const CONTEXT_I18N_KEYS = {
   back: "context.back",
@@ -55,18 +55,7 @@ export default function ContextDetailPage() {
     navigate(ROUTES.CONTEXTS);
   }, [id, deleteContext, navigate]);
 
-  const handleModeChange = useCallback(
-    (newMode: SidebarMode) => {
-      if (newMode === "categories") navigate(ROUTES.CATEGORIES);
-      else if (
-        newMode === "inbox" ||
-        newMode === "tasks" ||
-        newMode === "completed"
-      )
-        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
-    },
-    [navigate],
-  );
+  const handleModeChange = useSidebarNavigation();
 
   return (
     <EntityDetailLayout

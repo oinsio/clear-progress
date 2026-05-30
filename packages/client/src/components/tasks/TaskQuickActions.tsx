@@ -10,7 +10,7 @@ import {
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BOX, BOX_FILTER_LABELS } from "@/constants";
+import { BOX, BOX_FILTER_I18N_KEYS } from "@/constants";
 import { cn } from "@/shared/lib/cn";
 import type { Box, RepeatRule } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
@@ -390,7 +390,7 @@ export function TaskQuickActions({
                 <button
                   key={box}
                   type="button"
-                  aria-label={BOX_FILTER_LABELS[box]}
+                  aria-label={t(BOX_FILTER_I18N_KEYS[box])}
                   aria-pressed={isCurrentBox}
                   onClick={() => handleBoxSelect(box)}
                   className={cn(

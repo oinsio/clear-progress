@@ -149,7 +149,7 @@ test("Both complete same recurring offline → push both → consistent state", 
 
   // pageB has been idle — reload to ensure fresh UI + sync state
   await pageB.goto("/tasks");
-  await pageB.waitForSelector('[data-testid="inbox-page"]');
+  await pageB.waitForSelector('[data-testid="active-tasks-page"]');
 
   // Sync + wait for task to appear on pageB (retry sync if task not yet visible)
   await syncUntilTaskVisible(pageB, conflictTaskName);
