@@ -99,7 +99,10 @@ export default function CompletedPage() {
   const hasCompletedTasks = completedTasks.length > 0;
 
   return (
-    <div data-testid="completed-page" className="flex flex-1 flex-col">
+    <div
+      data-testid="completed-page"
+      className="flex flex-1 flex-col overflow-hidden"
+    >
       <TaskPageLayout
         sidebarMode="completed"
         selectedTask={selectedTask}

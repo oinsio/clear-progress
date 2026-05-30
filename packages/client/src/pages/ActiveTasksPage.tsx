@@ -171,7 +171,10 @@ export default function ActiveTasksPage() {
   );
 
   return (
-    <div data-testid="active-tasks-page" className="flex flex-1 flex-col">
+    <div
+      data-testid="active-tasks-page"
+      className="flex flex-1 flex-col overflow-hidden"
+    >
       <TaskPageLayout
         sidebarMode="tasks"
         selectedTask={selection.selectedTask}

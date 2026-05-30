@@ -123,7 +123,10 @@ export default function InboxPage() {
   );
 
   return (
-    <div data-testid="inbox-page" className="flex flex-1 flex-col">
+    <div
+      data-testid="inbox-page"
+      className="flex flex-1 flex-col overflow-hidden"
+    >
       <TaskPageLayout
         sidebarMode="inbox"
         selectedTask={selectedTask}
