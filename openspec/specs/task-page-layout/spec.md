@@ -1,4 +1,10 @@
-## ADDED Requirements
+# Capability: Task Page Layout
+
+## Purpose
+
+Shared layout and hooks for task pages (Inbox, Active Tasks, Completed). Provides split-pane layout with detail panel, collapsible task sections, task selection state management, and completion handling.
+
+## Requirements
 
 ### Requirement: TaskPageLayout provides shared split-pane layout
 

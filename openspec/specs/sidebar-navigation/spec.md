@@ -56,22 +56,31 @@ The sidebar SHALL render on the left or right side of the screen based on the `s
 
 ### Requirement: Mode selection changes active filter
 
-Clicking a filter item without a route SHALL set it as the active mode. Clicking the active mode again SHALL deactivate it (set mode to null). The active mode SHALL be visually distinguished with `bg-white/20`.
+Clicking a filter item SHALL navigate to its route if one is defined. For items without a route (focused_goals only), clicking SHALL toggle the active mode. The active mode SHALL be visually distinguished with `bg-white/20`. All task-related modes (inbox, tasks, completed) MUST have routes defined. Implements FR5 of refactor-task-pages.
 
-#### Scenario: Selecting a mode activates it
+#### Scenario: Clicking inbox navigates to inbox page
+- **WHEN** user clicks the "inbox" filter item
+- **THEN** app navigates to "/inbox"
+
+#### Scenario: Clicking tasks navigates to active tasks page
 - **WHEN** user clicks the "tasks" filter item
-- **THEN** "tasks" mode becomes active
-- **AND** the item has `aria-pressed="true"`
+- **THEN** app navigates to "/tasks"
 
-#### Scenario: Clicking active mode deactivates it
-- **WHEN** "tasks" mode is active
-- **AND** user clicks the "tasks" filter item
-- **THEN** mode is set to null
-- **AND** the item has `aria-pressed="false"`
+#### Scenario: Clicking completed navigates to completed page
+- **WHEN** user clicks the "completed" filter item
+- **THEN** app navigates to "/completed"
+
+#### Scenario: Active mode highlighted based on current route
+- **WHEN** user is on "/inbox"
+- **THEN** the "inbox" filter item has `aria-pressed="true"`
 
 ### Requirement: Filter items with routes navigate instead of toggling
 
-Filter items that have a `route` property (goals, ideas, contexts, categories, deleted) SHALL navigate to that route when clicked, instead of toggling the mode.
+Filter items that have a `route` property (inbox, tasks, completed, goals, ideas, contexts, categories, deleted) SHALL navigate to that route when clicked, instead of toggling the mode. Only focused_goals remains without a route. Implements FR5 of refactor-task-pages.
+
+#### Scenario: Clicking inbox navigates to inbox page
+- **WHEN** user clicks the "inbox" filter item
+- **THEN** app navigates to the inbox route "/inbox"
 
 #### Scenario: Clicking goals navigates to goals page
 - **WHEN** user clicks the "goals" filter item
