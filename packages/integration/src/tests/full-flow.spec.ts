@@ -116,7 +116,7 @@ test("modify multiple entities → push → verify changes on server", async () 
   const page = getPage();
   // --- Modify task ---
   await page.goto("/tasks");
-  await page.waitForSelector('[data-testid="inbox-page"]');
+  await page.waitForSelector('[data-testid="active-tasks-page"]');
   await openTaskDetail(page, taskName);
   const updatedTaskName = `Updated FF Task ${Date.now()}`;
   await updateTaskName(page, updatedTaskName);
@@ -169,7 +169,7 @@ test("soft-delete multiple entities → push → verify is_deleted=true on serve
   const page = getPage();
   // --- Delete task ---
   await page.goto("/tasks");
-  await page.waitForSelector('[data-testid="inbox-page"]');
+  await page.waitForSelector('[data-testid="active-tasks-page"]');
   await openTaskDetail(page, taskName);
   await deleteTaskFromDetail(page);
 

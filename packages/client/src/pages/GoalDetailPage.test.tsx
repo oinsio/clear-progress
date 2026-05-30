@@ -2,9 +2,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UseGoalReturn } from "@/hooks/useGoal";
-import type { UseGoalsReturn } from "@/hooks/useGoals";
 import type { UseGoalTasksReturn } from "@/hooks/useGoalTasks";
 import type { UseSettingsReturn } from "@/hooks/useSettings";
+import { buildGoalsHook } from "@/test/builders/hookBuilders";
 import { buildGoal } from "@/test/factories/goalFactory";
 import type { Task } from "@/types/entities";
 import GoalDetailPage from "./GoalDetailPage";
@@ -88,22 +88,6 @@ function buildGoalTasksHook(
     deleteTask: vi.fn().mockResolvedValue(undefined),
     duplicateTask: vi.fn().mockResolvedValue({} as Task),
     reorderTasks: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
-
-function buildGoalsHook(
-  overrides: Partial<UseGoalsReturn> = {},
-): UseGoalsReturn {
-  return {
-    goals: [],
-    isLoading: false,
-    reloadGoals: vi.fn().mockResolvedValue(undefined),
-    createGoal: vi.fn().mockResolvedValue(undefined),
-    updateGoal: vi.fn().mockResolvedValue(undefined),
-    updateGoalStatus: vi.fn().mockResolvedValue(undefined),
-    deleteGoal: vi.fn().mockResolvedValue(undefined),
-    reorderGoals: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

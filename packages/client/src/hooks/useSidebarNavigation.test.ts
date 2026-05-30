@@ -73,44 +73,36 @@ describe("useSidebarNavigation", () => {
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.DELETED);
   });
 
-  it("should navigate to inbox with filterMode state when mode is inbox", () => {
+  it("should navigate to inbox route when mode is inbox", () => {
     const { result } = renderHook(() => useSidebarNavigation());
 
     result.current("inbox");
 
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.INBOX, {
-      state: { filterMode: "inbox" },
-    });
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.INBOX);
   });
 
-  it("should navigate to inbox with filterMode state when mode is tasks", () => {
+  it("should navigate to tasks route when mode is tasks", () => {
     const { result } = renderHook(() => useSidebarNavigation());
 
     result.current("tasks");
 
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.INBOX, {
-      state: { filterMode: "tasks" },
-    });
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.TASKS);
   });
 
-  it("should navigate to inbox with filterMode state when mode is completed", () => {
+  it("should navigate to completed route when mode is completed", () => {
     const { result } = renderHook(() => useSidebarNavigation());
 
     result.current("completed");
 
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.INBOX, {
-      state: { filterMode: "completed" },
-    });
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.COMPLETED);
   });
 
-  it("should navigate to inbox with filterMode state when mode is focused_goals", () => {
+  it("should not navigate when mode is focused_goals (no route)", () => {
     const { result } = renderHook(() => useSidebarNavigation());
 
     result.current("focused_goals");
 
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.INBOX, {
-      state: { filterMode: "focused_goals" },
-    });
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("should return stable function reference across re-renders", () => {
@@ -139,7 +131,7 @@ describe("useSidebarNavigation", () => {
     expect(mockNavigate).toHaveBeenCalledTimes(1);
   });
 
-  it("should only call navigate once per invocation for mode without route", () => {
+  it("should only call navigate once per invocation for mode with filter route", () => {
     const { result } = renderHook(() => useSidebarNavigation());
 
     result.current("tasks");

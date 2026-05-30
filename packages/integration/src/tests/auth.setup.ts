@@ -42,7 +42,7 @@ setup(
 
     // --- Step 3: App handles callback → navigates to /tasks ---
     await page.waitForURL("**/tasks", { timeout: SYNC_COMPLETE_TIMEOUT_MS });
-    await page.waitForSelector('[data-testid="inbox-page"]');
+    await page.waitForSelector('[data-testid="active-tasks-page"]');
 
     // --- Step 4: Wait for initial sync to complete ---
     await page.waitForFunction(

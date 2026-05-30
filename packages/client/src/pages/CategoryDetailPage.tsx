@@ -2,12 +2,12 @@ import { Tag } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { EntityDetailLayout } from "@/components/tasks/EntityDetailLayout";
-import type { SidebarMode } from "@/components/tasks/Sidebar";
 import { ROUTES } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryTasks } from "@/hooks/useCategoryTasks";
 import { useContexts } from "@/hooks/useContexts";
 import { useGoals } from "@/hooks/useGoals";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 
 const CATEGORY_I18N_KEYS = {
   back: "category.back",
@@ -55,13 +55,7 @@ export default function CategoryDetailPage() {
     navigate(ROUTES.CATEGORIES);
   }, [id, deleteCategory, navigate]);
 
-  const handleModeChange = useCallback(
-    (newMode: SidebarMode) => {
-      if (newMode === "inbox" || newMode === "tasks" || newMode === "completed")
-        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
-    },
-    [navigate],
-  );
+  const handleModeChange = useSidebarNavigation();
 
   return (
     <EntityDetailLayout

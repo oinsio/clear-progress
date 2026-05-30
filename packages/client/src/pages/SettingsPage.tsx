@@ -15,7 +15,7 @@ import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
 import { ServerSection } from "@/components/settings/ServerSection";
-import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
+import { Sidebar } from "@/components/tasks/Sidebar";
 import { BOX_ICONS } from "@/components/tasks/taskEditShared";
 import { OpacityBars } from "@/components/ui/OpacityBars";
 import {
@@ -39,6 +39,7 @@ import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSettings } from "@/hooks/useSettings";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { getLocaleByCode, locales } from "@/services/localeRegistry";
 import {
   clearOauthReturnFlag,
@@ -70,7 +71,6 @@ const PANEL_SIDE_ICONS: Record<PanelSide, React.FC<{ className?: string }>> = {
  */
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const [filterMode, setFilterMode] = useState<SidebarMode>(null);
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const [isLanguagePanelOpen, setLanguagePanelOpen] = useState(false);
   const [languageSearchQuery, setLanguageSearchQuery] = useState("");
@@ -99,7 +99,7 @@ export default function SettingsPage() {
       // SDK handles code exchange via onAuthStateChange.
       // If token already present, navigate immediately.
       if (accessToken) {
-        navigate(ROUTES.INBOX);
+        navigate(ROUTES.TASKS);
       } else {
         isPkceCallbackRef.current = true;
       }
@@ -123,7 +123,7 @@ export default function SettingsPage() {
     ) {
       isPkceCallbackRef.current = false;
       clearOauthReturnFlag();
-      navigate(ROUTES.INBOX);
+      navigate(ROUTES.TASKS);
     }
   }, [accessToken, navigate]);
 
@@ -163,16 +163,7 @@ export default function SettingsPage() {
 
   const handlePanelToggle = togglePanelOpen;
 
-  const handleModeChange = useCallback(
-    (newMode: SidebarMode) => {
-      if (newMode !== null) {
-        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
-      } else {
-        setFilterMode(newMode);
-      }
-    },
-    [navigate],
-  );
+  const handleModeChange = useSidebarNavigation();
 
   const handleBoxSelect = (box: Box): void => {
     void setDefaultBox(box);
@@ -671,7 +662,7 @@ export default function SettingsPage() {
 
       {/* Right panel — same as on main page */}
       <Sidebar
-        mode={filterMode}
+        mode={null}
         isOpen={isPanelOpen}
         side={panelSide}
         onToggle={handlePanelToggle}

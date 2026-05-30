@@ -9,8 +9,8 @@ import { GripVertical, MapPin, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
-import { BOX, ROUTES } from "@/constants";
+import { Sidebar } from "@/components/tasks/Sidebar";
+import { BOX } from "@/constants";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
@@ -21,6 +21,7 @@ import { useInlineAdd } from "@/hooks/useInlineAdd";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { useTasks } from "@/hooks/useTasks";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
@@ -152,18 +153,7 @@ export default function ContextsPage() {
     [activeContexts, reorderContexts],
   );
 
-  const handleModeChange = useCallback(
-    (newMode: SidebarMode) => {
-      if (newMode === "categories") navigate(ROUTES.CATEGORIES);
-      else if (
-        newMode === "inbox" ||
-        newMode === "tasks" ||
-        newMode === "completed"
-      )
-        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
-    },
-    [navigate],
-  );
+  const handleModeChange = useSidebarNavigation();
 
   return (
     <div

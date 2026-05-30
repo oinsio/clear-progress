@@ -6,10 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { GoalItem } from "@/components/goals/GoalItem";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
-import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
+import { Sidebar } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
-import { ROUTES } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
 import { useFocusMode } from "@/hooks/useFocusMode";
@@ -17,6 +16,7 @@ import { useGoals } from "@/hooks/useGoals";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSearch } from "@/hooks/useSearch";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import {
   defaultIdeaService,
   defaultTaskService,
@@ -40,6 +40,7 @@ export default function SearchPage() {
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const navigate = useNavigate();
+  const handleModeChange = useSidebarNavigation();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -149,25 +150,6 @@ export default function SearchPage() {
       if (searchQuery) void search(searchQuery);
     },
     [searchQuery, search],
-  );
-
-  const handleModeChange = useCallback(
-    (newMode: SidebarMode) => {
-      if (
-        newMode === "inbox" ||
-        newMode === "tasks" ||
-        newMode === "completed"
-      ) {
-        navigate(ROUTES.INBOX, { state: { filterMode: newMode } });
-      } else if (newMode === "categories") {
-        navigate(ROUTES.CATEGORIES);
-      } else if (newMode === "contexts") {
-        navigate(ROUTES.CONTEXTS);
-      } else if (newMode === "goals") {
-        navigate(ROUTES.GOALS);
-      }
-    },
-    [navigate],
   );
 
   const hasResults = tasks.length > 0 || goals.length > 0 || ideas.length > 0;

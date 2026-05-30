@@ -1,144 +1,28 @@
-import { ChevronDown, Plus } from "lucide-react";
-import type * as React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+/**
+ * InboxPage — displays and manages tasks in the inbox box.
+ * Implements FR1 of refactor-task-pages
+ */
+import { Plus } from "lucide-react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
 import { AddTaskInput } from "@/components/tasks/AddTaskInput";
-import { BoxFilterBar } from "@/components/tasks/BoxFilterBar";
-import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
-import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
-import { TaskList } from "@/components/tasks/TaskList";
-import { BOX, BOX_FILTER_ALL } from "@/constants";
+import { TaskPageLayout } from "@/components/tasks/TaskPageLayout";
+import { TaskSection } from "@/components/tasks/TaskSection";
+import { BOX } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
-import { useCompletedTasks } from "@/hooks/useCompletedTasks";
 import { useContexts } from "@/hooks/useContexts";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useSearch } from "@/hooks/useSearch";
-import { useSectionCollapse } from "@/hooks/useSectionCollapse";
+import { useTaskCompletion } from "@/hooks/useTaskCompletion";
+import { useTaskSelection } from "@/hooks/useTaskSelection";
 import { useTasks } from "@/hooks/useTasks";
-import { defaultTaskService } from "@/services/defaultServices";
-import { cn } from "@/shared/lib/cn";
-import { groupCompletedTasks } from "@/shared/lib/utils";
-import type { Box, BoxFilter } from "@/types/common";
 import type { Task } from "@/types/entities";
-
-const SEARCH_DEBOUNCE_MS = 300;
-
-function TaskSection({
-  sectionKey,
-  label,
-  tasks,
-  goals,
-  contexts,
-  categories,
-  onComplete,
-  onUpdate,
-  onMove,
-  onDelete,
-  onReorder,
-  emptyMessage,
-  hideEmptyState,
-  onEmptyClick,
-  onSelect,
-  selectedTaskId,
-  isFocusMode,
-  focusDimmedOpacity,
-  expandedTaskId,
-  onExpand,
-}: {
-  sectionKey: string;
-  label: string;
-  tasks: Task[];
-  goals: ReturnType<typeof useGoals>["goals"];
-  contexts: ReturnType<typeof useContexts>["contexts"];
-  categories: ReturnType<typeof useCategories>["categories"];
-  onComplete: (id: string) => Promise<void>;
-  onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
-  onMove: (id: string, box: Box) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
-  onReorder?: (tasks: Task[]) => Promise<void>;
-  emptyMessage?: string;
-  hideEmptyState?: boolean;
-  onEmptyClick?: () => void;
-  onSelect?: (id: string) => void;
-  selectedTaskId?: string | null;
-  isFocusMode?: boolean;
-  focusDimmedOpacity?: number;
-  expandedTaskId?: string | null;
-  onExpand?: (id: string | null) => void;
-}) {
-  const { isCollapsed, toggleCollapse } = useSectionCollapse(sectionKey);
-  return (
-    <section>
-      <button
-        type="button"
-        onClick={toggleCollapse}
-        className="w-full flex items-center justify-between px-4 py-2 text-sm font-semibold text-accent bg-white border-b border-gray-100 sticky top-0 z-10"
-      >
-        <span>
-          {label} ({tasks.length})
-        </span>
-        <ChevronDown
-          className={`w-4 h-4 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
-        />
-      </button>
-      {!isCollapsed && (!hideEmptyState || tasks.length > 0) && (
-        <TaskList
-          tasks={tasks}
-          goals={goals}
-          contexts={contexts}
-          categories={categories}
-          onComplete={onComplete}
-          onUpdate={onUpdate}
-          onMove={onMove}
-          onDelete={onDelete}
-          onReorder={onReorder}
-          emptyMessage={emptyMessage}
-          onEmptyClick={onEmptyClick}
-          onSelect={onSelect}
-          selectedTaskId={selectedTaskId}
-          isFocusMode={isFocusMode}
-          focusDimmedOpacity={focusDimmedOpacity}
-          expandedTaskId={expandedTaskId}
-          onExpand={onExpand}
-        />
-      )}
-    </section>
-  );
-}
 
 export default function InboxPage() {
   const { t } = useTranslation();
-  const location = useLocation();
-  const initialFilterMode =
-    (location.state as { filterMode?: SidebarMode } | null)?.filterMode ??
-    "tasks";
-  const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
-  const [filterMode, setFilterMode] = useState<SidebarMode>(initialFilterMode);
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const { filterBarPosition } = useFilterBarPosition();
-  const [selectedContextId, setSelectedContextId] = useState<string | null>(
-    null,
-  );
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null,
-  );
   const [isAddingTask, setIsAddingTask] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
-  const isDesktop = useIsDesktop();
-  const {
-    ratio,
-    containerRef: splitContainerRef,
-    handleResizeMouseDown,
-  } = usePanelSplit();
+  const { filterBarPosition } = useFilterBarPosition();
 
   const {
     tasks: inboxTasks,
@@ -149,224 +33,61 @@ export default function InboxPage() {
     moveTask: moveInbox,
     reorderTasks: reorderInbox,
     duplicateTask: duplicateInbox,
-    reload: reloadInbox,
   } = useTasks(BOX.INBOX);
-  const {
-    tasks: todayTasks,
-    completeTask: completeToday,
-    deleteTask: deleteToday,
-    createTask: createTodayTask,
-    updateTask: updateToday,
-    moveTask: moveToday,
-    reorderTasks: reorderToday,
-    duplicateTask: duplicateToday,
-    reload: reloadToday,
-  } = useTasks(BOX.TODAY);
-  const {
-    tasks: weekTasks,
-    completeTask: completeWeek,
-    deleteTask: deleteWeek,
-    createTask: createWeekTask,
-    updateTask: updateWeek,
-    moveTask: moveWeek,
-    reorderTasks: reorderWeek,
-    duplicateTask: duplicateWeek,
-    reload: reloadWeek,
-  } = useTasks(BOX.WEEK);
-  const {
-    tasks: laterTasks,
-    completeTask: completeLater,
-    deleteTask: deleteLater,
-    createTask: createLaterTask,
-    updateTask: updateLater,
-    moveTask: moveLater,
-    reorderTasks: reorderLater,
-    duplicateTask: duplicateLater,
-    reload: reloadLater,
-  } = useTasks(BOX.LATER);
+
   const { goals } = useGoals();
   const { contexts } = useContexts();
   const { categories } = useCategories();
-  const { completedTasks, reload: reloadCompleted } = useCompletedTasks();
-  const {
-    tasks: searchResults,
-    isSearching,
-    search,
-    clear: clearSearch,
-  } = useSearch();
-  const { panelSide } = usePanelSide();
   const { isFocusMode, focusOpacity } = useFocusMode();
 
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const {
+    selectedTaskId,
+    expandedTaskId,
+    selectedTask,
+    setSelectedTaskId,
+    setExpandedTaskId,
+    handleTaskSelect,
+    handleTaskExpand,
+    handleDetailPanelClose,
+  } = useTaskSelection({
+    taskArrays: [inboxTasks],
+    isFocusMode,
+  });
 
-  const reloadAllBoxes = useCallback(async () => {
-    await Promise.all([
-      reloadInbox(),
-      reloadToday(),
-      reloadWeek(),
-      reloadLater(),
-    ]);
-  }, [reloadInbox, reloadToday, reloadWeek, reloadLater]);
-
-  const handleMoveTask = useCallback(
-    async (id: string, targetBox: Box) => {
-      const allTasks = [
-        ...inboxTasks,
-        ...todayTasks,
-        ...weekTasks,
-        ...laterTasks,
-      ];
-      const task = allTasks.find((t) => t.id === id);
-      if (!task) return;
-
-      const moveByBox: Record<
-        Box,
-        (taskId: string, box: Box) => Promise<void>
-      > = {
-        [BOX.INBOX]: moveInbox,
-        [BOX.TODAY]: moveToday,
-        [BOX.WEEK]: moveWeek,
-        [BOX.LATER]: moveLater,
-      };
-      await moveByBox[task.box](id, targetBox);
-      await reloadAllBoxes();
-    },
-    [
-      inboxTasks,
-      todayTasks,
-      weekTasks,
-      laterTasks,
-      moveInbox,
-      moveToday,
-      moveWeek,
-      moveLater,
-      reloadAllBoxes,
-    ],
-  );
+  const handleCompleteInbox = useTaskCompletion({
+    completeFn: completeInbox,
+    selectedTaskId,
+    expandedTaskId,
+    setSelectedTaskId,
+    setExpandedTaskId,
+  });
 
   const handleUpdateTask = useCallback(
     async (id: string, changes: Partial<Task>) => {
-      const allTasks = [
-        ...inboxTasks,
-        ...todayTasks,
-        ...weekTasks,
-        ...laterTasks,
-      ];
-      const task = allTasks.find((t) => t.id === id);
-      if (!task) return;
-
-      const updateByBox: Record<
-        Box,
-        (taskId: string, taskChanges: Partial<Task>) => Promise<void>
-      > = {
-        [BOX.INBOX]: updateInbox,
-        [BOX.TODAY]: updateToday,
-        [BOX.WEEK]: updateWeek,
-        [BOX.LATER]: updateLater,
-      };
-
-      const targetBox = (changes.box as Box) ?? task.box;
-      if (changes.box && changes.box !== task.box) {
-        await handleMoveTask(id, changes.box as Box);
+      if (changes.box && changes.box !== BOX.INBOX) {
+        await moveInbox(id, changes.box);
       } else {
-        await updateByBox[task.box](id, changes);
-        if (targetBox !== task.box) {
-          await reloadAllBoxes();
-        }
+        await updateInbox(id, changes);
       }
     },
-    [
-      inboxTasks,
-      todayTasks,
-      weekTasks,
-      laterTasks,
-      updateInbox,
-      updateToday,
-      updateWeek,
-      updateLater,
-      handleMoveTask,
-      reloadAllBoxes,
-    ],
+    [moveInbox, updateInbox],
   );
 
   const handleDuplicateTask = useCallback(
     async (id: string) => {
-      const allTasks = [
-        ...inboxTasks,
-        ...todayTasks,
-        ...weekTasks,
-        ...laterTasks,
-      ];
-      const task = allTasks.find((t) => t.id === id);
-      if (!task) return;
-
-      const duplicateByBox: Record<Box, (taskId: string) => Promise<Task>> = {
-        [BOX.INBOX]: duplicateInbox,
-        [BOX.TODAY]: duplicateToday,
-        [BOX.WEEK]: duplicateWeek,
-        [BOX.LATER]: duplicateLater,
-      };
-      const newTask = await duplicateByBox[task.box](id);
+      const newTask = await duplicateInbox(id);
       setSelectedTaskId(newTask.id);
-      setSelectedTask(newTask);
     },
-    [
-      inboxTasks,
-      todayTasks,
-      weekTasks,
-      laterTasks,
-      duplicateInbox,
-      duplicateToday,
-      duplicateWeek,
-      duplicateLater,
-    ],
+    [duplicateInbox, setSelectedTaskId],
   );
 
-  const handleTaskSelect = useCallback((id: string) => {
-    setSelectedTaskId((previous) => (previous === id ? null : id));
-  }, []);
-
-  const handleTaskExpand = useCallback((id: string | null) => {
-    setExpandedTaskId(id);
-  }, []);
-
-  const handleDetailPanelClose = useCallback(() => {
-    setSelectedTaskId(null);
-  }, []);
-
-  const handleSearchChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const query = event.target.value;
-      setSearchQuery(query);
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => {
-        void search(query);
-      }, SEARCH_DEBOUNCE_MS);
-    },
-    [search],
-  );
-
-  const handlePanelToggle = togglePanelOpen;
-
-  const handleModeChange = useCallback(
-    (newMode: SidebarMode) => {
+  const handleDeleteTask = useCallback(
+    (id: string) => {
       setSelectedTaskId(null);
-      setFilterMode(newMode);
-      if (newMode !== "search") {
-        setSearchQuery("");
-        clearSearch();
-      }
-      if (newMode === "completed") void reloadCompleted();
-      if (newMode !== "contexts") setSelectedContextId(null);
-      if (newMode !== "categories") setSelectedCategoryId(null);
+      void deleteInbox(id);
     },
-    [clearSearch, reloadCompleted],
+    [deleteInbox, setSelectedTaskId],
   );
-
-  const handleBoxChange = useCallback((box: BoxFilter) => {
-    setActiveBox(box);
-    setIsAddingTask(false);
-  }, []);
 
   const handleAddTask = useCallback(() => {
     setIsAddingTask(true);
@@ -374,650 +95,81 @@ export default function InboxPage() {
 
   const handleAddTaskSubmit = useCallback(
     async (name: string) => {
-      const targetBox =
-        filterMode === "inbox"
-          ? BOX.INBOX
-          : activeBox === BOX_FILTER_ALL
-            ? BOX.TODAY
-            : activeBox;
-      const createFunctions = {
-        [BOX.INBOX]: createInboxTask,
-        [BOX.TODAY]: createTodayTask,
-        [BOX.WEEK]: createWeekTask,
-        [BOX.LATER]: createLaterTask,
-      };
-      await createFunctions[targetBox](name);
+      await createInboxTask(name);
       setIsAddingTask(false);
     },
-    [
-      filterMode,
-      activeBox,
-      createInboxTask,
-      createTodayTask,
-      createWeekTask,
-      createLaterTask,
-    ],
+    [createInboxTask],
   );
 
   const handleAddTaskCancel = useCallback(() => {
     setIsAddingTask(false);
   }, []);
 
-  const applyFilters = useCallback(
-    (tasks: Task[]): Task[] => {
-      let filtered = tasks.filter((task) => !task.is_completed);
-      if (selectedContextId) {
-        filtered = filtered.filter(
-          (task) => task.context_id === selectedContextId,
-        );
-      }
-      if (selectedCategoryId) {
-        filtered = filtered.filter(
-          (task) => task.category_id === selectedCategoryId,
-        );
-      }
-      return filtered;
-    },
-    [selectedContextId, selectedCategoryId],
+  const activeTasks = inboxTasks.filter((task) => !task.is_completed);
+
+  const addButton = (position: "top" | "bottom") => (
+    <div
+      className={`flex items-center justify-end ${position === "bottom" ? "safe-area-bottom border-t" : "border-b"} border-gray-200 bg-white px-3 py-2`}
+    >
+      <button
+        type="button"
+        aria-label={t("task.add")}
+        data-testid="add-task-button"
+        onClick={handleAddTask}
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-white shadow-md transition-colors hover:bg-accent/80 active:bg-accent/70"
+      >
+        <Plus className="h-5 w-5" aria-hidden="true" />
+      </button>
+    </div>
   );
 
-  const targetBoxLabel = useMemo(() => {
-    if (filterMode === "inbox") return t(`box.${BOX.INBOX}`);
-    const targetBox = activeBox === BOX_FILTER_ALL ? BOX.TODAY : activeBox;
-    return t(`box.${targetBox}`);
-  }, [filterMode, activeBox, t]);
-
-  const handleCompleteTodayAndReload = useCallback(
-    async (id: string) => {
-      const recurringId = await completeToday(id);
-      if (recurringId) {
-        setSelectedTaskId(recurringId);
-      } else if (selectedTaskId === id) {
-        setSelectedTaskId(null);
-      }
-      if (expandedTaskId === id) {
-        setExpandedTaskId(null);
-      }
-      await reloadCompleted();
-    },
-    [completeToday, reloadCompleted, selectedTaskId, expandedTaskId],
-  );
-
-  const handleCompleteWeekAndReload = useCallback(
-    async (id: string) => {
-      const recurringId = await completeWeek(id);
-      if (recurringId) {
-        setSelectedTaskId(recurringId);
-      } else if (selectedTaskId === id) {
-        setSelectedTaskId(null);
-      }
-      if (expandedTaskId === id) {
-        setExpandedTaskId(null);
-      }
-      await reloadCompleted();
-    },
-    [completeWeek, reloadCompleted, selectedTaskId, expandedTaskId],
-  );
-
-  const handleCompleteLaterAndReload = useCallback(
-    async (id: string) => {
-      const recurringId = await completeLater(id);
-      if (recurringId) {
-        setSelectedTaskId(recurringId);
-      } else if (selectedTaskId === id) {
-        setSelectedTaskId(null);
-      }
-      if (expandedTaskId === id) {
-        setExpandedTaskId(null);
-      }
-      await reloadCompleted();
-    },
-    [completeLater, reloadCompleted, selectedTaskId, expandedTaskId],
-  );
-
-  const handleCompleteInbox = useCallback(
-    async (id: string) => {
-      const recurringId = await completeInbox(id);
-      if (recurringId) {
-        setSelectedTaskId(recurringId);
-      } else if (selectedTaskId === id) {
-        setSelectedTaskId(null);
-      }
-      if (expandedTaskId === id) {
-        setExpandedTaskId(null);
-      }
-    },
-    [completeInbox, selectedTaskId, expandedTaskId],
-  );
-
-  const handleCompleteToday = useCallback(
-    async (id: string) => {
-      const recurringId = await completeToday(id);
-      if (recurringId) {
-        setSelectedTaskId(recurringId);
-      } else if (selectedTaskId === id) {
-        setSelectedTaskId(null);
-      }
-      if (expandedTaskId === id) {
-        setExpandedTaskId(null);
-      }
-    },
-    [completeToday, selectedTaskId, expandedTaskId],
-  );
-
-  const handleCompleteWeek = useCallback(
-    async (id: string) => {
-      const recurringId = await completeWeek(id);
-      if (recurringId) {
-        setSelectedTaskId(recurringId);
-      } else if (selectedTaskId === id) {
-        setSelectedTaskId(null);
-      }
-      if (expandedTaskId === id) {
-        setExpandedTaskId(null);
-      }
-    },
-    [completeWeek, selectedTaskId, expandedTaskId],
-  );
-
-  const handleCompleteLater = useCallback(
-    async (id: string) => {
-      const recurringId = await completeLater(id);
-      if (recurringId) {
-        setSelectedTaskId(recurringId);
-      } else if (selectedTaskId === id) {
-        setSelectedTaskId(null);
-      }
-      if (expandedTaskId === id) {
-        setExpandedTaskId(null);
-      }
-    },
-    [completeLater, selectedTaskId, expandedTaskId],
-  );
-
-  const {
-    todayTasks: todayCompletedTasks,
-    yesterdayTasks: yesterdayCompletedTasks,
-    weekTasks: weekCompletedTasks,
-    monthTasks: monthCompletedTasks,
-    earlierTasks: earlierCompletedTasks,
-  } = useMemo(() => groupCompletedTasks(completedTasks), [completedTasks]);
-
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  useEffect(() => {
-    if (!selectedTaskId) {
-      setSelectedTask(null);
-      return;
-    }
-
-    // Сначала ищем в массивах (быстро)
-    const allTasks = [
-      ...inboxTasks,
-      ...todayTasks,
-      ...weekTasks,
-      ...laterTasks,
-      ...completedTasks,
-    ];
-    const found = allTasks.find((task) => task.id === selectedTaskId);
-
-    if (found) {
-      setSelectedTask(found);
-      // В режиме фокуса: если выделенная задача завершена, сбросить выделение
-      if (isFocusMode && found.is_completed) {
-        setSelectedTaskId(null);
-      }
-    } else {
-      // Если не нашли — запрашиваем из БД (для только что созданных задач)
-      void (async () => {
-        const task = await defaultTaskService.getById(selectedTaskId);
-        if (task) setSelectedTask(task);
-      })();
-    }
-  }, [
-    selectedTaskId,
-    inboxTasks,
-    todayTasks,
-    weekTasks,
-    laterTasks,
-    completedTasks,
-    isFocusMode,
-  ]);
-
-  const sharedSelectProps = {
-    onSelect: handleTaskSelect,
-    selectedTaskId,
-    isFocusMode,
-    focusDimmedOpacity: focusOpacity,
-    expandedTaskId,
-    onExpand: handleTaskExpand,
-  };
-
-  const renderContent = () => {
-    if (filterMode === "search") {
-      return (
-        <TaskList
-          tasks={searchResults}
-          goals={goals}
-          contexts={contexts}
-          categories={categories}
-          onComplete={handleCompleteToday}
-          onUpdate={handleUpdateTask}
-          onMove={handleMoveTask}
-          onDelete={deleteToday}
-          {...sharedSelectProps}
-        />
-      );
-    }
-
-    if (filterMode === "inbox") {
-      return (
-        <>
-          {isAddingTask && (
-            <AddTaskInput
-              targetBox={targetBoxLabel}
-              onAdd={handleAddTaskSubmit}
-              onCancel={handleAddTaskCancel}
-            />
-          )}
-          <TaskSection
-            key="inbox"
-            sectionKey="inbox"
-            label={t("section.inbox")}
-            tasks={applyFilters(inboxTasks)}
-            goals={goals}
-            contexts={contexts}
-            categories={categories}
-            onComplete={handleCompleteInbox}
-            onUpdate={handleUpdateTask}
-            onMove={handleMoveTask}
-            onDelete={deleteInbox}
-            onReorder={reorderInbox}
-            emptyMessage={t("task.emptyInbox")}
-            onEmptyClick={handleAddTask}
-            {...sharedSelectProps}
-          />
-        </>
-      );
-    }
-
-    if (filterMode === "completed") {
-      return (
-        <>
-          {todayCompletedTasks.length > 0 && (
-            <TaskSection
-              key="completed_today"
-              sectionKey="completed_today"
-              label={t("section.today")}
-              tasks={todayCompletedTasks}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={handleCompleteTodayAndReload}
-              onUpdate={handleUpdateTask}
-              onMove={handleMoveTask}
-              onDelete={deleteToday}
-              {...sharedSelectProps}
-            />
-          )}
-          {yesterdayCompletedTasks.length > 0 && (
-            <TaskSection
-              key="completed_yesterday"
-              sectionKey="completed_yesterday"
-              label={t("section.completedYesterday")}
-              tasks={yesterdayCompletedTasks}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={handleCompleteTodayAndReload}
-              onUpdate={handleUpdateTask}
-              onMove={handleMoveTask}
-              onDelete={deleteToday}
-              {...sharedSelectProps}
-            />
-          )}
-          {weekCompletedTasks.length > 0 && (
-            <TaskSection
-              key="completed_week"
-              sectionKey="completed_week"
-              label={t("section.completedWeek")}
-              tasks={weekCompletedTasks}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={handleCompleteTodayAndReload}
-              onUpdate={handleUpdateTask}
-              onMove={handleMoveTask}
-              onDelete={deleteToday}
-              {...sharedSelectProps}
-            />
-          )}
-          {monthCompletedTasks.length > 0 && (
-            <TaskSection
-              key="completed_month"
-              sectionKey="completed_month"
-              label={t("section.completedMonth")}
-              tasks={monthCompletedTasks}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={handleCompleteTodayAndReload}
-              onUpdate={handleUpdateTask}
-              onMove={handleMoveTask}
-              onDelete={deleteToday}
-              {...sharedSelectProps}
-            />
-          )}
-          {earlierCompletedTasks.length > 0 && (
-            <TaskSection
-              key="completed_earlier"
-              sectionKey="completed_earlier"
-              label={t("section.completedEarlier")}
-              tasks={earlierCompletedTasks}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={handleCompleteTodayAndReload}
-              onUpdate={handleUpdateTask}
-              onMove={handleMoveTask}
-              onDelete={deleteToday}
-              {...sharedSelectProps}
-            />
-          )}
-          {completedTasks.length === 0 && (
-            <TaskList
-              tasks={[]}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={handleCompleteTodayAndReload}
-              onUpdate={handleUpdateTask}
-              onMove={handleMoveTask}
-              onDelete={deleteToday}
-              emptyMessage={t("task.emptyCompleted")}
-              {...sharedSelectProps}
-            />
-          )}
-        </>
-      );
-    }
-
-    if (activeBox === BOX_FILTER_ALL) {
-      const visibleTodayTasks = applyFilters(todayTasks);
-      const visibleWeekTasks = applyFilters(weekTasks);
-      const visibleLaterTasks = applyFilters(laterTasks);
-      return (
-        <>
-          {isAddingTask && (
-            <AddTaskInput
-              targetBox={targetBoxLabel}
-              onAdd={handleAddTaskSubmit}
-              onCancel={handleAddTaskCancel}
-            />
-          )}
-          <TaskSection
-            key="today"
-            sectionKey="today"
-            label={t("section.today")}
-            tasks={visibleTodayTasks}
-            goals={goals}
-            contexts={contexts}
-            categories={categories}
-            onComplete={handleCompleteTodayAndReload}
-            onUpdate={handleUpdateTask}
-            onMove={handleMoveTask}
-            onDelete={deleteToday}
-            onReorder={reorderToday}
-            emptyMessage={t("task.emptyToday")}
-            {...sharedSelectProps}
-          />
-          <TaskSection
-            key="week"
-            sectionKey="week"
-            label={t("section.week")}
-            tasks={visibleWeekTasks}
-            goals={goals}
-            contexts={contexts}
-            categories={categories}
-            onComplete={handleCompleteWeekAndReload}
-            onUpdate={handleUpdateTask}
-            onMove={handleMoveTask}
-            onDelete={deleteWeek}
-            onReorder={reorderWeek}
-            hideEmptyState
-            {...sharedSelectProps}
-          />
-          <TaskSection
-            key="later"
-            sectionKey="later"
-            label={t("section.later")}
-            tasks={visibleLaterTasks}
-            goals={goals}
-            contexts={contexts}
-            categories={categories}
-            onComplete={handleCompleteLaterAndReload}
-            onUpdate={handleUpdateTask}
-            onMove={handleMoveTask}
-            onDelete={deleteLater}
-            onReorder={reorderLater}
-            hideEmptyState
-            {...sharedSelectProps}
-          />
-          {todayCompletedTasks.length > 0 && (
-            <TaskSection
-              key="all_completed_today"
-              sectionKey="all_completed_today"
-              label={t("section.completedToday")}
-              tasks={todayCompletedTasks}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={handleCompleteTodayAndReload}
-              onUpdate={handleUpdateTask}
-              onMove={handleMoveTask}
-              onDelete={deleteToday}
-              {...sharedSelectProps}
-            />
-          )}
-        </>
-      );
-    }
-
-    const boxConfig = {
-      [BOX.INBOX]: {
-        tasks: inboxTasks,
-        onComplete: handleCompleteInbox,
-        onDelete: deleteInbox,
-        onReorder: reorderInbox,
-      },
-      [BOX.TODAY]: {
-        tasks: todayTasks,
-        onComplete: handleCompleteToday,
-        onDelete: deleteToday,
-        onReorder: reorderToday,
-      },
-      [BOX.WEEK]: {
-        tasks: weekTasks,
-        onComplete: handleCompleteWeek,
-        onDelete: deleteWeek,
-        onReorder: reorderWeek,
-      },
-      [BOX.LATER]: {
-        tasks: laterTasks,
-        onComplete: handleCompleteLater,
-        onDelete: deleteLater,
-        onReorder: reorderLater,
-      },
-    };
-
-    const { tasks, onComplete, onDelete, onReorder } = boxConfig[activeBox];
-    const visibleTasks = applyFilters(tasks);
-
-    return (
-      <>
+  return (
+    <div data-testid="inbox-page" className="flex flex-1 flex-col">
+      <TaskPageLayout
+        sidebarMode="inbox"
+        selectedTask={selectedTask}
+        goals={goals}
+        contexts={contexts}
+        categories={categories}
+        onUpdateTask={handleUpdateTask}
+        onDeleteTask={handleDeleteTask}
+        onDuplicateTask={handleDuplicateTask}
+        onCloseDetailPanel={handleDetailPanelClose}
+        topToolbar={filterBarPosition === "top" ? addButton("top") : undefined}
+        bottomToolbar={
+          filterBarPosition === "bottom" ? addButton("bottom") : undefined
+        }
+      >
         {isAddingTask && (
           <AddTaskInput
-            targetBox={targetBoxLabel}
+            targetBox={t(`box.${BOX.INBOX}`)}
             onAdd={handleAddTaskSubmit}
             onCancel={handleAddTaskCancel}
           />
         )}
-        <TaskList
-          tasks={visibleTasks}
+        <TaskSection
+          key="inbox"
+          sectionKey="inbox"
+          label={t("section.inbox")}
+          tasks={activeTasks}
           goals={goals}
           contexts={contexts}
           categories={categories}
-          onComplete={onComplete}
+          onComplete={handleCompleteInbox}
           onUpdate={handleUpdateTask}
-          onMove={handleMoveTask}
-          onDelete={onDelete}
-          onReorder={onReorder}
-          {...sharedSelectProps}
+          onMove={moveInbox}
+          onDelete={deleteInbox}
+          onReorder={reorderInbox}
+          emptyMessage={t("task.emptyInbox")}
+          onEmptyClick={handleAddTask}
+          onSelect={handleTaskSelect}
+          selectedTaskId={selectedTaskId}
+          isFocusMode={isFocusMode}
+          focusDimmedOpacity={focusOpacity}
+          expandedTaskId={expandedTaskId}
+          onExpand={handleTaskExpand}
         />
-      </>
-    );
-  };
-
-  return (
-    <div
-      data-testid="inbox-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
-      {/* Split container: task list + optional task detail panel */}
-      <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
-        {/* Main content column */}
-        <div
-          className={cn(
-            "flex flex-col overflow-hidden",
-            !isDesktop && selectedTask && "hidden",
-          )}
-          style={
-            isDesktop && selectedTask
-              ? { width: `${ratio * 100}%`, flexShrink: 0 }
-              : { flex: "1 1 0" }
-          }
-        >
-          {/* Search header */}
-          {filterMode === "search" && (
-            <header className="px-4 py-2 border-b border-gray-100 flex items-center gap-2">
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder={t("task.searchPlaceholder")}
-                className={cn(
-                  "flex-1 text-sm outline-none placeholder:text-gray-400",
-                  isSearching && "opacity-60",
-                )}
-                data-testid="search-input"
-              />
-            </header>
-          )}
-
-          {/* Box filter bar — hidden in completed mode, position controlled by setting */}
-          {filterMode !== "completed" &&
-            filterBarPosition === "top" &&
-            (filterMode === "inbox" ? (
-              <div className="flex items-center justify-end border-b border-gray-200 bg-white px-3 py-2">
-                <button
-                  type="button"
-                  aria-label={t("task.add")}
-                  data-testid="add-task-button"
-                  onClick={handleAddTask}
-                  className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-                >
-                  <Plus className="w-5 h-5" aria-hidden="true" />
-                </button>
-              </div>
-            ) : (
-              <BoxFilterBar
-                activeBox={activeBox}
-                onBoxChange={handleBoxChange}
-                onAddTask={handleAddTask}
-                position="top"
-              />
-            ))}
-
-          {/* Scrollable task list */}
-          <main className="flex-1 overflow-y-auto">
-            <div className="xl:max-w-3xl xl:mx-auto">{renderContent()}</div>
-          </main>
-
-          {/* Box filter bar — bottom position (default) */}
-          {filterMode !== "completed" &&
-            filterBarPosition === "bottom" &&
-            (filterMode === "inbox" ? (
-              <div className="flex items-center justify-end border-t border-gray-200 bg-white px-3 py-2 safe-area-bottom">
-                <button
-                  type="button"
-                  aria-label={t("task.add")}
-                  data-testid="add-task-button"
-                  onClick={handleAddTask}
-                  className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-                >
-                  <Plus className="w-5 h-5" aria-hidden="true" />
-                </button>
-              </div>
-            ) : (
-              <BoxFilterBar
-                activeBox={activeBox}
-                onBoxChange={handleBoxChange}
-                onAddTask={handleAddTask}
-                position="bottom"
-              />
-            ))}
-        </div>
-
-        {/* Resize handle between task list and detail panel */}
-        {isDesktop && selectedTask && (
-          <div
-            className="w-1 flex-shrink-0 cursor-col-resize bg-gray-100 hover:bg-accent/30 active:bg-accent/50 transition-colors"
-            onMouseDown={handleResizeMouseDown}
-          />
-        )}
-
-        {/* Task detail panel — shown when a task is selected (desktop: side panel, mobile: full screen) */}
-        {selectedTask && (
-          <TaskDetailPanel
-            task={selectedTask}
-            goals={goals}
-            contexts={contexts}
-            categories={categories}
-            onUpdate={handleUpdateTask}
-            onDelete={(id) => {
-              setSelectedTaskId(null);
-              const allBoxDelete: Record<
-                string,
-                (id: string) => Promise<void>
-              > = {
-                [BOX.INBOX]: deleteInbox,
-                [BOX.TODAY]: deleteToday,
-                [BOX.WEEK]: deleteWeek,
-                [BOX.LATER]: deleteLater,
-              };
-              const deleteFn = allBoxDelete[selectedTask.box] ?? deleteToday;
-              void deleteFn(id);
-            }}
-            onDuplicate={handleDuplicateTask}
-            onClose={handleDetailPanelClose}
-            style={
-              isDesktop
-                ? { width: `${(1 - ratio) * 100}%`, flexShrink: 0 }
-                : { flex: "1 1 0" }
-            }
-          />
-        )}
-      </div>
-      {/* end splitContainerRef */}
-
-      {/* Right quick filter panel — always visible */}
-      <Sidebar
-        mode={filterMode}
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={handlePanelToggle}
-        onModeChange={handleModeChange}
-      />
+      </TaskPageLayout>
     </div>
   );
 }

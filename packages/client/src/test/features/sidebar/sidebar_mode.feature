@@ -3,20 +3,19 @@ Feature: Sidebar Mode Selection
   Clicking an active mode deactivates it. Items with routes navigate instead of toggling.
 
   @add-sidebar-specs @FR3
-  Scenario: Selecting a mode activates it
+  Scenario: Selecting a routed mode navigates to its route
     Given sidebar is expanded
     And no mode is active
     When user selects the "tasks" filter item
-    Then "tasks" mode becomes active
-    And the "tasks" filter button has aria-pressed "true"
+    Then app navigates to the tasks route
+    And the "tasks" filter button has aria-pressed "true" when mode is active
 
   @add-sidebar-specs @FR3
-  Scenario: Clicking active mode deactivates it
+  Scenario: Clicking active routed mode navigates again
     Given sidebar is expanded
     And "tasks" mode is active
     When user selects the "tasks" filter item
-    Then mode is set to null
-    And the "tasks" filter button has aria-pressed "false"
+    Then app navigates to the tasks route again
 
   @add-sidebar-specs @FR3
   Scenario: Filter item with route navigates instead of toggling

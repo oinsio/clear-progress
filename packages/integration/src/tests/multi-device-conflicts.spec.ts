@@ -46,14 +46,14 @@ async function createTaskAndSyncBoth(taskName: string): Promise<string> {
   const pageB = getPageB();
 
   await pageA.goto("/tasks");
-  await pageA.waitForSelector('[data-testid="inbox-page"]');
+  await pageA.waitForSelector('[data-testid="active-tasks-page"]');
   await createTask(pageA, taskName);
   await triggerSyncAndWait(pageA);
 
   // Navigate pageB to /tasks before sync to ensure clean UI state
   // (previous test may have left a detail panel open or a different page)
   await pageB.goto("/tasks");
-  await pageB.waitForSelector('[data-testid="inbox-page"]');
+  await pageB.waitForSelector('[data-testid="active-tasks-page"]');
   await triggerSyncAndWait(pageB);
 
   // Wait for the task to actually appear in pageB's UI.
@@ -79,7 +79,7 @@ async function openTaskDetailAndRename(
   newName: string,
 ): Promise<void> {
   await testPage.goto("/tasks");
-  await testPage.waitForSelector('[data-testid="inbox-page"]');
+  await testPage.waitForSelector('[data-testid="active-tasks-page"]');
 
   // Auto-sync from navigation may have pulled a rename from another device,
   // so the task might appear under any of the possible names.
@@ -181,7 +181,7 @@ test("Delete with newer updated_at wins over earlier modify", async () => {
   // A's auto-sync (from navigation) may have pulled B's rename,
   // so the task might appear under either name.
   await pageA.goto("/tasks");
-  await pageA.waitForSelector('[data-testid="inbox-page"]');
+  await pageA.waitForSelector('[data-testid="active-tasks-page"]');
 
   // Wait briefly for auto-sync to settle before checking the visible name
   await pageA.waitForTimeout(500);
@@ -300,7 +300,7 @@ test("Sequential edits without conflict preserve latest version", async () => {
 
   // App A creates task → pushes
   await pageA.goto("/tasks");
-  await pageA.waitForSelector('[data-testid="inbox-page"]');
+  await pageA.waitForSelector('[data-testid="active-tasks-page"]');
   await createTask(pageA, taskName);
   await triggerSyncAndWait(pageA);
 
