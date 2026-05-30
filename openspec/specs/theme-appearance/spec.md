@@ -128,6 +128,31 @@ The system SHALL support four interface scales: "small", "normal", "large", "xLa
 - **WHEN** any interface scale is applied
 - **THEN** the `html` element does not use the `zoom` CSS property
 
+### Requirement: All UI elements use rem-based sizing
+
+All text sizes, icon sizes, and content widths in the application SHALL use rem-based values (Tailwind standard classes or arbitrary rem values). Fixed px values SHALL NOT be used for text-size, icon-size, or content-width properties. Lucide icon components SHALL use Tailwind `w-X h-X` className instead of the `size` prop.  # implements FR2, FR3, FR4 of fix-interface-scaling
+
+#### Scenario: Text elements scale with interface scale
+- **WHEN** interface scale is changed from "normal" to "large"
+- **THEN** all text elements (including small badges, error indicators, labels) increase in size proportionally
+
+#### Scenario: Icons scale with interface scale
+- **WHEN** interface scale is changed from "normal" to "large"
+- **THEN** all Lucide icons increase in size proportionally
+
+#### Scenario: Content widths scale with interface scale
+- **WHEN** interface scale is changed from "normal" to "large"
+- **THEN** max-width constraints on content elements scale proportionally
+
+### Requirement: No horizontal overflow at maximum scale
+
+At xLarge scale (150%), the application SHALL NOT produce horizontal scrollbar on viewports with width >= 375px.  # implements NFR-A1 of fix-interface-scaling
+
+#### Scenario: No overflow at 150% scale on mobile viewport
+- **WHEN** interface scale is set to "xLarge"
+- **AND** viewport width is 375px
+- **THEN** there is no horizontal scrollbar
+
 ### Requirement: Interface scale initialization from localStorage
 
 The system SHALL read the initial interface scale from localStorage. If the cached value is valid ("small", "normal", "large", "xLarge"), it SHALL be used. If missing or invalid, the system SHALL fall back to "normal".  # implements FR6, FR11 of theme-appearance-spec
