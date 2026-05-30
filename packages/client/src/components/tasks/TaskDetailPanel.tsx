@@ -76,7 +76,7 @@ function DrillDownRow({ label, value, hasValue, onClick }: DrillDownRowProps) {
         <span className={cn(hasValue ? "text-gray-800" : "text-gray-400")}>
           {value}
         </span>
-        <ChevronRight size={16} className="text-gray-400" />
+        <ChevronRight className="w-4 h-4 text-gray-400" />
       </div>
     </button>
   );
@@ -445,7 +445,7 @@ export function TaskDetailPanel({
           aria-label={t("taskDetail.delete")}
           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
         >
-          <Trash2 size={16} />
+          <Trash2 className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -453,7 +453,7 @@ export function TaskDetailPanel({
           aria-label={t("taskDetail.close")}
           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
         >
-          <X size={18} />
+          <X className="w-[1.125rem] h-[1.125rem]" />
         </button>
       </div>
 
@@ -613,7 +613,7 @@ export function TaskDetailPanel({
                 aria-label={t("taskEdit.back")}
                 className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                <ArrowLeft size={18} />
+                <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
               </button>
               <h3 className="text-base font-semibold text-gray-800">
                 {t(SELECTOR_TITLE_KEYS[openSelector])}

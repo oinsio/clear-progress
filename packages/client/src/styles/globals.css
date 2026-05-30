@@ -20,13 +20,13 @@
   }
 
   html[data-scale="large"] {
-    --scale-factor: 1.125;
-    font-size: 112.5%;
+    --scale-factor: 1.25;
+    font-size: 125%;
   }
 
   html[data-scale="xLarge"] {
-    --scale-factor: 1.25;
-    font-size: 125%;
+    --scale-factor: 1.5;
+    font-size: 150%;
   }
 
   :root[data-accent="green"] {

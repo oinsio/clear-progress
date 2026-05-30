@@ -80,7 +80,7 @@ export function IdeaDetailPanel({
           aria-label={t("idea.deleteLabel")}
           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
         >
-          <Trash2 size={16} />
+          <Trash2 className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -88,7 +88,7 @@ export function IdeaDetailPanel({
           aria-label={t("idea.close")}
           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
         >
-          <X size={18} />
+          <X className="w-[1.125rem] h-[1.125rem]" />
         </button>
       </div>
 

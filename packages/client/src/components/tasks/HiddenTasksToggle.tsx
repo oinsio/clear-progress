@@ -21,7 +21,11 @@ export function HiddenTasksToggle() {
           : "text-gray-400 hover:bg-gray-100",
       )}
     >
-      {showHidden ? <Eye size={20} /> : <EyeOff size={20} />}
+      {showHidden ? (
+        <Eye className="w-5 h-5" />
+      ) : (
+        <EyeOff className="w-5 h-5" />
+      )}
     </button>
   );
 }

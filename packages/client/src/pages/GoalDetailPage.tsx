@@ -471,7 +471,7 @@ export default function GoalDetailPage() {
                                       : "text-accent bg-white hover:bg-accent/10",
                                   )}
                                 >
-                                  <StatusIcon size={18} />
+                                  <StatusIcon className="w-[1.125rem] h-[1.125rem]" />
                                 </button>
                               );
                             },

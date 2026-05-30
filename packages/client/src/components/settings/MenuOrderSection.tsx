@@ -60,7 +60,7 @@ function SortableMenuOrderItem({
         })}
         className="text-gray-300 hover:text-gray-500 transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
       >
-        <GripVertical size={18} />
+        <GripVertical className="w-[1.125rem] h-[1.125rem]" />
       </button>
 
       <filterItem.Icon

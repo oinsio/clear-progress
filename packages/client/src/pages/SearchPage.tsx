@@ -165,8 +165,7 @@ export default function SearchPage() {
         {/* Search header */}
         <header className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 bg-white">
           <Search
-            size={16}
-            className="text-gray-400 flex-shrink-0"
+            className="w-4 h-4 text-gray-400 flex-shrink-0"
             aria-hidden="true"
           />
           <input

@@ -28,7 +28,7 @@ export function LinkedText({ text, className }: LinkedTextProps) {
               className="bg-blue-600/5 hover:bg-blue-600/10 text-blue-600 rounded px-1 inline-flex items-baseline gap-0.5"
             >
               <span className="text-xs">🔗</span>
-              <span className="truncate max-w-[260px]">
+              <span className="truncate max-w-[16.25rem]">
                 {shortenUrl(segment.value)}
               </span>
             </a>

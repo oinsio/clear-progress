@@ -74,7 +74,7 @@ export function SortableChecklistItem({
             className="text-gray-300 hover:text-gray-500 transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
             aria-label={t("taskEdit.dragChecklist")}
           >
-            <GripVertical size={14} />
+            <GripVertical className="w-3.5 h-3.5" />
           </button>
         ) : (
           <span className="w-3.5 h-5 flex-shrink-0" />
