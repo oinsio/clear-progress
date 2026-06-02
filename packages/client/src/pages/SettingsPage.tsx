@@ -414,14 +414,14 @@ export default function SettingsPage() {
               <div className="flex gap-3">
                 {INTERFACE_SCALES.map((scale) => {
                   const isSelected = interfaceScale === scale;
-                  const iconSize =
+                  const textSizeClass =
                     scale === "small"
-                      ? 16
+                      ? "text-sm"
                       : scale === "normal"
-                        ? 20
+                        ? "text-base"
                         : scale === "large"
-                          ? 24
-                          : 28;
+                          ? "text-lg"
+                          : "text-xl";
 
                   return (
                     <button
@@ -438,8 +438,10 @@ export default function SettingsPage() {
                       )}
                     >
                       <span
-                        className="font-semibold text-gray-700"
-                        style={{ fontSize: `${iconSize}px` }}
+                        className={cn(
+                          "font-semibold text-gray-700",
+                          textSizeClass,
+                        )}
                       >
                         Aa
                       </span>
@@ -467,9 +469,8 @@ export default function SettingsPage() {
                   {currentLocale?.nativeName}
                 </span>
                 <ChevronDown
-                  size={16}
                   className={cn(
-                    "ml-auto transition-transform",
+                    "w-4 h-4 ml-auto transition-transform",
                     isLanguagePanelOpen && "rotate-180",
                   )}
                 />

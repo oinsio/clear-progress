@@ -201,9 +201,9 @@ export function TaskItem({
           )}
         >
           {task.is_completed ? (
-            <RotateCcw size={20} className="text-white" />
+            <RotateCcw className="w-5 h-5 text-white" />
           ) : (
-            <Check size={20} className="text-white" />
+            <Check className="w-5 h-5 text-white" />
           )}
         </div>
       )}
@@ -295,15 +295,15 @@ export function TaskItem({
               task.is_hidden) && (
               <span className="flex items-center gap-2 mt-0.5">
                 {task.description && !task.is_completed && (
-                  <FileText size={12} className="text-gray-400 flex-shrink-0" />
+                  <FileText className="w-3 h-3 text-gray-400 flex-shrink-0" />
                 )}
                 {checklistProgress.total > 0 && (
                   <span
                     data-testid="checklist-badge"
                     className="flex items-center gap-0.5 text-gray-400"
                   >
-                    <ListChecks size={10} />
-                    <span className="text-[10px]">
+                    <ListChecks className="w-2.5 h-2.5" />
+                    <span className="text-[0.625rem]">
                       {checklistProgress.completed}/{checklistProgress.total}
                     </span>
                   </span>
@@ -311,15 +311,13 @@ export function TaskItem({
                 {task.repeat_rule && (
                   <Repeat
                     data-testid="repeat-rule-indicator"
-                    size={10}
-                    className="text-gray-400 flex-shrink-0"
+                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
                   />
                 )}
                 {task.is_hidden && (
                   <EyeOff
                     data-testid="hidden-task-indicator"
-                    size={10}
-                    className="text-gray-400 flex-shrink-0"
+                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
                   />
                 )}
               </span>
@@ -335,7 +333,7 @@ export function TaskItem({
               {...dragHandleProps.attributes}
               {...dragHandleProps.listeners}
             >
-              <GripVertical size={16} />
+              <GripVertical className="w-4 h-4" />
             </button>
           )}
         </div>

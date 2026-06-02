@@ -324,7 +324,7 @@ export function RepeatRuleSelector({
             aria-label={t("taskEdit.back")}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
           </button>
           <h2 className="text-base font-semibold text-gray-800">
             {t("taskEdit.selectRepeatType")}
@@ -374,7 +374,7 @@ export function RepeatRuleSelector({
             aria-label={t("taskEdit.back")}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
           </button>
           <h2 className="text-base font-semibold text-gray-800">
             {t("repeat.fixed")}
@@ -519,9 +519,8 @@ export function RepeatRuleSelector({
                       {t(`repeat.month${state.monthAndDay.month}`)}
                     </span>
                     <ChevronDown
-                      size={16}
                       className={cn(
-                        "ml-auto transition-transform text-gray-400",
+                        "w-4 h-4 ml-auto transition-transform text-gray-400",
                         isMonthPanelOpen && "rotate-180",
                       )}
                     />
@@ -605,7 +604,7 @@ export function RepeatRuleSelector({
             aria-label={t("taskEdit.back")}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
           </button>
           <h2 className="text-base font-semibold text-gray-800">
             {t("repeat.afterCompletion", { count: state.delayDays })}
@@ -655,7 +654,7 @@ export function RepeatRuleSelector({
             aria-label={t("taskEdit.back")}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
           </button>
           <h2 className="text-base font-semibold text-gray-800">
             {t("repeat.targetBox")}

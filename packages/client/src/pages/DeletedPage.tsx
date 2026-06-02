@@ -160,8 +160,7 @@ export default function DeletedPage() {
         <header className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2 bg-white">
           <div className="flex items-center gap-2">
             <Trash2
-              size={16}
-              className="text-accent flex-shrink-0"
+              className="w-4 h-4 text-accent flex-shrink-0"
               aria-hidden="true"
             />
             <h1 className="text-lg font-semibold text-accent">
@@ -174,7 +173,7 @@ export default function DeletedPage() {
             disabled={isEmpty || isPurging}
             className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <AlertTriangle size={14} aria-hidden="true" />
+            <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
             {isPurging
               ? t("deleted.purgingInProgress")
               : t("deleted.purgeButton")}
@@ -214,7 +213,10 @@ export default function DeletedPage() {
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
-                        <ArchiveRestore size={16} aria-hidden="true" />
+                        <ArchiveRestore
+                          className="w-4 h-4"
+                          aria-hidden="true"
+                        />
                       </button>
                     </div>
                   )}
@@ -248,7 +250,10 @@ export default function DeletedPage() {
                           })}
                           className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                         >
-                          <ArchiveRestore size={16} aria-hidden="true" />
+                          <ArchiveRestore
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          />
                         </button>
                       </div>
                     );
@@ -272,7 +277,10 @@ export default function DeletedPage() {
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
-                        <ArchiveRestore size={16} aria-hidden="true" />
+                        <ArchiveRestore
+                          className="w-4 h-4"
+                          aria-hidden="true"
+                        />
                       </button>
                     </div>
                   )}
@@ -295,7 +303,10 @@ export default function DeletedPage() {
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
-                        <ArchiveRestore size={16} aria-hidden="true" />
+                        <ArchiveRestore
+                          className="w-4 h-4"
+                          aria-hidden="true"
+                        />
                       </button>
                     </div>
                   )}
@@ -318,7 +329,10 @@ export default function DeletedPage() {
                         })}
                         className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
                       >
-                        <ArchiveRestore size={16} aria-hidden="true" />
+                        <ArchiveRestore
+                          className="w-4 h-4"
+                          aria-hidden="true"
+                        />
                       </button>
                     </div>
                   )}

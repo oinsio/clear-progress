@@ -196,7 +196,7 @@ export function TaskQuickActions({
           onClick={handleDescriptionToggle}
           className={descriptionButtonClass}
         >
-          <FileText size={17} />
+          <FileText className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -205,7 +205,7 @@ export function TaskQuickActions({
           onClick={() => handleModeToggle("goal")}
           className={goalButtonClass}
         >
-          <Target size={17} />
+          <Target className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -228,7 +228,7 @@ export function TaskQuickActions({
           onClick={() => handleModeToggle("context")}
           className={contextButtonClass}
         >
-          <MapPin size={17} />
+          <MapPin className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -237,7 +237,7 @@ export function TaskQuickActions({
           onClick={() => handleModeToggle("category")}
           className={categoryButtonClass}
         >
-          <Tag size={17} />
+          <Tag className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -246,7 +246,7 @@ export function TaskQuickActions({
           onClick={() => handleModeToggle("repeat")}
           className={repeatButtonClass}
         >
-          <Repeat size={17} />
+          <Repeat className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -257,7 +257,7 @@ export function TaskQuickActions({
             "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
           )}
         >
-          <Pencil size={17} />
+          <Pencil className="w-4 h-4" />
         </button>
       </div>
 

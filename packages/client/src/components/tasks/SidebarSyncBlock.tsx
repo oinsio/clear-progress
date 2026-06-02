@@ -199,9 +199,7 @@ function renderCollapsedButton(
         />
         {hasSyncError && (
           <span className="absolute top-3.5 right-3.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-[14px] font-bold leading-none">
-              !
-            </span>
+            <span className="text-white text-sm font-bold leading-none">!</span>
           </span>
         )}
       </button>
@@ -268,7 +266,7 @@ function renderSyncLoginButton(
           />
           {hasSyncError && (
             <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-[14px] font-bold leading-none">
+              <span className="text-white text-sm font-bold leading-none">
                 !
               </span>
             </span>
