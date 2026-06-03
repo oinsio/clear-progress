@@ -217,10 +217,6 @@ Given(
   },
 );
 
-When("user selects Supabase backend", async ({ page }) => {
-  await selectSupabaseBackend(page);
-});
-
 Then("Supabase URL input is visible and usable", async ({ page }) => {
   const urlInput = page.getByTestId("server-supabase-url");
   await expect(urlInput).toBeVisible();

@@ -122,6 +122,7 @@ export function CommandBar({
         <textarea
           ref={setTextareaRef}
           rows={1}
+          aria-label={placeholder}
           placeholder={placeholder}
           onInput={handleInput}
           onKeyDown={handleKeyDown}
