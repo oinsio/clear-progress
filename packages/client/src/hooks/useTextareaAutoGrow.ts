@@ -1,4 +1,5 @@
-import React, { useCallback, useRef, useState } from "react";
+import type React from "react";
+import { useCallback, useRef, useState } from "react";
 import { COMMAND_BAR_STACKED_CLASS } from "@/constants";
 
 interface UseTextareaAutoGrowReturn {
