@@ -3,7 +3,6 @@ import { Eye, EyeOff, Plus } from "lucide-react";
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useCommandBarResize } from "@/hooks/useCommandBarResize";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useHandedness } from "@/hooks/useHandedness";
 import { useTextareaAutoGrow } from "@/hooks/useTextareaAutoGrow";
@@ -47,7 +46,6 @@ export function CommandBar({
   const { filterBarPosition } = useFilterBarPosition();
   const isBottomPosition = filterBarPosition === "bottom";
   const barRef = useRef<HTMLDivElement | null>(null);
-  useCommandBarResize(barRef);
   const { textareaRef, actionsRef, isWrapped, handleInput } =
     useTextareaAutoGrow();
   const internalTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -97,11 +95,10 @@ export function CommandBar({
     <div
       ref={barRef}
       className={cn(
-        "bg-white fixed z-40 px-3 py-2 flex items-start gap-1.5",
-        "left-0 right-0 xl:max-w-3xl xl:mx-auto",
+        "bg-white shrink-0 px-3 py-2 flex items-start gap-1.5",
         isBottomPosition
-          ? "bottom-0 border-t border-gray-200 pb-[env(safe-area-inset-bottom)]"
-          : "top-0 border-b border-gray-200",
+          ? "order-last border-t border-gray-200 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
+          : "border-b border-gray-200",
         isLeftHanded && "flex-row-reverse",
       )}
       data-testid="command-bar"
@@ -129,7 +126,7 @@ export function CommandBar({
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           onFocus={handleTextareaFocus}
-          className="border border-gray-200 focus:border-accent rounded-2xl py-2 pr-3 pl-9 text-sm leading-snug min-h-9 max-h-40 resize-none overflow-hidden placeholder:text-gray-400 text-gray-900 transition-colors w-full"
+          className="m-0 block border border-gray-200 outline-none focus:border-accent rounded-2xl py-2 pr-3 pl-9 text-sm leading-snug min-h-9 max-h-40 resize-none overflow-hidden placeholder:text-gray-400 text-gray-900 transition-colors w-full"
           data-testid="command-bar-textarea"
         />
       </div>

@@ -102,16 +102,18 @@ export default function InboxPage() {
       data-testid="inbox-page"
       className="flex flex-1 flex-col overflow-hidden"
     >
-      <CommandBar
-        eyeToggle={{
-          isVisible: showHidden,
-          onToggle: toggleShowHidden,
-        }}
-        entityIcon={CheckSquare}
-        placeholder={t("commandBar.placeholder.inbox")}
-        onSubmit={(name) => void handleSubmit(name)}
-      />
       <TaskPageLayout
+        commandBar={
+          <CommandBar
+            eyeToggle={{
+              isVisible: showHidden,
+              onToggle: toggleShowHidden,
+            }}
+            entityIcon={CheckSquare}
+            placeholder={t("commandBar.placeholder.inbox")}
+            onSubmit={(name) => void handleSubmit(name)}
+          />
+        }
         sidebarMode="inbox"
         selectedTask={selectedTask}
         goals={goals}

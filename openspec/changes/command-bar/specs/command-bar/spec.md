@@ -2,7 +2,7 @@
 
 ### Requirement: CommandBar renders configurable layout
 
-CommandBar SHALL render a horizontal bar containing: optional filter section, textarea with entity icon, optional eye toggle, and create button. The bar SHALL use `position: fixed` at `bottom: 0` or `top: 0` based on user's `filter_bar_position` preference. Textarea SHALL have `flex: 1` to fill available space. All sizes MUST use Tailwind rem-based classes to scale with the interface scale setting. Bar styling: `bg-white fixed z-40 px-3 py-2 flex items-start gap-1.5`. Bottom position: `border-t border-gray-200 safe-area-bottom`. Top position: `border-b border-gray-200`. Implements FR1, FR2, FR3, FR4 of command-bar.
+CommandBar SHALL render a horizontal bar containing: optional filter section, textarea with entity icon, optional eye toggle, and create button. The bar SHALL be a non-fixed flex child (`shrink-0`) inside the page's flex column layout, positioned above or below the scrollable content based on user's `filter_bar_position` preference. Bottom position uses `order-last` to appear below the scrollable area. CommandBar MUST NOT use `position: fixed` — it participates in the normal document flow so it naturally respects the Sidebar and content area boundaries. CommandBar MUST NEVER overlap the Sidebar. Textarea SHALL have `flex: 1` to fill available space. All sizes MUST use Tailwind rem-based classes to scale with the interface scale setting. Bar styling: `bg-white shrink-0 px-3 py-2 flex items-start gap-1.5`. Bottom position: `order-last border-t border-gray-200 pb-[calc(0.5rem+env(safe-area-inset-bottom))]` — bottom padding includes base 0.5rem plus iOS safe area. Top position: `border-b border-gray-200`. Textarea MUST use `m-0 block` to eliminate browser default margin and inline baseline gap — this ensures CommandBar height (57px) matches Sidebar search section height exactly, aligning their top borders. Implements FR1, FR2, FR3, FR4, NFR-R3 of command-bar.
 
 #### Scenario: Minimal configuration (no filter, no eye)
 - **WHEN** CommandBar receives only entityIcon, placeholder, and onSubmit
@@ -140,21 +140,21 @@ When handedness preference is "left", CommandBar SHALL apply `flex-direction: ro
 - **WHEN** handedness is "left" and textarea content wraps to multiple visual lines
 - **THEN** stacked buttons are on the left, filter on the right, create button still at bottom of stack
 
-### Requirement: CommandBar publishes height as CSS variable
+### Requirement: CommandBar does not overlap Sidebar
 
-CommandBar SHALL observe its own height via ResizeObserver and set `--command-bar-height` on `document.documentElement`. The observer callback SHALL be throttled to one update per animation frame. On unmount, the CSS variable SHALL be reset to "0px". Implements FR16, NFR-P2 of command-bar.
+CommandBar MUST NOT overlap or extend over the Sidebar on any viewport size. Since CommandBar is a flex child inside the content area (not `position: fixed`), it naturally inherits the content area width. The content area is the space between the Sidebar and any detail panel. This applies to all viewport sizes — desktop, tablet, and mobile. Implements NFR-R3 of command-bar.
 
-#### Scenario: Height variable set on mount
-- **WHEN** CommandBar mounts
-- **THEN** `--command-bar-height` is set to the bar's offsetHeight in px
+#### Scenario: Desktop with collapsed sidebar
+- **WHEN** viewport is 1440px and sidebar is collapsed (w-14)
+- **THEN** CommandBar left edge starts after the sidebar, not at viewport edge
 
-#### Scenario: Height variable updates on textarea growth
-- **WHEN** textarea grows from 1 line to 3 lines
-- **THEN** `--command-bar-height` updates to new height
+#### Scenario: Mobile with sidebar icons
+- **WHEN** viewport is 375px
+- **THEN** CommandBar is within the content area, not overlapping sidebar icons
 
-#### Scenario: Height variable reset on unmount
-- **WHEN** CommandBar unmounts
-- **THEN** `--command-bar-height` is set to "0px"
+#### Scenario: CommandBar width matches content area
+- **WHEN** CommandBar is rendered on any page
+- **THEN** CommandBar width equals the width of the content area (main column)
 
 ### Requirement: Submit creates entity and clears textarea
 
@@ -226,12 +226,12 @@ All interactive elements in CommandBar SHALL have appropriate aria attributes. I
 
 ### Requirement: Responsive behavior
 
-CommandBar SHALL span full width on mobile (<640px). On desktop (>=640px), it SHALL respect the page's max-width and centering. Implements NFR-R1, NFR-R2 of command-bar.
+CommandBar SHALL span full width of the content area (not the viewport) on all screen sizes. On mobile, content area width equals viewport minus sidebar width. On desktop, content area may be further split by a detail panel. CommandBar width always matches the content column width. Implements NFR-R1, NFR-R2 of command-bar.
 
-#### Scenario: Mobile full width
-- **WHEN** viewport is 375px wide
-- **THEN** CommandBar spans full viewport width
+#### Scenario: Mobile content width
+- **WHEN** viewport is 375px wide with sidebar (w-14)
+- **THEN** CommandBar width equals viewport width minus sidebar width
 
-#### Scenario: Desktop constrained width
+#### Scenario: Desktop content width
 - **WHEN** viewport is 1440px wide
-- **THEN** CommandBar width matches page content max-width and is centered
+- **THEN** CommandBar width matches the main content column width

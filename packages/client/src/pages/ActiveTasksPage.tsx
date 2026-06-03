@@ -157,21 +157,23 @@ export default function ActiveTasksPage() {
       data-testid="active-tasks-page"
       className="flex flex-1 flex-col overflow-hidden"
     >
-      <CommandBar
-        filter={{
-          boxes: TASK_BOX_FILTER_ORDER,
-          activeBox,
-          onBoxChange: handleBoxChange,
-        }}
-        eyeToggle={{
-          isVisible: showHidden,
-          onToggle: toggleShowHidden,
-        }}
-        entityIcon={CheckSquare}
-        placeholder={placeholder}
-        onSubmit={(name) => void handleSubmit(name)}
-      />
       <TaskPageLayout
+        commandBar={
+          <CommandBar
+            filter={{
+              boxes: TASK_BOX_FILTER_ORDER,
+              activeBox,
+              onBoxChange: handleBoxChange,
+            }}
+            eyeToggle={{
+              isVisible: showHidden,
+              onToggle: toggleShowHidden,
+            }}
+            entityIcon={CheckSquare}
+            placeholder={placeholder}
+            onSubmit={(name) => void handleSubmit(name)}
+          />
+        }
         sidebarMode="tasks"
         selectedTask={selection.selectedTask}
         goals={goals}

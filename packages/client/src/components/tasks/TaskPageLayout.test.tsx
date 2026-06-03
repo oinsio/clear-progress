@@ -29,14 +29,6 @@ vi.mock("@/hooks/useSidebarNavigation", () => ({
   useSidebarNavigation: () => vi.fn(),
 }));
 
-const mockFilterBarPosition = vi.fn(() => "bottom");
-vi.mock("@/hooks/useFilterBarPosition", () => ({
-  useFilterBarPosition: () => ({
-    filterBarPosition: mockFilterBarPosition(),
-    setFilterBarPosition: vi.fn(),
-  }),
-}));
-
 // FR-6: Mock child components
 vi.mock("./Sidebar", () => ({
   Sidebar: (props: Record<string, unknown>) => (
@@ -71,7 +63,6 @@ const selectedTask = { id: "task-1", name: "Test task" } as unknown as Task;
 describe("TaskPageLayout", () => {
   beforeEach(() => {
     mockUseIsDesktop.mockReturnValue(true);
-    mockFilterBarPosition.mockReturnValue("bottom");
   });
 
   // FR-6: renders children in main content area
@@ -185,32 +176,16 @@ describe("TaskPageLayout", () => {
     expect(mainColumn).not.toHaveClass("hidden");
   });
 
-  // FR17: main content applies padding-bottom when command bar is at bottom
-  it("should apply padding-bottom CSS variable when filter bar is at bottom", () => {
-    mockFilterBarPosition.mockReturnValue("bottom");
+  // FR17: main content has no extra padding — CommandBar is in the layout flow
+  it("should not apply command-bar padding to main content", () => {
     render(
       <TaskPageLayout {...baseProps}>
         <div>Content</div>
       </TaskPageLayout>,
     );
     const mainElement = screen.getByRole("main");
-    expect(mainElement.style.paddingBottom).toBe(
-      "var(--command-bar-height, 0px)",
-    );
-    expect(mainElement.style.paddingTop).toBe("");
-  });
-
-  // FR17: main content applies padding-top when command bar is at top
-  it("should apply padding-top CSS variable when filter bar is at top", () => {
-    mockFilterBarPosition.mockReturnValue("top");
-    render(
-      <TaskPageLayout {...baseProps}>
-        <div>Content</div>
-      </TaskPageLayout>,
-    );
-    const mainElement = screen.getByRole("main");
-    expect(mainElement.style.paddingTop).toBe("var(--command-bar-height, 0px)");
     expect(mainElement.style.paddingBottom).toBe("");
+    expect(mainElement.style.paddingTop).toBe("");
   });
 
   // FR-6: desktop with selected task applies split ratio to main column

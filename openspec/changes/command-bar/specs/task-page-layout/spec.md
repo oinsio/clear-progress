@@ -2,7 +2,7 @@
 
 ### Requirement: TaskPageLayout provides shared split-pane layout
 
-TaskPageLayout SHALL render a split-pane layout containing: main content area (children), TaskDetailPanel (when a task is selected), resize handle (desktop only), and Sidebar. The layout SHALL use `usePanelSplit` for resize, `usePanelSide` for sidebar placement, `usePanelOpen` for sidebar toggle, and `useIsDesktop` for responsive behavior. The main content area SHALL apply padding based on `--command-bar-height` CSS variable to prevent CommandBar overlap. TaskPageLayout SHALL NOT render toolbars — CommandBar is rendered independently by each page. Implements FR17 of command-bar. Modifies FR6 of refactor-task-pages.
+TaskPageLayout SHALL render a split-pane layout containing: main content area (children), optional `commandBar` slot, TaskDetailPanel (when a task is selected), resize handle (desktop only), and Sidebar. The layout SHALL use `usePanelSplit` for resize, `usePanelSide` for sidebar placement, `usePanelOpen` for sidebar toggle, and `useIsDesktop` for responsive behavior. TaskPageLayout accepts an optional `commandBar` React node prop that is rendered inside the main column (before the scrollable `<main>` area), ensuring CommandBar is constrained to the content area and never overlaps the Sidebar. No padding or CSS variable is needed for overlap prevention. Implements FR17 of command-bar. Modifies FR6 of refactor-task-pages.
 
 #### Scenario: Desktop layout with selected task
 - **WHEN** a task is selected on desktop
@@ -20,13 +20,9 @@ TaskPageLayout SHALL render a split-pane layout containing: main content area (c
 - **WHEN** TaskPageLayout receives sidebarMode="inbox"
 - **THEN** Sidebar highlights the inbox filter item
 
-#### Scenario: Content has padding for bottom CommandBar
-- **WHEN** CommandBar is positioned at bottom and has height 56px
-- **THEN** main content has padding-bottom of 56px (from --command-bar-height)
-
-#### Scenario: Content has padding for top CommandBar
-- **WHEN** CommandBar is positioned at top and has height 56px
-- **THEN** main content has padding-top of 56px (from --command-bar-height)
+#### Scenario: CommandBar rendered inside main column via commandBar prop
+- **WHEN** TaskPageLayout receives a commandBar prop
+- **THEN** CommandBar is rendered inside the main column, before the scrollable content, constrained by the Sidebar
 
 ### Requirement: InboxPage displays only inbox tasks
 
@@ -83,5 +79,5 @@ CompletedPage (`/completed`) SHALL display all completed tasks grouped by date (
 ## REMOVED Requirements
 
 ### Requirement: Top and bottom toolbars
-**Reason**: Replaced by CommandBar component with `position: fixed`. CommandBar is rendered by each page independently, not via layout slots.
-**Migration**: Pages that used `topToolbar`/`bottomToolbar` props now render `<CommandBar>` directly. Content padding is handled via `--command-bar-height` CSS variable.
+**Reason**: Replaced by CommandBar component passed via `commandBar` prop to TaskPageLayout. CommandBar is a non-fixed flex child inside the main column.
+**Migration**: Pages that used `topToolbar`/`bottomToolbar` props now pass `<CommandBar>` via the `commandBar` prop.

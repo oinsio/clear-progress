@@ -92,12 +92,15 @@ vi.mock("@/hooks/useTaskCompletion", () => ({
 vi.mock("@/components/tasks/TaskPageLayout", () => ({
   TaskPageLayout: ({
     children,
+    commandBar,
     sidebarMode,
   }: {
     children: React.ReactNode;
+    commandBar?: React.ReactNode;
     sidebarMode: string;
   }) => (
     <div data-testid="task-page-layout" data-sidebar-mode={sidebarMode}>
+      {commandBar}
       {children}
     </div>
   ),
