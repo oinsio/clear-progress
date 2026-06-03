@@ -1,13 +1,13 @@
 /**
- * Tests for GoalsPage.
+ * Tests for ContextsPage.
  * Implements FR20 of command-bar.
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
-import { buildGoalsHook } from "@/test/builders/hookBuilders";
-import { buildGoal } from "@/test/factories/goalFactory";
-import GoalsPage from "./GoalsPage";
+import { buildContextsHook } from "@/test/builders/hookBuilders";
+import { buildContext } from "@/test/factories/contextFactory";
+import ContextsPage from "./ContextsPage";
 
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: () => ({
@@ -19,12 +19,12 @@ vi.mock("@/app/providers/AuthProvider", () => ({
     silentRefresh: vi.fn(),
   }),
 }));
-vi.mock("@/hooks/useGoals");
+vi.mock("@/hooks/useContexts");
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/services/TaskService", () => ({
   TaskService: vi.fn().mockImplementation(() => ({
-    getGoalTaskCounts: vi.fn().mockResolvedValue({}),
+    getContextTaskCounts: vi.fn().mockResolvedValue({}),
   })),
 }));
 vi.mock("@/db/repositories/TaskRepository", () => ({
@@ -48,15 +48,15 @@ vi.mock("@/hooks/useHandedness", () => ({
   }),
 }));
 
-import { useGoals } from "@/hooks/useGoals";
+import { useContexts } from "@/hooks/useContexts";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 
-const mockUseGoals = vi.mocked(useGoals);
+const mockUseContexts = vi.mocked(useContexts);
 const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
 
-function renderGoalsPage() {
+function renderContextsPage() {
   mockUsePanelSide.mockReturnValue({
     panelSide: "right",
     setPanelSide: vi.fn(),
@@ -68,73 +68,57 @@ function renderGoalsPage() {
 
   render(
     <MemoryRouter>
-      <GoalsPage />
+      <ContextsPage />
     </MemoryRouter>,
   );
 }
 
-describe("GoalsPage", () => {
-  beforeEach(() => {
-    mockUseGoals.mockReturnValue(buildGoalsHook());
+describe("ContextsPage", () => {
+  it("should render page with test-id 'contexts-page'", () => {
+    mockUseContexts.mockReturnValue(buildContextsHook());
+    renderContextsPage();
+    expect(screen.getByTestId("contexts-page")).toBeInTheDocument();
   });
 
-  it("should render page with test-id 'goals-page'", () => {
-    renderGoalsPage();
-    expect(screen.getByTestId("goals-page")).toBeInTheDocument();
-  });
-
-  it("should render header", () => {
-    renderGoalsPage();
-    expect(screen.getByRole("heading")).toBeInTheDocument();
-  });
-
-  it("should render goal items for each active goal", () => {
-    const goals = [
-      buildGoal({ name: "Goal A" }),
-      buildGoal({ name: "Goal B" }),
+  it("should render context items for each active context", () => {
+    const contexts = [
+      buildContext({ name: "@Home" }),
+      buildContext({ name: "@Office" }),
     ];
-    mockUseGoals.mockReturnValue(buildGoalsHook({ goals }));
-
-    renderGoalsPage();
-    expect(screen.getByText("Goal A")).toBeInTheDocument();
-    expect(screen.getByText("Goal B")).toBeInTheDocument();
+    mockUseContexts.mockReturnValue(buildContextsHook({ contexts }));
+    renderContextsPage();
+    expect(screen.getByText("@Home")).toBeInTheDocument();
+    expect(screen.getByText("@Office")).toBeInTheDocument();
   });
 
-  it("should not render deleted goals", () => {
-    const goals = [
-      buildGoal({ name: "Active Goal" }),
-      buildGoal({ name: "Deleted Goal", is_deleted: true }),
+  it("should not render deleted contexts", () => {
+    const contexts = [
+      buildContext({ name: "@Active" }),
+      buildContext({ name: "@Deleted", is_deleted: true }),
     ];
-    mockUseGoals.mockReturnValue(buildGoalsHook({ goals }));
-
-    renderGoalsPage();
-    expect(screen.getByText("Active Goal")).toBeInTheDocument();
-    expect(screen.queryByText("Deleted Goal")).not.toBeInTheDocument();
+    mockUseContexts.mockReturnValue(buildContextsHook({ contexts }));
+    renderContextsPage();
+    expect(screen.getByText("@Active")).toBeInTheDocument();
+    expect(screen.queryByText("@Deleted")).not.toBeInTheDocument();
   });
 
-  it("should show empty state when no goals exist", () => {
-    mockUseGoals.mockReturnValue(buildGoalsHook({ goals: [] }));
-
-    renderGoalsPage();
-    expect(screen.getByTestId("empty-goals-message")).toBeInTheDocument();
-  });
-
-  it("should not show empty state when goals exist", () => {
-    mockUseGoals.mockReturnValue(buildGoalsHook({ goals: [buildGoal()] }));
-
-    renderGoalsPage();
-    expect(screen.queryByTestId("empty-goals-message")).not.toBeInTheDocument();
+  it("should show empty state when no contexts exist", () => {
+    mockUseContexts.mockReturnValue(buildContextsHook({ contexts: [] }));
+    renderContextsPage();
+    expect(screen.getByTestId("empty-contexts-message")).toBeInTheDocument();
   });
 
   // FR-20: renders CommandBar
   it("should render CommandBar", () => {
-    renderGoalsPage();
+    mockUseContexts.mockReturnValue(buildContextsHook());
+    renderContextsPage();
     expect(screen.getByTestId("command-bar")).toBeInTheDocument();
   });
 
   // FR-20: CommandBar has no filter
   it("should not render CommandBar filter toggle", () => {
-    renderGoalsPage();
+    mockUseContexts.mockReturnValue(buildContextsHook());
+    renderContextsPage();
     expect(
       screen.queryByTestId("command-bar-filter-toggle"),
     ).not.toBeInTheDocument();
@@ -142,7 +126,8 @@ describe("GoalsPage", () => {
 
   // FR-20: CommandBar has no eye toggle
   it("should not render CommandBar eye toggle", () => {
-    renderGoalsPage();
+    mockUseContexts.mockReturnValue(buildContextsHook());
+    renderContextsPage();
     expect(
       screen.queryByTestId("command-bar-eye-toggle"),
     ).not.toBeInTheDocument();
@@ -150,42 +135,41 @@ describe("GoalsPage", () => {
 
   // FR-20: CommandBar has entity icon
   it("should render CommandBar entity icon", () => {
-    renderGoalsPage();
+    mockUseContexts.mockReturnValue(buildContextsHook());
+    renderContextsPage();
     expect(screen.getByTestId("command-bar-entity-icon")).toBeInTheDocument();
   });
 
   // FR-20: CommandBar has create button
   it("should render CommandBar create button", () => {
-    renderGoalsPage();
+    mockUseContexts.mockReturnValue(buildContextsHook());
+    renderContextsPage();
     expect(screen.getByTestId("command-bar-create-button")).toBeInTheDocument();
   });
 
-  // FR-20: creates goal via CommandBar submit
-  it("should call createGoal when submitting via CommandBar", async () => {
-    const createGoal = vi.fn().mockResolvedValue(undefined);
-    mockUseGoals.mockReturnValue(buildGoalsHook({ createGoal }));
-    renderGoalsPage();
+  // FR-20: creates context via CommandBar submit
+  it("should call createContext when submitting via CommandBar", async () => {
+    const createContext = vi.fn().mockResolvedValue(undefined);
+    mockUseContexts.mockReturnValue(buildContextsHook({ createContext }));
+    renderContextsPage();
     const textarea = screen.getByTestId("command-bar-textarea");
-    fireEvent.input(textarea, { target: { value: "New Goal" } });
+    fireEvent.input(textarea, { target: { value: "New Context" } });
     fireEvent.keyDown(textarea, { key: "Enter" });
     await waitFor(() => {
-      expect(createGoal).toHaveBeenCalledWith({ name: "New Goal" });
+      expect(createContext).toHaveBeenCalledWith("New Context");
     });
   });
 
   // FR-20: no old inline add buttons
-  it("should not render old add-goal-button", () => {
-    renderGoalsPage();
-    expect(screen.queryByTestId("add-goal-button")).not.toBeInTheDocument();
+  it("should not render old add-context-button", () => {
+    mockUseContexts.mockReturnValue(buildContextsHook());
+    renderContextsPage();
+    expect(screen.queryByTestId("add-context-button")).not.toBeInTheDocument();
   });
 
   it("should not render old add-task-button", () => {
-    renderGoalsPage();
+    mockUseContexts.mockReturnValue(buildContextsHook());
+    renderContextsPage();
     expect(screen.queryByTestId("add-task-button")).not.toBeInTheDocument();
-  });
-
-  it("should not render GoalCreateSheet", () => {
-    renderGoalsPage();
-    expect(screen.queryByTestId("goal-create-sheet")).not.toBeInTheDocument();
   });
 });
