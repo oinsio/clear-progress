@@ -36,10 +36,11 @@ test("create idea locally → push → verify idea exists on server", async () =
   await page.goto("/ideas");
   await page.waitForSelector('[data-testid="ideas-page"]');
 
-  // Add an idea via the UI
-  await page.getByTestId("add-idea-button").first().click();
-  await page.getByTestId("add-idea-input").fill(createdIdeaName);
-  await page.getByTestId("add-idea-input").press("Enter");
+  // Add an idea via the CommandBar
+  const ideaTextarea = page.getByTestId("command-bar-textarea");
+  await ideaTextarea.click();
+  await ideaTextarea.fill(createdIdeaName);
+  await ideaTextarea.press("Enter");
 
   // Wait for the idea to appear in the list
   await page.locator(`text=${createdIdeaName}`).waitFor({ state: "visible" });

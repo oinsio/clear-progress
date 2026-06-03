@@ -35,10 +35,11 @@ test("create context locally → push → verify context exists on server", asyn
   await page.goto("/contexts");
   await page.waitForSelector('[data-testid="contexts-page"]');
 
-  // Add a context via the UI
-  await page.getByTestId("add-context-button").first().click();
-  await page.getByTestId("add-context-input").fill(createdContextName);
-  await page.getByTestId("add-context-input").press("Enter");
+  // Add a context via the CommandBar
+  const contextTextarea = page.getByTestId("command-bar-textarea");
+  await contextTextarea.click();
+  await contextTextarea.fill(createdContextName);
+  await contextTextarea.press("Enter");
 
   // Wait for the context to appear in the list
   await page

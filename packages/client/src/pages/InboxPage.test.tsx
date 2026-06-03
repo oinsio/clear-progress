@@ -1,6 +1,7 @@
 /**
  * Tests for InboxPage — inbox-only task page.
  * Implements FR1 of refactor-task-pages
+ * Implements FR20 of command-bar
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -48,6 +49,27 @@ vi.mock("@/hooks/useFocusMode", () => ({
   useFocusMode: () => ({ isFocusMode: false, focusOpacity: 1 }),
 }));
 
+vi.mock("@/hooks/useShowHidden", () => ({
+  useShowHidden: () => ({
+    showHidden: false,
+    toggleShowHidden: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useFilterBarPosition", () => ({
+  useFilterBarPosition: () => ({
+    filterBarPosition: "bottom",
+    setFilterBarPosition: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useHandedness", () => ({
+  useHandedness: () => ({
+    handedness: "right",
+    setHandedness: vi.fn(),
+  }),
+}));
+
 const mockSetSelectedTaskId = vi.fn();
 vi.mock("@/hooks/useTaskSelection", () => ({
   useTaskSelection: () => ({
@@ -67,30 +89,16 @@ vi.mock("@/hooks/useTaskCompletion", () => ({
   useTaskCompletion: () => mockHandleComplete,
 }));
 
-let mockFilterBarPosition = "bottom";
-vi.mock("@/hooks/useFilterBarPosition", () => ({
-  useFilterBarPosition: () => ({
-    filterBarPosition: mockFilterBarPosition,
-    setFilterBarPosition: vi.fn(),
-  }),
-}));
-
 vi.mock("@/components/tasks/TaskPageLayout", () => ({
   TaskPageLayout: ({
     children,
     sidebarMode,
-    topToolbar,
-    bottomToolbar,
   }: {
     children: React.ReactNode;
     sidebarMode: string;
-    topToolbar?: React.ReactNode;
-    bottomToolbar?: React.ReactNode;
   }) => (
     <div data-testid="task-page-layout" data-sidebar-mode={sidebarMode}>
-      {topToolbar && <div data-testid="top-toolbar">{topToolbar}</div>}
       {children}
-      {bottomToolbar && <div data-testid="bottom-toolbar">{bottomToolbar}</div>}
     </div>
   ),
 }));
@@ -119,21 +127,6 @@ vi.mock("@/components/tasks/TaskSection", () => ({
   ),
 }));
 
-vi.mock("@/components/tasks/AddTaskInput", () => ({
-  AddTaskInput: ({
-    onAdd,
-    onCancel,
-  }: {
-    onAdd: (name: string) => void;
-    onCancel: () => void;
-  }) => (
-    <div data-testid="add-task-input">
-      <button data-testid="submit-add" onClick={() => onAdd("New task")} />
-      <button data-testid="cancel-add" onClick={onCancel} />
-    </div>
-  ),
-}));
-
 import { useTasks } from "@/hooks/useTasks";
 
 const mockUseTasks = vi.mocked(useTasks);
@@ -148,7 +141,6 @@ import InboxPage from "./InboxPage";
 describe("InboxPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFilterBarPosition = "bottom";
   });
 
   // FR-1: renders page container with correct testid
@@ -177,6 +169,32 @@ describe("InboxPage", () => {
     expect(section).toHaveAttribute("data-label", "section.inbox");
   });
 
+  // FR-20: renders CommandBar
+  it("should render CommandBar", () => {
+    renderPage();
+    expect(screen.getByTestId("command-bar")).toBeInTheDocument();
+  });
+
+  // FR-20: CommandBar has no filter (no filter toggle)
+  it("should not render CommandBar filter toggle", () => {
+    renderPage();
+    expect(
+      screen.queryByTestId("command-bar-filter-toggle"),
+    ).not.toBeInTheDocument();
+  });
+
+  // FR-20: CommandBar has eye toggle
+  it("should render CommandBar eye toggle", () => {
+    renderPage();
+    expect(screen.getByTestId("command-bar-eye-toggle")).toBeInTheDocument();
+  });
+
+  // FR-20: CommandBar has to create button
+  it("should render CommandBar create button", () => {
+    renderPage();
+    expect(screen.getByTestId("command-bar-create-button")).toBeInTheDocument();
+  });
+
   // FR-1: filters out completed tasks
   it("should filter out completed tasks", () => {
     const tasks = [
@@ -201,52 +219,15 @@ describe("InboxPage", () => {
     expect(items[0]).toHaveTextContent("Active");
   });
 
-  // FR-1: shows AddTaskInput when add button clicked
-  it("should show AddTaskInput when add button is clicked", () => {
+  // FR-20: creates task via CommandBar submit
+  it("should call createTask when submitting via CommandBar", async () => {
     renderPage();
-    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    expect(screen.getByTestId("add-task-input")).toBeInTheDocument();
-  });
-
-  // FR-1: hides AddTaskInput after submit
-  it("should hide AddTaskInput after task is submitted", async () => {
-    renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    fireEvent.click(screen.getByTestId("submit-add"));
+    const textarea = screen.getByTestId("command-bar-textarea");
+    fireEvent.input(textarea, { target: { value: "New task" } });
+    fireEvent.keyDown(textarea, { key: "Enter" });
     await waitFor(() => {
-      expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
+      expect(mockCreateTask).toHaveBeenCalledWith("New task");
     });
-  });
-
-  // FR-1: hides AddTaskInput on cancel
-  it("should hide AddTaskInput on cancel", () => {
-    renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    fireEvent.click(screen.getByTestId("cancel-add"));
-    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
-  });
-
-  // FR-1: add button in bottom toolbar when filterBarPosition is bottom
-  it("should render add button in bottom toolbar when position is bottom", () => {
-    mockFilterBarPosition = "bottom";
-    renderPage();
-    const bottomToolbar = screen.getByTestId("bottom-toolbar");
-    expect(
-      bottomToolbar.querySelector("[data-testid='add-task-button']"),
-    ).toBeInTheDocument();
-    expect(screen.queryByTestId("top-toolbar")).not.toBeInTheDocument();
-  });
-
-  // FR-1: add button in top toolbar when filterBarPosition is top
-  it("should render add button in top toolbar when position is top", () => {
-    mockFilterBarPosition = "top";
-    renderPage();
-    const topToolbar = screen.getByTestId("top-toolbar");
-    expect(
-      topToolbar.querySelector("[data-testid='add-task-button']"),
-    ).toBeInTheDocument();
-    expect(screen.queryByTestId("bottom-toolbar")).not.toBeInTheDocument();
   });
 
   // FR-1: handles task completion via onComplete

@@ -1,3 +1,7 @@
+/**
+ * IdeasPage — displays and manages ideas.
+ * Implements FR20 of command-bar.
+ */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -5,24 +9,20 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { GripVertical, Lightbulb, Plus } from "lucide-react";
+import { GripVertical, Lightbulb } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { CommandBar } from "@/components/command-bar";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
 import { Sidebar } from "@/components/tasks/Sidebar";
-import { BOX } from "@/constants";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useDndSensors } from "@/hooks/useDndSensors";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useIdeas } from "@/hooks/useIdeas";
-import { useInlineAdd } from "@/hooks/useInlineAdd";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useTasks } from "@/hooks/useTasks";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
 
@@ -78,10 +78,8 @@ export default function IdeasPage() {
   const { t } = useTranslation();
   const { ideas, isLoading, createIdea, updateIdea, deleteIdea, reorderIdeas } =
     useIdeas();
-  const { createTask } = useTasks(BOX.INBOX);
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const { filterBarPosition } = useFilterBarPosition();
   const sensors = useDndSensors();
   const isDesktop = useIsDesktop();
   const {
@@ -91,27 +89,6 @@ export default function IdeasPage() {
   } = usePanelSplit();
 
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
-
-  const {
-    isAdding: isAddingIdea,
-    setIsAdding: setIsAddingIdea,
-    value: newIdeaName,
-    setValue: setNewIdeaName,
-    handleKeyDown: handleAddIdeaKeyDown,
-    handleBlur: handleAddIdeaBlur,
-  } = useInlineAdd((name) => createIdea({ name }));
-
-  const {
-    isAdding: isAddingTask,
-    setIsAdding: setIsAddingTask,
-    value: newTaskName,
-    setValue: setNewTaskName,
-    handleKeyDown: handleAddTaskKeyDown,
-    handleBlur: handleAddTaskBlur,
-  } = useInlineAdd(createTask);
-
-  const newIdeaTextareaRef = useAutoResizeTextarea(newIdeaName);
-  const newTaskTextareaRef = useAutoResizeTextarea(newTaskName);
 
   const activeIdeas = ideas.filter((idea) => !idea.is_deleted);
 
@@ -151,6 +128,13 @@ export default function IdeasPage() {
     [deleteIdea],
   );
 
+  const handleSubmit = useCallback(
+    (name: string) => {
+      void createIdea({ name });
+    },
+    [createIdea],
+  );
+
   const selectedIdea = selectedIdeaId
     ? activeIdeas.find((idea) => idea.id === selectedIdeaId)
     : null;
@@ -174,38 +158,11 @@ export default function IdeasPage() {
               : undefined
           }
         >
-          {/* Action bar — top position (above header) */}
-          {filterBarPosition === "top" && (
-            <div
-              className={cn(
-                "flex items-center border-b border-gray-200 bg-white px-3 py-2",
-                panelSide === "left" && "flex-row-reverse",
-              )}
-            >
-              <button
-                type="button"
-                aria-label={t("idea.add")}
-                data-testid="add-idea-button"
-                onClick={() => setIsAddingIdea(true)}
-                className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
-              >
-                <Lightbulb className="w-5 h-5" aria-hidden="true" />
-                <Plus
-                  className="w-3 h-3 absolute bottom-1 right-1"
-                  aria-hidden="true"
-                />
-              </button>
-              <button
-                type="button"
-                aria-label={t("idea.addTask")}
-                data-testid="add-task-button"
-                onClick={() => setIsAddingTask(true)}
-                className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-              >
-                <Plus className="w-5 h-5" aria-hidden="true" />
-              </button>
-            </div>
-          )}
+          <CommandBar
+            entityIcon={Lightbulb}
+            placeholder={t("commandBar.placeholder.idea")}
+            onSubmit={handleSubmit}
+          />
 
           {/* Header */}
           <header className="px-4 py-3 border-b border-gray-100">
@@ -218,14 +175,12 @@ export default function IdeasPage() {
           <main className="flex-1 overflow-y-auto">
             <div className="xl:max-w-3xl xl:mx-auto">
               {!isLoading && activeIdeas.length === 0 ? (
-                <button
-                  type="button"
-                  onClick={() => setIsAddingIdea(true)}
-                  className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
+                <div
+                  className="w-full flex flex-col items-center justify-center text-gray-400 py-3"
                   data-testid="empty-ideas-message"
                 >
                   <p className="text-sm">{t("idea.empty")}</p>
-                </button>
+                </div>
               ) : (
                 <DndContext
                   sensors={sensors}
@@ -248,78 +203,8 @@ export default function IdeasPage() {
                   </SortableContext>
                 </DndContext>
               )}
-
-              {/* Inline add idea input */}
-              {isAddingIdea && (
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <textarea
-                    ref={newIdeaTextareaRef}
-                    rows={1}
-                    value={newIdeaName}
-                    onChange={(event) => setNewIdeaName(event.target.value)}
-                    onKeyDown={handleAddIdeaKeyDown}
-                    onBlur={handleAddIdeaBlur}
-                    placeholder={t("idea.namePlaceholder")}
-                    className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                    data-testid="add-idea-input"
-                  />
-                </div>
-              )}
-
-              {/* Inline add task input */}
-              {isAddingTask && (
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <textarea
-                    ref={newTaskTextareaRef}
-                    rows={1}
-                    value={newTaskName}
-                    onChange={(event) => setNewTaskName(event.target.value)}
-                    onKeyDown={handleAddTaskKeyDown}
-                    onBlur={handleAddTaskBlur}
-                    placeholder={t("idea.taskPlaceholder")}
-                    className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                    data-testid="add-task-input"
-                  />
-                </div>
-              )}
             </div>
           </main>
-
-          {/* Action bar — bottom position (default) */}
-          {filterBarPosition === "bottom" && (
-            <div
-              className={cn(
-                "flex items-center border-t border-gray-200 bg-white px-3 py-2",
-                panelSide === "left" && "flex-row-reverse",
-              )}
-            >
-              {/* Add idea button */}
-              <button
-                type="button"
-                aria-label={t("idea.add")}
-                data-testid="add-idea-button"
-                onClick={() => setIsAddingIdea(true)}
-                className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
-              >
-                <Lightbulb className="w-5 h-5" aria-hidden="true" />
-                <Plus
-                  className="w-3 h-3 absolute bottom-1 right-1"
-                  aria-hidden="true"
-                />
-              </button>
-
-              {/* Add task button */}
-              <button
-                type="button"
-                aria-label={t("idea.addTask")}
-                data-testid="add-task-button"
-                onClick={() => setIsAddingTask(true)}
-                className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-              >
-                <Plus className="w-5 h-5" aria-hidden="true" />
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Resize handle between idea list and detail panel */}
@@ -330,7 +215,7 @@ export default function IdeasPage() {
           />
         )}
 
-        {/* Idea detail panel — shown when an idea is selected (desktop: side panel, mobile: full screen) */}
+        {/* Idea detail panel */}
         {selectedIdea && (
           <IdeaDetailPanel
             idea={selectedIdea}

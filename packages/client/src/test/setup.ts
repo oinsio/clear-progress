@@ -31,6 +31,13 @@ Object.defineProperty(globalThis, "localStorage", {
   configurable: true,
 });
 
+// jsdom doesn't implement ResizeObserver
+globalThis.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as unknown as typeof globalThis.ResizeObserver;
+
 // jsdom doesn't implement window.matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,

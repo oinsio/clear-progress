@@ -4,6 +4,7 @@ import type {
   BoxFilter,
   ColorScheme,
   FilterBarPosition,
+  Handedness,
   InterfaceScale,
   PanelSide,
 } from "@/types/common";
@@ -44,6 +45,14 @@ export const BOX_FILTER_I18N_KEYS: Record<BoxFilter, string> = {
 };
 
 export const TASK_BOX_FILTER_ORDER: BoxFilter[] = [
+  "today",
+  "week",
+  "later",
+  "all",
+];
+
+export const FULL_BOX_FILTER_ORDER: BoxFilter[] = [
+  "inbox",
   "today",
   "week",
   "later",
@@ -160,6 +169,7 @@ export const STORAGE_KEYS = {
   SETTINGS_UPDATED_AT: "settings_updated_at",
   FOCUS_MODE: "focus_mode",
   FOCUS_OPACITY: "focus_opacity",
+  HANDEDNESS: "handedness",
 } as const;
 
 export const DEFAULT_FOCUS_OPACITY = 30;
@@ -221,3 +231,11 @@ export const GOAL_STATUS_SORT_ORDER: Record<
   completed: 3,
   cancelled: 4,
 } as const;
+
+export const DEFAULT_HANDEDNESS: Handedness = "right";
+
+export const HANDEDNESS_OPTIONS: Handedness[] = ["right", "left"];
+
+export const COMMAND_BAR_CSS_VAR = "--command-bar-height";
+
+export const COMMAND_BAR_STACKED_CLASS = "command-bar-stacked";

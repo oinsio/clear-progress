@@ -205,6 +205,9 @@
     "filterBarPosition": "Filter position",
     "filterBarBottom": "Bottom",
     "filterBarTop": "Top",
+    "handedness": "Handedness",
+    "handednessRight": "Right-handed",
+    "handednessLeft": "Left-handed",
     "login": "Configure server",
     "loginAriaLabel": "Configure server",
     "settingsAriaLabel": "Settings",
@@ -472,6 +475,21 @@
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Try reloading the app.",
     "reload": "Reload"
+  },
+  "commandBar": {
+    "placeholder": {
+      "inbox": "To inbox...",
+      "today": "For today...",
+      "week": "For week...",
+      "later": "For later...",
+      "goal": "New goal...",
+      "idea": "New idea...",
+      "category": "New category...",
+      "context": "New context..."
+    },
+    "filterByBox": "Filter by box",
+    "toggleHiddenItems": "Toggle hidden items",
+    "create": "Create"
   },
   "pwa": {
     "appUpdated": "App updated",

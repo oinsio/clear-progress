@@ -5,6 +5,7 @@
  * for all task pages.
  */
 import type * as React from "react";
+import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
@@ -27,9 +28,9 @@ export interface TaskPageLayoutProps {
   onDuplicateTask: (id: string) => Promise<void>;
   onCloseDetailPanel: () => void;
   onModeChange?: (newMode: SidebarMode) => void;
-  topToolbar?: React.ReactNode;
-  bottomToolbar?: React.ReactNode;
 }
+
+const COMMAND_BAR_PADDING = "var(--command-bar-height, 0px)";
 
 export function TaskPageLayout({
   children,
@@ -43,8 +44,6 @@ export function TaskPageLayout({
   onDuplicateTask,
   onCloseDetailPanel,
   onModeChange: externalModeChange,
-  topToolbar,
-  bottomToolbar,
 }: TaskPageLayoutProps) {
   const { ratio, containerRef, handleResizeMouseDown } = usePanelSplit();
   const { panelSide } = usePanelSide();
@@ -52,6 +51,7 @@ export function TaskPageLayout({
   const isDesktop = useIsDesktop();
   const defaultModeChange = useSidebarNavigation();
   const handleModeChange = externalModeChange ?? defaultModeChange;
+  const { filterBarPosition } = useFilterBarPosition();
 
   const isTaskSelected = selectedTask !== null;
   const showResizeHandle = isDesktop && isTaskSelected;
@@ -80,11 +80,16 @@ export function TaskPageLayout({
           )}
           style={mainColumnStyle}
         >
-          {topToolbar}
-          <main className="flex-1 overflow-y-auto">
+          <main
+            className="flex-1 overflow-y-auto"
+            style={
+              filterBarPosition === "bottom"
+                ? { paddingBottom: COMMAND_BAR_PADDING }
+                : { paddingTop: COMMAND_BAR_PADDING }
+            }
+          >
             <div className="xl:mx-auto xl:max-w-3xl">{children}</div>
           </main>
-          {bottomToolbar}
         </div>
 
         {showResizeHandle && (

@@ -29,6 +29,14 @@ vi.mock("@/hooks/useSidebarNavigation", () => ({
   useSidebarNavigation: () => vi.fn(),
 }));
 
+const mockFilterBarPosition = vi.fn(() => "bottom");
+vi.mock("@/hooks/useFilterBarPosition", () => ({
+  useFilterBarPosition: () => ({
+    filterBarPosition: mockFilterBarPosition(),
+    setFilterBarPosition: vi.fn(),
+  }),
+}));
+
 // FR-6: Mock child components
 vi.mock("./Sidebar", () => ({
   Sidebar: (props: Record<string, unknown>) => (
@@ -63,6 +71,7 @@ const selectedTask = { id: "task-1", name: "Test task" } as unknown as Task;
 describe("TaskPageLayout", () => {
   beforeEach(() => {
     mockUseIsDesktop.mockReturnValue(true);
+    mockFilterBarPosition.mockReturnValue("bottom");
   });
 
   // FR-6: renders children in main content area
@@ -176,30 +185,32 @@ describe("TaskPageLayout", () => {
     expect(mainColumn).not.toHaveClass("hidden");
   });
 
-  // FR-6: topToolbar renders in correct position
-  it("should render topToolbar above main content", () => {
+  // FR17: main content applies padding-bottom when command bar is at bottom
+  it("should apply padding-bottom CSS variable when filter bar is at bottom", () => {
+    mockFilterBarPosition.mockReturnValue("bottom");
     render(
-      <TaskPageLayout
-        {...baseProps}
-        topToolbar={<div data-testid="top-toolbar">Toolbar</div>}
-      >
+      <TaskPageLayout {...baseProps}>
         <div>Content</div>
       </TaskPageLayout>,
     );
-    expect(screen.getByTestId("top-toolbar")).toBeInTheDocument();
+    const mainElement = screen.getByRole("main");
+    expect(mainElement.style.paddingBottom).toBe(
+      "var(--command-bar-height, 0px)",
+    );
+    expect(mainElement.style.paddingTop).toBe("");
   });
 
-  // FR-6: bottomToolbar renders in correct position
-  it("should render bottomToolbar below main content", () => {
+  // FR17: main content applies padding-top when command bar is at top
+  it("should apply padding-top CSS variable when filter bar is at top", () => {
+    mockFilterBarPosition.mockReturnValue("top");
     render(
-      <TaskPageLayout
-        {...baseProps}
-        bottomToolbar={<div data-testid="bottom-toolbar">Bottom</div>}
-      >
+      <TaskPageLayout {...baseProps}>
         <div>Content</div>
       </TaskPageLayout>,
     );
-    expect(screen.getByTestId("bottom-toolbar")).toBeInTheDocument();
+    const mainElement = screen.getByRole("main");
+    expect(mainElement.style.paddingTop).toBe("var(--command-bar-height, 0px)");
+    expect(mainElement.style.paddingBottom).toBe("");
   });
 
   // FR-6: desktop with selected task applies split ratio to main column

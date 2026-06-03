@@ -1,22 +1,24 @@
 /**
  * Active tasks page — tasks grouped by time-box (today/week/later).
  * Implements FR2 of refactor-task-pages.
+ * Implements FR20 of command-bar.
  */
+import { CheckSquare } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AddTaskInput } from "@/components/tasks/AddTaskInput";
-import { BoxFilterBar } from "@/components/tasks/BoxFilterBar";
+import { CommandBar } from "@/components/command-bar";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskPageLayout } from "@/components/tasks/TaskPageLayout";
 import { TaskSection } from "@/components/tasks/TaskSection";
-import { BOX, BOX_FILTER_ALL } from "@/constants";
+import { BOX, BOX_FILTER_ALL, TASK_BOX_FILTER_ORDER } from "@/constants";
 import { useActiveTaskHandlers } from "@/hooks/useActiveTaskHandlers";
 import { useCategories } from "@/hooks/useCategories";
 import { useCompletedTasks } from "@/hooks/useCompletedTasks";
 import { useContexts } from "@/hooks/useContexts";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
+import { useShowHidden } from "@/hooks/useShowHidden";
+import { useTargetBox } from "@/hooks/useTargetBox";
 import { useTaskCompletion } from "@/hooks/useTaskCompletion";
 import { useTaskSelection } from "@/hooks/useTaskSelection";
 import { useTasks } from "@/hooks/useTasks";
@@ -25,9 +27,8 @@ import type { BoxFilter } from "@/types/common";
 export default function ActiveTasksPage() {
   const { t } = useTranslation();
   const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
-  const [isAddingTask, setIsAddingTask] = useState(false);
-  const { filterBarPosition } = useFilterBarPosition();
   const { isFocusMode, focusOpacity } = useFocusMode();
+  const { showHidden, toggleShowHidden } = useShowHidden();
   const { goals } = useGoals();
   const { contexts } = useContexts();
   const { categories } = useCategories();
@@ -35,6 +36,7 @@ export default function ActiveTasksPage() {
   const today = useTasks(BOX.TODAY);
   const week = useTasks(BOX.WEEK);
   const later = useTasks(BOX.LATER);
+  const targetBox = useTargetBox(activeBox);
 
   const selection = useTaskSelection({
     taskArrays: [today.tasks, week.tasks, later.tasks, completedTasks],
@@ -77,13 +79,9 @@ export default function ActiveTasksPage() {
 
   const handleBoxChange = useCallback((box: BoxFilter) => {
     setActiveBox(box);
-    setIsAddingTask(false);
   }, []);
-  const handleAddTask = useCallback(() => setIsAddingTask(true), []);
-  const handleAddTaskCancel = useCallback(() => setIsAddingTask(false), []);
-  const targetBox = activeBox === BOX_FILTER_ALL ? BOX.TODAY : activeBox;
 
-  const handleAddTaskSubmit = useCallback(
+  const handleSubmit = useCallback(
     async (name: string) => {
       const createFns: Record<string, (n: string) => Promise<void>> = {
         [BOX.TODAY]: today.createTask,
@@ -91,10 +89,11 @@ export default function ActiveTasksPage() {
         [BOX.LATER]: later.createTask,
       };
       await createFns[targetBox](name);
-      setIsAddingTask(false);
     },
     [targetBox, today, week, later],
   );
+
+  const placeholder = t(`commandBar.placeholder.${targetBox}`);
 
   const sharedProps = {
     goals,
@@ -153,28 +152,25 @@ export default function ActiveTasksPage() {
     [BOX.LATER]: { data: later, onComplete: completeLater },
   };
 
-  const addTaskInput = isAddingTask && (
-    <AddTaskInput
-      targetBox={t(`box.${targetBox}`)}
-      onAdd={handleAddTaskSubmit}
-      onCancel={handleAddTaskCancel}
-    />
-  );
-
-  const filterBar = (
-    <BoxFilterBar
-      activeBox={activeBox}
-      onBoxChange={handleBoxChange}
-      onAddTask={handleAddTask}
-      position={filterBarPosition === "top" ? "top" : "bottom"}
-    />
-  );
-
   return (
     <div
       data-testid="active-tasks-page"
       className="flex flex-1 flex-col overflow-hidden"
     >
+      <CommandBar
+        filter={{
+          boxes: TASK_BOX_FILTER_ORDER,
+          activeBox,
+          onBoxChange: handleBoxChange,
+        }}
+        eyeToggle={{
+          isVisible: showHidden,
+          onToggle: toggleShowHidden,
+        }}
+        entityIcon={CheckSquare}
+        placeholder={placeholder}
+        onSubmit={(name) => void handleSubmit(name)}
+      />
       <TaskPageLayout
         sidebarMode="tasks"
         selectedTask={selection.selectedTask}
@@ -185,10 +181,7 @@ export default function ActiveTasksPage() {
         onDeleteTask={handleDeleteTask}
         onDuplicateTask={handleDuplicateTask}
         onCloseDetailPanel={selection.handleDetailPanelClose}
-        topToolbar={filterBarPosition === "top" ? filterBar : undefined}
-        bottomToolbar={filterBarPosition === "bottom" ? filterBar : undefined}
       >
-        {addTaskInput}
         {activeBox === BOX_FILTER_ALL ? (
           <>
             {sections.map((section) => (
