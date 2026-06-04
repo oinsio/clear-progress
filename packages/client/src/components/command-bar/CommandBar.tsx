@@ -46,8 +46,7 @@ export function CommandBar({
   const { filterBarPosition } = useFilterBarPosition();
   const isBottomPosition = filterBarPosition === "bottom";
   const barRef = useRef<HTMLDivElement | null>(null);
-  const { textareaRef, actionsRef, isWrapped, handleInput } =
-    useTextareaAutoGrow();
+  const { textareaRef, actionsRef, handleInput } = useTextareaAutoGrow();
   const internalTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
@@ -135,10 +134,8 @@ export function CommandBar({
       <div
         ref={actionsRef as React.RefObject<HTMLDivElement>}
         className={cn(
-          "flex shrink-0",
-          isWrapped
-            ? "flex-col self-stretch justify-end gap-0.5"
-            : cn("self-end gap-1", isLeftHanded && "flex-row-reverse"),
+          "flex shrink-0 self-end gap-1",
+          isLeftHanded && "flex-row-reverse",
         )}
         data-testid="command-bar-actions"
       >

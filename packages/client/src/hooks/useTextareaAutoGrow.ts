@@ -1,25 +1,30 @@
 import type React from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { COMMAND_BAR_STACKED_CLASS } from "@/constants";
 
 interface UseTextareaAutoGrowReturn {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   actionsRef: React.RefObject<HTMLDivElement | null>;
-  isWrapped: boolean;
   handleInput: () => void;
 }
 
 /**
  * Implements FR10, FR12, NFR-P1 of command-bar.
- * Telegram-style textarea auto-grow with anti-oscillation.
- * Measures in row-mode (stacked class removed) for stable threshold,
- * then applies stacking if wrapped and re-measures for final height.
+ * Telegram-style textarea auto-grow.
+ *
+ * Layout (row vs stacked buttons) is controlled via a CSS class
+ * applied directly to the DOM — no React state — to avoid
+ * re-render feedback loops that caused eye-toggle oscillation.
+ *
+ * Algorithm (matches proven mockup):
+ * 1. Remove stacked class → measure scrollHeight in row mode
+ * 2. Toggle stacked class based on whether text wraps
+ * 3. If stacked, re-measure (textarea is wider) and set final height
  */
 export function useTextareaAutoGrow(): UseTextareaAutoGrowReturn {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const actionsRef = useRef<HTMLDivElement | null>(null);
   const singleLineHeightRef = useRef<number>(0);
-  const [isWrapped, setIsWrapped] = useState(false);
 
   const handleInput = useCallback(() => {
     const textarea = textareaRef.current;
@@ -37,7 +42,7 @@ export function useTextareaAutoGrow(): UseTextareaAutoGrowReturn {
     const singleLineHeight = singleLineHeightRef.current;
     const maxHeight = parseFloat(getComputedStyle(textarea).maxHeight);
 
-    // Step 1: Remove stacked class to measure in row-mode
+    // Step 1: Remove stacked class to measure in row mode
     if (actions) {
       actions.classList.remove(COMMAND_BAR_STACKED_CLASS);
     }
@@ -47,16 +52,13 @@ export function useTextareaAutoGrow(): UseTextareaAutoGrowReturn {
 
     // Step 2: Toggle stacked class
     if (actions) {
-      if (shouldStack) {
-        actions.classList.add(COMMAND_BAR_STACKED_CLASS);
-      }
+      actions.classList.toggle(COMMAND_BAR_STACKED_CLASS, shouldStack);
     }
 
     // Step 3: If not wrapped, clear inline styles
     if (!shouldStack) {
       textarea.style.height = "";
       textarea.style.overflowY = "";
-      setIsWrapped(false);
       return;
     }
 
@@ -67,13 +69,11 @@ export function useTextareaAutoGrow(): UseTextareaAutoGrowReturn {
     textarea.style.height = `${finalHeight}px`;
     textarea.style.overflowY =
       finalScrollHeight > maxHeight ? "auto" : "hidden";
-    setIsWrapped(true);
   }, []);
 
   return {
     textareaRef,
     actionsRef,
-    isWrapped,
     handleInput,
   };
 }

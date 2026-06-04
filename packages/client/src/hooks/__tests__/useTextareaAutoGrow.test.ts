@@ -102,24 +102,16 @@ describe("useTextareaAutoGrow", () => {
   });
 
   describe("initialization", () => {
-    it("should measure singleLineHeight on init", () => {
-      const { result } = setupHook();
+    it("should not have stacked class on init", () => {
+      const { actionsContainer } = setupHook();
 
-      expect(result.current.isWrapped).toBe(false);
+      expect(
+        actionsContainer.classList.contains(COMMAND_BAR_STACKED_CLASS),
+      ).toBe(false);
     });
   });
 
   describe("single-line text", () => {
-    it("should report isWrapped as false when text fits in one line", () => {
-      const { result } = setupHook();
-
-      act(() => {
-        result.current.handleInput();
-      });
-
-      expect(result.current.isWrapped).toBe(false);
-    });
-
     it("should not set inline height when text is single-line", () => {
       const { mockTextarea, result } = setupHook();
 
@@ -144,12 +136,6 @@ describe("useTextareaAutoGrow", () => {
   });
 
   describe("wrapped text", () => {
-    it("should report isWrapped as true when scrollHeight exceeds singleLineHeight", () => {
-      const { result } = setupWrapped();
-
-      expect(result.current.isWrapped).toBe(true);
-    });
-
     it("should set inline height when text wraps", () => {
       const { mockTextarea } = setupWrapped();
 
@@ -208,12 +194,6 @@ describe("useTextareaAutoGrow", () => {
   });
 
   describe("clearing text", () => {
-    it("should reset isWrapped to false when text is cleared", () => {
-      const { result } = setupCleared();
-
-      expect(result.current.isWrapped).toBe(false);
-    });
-
     it("should remove inline height when text is cleared", () => {
       const { mockTextarea } = setupCleared();
 
@@ -266,8 +246,6 @@ describe("useTextareaAutoGrow", () => {
         result.current.handleInput();
       });
 
-      // Pre-add stacked class to simulate previous wrap state
-      actionsContainer.classList.add(COMMAND_BAR_STACKED_CLASS);
       classListOperations.length = 0;
 
       mockTextarea.setScrollHeight(WRAPPED_SCROLL_HEIGHT);
@@ -276,7 +254,7 @@ describe("useTextareaAutoGrow", () => {
         result.current.handleInput();
       });
 
-      // First operation should be removing stacked class (measure in row-mode)
+      // First operation should be removing stacked class (measure in row mode)
       expect(classListOperations[0]).toBe(
         `remove:${COMMAND_BAR_STACKED_CLASS}`,
       );
