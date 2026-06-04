@@ -38,3 +38,18 @@ Feature: Command Bar — Accessibility (E2E)
   Scenario: Textarea has appropriate placeholder and role
     Then textarea has a visible placeholder text
     And textarea has role "textbox"
+
+  @command-bar @NFR-A1 @NFR-A2 @NFR-A3 @NFR-A4 @NFR-A5
+  Scenario: CommandBar with full configuration passes axe-core checks
+    Then CommandBar passes axe-core accessibility checks
+
+  @command-bar @NFR-A1 @NFR-A5
+  Scenario: CommandBar with minimal configuration passes axe-core checks
+    Given user is on a page with minimal CommandBar configuration
+    Then CommandBar passes axe-core accessibility checks
+
+  @command-bar @NFR-A1 @NFR-A5
+  Scenario: CommandBar in left-handed mode passes axe-core checks
+    Given user has left-handed mode enabled
+    And user is on a page with full CommandBar configuration
+    Then CommandBar passes axe-core accessibility checks

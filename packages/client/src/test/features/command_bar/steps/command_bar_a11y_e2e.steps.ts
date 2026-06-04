@@ -1,4 +1,5 @@
 // Verifies NFR-A1, NFR-A2, NFR-A3, NFR-A4, NFR-A5 of command-bar
+import AxeBuilder from "@axe-core/playwright";
 import { expect } from "@playwright/test";
 import { createBdd } from "playwright-bdd";
 
@@ -142,4 +143,31 @@ Then("textarea has a visible placeholder text", async ({ page }) => {
 Then("textarea has role {string}", async ({ page }, expectedRole: string) => {
   const textarea = page.getByRole(expectedRole as "textbox");
   await expect(textarea.first()).toBeVisible();
+});
+
+// ============================================================================
+// axe-core: Automated accessibility checks
+// ============================================================================
+
+Then("CommandBar passes axe-core accessibility checks", async ({ page }) => {
+  const accessibilityScanResults = await new AxeBuilder({ page })
+    .include('[data-testid="command-bar"]')
+    .analyze();
+  expect(accessibilityScanResults.violations).toEqual([]);
+});
+
+Given(
+  "user is on a page with minimal CommandBar configuration",
+  async ({ page }) => {
+    await page.goto("/goals");
+    await page
+      .getByTestId("command-bar")
+      .waitFor({ state: "visible", timeout: COMMAND_BAR_TIMEOUT_MS });
+  },
+);
+
+Given("user has left-handed mode enabled", async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.setItem("handedness", "left");
+  });
 });

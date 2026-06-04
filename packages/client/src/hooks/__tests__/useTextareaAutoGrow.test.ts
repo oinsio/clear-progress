@@ -283,6 +283,80 @@ describe("useTextareaAutoGrow", () => {
     });
   });
 
+  describe("boundary: scrollHeight equals maxHeight", () => {
+    it("should set overflow-y to hidden when scrollHeight equals max-height exactly", () => {
+      const { mockTextarea, result } = setupHook();
+
+      act(() => {
+        result.current.handleInput();
+      });
+
+      // scrollHeight === maxHeight (160 === 160)
+      mockTextarea.setScrollHeight(MAX_HEIGHT);
+
+      act(() => {
+        result.current.handleInput();
+      });
+
+      expect(mockTextarea.element.style.overflowY).toBe("hidden");
+      expect(mockTextarea.element.style.height).toBe(`${MAX_HEIGHT}px`);
+    });
+
+    it("should set overflow-y to auto only when scrollHeight strictly exceeds max-height", () => {
+      const { mockTextarea, result } = setupHook();
+
+      act(() => {
+        result.current.handleInput();
+      });
+
+      mockTextarea.setScrollHeight(MAX_HEIGHT + 1);
+
+      act(() => {
+        result.current.handleInput();
+      });
+
+      expect(mockTextarea.element.style.overflowY).toBe("auto");
+    });
+  });
+
+  describe("height reset to auto before measuring", () => {
+    it("should set height to auto before measuring wrapped scrollHeight", () => {
+      const { mockTextarea, result } = setupHook();
+      const styleOperations: string[] = [];
+
+      act(() => {
+        result.current.handleInput();
+      });
+
+      // Track style.height assignments after init
+      const originalDescriptor = Object.getOwnPropertyDescriptor(
+        mockTextarea.element.style,
+        "height",
+      );
+      let lastHeight = "";
+      Object.defineProperty(mockTextarea.element.style, "height", {
+        get: () => lastHeight,
+        set: (value: string) => {
+          styleOperations.push(value);
+          lastHeight = value;
+          if (originalDescriptor?.set) {
+            originalDescriptor.set.call(mockTextarea.element.style, value);
+          }
+        },
+        configurable: true,
+      });
+
+      mockTextarea.setScrollHeight(WRAPPED_SCROLL_HEIGHT);
+
+      act(() => {
+        result.current.handleInput();
+      });
+
+      // Should include "auto" as one of the height assignments
+      expect(styleOperations).toContain("auto");
+    });
+  });
+
   describe("null refs", () => {
     it("should not throw when textarea ref is null", () => {
       const { result } = renderHook(() => useTextareaAutoGrow());

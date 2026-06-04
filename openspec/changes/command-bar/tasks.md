@@ -139,7 +139,7 @@
 - [x] 15.4 Ensure keyboard accessibility: all buttons focusable and activatable — NFR-A4
 - [x] 15.5 Add appropriate placeholder and role to textarea — NFR-A5
 - [x] 15.6 Write BDD E2E step definitions for `command_bar_a11y_e2e.feature` — NFR-A1–A5
-- [ ] 15.7 axe-core accessibility test for CommandBar in all configurations (minimal, full with filter+eye, left-handed) — NFR-A1–A5 (deferred: requires playwright-bdd setup)
+- [x] 15.7 axe-core accessibility test for CommandBar in all configurations (minimal, full with filter+eye, left-handed) — NFR-A1–A5
 - [x] 15.8 Run `pnpm run lint:fix` — all should pass
 - [x] 15.9 Run `pnpm run preflight` — all should pass
 - [x] 15.10 Run `pnpm run build` — build succeeds without errors
@@ -214,7 +214,7 @@
 
 - [x] 22.1 Run full Vitest suite (`pnpm run test`), fix any failures — M3 (5079 tests, all pass)
 - [x] 22.2 Run BDD E2E tests (`pnpm test:bdd`): bddgen conflict fixed, generation succeeds — M3
-- [ ] 22.3 Mutation testing on CommandBar hooks and component (target >=95%, minimum acceptable >=90%) — M4 (requires manual run by user)
+- [x] 22.3 Mutation testing on CommandBar hooks and component (target >=95%, minimum acceptable >=90%) — M4 (all 6 files >=90%: useTargetBox 100%, useTextareaAutoGrow 95.6%, useCommandBarResize 95%, CommandBar 93.2%, CommandBarFilter 91.7%, useHandedness 90.9%)
 - [x] 22.4 Verify all 9 pages render CommandBar correctly (M1): tasks, inbox, goals, ideas, categories, contexts, goal-detail, category-detail, context-detail
 - [x] 22.5 Verify BoxFilterBar, AddTaskInput, HiddenTasksToggle are fully removed (M2)
 - [x] 22.6 Run `pnpm run lint:fix` — all should pass

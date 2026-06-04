@@ -66,10 +66,25 @@ function flushFrames(): void {
   }
 }
 
+function stubRafWithCounter(): { getRafCallCount: () => number } {
+  let rafCallCount = 0;
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    rafCallCount++;
+    pendingFrames.push(callback);
+    return nextFrameId++;
+  });
+  return { getRafCallCount: () => rafCallCount };
+}
+
 describe("useCommandBarResize", () => {
+  let element: FakeElement;
+  let barRef: { current: FakeElement };
+
   beforeEach(() => {
     pendingFrames = [];
     nextFrameId = 1;
+    element = createFakeElement(48);
+    barRef = { current: element };
     vi.stubGlobal("ResizeObserver", MockResizeObserver);
     vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
       pendingFrames.push(callback);
@@ -87,18 +102,12 @@ describe("useCommandBarResize", () => {
   });
 
   it("should observe the referenced element on mount", () => {
-    const element = createFakeElement(48);
-    const barRef = { current: element };
-
     renderHook(() => useCommandBarResize(barRef));
 
     expect(mockObserve).toHaveBeenCalledWith(element);
   });
 
   it("should set CSS variable when resize is observed", () => {
-    const element = createFakeElement(48);
-    const barRef = { current: element };
-
     renderHook(() => useCommandBarResize(barRef));
     triggerResize(48);
     flushFrames();
@@ -107,9 +116,6 @@ describe("useCommandBarResize", () => {
   });
 
   it("should update CSS variable when element resizes", () => {
-    const element = createFakeElement(48);
-    const barRef = { current: element };
-
     renderHook(() => useCommandBarResize(barRef));
     triggerResize(48);
     flushFrames();
@@ -122,9 +128,6 @@ describe("useCommandBarResize", () => {
   });
 
   it("should reset CSS variable to 0px on unmount", () => {
-    const element = createFakeElement(48);
-    const barRef = { current: element };
-
     const { unmount } = renderHook(() => useCommandBarResize(barRef));
     triggerResize(48);
     flushFrames();
@@ -136,9 +139,6 @@ describe("useCommandBarResize", () => {
   });
 
   it("should disconnect observer on unmount", () => {
-    const element = createFakeElement(48);
-    const barRef = { current: element };
-
     const { unmount } = renderHook(() => useCommandBarResize(barRef));
     unmount();
 
@@ -146,16 +146,15 @@ describe("useCommandBarResize", () => {
   });
 
   it("should not observe when ref is null", () => {
-    const barRef = { current: null };
+    const nullRef = { current: null };
 
-    renderHook(() => useCommandBarResize(barRef));
+    renderHook(() => useCommandBarResize(nullRef));
 
     expect(mockObserve).not.toHaveBeenCalled();
   });
 
   it("should use element offsetHeight inside rAF callback", () => {
-    const element = createFakeElement(52);
-    const barRef = { current: element };
+    element.__mockHeight = 52;
 
     renderHook(() => useCommandBarResize(barRef));
     triggerResize(52);
@@ -171,9 +170,6 @@ describe("useCommandBarResize", () => {
       return 1;
     });
 
-    const element = createFakeElement(48);
-    const barRef = { current: element };
-
     renderHook(() => useCommandBarResize(barRef));
 
     // First resize schedules rAF
@@ -186,5 +182,71 @@ describe("useCommandBarResize", () => {
     pendingCallback!(0);
 
     expect(getCssVariable()).toBe("48px");
+  });
+
+  it("should skip resize when rAF is already pending", () => {
+    const { getRafCallCount } = stubRafWithCounter();
+
+    renderHook(() => useCommandBarResize(barRef));
+
+    triggerResize(48);
+    expect(getRafCallCount()).toBe(1);
+
+    // Second resize while rAF is pending — should NOT schedule another rAF
+    triggerResize(64);
+    expect(getRafCallCount()).toBe(1);
+  });
+
+  it("should allow new rAF after previous one completes", () => {
+    const { getRafCallCount } = stubRafWithCounter();
+
+    renderHook(() => useCommandBarResize(barRef));
+
+    triggerResize(48);
+    expect(getRafCallCount()).toBe(1);
+    flushFrames();
+
+    // After rAF completes, rafId is reset to null — new resize should schedule
+    element.__mockHeight = 72;
+    triggerResize(72);
+    expect(getRafCallCount()).toBe(2);
+    flushFrames();
+    expect(getCssVariable()).toBe("72px");
+  });
+
+  it("should not set CSS variable when entries array is empty", () => {
+    renderHook(() => useCommandBarResize(barRef));
+
+    // Trigger with empty entries
+    resizeCallback([]);
+    flushFrames();
+
+    expect(getCssVariable()).toBe("");
+  });
+
+  it("should cancel pending rAF on unmount", () => {
+    const mockCancelAnimationFrame = vi.fn();
+    vi.stubGlobal("cancelAnimationFrame", mockCancelAnimationFrame);
+
+    const { unmount } = renderHook(() => useCommandBarResize(barRef));
+
+    // Schedule a rAF that hasn't fired yet
+    triggerResize(48);
+
+    unmount();
+
+    expect(mockCancelAnimationFrame).toHaveBeenCalledWith(1);
+  });
+
+  it("should not cancel rAF on unmount when none is pending", () => {
+    const mockCancelAnimationFrame = vi.fn();
+    vi.stubGlobal("cancelAnimationFrame", mockCancelAnimationFrame);
+
+    const { unmount } = renderHook(() => useCommandBarResize(barRef));
+
+    // No resize triggered, so no rAF pending
+    unmount();
+
+    expect(mockCancelAnimationFrame).not.toHaveBeenCalled();
   });
 });
