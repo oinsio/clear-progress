@@ -81,6 +81,8 @@ export default function ActiveTasksPage() {
     setActiveBox(box);
   }, []);
 
+  const effectiveBox = targetBox === BOX.INBOX ? BOX.TODAY : targetBox;
+
   const handleSubmit = useCallback(
     async (name: string) => {
       const createFns: Record<string, (n: string) => Promise<void>> = {
@@ -88,12 +90,12 @@ export default function ActiveTasksPage() {
         [BOX.WEEK]: week.createTask,
         [BOX.LATER]: later.createTask,
       };
-      await createFns[targetBox](name);
+      await createFns[effectiveBox](name);
     },
-    [targetBox, today, week, later],
+    [effectiveBox, today, week, later],
   );
 
-  const placeholder = t(`commandBar.placeholder.${targetBox}`);
+  const placeholder = t(`commandBar.placeholder.${effectiveBox}`);
 
   const sharedProps = {
     goals,

@@ -49,9 +49,13 @@ vi.mock("@/hooks/useFilterBarPosition", () => ({
   }),
 }));
 
+// eslint-disable-next-line prefer-const
+let mockDefaultBox = "today";
 vi.mock("@/hooks/useSettings", () => ({
   useSettings: () => ({
-    defaultBox: "today",
+    get defaultBox() {
+      return mockDefaultBox;
+    },
     accentColor: "green",
     isLoading: false,
     setDefaultBox: vi.fn(),
@@ -101,6 +105,7 @@ function setupAllBoxTasks() {
 
 describe("ActiveTasksPage", () => {
   beforeEach(() => {
+    mockDefaultBox = "today";
     mockFilterBarPosition = "bottom";
     mockUseTasks.mockReturnValue(buildTasksHook());
     mockUseGoals.mockReturnValue(buildGoalsHook());
@@ -405,6 +410,32 @@ describe("ActiveTasksPage", () => {
     renderPage();
     // Should not see the completed today section label
     expect(screen.queryByText(/Выполненные сегодня/)).not.toBeInTheDocument();
+  });
+
+  // FR-20: creates task when defaultBox is "inbox" (regression: createFns had no inbox key)
+  it("should create task in today box when defaultBox is inbox and filter is all", async () => {
+    mockDefaultBox = "inbox";
+    const createTodayTask = vi.fn().mockResolvedValue(undefined);
+    mockUseTasks.mockImplementation((box) => {
+      if (box === "today")
+        return buildTasksHook({ createTask: createTodayTask });
+      return buildTasksHook();
+    });
+    renderPage();
+    const textarea = screen.getByTestId("command-bar-textarea");
+    fireEvent.input(textarea, { target: { value: "Inbox task" } });
+    fireEvent.keyDown(textarea, { key: "Enter" });
+    await waitFor(() => {
+      expect(createTodayTask).toHaveBeenCalledWith("Inbox task");
+    });
+  });
+
+  // FR-20: placeholder shows "today" text when defaultBox is "inbox" (regression)
+  it("should show today placeholder when defaultBox is inbox and filter is all", () => {
+    mockDefaultBox = "inbox";
+    renderPage();
+    const textarea = screen.getByTestId("command-bar-textarea");
+    expect(textarea).toHaveAttribute("placeholder", "На сегодня...");
   });
 
   // FR-7: CompletedPage should NOT have CommandBar (verified in CompletedPage.test.tsx)
