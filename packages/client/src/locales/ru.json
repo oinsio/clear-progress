@@ -29,7 +29,7 @@
     "emptyCompleted": "Завершённых задач нет",
     "emptyInbox": "Задач нет",
     "emptyToday": "Задач на сегодня нет",
-    "noTasksPrompt": "Задач нет. Нажмите сюда, чтобы добавить.",
+    "noTasksPrompt": "Задач нет.",
     "editDescription": "Редактировать заметку",
     "selectGoal": "Выбрать цель",
     "moveToBox": "Переместить",
