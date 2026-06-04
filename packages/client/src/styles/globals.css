@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CommandBar actions stacked layout — applied via DOM manipulation
+   to avoid React re-render feedback loop (oscillation fix).
+   Unlayered to beat Tailwind utility classes without !important. */
+.command-bar-stacked {
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: flex-end;
+  gap: 0.125rem;
+}
+
 @layer base {
   :root {
     --color-accent: 105 178 62; /* green default */

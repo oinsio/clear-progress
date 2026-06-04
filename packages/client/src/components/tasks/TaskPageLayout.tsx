@@ -17,6 +17,7 @@ import { TaskDetailPanel } from "./TaskDetailPanel";
 
 export interface TaskPageLayoutProps {
   children: React.ReactNode;
+  commandBar?: React.ReactNode;
   sidebarMode: SidebarMode;
   selectedTask: Task | null;
   goals: Goal[];
@@ -27,12 +28,11 @@ export interface TaskPageLayoutProps {
   onDuplicateTask: (id: string) => Promise<void>;
   onCloseDetailPanel: () => void;
   onModeChange?: (newMode: SidebarMode) => void;
-  topToolbar?: React.ReactNode;
-  bottomToolbar?: React.ReactNode;
 }
 
 export function TaskPageLayout({
   children,
+  commandBar,
   sidebarMode,
   selectedTask,
   goals,
@@ -43,8 +43,6 @@ export function TaskPageLayout({
   onDuplicateTask,
   onCloseDetailPanel,
   onModeChange: externalModeChange,
-  topToolbar,
-  bottomToolbar,
 }: TaskPageLayoutProps) {
   const { ratio, containerRef, handleResizeMouseDown } = usePanelSplit();
   const { panelSide } = usePanelSide();
@@ -80,11 +78,10 @@ export function TaskPageLayout({
           )}
           style={mainColumnStyle}
         >
-          {topToolbar}
+          {commandBar}
           <main className="flex-1 overflow-y-auto">
             <div className="xl:mx-auto xl:max-w-3xl">{children}</div>
           </main>
-          {bottomToolbar}
         </div>
 
         {showResizeHandle && (

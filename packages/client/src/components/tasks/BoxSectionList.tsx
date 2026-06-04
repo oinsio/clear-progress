@@ -107,7 +107,7 @@ interface BoxSectionListProps {
   goals: Goal[];
   contexts: Context[];
   categories: Category[];
-  onAddPromptClick: () => void;
+  onAddPromptClick?: () => void;
   onComplete: (id: string) => void;
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
   onMove: (id: string, box: Box) => Promise<void>;
@@ -147,14 +147,13 @@ export function BoxSectionList({
 
   if (!isLoading && !hasAnyTasks) {
     return (
-      <button
-        type="button"
+      <p
         data-testid="no-tasks-add-prompt"
         onClick={onAddPromptClick}
-        className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:text-accent hover:bg-gray-50 transition-colors"
+        className="w-full text-left px-4 py-3 text-sm text-gray-400"
       >
         {t("task.noTasksPrompt")}
-      </button>
+      </p>
     );
   }
 

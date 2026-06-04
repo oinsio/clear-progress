@@ -46,6 +46,8 @@ export type FilterBarPosition = "top" | "bottom";
 
 export type InterfaceScale = "small" | "normal" | "large" | "xLarge";
 
+export type Handedness = "right" | "left";
+
 export type {
   MenuItemConfig,
   MenuMode,

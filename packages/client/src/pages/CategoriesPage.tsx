@@ -1,3 +1,7 @@
+/**
+ * CategoriesPage — displays and manages categories.
+ * Implements FR20 of command-bar.
+ */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -5,24 +9,20 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { GripVertical, Plus, Tag } from "lucide-react";
+import { GripVertical, Tag } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { CommandBar } from "@/components/command-bar";
 import { Sidebar } from "@/components/tasks/Sidebar";
-import { BOX } from "@/constants";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useCategories } from "@/hooks/useCategories";
 import { useDndSensors } from "@/hooks/useDndSensors";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useInlineAdd } from "@/hooks/useInlineAdd";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useTasks } from "@/hooks/useTasks";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
 import type { Category } from "@/types/entities";
@@ -101,9 +101,7 @@ export default function CategoriesPage() {
   const { t } = useTranslation();
   const { categories, isLoading, createCategory, reorderCategories } =
     useCategories();
-  const { createTask } = useTasks(BOX.INBOX);
   const { panelSide } = usePanelSide();
-  const { filterBarPosition } = useFilterBarPosition();
   const navigate = useNavigate();
 
   const sensors = useDndSensors();
@@ -112,27 +110,6 @@ export default function CategoriesPage() {
     Record<string, number>
   >({});
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-
-  const {
-    isAdding: isAddingCategory,
-    setIsAdding: setIsAddingCategory,
-    value: newCategoryName,
-    setValue: setNewCategoryName,
-    handleKeyDown: handleAddCategoryKeyDown,
-    handleBlur: handleAddCategoryBlur,
-  } = useInlineAdd(createCategory);
-
-  const {
-    isAdding: isAddingTask,
-    setIsAdding: setIsAddingTask,
-    value: newTaskName,
-    setValue: setNewTaskName,
-    handleKeyDown: handleAddTaskKeyDown,
-    handleBlur: handleAddTaskBlur,
-  } = useInlineAdd(createTask);
-
-  const newCategoryTextareaRef = useAutoResizeTextarea(newCategoryName);
-  const newTaskTextareaRef = useAutoResizeTextarea(newTaskName);
 
   const activeCategories = categories.filter(
     (category) => !category.is_deleted,
@@ -158,6 +135,13 @@ export default function CategoriesPage() {
 
   const handleModeChange = useSidebarNavigation();
 
+  const handleSubmit = useCallback(
+    (name: string) => {
+      void createCategory(name);
+    },
+    [createCategory],
+  );
+
   return (
     <div
       data-testid="categories-page"
@@ -165,38 +149,11 @@ export default function CategoriesPage() {
     >
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Action bar — top position (above header) */}
-        {filterBarPosition === "top" && (
-          <div
-            className={cn(
-              "flex items-center border-b border-gray-200 bg-white px-3 py-2",
-              panelSide === "left" && "flex-row-reverse",
-            )}
-          >
-            <button
-              type="button"
-              aria-label={t("category.add")}
-              data-testid="add-category-button"
-              onClick={() => setIsAddingCategory(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
-            >
-              <Tag className="w-5 h-5" aria-hidden="true" />
-              <Plus
-                className="w-3 h-3 absolute bottom-1 right-1"
-                aria-hidden="true"
-              />
-            </button>
-            <button
-              type="button"
-              aria-label={t("category.addTask")}
-              data-testid="add-task-button"
-              onClick={() => setIsAddingTask(true)}
-              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-            >
-              <Plus className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
+        <CommandBar
+          entityIcon={Tag}
+          placeholder={t("commandBar.placeholder.category")}
+          onSubmit={handleSubmit}
+        />
 
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
@@ -208,17 +165,13 @@ export default function CategoriesPage() {
         {/* Scrollable category list */}
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
-            {!isLoading &&
-            activeCategories.length === 0 &&
-            !isAddingCategory ? (
-              <button
-                type="button"
-                onClick={() => setIsAddingCategory(true)}
-                className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
+            {!isLoading && activeCategories.length === 0 ? (
+              <div
+                className="w-full flex flex-col items-center justify-center text-gray-400 py-3"
                 data-testid="empty-categories-message"
               >
                 <p className="text-sm">{t("category.empty")}</p>
-              </button>
+              </div>
             ) : (
               <DndContext
                 sensors={sensors}
@@ -238,84 +191,12 @@ export default function CategoriesPage() {
                         onNavigate={(id) => navigate(`/categories/${id}`)}
                       />
                     ))}
-
-                    {/* Inline add category input */}
-                    {isAddingCategory && (
-                      <li className="px-4 py-3 border-b border-gray-100">
-                        <textarea
-                          ref={newCategoryTextareaRef}
-                          rows={1}
-                          value={newCategoryName}
-                          onChange={(event) =>
-                            setNewCategoryName(event.target.value)
-                          }
-                          onKeyDown={handleAddCategoryKeyDown}
-                          onBlur={handleAddCategoryBlur}
-                          placeholder={t("category.namePlaceholder")}
-                          className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                          data-testid="add-category-input"
-                        />
-                      </li>
-                    )}
                   </ul>
                 </SortableContext>
               </DndContext>
             )}
-
-            {/* Inline add task input */}
-            {isAddingTask && (
-              <div className="px-4 py-3 border-b border-gray-100">
-                <textarea
-                  ref={newTaskTextareaRef}
-                  rows={1}
-                  value={newTaskName}
-                  onChange={(event) => setNewTaskName(event.target.value)}
-                  onKeyDown={handleAddTaskKeyDown}
-                  onBlur={handleAddTaskBlur}
-                  placeholder={t("category.taskPlaceholder")}
-                  className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                  data-testid="add-task-input"
-                />
-              </div>
-            )}
           </div>
         </main>
-
-        {/* Action bar — bottom position (default) */}
-        {filterBarPosition === "bottom" && (
-          <div
-            className={cn(
-              "flex items-center border-t border-gray-200 bg-white px-3 py-2",
-              panelSide === "left" && "flex-row-reverse",
-            )}
-          >
-            {/* Add category button */}
-            <button
-              type="button"
-              aria-label={t("category.add")}
-              data-testid="add-category-button"
-              onClick={() => setIsAddingCategory(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
-            >
-              <Tag className="w-5 h-5" aria-hidden="true" />
-              <Plus
-                className="w-3 h-3 absolute bottom-1 right-1"
-                aria-hidden="true"
-              />
-            </button>
-
-            {/* Add task button */}
-            <button
-              type="button"
-              aria-label={t("category.addTask")}
-              data-testid="add-task-button"
-              onClick={() => setIsAddingTask(true)}
-              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-            >
-              <Plus className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Right filter panel — full height */}

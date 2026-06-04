@@ -13,6 +13,7 @@ vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/usePanelAlwaysOpen");
 vi.mock("@/hooks/useFocusMode");
 vi.mock("@/hooks/useFilterBarPosition");
+vi.mock("@/hooks/useHandedness");
 vi.mock("@/app/providers/InterfaceScaleProvider");
 vi.mock("@/components/tasks/Sidebar");
 vi.mock("@/components/settings/MenuOrderSection");
@@ -36,6 +37,7 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusMode } from "@/hooks/useFocusMode";
+import { useHandedness } from "@/hooks/useHandedness";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
@@ -53,6 +55,7 @@ const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelAlwaysOpen = vi.mocked(usePanelAlwaysOpen);
 const mockUseFocusMode = vi.mocked(useFocusMode);
 const mockUseFilterBarPosition = vi.mocked(useFilterBarPosition);
+const mockUseHandedness = vi.mocked(useHandedness);
 const mockUseInterfaceScale = vi.mocked(useInterfaceScale);
 
 function buildSettingsHook(
@@ -140,6 +143,10 @@ describe("SettingsPage", () => {
     mockUseFilterBarPosition.mockReturnValue({
       filterBarPosition: "bottom",
       setFilterBarPosition: vi.fn(),
+    });
+    mockUseHandedness.mockReturnValue({
+      handedness: "right",
+      setHandedness: vi.fn(),
     });
     mockUseInterfaceScale.mockReturnValue({
       interfaceScale: "normal",
@@ -370,6 +377,48 @@ describe("SettingsPage", () => {
       const bar50 = screen.getByTestId("opacity-bar-50");
       fireEvent.click(bar50);
       expect(setFocusOpacity).toHaveBeenCalledWith(50);
+    });
+  });
+
+  describe("handedness section", () => {
+    it("should render handedness section", () => {
+      renderPage();
+      expect(screen.getByTestId("settings-handedness")).toBeInTheDocument();
+    });
+
+    it("should render right and left options", () => {
+      renderPage();
+      expect(
+        screen.getByTestId("settings-handedness-option-right"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId("settings-handedness-option-left"),
+      ).toBeInTheDocument();
+    });
+
+    it("should mark the current handedness as active", () => {
+      mockUseHandedness.mockReturnValue({
+        handedness: "left",
+        setHandedness: vi.fn(),
+      });
+      renderPage();
+      expect(
+        screen.getByTestId("settings-handedness-option-left"),
+      ).toHaveAttribute("aria-pressed", "true");
+      expect(
+        screen.getByTestId("settings-handedness-option-right"),
+      ).toHaveAttribute("aria-pressed", "false");
+    });
+
+    it("should call setHandedness when an option is clicked", () => {
+      const setHandedness = vi.fn();
+      mockUseHandedness.mockReturnValue({
+        handedness: "right",
+        setHandedness,
+      });
+      renderPage();
+      fireEvent.click(screen.getByTestId("settings-handedness-option-left"));
+      expect(setHandedness).toHaveBeenCalledWith("left");
     });
   });
 });

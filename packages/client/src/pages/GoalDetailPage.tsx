@@ -3,35 +3,34 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  CheckSquare,
   CircleMinus,
   Crosshair,
   Pause,
   Pencil,
   Play,
-  Plus,
   Square,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
+import { CommandBar } from "@/components/command-bar";
 import { FocusGoalReplacementDialog } from "@/components/goals/FocusGoalReplacementDialog";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
 import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
-import { AddTaskInput } from "@/components/tasks/AddTaskInput";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
 import { EditableDescription } from "@/components/ui/EditableDescription";
 import { LinkedText } from "@/components/ui/LinkedText";
-import { ROUTES } from "@/constants";
+import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER, ROUTES } from "@/constants";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
 import { useCoverPreview } from "@/hooks/useCoverPreview";
 import { useCoverUrl } from "@/hooks/useCoverUrl";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusedGoals } from "@/hooks/useFocusedGoals";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoal } from "@/hooks/useGoal";
@@ -43,15 +42,16 @@ import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useSettings } from "@/hooks/useSettings";
+import { useShowHidden } from "@/hooks/useShowHidden";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useTargetBox } from "@/hooks/useTargetBox";
 import { useTasksByBox } from "@/hooks/useTasksByBox";
 import {
   defaultCoverService,
   defaultTaskService,
 } from "@/services/defaultServices";
 import { cn } from "@/shared/lib/cn";
-import type { Box, GoalStatus } from "@/types/common";
+import type { Box, BoxFilter, GoalStatus } from "@/types/common";
 import type { Goal, Task } from "@/types/entities";
 
 interface GoalStatusOption {
@@ -105,7 +105,6 @@ export default function GoalDetailPage() {
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { isFocusMode, focusOpacity } = useFocusMode();
-  const { filterBarPosition } = useFilterBarPosition();
   const isDesktop = useIsDesktop();
   const {
     ratio,
@@ -113,12 +112,13 @@ export default function GoalDetailPage() {
     handleResizeMouseDown,
   } = usePanelSplit();
 
-  const { defaultBox } = useSettings();
   const isUnsynced = useIsUnsynced(goal ?? { needsSync: false });
+  const { showHidden, toggleShowHidden } = useShowHidden();
+  const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
+  const targetBox = useTargetBox(activeBox);
 
   // view state
   const [isEditing, setIsEditing] = useState(false);
-  const [isAddingTask, setIsAddingTask] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
@@ -205,6 +205,19 @@ export default function GoalDetailPage() {
     },
     [createTask],
   );
+
+  const handleBoxChange = useCallback((box: BoxFilter) => {
+    setActiveBox(box);
+  }, []);
+
+  const handleCommandBarSubmit = useCallback(
+    (name: string) => {
+      void handleCreateTask(name, targetBox, "");
+    },
+    [handleCreateTask, targetBox],
+  );
+
+  const commandBarPlaceholder = t(`commandBar.placeholder.${targetBox}`);
 
   const handleReorderTasks = useCallback(
     async (_box: Box, orderedTasks: Task[]) => {
@@ -360,20 +373,20 @@ export default function GoalDetailPage() {
               : { flex: "1 1 0" }
           }
         >
-          {/* Action bar — top position (above header) */}
-          {filterBarPosition === "top" && (
-            <div className="flex items-center justify-end border-b border-gray-200 bg-white px-3 py-2">
-              <button
-                type="button"
-                aria-label={t("task.add")}
-                data-testid="add-task-button"
-                onClick={() => setIsAddingTask(true)}
-                className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-              >
-                <Plus className="w-5 h-5" aria-hidden="true" />
-              </button>
-            </div>
-          )}
+          <CommandBar
+            filter={{
+              boxes: FULL_BOX_FILTER_ORDER,
+              activeBox,
+              onBoxChange: handleBoxChange,
+            }}
+            eyeToggle={{
+              isVisible: showHidden,
+              onToggle: toggleShowHidden,
+            }}
+            entityIcon={CheckSquare}
+            placeholder={commandBarPlaceholder}
+            onSubmit={handleCommandBarSubmit}
+          />
 
           {/* Header */}
           <header className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
@@ -645,18 +658,6 @@ export default function GoalDetailPage() {
                 </div>
               )}
 
-              {/* Inline task creation input */}
-              {isAddingTask && (
-                <AddTaskInput
-                  targetBox={t(`box.${defaultBox}`)}
-                  onAdd={async (name) => {
-                    await handleCreateTask(name, defaultBox, "");
-                    setIsAddingTask(false);
-                  }}
-                  onCancel={() => setIsAddingTask(false)}
-                />
-              )}
-
               {/* Active tasks by box */}
               <BoxSectionList
                 isLoading={isLoading}
@@ -664,7 +665,6 @@ export default function GoalDetailPage() {
                 goals={goals}
                 contexts={contexts}
                 categories={categories}
-                onAddPromptClick={() => setIsAddingTask(true)}
                 onComplete={handleCompleteTask}
                 onUpdate={updateTask}
                 onMove={moveTask}
@@ -706,21 +706,6 @@ export default function GoalDetailPage() {
               )}
             </div>
           </main>
-
-          {/* Action bar — bottom position (default) */}
-          {filterBarPosition === "bottom" && (
-            <div className="flex items-center justify-end border-t border-gray-200 bg-white px-3 py-2">
-              <button
-                type="button"
-                aria-label={t("task.add")}
-                data-testid="add-task-button"
-                onClick={() => setIsAddingTask(true)}
-                className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-              >
-                <Plus className="w-5 h-5" aria-hidden="true" />
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Resize handle between task list and detail panel */}

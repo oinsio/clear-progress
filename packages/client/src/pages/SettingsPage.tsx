@@ -26,6 +26,7 @@ import {
   COLOR_SCHEMES,
   FILTER_BAR_POSITIONS,
   FOCUS_OPACITY_LEVELS,
+  HANDEDNESS_OPTIONS,
   INTERFACE_SCALES,
   LANGUAGE_SEARCH_THRESHOLD,
   PANEL_SIDES,
@@ -34,6 +35,7 @@ import {
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusMode } from "@/hooks/useFocusMode";
+import { useHandedness } from "@/hooks/useHandedness";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
@@ -51,6 +53,7 @@ import type {
   Box,
   ColorScheme,
   FilterBarPosition,
+  Handedness,
   PanelSide,
 } from "@/types/common";
 
@@ -143,6 +146,7 @@ export default function SettingsPage() {
   const { isFocusMode, setFocusMode, focusOpacity, setFocusOpacity } =
     useFocusMode();
   const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
+  const { handedness, setHandedness } = useHandedness();
   const { interfaceScale, setInterfaceScale } = useInterfaceScale();
 
   const [customLightInput, setCustomLightInput] = useState(customAccentLight);
@@ -192,6 +196,10 @@ export default function SettingsPage() {
 
   const handleFilterBarPositionSelect = (position: FilterBarPosition): void => {
     setFilterBarPosition(position);
+  };
+
+  const handleHandednessSelect = (value: Handedness): void => {
+    setHandedness(value);
   };
 
   const handleLanguageSelect = (lang: string): void => {
@@ -647,6 +655,33 @@ export default function SettingsPage() {
                     {position === "bottom"
                       ? t("settings.filterBarBottom")
                       : t("settings.filterBarTop")}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Handedness section */}
+            <section data-testid="settings-handedness" className="space-y-3">
+              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                {t("settings.handedness")}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {HANDEDNESS_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    data-testid={`settings-handedness-option-${option}`}
+                    aria-pressed={handedness === option}
+                    onClick={() => handleHandednessSelect(option)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
+                      handedness === option
+                        ? "bg-accent border-accent text-white"
+                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
+                    )}
+                  >
+                    {option === "right"
+                      ? t("settings.handednessRight")
+                      : t("settings.handednessLeft")}
                   </button>
                 ))}
               </div>

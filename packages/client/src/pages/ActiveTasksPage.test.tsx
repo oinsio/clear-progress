@@ -34,6 +34,13 @@ vi.mock("@/hooks/useFocusMode", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useShowHidden", () => ({
+  useShowHidden: () => ({
+    showHidden: false,
+    toggleShowHidden: vi.fn(),
+  }),
+}));
+
 let mockFilterBarPosition = "bottom";
 vi.mock("@/hooks/useFilterBarPosition", () => ({
   useFilterBarPosition: () => ({
@@ -41,10 +48,25 @@ vi.mock("@/hooks/useFilterBarPosition", () => ({
     setFilterBarPosition: vi.fn(),
   }),
 }));
-vi.mock("@/hooks/useShowHidden", () => ({
-  useShowHidden: () => ({
-    showHidden: false,
-    toggleShowHidden: vi.fn(),
+
+// eslint-disable-next-line prefer-const
+let mockDefaultBox = "today";
+vi.mock("@/hooks/useSettings", () => ({
+  useSettings: () => ({
+    get defaultBox() {
+      return mockDefaultBox;
+    },
+    accentColor: "green",
+    isLoading: false,
+    setDefaultBox: vi.fn(),
+    setAccentColor: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useHandedness", () => ({
+  useHandedness: () => ({
+    handedness: "right",
+    setHandedness: vi.fn(),
   }),
 }));
 
@@ -83,6 +105,7 @@ function setupAllBoxTasks() {
 
 describe("ActiveTasksPage", () => {
   beforeEach(() => {
+    mockDefaultBox = "today";
     mockFilterBarPosition = "bottom";
     mockUseTasks.mockReturnValue(buildTasksHook());
     mockUseGoals.mockReturnValue(buildGoalsHook());
@@ -103,10 +126,34 @@ describe("ActiveTasksPage", () => {
     expect(screen.getByTestId("task-page-layout")).toBeInTheDocument();
   });
 
-  // FR-2: shows BoxFilterBar when in default (all) view
-  it("should render BoxFilterBar", () => {
+  // FR-20: shows CommandBar instead of BoxFilterBar
+  it("should render CommandBar", () => {
     renderPage();
-    expect(screen.getByTestId("box-filter-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("command-bar")).toBeInTheDocument();
+  });
+
+  // FR-20: CommandBar has filter toggle
+  it("should render CommandBar filter toggle", () => {
+    renderPage();
+    expect(screen.getByTestId("command-bar-filter-toggle")).toBeInTheDocument();
+  });
+
+  // FR-20: CommandBar has eye toggle
+  it("should render CommandBar eye toggle", () => {
+    renderPage();
+    expect(screen.getByTestId("command-bar-eye-toggle")).toBeInTheDocument();
+  });
+
+  // FR-20: CommandBar has to create button
+  it("should render CommandBar create button", () => {
+    renderPage();
+    expect(screen.getByTestId("command-bar-create-button")).toBeInTheDocument();
+  });
+
+  // FR-20: CommandBar has entity icon
+  it("should render CommandBar entity icon", () => {
+    renderPage();
+    expect(screen.getByTestId("command-bar-entity-icon")).toBeInTheDocument();
   });
 
   // FR-2: shows three sections (today, week, later) when filter is "all"
@@ -143,13 +190,6 @@ describe("ActiveTasksPage", () => {
     expect(emptySections.length).toBeGreaterThan(0);
   });
 
-  // FR-2: shows add task input when add button is clicked
-  it("should show add task input when add button is clicked", () => {
-    renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    expect(screen.getByTestId("add-task-input")).toBeInTheDocument();
-  });
-
   // FR-2: specific box filter shows only that box's tasks
   it("should show only specific box tasks when filter is changed", () => {
     const todayTasks = [buildTask({ box: "today" })];
@@ -161,42 +201,10 @@ describe("ActiveTasksPage", () => {
     });
     renderPage();
     // Expand filter bar and select "today"
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
+    fireEvent.click(screen.getByTestId("command-bar-filter-toggle"));
     fireEvent.click(screen.getByTestId("box-filter-today"));
     // Only today tasks should show (in a TaskList, not sections)
     expect(screen.getAllByTestId("task-item")).toHaveLength(1);
-  });
-
-  // FR-2: add task input is not shown by default (isAddingTask starts false)
-  it("should not show add task input by default", () => {
-    renderPage();
-    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
-  });
-
-  // FR-2: add task cancel via Escape hides the input
-  it("should hide add task input when Escape is pressed", () => {
-    renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    expect(screen.getByTestId("add-task-input")).toBeInTheDocument();
-    const textarea = screen.getByTestId("add-task-input");
-    fireEvent.keyDown(textarea, { key: "Escape" });
-    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
-  });
-
-  // FR-2: switching box filter hides the add task input
-  it("should hide add task input when box filter is changed", () => {
-    const todayTasks = [buildTask({ box: "today" })];
-    mockUseTasks.mockImplementation((box) => {
-      if (box === "today") return buildTasksHook({ tasks: todayTasks });
-      return buildTasksHook();
-    });
-    renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    expect(screen.getByTestId("add-task-input")).toBeInTheDocument();
-    // Change box filter
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
-    fireEvent.click(screen.getByTestId("box-filter-today"));
-    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
   });
 
   // FR-2: completed tasks from yesterday should not appear in completed today section
@@ -259,62 +267,10 @@ describe("ActiveTasksPage", () => {
       return buildTasksHook();
     });
     renderPage();
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
+    fireEvent.click(screen.getByTestId("command-bar-filter-toggle"));
     fireEvent.click(screen.getByTestId("box-filter-week"));
     expect(screen.getByText(/Active week/)).toBeInTheDocument();
     expect(screen.queryByText(/Done week/)).not.toBeInTheDocument();
-  });
-
-  // FR-2: shows add task input in single box view
-  it("should show add task input in single box view when add button is clicked", () => {
-    const todayTasks = [buildTask({ box: "today" })];
-    mockUseTasks.mockImplementation((box) => {
-      if (box === "today") return buildTasksHook({ tasks: todayTasks });
-      return buildTasksHook();
-    });
-    renderPage();
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
-    fireEvent.click(screen.getByTestId("box-filter-today"));
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    expect(screen.getByTestId("add-task-input")).toBeInTheDocument();
-  });
-
-  // FR-2: createTask is called on submit in single box view
-  it("should call createTask when submitting add task in single box view", async () => {
-    const createTask = vi.fn().mockResolvedValue(undefined);
-    mockUseTasks.mockImplementation((box) => {
-      if (box === "today") return buildTasksHook({ createTask });
-      return buildTasksHook();
-    });
-    renderPage();
-    // Switch to today box
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
-    fireEvent.click(screen.getByTestId("box-filter-today"));
-    // Open add task input
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const textarea = screen.getByTestId("add-task-input");
-    fireEvent.change(textarea, { target: { value: "New task" } });
-    fireEvent.keyDown(textarea, { key: "Enter" });
-    await waitFor(() => {
-      expect(createTask).toHaveBeenCalledWith("New task");
-    });
-  });
-
-  // FR-2: add task input disappears after successful submit
-  it("should hide add task input after successful submit", async () => {
-    const createTask = vi.fn().mockResolvedValue(undefined);
-    mockUseTasks.mockImplementation((box) => {
-      if (box === "today") return buildTasksHook({ createTask });
-      return buildTasksHook();
-    });
-    renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const textarea = screen.getByTestId("add-task-input");
-    fireEvent.change(textarea, { target: { value: "New task" } });
-    fireEvent.keyDown(textarea, { key: "Enter" });
-    await waitFor(() => {
-      expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
-    });
   });
 
   // FR-2: section labels are rendered with correct translated text
@@ -353,7 +309,7 @@ describe("ActiveTasksPage", () => {
       return buildTasksHook();
     });
     renderPage();
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
+    fireEvent.click(screen.getByTestId("command-bar-filter-toggle"));
     fireEvent.click(screen.getByTestId("box-filter-week"));
     expect(screen.getByText(/Week task/)).toBeInTheDocument();
   });
@@ -366,17 +322,9 @@ describe("ActiveTasksPage", () => {
       return buildTasksHook();
     });
     renderPage();
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
+    fireEvent.click(screen.getByTestId("command-bar-filter-toggle"));
     fireEvent.click(screen.getByTestId("box-filter-later"));
     expect(screen.getByText(/Later task/)).toBeInTheDocument();
-  });
-
-  // FR-2: filter bar position top places it as topToolbar
-  it("should place filter bar in top position when filterBarPosition is top", () => {
-    mockFilterBarPosition = "top";
-    renderPage();
-    // The filter bar should still be rendered
-    expect(screen.getByTestId("box-filter-toggle")).toBeInTheDocument();
   });
 
   // FR-2: filters out completed tasks from week section in all-box view
@@ -417,8 +365,8 @@ describe("ActiveTasksPage", () => {
     expect(screen.queryByText(/Completed later task/)).not.toBeInTheDocument();
   });
 
-  // FR-2: add task in all-box view defaults to today box
-  it("should create task in today box when in all-box view", async () => {
+  // FR-20: creates task via CommandBar submit in all-box view using default box
+  it("should create task via CommandBar in all-box view", async () => {
     const createTodayTask = vi.fn().mockResolvedValue(undefined);
     const createWeekTask = vi.fn().mockResolvedValue(undefined);
     mockUseTasks.mockImplementation((box) => {
@@ -428,9 +376,8 @@ describe("ActiveTasksPage", () => {
       return buildTasksHook();
     });
     renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const textarea = screen.getByTestId("add-task-input");
-    fireEvent.change(textarea, { target: { value: "All box task" } });
+    const textarea = screen.getByTestId("command-bar-textarea");
+    fireEvent.input(textarea, { target: { value: "All box task" } });
     fireEvent.keyDown(textarea, { key: "Enter" });
     await waitFor(() => {
       expect(createTodayTask).toHaveBeenCalledWith("All box task");
@@ -438,7 +385,7 @@ describe("ActiveTasksPage", () => {
     expect(createWeekTask).not.toHaveBeenCalled();
   });
 
-  // FR-2: add task in week view creates task in week box
+  // FR-20: creates task in selected box via CommandBar
   it("should create task in week box when week filter is active", async () => {
     const createWeekTask = vi.fn().mockResolvedValue(undefined);
     mockUseTasks.mockImplementation((box) => {
@@ -446,31 +393,14 @@ describe("ActiveTasksPage", () => {
       return buildTasksHook();
     });
     renderPage();
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
+    fireEvent.click(screen.getByTestId("command-bar-filter-toggle"));
     fireEvent.click(screen.getByTestId("box-filter-week"));
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const textarea = screen.getByTestId("add-task-input");
-    fireEvent.change(textarea, { target: { value: "Week task" } });
+    const textarea = screen.getByTestId("command-bar-textarea");
+    fireEvent.input(textarea, { target: { value: "Week task" } });
     fireEvent.keyDown(textarea, { key: "Enter" });
     await waitFor(() => {
       expect(createWeekTask).toHaveBeenCalledWith("Week task");
     });
-  });
-
-  // FR-2: add task placeholder shows correct box name
-  it("should show add task placeholder with target box name", () => {
-    mockUseTasks.mockImplementation((box) => {
-      if (box === "week")
-        return buildTasksHook({ tasks: [buildTask({ box: "week" })] });
-      return buildTasksHook();
-    });
-    renderPage();
-    fireEvent.click(screen.getByTestId("box-filter-toggle"));
-    fireEvent.click(screen.getByTestId("box-filter-week"));
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const textarea = screen.getByTestId("add-task-input");
-    // Placeholder should contain the box name (translated)
-    expect(textarea.getAttribute("placeholder")).toBeTruthy();
   });
 
   // FR-2: completed today section is not visible when there are zero completed tasks
@@ -481,4 +411,32 @@ describe("ActiveTasksPage", () => {
     // Should not see the completed today section label
     expect(screen.queryByText(/Выполненные сегодня/)).not.toBeInTheDocument();
   });
+
+  // FR-20: creates task when defaultBox is "inbox" (regression: createFns had no inbox key)
+  it("should create task in today box when defaultBox is inbox and filter is all", async () => {
+    mockDefaultBox = "inbox";
+    const createTodayTask = vi.fn().mockResolvedValue(undefined);
+    mockUseTasks.mockImplementation((box) => {
+      if (box === "today")
+        return buildTasksHook({ createTask: createTodayTask });
+      return buildTasksHook();
+    });
+    renderPage();
+    const textarea = screen.getByTestId("command-bar-textarea");
+    fireEvent.input(textarea, { target: { value: "Inbox task" } });
+    fireEvent.keyDown(textarea, { key: "Enter" });
+    await waitFor(() => {
+      expect(createTodayTask).toHaveBeenCalledWith("Inbox task");
+    });
+  });
+
+  // FR-20: placeholder shows "today" text when defaultBox is "inbox" (regression)
+  it("should show today placeholder when defaultBox is inbox and filter is all", () => {
+    mockDefaultBox = "inbox";
+    renderPage();
+    const textarea = screen.getByTestId("command-bar-textarea");
+    expect(textarea).toHaveAttribute("placeholder", "На сегодня...");
+  });
+
+  // FR-7: CompletedPage should NOT have CommandBar (verified in CompletedPage.test.tsx)
 });

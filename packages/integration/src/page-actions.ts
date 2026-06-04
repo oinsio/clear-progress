@@ -7,9 +7,18 @@ import type { Page } from "@playwright/test";
 // ---------------------------------------------------------------------------
 
 export async function createTask(page: Page, taskName: string): Promise<void> {
-  await page.getByTestId("add-task-button").click();
-  await page.getByTestId("add-task-input").fill(taskName);
-  await page.getByTestId("add-task-input").press("Enter");
+  // If box filter is present (Active Tasks page), select "today" to ensure
+  // the task is created in a visible box (defaultBox may be "inbox").
+  const filterToggle = page.getByTestId("command-bar-filter-toggle");
+  if (await filterToggle.isVisible()) {
+    await filterToggle.click();
+    await page.getByTestId("box-filter-today").click();
+  }
+
+  const textarea = page.getByTestId("command-bar-textarea");
+  await textarea.click();
+  await textarea.fill(taskName);
+  await textarea.press("Enter");
 }
 
 export function findTaskItem(page: Page, taskName: string) {
@@ -83,9 +92,10 @@ export async function navigateToGoals(page: Page): Promise<void> {
 }
 
 export async function createGoal(page: Page, goalName: string): Promise<void> {
-  await page.getByTestId("add-goal-button").first().click();
-  await page.getByTestId("add-goal-input").fill(goalName);
-  await page.getByTestId("add-goal-input").press("Enter");
+  const textarea = page.getByTestId("command-bar-textarea");
+  await textarea.click();
+  await textarea.fill(goalName);
+  await textarea.press("Enter");
   await page
     .locator('[data-testid="goal-item"]')
     .filter({ has: page.locator(`text=${goalName}`) })
@@ -135,9 +145,10 @@ export async function createCategory(
   page: Page,
   categoryName: string,
 ): Promise<void> {
-  await page.getByTestId("add-category-button").first().click();
-  await page.getByTestId("add-category-input").fill(categoryName);
-  await page.getByTestId("add-category-input").press("Enter");
+  const textarea = page.getByTestId("command-bar-textarea");
+  await textarea.click();
+  await textarea.fill(categoryName);
+  await textarea.press("Enter");
   await page.locator(`text=${categoryName}`).waitFor({ state: "visible" });
 }
 

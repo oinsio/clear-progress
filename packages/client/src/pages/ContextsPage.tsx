@@ -1,3 +1,7 @@
+/**
+ * ContextsPage — displays and manages contexts.
+ * Implements FR20 of command-bar.
+ */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -5,24 +9,20 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { GripVertical, MapPin, Plus } from "lucide-react";
+import { GripVertical, MapPin } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { CommandBar } from "@/components/command-bar";
 import { Sidebar } from "@/components/tasks/Sidebar";
-import { BOX } from "@/constants";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useContexts } from "@/hooks/useContexts";
 import { useDndSensors } from "@/hooks/useDndSensors";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useInlineAdd } from "@/hooks/useInlineAdd";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useTasks } from "@/hooks/useTasks";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
 import type { Context } from "@/types/entities";
@@ -100,9 +100,7 @@ function SortableContextItem({
 export default function ContextsPage() {
   const { t } = useTranslation();
   const { contexts, isLoading, createContext, reorderContexts } = useContexts();
-  const { createTask } = useTasks(BOX.INBOX);
   const { panelSide } = usePanelSide();
-  const { filterBarPosition } = useFilterBarPosition();
   const navigate = useNavigate();
 
   const sensors = useDndSensors();
@@ -111,27 +109,6 @@ export default function ContextsPage() {
     Record<string, number>
   >({});
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-
-  const {
-    isAdding: isAddingContext,
-    setIsAdding: setIsAddingContext,
-    value: newContextName,
-    setValue: setNewContextName,
-    handleKeyDown: handleAddContextKeyDown,
-    handleBlur: handleAddContextBlur,
-  } = useInlineAdd(createContext);
-
-  const {
-    isAdding: isAddingTask,
-    setIsAdding: setIsAddingTask,
-    value: newTaskName,
-    setValue: setNewTaskName,
-    handleKeyDown: handleAddTaskKeyDown,
-    handleBlur: handleAddTaskBlur,
-  } = useInlineAdd(createTask);
-
-  const newContextTextareaRef = useAutoResizeTextarea(newContextName);
-  const newTaskTextareaRef = useAutoResizeTextarea(newTaskName);
 
   const activeContexts = contexts.filter((context) => !context.is_deleted);
 
@@ -155,6 +132,13 @@ export default function ContextsPage() {
 
   const handleModeChange = useSidebarNavigation();
 
+  const handleSubmit = useCallback(
+    (name: string) => {
+      void createContext(name);
+    },
+    [createContext],
+  );
+
   return (
     <div
       data-testid="contexts-page"
@@ -162,38 +146,11 @@ export default function ContextsPage() {
     >
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Action bar — top position (above header) */}
-        {filterBarPosition === "top" && (
-          <div
-            className={cn(
-              "flex items-center border-b border-gray-200 bg-white px-3 py-2",
-              panelSide === "left" && "flex-row-reverse",
-            )}
-          >
-            <button
-              type="button"
-              aria-label={t("context.add")}
-              data-testid="add-context-button"
-              onClick={() => setIsAddingContext(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
-            >
-              <MapPin className="w-5 h-5" aria-hidden="true" />
-              <Plus
-                className="w-3 h-3 absolute bottom-1 right-1"
-                aria-hidden="true"
-              />
-            </button>
-            <button
-              type="button"
-              aria-label={t("context.addTask")}
-              data-testid="add-task-button"
-              onClick={() => setIsAddingTask(true)}
-              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-            >
-              <Plus className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
+        <CommandBar
+          entityIcon={MapPin}
+          placeholder={t("commandBar.placeholder.context")}
+          onSubmit={handleSubmit}
+        />
 
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
@@ -205,15 +162,13 @@ export default function ContextsPage() {
         {/* Scrollable context list */}
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
-            {!isLoading && activeContexts.length === 0 && !isAddingContext ? (
-              <button
-                type="button"
-                onClick={() => setIsAddingContext(true)}
-                className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
+            {!isLoading && activeContexts.length === 0 ? (
+              <div
+                className="w-full flex flex-col items-center justify-center text-gray-400 py-3"
                 data-testid="empty-contexts-message"
               >
                 <p className="text-sm">{t("context.empty")}</p>
-              </button>
+              </div>
             ) : (
               <DndContext
                 sensors={sensors}
@@ -233,84 +188,12 @@ export default function ContextsPage() {
                         onNavigate={(id) => navigate(`/contexts/${id}`)}
                       />
                     ))}
-
-                    {/* Inline add context input */}
-                    {isAddingContext && (
-                      <li className="px-4 py-3 border-b border-gray-100">
-                        <textarea
-                          ref={newContextTextareaRef}
-                          rows={1}
-                          value={newContextName}
-                          onChange={(event) =>
-                            setNewContextName(event.target.value)
-                          }
-                          onKeyDown={handleAddContextKeyDown}
-                          onBlur={handleAddContextBlur}
-                          placeholder={t("context.namePlaceholder")}
-                          className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                          data-testid="add-context-input"
-                        />
-                      </li>
-                    )}
                   </ul>
                 </SortableContext>
               </DndContext>
             )}
-
-            {/* Inline add task input */}
-            {isAddingTask && (
-              <div className="px-4 py-3 border-b border-gray-100">
-                <textarea
-                  ref={newTaskTextareaRef}
-                  rows={1}
-                  value={newTaskName}
-                  onChange={(event) => setNewTaskName(event.target.value)}
-                  onKeyDown={handleAddTaskKeyDown}
-                  onBlur={handleAddTaskBlur}
-                  placeholder={t("context.taskPlaceholder")}
-                  className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                  data-testid="add-task-input"
-                />
-              </div>
-            )}
           </div>
         </main>
-
-        {/* Action bar — bottom position (default) */}
-        {filterBarPosition === "bottom" && (
-          <div
-            className={cn(
-              "flex items-center border-t border-gray-200 bg-white px-3 py-2",
-              panelSide === "left" && "flex-row-reverse",
-            )}
-          >
-            {/* Add context button */}
-            <button
-              type="button"
-              aria-label={t("context.add")}
-              data-testid="add-context-button"
-              onClick={() => setIsAddingContext(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
-            >
-              <MapPin className="w-5 h-5" aria-hidden="true" />
-              <Plus
-                className="w-3 h-3 absolute bottom-1 right-1"
-                aria-hidden="true"
-              />
-            </button>
-
-            {/* Add task button */}
-            <button
-              type="button"
-              aria-label={t("context.addTask")}
-              data-testid="add-task-button"
-              onClick={() => setIsAddingTask(true)}
-              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-            >
-              <Plus className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Right filter panel */}

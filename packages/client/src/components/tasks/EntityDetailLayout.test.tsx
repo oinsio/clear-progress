@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MapPin } from "lucide-react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { UseSettingsReturn } from "@/hooks/useSettings";
 import type { Task } from "@/types/entities";
 import {
   EntityDetailLayout,
@@ -24,34 +23,49 @@ vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/useIsUnsynced");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
-vi.mock("@/hooks/useSettings");
+
+vi.mock("@/hooks/useShowHidden", () => ({
+  useShowHidden: () => ({
+    showHidden: false,
+    toggleShowHidden: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useSettings", () => ({
+  useSettings: () => ({
+    defaultBox: "today",
+    accentColor: "green",
+    isLoading: false,
+    setDefaultBox: vi.fn(),
+    setAccentColor: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useFilterBarPosition", () => ({
+  useFilterBarPosition: () => ({
+    filterBarPosition: "bottom",
+    setFilterBarPosition: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useHandedness", () => ({
+  useHandedness: () => ({
+    handedness: "right",
+    setHandedness: vi.fn(),
+  }),
+}));
 
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useSettings } from "@/hooks/useSettings";
 
 const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUseIsUnsynced = vi.mocked(useIsUnsynced);
 const mockUseIsDesktop = vi.mocked(useIsDesktop);
 const mockUsePanelSplit = vi.mocked(usePanelSplit);
-const mockUseSettings = vi.mocked(useSettings);
-
-function buildSettingsHook(
-  overrides: Partial<UseSettingsReturn> = {},
-): UseSettingsReturn {
-  return {
-    defaultBox: "inbox",
-    accentColor: "green",
-    isLoading: false,
-    setDefaultBox: vi.fn().mockResolvedValue(undefined),
-    setAccentColor: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
 
 function buildProps(
   overrides: Partial<EntityDetailLayoutProps> = {},
@@ -119,51 +133,43 @@ beforeEach(() => {
     containerRef: { current: null },
     handleResizeMouseDown: vi.fn(),
   });
-  mockUseSettings.mockReturnValue(buildSettingsHook());
 });
 
-describe("EntityDetailLayout — inline task creation", () => {
-  it("should render the FAB add-task button", () => {
+describe("EntityDetailLayout — CommandBar integration", () => {
+  // FR-20: renders CommandBar
+  it("should render CommandBar", () => {
     renderLayout();
-    expect(screen.getByTestId("add-task-button")).toBeInTheDocument();
+    expect(screen.getByTestId("command-bar")).toBeInTheDocument();
   });
 
-  it("should show inline input when FAB is clicked", () => {
+  // FR-20: CommandBar has filter toggle (5-box filter)
+  it("should render CommandBar filter toggle", () => {
     renderLayout();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    expect(screen.getByTestId("add-task-input")).toBeInTheDocument();
+    expect(screen.getByTestId("command-bar-filter-toggle")).toBeInTheDocument();
   });
 
-  it("should hide inline input after Escape", () => {
+  // FR-20: CommandBar has eye toggle
+  it("should render CommandBar eye toggle", () => {
     renderLayout();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const input = screen.getByTestId("add-task-input");
-    fireEvent.keyDown(input, { key: "Escape" });
-    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
+    expect(screen.getByTestId("command-bar-eye-toggle")).toBeInTheDocument();
   });
 
-  it("should call onCreateTask with name and defaultBox when Enter is pressed", async () => {
+  // FR-20: creates task via CommandBar with default box
+  it("should call onCreateTask with name and default box via CommandBar", async () => {
     const onCreateTask = vi.fn().mockResolvedValue(undefined);
     renderLayout({ onCreateTask });
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const input = screen.getByTestId("add-task-input");
-    fireEvent.change(input, { target: { value: "Новая задача" } });
-    fireEvent.keyDown(input, { key: "Enter" });
+    const textarea = screen.getByTestId("command-bar-textarea");
+    fireEvent.input(textarea, { target: { value: "Новая задача" } });
+    fireEvent.keyDown(textarea, { key: "Enter" });
     await waitFor(() => {
-      expect(onCreateTask).toHaveBeenCalledWith("Новая задача", "inbox", "");
+      expect(onCreateTask).toHaveBeenCalledWith("Новая задача", "today", "");
     });
   });
 
-  it("should hide inline input after successful task creation", async () => {
-    const onCreateTask = vi.fn().mockResolvedValue(undefined);
-    renderLayout({ onCreateTask });
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const input = screen.getByTestId("add-task-input");
-    fireEvent.change(input, { target: { value: "Задача" } });
-    fireEvent.keyDown(input, { key: "Enter" });
-    await waitFor(() => {
-      expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
-    });
+  // FR-20: no old FAB add-task button
+  it("should not render old add-task FAB button", () => {
+    renderLayout();
+    expect(screen.queryByTestId("add-task-button")).not.toBeInTheDocument();
   });
 });
 

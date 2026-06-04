@@ -3,7 +3,6 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UseGoalReturn } from "@/hooks/useGoal";
 import type { UseGoalTasksReturn } from "@/hooks/useGoalTasks";
-import type { UseSettingsReturn } from "@/hooks/useSettings";
 import { buildGoalsHook } from "@/test/builders/hookBuilders";
 import { buildGoal } from "@/test/factories/goalFactory";
 import type { Task } from "@/types/entities";
@@ -31,7 +30,37 @@ vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
 vi.mock("@/hooks/useCoverUrl");
 vi.mock("@/hooks/useCoverPreview");
-vi.mock("@/hooks/useSettings");
+
+vi.mock("@/hooks/useShowHidden", () => ({
+  useShowHidden: () => ({
+    showHidden: false,
+    toggleShowHidden: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useSettings", () => ({
+  useSettings: () => ({
+    defaultBox: "today",
+    accentColor: "green",
+    isLoading: false,
+    setDefaultBox: vi.fn(),
+    setAccentColor: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useFilterBarPosition", () => ({
+  useFilterBarPosition: () => ({
+    filterBarPosition: "bottom",
+    setFilterBarPosition: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useHandedness", () => ({
+  useHandedness: () => ({
+    handedness: "right",
+    setHandedness: vi.fn(),
+  }),
+}));
 
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
@@ -44,7 +73,6 @@ import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useSettings } from "@/hooks/useSettings";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 
 const mockUseGoal = vi.mocked(useGoal);
@@ -59,7 +87,6 @@ const mockUseIsDesktop = vi.mocked(useIsDesktop);
 const mockUsePanelSplit = vi.mocked(usePanelSplit);
 const mockUseCoverUrl = vi.mocked(useCoverUrl);
 const mockUseCoverPreview = vi.mocked(useCoverPreview);
-const mockUseSettings = vi.mocked(useSettings);
 
 function buildGoalHook(overrides: Partial<UseGoalReturn> = {}): UseGoalReturn {
   return {
@@ -92,19 +119,6 @@ function buildGoalTasksHook(
   };
 }
 
-function buildSettingsHook(
-  overrides: Partial<UseSettingsReturn> = {},
-): UseSettingsReturn {
-  return {
-    defaultBox: "inbox",
-    accentColor: "green",
-    isLoading: false,
-    setDefaultBox: vi.fn().mockResolvedValue(undefined),
-    setAccentColor: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
-
 function renderPage() {
   render(
     <MemoryRouter initialEntries={["/goals/test-id"]}>
@@ -115,7 +129,7 @@ function renderPage() {
   );
 }
 
-describe("GoalDetailPage — inline task creation", () => {
+describe("GoalDetailPage — CommandBar integration", () => {
   beforeEach(() => {
     mockUseGoal.mockReturnValue(buildGoalHook());
     mockUseGoalTasks.mockReturnValue(buildGoalTasksHook());
@@ -154,51 +168,42 @@ describe("GoalDetailPage — inline task creation", () => {
     });
     mockUseCoverUrl.mockReturnValue({ url: null });
     mockUseCoverPreview.mockReturnValue(null);
-    mockUseSettings.mockReturnValue(buildSettingsHook());
   });
 
-  it("should render the FAB add-task button", () => {
+  // FR-20: renders CommandBar
+  it("should render CommandBar", () => {
     renderPage();
-    expect(screen.getByTestId("add-task-button")).toBeInTheDocument();
+    expect(screen.getByTestId("command-bar")).toBeInTheDocument();
   });
 
-  it("should show inline input when FAB is clicked", () => {
+  // FR-20: CommandBar has filter toggle (5-box filter)
+  it("should render CommandBar filter toggle", () => {
     renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    expect(screen.getByTestId("add-task-input")).toBeInTheDocument();
+    expect(screen.getByTestId("command-bar-filter-toggle")).toBeInTheDocument();
   });
 
-  it("should hide inline input after Escape", () => {
+  // FR-20: CommandBar has eye toggle
+  it("should render CommandBar eye toggle", () => {
     renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const input = screen.getByTestId("add-task-input");
-    fireEvent.keyDown(input, { key: "Escape" });
-    expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
+    expect(screen.getByTestId("command-bar-eye-toggle")).toBeInTheDocument();
   });
 
-  it("should call createTask with name and defaultBox when Enter is pressed", async () => {
+  // FR-20: creates task via CommandBar with default box
+  it("should call createTask with name and default box when Enter is pressed", async () => {
     const createTask = vi.fn().mockResolvedValue(undefined);
     mockUseGoalTasks.mockReturnValue(buildGoalTasksHook({ createTask }));
     renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const input = screen.getByTestId("add-task-input");
-    fireEvent.change(input, { target: { value: "Новая задача" } });
-    fireEvent.keyDown(input, { key: "Enter" });
+    const textarea = screen.getByTestId("command-bar-textarea");
+    fireEvent.input(textarea, { target: { value: "Новая задача" } });
+    fireEvent.keyDown(textarea, { key: "Enter" });
     await waitFor(() => {
-      expect(createTask).toHaveBeenCalledWith("Новая задача", "inbox", "");
+      expect(createTask).toHaveBeenCalledWith("Новая задача", "today", "");
     });
   });
 
-  it("should hide inline input after successful task creation", async () => {
-    const createTask = vi.fn().mockResolvedValue(undefined);
-    mockUseGoalTasks.mockReturnValue(buildGoalTasksHook({ createTask }));
+  // FR-20: no longer renders the old FAB add-task button
+  it("should not render old add-task FAB button", () => {
     renderPage();
-    fireEvent.click(screen.getByTestId("add-task-button"));
-    const input = screen.getByTestId("add-task-input");
-    fireEvent.change(input, { target: { value: "Задача" } });
-    fireEvent.keyDown(input, { key: "Enter" });
-    await waitFor(() => {
-      expect(screen.queryByTestId("add-task-input")).not.toBeInTheDocument();
-    });
+    expect(screen.queryByTestId("add-task-button")).not.toBeInTheDocument();
   });
 });

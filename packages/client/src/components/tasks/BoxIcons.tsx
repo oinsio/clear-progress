@@ -1,4 +1,4 @@
-// Shared box icon components used in BoxFilterBar and TaskQuickActions
+// Shared box icon components used in CommandBarFilter and TaskQuickActions
 
 export function TodayBoxIcon({ className }: { className?: string }) {
   return (

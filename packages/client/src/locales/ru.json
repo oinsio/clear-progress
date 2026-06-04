@@ -29,7 +29,7 @@
     "emptyCompleted": "Завершённых задач нет",
     "emptyInbox": "Задач нет",
     "emptyToday": "Задач на сегодня нет",
-    "noTasksPrompt": "Задач нет. Нажмите сюда, чтобы добавить.",
+    "noTasksPrompt": "Задач нет.",
     "editDescription": "Редактировать заметку",
     "selectGoal": "Выбрать цель",
     "moveToBox": "Переместить",
@@ -205,6 +205,9 @@
     "filterBarPosition": "Расположение фильтра",
     "filterBarBottom": "Снизу",
     "filterBarTop": "Сверху",
+    "handedness": "Ведущая рука",
+    "handednessRight": "Правша",
+    "handednessLeft": "Левша",
     "login": "Настроить сервер",
     "loginAriaLabel": "Настроить сервер",
     "settingsAriaLabel": "Настройки",
@@ -469,6 +472,21 @@
     "title": "Что-то пошло не так",
     "description": "Произошла непредвиденная ошибка. Попробуйте перезагрузить приложение.",
     "reload": "Перезагрузить"
+  },
+  "commandBar": {
+    "placeholder": {
+      "inbox": "Во входящие...",
+      "today": "На сегодня...",
+      "week": "На неделю...",
+      "later": "На потом...",
+      "goal": "Новая цель...",
+      "idea": "Новая идея...",
+      "category": "Новая категория...",
+      "context": "Новый контекст..."
+    },
+    "filterByBox": "Фильтр по коробочке",
+    "toggleHiddenItems": "Переключить скрытые элементы",
+    "create": "Создать"
   },
   "pwa": {
     "appUpdated": "Приложение обновлено",

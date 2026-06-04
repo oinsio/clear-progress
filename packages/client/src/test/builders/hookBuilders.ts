@@ -3,6 +3,7 @@ import type { UseCategoriesReturn } from "@/hooks/useCategories";
 import type { UseCompletedTasksReturn } from "@/hooks/useCompletedTasks";
 import type { UseContextsReturn } from "@/hooks/useContexts";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
+import type { UseIdeasReturn } from "@/hooks/useIdeas";
 import type { UseTasksReturn } from "@/hooks/useTasks";
 import type { Task } from "@/types/entities";
 
@@ -64,6 +65,21 @@ export function buildCategoriesHook(
     updateCategory: vi.fn(),
     deleteCategory: vi.fn(),
     reorderCategories: vi.fn(),
+    ...overrides,
+  };
+}
+
+export function buildIdeasHook(
+  overrides: Partial<UseIdeasReturn> = {},
+): UseIdeasReturn {
+  return {
+    ideas: [],
+    isLoading: false,
+    reloadIdeas: vi.fn().mockResolvedValue(undefined),
+    createIdea: vi.fn().mockResolvedValue(undefined),
+    updateIdea: vi.fn().mockResolvedValue(undefined),
+    deleteIdea: vi.fn().mockResolvedValue(undefined),
+    reorderIdeas: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

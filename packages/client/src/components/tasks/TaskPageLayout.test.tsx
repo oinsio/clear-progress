@@ -176,30 +176,16 @@ describe("TaskPageLayout", () => {
     expect(mainColumn).not.toHaveClass("hidden");
   });
 
-  // FR-6: topToolbar renders in correct position
-  it("should render topToolbar above main content", () => {
+  // FR17: main content has no extra padding — CommandBar is in the layout flow
+  it("should not apply command-bar padding to main content", () => {
     render(
-      <TaskPageLayout
-        {...baseProps}
-        topToolbar={<div data-testid="top-toolbar">Toolbar</div>}
-      >
+      <TaskPageLayout {...baseProps}>
         <div>Content</div>
       </TaskPageLayout>,
     );
-    expect(screen.getByTestId("top-toolbar")).toBeInTheDocument();
-  });
-
-  // FR-6: bottomToolbar renders in correct position
-  it("should render bottomToolbar below main content", () => {
-    render(
-      <TaskPageLayout
-        {...baseProps}
-        bottomToolbar={<div data-testid="bottom-toolbar">Bottom</div>}
-      >
-        <div>Content</div>
-      </TaskPageLayout>,
-    );
-    expect(screen.getByTestId("bottom-toolbar")).toBeInTheDocument();
+    const mainElement = screen.getByRole("main");
+    expect(mainElement.style.paddingBottom).toBe("");
+    expect(mainElement.style.paddingTop).toBe("");
   });
 
   // FR-6: desktop with selected task applies split ratio to main column

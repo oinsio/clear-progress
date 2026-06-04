@@ -1,3 +1,7 @@
+/**
+ * GoalsPage — displays and manages goals.
+ * Implements FR20 of command-bar.
+ */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -5,26 +9,21 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { GripVertical, Plus, Target } from "lucide-react";
+import { GripVertical, Target } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { CommandBar } from "@/components/command-bar";
 import { GoalItem } from "@/components/goals/GoalItem";
 import { Sidebar } from "@/components/tasks/Sidebar";
-import { BOX } from "@/constants";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useDndSensors } from "@/hooks/useDndSensors";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useGoals } from "@/hooks/useGoals";
-import { useInlineAdd } from "@/hooks/useInlineAdd";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useTasks } from "@/hooks/useTasks";
 import { TaskService } from "@/services/TaskService";
-import { cn } from "@/shared/lib/cn";
 import type { Goal } from "@/types/entities";
 
 function SortableGoalItem({
@@ -86,37 +85,14 @@ const defaultTaskService = new TaskService(
 export default function GoalsPage() {
   const { t } = useTranslation();
   const { goals, isLoading, createGoal, reorderGoals } = useGoals();
-  const { createTask } = useTasks(BOX.INBOX);
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const { filterBarPosition } = useFilterBarPosition();
   const navigate = useNavigate();
   const sensors = useDndSensors();
 
   const [goalTaskCounts, setGoalTaskCounts] = useState<Record<string, number>>(
     {},
   );
-
-  const {
-    isAdding: isAddingTask,
-    setIsAdding: setIsAddingTask,
-    value: newTaskName,
-    setValue: setNewTaskName,
-    handleKeyDown: handleAddTaskKeyDown,
-    handleBlur: handleAddTaskBlur,
-  } = useInlineAdd(createTask);
-
-  const {
-    isAdding: isAddingGoal,
-    setIsAdding: setIsAddingGoal,
-    value: newGoalName,
-    setValue: setNewGoalName,
-    handleKeyDown: handleAddGoalKeyDown,
-    handleBlur: handleAddGoalBlur,
-  } = useInlineAdd((name) => createGoal({ name }));
-
-  const newGoalTextareaRef = useAutoResizeTextarea(newGoalName);
-  const newTaskTextareaRef = useAutoResizeTextarea(newTaskName);
 
   const activeGoals = goals.filter((goal) => !goal.is_deleted);
 
@@ -145,6 +121,13 @@ export default function GoalsPage() {
     [activeGoals, reorderGoals],
   );
 
+  const handleSubmit = useCallback(
+    (name: string) => {
+      void createGoal({ name });
+    },
+    [createGoal],
+  );
+
   return (
     <div
       data-testid="goals-page"
@@ -152,38 +135,11 @@ export default function GoalsPage() {
     >
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Action bar — top position (above header) */}
-        {filterBarPosition === "top" && (
-          <div
-            className={cn(
-              "flex items-center border-b border-gray-200 bg-white px-3 py-2",
-              panelSide === "left" && "flex-row-reverse",
-            )}
-          >
-            <button
-              type="button"
-              aria-label={t("goal.add")}
-              data-testid="add-goal-button"
-              onClick={() => setIsAddingGoal(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
-            >
-              <Target className="w-5 h-5" aria-hidden="true" />
-              <Plus
-                className="w-3 h-3 absolute bottom-1 right-1"
-                aria-hidden="true"
-              />
-            </button>
-            <button
-              type="button"
-              aria-label={t("goal.addTask")}
-              data-testid="add-task-button"
-              onClick={() => setIsAddingTask(true)}
-              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-            >
-              <Plus className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
+        <CommandBar
+          entityIcon={Target}
+          placeholder={t("commandBar.placeholder.goal")}
+          onSubmit={handleSubmit}
+        />
 
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
@@ -196,14 +152,12 @@ export default function GoalsPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="xl:max-w-3xl xl:mx-auto">
             {!isLoading && activeGoals.length === 0 ? (
-              <button
-                type="button"
-                onClick={() => setIsAddingGoal(true)}
-                className="w-full flex flex-col items-center justify-center text-gray-400 hover:text-accent transition-colors py-3"
+              <div
+                className="w-full flex flex-col items-center justify-center text-gray-400 py-3"
                 data-testid="empty-goals-message"
               >
                 <p className="text-sm">{t("goal.empty")}</p>
-              </button>
+              </div>
             ) : (
               <DndContext
                 sensors={sensors}
@@ -227,78 +181,8 @@ export default function GoalsPage() {
                 </SortableContext>
               </DndContext>
             )}
-
-            {/* Inline add goal input */}
-            {isAddingGoal && (
-              <div className="px-4 py-3 border-b border-gray-100">
-                <textarea
-                  ref={newGoalTextareaRef}
-                  rows={1}
-                  value={newGoalName}
-                  onChange={(event) => setNewGoalName(event.target.value)}
-                  onKeyDown={handleAddGoalKeyDown}
-                  onBlur={handleAddGoalBlur}
-                  placeholder={t("goal.namePlaceholder")}
-                  className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                  data-testid="add-goal-input"
-                />
-              </div>
-            )}
-
-            {/* Inline add task input */}
-            {isAddingTask && (
-              <div className="px-4 py-3 border-b border-gray-100">
-                <textarea
-                  ref={newTaskTextareaRef}
-                  rows={1}
-                  value={newTaskName}
-                  onChange={(event) => setNewTaskName(event.target.value)}
-                  onKeyDown={handleAddTaskKeyDown}
-                  onBlur={handleAddTaskBlur}
-                  placeholder={t("goal.taskPlaceholder")}
-                  className="w-full text-sm outline-none placeholder:text-gray-400 resize-none overflow-hidden"
-                  data-testid="add-task-input"
-                />
-              </div>
-            )}
           </div>
         </main>
-
-        {/* Action bar — bottom position (default) */}
-        {filterBarPosition === "bottom" && (
-          <div
-            className={cn(
-              "flex items-center border-t border-gray-200 bg-white px-3 py-2",
-              panelSide === "left" && "flex-row-reverse",
-            )}
-          >
-            {/* Add goal button */}
-            <button
-              type="button"
-              aria-label={t("goal.add")}
-              data-testid="add-goal-button"
-              onClick={() => setIsAddingGoal(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full text-accent hover:bg-accent/10 active:bg-accent/20 transition-colors"
-            >
-              <Target className="w-5 h-5" aria-hidden="true" />
-              <Plus
-                className="w-3 h-3 absolute bottom-1 right-1"
-                aria-hidden="true"
-              />
-            </button>
-
-            {/* Add task button */}
-            <button
-              type="button"
-              aria-label={t("goal.addTask")}
-              data-testid="add-task-button"
-              onClick={() => setIsAddingTask(true)}
-              className="ml-auto flex-shrink-0 w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-md hover:bg-accent/80 active:bg-accent/70 transition-colors"
-            >
-              <Plus className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Right filter panel */}
