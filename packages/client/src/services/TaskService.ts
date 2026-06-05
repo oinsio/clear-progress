@@ -169,7 +169,7 @@ export class TaskService {
         }
       } catch (error) {
         console.error("Failed to create recurring task:", error);
-        // Не прерываем завершение задачи, если не удалось создать клон
+        // Do not interrupt task completion if clone creation failed
       }
     }
 
@@ -241,7 +241,7 @@ export class TaskService {
   }
 
   async softDelete(id: string): Promise<Task> {
-    // Найти все копии этой задачи
+    // Find all copies of this task
     const copies = await this.taskRepository.findByOriginalTaskId(id);
 
     if (copies.length > 0) {

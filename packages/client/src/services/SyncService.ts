@@ -662,7 +662,7 @@ export class SyncService {
       response.purge_revision,
     );
 
-    // 4. Сделать pull для синхронизации (обновит current_revision)
+    // 4. Perform pull to sync (will update current_revision)
     await this._pull();
 
     // 5. Вернуть статистику для UI

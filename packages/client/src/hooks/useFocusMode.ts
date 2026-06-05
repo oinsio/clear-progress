@@ -10,7 +10,7 @@ function getCachedFocusMode(): boolean {
       return cached === "true";
     }
   } catch {
-    // localStorage недоступен
+    // localStorage is unavailable
   }
   return DEFAULT_FOCUS_MODE;
 }
@@ -25,7 +25,7 @@ function getCachedFocusOpacity(): number {
       }
     }
   } catch {
-    // localStorage недоступен
+    // localStorage is unavailable
   }
   return DEFAULT_FOCUS_OPACITY;
 }
@@ -48,7 +48,7 @@ export function useFocusMode(): UseFocusModeReturn {
     try {
       localStorage.setItem(STORAGE_KEYS.FOCUS_MODE, String(enabled));
     } catch {
-      // localStorage недоступен
+      // localStorage is unavailable
     }
     setFocusModeState(enabled);
   }, []);
@@ -57,7 +57,7 @@ export function useFocusMode(): UseFocusModeReturn {
     try {
       localStorage.setItem(STORAGE_KEYS.FOCUS_OPACITY, String(value));
     } catch {
-      // localStorage недоступен
+      // localStorage is unavailable
     }
     setFocusOpacityState(value);
   }, []);
