@@ -84,7 +84,7 @@ The system SHALL support `Attachment` as a synced entity with fields: `id` (UUID
 
 ### Requirement: Attach file to entity
 
-Users SHALL be able to attach files to tasks, goals, and ideas. The attach operation SHALL validate the file (MIME, magic bytes, size), compute SHA-256 hash, upload the file to server (or queue as pending if offline), create an Attachment record, and store the blob in IndexedDB for offline access. Implements FR8 of add-file-attachments.
+Users SHALL be able to attach files to tasks, goals, and ideas. The attachment operation SHALL validate the file (MIME, magic bytes, size), compute SHA-256 hash, upload the file to server (or queue as pending if offline), create an Attachment record, and store the blob in IndexedDB for offline access. Implements FR8 of add-file-attachments.
 
 #### Scenario: Attach file to task online
 

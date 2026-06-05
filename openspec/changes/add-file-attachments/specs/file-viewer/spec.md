@@ -43,7 +43,7 @@ The system SHALL display attached PDFs in the lightbox using an `<iframe>` with 
 
 #### Scenario: PDF iframe is scrollable on mobile
 
-- **WHEN** a multi-page PDF is displayed on a mobile viewport
+- **WHEN** a multipage PDF is displayed on a mobile viewport
 - **THEN** the iframe content is scrollable within the lightbox
 
 ### Requirement: Text preview in lightbox

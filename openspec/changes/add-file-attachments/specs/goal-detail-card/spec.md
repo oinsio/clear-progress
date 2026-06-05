@@ -2,7 +2,7 @@
 
 ### Requirement: Goal edit mode with tabs
 
-Goal edit mode SHALL show cover + name at top (always visible), then two tab buttons: Details, Attachments. The Details tab SHALL contain the description field and status selector. The Attachments tab SHALL show the attachment list with an attach file button. Footer buttons (Delete, Cancel, Save) SHALL remain visible at the bottom regardless of active tab. Implements UX2 of add-file-attachments.
+Goal edit mode SHALL show cover + name at top (always visible), then two tab buttons: Details, Attachments. The Details tab SHALL contain the description field and status selector. The Attachments tab SHALL show the attachment list with an attached file button. Footer buttons (Delete, Cancel, Save) SHALL remain visible at the bottom regardless of active tab. Implements UX2 of add-file-attachments.
 
 #### Scenario: Two tabs visible in goal edit mode
 
@@ -19,7 +19,7 @@ Goal edit mode SHALL show cover + name at top (always visible), then two tab but
 #### Scenario: Attachments tab shows attachment list
 
 - **WHEN** user clicks the Attachments tab in goal edit mode
-- **THEN** the attachment list for the current goal is displayed with an attach file button
+- **THEN** the attachment list for the current goal is displayed with an attached file button
 
 #### Scenario: Cover and name remain visible across tabs
 

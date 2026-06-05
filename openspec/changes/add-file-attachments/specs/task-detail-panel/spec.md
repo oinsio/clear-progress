@@ -2,7 +2,7 @@
 
 ### Requirement: Attachments tab in task detail panel
 
-The task detail panel SHALL have three tab buttons: Details, Checklist, Attachments. The Attachments tab SHALL show the attachment list for the current task with an attach file button. Tab switching SHALL follow the existing pill button pattern. Implements UX1 of add-file-attachments.
+The task detail panel SHALL have three tab buttons: Details, Checklist, Attachments. The Attachments tab SHALL show the attachment list for the current task with an attached file button. Tab switching SHALL follow the existing pill button pattern. Implements UX1 of add-file-attachments.
 
 #### Scenario: Three tabs visible in task detail panel
 
@@ -25,7 +25,7 @@ The task detail panel SHALL have three tab buttons: Details, Checklist, Attachme
 
 - **GIVEN** task has no attachments
 - **WHEN** user switches to the Attachments tab
-- **THEN** an empty state message is shown with an attach file button
+- **THEN** an empty state message is shown with an attached file button
 
 ### Requirement: TaskDetailPanel refactoring
 
