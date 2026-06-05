@@ -135,6 +135,7 @@ export const PUSH_CHUNK_SIZE = 200;
 export const BACKEND_CONNECTION_EVENT = "backend_connection_changed";
 export const GOOGLE_CLIENT_ID_CHANGED_EVENT = "google_client_id_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
+export const DAY_BOUNDARY_CHANGED_EVENT = "day_boundary_changed";
 
 export const DB_NAME = "clear-progress";
 
@@ -170,6 +171,7 @@ export const STORAGE_KEYS = {
   FOCUS_MODE: "focus_mode",
   FOCUS_OPACITY: "focus_opacity",
   HANDEDNESS: "handedness",
+  DAY_BOUNDARY: "day_boundary",
 } as const;
 
 export const DEFAULT_FOCUS_OPACITY = 30;
@@ -194,6 +196,7 @@ export const SETTING_KEYS = {
   ACCENT_COLOR: "accent_color",
   CUSTOM_ACCENT_LIGHT: "custom_accent_light",
   CUSTOM_ACCENT_DARK: "custom_accent_dark",
+  DAY_BOUNDARY: "day_boundary",
 } as const;
 
 export const MAX_COVER_SIZE_BYTES = 2 * 1024 * 1024;
@@ -231,6 +234,8 @@ export const GOAL_STATUS_SORT_ORDER: Record<
   completed: 3,
   cancelled: 4,
 } as const;
+
+export const DEFAULT_DAY_BOUNDARY = "00:00";
 
 export const DEFAULT_HANDEDNESS: Handedness = "right";
 

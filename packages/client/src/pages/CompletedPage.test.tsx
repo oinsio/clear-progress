@@ -9,36 +9,7 @@ import {
   buildTasksHook,
 } from "@/test/builders/hookBuilders";
 import { buildTask } from "@/test/factories/taskFactory";
-
-vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({
-    accessToken: null,
-    userEmail: null,
-    userPicture: null,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    silentRefresh: vi.fn(),
-  }),
-}));
-vi.mock("@/hooks/useTasks");
-vi.mock("@/hooks/useGoals");
-vi.mock("@/hooks/useContexts");
-vi.mock("@/hooks/useCategories");
-vi.mock("@/hooks/useCompletedTasks");
-vi.mock("@/hooks/useFocusMode", () => ({
-  useFocusMode: () => ({
-    isFocusMode: false,
-    setFocusMode: vi.fn(),
-    focusOpacity: 30,
-    setFocusOpacity: vi.fn(),
-  }),
-}));
-vi.mock("@/hooks/useShowHidden", () => ({
-  useShowHidden: () => ({
-    showHidden: false,
-    toggleShowHidden: vi.fn(),
-  }),
-}));
+import "@/test/mocks/taskPageMocks";
 
 import { useCategories } from "@/hooks/useCategories";
 import { useCompletedTasks } from "@/hooks/useCompletedTasks";

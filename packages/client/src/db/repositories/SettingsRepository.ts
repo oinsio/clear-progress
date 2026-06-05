@@ -21,7 +21,7 @@ export class SettingsRepository {
   async set(key: string, value: string): Promise<void> {
     const existing = await this.getByKey(key);
 
-    // Если значение не изменилось, ничего не делаем
+    // If the value has not changed, do nothing
     if (existing && existing.value === value) {
       return;
     }

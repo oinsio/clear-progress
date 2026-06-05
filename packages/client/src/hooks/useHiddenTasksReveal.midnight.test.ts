@@ -6,6 +6,7 @@ vi.mock("@/db/repositories/TaskRepository", () => ({
   TaskRepository: vi.fn(),
 }));
 
+import { STORAGE_KEYS } from "@/constants";
 import { HiddenTaskService } from "@/services/HiddenTaskService";
 import { useHiddenTasksReveal } from "./useHiddenTasksReveal";
 import {
@@ -19,8 +20,8 @@ setupHiddenTasksRevealMocks(
   vi.mocked(HiddenTaskService),
 );
 
-describe("useHiddenTasksReveal", () => {
-  it("should schedule midnight reveal on mount", async () => {
+describe("useHiddenTasksReveal — boundary timer", () => {
+  it("should schedule reveal at default boundary (00:00) on mount", async () => {
     vi.useFakeTimers();
     const clock = createMutableClock("2026-04-16T22:00:00Z", "UTC");
 
@@ -29,7 +30,7 @@ describe("useHiddenTasksReveal", () => {
 
     mockRevealHiddenTasks.mockClear();
 
-    // 22:00 -> 00:00:01 = 2 hours 1 second = 7201000 ms
+    // 22:00 -> 00:00 + 1s buffer = 2h 1s = 7201000 ms
     await act(async () => {
       vi.advanceTimersByTime(7201000);
     });
@@ -39,7 +40,35 @@ describe("useHiddenTasksReveal", () => {
     vi.useRealTimers();
   });
 
-  it("should reschedule midnight reveal after first trigger", async () => {
+  it("should schedule reveal at custom boundary (02:00) instead of midnight", async () => {
+    vi.useFakeTimers();
+    localStorage.setItem(STORAGE_KEYS.DAY_BOUNDARY, "02:00");
+    const clock = createMutableClock("2026-04-16T22:00:00Z", "UTC");
+
+    renderHook(() => useHiddenTasksReveal(clock));
+    await act(async () => {});
+
+    mockRevealHiddenTasks.mockClear();
+
+    // Should NOT fire at midnight (2h + 1s buffer = 7201000 ms)
+    await act(async () => {
+      vi.advanceTimersByTime(7201000);
+    });
+
+    expect(mockRevealHiddenTasks).not.toHaveBeenCalled();
+
+    // Should fire at 02:00 + 1s buffer: 22:00 -> 02:00 = 4h + 1s = 14401000 ms
+    await act(async () => {
+      vi.advanceTimersByTime(14401000 - 7201000);
+    });
+
+    expect(mockRevealHiddenTasks).toHaveBeenCalledTimes(1);
+
+    localStorage.removeItem(STORAGE_KEYS.DAY_BOUNDARY);
+    vi.useRealTimers();
+  });
+
+  it("should reschedule boundary reveal after first trigger", async () => {
     vi.useFakeTimers();
     const clock = createMutableClock("2026-04-16T23:00:00Z", "UTC");
 
@@ -48,7 +77,7 @@ describe("useHiddenTasksReveal", () => {
 
     mockRevealHiddenTasks.mockClear();
 
-    // First midnight: 23:00 -> 00:00:01 = 1 hour 1 second = 3601000 ms
+    // First boundary (00:00): 23:00 -> 00:00 + 1s = 3601000 ms
     await act(async () => {
       vi.advanceTimersByTime(3601000);
     });
@@ -59,7 +88,7 @@ describe("useHiddenTasksReveal", () => {
 
     mockRevealHiddenTasks.mockClear();
 
-    // Second midnight: 00:00:01 -> 24:00:01 = 24 hours = 86400000 ms
+    // Second boundary: 00:00:01 -> next 00:00 + 1s = ~24h = 86400000 ms
     await act(async () => {
       vi.advanceTimersByTime(86400000);
     });
@@ -69,7 +98,7 @@ describe("useHiddenTasksReveal", () => {
     vi.useRealTimers();
   });
 
-  it("should clear midnight timeout on unmount", async () => {
+  it("should clear boundary timeout on unmount", async () => {
     vi.useFakeTimers();
     const clock = createMutableClock("2026-04-16T23:00:00Z", "UTC");
 
@@ -89,7 +118,7 @@ describe("useHiddenTasksReveal", () => {
     vi.useRealTimers();
   });
 
-  it("should handle timezone correctly when scheduling midnight", async () => {
+  it("should handle timezone correctly when scheduling boundary", async () => {
     vi.useFakeTimers();
     // 2026-04-16 20:00 UTC = 2026-04-16 23:00 Europe/Moscow (UTC+3)
     const clock = createMutableClock("2026-04-16T20:00:00Z", "Europe/Moscow");
@@ -99,13 +128,35 @@ describe("useHiddenTasksReveal", () => {
 
     mockRevealHiddenTasks.mockClear();
 
-    // Until midnight Moscow time: 23:00 -> 00:00:01 = 1 hour 1 second = 3601000 ms
+    // Until midnight Moscow time: 23:00 -> 00:00 + 1s buffer = 3601000 ms
     await act(async () => {
       vi.advanceTimersByTime(3601000);
     });
 
     expect(mockRevealHiddenTasks).toHaveBeenCalledTimes(1);
 
+    vi.useRealTimers();
+  });
+
+  it("should schedule at next day boundary when current time is past boundary", async () => {
+    vi.useFakeTimers();
+    localStorage.setItem(STORAGE_KEYS.DAY_BOUNDARY, "04:00");
+    // Current time 06:00 UTC — already past 04:00 boundary
+    const clock = createMutableClock("2026-04-16T06:00:00Z", "UTC");
+
+    renderHook(() => useHiddenTasksReveal(clock));
+    await act(async () => {});
+
+    mockRevealHiddenTasks.mockClear();
+
+    // Next boundary: 06:00 -> next day 04:00 + 1s = 22h + 1s = 79201000 ms
+    await act(async () => {
+      vi.advanceTimersByTime(79201000);
+    });
+
+    expect(mockRevealHiddenTasks).toHaveBeenCalledTimes(1);
+
+    localStorage.removeItem(STORAGE_KEYS.DAY_BOUNDARY);
     vi.useRealTimers();
   });
 });

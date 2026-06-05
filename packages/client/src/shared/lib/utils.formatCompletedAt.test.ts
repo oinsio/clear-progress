@@ -53,4 +53,40 @@ describe("formatCompletedAt", () => {
     const result = formatCompletedAt(timestampLateUtc, tokyoClock);
     expect(result).toMatch(/^Завершено: Сегодня \d{2}:\d{2}$/);
   });
+
+  // @day-boundary @FR8 @FR9
+  describe("with dayBoundary parameter", () => {
+    it("should show 'Сегодня' for task completed before boundary in same logical day", () => {
+      // Clock: 2026-06-05T10:00:00Z, dayBoundary: "02:00"
+      // Task completed at 2026-06-05T03:00:00Z (after 02:00 boundary)
+      // Logical "today" starts at 02:00, so task at 03:00 is "today"
+      const boundaryClock = fakeClock("2026-06-05T10:00:00Z");
+      const taskTimestamp = "2026-06-05T03:00:00.000Z";
+
+      const result = formatCompletedAt(taskTimestamp, boundaryClock, "02:00");
+
+      expect(result).toMatch(/^Завершено: Сегодня \d{2}:\d{2}$/);
+    });
+
+    it("should show 'Вчера' for task completed before boundary as previous logical day", () => {
+      // Clock: 2026-06-05T10:00:00Z, dayBoundary: "02:00"
+      // Task completed at 2026-06-05T01:30:00Z (before 02:00 boundary)
+      // Logical "today" starts at 02:00, so task at 01:30 is "yesterday"
+      const boundaryClock = fakeClock("2026-06-05T10:00:00Z");
+      const taskTimestamp = "2026-06-05T01:30:00.000Z";
+
+      const result = formatCompletedAt(taskTimestamp, boundaryClock, "02:00");
+
+      expect(result).toMatch(/^Завершено: Вчера \d{2}:\d{2}$/);
+    });
+
+    it("should preserve current behavior when dayBoundary is default 00:00", () => {
+      const todayISO = buildISOForTodayAt(21, 58, REFERENCE_DATE);
+
+      const resultWithBoundary = formatCompletedAt(todayISO, clock, "00:00");
+      const resultWithoutBoundary = formatCompletedAt(todayISO, clock);
+
+      expect(resultWithBoundary).toBe(resultWithoutBoundary);
+    });
+  });
 });

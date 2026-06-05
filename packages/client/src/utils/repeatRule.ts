@@ -27,10 +27,10 @@ function calculateNextDateDaily(
   let next = prev.add({ days: interval });
 
   const today = clock.plainDateISO();
-  // Skip logic: если next_date оказался в прошлом (пользователь не открывал приложение
-  // несколько дней), вычисляем ближайшую будущую дату вместо создания множества
-  // пропущенных копий. Это сознательное архитектурное решение для приложения.
-  // Подробнее: .claude/docs/architecture/recurring-tasks-skip-logic.md
+  // Skip logic: if next_date ended up in the past (user did not open the app
+  // for several days), compute the nearest future date instead of creating multiple
+  // missed copies. This is an intentional architectural decision for the app.
+  // Details: .claude/docs/architecture/recurring-tasks-skip-logic.md
   if (Temporal.PlainDate.compare(next, today) < 0) {
     const totalDays = prev.until(today, { largestUnit: "days" }).days;
     const periodsToSkip = Math.ceil(totalDays / interval);
@@ -45,9 +45,9 @@ function findNextWeekday(
   weekdays: number[],
   interval: number,
 ): string {
-  // weekdays: 1=Пн, 2=Вт, ..., 7=Вс (ISO 8601)
+  // weekdays: 1=Mon, 2=Tue, ..., 7=Sun (ISO 8601)
   const sortedWeekdays = [...weekdays].sort((a, b) => a - b);
-  // Пропустить (interval - 1) полных недель перед началом поиска
+  // Skip (interval - 1) full weeks before starting the search
   let current = startDate.add({ days: 7 * (interval - 1) });
 
   for (let i = 0; i < 7; i++) {
@@ -74,7 +74,7 @@ function calculateNextDateWeekly(
   const today = clock.plainDateISO();
 
   if (!previousNextDate) {
-    // Первое создание: ближайший день из weekdays[], начиная с завтра
+    // First creation: nearest day from weekdays[], starting from tomorrow
     const tomorrow = today.add({ days: 1 });
     return findNextWeekday(tomorrow, weekdays, interval);
   }
@@ -84,9 +84,9 @@ function calculateNextDateWeekly(
   const candidate = findNextWeekday(nextDay, weekdays, interval);
   const candidateDate = Temporal.PlainDate.from(candidate);
 
-  // Skip logic: если дата в прошлом, перепрыгнуть к ближайшему
-  // периоду, выровненному по интервалу (аналогично daily/monthly/yearly skip logic).
-  // Это предотвращает создание множества пропущенных копий при длительной не активности.
+  // Skip logic: if the date is in the past, jump to the nearest
+  // period aligned to the interval (analogous to daily/monthly/yearly skip logic).
+  // This prevents creating multiple missed copies during prolonged inactivity.
   if (Temporal.PlainDate.compare(candidateDate, today) < 0) {
     const periodDays = 7 * interval;
     const daysElapsed = nextDay.until(today, { largestUnit: "days" }).days;
@@ -95,7 +95,7 @@ function calculateNextDateWeekly(
     const alignedCandidate = findNextWeekday(alignedStart, weekdays, interval);
     const alignedCandidateDate = Temporal.PlainDate.from(alignedCandidate);
 
-    // Если выровненный кандидат тоже в прошлом, перейти к следующему периоду
+    // If the aligned candidate is also in the past, advance to the next period
     if (Temporal.PlainDate.compare(alignedCandidateDate, today) <= 0) {
       return findNextWeekday(
         alignedStart.add({ days: periodDays }),
@@ -120,9 +120,9 @@ function calculateNextDateMonthly(
   const prevYearMonth = prev.toPlainYearMonth();
   let targetYearMonth = prevYearMonth.add({ months: interval });
 
-  // Skip logic: если целевой месяц в прошлом, перепрыгнуть к ближайшему
-  // месяцу, выровненному по интервалу (аналогично daily skip logic).
-  // Это предотвращает создание множества пропущенных копий при длительной не активности.
+  // Skip logic: if the target month is in the past, jump to the nearest
+  // month aligned to the interval (analogous to daily skip logic).
+  // This prevents creating multiple missed copies during prolonged inactivity.
   const todayYearMonth = today.toPlainYearMonth();
   if (Temporal.PlainYearMonth.compare(targetYearMonth, todayYearMonth) < 0) {
     const monthsElapsed = prevYearMonth.until(todayYearMonth, {
@@ -131,7 +131,7 @@ function calculateNextDateMonthly(
     const periodsToSkip = Math.ceil(monthsElapsed / interval);
     targetYearMonth = prevYearMonth.add({ months: periodsToSkip * interval });
 
-    // Если дата уже прошла или наступила сегодня в целевом месяце, добавить interval
+    // If the date has already passed or falls today in the target month, add interval
     const actualDay = Math.min(dayOfMonth, targetYearMonth.daysInMonth);
     if (
       Temporal.PlainDate.compare(
@@ -157,16 +157,16 @@ function calculateNextDateYearly(
   const today = clock.plainDateISO();
   let targetYear = prev.year + interval;
 
-  // Skip logic: если целевой год в прошлом, перепрыгнуть к ближайшему
-  // году, выровненному по интервалу (аналогично daily skip logic).
-  // Это предотвращает создание множества пропущенных копий при длительной не активности.
+  // Skip logic: if the target year is in the past, jump to the nearest
+  // year aligned to the interval (analogous to daily skip logic).
+  // This prevents creating multiple missed copies during prolonged inactivity.
   if (targetYear < today.year) {
     const yearsElapsed = today.year - prev.year;
     const periodsToSkip = Math.ceil(yearsElapsed / interval);
     targetYear = prev.year + periodsToSkip * interval;
   }
 
-  // Создаём кандидата для текущего целевого года
+  // Build the candidate date for the current target year
   const targetYearMonth = Temporal.PlainYearMonth.from({
     year: targetYear,
     month: monthAndDay.month,
@@ -178,7 +178,7 @@ function calculateNextDateYearly(
     day: actualDay,
   });
 
-  // Если дата уже прошла в целевом году, перейти к следующему выровненному году
+  // If the date has already passed in the target year, advance to the next aligned year
   if (Temporal.PlainDate.compare(candidate, today) < 0) {
     const nextYear = targetYear + interval;
     const nextYearMonth = Temporal.PlainYearMonth.from({
@@ -234,7 +234,7 @@ export function calculateNextDate(
   // type === 'fixed'
   if (!rule.frequency) throw new Error("frequency required for fixed");
   if (!previousNextDate) {
-    // Первое создание: используем completedAt как базу
+    // First creation: use completedAt as the base
     const completedInstant = Temporal.Instant.from(completedAt);
     let timeZone: string;
     try {

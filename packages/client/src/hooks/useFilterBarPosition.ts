@@ -13,7 +13,7 @@ function getCachedFilterBarPosition(): FilterBarPosition {
       return cached as FilterBarPosition;
     }
   } catch {
-    // localStorage недоступен
+    // localStorage is unavailable
   }
   return DEFAULT_FILTER_BAR_POSITION;
 }
@@ -31,7 +31,7 @@ export function useFilterBarPosition(): UseFilterBarPositionReturn {
     try {
       localStorage.setItem(STORAGE_KEYS.FILTER_BAR_POSITION, position);
     } catch {
-      // localStorage недоступен
+      // localStorage is unavailable
     }
     setFilterBarPositionState(position);
   }, []);

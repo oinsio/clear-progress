@@ -242,4 +242,106 @@ describe("groupCompletedTasks", () => {
     expect(result.weekTasks).toHaveLength(0);
     expect(result.yesterdayTasks).toContain(yesterdayTask);
   });
+
+  // @day-boundary @FR8
+  describe("with dayBoundary parameter", () => {
+    it("should group task completed before boundary as previous logical day", () => {
+      // Clock: 2026-06-05T10:00:00Z, dayBoundary: "02:00"
+      // Task completed at 2026-06-05T01:30:00Z (before 02:00 boundary)
+      // Logical "today" starts at 2026-06-05T02:00, so task is in "yesterday"
+      const boundaryClock = fakeClock("2026-06-05T10:00:00Z");
+      const dayBoundary = "02:00";
+
+      const task = buildTask({
+        is_completed: true,
+        completed_at: "2026-06-05T01:30:00.000Z" as ISOTimestamp,
+      });
+
+      const result = groupCompletedTasks([task], boundaryClock, dayBoundary);
+
+      expect(result.yesterdayTasks).toContain(task);
+      expect(result.todayTasks).toHaveLength(0);
+    });
+
+    it("should group task completed after boundary as current logical day", () => {
+      // Clock: 2026-06-05T10:00:00Z, dayBoundary: "02:00"
+      // Task completed at 2026-06-05T03:00:00Z (after 02:00 boundary)
+      // Logical "today" starts at 2026-06-05T02:00, so task is in "today"
+      const boundaryClock = fakeClock("2026-06-05T10:00:00Z");
+      const dayBoundary = "02:00";
+
+      const task = buildTask({
+        is_completed: true,
+        completed_at: "2026-06-05T03:00:00.000Z" as ISOTimestamp,
+      });
+
+      const result = groupCompletedTasks([task], boundaryClock, dayBoundary);
+
+      expect(result.todayTasks).toContain(task);
+      expect(result.yesterdayTasks).toHaveLength(0);
+    });
+
+    it("should group task completed exactly at boundary as current logical day", () => {
+      // Clock: 2026-06-05T10:00:00Z, dayBoundary: "02:00"
+      // Task completed at exactly 2026-06-05T02:00:00Z (at boundary)
+      // Boundary instant is inclusive for "today"
+      const boundaryClock = fakeClock("2026-06-05T10:00:00Z");
+      const dayBoundary = "02:00";
+
+      const task = buildTask({
+        is_completed: true,
+        completed_at: "2026-06-05T02:00:00.000Z" as ISOTimestamp,
+      });
+
+      const result = groupCompletedTasks([task], boundaryClock, dayBoundary);
+
+      expect(result.todayTasks).toContain(task);
+      expect(result.yesterdayTasks).toHaveLength(0);
+    });
+
+    it("should preserve current behavior when dayBoundary is default 00:00", () => {
+      // Same as existing tests but explicitly passing "00:00"
+      const defaultBoundary = "00:00";
+
+      const todayTask = buildTask({
+        is_completed: true,
+        completed_at: Temporal.PlainDate.from(REFERENCE_DATE)
+          .toZonedDateTime({
+            timeZone: "UTC",
+            plainTime: { hour: 10, minute: 0 },
+          })
+          .toInstant()
+          .toString() as ISOTimestamp,
+      });
+
+      const resultWithBoundary = groupCompletedTasks(
+        [todayTask],
+        clock,
+        defaultBoundary,
+      );
+      const resultWithoutBoundary = groupCompletedTasks([todayTask], clock);
+
+      expect(resultWithBoundary.todayTasks).toEqual(
+        resultWithoutBoundary.todayTasks,
+      );
+      expect(resultWithBoundary.yesterdayTasks).toEqual(
+        resultWithoutBoundary.yesterdayTasks,
+      );
+    });
+
+    it("should preserve current behavior when dayBoundary is omitted", () => {
+      // Without dayBoundary, midnight is used — task at 00:30 is "today"
+      const midnightClock = fakeClock("2026-06-05T10:00:00Z");
+
+      const task = buildTask({
+        is_completed: true,
+        completed_at: "2026-06-05T00:30:00.000Z" as ISOTimestamp,
+      });
+
+      const result = groupCompletedTasks([task], midnightClock);
+
+      expect(result.todayTasks).toContain(task);
+      expect(result.yesterdayTasks).toHaveLength(0);
+    });
+  });
 });

@@ -20,7 +20,7 @@ export const BackendTypeSchema = z.enum(["gas", "supabase"]);
 export type BackendType = z.infer<typeof BackendTypeSchema>;
 
 /**
- * GasConnectionConfig — конфигурация подключения к Google Apps Script
+ * GasConnectionConfig — connection configuration for Google Apps Script
  */
 export const GasConnectionConfigSchema = z.object({
   type: z.literal("gas"),
@@ -32,7 +32,7 @@ export const GasConnectionConfigSchema = z.object({
 export type GasConnectionConfig = z.infer<typeof GasConnectionConfigSchema>;
 
 /**
- * SupabaseConnectionConfig — конфигурация подключения к Supabase
+ * SupabaseConnectionConfig — connection configuration for Supabase
  */
 export const SupabaseConnectionConfigSchema = z.object({
   type: z.literal("supabase"),
@@ -46,7 +46,7 @@ export type SupabaseConnectionConfig = z.infer<
 >;
 
 /**
- * ConnectionConfig — discriminated union по полю type
+ * ConnectionConfig — discriminated union on the type field
  */
 export const ConnectionConfigSchema = z.discriminatedUnion("type", [
   GasConnectionConfigSchema,

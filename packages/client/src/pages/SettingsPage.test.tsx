@@ -64,9 +64,11 @@ function buildSettingsHook(
   return {
     defaultBox: "today",
     accentColor: "green",
+    dayBoundary: "00:00",
     isLoading: false,
     setDefaultBox: vi.fn().mockResolvedValue(undefined),
     setAccentColor: vi.fn().mockResolvedValue(undefined),
+    setDayBoundary: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -267,15 +269,15 @@ describe("SettingsPage", () => {
     renderPage();
     const trigger = screen.getByTestId("settings-language-trigger");
 
-    // Панель закрыта изначально
+    // Panel is closed initially
     expect(
       screen.queryByTestId("settings-language-option-ru"),
     ).not.toBeInTheDocument();
 
-    // Открываем панель
+    // Open the panel
     fireEvent.click(trigger);
 
-    // Панель открыта, языки видны
+    // Panel is open, languages are visible
     expect(
       screen.getByTestId("settings-language-option-ru"),
     ).toBeInTheDocument();
@@ -292,16 +294,16 @@ describe("SettingsPage", () => {
     mockUseLanguage.mockReturnValue(buildLanguageHook({ setLanguage }));
     renderPage();
 
-    // Открываем панель
+    // Open the panel
     fireEvent.click(screen.getByTestId("settings-language-trigger"));
 
-    // Кликаем на язык
+    // Click a language
     fireEvent.click(screen.getByTestId("settings-language-option-en"));
 
-    // Проверяем вызов setLanguage
+    // Verify setLanguage was called
     expect(setLanguage).toHaveBeenCalledWith("en");
 
-    // Панель закрылась
+    // Panel is closed
     expect(
       screen.queryByTestId("settings-language-option-ru"),
     ).not.toBeInTheDocument();

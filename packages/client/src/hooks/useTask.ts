@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
+import { systemClock } from "@/lib/temporal";
 import { defaultTaskService } from "@/services/defaultServices";
 import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
 import type { Task } from "@/types/entities";
+import { getLogicalDate } from "@/utils/getLogicalDate";
+
+import { getCachedDayBoundary } from "./useSettings";
 
 export interface UseTaskReturn {
   task: Task | undefined;
@@ -41,7 +45,8 @@ export function useTask(
 
   const completeTask = useCallback(async () => {
     if (!task) return;
-    await taskService.complete(task.id);
+    const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
+    await taskService.complete(task.id, logicalDate);
     await loadTask();
   }, [taskService, task, loadTask]);
 

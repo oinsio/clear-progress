@@ -39,7 +39,7 @@ export function purge(payload: {
     );
     const ideas = deleteIdeasByIds(getDeletedIds(getAllIdeas()));
 
-    // Инкрементировать purge_revision
+    // Increment purge_revision
     const currentPurgeRevision = readPurgeRevision();
     const newPurgeRevision = currentPurgeRevision + 1;
     savePurgeRevision(newPurgeRevision);

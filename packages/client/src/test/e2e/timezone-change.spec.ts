@@ -9,11 +9,11 @@ test.describe("Recurring Tasks - Timezone Integration", () => {
   test("should create hidden clone with next_date when completing recurring task", async ({
     page,
   }) => {
-    // Создать daily повторяющуюся задачу
+    // Create a daily recurring task
     await page.locator('[data-test-id="add-task-button"]').click();
     await page.locator('[data-test-id="task-name-input"]').fill("Daily task");
 
-    // Настроить repeat rule
+    // Configure repeat rule
     await page.locator('[data-test-id="task-repeat-button"]').click();
     await page.locator('[data-test-id="repeat-type-fixed"]').click();
     await page.locator('[data-test-id="repeat-frequency-daily"]').click();
@@ -24,24 +24,24 @@ test.describe("Recurring Tasks - Timezone Integration", () => {
     await page.locator('[data-test-id="task-save-button"]').click();
     await page.waitForTimeout(500);
 
-    // Завершить задачу
+    // Complete the task
     const taskItem = page.locator('[data-test-id="task-item"]', {
       hasText: "Daily task",
     });
     await taskItem.locator('[data-test-id="task-complete-button"]').click();
     await page.waitForTimeout(500);
 
-    // Включить показ скрытых задач
+    // Enable display of hidden tasks
     await page.locator('[data-test-id="hidden-tasks-toggle"]').click();
     await page.waitForTimeout(500);
 
-    // Проверить, что создана скрытая копия
+    // Verify that a hidden copy was created
     const hiddenTask = page.locator('[data-test-id="task-item"]', {
       hasText: "Daily task",
     });
     await expect(hiddenTask).toBeVisible();
 
-    // Проверить наличие иконки скрытой задачи
+    // Verify that the hidden task icon is present
     const hiddenIcon = hiddenTask.locator('[data-test-id="task-hidden-icon"]');
     await expect(hiddenIcon).toBeVisible();
   });

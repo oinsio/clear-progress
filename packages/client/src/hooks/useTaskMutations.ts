@@ -1,8 +1,11 @@
 import { useMemo } from "react";
+import { systemClock } from "@/lib/temporal";
 import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
 import type { Task } from "@/types/entities";
+import { getLogicalDate } from "@/utils/getLogicalDate";
 import { useSyncWrapper } from "./useMutationHelpers";
+import { getCachedDayBoundary } from "./useSettings";
 
 export interface UseTaskMutationsReturn {
   completeTask: (id: string) => Promise<string | null>;
@@ -29,8 +32,12 @@ export function useTaskMutations(
           if (task.is_completed) {
             await taskService.noncomplete(id);
           } else {
-            const { recurring } = await taskService.complete(id);
-            // Возвращаем ID только если копия НЕ скрыта
+            const logicalDate = getLogicalDate(
+              systemClock,
+              getCachedDayBoundary(),
+            );
+            const { recurring } = await taskService.complete(id, logicalDate);
+            // Return ID only if the copy is NOT hidden
             recurringId =
               recurring && !recurring.is_hidden ? recurring.id : null;
           }

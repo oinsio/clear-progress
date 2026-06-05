@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
 import { BOX } from "@/constants";
+import { systemClock } from "@/lib/temporal";
 import { defaultTaskService } from "@/services/defaultServices";
 import type { TaskService } from "@/services/TaskService";
 import type { Task } from "@/types/entities";
+import { getLogicalDate } from "@/utils/getLogicalDate";
+
+import { getCachedDayBoundary } from "./useSettings";
 
 export interface UseInboxTasksReturn {
   tasks: Task[];
@@ -32,7 +36,8 @@ export function useInboxTasks(
 
   const completeTask = useCallback(
     async (id: string) => {
-      await taskService.complete(id);
+      const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
+      await taskService.complete(id, logicalDate);
       await loadTasks();
       schedulePush();
     },

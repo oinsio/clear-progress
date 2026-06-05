@@ -1,6 +1,6 @@
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { type Clock, systemClock } from "@/lib/temporal";
-import type { Task } from "@/types/entities";
+import type { ISODate, Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 
 export class HiddenTaskService {
@@ -9,8 +9,9 @@ export class HiddenTaskService {
     private readonly clock: Clock = systemClock,
   ) {}
 
-  async revealHiddenTasks(): Promise<Task[]> {
-    const currentDate = this.clock.plainDateISO().toString();
+  /** Implements FR4 of day-boundary */
+  async revealHiddenTasks(logicalDate?: ISODate): Promise<Task[]> {
+    const currentDate = logicalDate ?? this.clock.plainDateISO().toString();
     const tasksToReveal =
       await this.taskRepository.getTasksToReveal(currentDate);
 

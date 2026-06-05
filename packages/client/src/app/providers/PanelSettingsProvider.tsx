@@ -14,7 +14,7 @@ function getCachedPanelAlwaysOpen(): boolean {
   try {
     return localStorage.getItem(STORAGE_KEYS.PANEL_ALWAYS_OPEN) === "true";
   } catch {
-    // localStorage недоступен
+    // localStorage is unavailable
   }
   return false;
 }
@@ -32,7 +32,7 @@ export function PanelSettingsProvider({
     try {
       localStorage.setItem(STORAGE_KEYS.PANEL_ALWAYS_OPEN, String(value));
     } catch {
-      // localStorage недоступен
+      // localStorage is unavailable
     }
     setIsPanelAlwaysOpenState(value);
   }, []);

@@ -13,12 +13,12 @@ interface LocaleFile {
   [key: string]: unknown;
 }
 
-// Автоматический сбор всех JSON-файлов из директории locales
+// Automatically collect all JSON files from the locales directory
 const localeFiles = import.meta.glob("@/locales/*.json", {
   eager: true,
 }) as Record<string, { default: LocaleFile }>;
 
-// Валидация и извлечение метаданных
+// Validate and extract metadata
 const locales: LocaleMeta[] = [];
 const localeResources: Record<string, { translation: object }> = {};
 
@@ -40,7 +40,7 @@ for (const [path, module] of Object.entries(localeFiles)) {
     continue;
   }
 
-  // Проверка совпадения code с именем файла
+  // Verify that code matches the filename
   const fileName = path.split("/").pop()?.replace(".json", "");
   if (fileName !== code) {
     console.error(
@@ -51,15 +51,15 @@ for (const [path, module] of Object.entries(localeFiles)) {
 
   locales.push({ code, name, nativeName, baseLanguage, emoji });
 
-  // Убираем _meta из resources для i18next
+  // Strip _meta from resources for i18next
   const { _meta, ...translation } = content;
   localeResources[code] = { translation };
 }
 
-// Сортировка по английскому названию
+// Sort by English name
 locales.sort((a, b) => a.name.localeCompare(b.name));
 
-// Утилиты
+// Utilities
 export function getLocaleByCode(code: string): LocaleMeta | undefined {
   return locales.find((locale) => locale.code === code);
 }

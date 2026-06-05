@@ -13,6 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useTheme } from "@/app/providers/ThemeProvider";
+import { DayBoundarySection } from "@/components/settings/DayBoundarySection";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
 import { ServerSection } from "@/components/settings/ServerSection";
 import { Sidebar } from "@/components/tasks/Sidebar";
@@ -130,7 +131,8 @@ export default function SettingsPage() {
     }
   }, [accessToken, navigate]);
 
-  const { defaultBox, setDefaultBox } = useSettings();
+  const { defaultBox, setDefaultBox, dayBoundary, setDayBoundary } =
+    useSettings();
   const {
     accentColor,
     setAccentColor,
@@ -249,6 +251,12 @@ export default function SettingsPage() {
               </div>
             </section>
 
+            {/* Day boundary section — implements FR10, UX2 of day-boundary */}
+            <DayBoundarySection
+              dayBoundary={dayBoundary}
+              onDayBoundaryChange={(value) => void setDayBoundary(value)}
+            />
+
             {/* Accent color section */}
             <section data-testid="settings-accent-color" className="space-y-3">
               <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
@@ -313,7 +321,7 @@ export default function SettingsPage() {
                 })}
               </div>
 
-              {/* Custom color picker - показывается только когда выбран custom */}
+              {/* Custom color picker — shown only when custom is selected */}
               {accentColor === "custom" && (
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   {/* Light theme color */}
@@ -465,7 +473,7 @@ export default function SettingsPage() {
                 {t("settings.language")}
               </h2>
 
-              {/* Триггер */}
+              {/* Trigger */}
               <button
                 type="button"
                 data-testid="settings-language-trigger"
@@ -484,10 +492,10 @@ export default function SettingsPage() {
                 />
               </button>
 
-              {/* Inline-панель со списком языков */}
+              {/* Inline panel with language list */}
               {isLanguagePanelOpen && (
                 <div className="border border-gray-200 rounded-lg overflow-hidden max-w-xs">
-                  {/* Поиск (если языков >= 10) */}
+                  {/* Search (if there are >= 10 languages) */}
                   {locales.length >= LANGUAGE_SEARCH_THRESHOLD && (
                     <div className="border-b border-gray-100 p-2">
                       <input
@@ -501,7 +509,7 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {/* Список языков */}
+                  {/* Language list */}
                   <div className="flex flex-col gap-0.5 p-2 max-h-60 overflow-y-auto">
                     {filteredLocales.map((locale) => (
                       <button

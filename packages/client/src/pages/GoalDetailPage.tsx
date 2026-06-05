@@ -171,7 +171,7 @@ export default function GoalDetailPage() {
     if (found) {
       setSelectedTask(found);
     } else {
-      // Если не нашли — запрашиваем из БД (для только что созданных задач)
+      // If not found — fetch from DB (for just-created tasks)
       void (async () => {
         const task = await defaultTaskService.getById(selectedTaskId);
         if (task) setSelectedTask(task);

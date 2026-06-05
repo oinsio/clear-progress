@@ -37,7 +37,7 @@ describe("SettingsRepository", () => {
       expect(setting).toBeDefined();
       const updatedAt = setting?.updated_at ?? "";
       expect(updatedAt >= before).toBe(true);
-      // Проверяем, что timestamp не в будущем (с буфером 500ms)
+      // Verify that the timestamp is not in the future (with a 500ms buffer)
       const maxAllowed = toISOTimestamp(
         Temporal.Now.instant().add({ milliseconds: 500 }),
       );

@@ -106,12 +106,12 @@ describe("RepeatRuleSelector", () => {
     user: ReturnType<typeof userEvent.setup>,
     monthNumber: number,
   ) => {
-    // Открыть панель выбора месяца, если она закрыта
+    // Open the month selection panel if it is closed
     const trigger = screen.queryByTestId("repeat-month-trigger");
     if (trigger) {
       await user.click(trigger);
     }
-    // Кликнуть на опцию месяца
+    // Click on the month option
     await user.click(screen.getByTestId(`repeat-month-option-${monthNumber}`));
   };
 
@@ -243,11 +243,11 @@ describe("RepeatRuleSelector", () => {
       await navigateToFixedParams(user);
       await user.click(screen.getByTestId("repeat-frequency-yearly"));
 
-      // Проверяем наличие триггера выбора месяца
+      // Verify the month selection trigger is present
       expect(screen.getByTestId("repeat-month-trigger")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-day-input")).toBeInTheDocument();
 
-      // Открываем панель и проверяем наличие опций месяцев
+      // Open the panel and verify month options are present
       await user.click(screen.getByTestId("repeat-month-trigger"));
       expect(screen.getByTestId("repeat-month-option-1")).toBeInTheDocument();
       expect(screen.getByTestId("repeat-month-option-12")).toBeInTheDocument();
@@ -276,11 +276,11 @@ describe("RepeatRuleSelector", () => {
       ) as HTMLInputElement;
       expect(dayInput.value).toBe("15");
 
-      // Проверяем, что выбран апрель (месяц 4)
-      // Открываем панель месяцев
+      // Verify that April (month 4) is selected
+      // Open the month panel
       await user.click(screen.getByTestId("repeat-month-trigger"));
 
-      // Проверяем, что апрель (месяц 4) имеет активный стиль
+      // Verify that April (month 4) has the active style
       const aprilOption = screen.getByTestId("repeat-month-option-4");
       expect(aprilOption).toHaveClass("bg-accent/10");
     });

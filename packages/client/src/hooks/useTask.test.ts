@@ -79,7 +79,10 @@ describe("useTask", () => {
       await result.current.completeTask();
     });
 
-    expect(mockTaskService.complete).toHaveBeenCalledWith(task.id);
+    expect(mockTaskService.complete).toHaveBeenCalledWith(
+      task.id,
+      expect.any(String),
+    );
     expect(mockGetById).toHaveBeenCalledTimes(2);
   });
 

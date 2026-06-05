@@ -11,6 +11,7 @@ vi.mock("@/hooks/useSettings", () => ({
     setDefaultBox: vi.fn(),
     setAccentColor: vi.fn(),
   }),
+  getCachedDayBoundary: () => "00:00",
 }));
 
 import { BOX, BOX_FILTER_ALL } from "@/constants";

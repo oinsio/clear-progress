@@ -7,9 +7,9 @@ export function useAutoResizeTextarea(_value: string) {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    // Сбросить высоту для корректного пересчёта
+    // Reset height for correct recalculation
     textarea.style.height = "auto";
-    // Установить высоту по scrollHeight
+    // Set height based on scrollHeight
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, []);
 

@@ -71,17 +71,17 @@ export class TaskService {
       throw new Error(`Task not found: ${id}`);
     }
 
-    // Создаем обновленную версию без изменения метаданных
+    // Create updated version without changing metadata
     const candidateTask: Task = {
       ...existingTask,
       ...changes,
       id,
     };
 
-    // Проверяем, действительно ли что-то изменилось
+    // Check whether anything actually changed
     const hasChanged = hasEntityChanged(existingTask, candidateTask);
 
-    // Применяем метаданные только если есть изменения
+    // Apply metadata only if there are changes
     const updatedTask: Task = {
       ...candidateTask,
       updated_at: hasChanged ? toISOTimestamp() : existingTask.updated_at,
@@ -92,8 +92,14 @@ export class TaskService {
     return updatedTask;
   }
 
+  /**
+   * Implements FR7 of day-boundary.
+   * @param id — task ID to complete
+   * @param logicalDate — when provided, used for shouldReveal comparison instead of clock.plainDateISO()
+   */
   async complete(
     id: string,
+    logicalDate?: string,
   ): Promise<{ completed: Task; recurring: Task | null }> {
     const existingTask = await this.taskRepository.getById(id);
     if (!existingTask) {
@@ -112,7 +118,7 @@ export class TaskService {
       try {
         const rule = parseRepeatRule(existingTask.repeat_rule);
         if (rule) {
-          // Вычислить next_date и appear_date
+          // Calculate next_date and appear_date
           const nextDate = calculateNextDate(
             rule,
             now,
@@ -120,15 +126,15 @@ export class TaskService {
           );
           const appearDate = calculateAppearDate(nextDate, rule.advance_days);
 
-          // Определяем original_task_id для поиска
+          // Determine original_task_id for lookup
           const searchId = existingTask.original_task_id || existingTask.id;
 
-          // Проверить, существует ли уже такая скрытая задача
+          // Check whether such a hidden task already exists
           const existingHiddenTask =
             await this.taskRepository.findHiddenRecurringTask(searchId);
 
-          // Определяем, нужно ли раскрыть клон сразу
-          const today = this.clock.plainDateISO().toString();
+          // Determine whether the clone should be revealed immediately
+          const today = logicalDate ?? this.clock.plainDateISO().toString();
           const sanitizedAppearDate = sanitizeDateOnly(toISODate(appearDate));
           const shouldReveal =
             sanitizedAppearDate &&
@@ -138,7 +144,7 @@ export class TaskService {
             ) <= 0;
 
           if (existingHiddenTask) {
-            // Обновляем существующую копию со всеми актуальными полями
+            // Update the existing copy with all current fields
             recurringTask = await this.update(existingHiddenTask.id, {
               name: existingTask.name,
               description: existingTask.description,
@@ -152,7 +158,7 @@ export class TaskService {
               is_hidden: !shouldReveal,
             });
           } else {
-            // Создать скрытый клон только если его ещё нет
+            // Create a hidden clone only if one does not exist yet
             recurringTask = await this.createRecurringCopy(existingTask, {
               is_hidden: !shouldReveal,
               next_date: toISODate(nextDate),
@@ -163,7 +169,7 @@ export class TaskService {
         }
       } catch (error) {
         console.error("Failed to create recurring task:", error);
-        // Не прерываем завершение задачи, если не удалось создать клон
+        // Do not interrupt task completion if clone creation failed
       }
     }
 
@@ -235,22 +241,22 @@ export class TaskService {
   }
 
   async softDelete(id: string): Promise<Task> {
-    // Найти все копии этой задачи
+    // Find all copies of this task
     const copies = await this.taskRepository.findByOriginalTaskId(id);
 
     if (copies.length > 0) {
-      // Найти первую активную копию (не удалённую)
+      // Find the first active copy (not deleted)
       const newOriginal = copies.find((copy) => !copy.is_deleted);
 
       if (newOriginal) {
-        // Переназначить все остальные копии на новый оригинал
+        // Reassign all other copies to the new original
         for (const copy of copies) {
           if (copy.id !== newOriginal.id) {
             await this.update(copy.id, { original_task_id: newOriginal.id });
           }
         }
 
-        // Очистить original_task_id у нового оригинала
+        // Clear original_task_id on the new original
         await this.update(newOriginal.id, { original_task_id: "" });
       }
     }
@@ -268,7 +274,7 @@ export class TaskService {
       await this.checklistRepository.bulkUpsert(updatedItems);
     }
 
-    // Удалить исходную задачу
+    // Delete the original task
     return this.update(id, { is_deleted: true });
   }
 
@@ -309,12 +315,12 @@ export class TaskService {
   async reorderTasks(orderedTasks: Task[]): Promise<void> {
     if (orderedTasks.length === 0) return;
 
-    // Проверяем, изменился ли хотя бы один sort_order
+    // Check whether at least one sort_order has changed
     const hasAnyOrderChanged = orderedTasks.some(
       (task, index) => task.sort_order !== index,
     );
     if (!hasAnyOrderChanged) {
-      return; // Ничего не изменилось, не синхронизируем
+      return; // Nothing changed, skip sync
     }
 
     const now = toISOTimestamp();

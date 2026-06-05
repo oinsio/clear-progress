@@ -6,7 +6,7 @@ function getCachedPanelOpen(): boolean {
     const cached = localStorage.getItem(STORAGE_KEYS.PANEL_OPEN);
     return cached === "true";
   } catch {
-    // localStorage недоступен
+    // localStorage is not available
   }
   return false;
 }
@@ -25,7 +25,7 @@ export function usePanelOpen(): UsePanelOpenReturn {
       try {
         localStorage.setItem(STORAGE_KEYS.PANEL_OPEN, String(next));
       } catch {
-        // localStorage недоступен
+        // localStorage is not available
       }
       return next;
     });

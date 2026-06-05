@@ -39,6 +39,7 @@ vi.mock("@/hooks/useSettings", () => ({
     setDefaultBox: vi.fn(),
     setAccentColor: vi.fn(),
   }),
+  getCachedDayBoundary: () => "00:00",
 }));
 
 vi.mock("@/hooks/useFilterBarPosition", () => ({

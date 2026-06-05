@@ -79,13 +79,13 @@ export class SyncService {
       throw new Error("Pull failed");
     }
 
-    // Проверить purge_revision
+    // Check purge_revision
     const localPurgeRevision = await this.syncMetaRepository.getValue(
       SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
     );
 
     if (pullResponse.purge_revision > localPurgeRevision) {
-      // Кто-то другой вызвал purge — удалить локальные soft-deleted записи
+      // Someone else called purge — delete local soft-deleted records
       await this._purgeLocalDeletedRecords();
       await this.syncMetaRepository.setValue(
         SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
@@ -190,7 +190,7 @@ export class SyncService {
       pullResponse.current_revision,
     );
 
-    // Уведомить о завершении синхронизации
+    // Notify about sync completion
     window.dispatchEvent(new CustomEvent("sync_complete"));
   }
 
@@ -597,16 +597,16 @@ export class SyncService {
   }
 
   async resetAndPull(): Promise<void> {
-    // 1. Сбросить revision в 0
+    // 1. Reset revision to 0
     await this.syncMetaRepository.setValue(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
       0,
     );
 
-    // Сбросить settings_updated_at для полного pull settings
+    // Reset settings_updated_at for a full settings pull
     localStorage.removeItem(STORAGE_KEYS.SETTINGS_UPDATED_AT);
 
-    // 2. Пометить все записи как не-needsSync (чтобы pull перезаписал их)
+    // 2. Mark all records as not-needsSync (so pull overwrites them)
     await db.tasks.toCollection().modify({ needsSync: false });
     await db.goals.toCollection().modify({ needsSync: false });
     await db.contexts.toCollection().modify({ needsSync: false });
@@ -615,7 +615,7 @@ export class SyncService {
     await db.ideas.toCollection().modify({ needsSync: false });
     await db.settings.toCollection().modify({ needsSync: false });
 
-    // 3. Получить полное состояние с сервера
+    // 3. Fetch the full state from the server
     await this.pull();
   }
 
@@ -646,26 +646,26 @@ export class SyncService {
   }
 
   private async _purge(): Promise<PurgeResponse["purged"]> {
-    // 1. Вызвать API purge
+    // 1. Call the purge API
     const response = await this.syncAdapter.purge();
 
     if (!response.ok) {
       throw new Error("Purge failed");
     }
 
-    // 2. Удалить локальные soft-deleted записи
+    // 2. Delete local soft-deleted records
     await this._purgeLocalDeletedRecords();
 
-    // 3. Обновить last_known_purge_revision
+    // 3. Update last_known_purge_revision
     await this.syncMetaRepository.setValue(
       SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
       response.purge_revision,
     );
 
-    // 4. Сделать pull для синхронизации (обновит current_revision)
+    // 4. Perform pull to sync (will update current_revision)
     await this._pull();
 
-    // 5. Вернуть статистику для UI
+    // 5. Return statistics for the UI
     return response.purged;
   }
 }
