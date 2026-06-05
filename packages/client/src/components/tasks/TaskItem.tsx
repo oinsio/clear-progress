@@ -23,6 +23,7 @@ import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useLongPress } from "@/hooks/useLongPress";
 import { usePanelSide } from "@/hooks/usePanelSide";
+import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { useShowCheckbox } from "@/hooks/useShowCheckbox";
 import { useSwipeAction } from "@/hooks/useSwipeAction";
 import { cn } from "@/shared/lib/cn";
@@ -276,7 +277,11 @@ export function TaskItem({
                 data-testid="task-item-completed-at"
                 className="text-xs text-accent mt-0.5"
               >
-                {formatCompletedAt(task.completed_at)}
+                {formatCompletedAt(
+                  task.completed_at,
+                  undefined,
+                  getCachedDayBoundary(),
+                )}
               </span>
             )}
             {task.is_hidden && task.appear_date && (

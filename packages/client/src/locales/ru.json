@@ -248,6 +248,8 @@
     "menuOrderHint": "Перетащите, чтобы изменить порядок. Отключённые пункты скрыты в панели.",
     "menuOrderDragHandle": "Переместить: {{label}}",
     "menuOrderToggle": "Показать/скрыть: {{label}}",
+    "dayBoundary": "Начало дня",
+    "dayBoundaryDescription": "Время начала Вашего дня. Отложенные на завтра задачи появятся в это время.",
     "server": {
       "account": "Аккаунт",
       "anonKey": "Anon Key",

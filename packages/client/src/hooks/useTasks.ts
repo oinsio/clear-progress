@@ -2,10 +2,14 @@ import { liveQuery } from "dexie";
 import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useShowHidden } from "@/hooks/useShowHidden";
+import { systemClock } from "@/lib/temporal";
 import { defaultTaskService } from "@/services/defaultServices";
 import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
 import type { Task } from "@/types/entities";
+import { getLogicalDate } from "@/utils/getLogicalDate";
+
+import { getCachedDayBoundary } from "./useSettings";
 
 export interface UseTasksReturn {
   tasks: Task[];
@@ -59,7 +63,8 @@ export function useTasks(
       if (task.is_completed) {
         await taskService.noncomplete(id);
       } else {
-        const { recurring } = await taskService.complete(id);
+        const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
+        const { recurring } = await taskService.complete(id, logicalDate);
         // Возвращаем ID только если копия НЕ скрыта
         recurringId = recurring && !recurring.is_hidden ? recurring.id : null;
       }

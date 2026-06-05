@@ -14,6 +14,7 @@ import { useCompletedTasks } from "@/hooks/useCompletedTasks";
 import { useContexts } from "@/hooks/useContexts";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
+import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { useTaskCompletion } from "@/hooks/useTaskCompletion";
 import { useTaskSelection } from "@/hooks/useTaskSelection";
 import { useTasks } from "@/hooks/useTasks";
@@ -73,7 +74,11 @@ export default function CompletedPage() {
     weekTasks: weekCompletedTasks,
     monthTasks: monthCompletedTasks,
     earlierTasks: earlierCompletedTasks,
-  } = useMemo(() => groupCompletedTasks(completedTasks), [completedTasks]);
+  } = useMemo(
+    () =>
+      groupCompletedTasks(completedTasks, undefined, getCachedDayBoundary()),
+    [completedTasks],
+  );
 
   const sharedSelectProps = {
     onSelect: handleTaskSelect,

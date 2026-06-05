@@ -16,7 +16,9 @@ import { useGoals } from "@/hooks/useGoals";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSearch } from "@/hooks/useSearch";
+import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { systemClock } from "@/lib/temporal";
 import {
   defaultIdeaService,
   defaultTaskService,
@@ -24,6 +26,7 @@ import {
 import { cn } from "@/shared/lib/cn";
 import type { Box } from "@/types/common";
 import type { Idea, Task } from "@/types/entities";
+import { getLogicalDate } from "@/utils/getLogicalDate";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -72,7 +75,8 @@ export default function SearchPage() {
       if (task.is_completed) {
         await defaultTaskService.noncomplete(id);
       } else {
-        await defaultTaskService.complete(id);
+        const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
+        await defaultTaskService.complete(id, logicalDate);
       }
       if (searchQuery) void search(searchQuery);
     },

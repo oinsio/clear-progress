@@ -1,7 +1,9 @@
 import i18next from "i18next";
+import { DEFAULT_DAY_BOUNDARY } from "@/constants";
 import { type Clock, systemClock, Temporal } from "@/lib/temporal";
 import type { Task } from "@/types/entities";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
+import { getLogicalDate } from "@/utils/getLogicalDate";
 
 export interface GroupedCompletedTasks {
   todayTasks: Task[];
@@ -17,24 +19,25 @@ const DAYS_IN_MONTH = 30;
 export function groupCompletedTasks(
   tasks: Task[],
   clock: Clock = systemClock,
+  dayBoundary: string = DEFAULT_DAY_BOUNDARY,
 ): GroupedCompletedTasks {
   const userTimeZone = clock.timeZoneId();
-  const today = clock.plainDateISO();
+  const today = Temporal.PlainDate.from(getLogicalDate(clock, dayBoundary));
   const yesterday = today.subtract({ days: 1 });
   const sevenDaysAgo = today.subtract({ days: DAYS_IN_WEEK });
   const thirtyDaysAgo = today.subtract({ days: DAYS_IN_MONTH });
 
   const startOfToday = today
-    .toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" })
+    .toZonedDateTime({ timeZone: userTimeZone, plainTime: dayBoundary })
     .toInstant();
   const startOfYesterday = yesterday
-    .toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" })
+    .toZonedDateTime({ timeZone: userTimeZone, plainTime: dayBoundary })
     .toInstant();
   const startOf7DaysAgo = sevenDaysAgo
-    .toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" })
+    .toZonedDateTime({ timeZone: userTimeZone, plainTime: dayBoundary })
     .toInstant();
   const startOf30DaysAgo = thirtyDaysAgo
-    .toZonedDateTime({ timeZone: userTimeZone, plainTime: "00:00" })
+    .toZonedDateTime({ timeZone: userTimeZone, plainTime: dayBoundary })
     .toInstant();
 
   const todayTasks: Task[] = [];
@@ -80,17 +83,20 @@ interface DayBoundaries {
   startOfYesterday: Temporal.Instant;
 }
 
-function getDayBoundaries(clock: Clock = systemClock): DayBoundaries {
+function getDayBoundaries(
+  clock: Clock = systemClock,
+  dayBoundary: string = DEFAULT_DAY_BOUNDARY,
+): DayBoundaries {
   const timeZone = clock.timeZoneId();
-  const today = clock.plainDateISO();
+  const today = Temporal.PlainDate.from(getLogicalDate(clock, dayBoundary));
   const yesterday = today.subtract({ days: 1 });
 
   return {
     startOfToday: today
-      .toZonedDateTime({ timeZone, plainTime: "00:00" })
+      .toZonedDateTime({ timeZone, plainTime: dayBoundary })
       .toInstant(),
     startOfYesterday: yesterday
-      .toZonedDateTime({ timeZone, plainTime: "00:00" })
+      .toZonedDateTime({ timeZone, plainTime: dayBoundary })
       .toInstant(),
   };
 }
@@ -98,10 +104,14 @@ function getDayBoundaries(clock: Clock = systemClock): DayBoundaries {
 export function formatCompletedAt(
   isoString: string,
   clock: Clock = systemClock,
+  dayBoundary: string = DEFAULT_DAY_BOUNDARY,
 ): string {
   if (!isoString) return "";
   const completedInstant = Temporal.Instant.from(isoString);
-  const { startOfToday, startOfYesterday } = getDayBoundaries(clock);
+  const { startOfToday, startOfYesterday } = getDayBoundaries(
+    clock,
+    dayBoundary,
+  );
 
   const locale = i18next.language || "en";
   const timeZone = clock.timeZoneId();
@@ -134,10 +144,14 @@ export function formatCompletedAt(
 export function formatShortDateTime(
   isoString: string,
   clock: Clock = systemClock,
+  dayBoundary: string = DEFAULT_DAY_BOUNDARY,
 ): string {
   if (!isoString) return "";
   const instant = Temporal.Instant.from(isoString);
-  const { startOfToday, startOfYesterday } = getDayBoundaries(clock);
+  const { startOfToday, startOfYesterday } = getDayBoundaries(
+    clock,
+    dayBoundary,
+  );
 
   const locale = i18next.language || "en";
   const timeZone = clock.timeZoneId();

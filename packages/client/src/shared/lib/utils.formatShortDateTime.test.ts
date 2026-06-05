@@ -46,4 +46,38 @@ describe("formatShortDateTime", () => {
     const result = formatShortDateTime(timestampLateUtc, tokyoClock);
     expect(result).toMatch(/^Сегодня \d{2}:\d{2}$/);
   });
+
+  // @day-boundary @FR8 @FR9
+  describe("with dayBoundary parameter", () => {
+    it("should show 'Сегодня' for task after boundary in same logical day", () => {
+      // Clock: 2026-06-05T10:00:00Z, dayBoundary: "02:00"
+      // Task at 2026-06-05T03:00:00Z (after 02:00 boundary) => "today"
+      const boundaryClock = fakeClock("2026-06-05T10:00:00Z");
+      const taskTimestamp = "2026-06-05T03:00:00.000Z";
+
+      const result = formatShortDateTime(taskTimestamp, boundaryClock, "02:00");
+
+      expect(result).toMatch(/^Сегодня \d{2}:\d{2}$/);
+    });
+
+    it("should show 'Вчера' for task before boundary as previous logical day", () => {
+      // Clock: 2026-06-05T10:00:00Z, dayBoundary: "02:00"
+      // Task at 2026-06-05T01:30:00Z (before 02:00 boundary) => "yesterday"
+      const boundaryClock = fakeClock("2026-06-05T10:00:00Z");
+      const taskTimestamp = "2026-06-05T01:30:00.000Z";
+
+      const result = formatShortDateTime(taskTimestamp, boundaryClock, "02:00");
+
+      expect(result).toMatch(/^Вчера \d{2}:\d{2}$/);
+    });
+
+    it("should preserve current behavior when dayBoundary is default 00:00", () => {
+      const todayISO = buildISOForTodayAt(10, 30, REFERENCE_DATE);
+
+      const resultWithBoundary = formatShortDateTime(todayISO, clock, "00:00");
+      const resultWithoutBoundary = formatShortDateTime(todayISO, clock);
+
+      expect(resultWithBoundary).toBe(resultWithoutBoundary);
+    });
+  });
 });

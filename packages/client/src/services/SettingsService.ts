@@ -1,6 +1,12 @@
-import { BOX, DEFAULT_ACCENT_COLOR, SETTING_KEYS } from "@/constants";
+import {
+  BOX,
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_DAY_BOUNDARY,
+  SETTING_KEYS,
+} from "@/constants";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import type { AccentColor, Box } from "@/types/common";
+import { isValidDayBoundary } from "@/utils/getLogicalDate";
 
 export class SettingsService {
   constructor(private readonly settingsRepository: SettingsRepository) {}
@@ -25,5 +31,26 @@ export class SettingsService {
       SETTING_KEYS.ACCENT_COLOR,
     );
     return (value as AccentColor) ?? DEFAULT_ACCENT_COLOR;
+  }
+
+  /** Implements FR1, FR12 of day-boundary */
+  async getDayBoundary(): Promise<string> {
+    const value = await this.settingsRepository.getValue(
+      SETTING_KEYS.DAY_BOUNDARY,
+    );
+
+    if (value === undefined) {
+      return DEFAULT_DAY_BOUNDARY;
+    }
+
+    if (isValidDayBoundary(value)) {
+      return value;
+    }
+
+    await this.settingsRepository.set(
+      SETTING_KEYS.DAY_BOUNDARY,
+      DEFAULT_DAY_BOUNDARY,
+    );
+    return DEFAULT_DAY_BOUNDARY;
   }
 }

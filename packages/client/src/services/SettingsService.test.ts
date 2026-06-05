@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { BOX, DEFAULT_ACCENT_COLOR, SETTING_KEYS } from "@/constants";
+import {
+  BOX,
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_DAY_BOUNDARY,
+  SETTING_KEYS,
+} from "@/constants";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SettingsService } from "./SettingsService";
 
@@ -90,6 +95,60 @@ describe("SettingsService", () => {
       const settingsService = new SettingsService(mockSettingsRepository);
       const color = await settingsService.getAccentColor();
       expect(color).toBe(DEFAULT_ACCENT_COLOR);
+    });
+  });
+
+  // implements FR1, FR12 of day-boundary
+  describe("getDayBoundary", () => {
+    it("should return DEFAULT_DAY_BOUNDARY when no setting exists", async () => {
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const dayBoundary = await settingsService.getDayBoundary();
+      expect(dayBoundary).toBe(DEFAULT_DAY_BOUNDARY);
+    });
+
+    it("should return stored value when valid", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue("02:00"),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const dayBoundary = await settingsService.getDayBoundary();
+      expect(dayBoundary).toBe("02:00");
+    });
+
+    it("should return DEFAULT_DAY_BOUNDARY when stored value is invalid", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue("abc"),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const dayBoundary = await settingsService.getDayBoundary();
+      expect(dayBoundary).toBe(DEFAULT_DAY_BOUNDARY);
+    });
+
+    it("should overwrite invalid value with default and needsSync true", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue("abc"),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getDayBoundary();
+      expect(mockSettingsRepository.set).toHaveBeenCalledWith(
+        SETTING_KEYS.DAY_BOUNDARY,
+        DEFAULT_DAY_BOUNDARY,
+      );
+    });
+
+    it("should NOT trigger healing write for valid values", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue("02:00"),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getDayBoundary();
+      expect(mockSettingsRepository.set).not.toHaveBeenCalled();
+    });
+
+    it("should NOT trigger healing write when setting is missing", async () => {
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getDayBoundary();
+      expect(mockSettingsRepository.set).not.toHaveBeenCalled();
     });
   });
 });

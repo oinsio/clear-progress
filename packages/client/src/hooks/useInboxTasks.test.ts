@@ -88,7 +88,11 @@ describe("useInboxTasks", () => {
       await hookAction(result.current, task.id);
     });
 
-    expect(mockTaskService[serviceMethod]).toHaveBeenCalledWith(task.id);
+    const expectedArgs =
+      serviceMethod === "complete" ? [task.id, expect.any(String)] : [task.id];
+    expect(mockTaskService[serviceMethod]).toHaveBeenCalledWith(
+      ...expectedArgs,
+    );
     expect(mockGetByBox).toHaveBeenCalledTimes(2);
   });
 
@@ -174,7 +178,9 @@ describe("useInboxTasks", () => {
       await hookAction(result.current, task.id);
     });
 
-    expect(secondService[serviceMethod]).toHaveBeenCalledWith(task.id);
+    const expectedArgs =
+      serviceMethod === "complete" ? [task.id, expect.any(String)] : [task.id];
+    expect(secondService[serviceMethod]).toHaveBeenCalledWith(...expectedArgs);
     expect(firstService[serviceMethod]).not.toHaveBeenCalled();
   });
 });

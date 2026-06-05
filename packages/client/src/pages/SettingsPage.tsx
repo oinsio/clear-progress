@@ -13,6 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
 import { useTheme } from "@/app/providers/ThemeProvider";
+import { DayBoundarySection } from "@/components/settings/DayBoundarySection";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
 import { ServerSection } from "@/components/settings/ServerSection";
 import { Sidebar } from "@/components/tasks/Sidebar";
@@ -130,7 +131,8 @@ export default function SettingsPage() {
     }
   }, [accessToken, navigate]);
 
-  const { defaultBox, setDefaultBox } = useSettings();
+  const { defaultBox, setDefaultBox, dayBoundary, setDayBoundary } =
+    useSettings();
   const {
     accentColor,
     setAccentColor,
@@ -248,6 +250,12 @@ export default function SettingsPage() {
                 })}
               </div>
             </section>
+
+            {/* Day boundary section — implements FR10, UX2 of day-boundary */}
+            <DayBoundarySection
+              dayBoundary={dayBoundary}
+              onDayBoundaryChange={(value) => void setDayBoundary(value)}
+            />
 
             {/* Accent color section */}
             <section data-testid="settings-accent-color" className="space-y-3">

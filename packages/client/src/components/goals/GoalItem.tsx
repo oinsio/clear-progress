@@ -4,6 +4,7 @@ import defaultCoverSvg from "@/assets/default-goal-cover.svg";
 import { useCoverUrl } from "@/hooks/useCoverUrl";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
+import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { cn } from "@/shared/lib/cn";
 import { formatShortDateTime } from "@/shared/lib/utils";
 import type { GoalStatus } from "@/types/common";
@@ -85,7 +86,11 @@ export function GoalItem({
               data-testid="goal-item-finished-at"
               className="text-xs text-gray-400 mt-0.5 block"
             >
-              {formatShortDateTime(goal.updated_at)}
+              {formatShortDateTime(
+                goal.updated_at,
+                undefined,
+                getCachedDayBoundary(),
+              )}
             </span>
           )}
         </div>

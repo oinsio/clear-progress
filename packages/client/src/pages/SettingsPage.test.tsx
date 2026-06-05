@@ -64,9 +64,11 @@ function buildSettingsHook(
   return {
     defaultBox: "today",
     accentColor: "green",
+    dayBoundary: "00:00",
     isLoading: false,
     setDefaultBox: vi.fn().mockResolvedValue(undefined),
     setAccentColor: vi.fn().mockResolvedValue(undefined),
+    setDayBoundary: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

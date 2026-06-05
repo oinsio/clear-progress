@@ -17,12 +17,15 @@ vi.mock("@/app/providers/SyncProvider", () => ({
 import {
   ACCENT_COLORS,
   BOX,
+  DAY_BOUNDARY_CHANGED_EVENT,
   DEFAULT_ACCENT_COLOR,
+  DEFAULT_DAY_BOUNDARY,
   SETTING_KEYS,
   STORAGE_KEYS,
 } from "@/constants";
 import type { SettingsService } from "@/services/SettingsService";
 import type { AccentColor } from "@/types/common";
+import { getCachedDayBoundary } from "./useSettings";
 
 function createMockSettingsService(
   overrides: Partial<Record<keyof SettingsService, unknown>> = {},
@@ -30,6 +33,7 @@ function createMockSettingsService(
   return {
     getDefaultBox: vi.fn().mockResolvedValue(BOX.INBOX),
     getAccentColor: vi.fn().mockResolvedValue(DEFAULT_ACCENT_COLOR),
+    getDayBoundary: vi.fn().mockResolvedValue(DEFAULT_DAY_BOUNDARY),
     set: vi.fn().mockResolvedValue(undefined),
     get: vi.fn().mockResolvedValue(undefined),
     ...overrides,
@@ -188,5 +192,105 @@ describe("useSettings", () => {
     const { result } = renderHook(() => useSettings(mockSettingsService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.defaultBox).toBe(box);
+  });
+
+  it("should return dayBoundary default after loading", async () => {
+    const { result } = renderHook(() => useSettings(mockSettingsService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.dayBoundary).toBe(DEFAULT_DAY_BOUNDARY);
+  });
+
+  it("should load dayBoundary from settingsService.getDayBoundary()", async () => {
+    mockSettingsService = createMockSettingsService({
+      getDayBoundary: vi.fn().mockResolvedValue("04:00"),
+    });
+    const { result } = renderHook(() => useSettings(mockSettingsService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.dayBoundary).toBe("04:00");
+  });
+
+  it("should call set with SETTING_KEYS.DAY_BOUNDARY when setDayBoundary is called", async () => {
+    const { result } = renderHook(() => useSettings(mockSettingsService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.setDayBoundary("05:00");
+    });
+
+    expect(mockSettingsService.set).toHaveBeenCalledWith(
+      SETTING_KEYS.DAY_BOUNDARY,
+      "05:00",
+    );
+    expect(mockSettingsService.getDayBoundary).toHaveBeenCalledTimes(2);
+  });
+
+  it("should update dayBoundary state after setDayBoundary is called", async () => {
+    mockSettingsService = createMockSettingsService({
+      getDayBoundary: vi
+        .fn()
+        .mockResolvedValueOnce(DEFAULT_DAY_BOUNDARY)
+        .mockResolvedValueOnce("03:00"),
+    });
+    const { result } = renderHook(() => useSettings(mockSettingsService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.setDayBoundary("03:00");
+    });
+
+    expect(result.current.dayBoundary).toBe("03:00");
+  });
+
+  it("should cache dayBoundary to localStorage after loading", async () => {
+    mockSettingsService = createMockSettingsService({
+      getDayBoundary: vi.fn().mockResolvedValue("02:00"),
+    });
+    renderHook(() => useSettings(mockSettingsService));
+    await waitFor(() =>
+      expect(localStorage.getItem(STORAGE_KEYS.DAY_BOUNDARY)).toBe("02:00"),
+    );
+  });
+
+  it("should dispatch DAY_BOUNDARY_CHANGED_EVENT when setDayBoundary is called", async () => {
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+    const { result } = renderHook(() => useSettings(mockSettingsService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.setDayBoundary("06:00");
+    });
+
+    const matchingEvent = dispatchSpy.mock.calls.find(
+      ([event]) =>
+        event instanceof CustomEvent &&
+        event.type === DAY_BOUNDARY_CHANGED_EVENT,
+    );
+    expect(matchingEvent).toBeDefined();
+    dispatchSpy.mockRestore();
+  });
+
+  it("should use STORAGE_KEYS.DAY_BOUNDARY constant (not 'day_boundary' magic string)", () => {
+    expect(STORAGE_KEYS.DAY_BOUNDARY).toBe("day_boundary");
+  });
+
+  describe("getCachedDayBoundary", () => {
+    it("should return DEFAULT_DAY_BOUNDARY when localStorage is empty", () => {
+      localStorage.removeItem(STORAGE_KEYS.DAY_BOUNDARY);
+      expect(getCachedDayBoundary()).toBe(DEFAULT_DAY_BOUNDARY);
+    });
+
+    it("should return cached value from localStorage", () => {
+      localStorage.setItem(STORAGE_KEYS.DAY_BOUNDARY, "04:00");
+      expect(getCachedDayBoundary()).toBe("04:00");
+    });
+
+    it("should return DEFAULT_DAY_BOUNDARY when localStorage throws", () => {
+      const originalGetItem = localStorage.getItem.bind(localStorage);
+      localStorage.getItem = () => {
+        throw new Error("localStorage unavailable");
+      };
+      expect(getCachedDayBoundary()).toBe(DEFAULT_DAY_BOUNDARY);
+      localStorage.getItem = originalGetItem;
+    });
   });
 });

@@ -58,7 +58,10 @@ describe("useTaskMutations > completeTask", () => {
     });
 
     it("should call complete", () => {
-      expect(ctx.mockTaskService.complete).toHaveBeenCalledWith(task.id);
+      expect(ctx.mockTaskService.complete).toHaveBeenCalledWith(
+        task.id,
+        expect.any(String),
+      );
     });
 
     it("should call reload", () => {
