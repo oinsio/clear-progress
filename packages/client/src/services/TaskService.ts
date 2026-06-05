@@ -107,10 +107,18 @@ export class TaskService {
     }
 
     const now = toISOTimestamp();
-    const completedTask = await this.update(id, {
+    /** Implements FR6 of hide-tasks */
+    let finalCompletedTask = await this.update(id, {
       is_completed: true,
       completed_at: now,
     });
+
+    if (existingTask.is_hidden && !existingTask.repeat_rule) {
+      finalCompletedTask = await this.update(id, {
+        is_hidden: false,
+        appear_date: "",
+      });
+    }
 
     let recurringTask: Task | null = null;
 
@@ -173,7 +181,7 @@ export class TaskService {
       }
     }
 
-    return { completed: completedTask, recurring: recurringTask };
+    return { completed: finalCompletedTask, recurring: recurringTask };
   }
 
   private async createRecurringCopy(
@@ -336,8 +344,12 @@ export class TaskService {
     await this.taskRepository.bulkUpsert(updatedTasks);
   }
 
-  async getByGoalId(goalId: string): Promise<Task[]> {
-    const tasks = await this.taskRepository.getByGoalId(goalId);
+  /** Implements FR9 of hide-tasks */
+  async getByGoalId(
+    goalId: string,
+    options?: { includeHidden?: boolean },
+  ): Promise<Task[]> {
+    const tasks = await this.taskRepository.getByGoalId(goalId, options);
     return this.sortBySortOrder(tasks);
   }
 
@@ -399,6 +411,7 @@ export class TaskService {
     });
   }
 
+  /** Implements FR10 of hide-tasks */
   async duplicate(id: string): Promise<Task> {
     const originalTask = await this.taskRepository.getById(id);
     if (!originalTask) {
@@ -413,6 +426,8 @@ export class TaskService {
       context_id: originalTask.context_id,
       category_id: originalTask.category_id,
       repeat_rule: originalTask.repeat_rule,
+      is_hidden: false,
+      appear_date: "",
     });
 
     await this.copyChecklistItems(originalTask.id, newTask.id);

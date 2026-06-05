@@ -26,8 +26,10 @@ export interface UseGoalTasksReturn {
   reorderTasks: (orderedTasks: Task[]) => Promise<void>;
 }
 
+/** Implements FR9 of hide-tasks */
 export function useGoalTasks(
   goalId: string,
+  options?: { showHidden?: boolean },
   taskService: TaskService = defaultTaskService,
 ): UseGoalTasksReturn {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -36,8 +38,9 @@ export function useGoalTasks(
   const { schedulePush } = useSync();
 
   const queryFn = useMemo(
-    () => () => taskService.getByGoalId(goalId),
-    [goalId, taskService],
+    () => () =>
+      taskService.getByGoalId(goalId, { includeHidden: options?.showHidden }),
+    [goalId, options?.showHidden, taskService],
   );
 
   useEffect(() => {

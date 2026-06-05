@@ -145,4 +145,37 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(thrownError.message).toContain("Task not found");
     });
   });
+
+  // @hide-tasks @FR10
+  f.Scenario(
+    "Duplicating a hidden task creates a visible copy",
+    ({ Given, When, Then, And }) => {
+      let duplicatedTask: Task;
+
+      Given(
+        'a hidden task "Renew passport" with appear_date "2027-06-01"',
+        async (_ctx: TestContext) => {
+          await seedTask(ctx.taskIds, "Renew passport", {
+            box: "inbox",
+            is_hidden: true,
+            appear_date: "2027-06-01",
+          });
+        },
+      );
+
+      When("user duplicates the task", async (_ctx: TestContext) => {
+        duplicatedTask = await ctx.taskService.duplicate(
+          getIdOrThrow(ctx.taskIds, "Renew passport"),
+        );
+      });
+
+      Then("new task has is_hidden false", async (_ctx: TestContext) => {
+        expect(duplicatedTask.is_hidden).toBe(false);
+      });
+
+      And('new task has appear_date ""', async (_ctx: TestContext) => {
+        expect(duplicatedTask.appear_date).toBe("");
+      });
+    },
+  );
 });

@@ -1,4 +1,6 @@
 import {
+  Eye,
+  EyeOff,
   FileText,
   Inbox,
   MapPin,
@@ -15,6 +17,7 @@ import { cn } from "@/shared/lib/cn";
 import type { Box, RepeatRule } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
 import { LaterBoxIcon, TodayBoxIcon, WeekBoxIcon } from "./BoxIcons";
+import { HideTaskPanel } from "./HideTaskPanel";
 import { RepeatRuleSelector } from "./RepeatRuleSelector";
 
 type QuickActionMode =
@@ -24,7 +27,8 @@ type QuickActionMode =
   | "box"
   | "context"
   | "category"
-  | "repeat";
+  | "repeat"
+  | "hide";
 
 interface TaskQuickActionsProps {
   task: Task;
@@ -182,6 +186,19 @@ export function TaskQuickActions({
     setActiveMode("none");
   }, []);
 
+  const handleHide = useCallback(
+    async (date: string) => {
+      await onUpdate(task.id, { is_hidden: true, appear_date: date });
+      setActiveMode("none");
+    },
+    [task.id, onUpdate],
+  );
+
+  const handleUnhide = useCallback(async () => {
+    await onUpdate(task.id, { is_hidden: false, appear_date: "" });
+    setActiveMode("none");
+  }, [task.id, onUpdate]);
+
   return (
     <div
       data-testid="task-quick-actions"
@@ -248,6 +265,32 @@ export function TaskQuickActions({
         >
           <Repeat className="w-4 h-4" />
         </button>
+        {!task.repeat_rule && (
+          <button
+            type="button"
+            aria-label={
+              task.is_hidden ? t("task.unhideTask") : t("task.hideTask")
+            }
+            aria-pressed={activeMode === "hide"}
+            onClick={
+              task.is_hidden ? handleUnhide : () => handleModeToggle("hide")
+            }
+            className={cn(
+              "flex items-center justify-center w-9 h-9 rounded-lg transition-colors",
+              activeMode === "hide"
+                ? "bg-accent/15 text-accent"
+                : task.is_hidden
+                  ? "text-accent hover:bg-accent/10"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+            )}
+          >
+            {task.is_hidden ? (
+              <Eye className="w-4 h-4" />
+            ) : (
+              <EyeOff className="w-4 h-4" />
+            )}
+          </button>
+        )}
         <button
           type="button"
           aria-label={t("task.fullEdit")}
@@ -415,6 +458,18 @@ export function TaskQuickActions({
             value={task.repeat_rule ? JSON.parse(task.repeat_rule) : null}
             onChange={handleRepeatChange}
             onBack={handleRepeatBack}
+          />
+        </div>
+      )}
+
+      {/* Hide task panel */}
+      {activeMode === "hide" && !task.is_hidden && (
+        <div className="px-3 pb-2">
+          <HideTaskPanel
+            isHidden={false}
+            appearDate=""
+            onHide={handleHide}
+            onUnhide={handleUnhide}
           />
         </div>
       )}

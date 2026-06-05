@@ -19,3 +19,10 @@ Feature: Task Duplicate
   Scenario: Duplicate nonexistent task throws error
     When user duplicates nonexistent task
     Then error "Task not found" is thrown
+
+  @hide-tasks @FR10
+  Scenario: Duplicating a hidden task creates a visible copy
+    Given a hidden task "Renew passport" with appear_date "2027-06-01"
+    When user duplicates the task
+    Then new task has is_hidden false
+    And new task has appear_date ""

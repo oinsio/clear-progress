@@ -289,7 +289,7 @@ export function TaskItem({
                 data-testid="task-item-appear-date"
                 className="text-xs text-gray-500 mt-0.5"
               >
-                {t("repeat.appearDate", {
+                {t("task.appearDate", {
                   date: formatAppearDate(task.appear_date),
                 })}
               </span>
