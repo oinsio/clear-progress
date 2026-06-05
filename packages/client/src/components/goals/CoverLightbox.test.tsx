@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import React, { createRef } from "react";
+import type React from "react";
+import { createRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CoverLightbox } from "./CoverLightbox";
 
@@ -12,8 +13,7 @@ vi.mock("react-i18next", () => ({
 function renderLightbox(
   overrides: Partial<React.ComponentProps<typeof CoverLightbox>> = {},
 ) {
-  const triggerRef =
-    overrides.triggerRef ?? createRef<HTMLElement>();
+  const triggerRef = overrides.triggerRef ?? createRef<HTMLElement>();
   const onClose = vi.fn();
 
   const result = render(
@@ -47,7 +47,10 @@ describe("CoverLightbox", () => {
     renderLightbox();
 
     const closeButton = screen.getByTestId("cover-lightbox-close");
-    expect(closeButton).toHaveAttribute("aria-label", "goal.cover.closeLightbox");
+    expect(closeButton).toHaveAttribute(
+      "aria-label",
+      "goal.cover.closeLightbox",
+    );
   });
 
   it("should close on X button click", () => {
