@@ -92,8 +92,14 @@ export class TaskService {
     return updatedTask;
   }
 
+  /**
+   * Implements FR7 of day-boundary.
+   * @param id — task ID to complete
+   * @param logicalDate — when provided, used for shouldReveal comparison instead of clock.plainDateISO()
+   */
   async complete(
     id: string,
+    logicalDate?: string,
   ): Promise<{ completed: Task; recurring: Task | null }> {
     const existingTask = await this.taskRepository.getById(id);
     if (!existingTask) {
@@ -128,7 +134,7 @@ export class TaskService {
             await this.taskRepository.findHiddenRecurringTask(searchId);
 
           // Определяем, нужно ли раскрыть клон сразу
-          const today = this.clock.plainDateISO().toString();
+          const today = logicalDate ?? this.clock.plainDateISO().toString();
           const sanitizedAppearDate = sanitizeDateOnly(toISODate(appearDate));
           const shouldReveal =
             sanitizedAppearDate &&
