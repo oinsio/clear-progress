@@ -9,7 +9,7 @@ function getCachedPanelSide(): PanelSide {
       return cached as PanelSide;
     }
   } catch {
-    // localStorage недоступен
+    // localStorage is not available
   }
   return DEFAULT_PANEL_SIDE;
 }
@@ -27,7 +27,7 @@ export function usePanelSide(): UsePanelSideReturn {
     try {
       localStorage.setItem(STORAGE_KEYS.PANEL_SIDE, side);
     } catch {
-      // localStorage недоступен
+      // localStorage is not available
     }
     setPanelSideState(side);
   }, []);

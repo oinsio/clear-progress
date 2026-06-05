@@ -1,21 +1,31 @@
 import { useEffect, useRef } from "react";
+import { DAY_BOUNDARY_CHANGED_EVENT } from "@/constants";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { type Clock, systemClock } from "@/lib/temporal";
+import { type Clock, systemClock, Temporal } from "@/lib/temporal";
 import { HiddenTaskService } from "@/services/HiddenTaskService";
+import type { ISODate } from "@/types/entities";
+import { getLogicalDate } from "@/utils/getLogicalDate";
 
-const MIDNIGHT_BUFFER_MS = 1000;
+import { getCachedDayBoundary } from "./useSettings";
+
+const BOUNDARY_BUFFER_MS = 1000;
 
 const taskRepository = new TaskRepository();
 
 export function useHiddenTasksReveal(clock: Clock = systemClock) {
-  const midnightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const boundaryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dayBoundaryRef = useRef(getCachedDayBoundary());
 
   useEffect(() => {
     const hiddenTaskService = new HiddenTaskService(taskRepository, clock);
 
     const revealTasks = async () => {
       try {
-        const revealed = await hiddenTaskService.revealHiddenTasks();
+        const logicalDate = getLogicalDate(
+          clock,
+          dayBoundaryRef.current,
+        ) as ISODate;
+        const revealed = await hiddenTaskService.revealHiddenTasks(logicalDate);
         if (revealed.length > 0) {
           console.log(`Revealed ${revealed.length} hidden tasks`);
         }
@@ -24,69 +34,96 @@ export function useHiddenTasksReveal(clock: Clock = systemClock) {
       }
     };
 
-    const scheduleNextDayReveal = (): ReturnType<typeof setTimeout> => {
+    const scheduleBoundaryReveal = (): ReturnType<typeof setTimeout> => {
       const now = clock.instant();
       const timeZone = clock.timeZoneId();
-      const tomorrow = clock.plainDateISO().add({ days: 1 });
-      const midnight = tomorrow
-        .toZonedDateTime({ timeZone, plainTime: "00:00" })
+      const boundaryTime = Temporal.PlainTime.from(dayBoundaryRef.current);
+      const today = clock.plainDateISO();
+      const todayBoundary = today
+        .toZonedDateTime({ timeZone, plainTime: boundaryTime })
         .toInstant();
-      const msUntilMidnight = midnight
+
+      const nextBoundary =
+        Temporal.Instant.compare(todayBoundary, now) > 0
+          ? todayBoundary
+          : today
+              .add({ days: 1 })
+              .toZonedDateTime({ timeZone, plainTime: boundaryTime })
+              .toInstant();
+
+      const msUntilBoundary = nextBoundary
         .since(now)
         .total({ unit: "milliseconds" });
 
       return setTimeout(() => {
         void revealTasks();
-        // Перепланировать на следующую полночь
-        midnightTimeoutRef.current = scheduleNextDayReveal();
-      }, msUntilMidnight + MIDNIGHT_BUFFER_MS);
+        boundaryTimeoutRef.current = scheduleBoundaryReveal();
+      }, msUntilBoundary + BOUNDARY_BUFFER_MS);
     };
 
-    // Раскрыть при монтировании
+    const clearBoundaryTimeout = () => {
+      if (boundaryTimeoutRef.current) {
+        clearTimeout(boundaryTimeoutRef.current);
+      }
+    };
+
+    const reschedule = () => {
+      clearBoundaryTimeout();
+      boundaryTimeoutRef.current = scheduleBoundaryReveal();
+    };
+
+    // Reveal on mount
     void revealTasks();
 
-    // Запланировать раскрытие на полночь
-    midnightTimeoutRef.current = scheduleNextDayReveal();
+    // Schedule reveal at day boundary time
+    boundaryTimeoutRef.current = scheduleBoundaryReveal();
 
-    // Раскрыть после каждого pull (слушать событие sync)
+    // Reveal after each pull (listen to sync event)
     const handleSyncComplete = () => {
       void revealTasks();
     };
 
-    // Раскрыть при возврате из фона (visibilitychange)
-    // и перепланировать midnight timer с актуальным часовым поясом
-    // (пользователь мог сменить TZ во время не активности)
+    // Reveal when returning from background (visibilitychange)
+    // and reschedule boundary timer with the current timezone
+    // (user may have changed TZ while inactive)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         void revealTasks();
-        if (midnightTimeoutRef.current) {
-          clearTimeout(midnightTimeoutRef.current);
-        }
-        midnightTimeoutRef.current = scheduleNextDayReveal();
+        reschedule();
       }
     };
 
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
         void revealTasks();
-        if (midnightTimeoutRef.current) {
-          clearTimeout(midnightTimeoutRef.current);
-        }
-        midnightTimeoutRef.current = scheduleNextDayReveal();
+        reschedule();
       }
+    };
+
+    // FR6: On boundary change — recalculate timer + immediate check
+    const handleDayBoundaryChanged = () => {
+      dayBoundaryRef.current = getCachedDayBoundary();
+      void revealTasks();
+      reschedule();
     };
 
     window.addEventListener("sync_complete", handleSyncComplete);
     window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener(
+      DAY_BOUNDARY_CHANGED_EVENT,
+      handleDayBoundaryChanged,
+    );
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("sync_complete", handleSyncComplete);
       window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener(
+        DAY_BOUNDARY_CHANGED_EVENT,
+        handleDayBoundaryChanged,
+      );
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      if (midnightTimeoutRef.current) {
-        clearTimeout(midnightTimeoutRef.current);
-      }
+      clearBoundaryTimeout();
     };
   }, [clock]);
 }

@@ -37,7 +37,7 @@ export function useTaskMutations(
               getCachedDayBoundary(),
             );
             const { recurring } = await taskService.complete(id, logicalDate);
-            // Возвращаем ID только если копия НЕ скрыта
+            // Return ID only if the copy is NOT hidden
             recurringId =
               recurring && !recurring.is_hidden ? recurring.id : null;
           }

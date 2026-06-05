@@ -24,7 +24,7 @@ function getCachedBox(): Box {
       return cached as Box;
     }
   } catch {
-    // localStorage недоступен
+    // localStorage is not available
   }
   return BOX.INBOX;
 }
@@ -36,7 +36,7 @@ function getCachedAccentColor(): AccentColor {
       return cached as AccentColor;
     }
   } catch {
-    // localStorage недоступен
+    // localStorage is not available
   }
   return DEFAULT_ACCENT_COLOR;
 }
@@ -48,7 +48,7 @@ export function getCachedDayBoundary(): string {
       return cached;
     }
   } catch {
-    // localStorage недоступен
+    // localStorage is not available
   }
   return DEFAULT_DAY_BOUNDARY;
 }
@@ -85,7 +85,7 @@ export function useSettings(
       localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, color);
       localStorage.setItem(STORAGE_KEYS.DAY_BOUNDARY, boundary);
     } catch {
-      // localStorage недоступен
+      // localStorage is not available
     }
     setDefaultBoxState(box);
     setAccentColorState(color);

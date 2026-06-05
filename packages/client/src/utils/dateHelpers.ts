@@ -2,11 +2,11 @@ import { type Clock, systemClock, Temporal } from "@/lib/temporal";
 import type { ISODate, ISOTimestamp } from "@/types/entities";
 
 /**
- * Преобразует Clock или Temporal.Instant в ISOTimestamp (branded type).
- * Без аргументов возвращает текущее время через systemClock.
+ * Converts a Clock or Temporal.Instant to ISOTimestamp (branded type).
+ * Without arguments returns the current time via systemClock.
  *
- * @param clockOrInstant - Clock для получения текущего времени, или Temporal.Instant для обёртки
- * @returns ISO 8601 timestamp string с branded type
+ * @param clockOrInstant - Clock for getting current time, or Temporal.Instant to wrap
+ * @returns ISO 8601 timestamp string with branded type
  */
 export function toISOTimestamp(
   clockOrInstant?: Clock | Temporal.Instant,
@@ -19,29 +19,29 @@ export function toISOTimestamp(
   } else {
     instant = clockOrInstant.instant();
   }
-  // Нормализация: всегда 3 десятичных знака для безопасного строкового сравнения
-  // Temporal.Instant.toString() может опустить дробную часть на границе секунды
-  // (например "2026-04-16T10:30:00Z"), что ломает лексикографическое сравнение
-  // с Date.toISOString() (всегда "2026-04-16T10:30:00.000Z").
+  // Normalization: always 3 fractional digits for safe string comparison
+  // Temporal.Instant.toString() may omit the fractional part at second boundaries
+  // (e.g. "2026-04-16T10:30:00Z"), which breaks lexicographic comparison
+  // with Date.toISOString() (always "2026-04-16T10:30:00.000Z").
   return instant.toString({ fractionalSecondDigits: 3 }) as ISOTimestamp;
 }
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * Sanityze строку даты из произвольного формата в ISO date (YYYY-MM-DD).
- * Обрабатывает:
+ * Sanitizes a date string from an arbitrary format into ISO date (YYYY-MM-DD).
+ * Handles:
  * - ISO date: "2026-04-19" → as-is
  * - ISO timestamp: "2026-04-19T19:00:00.000Z" → "2026-04-19"
  * - Date.toString(): "Sun Apr 19 2026 19:00:00 GMT+0000 (...)" → "2026-04-19"
- * - Пустая строка: "" → ""
+ * - Empty string: "" → ""
  *
- * @returns Строка в формате YYYY-MM-DD или пустая строка
+ * @returns String in YYYY-MM-DD format or empty string
  */
 export function sanitizeDateOnly(value: string): string {
   if (!value) return "";
 
-  // ISO date формат — проверяем regex и валидность через Temporal
+  // ISO date format — validate with regex and Temporal
   if (ISO_DATE_REGEX.test(value)) {
     try {
       Temporal.PlainDate.from(value);
@@ -51,7 +51,7 @@ export function sanitizeDateOnly(value: string): string {
     }
   }
 
-  // ISO timestamp — извлекаем дату до "T"
+  // ISO timestamp — extract date portion before "T"
   const timestampIndex = value.indexOf("T");
   if (timestampIndex > 0) {
     const datePart = value.substring(0, timestampIndex);
@@ -65,7 +65,7 @@ export function sanitizeDateOnly(value: string): string {
     }
   }
 
-  // Fallback: попытка parse через Temporal.PlainDate
+  // Fallback: attempt to parse via Temporal.PlainDate
   try {
     const plainDate = Temporal.PlainDate.from(value);
     return plainDate.toString();
@@ -75,14 +75,14 @@ export function sanitizeDateOnly(value: string): string {
 }
 
 /**
- * Преобразует строку формата YYYY-MM-DD в ISODate (branded type).
- * Если dateString не передан, используется текущая дата.
- * Valid формат через Temporal.PlainDate.from().
+ * Converts a YYYY-MM-DD string to ISODate (branded type).
+ * If dateString is not provided, the current date is used.
+ * Validates format via Temporal.PlainDate.from().
  *
- * @param dateString - Строка даты в формате YYYY-MM-DD
- * @param clock - Clock для получения текущей даты (по умолчанию systemClock)
- * @returns ISO 8601 date string с branded type
- * @throws {RangeError} Если dateString не соответствует формату YYYY-MM-DD
+ * @param dateString - Date string in YYYY-MM-DD format
+ * @param clock - Clock for getting the current date (defaults to systemClock)
+ * @returns ISO 8601 date string with branded type
+ * @throws {RangeError} If dateString does not match YYYY-MM-DD format
  */
 export function toISODate(
   dateString?: string,
@@ -94,37 +94,37 @@ export function toISODate(
 }
 
 /**
- * Возвращает максимальное количество дней в указанном месяце.
- * Для февраля возвращает 29 (разрешаем ввод 29, хотя в невисокосный год будет скорректировано при расчете).
+ * Returns the maximum number of days in the given month.
+ * For February returns 29 (we allow input of 29, though it will be clamped in non-leap years during calculation).
  *
- * @param month - Номер месяца (1-12)
- * @returns Количество дней в месяце
+ * @param month - Month number (1-12)
+ * @returns Number of days in the month
  */
 export function getDaysInMonth(month: number): number {
   const DAYS_IN_MONTH: Record<number, number> = {
-    1: 31, // Январь
-    2: 29, // Февраль (разрешаем 29)
-    3: 31, // Март
-    4: 30, // Апрель
-    5: 31, // Май
-    6: 30, // Июнь
-    7: 31, // Июль
-    8: 31, // Август
-    9: 30, // Сентябрь
-    10: 31, // Октябрь
-    11: 30, // Ноябрь
-    12: 31, // Декабрь
+    1: 31, // January
+    2: 29, // February (allow 29)
+    3: 31, // March
+    4: 30, // April
+    5: 31, // May
+    6: 30, // June
+    7: 31, // July
+    8: 31, // August
+    9: 30, // September
+    10: 31, // October
+    11: 30, // November
+    12: 31, // December
   };
 
   return DAYS_IN_MONTH[month] ?? 31;
 }
 
 /**
- * Возвращает текущую дату для использования в качестве значений по умолчанию
- * при настройке повторяющихся задач.
+ * Returns the current date for use as default values
+ * when configuring recurring tasks.
  *
- * @param clock - Clock для получения текущей даты (по умолчанию systemClock)
- * @returns Объект с текущим днём месяца и месяцем
+ * @param clock - Clock for getting the current date (defaults to systemClock)
+ * @returns Object with the current day of month and month
  */
 export function getCurrentDateDefaults(clock: Clock = systemClock): {
   dayOfMonth: number;

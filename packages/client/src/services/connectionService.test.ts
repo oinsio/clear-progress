@@ -20,7 +20,7 @@ describe("connectionService", () => {
         type: "gas",
         url: "https://example.com",
         clientId: "test-client-id",
-        isActive: false, // Передаём false, но connect должен сохранить с true
+        isActive: false, // We pass false, but connect should save with true
       };
 
       connect(config);

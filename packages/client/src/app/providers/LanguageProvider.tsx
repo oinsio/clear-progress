@@ -46,7 +46,7 @@ function getInitialLanguage(): string {
     localStorage.setItem(STORAGE_KEYS.LANGUAGE, detectedLanguage);
     return detectedLanguage;
   } catch {
-    // localStorage недоступен
+    // localStorage is unavailable
     return detectBrowserLanguage() ?? DEFAULT_LANGUAGE;
   }
 }
@@ -54,8 +54,8 @@ function getInitialLanguage(): string {
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<string>(getInitialLanguage);
 
-  // i18next инициализируется до React (при импорте модуля), поэтому синхронизируем
-  // определённый язык с i18next при монтировании компонента
+  // i18next is initialized before React (at module import time), so we sync
+  // the detected language with i18next on component mount
   useEffect(() => {
     void i18n.changeLanguage(language);
   }, [language]); // eslint-disable-line react-hooks/exhaustive-deps

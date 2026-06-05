@@ -53,12 +53,12 @@ export class CategoryService {
   async reorderCategories(orderedCategories: Category[]): Promise<void> {
     if (orderedCategories.length === 0) return;
 
-    // Проверяем, изменился ли хотя бы один sort_order
+    // Check if at least one sort_order has changed
     const hasAnyOrderChanged = orderedCategories.some(
       (category, index) => category.sort_order !== index,
     );
     if (!hasAnyOrderChanged) {
-      return; // Ничего не изменилось, не синхронизируем
+      return; // Nothing changed, skip sync
     }
 
     const now = toISOTimestamp(this.clock);
@@ -83,17 +83,17 @@ export class CategoryService {
       throw new Error(`Category not found: ${id}`);
     }
 
-    // Создаем обновленную версию без изменения метаданных
+    // Build the updated version without modifying metadata
     const candidateCategory: Category = {
       ...existingCategory,
       ...changes,
       id,
     };
 
-    // Проверяем, действительно ли что-то изменилось
+    // Check whether anything actually changed
     const hasChanged = hasEntityChanged(existingCategory, candidateCategory);
 
-    // Применяем метаданные только если есть изменения
+    // Apply metadata only if there are changes
     const updatedCategory: Category = {
       ...candidateCategory,
       updated_at: hasChanged

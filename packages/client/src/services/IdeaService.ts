@@ -40,17 +40,17 @@ export class IdeaService {
       throw new Error(`Idea not found: ${id}`);
     }
 
-    // Создаем обновленную версию без изменения метаданных
+    // Build the updated version without modifying metadata
     const candidateIdea: Idea = {
       ...existingIdea,
       ...changes,
       id,
     };
 
-    // Проверяем, действительно ли что-то изменилось
+    // Check whether anything actually changed
     const hasChanged = hasEntityChanged(existingIdea, candidateIdea);
 
-    // Применяем метаданные только если есть изменения
+    // Apply metadata only if there are changes
     const updatedIdea: Idea = {
       ...candidateIdea,
       updated_at: hasChanged ? toISOTimestamp() : existingIdea.updated_at,
@@ -89,12 +89,12 @@ export class IdeaService {
   async reorderIdeas(orderedIdeas: Idea[]): Promise<void> {
     if (orderedIdeas.length === 0) return;
 
-    // Проверяем, изменился ли хотя бы один sort_order
+    // Check if at least one sort_order has changed
     const hasAnyOrderChanged = orderedIdeas.some(
       (idea, index) => idea.sort_order !== index,
     );
     if (!hasAnyOrderChanged) {
-      return; // Ничего не изменилось, не синхронизируем
+      return; // Nothing changed, skip sync
     }
 
     const now = toISOTimestamp();

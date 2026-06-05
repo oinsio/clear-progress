@@ -13,7 +13,7 @@ describe("calculateNextDate", () => {
       target_box: "today",
       advance_days: 0,
     };
-    const previousNextDate = "2026-04-15"; // вчера
+    const previousNextDate = "2026-04-15"; // yesterday
     const completedAt = "2026-04-13T10:00:00.000Z";
     const nextDate = calculateNextDate(
       rule,
@@ -22,7 +22,7 @@ describe("calculateNextDate", () => {
       clock,
     );
 
-    expect(nextDate).toBe("2026-04-16"); // сегодня
+    expect(nextDate).toBe("2026-04-16"); // today
   });
 
   it("should calculate next date for after_completion rule", () => {

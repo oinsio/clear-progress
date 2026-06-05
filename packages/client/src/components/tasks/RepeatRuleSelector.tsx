@@ -31,15 +31,15 @@ type Step = "type" | "fixed_params" | "after_completion_params" | "placement";
 interface State {
   step: Step;
   type: "fixed" | "after_completion" | null;
-  // Для fixed
+  // For fixed
   frequency: "daily" | "weekly" | "monthly" | "yearly" | null;
   interval: number;
   weekdays: number[];
   dayOfMonth: number;
   monthAndDay: { month: number; day: number };
-  // Для after_completion
+  // For after_completion
   delayDays: number;
-  // Общее
+  // Common
   targetBox: Box;
   advanceDays: number;
 }
@@ -173,14 +173,14 @@ export function RepeatRuleSelector({
       const maxDaysInNewMonth = getDaysInMonth(month);
       let newDay = prev.monthAndDay.day;
 
-      // Если текущий день 30 или 31, а новый месяц — февраль, устанавливаем 28
+      // If the current day is 30 or 31 and the new month is February, set to 28
       if (
         (prev.monthAndDay.day === 30 || prev.monthAndDay.day === 31) &&
         month === 2
       ) {
         newDay = 28;
       }
-      // Если текущий день 31, а новый месяц имеет только 30 дней, устанавливаем 30
+      // If the current day is 31 and the new month has only 30 days, set to 30
       else if (prev.monthAndDay.day === 31 && maxDaysInNewMonth === 30) {
         newDay = 30;
       }
@@ -249,9 +249,9 @@ export function RepeatRuleSelector({
   );
 
   const handleFixedParamsNext = useCallback(() => {
-    // Валидация
+    // Validation
     if (state.frequency === "weekly" && state.weekdays.length === 0) {
-      return; // Не переходим, если не выбраны дни недели
+      return; // Do not proceed if no weekdays are selected
     }
     setState((prev) => ({ ...prev, step: "placement" }));
   }, [state.frequency, state.weekdays.length]);
@@ -312,7 +312,7 @@ export function RepeatRuleSelector({
     onBack();
   }, [onChange, onBack]);
 
-  // Шаг 1: Выбор типа
+  // Step 1: Select type
   if (state.step === "type") {
     return (
       <div data-testid="repeat-type-step">
@@ -362,7 +362,7 @@ export function RepeatRuleSelector({
     );
   }
 
-  // Шаг 2a: Параметры для fixed
+  // Step 2a: Parameters for fixed
   if (state.step === "fixed_params") {
     return (
       <div data-testid="repeat-fixed-params-step">
@@ -381,7 +381,7 @@ export function RepeatRuleSelector({
           </h2>
         </div>
         <div className="px-4 py-4 flex flex-col gap-4">
-          {/* Сегментированный control: Daily / Weekly / Monthly / Yearly */}
+          {/* Segmented control: Daily / Weekly / Monthly / Yearly */}
           <div className="flex gap-2">
             {(["daily", "weekly", "monthly", "yearly"] as const).map((freq) => (
               <button
@@ -401,7 +401,7 @@ export function RepeatRuleSelector({
             ))}
           </div>
 
-          {/* Интервал */}
+          {/* Interval */}
           {state.frequency && (
             <div className="flex flex-col gap-2">
               <label
@@ -430,7 +430,7 @@ export function RepeatRuleSelector({
             </div>
           )}
 
-          {/* Для Weekly: multi choose дней недели */}
+          {/* For Weekly: multi-select weekdays */}
           {state.frequency === "weekly" && (
             <div className="flex flex-col gap-2">
               <label className="text-sm text-gray-600">
@@ -461,7 +461,7 @@ export function RepeatRuleSelector({
             </div>
           )}
 
-          {/* Для Monthly: числовой ввод 1—31 */}
+          {/* For Monthly: numeric input 1–31 */}
           {state.frequency === "monthly" && (
             <div className="flex flex-col gap-2">
               <label
@@ -486,7 +486,7 @@ export function RepeatRuleSelector({
             </div>
           )}
 
-          {/* Для Yearly: выбор месяца (выпадающий список) + числовой ввод дня */}
+          {/* For Yearly: month selection (dropdown) + numeric day input */}
           {state.frequency === "yearly" && (
             <div className="flex flex-col gap-2">
               <label className="text-sm text-gray-600">
@@ -497,9 +497,9 @@ export function RepeatRuleSelector({
                 })}
               </label>
 
-              {/* Адаптивный контейнер: вертикально на узких экранах, горизонтально на широких */}
+              {/* Responsive container: vertical on narrow screens, horizontal on wide screens */}
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                {/* Поле выбора месяца */}
+                {/* Month selection field */}
                 <div className="flex flex-col gap-2 sm:flex-1">
                   <label
                     htmlFor="repeat-month-trigger"
@@ -507,7 +507,7 @@ export function RepeatRuleSelector({
                   >
                     {t("repeat.month")}
                   </label>
-                  {/* Триггер выбора месяца */}
+                  {/* Month selection trigger */}
                   <button
                     id="repeat-month-trigger"
                     type="button"
@@ -526,7 +526,7 @@ export function RepeatRuleSelector({
                     />
                   </button>
 
-                  {/* Inline-панель со списком месяцев */}
+                  {/* Inline panel with month list */}
                   {isMonthPanelOpen && (
                     <div className="border border-gray-200 rounded-lg overflow-hidden">
                       <div className="flex flex-col gap-0.5 p-2 max-h-60 overflow-y-auto">
@@ -551,7 +551,7 @@ export function RepeatRuleSelector({
                   )}
                 </div>
 
-                {/* Поле ввода дня */}
+                {/* Day input field */}
                 <div className="flex flex-col gap-2 sm:flex-1">
                   <label
                     htmlFor="repeat-day-input"
@@ -592,7 +592,7 @@ export function RepeatRuleSelector({
     );
   }
 
-  // Шаг 2b: Параметры для after_completion
+  // Step 2b: Parameters for after_completion
   if (state.step === "after_completion_params") {
     return (
       <div data-testid="repeat-after-completion-params-step">
@@ -642,7 +642,7 @@ export function RepeatRuleSelector({
     );
   }
 
-  // Шаг 3: Куда поместить
+  // Step 3: Where to place
   if (state.step === "placement") {
     return (
       <div data-testid="repeat-placement-step">
@@ -661,7 +661,7 @@ export function RepeatRuleSelector({
           </h2>
         </div>
         <div className="px-4 py-4 flex flex-col gap-4">
-          {/* Сегментированный control: Inbox / Today / Week / Later */}
+          {/* Segmented control: Inbox / Today / Week / Later */}
           <div className="flex gap-1">
             {TARGET_BOX_ORDER.map((box) => {
               const Icon = TARGET_BOX_ICONS[box];
@@ -687,7 +687,7 @@ export function RepeatRuleSelector({
             })}
           </div>
 
-          {/* Числовой ввод: "Показать за ___ дней до даты" */}
+          {/* Numeric input: "Show ___ days before the date" */}
           <div className="flex flex-col gap-2">
             <label
               htmlFor="repeat-advance-days"

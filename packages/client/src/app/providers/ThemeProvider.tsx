@@ -39,7 +39,7 @@ function getInitialAccentColor(): AccentColor {
       return cached as AccentColor;
     }
   } catch {
-    // localStorage недоступен — используем дефолт
+    // localStorage is unavailable — use default
   }
   return DEFAULT_ACCENT_COLOR;
 }
@@ -51,7 +51,7 @@ function getInitialColorScheme(): ColorScheme {
       return cached as ColorScheme;
     }
   } catch {
-    // localStorage недоступен — используем дефолт
+    // localStorage is unavailable — use default
   }
   return DEFAULT_COLOR_SCHEME;
 }
@@ -101,13 +101,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           SETTING_KEYS.ACCENT_COLOR,
         );
 
-        // Валидация цвета
+        // Validate color
         if (storedColor && ACCENT_COLORS.includes(storedColor as AccentColor)) {
           const color = storedColor as AccentColor;
           let lightHex: string | undefined;
           let darkHex: string | undefined;
 
-          // Если custom, загрузить пользовательские цвета
+          // If custom, load user-defined colors
           if (color === "custom") {
             lightHex = await settingsRepository.getValue(
               SETTING_KEYS.CUSTOM_ACCENT_LIGHT,
@@ -130,7 +130,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           setAccentColorState(color);
           localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, color);
         } else if (storedColor) {
-          // Невалидный цвет — установить дефолтный и синхронизировать
+          // Invalid color — set default and sync
           await settingsRepository.set(
             SETTING_KEYS.ACCENT_COLOR,
             DEFAULT_ACCENT_COLOR,

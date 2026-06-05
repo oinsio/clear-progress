@@ -13,7 +13,7 @@ function readCollapsedSections(): Record<string, boolean> {
       console.error("Invalid collapsed sections:", parseResult.error);
     }
   } catch {
-    // localStorage недоступен или данные повреждены
+    // localStorage is not available or data is corrupted
   }
   return {};
 }
@@ -25,7 +25,7 @@ function writeCollapsedSections(sections: Record<string, boolean>): void {
       JSON.stringify(sections),
     );
   } catch {
-    // localStorage недоступен
+    // localStorage is not available
   }
 }
 

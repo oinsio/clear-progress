@@ -93,8 +93,8 @@ describe("GoalService", () => {
       const goalService = new GoalService(mockGoalRepository);
       await goalService.reorderGoals([goalA, goalB]);
       const upserted = getUpsertedGoals();
-      expect(upserted[0].needsSync).toBe(false); // не изменился
-      expect(upserted[1].needsSync).toBe(true); // изменился с 2 на 1
+      expect(upserted[0].needsSync).toBe(false); // did not change
+      expect(upserted[1].needsSync).toBe(true); // changed from 2 to 1
     });
 
     it("should not update updated_at for goals that did not change position", async () => {
@@ -106,8 +106,8 @@ describe("GoalService", () => {
       const goalService = new GoalService(mockGoalRepository);
       await goalService.reorderGoals([goalA, goalB]);
       const upserted = getUpsertedGoals();
-      expect(upserted[0].updated_at).toBe(oldTimestamp); // не изменился
-      expect(upserted[1].updated_at).not.toBe(oldTimestamp); // изменился
+      expect(upserted[0].updated_at).toBe(oldTimestamp); // did not change
+      expect(upserted[1].updated_at).not.toBe(oldTimestamp); // changed
     });
   });
 });

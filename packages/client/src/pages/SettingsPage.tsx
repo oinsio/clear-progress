@@ -321,7 +321,7 @@ export default function SettingsPage() {
                 })}
               </div>
 
-              {/* Custom color picker - показывается только когда выбран custom */}
+              {/* Custom color picker — shown only when custom is selected */}
               {accentColor === "custom" && (
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   {/* Light theme color */}
@@ -473,7 +473,7 @@ export default function SettingsPage() {
                 {t("settings.language")}
               </h2>
 
-              {/* Триггер */}
+              {/* Trigger */}
               <button
                 type="button"
                 data-testid="settings-language-trigger"
@@ -492,10 +492,10 @@ export default function SettingsPage() {
                 />
               </button>
 
-              {/* Inline-панель со списком языков */}
+              {/* Inline panel with language list */}
               {isLanguagePanelOpen && (
                 <div className="border border-gray-200 rounded-lg overflow-hidden max-w-xs">
-                  {/* Поиск (если языков >= 10) */}
+                  {/* Search (if there are >= 10 languages) */}
                   {locales.length >= LANGUAGE_SEARCH_THRESHOLD && (
                     <div className="border-b border-gray-100 p-2">
                       <input
@@ -509,7 +509,7 @@ export default function SettingsPage() {
                     </div>
                   )}
 
-                  {/* Список языков */}
+                  {/* Language list */}
                   <div className="flex flex-col gap-0.5 p-2 max-h-60 overflow-y-auto">
                     {filteredLocales.map((locale) => (
                       <button

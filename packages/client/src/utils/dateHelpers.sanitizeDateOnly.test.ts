@@ -31,7 +31,7 @@ describe("sanitizeDateOnly", () => {
   });
 
   it("should return empty string for malformed date", () => {
-    // Temporal.PlainDate.from() выбрасывает RangeError для невалидных дат
+    // Temporal.PlainDate.from() throws RangeError for invalid dates
     expect(sanitizeDateOnly("2026-13-45")).toBe("");
   });
 
@@ -40,15 +40,15 @@ describe("sanitizeDateOnly", () => {
   });
 
   it("should return empty string for non-leap year Feb 29", () => {
-    // Temporal.PlainDate.from() выбрасывает RangeError для невалидных дат
-    // (2025 — не високосный год, 29 февраля не существует)
+    // Temporal.PlainDate.from() throws RangeError for invalid dates
+    // (2025 is not a leap year, February 29 does not exist)
     expect(sanitizeDateOnly("2025-02-29")).toBe("");
   });
 
   describe("timezone-independent behavior (regression test for sync bug)", () => {
     it("should not shift date when parsing ISO date string", () => {
-      // Баг: new Date("2026-04-20") в UTC-5 возвращал "2026-04-19"
-      // Исправление: используем Temporal.PlainDate вместо Date
+      // Bug: new Date("2026-04-20") in UTC-5 returned "2026-04-19"
+      // Fix: use Temporal.PlainDate instead of Date
       expect(sanitizeDateOnly("2026-04-20")).toBe("2026-04-20");
       expect(sanitizeDateOnly("2026-04-19")).toBe("2026-04-19");
       expect(sanitizeDateOnly("2026-04-18")).toBe("2026-04-18");

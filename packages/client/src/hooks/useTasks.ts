@@ -65,7 +65,7 @@ export function useTasks(
       } else {
         const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
         const { recurring } = await taskService.complete(id, logicalDate);
-        // Возвращаем ID только если копия НЕ скрыта
+        // Return ID only if the recurring copy is NOT hidden
         recurringId = recurring && !recurring.is_hidden ? recurring.id : null;
       }
       schedulePush();

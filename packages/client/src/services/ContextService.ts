@@ -49,12 +49,12 @@ export class ContextService {
   async reorderContexts(orderedContexts: Context[]): Promise<void> {
     if (orderedContexts.length === 0) return;
 
-    // Проверяем, изменился ли хотя бы один sort_order
+    // Check if at least one sort_order has changed
     const hasAnyOrderChanged = orderedContexts.some(
       (context, index) => context.sort_order !== index,
     );
     if (!hasAnyOrderChanged) {
-      return; // Ничего не изменилось, не синхронизируем
+      return; // Nothing changed, skip sync
     }
 
     const now = toISOTimestamp();
@@ -79,17 +79,17 @@ export class ContextService {
       throw new Error(`Context not found: ${id}`);
     }
 
-    // Создаем обновленную версию без изменения метаданных
+    // Build the updated version without modifying metadata
     const candidateContext: Context = {
       ...existingContext,
       ...changes,
       id,
     };
 
-    // Проверяем, действительно ли что-то изменилось
+    // Check whether anything actually changed
     const hasChanged = hasEntityChanged(existingContext, candidateContext);
 
-    // Применяем метаданные только если есть изменения
+    // Apply metadata only if there are changes
     const updatedContext: Context = {
       ...candidateContext,
       updated_at: hasChanged ? toISOTimestamp() : existingContext.updated_at,

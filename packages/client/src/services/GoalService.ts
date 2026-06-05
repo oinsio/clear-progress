@@ -43,17 +43,17 @@ export class GoalService {
       throw new Error(`Goal not found: ${id}`);
     }
 
-    // Создаем обновленную версию без изменения метаданных
+    // Build the updated version without modifying metadata
     const candidateGoal: Goal = {
       ...existingGoal,
       ...changes,
       id,
     };
 
-    // Проверяем, действительно ли что-то изменилось
+    // Check whether anything actually changed
     const hasChanged = hasEntityChanged(existingGoal, candidateGoal);
 
-    // Применяем метаданные только если есть изменения
+    // Apply metadata only if there are changes
     const updatedGoal: Goal = {
       ...candidateGoal,
       updated_at: hasChanged ? toISOTimestamp() : existingGoal.updated_at,
@@ -99,12 +99,12 @@ export class GoalService {
   async reorderGoals(orderedGoals: Goal[]): Promise<void> {
     if (orderedGoals.length === 0) return;
 
-    // Проверяем, изменился ли хотя бы один sort_order
+    // Check if at least one sort_order has changed
     const hasAnyOrderChanged = orderedGoals.some(
       (goal, index) => goal.sort_order !== index,
     );
     if (!hasAnyOrderChanged) {
-      return; // Ничего не изменилось, не синхронизируем
+      return; // Nothing changed, skip sync
     }
 
     const now = toISOTimestamp();

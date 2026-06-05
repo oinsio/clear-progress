@@ -66,12 +66,12 @@ export class ChecklistService {
   async reorderItems(items: ChecklistItem[]): Promise<void> {
     if (items.length === 0) return;
 
-    // Проверяем, изменился ли хотя бы один sort_order
+    // Check if at least one sort_order has changed
     const hasAnyOrderChanged = items.some(
       (item, index) => item.sort_order !== index,
     );
     if (!hasAnyOrderChanged) {
-      return; // Ничего не изменилось, не синхронизируем
+      return; // Nothing changed, skip sync
     }
 
     const now = toISOTimestamp();
@@ -104,17 +104,17 @@ export class ChecklistService {
       throw new Error(`ChecklistItem not found: ${id}`);
     }
 
-    // Создаем обновленную версию без изменения метаданных
+    // Build the updated version without modifying metadata
     const candidateItem: ChecklistItem = {
       ...existingItem,
       ...changes,
       id,
     };
 
-    // Проверяем, действительно ли что-то изменилось
+    // Check whether anything actually changed
     const hasChanged = hasEntityChanged(existingItem, candidateItem);
 
-    // Применяем метаданные только если есть изменения
+    // Apply metadata only if there are changes
     const updatedItem: ChecklistItem = {
       ...candidateItem,
       updated_at: hasChanged ? toISOTimestamp() : existingItem.updated_at,

@@ -1,6 +1,6 @@
 /**
- * Нормализует пустые значения для корректного сравнения.
- * "" и undefined считаются одинаковыми значениями.
+ * Normalizes empty values for correct comparison.
+ * "" and undefined are considered equal values.
  */
 function normalizeValue(value: unknown): unknown {
   if (value === "" || value === undefined || value === null) {
@@ -10,14 +10,14 @@ function normalizeValue(value: unknown): unknown {
 }
 
 /**
- * Проверяет, изменились ли значимые поля сущности.
- * Игнорирует служебные поля (id, updated_at, created_at, needsSync, revision).
- * Нормализует пустые значения ("" и undefined считаются одинаковыми).
+ * Checks whether any significant fields of an entity have changed.
+ * Ignores service fields (id, updated_at, created_at, needsSync, revision).
+ * Normalizes empty values ("" and undefined are considered equal).
  *
- * @param existing - Существующая сущность
- * @param updated - Обновленная сущность
- * @param excludeFields - Поля, которые нужно исключить из сравнения
- * @returns true, если хотя бы одно значимое поле изменилось
+ * @param existing - The existing entity
+ * @param updated - The updated entity
+ * @param excludeFields - Fields to exclude from comparison
+ * @returns true if at least one significant field has changed
  */
 export function hasEntityChanged<T extends object>(
   existing: T,
@@ -33,11 +33,11 @@ export function hasEntityChanged<T extends object>(
   const existingKeys = Object.keys(existing);
   const updatedKeys = Object.keys(updated);
 
-  // Получаем все уникальные ключи из обоих объектов
+  // Get all unique keys from both objects
   const allKeys = new Set([...existingKeys, ...updatedKeys]);
 
   for (const key of allKeys) {
-    // Пропускаем служебные поля
+    // Skip service fields
     if (excludeFields.includes(key)) {
       continue;
     }
@@ -45,7 +45,7 @@ export function hasEntityChanged<T extends object>(
     const existingValue = normalizeValue(existing[key as keyof T] as unknown);
     const updatedValue = normalizeValue(updated[key as keyof T] as unknown);
 
-    // Сравниваем нормализованные значения
+    // Compare normalized values
     if (existingValue !== updatedValue) {
       return true;
     }
