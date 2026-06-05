@@ -2,39 +2,19 @@ Feature: Logical date computation from day boundary
   Implements FR3 of day-boundary.
 
   @day-boundary @FR3
-  Scenario: Midnight boundary returns calendar date
-    Given day boundary is "00:00"
-    And current local time is "14:00" on "2026-06-05"
+  Scenario Outline: Logical date depends on current time relative to boundary
+    Given day boundary is "<boundary>"
+    And current local time is "<time>" on "<date>"
     When system computes the logical date
-    Then logical date is "2026-06-05"
+    Then logical date is "<logical_date>"
 
-  @day-boundary @FR3
-  Scenario: Before boundary returns previous day
-    Given day boundary is "02:00"
-    And current local time is "01:30" on "2026-06-05"
-    When system computes the logical date
-    Then logical date is "2026-06-04"
-
-  @day-boundary @FR3
-  Scenario: At boundary returns current day
-    Given day boundary is "02:00"
-    And current local time is "02:00" on "2026-06-05"
-    When system computes the logical date
-    Then logical date is "2026-06-05"
-
-  @day-boundary @FR3
-  Scenario: After boundary returns current day
-    Given day boundary is "02:00"
-    And current local time is "14:00" on "2026-06-05"
-    When system computes the logical date
-    Then logical date is "2026-06-05"
-
-  @day-boundary @FR3
-  Scenario: Large boundary value
-    Given day boundary is "06:00"
-    And current local time is "05:59" on "2026-06-05"
-    When system computes the logical date
-    Then logical date is "2026-06-04"
+    Examples:
+      | boundary | time  | date       | logical_date |
+      | 00:00    | 14:00 | 2026-06-05 | 2026-06-05   |
+      | 02:00    | 01:30 | 2026-06-05 | 2026-06-04   |
+      | 02:00    | 02:00 | 2026-06-05 | 2026-06-05   |
+      | 02:00    | 14:00 | 2026-06-05 | 2026-06-05   |
+      | 06:00    | 05:59 | 2026-06-05 | 2026-06-04   |
 
   @day-boundary @FR3
   Scenario: Respects current timezone
