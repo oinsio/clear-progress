@@ -24,6 +24,14 @@ function renderSection(
   };
 }
 
+function getHoursInput(): HTMLInputElement {
+  return screen.getByTestId("day-boundary-hours-input") as HTMLInputElement;
+}
+
+function getMinutesInput(): HTMLInputElement {
+  return screen.getByTestId("day-boundary-minutes-input") as HTMLInputElement;
+}
+
 describe("DayBoundarySection", () => {
   it("should render the section container", () => {
     renderSection();
@@ -42,63 +50,147 @@ describe("DayBoundarySection", () => {
     ).toBeInTheDocument();
   });
 
-  it("should show current dayBoundary value in the input", () => {
+  it("should show current hours and minutes in separate inputs", () => {
     renderSection({ dayBoundary: "05:30" });
-    const input = screen.getByTestId(
-      "settings-day-boundary-input",
-    ) as HTMLInputElement;
-    expect(input.value).toBe("05:30");
+    expect(getHoursInput().value).toBe("05");
+    expect(getMinutesInput().value).toBe("30");
   });
 
-  it("should call onDayBoundaryChange with valid value", () => {
+  it("should commit valid time on hours blur", () => {
     const onDayBoundaryChange = vi.fn();
-    renderSection({ onDayBoundaryChange });
+    renderSection({ dayBoundary: "04:00", onDayBoundaryChange });
 
-    const input = screen.getByTestId("settings-day-boundary-input");
-    fireEvent.change(input, { target: { value: "06:00" } });
+    const hoursInput = getHoursInput();
+    fireEvent.change(hoursInput, { target: { value: "06" } });
+    fireEvent.blur(hoursInput);
 
     expect(onDayBoundaryChange).toHaveBeenCalledWith("06:00");
   });
 
-  it("should not call onDayBoundaryChange with invalid value", () => {
+  it("should commit valid time on minutes blur", () => {
     const onDayBoundaryChange = vi.fn();
-    renderSection({ onDayBoundaryChange });
+    renderSection({ dayBoundary: "04:00", onDayBoundaryChange });
 
-    const input = screen.getByTestId("settings-day-boundary-input");
-    fireEvent.change(input, { target: { value: "25:00" } });
+    const minutesInput = getMinutesInput();
+    fireEvent.change(minutesInput, { target: { value: "30" } });
+    fireEvent.blur(minutesInput);
+
+    expect(onDayBoundaryChange).toHaveBeenCalledWith("04:30");
+  });
+
+  it("should auto-commit when two valid minute digits are entered", () => {
+    const onDayBoundaryChange = vi.fn();
+    renderSection({ dayBoundary: "04:00", onDayBoundaryChange });
+
+    const minutesInput = getMinutesInput();
+    fireEvent.change(minutesInput, { target: { value: "15" } });
+
+    expect(onDayBoundaryChange).toHaveBeenCalledWith("04:15");
+  });
+
+  it("should auto-focus minutes after entering two valid hour digits", () => {
+    renderSection();
+
+    const hoursInput = getHoursInput();
+    fireEvent.change(hoursInput, { target: { value: "05" } });
+
+    expect(document.activeElement).toBe(getMinutesInput());
+  });
+
+  it("should not auto-focus minutes when hours value is invalid", () => {
+    renderSection();
+
+    const hoursInput = getHoursInput();
+    fireEvent.change(hoursInput, { target: { value: "25" } });
+
+    expect(document.activeElement).not.toBe(getMinutesInput());
+  });
+
+  it("should pad single digit with leading zero on blur", () => {
+    const onDayBoundaryChange = vi.fn();
+    renderSection({ dayBoundary: "04:00", onDayBoundaryChange });
+
+    const hoursInput = getHoursInput();
+    fireEvent.change(hoursInput, { target: { value: "5" } });
+    fireEvent.blur(hoursInput);
+
+    expect(onDayBoundaryChange).toHaveBeenCalledWith("05:00");
+  });
+
+  it("should revert to current value on blur with invalid input", () => {
+    const onDayBoundaryChange = vi.fn();
+    renderSection({ dayBoundary: "04:00", onDayBoundaryChange });
+
+    const hoursInput = getHoursInput();
+    fireEvent.change(hoursInput, { target: { value: "25" } });
+    fireEvent.blur(hoursInput);
+
+    expect(onDayBoundaryChange).not.toHaveBeenCalled();
+    expect(getHoursInput().value).toBe("04");
+  });
+
+  it("should strip non-digit characters from input", () => {
+    renderSection();
+
+    const hoursInput = getHoursInput();
+    fireEvent.change(hoursInput, { target: { value: "a3b" } });
+
+    expect(hoursInput.value).toBe("3");
+  });
+
+  it("should commit on Enter key", () => {
+    const onDayBoundaryChange = vi.fn();
+    renderSection({ dayBoundary: "04:00", onDayBoundaryChange });
+
+    const minutesInput = getMinutesInput();
+    fireEvent.change(minutesInput, { target: { value: "45" } });
+    // Reset mock since auto-commit already fired
+    onDayBoundaryChange.mockClear();
+
+    fireEvent.change(minutesInput, { target: { value: "3" } });
+    fireEvent.keyDown(minutesInput, { key: "Enter" });
+
+    expect(onDayBoundaryChange).toHaveBeenCalledWith("04:03");
+  });
+
+  it("should not call onDayBoundaryChange when value hasn't changed", () => {
+    const onDayBoundaryChange = vi.fn();
+    renderSection({ dayBoundary: "04:00", onDayBoundaryChange });
+
+    const hoursInput = getHoursInput();
+    fireEvent.blur(hoursInput);
 
     expect(onDayBoundaryChange).not.toHaveBeenCalled();
   });
 
-  it("should not call onDayBoundaryChange with empty value", () => {
-    const onDayBoundaryChange = vi.fn();
-    renderSection({ onDayBoundaryChange });
-
-    const input = screen.getByTestId("settings-day-boundary-input");
-    fireEvent.change(input, { target: { value: "" } });
-
-    expect(onDayBoundaryChange).not.toHaveBeenCalled();
+  it("should have accessible labels on both inputs", () => {
+    renderSection();
+    expect(
+      screen.getByLabelText("settings.dayBoundaryHours"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("settings.dayBoundaryMinutes"),
+    ).toBeInTheDocument();
   });
 
-  it("should have accessible label linked to input via htmlFor/id", () => {
+  it("should have aria-describedby linking inputs to description", () => {
     renderSection();
-    const input = screen.getByTestId(
-      "settings-day-boundary-input",
-    ) as HTMLInputElement;
-    const label = screen.getByText("settings.dayBoundary");
+    const hoursInput = getHoursInput();
+    const minutesInput = getMinutesInput();
+    const descriptionId = "day-boundary-description";
 
-    expect(label.tagName).toBe("LABEL");
-    expect(label).toHaveAttribute("for", input.id);
-  });
+    expect(hoursInput).toHaveAttribute("aria-describedby", descriptionId);
+    expect(minutesInput).toHaveAttribute("aria-describedby", descriptionId);
 
-  it("should have aria-describedby linking input to description", () => {
-    renderSection();
-    const input = screen.getByTestId("settings-day-boundary-input");
-    const descriptionId = input.getAttribute("aria-describedby");
-
-    expect(descriptionId).toBeTruthy();
-    const description = document.getElementById(descriptionId!);
+    const description = document.getElementById(descriptionId);
     expect(description).toBeInTheDocument();
     expect(description).toHaveTextContent("settings.dayBoundaryDescription");
+  });
+
+  it("should have htmlFor on label pointing to hours input", () => {
+    renderSection();
+    const label = screen.getByText("settings.dayBoundary");
+    expect(label.tagName).toBe("LABEL");
+    expect(label).toHaveAttribute("for", "day-boundary-hours");
   });
 });

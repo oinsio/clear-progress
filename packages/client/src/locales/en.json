@@ -249,6 +249,8 @@
     "menuOrderDragHandle": "Move: {{label}}",
     "menuOrderToggle": "Show/hide: {{label}}",
     "dayBoundary": "Day start time",
+    "dayBoundaryHours": "Hours",
+    "dayBoundaryMinutes": "Minutes",
     "dayBoundaryDescription": "Time when your day starts. Tasks deferred to tomorrow will appear at this time.",
     "server": {
       "account": "Account",
