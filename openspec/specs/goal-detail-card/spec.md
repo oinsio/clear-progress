@@ -108,3 +108,19 @@ The goal detail card in view mode SHALL use a three-row layout. Row 1 SHALL cont
 
 - **WHEN** user enters edit mode on the goal detail card
 - **THEN** the edit form layout is identical to the current implementation
+
+### Requirement: GoalDetailPage respects eye toggle for hidden tasks
+
+The GoalDetailPage SHALL display hidden tasks in the goal's task list when the eye toggle (`showHidden`) is active. Currently, `TaskRepository.getByGoalId()` hard-filters `!is_hidden`, making hidden tasks invisible even with the eye toggle on. Implements FR9 of hide-tasks.
+
+#### Scenario: Hidden tasks visible on goal page with eye toggle on
+
+- **GIVEN** a hidden task is assigned to the displayed goal
+- **WHEN** user enables the eye toggle on GoalDetailPage
+- **THEN** the hidden task appears in the goal's task list with reduced opacity and hidden indicator
+
+#### Scenario: Hidden tasks invisible on goal page with eye toggle off
+
+- **GIVEN** a hidden task is assigned to the displayed goal
+- **WHEN** user has eye toggle off on GoalDetailPage
+- **THEN** the hidden task does NOT appear in the goal's task list

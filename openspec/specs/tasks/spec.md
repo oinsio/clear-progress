@@ -121,6 +121,19 @@ User SHALL be able to mark a task as completed. System MUST set `is_completed` t
 - **THEN** is_completed is true, completed_at is set
 - **AND** a recurring copy is created per repeating-tasks spec FR9
 
+#### Scenario: Completing a manually hidden task clears hide state
+# implements FR6 of hide-tasks
+- **WHEN** user completes a task where `is_hidden = true` and `repeat_rule = ""`
+- **THEN** the task's `is_completed` is set to `true`
+- **AND** `is_hidden` is set to `false`
+- **AND** `appear_date` is cleared to `""`
+
+#### Scenario: Completing a recurring hidden task does not clear hide state
+# implements FR6 of hide-tasks
+- **WHEN** user completes a task where `is_hidden = true` and `repeat_rule` is non-empty
+- **THEN** the existing recurring completion logic runs unchanged
+- **AND** the hide state is managed by the recurring task mechanism, not cleared
+
 ### Requirement: User can uncomplete a task
 # implements FR3 of task-core-specs
 
@@ -211,7 +224,7 @@ User SHALL be able to search active (non-deleted, non-hidden) tasks by name or d
 ### Requirement: User can duplicate a task
 # implements FR7 of task-core-specs
 
-User SHALL be able to duplicate a task. System MUST create a new task with the same name, box, description, goal_id, context_id, category_id, and repeat_rule. Checklist items MUST be copied with new IDs and is_completed reset to false. The duplicate MUST have a new UUID, fresh timestamps, and needsSync true.
+User SHALL be able to duplicate a task. System MUST create a new task with the same name, box, description, goal_id, context_id, category_id, and repeat_rule. Checklist items MUST be copied with new IDs and is_completed reset to false. The duplicate MUST have a new UUID, fresh timestamps, and needsSync true. The duplicate MUST always be created with `is_hidden = false` and `appear_date = ""`, regardless of the original task's hidden state. Implements FR10 of hide-tasks.
 
 #### Scenario: Duplicate a task
 - **GIVEN** task "Buy groceries" in inbox with description "weekly"
@@ -227,6 +240,12 @@ User SHALL be able to duplicate a task. System MUST create a new task with the s
 #### Scenario: Duplicate nonexistent task throws error
 - **WHEN** user attempts to duplicate a task with a nonexistent ID
 - **THEN** system throws error "Task not found"
+
+#### Scenario: Duplicating a hidden task creates a visible copy
+# implements FR10 of hide-tasks
+- **WHEN** user duplicates a task where `is_hidden = true` and `appear_date = "2027-01-15"`
+- **THEN** the duplicate task has `is_hidden = false` and `appear_date = ""`
+- **AND** the duplicate is immediately visible in the task list
 
 ### Requirement: User can get tasks by goal
 # implements FR8 of task-core-specs
