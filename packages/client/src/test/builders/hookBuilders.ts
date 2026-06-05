@@ -2,9 +2,12 @@ import { vi } from "vitest";
 import type { UseCategoriesReturn } from "@/hooks/useCategories";
 import type { UseCompletedTasksReturn } from "@/hooks/useCompletedTasks";
 import type { UseContextsReturn } from "@/hooks/useContexts";
+import type { UseGoalReturn } from "@/hooks/useGoal";
 import type { UseGoalsReturn } from "@/hooks/useGoals";
+import type { UseGoalTasksReturn } from "@/hooks/useGoalTasks";
 import type { UseIdeasReturn } from "@/hooks/useIdeas";
 import type { UseTasksReturn } from "@/hooks/useTasks";
+import { buildGoal } from "@/test/factories/goalFactory";
 import type { Task } from "@/types/entities";
 
 export function buildTasksHook(
@@ -91,6 +94,39 @@ export function buildCompletedTasksHook(
     completedTasks: [],
     isLoading: false,
     reload: vi.fn(),
+    ...overrides,
+  };
+}
+
+export function buildGoalHook(
+  overrides: Partial<UseGoalReturn> = {},
+): UseGoalReturn {
+  return {
+    goal: buildGoal({ name: "Моя цель" }),
+    tasks: [],
+    isLoading: false,
+    updateGoal: vi.fn().mockResolvedValue(undefined),
+    updateGoalStatus: vi.fn().mockResolvedValue(undefined),
+    deleteGoal: vi.fn().mockResolvedValue(undefined),
+    reload: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  };
+}
+
+export function buildGoalTasksHook(
+  overrides: Partial<UseGoalTasksReturn> = {},
+): UseGoalTasksReturn {
+  return {
+    tasks: [],
+    completedTasks: [],
+    isLoading: false,
+    createTask: vi.fn().mockResolvedValue(undefined),
+    completeTask: vi.fn().mockResolvedValue(undefined),
+    updateTask: vi.fn().mockResolvedValue(undefined),
+    moveTask: vi.fn().mockResolvedValue(undefined),
+    deleteTask: vi.fn().mockResolvedValue(undefined),
+    duplicateTask: vi.fn().mockResolvedValue({} as Task),
+    reorderTasks: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
