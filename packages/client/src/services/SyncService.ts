@@ -665,7 +665,7 @@ export class SyncService {
     // 4. Perform pull to sync (will update current_revision)
     await this._pull();
 
-    // 5. Вернуть статистику для UI
+    // 5. Return statistics for the UI
     return response.purged;
   }
 }

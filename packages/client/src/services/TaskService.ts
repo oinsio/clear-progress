@@ -245,18 +245,18 @@ export class TaskService {
     const copies = await this.taskRepository.findByOriginalTaskId(id);
 
     if (copies.length > 0) {
-      // Найти первую активную копию (не удалённую)
+      // Find the first active copy (not deleted)
       const newOriginal = copies.find((copy) => !copy.is_deleted);
 
       if (newOriginal) {
-        // Переназначить все остальные копии на новый оригинал
+        // Reassign all other copies to the new original
         for (const copy of copies) {
           if (copy.id !== newOriginal.id) {
             await this.update(copy.id, { original_task_id: newOriginal.id });
           }
         }
 
-        // Очистить original_task_id у нового оригинала
+        // Clear original_task_id on the new original
         await this.update(newOriginal.id, { original_task_id: "" });
       }
     }
@@ -274,7 +274,7 @@ export class TaskService {
       await this.checklistRepository.bulkUpsert(updatedItems);
     }
 
-    // Удалить исходную задачу
+    // Delete the original task
     return this.update(id, { is_deleted: true });
   }
 
@@ -315,12 +315,12 @@ export class TaskService {
   async reorderTasks(orderedTasks: Task[]): Promise<void> {
     if (orderedTasks.length === 0) return;
 
-    // Проверяем, изменился ли хотя бы один sort_order
+    // Check whether at least one sort_order has changed
     const hasAnyOrderChanged = orderedTasks.some(
       (task, index) => task.sort_order !== index,
     );
     if (!hasAnyOrderChanged) {
-      return; // Ничего не изменилось, не синхронизируем
+      return; // Nothing changed, skip sync
     }
 
     const now = toISOTimestamp();
