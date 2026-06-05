@@ -1,405 +1,81 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  ArrowLeft,
-  Check,
-  CheckCheck,
-  CheckSquare,
-  CircleMinus,
-  Crosshair,
-  Pause,
-  Pencil,
-  Play,
-  Square,
-} from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
-import defaultCoverSvg from "@/assets/default-goal-cover.svg";
+/**
+ * Goal detail page — layout component.
+ * Delegates state to useGoalDetailState, card rendering to GoalCardViewMode/GoalCardEditMode.
+ * Implements FR1-FR5 of goal-detail-card-refactor.
+ */
+import { ArrowLeft, CheckSquare } from "lucide-react";
 import { CommandBar } from "@/components/command-bar";
 import { FocusGoalReplacementDialog } from "@/components/goals/FocusGoalReplacementDialog";
-import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
-import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
+import { GoalCardEditMode } from "@/components/goals/GoalCardEditMode";
+import { GoalCardViewMode } from "@/components/goals/GoalCardViewMode";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
-import { EditableDescription } from "@/components/ui/EditableDescription";
-import { LinkedText } from "@/components/ui/LinkedText";
-import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER, ROUTES } from "@/constants";
-import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
-import { useCategories } from "@/hooks/useCategories";
-import { useContexts } from "@/hooks/useContexts";
-import { useCoverPreview } from "@/hooks/useCoverPreview";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
-import { useFocusedGoals } from "@/hooks/useFocusedGoals";
-import { useFocusMode } from "@/hooks/useFocusMode";
-import { useGoal } from "@/hooks/useGoal";
-import { useGoals } from "@/hooks/useGoals";
-import { useGoalTasks } from "@/hooks/useGoalTasks";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { useMenuOrder } from "@/hooks/useMenuOrder";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useShowHidden } from "@/hooks/useShowHidden";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useTargetBox } from "@/hooks/useTargetBox";
-import { useTasksByBox } from "@/hooks/useTasksByBox";
-import {
-  defaultCoverService,
-  defaultTaskService,
-} from "@/services/defaultServices";
+import { FULL_BOX_FILTER_ORDER, ROUTES } from "@/constants";
+import { useGoalDetailState } from "@/hooks/useGoalDetailState";
 import { cn } from "@/shared/lib/cn";
-import type { Box, BoxFilter, GoalStatus } from "@/types/common";
-import type { Goal, Task } from "@/types/entities";
-
-interface GoalStatusOption {
-  status: GoalStatus;
-  icon: LucideIcon;
-}
-
-const STATUS_OPTIONS: GoalStatusOption[] = [
-  { status: "cancelled", icon: CircleMinus },
-  { status: "paused", icon: Pause },
-  { status: "planning", icon: Square },
-  { status: "in_progress", icon: Play },
-  { status: "completed", icon: Check },
-];
+import type { Goal } from "@/types/entities";
 
 export default function GoalDetailPage() {
-  const { t } = useTranslation();
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const state = useGoalDetailState();
 
-  const {
-    goal,
-    isLoading: isGoalLoading,
-    reload: reloadGoal,
-    updateGoal,
-    deleteGoal,
-  } = useGoal(id ?? "");
-  const { url: existingCoverUrl } = useCoverUrl(goal?.cover_hash ?? "");
-  const {
-    tasks,
-    completedTasks,
-    isLoading: isTasksLoading,
-    createTask,
-    completeTask,
-    updateTask,
-    moveTask,
-    deleteTask,
-    duplicateTask,
-    reorderTasks,
-  } = useGoalTasks(id ?? "");
-  const { goals } = useGoals();
-  const {
-    focusedGoalIds,
-    addGoalToFocus,
-    removeGoalFromFocus,
-    replaceGoalInFocus,
-  } = useFocusedGoals();
-  const { contexts } = useContexts();
-  const { categories } = useCategories();
-  const { menuOrder } = useMenuOrder();
-  const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const { isFocusMode, focusOpacity } = useFocusMode();
-  const isDesktop = useIsDesktop();
-  const {
-    ratio,
-    containerRef: splitContainerRef,
-    handleResizeMouseDown,
-  } = usePanelSplit();
-
-  const isUnsynced = useIsUnsynced(goal ?? { needsSync: false });
-  const { showHidden, toggleShowHidden } = useShowHidden();
-  const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
-  const targetBox = useTargetBox(activeBox);
-
-  // view state
-  const [isEditing, setIsEditing] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
-  const [isReplacementDialogOpen, setIsReplacementDialogOpen] = useState(false);
-
-  // edit form state
-  const [editName, setEditName] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editStatus, setEditStatus] = useState<GoalStatus>("planning");
-  const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null);
-  const [isCoverRemoved, setIsCoverRemoved] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-
-  const coverPreviewSrc = useCoverPreview({
-    pendingCoverFile,
-    isCoverRemoved,
-    existingCoverUrl,
-  });
-
-  const editNameTextareaRef = useAutoResizeTextarea(editName);
-
-  const hasLoadedRef = useRef(false);
-  const isLoading = isGoalLoading || isTasksLoading;
-
-  useEffect(() => {
-    if (!isGoalLoading) {
-      if (!hasLoadedRef.current) {
-        hasLoadedRef.current = true;
-      } else if (!goal) {
-        navigate(ROUTES.GOALS);
-      }
-    }
-  }, [isGoalLoading, goal, navigate]);
-
-  const tasksByBox = useTasksByBox(tasks);
-
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  useEffect(() => {
-    if (!selectedTaskId) {
-      setSelectedTask(null);
-      return;
-    }
-
-    const allTasks = [...tasks, ...completedTasks];
-    const found = allTasks.find((task) => task.id === selectedTaskId);
-
-    if (found) {
-      setSelectedTask(found);
-    } else {
-      // If not found — fetch from DB (for just-created tasks)
-      void (async () => {
-        const task = await defaultTaskService.getById(selectedTaskId);
-        if (task) setSelectedTask(task);
-      })();
-    }
-  }, [selectedTaskId, tasks, completedTasks]);
-
-  const handleTaskSelect = useCallback((taskId: string) => {
-    setSelectedTaskId((previous) => (previous === taskId ? null : taskId));
-  }, []);
-
-  const handleTaskExpand = useCallback((taskId: string | null) => {
-    setExpandedTaskId(taskId);
-  }, []);
-
-  const handleDetailPanelClose = useCallback(() => {
-    setSelectedTaskId(null);
-  }, []);
-
-  const handleCompleteTask = useCallback(
-    async (id: string) => {
-      const recurringId = await completeTask(id);
-      if (recurringId) setSelectedTaskId(recurringId);
-    },
-    [completeTask],
-  );
-
-  const handleCreateTask = useCallback(
-    async (name: string, box: Box, description: string) => {
-      await createTask(name, box, description);
-    },
-    [createTask],
-  );
-
-  const handleBoxChange = useCallback((box: BoxFilter) => {
-    setActiveBox(box);
-  }, []);
-
-  const handleCommandBarSubmit = useCallback(
-    (name: string) => {
-      void handleCreateTask(name, targetBox, "");
-    },
-    [handleCreateTask, targetBox],
-  );
-
-  const commandBarPlaceholder = t(`commandBar.placeholder.${targetBox}`);
-
-  const handleReorderTasks = useCallback(
-    async (_box: Box, orderedTasks: Task[]) => {
-      await reorderTasks(orderedTasks);
-    },
-    [reorderTasks],
-  );
-
-  const handleStartEdit = useCallback(() => {
-    setEditName(goal?.name ?? "");
-    setEditDescription(goal?.description ?? "");
-    setEditStatus(goal?.status ?? "planning");
-    setPendingCoverFile(null);
-    setIsCoverRemoved(false);
-    setSaveError(null);
-    setIsConfirmingDelete(false);
-    setIsEditing(true);
-  }, [goal]);
-
-  const handleCancelEdit = useCallback(() => {
-    setIsEditing(false);
-    setSaveError(null);
-    setIsConfirmingDelete(false);
-  }, []);
-
-  const handleCoverSelect = useCallback((file: File) => {
-    setPendingCoverFile(file);
-    setIsCoverRemoved(false);
-  }, []);
-
-  const handleCoverRemove = useCallback(() => {
-    setPendingCoverFile(null);
-    setIsCoverRemoved(true);
-  }, []);
-
-  const canSave = editName.trim().length > 0 && !isSaving;
-
-  const handleSave = useCallback(async () => {
-    if (!canSave || !id) return;
-    setIsSaving(true);
-    setSaveError(null);
-    try {
-      const originalCoverFileId = goal?.cover_hash ?? "";
-      let newCoverFileId = originalCoverFileId;
-
-      if (pendingCoverFile) {
-        const result = await defaultCoverService.uploadCover(
-          pendingCoverFile,
-          id,
-        );
-        newCoverFileId = result.data_hash;
-        if (originalCoverFileId && originalCoverFileId !== newCoverFileId) {
-          void defaultCoverService.deleteCover(originalCoverFileId, id);
-        }
-      } else if (isCoverRemoved) {
-        newCoverFileId = "";
-        if (originalCoverFileId) {
-          void defaultCoverService.deleteCover(originalCoverFileId, id);
-        }
-      }
-
-      await updateGoal({
-        name: editName.trim(),
-        description: editDescription.trim(),
-        cover_hash: newCoverFileId,
-        status: editStatus,
-      });
-      void reloadGoal();
-      setIsEditing(false);
-    } catch {
-      setSaveError(t("goal.cover.uploadError"));
-    } finally {
-      setIsSaving(false);
-    }
-  }, [
-    canSave,
-    id,
-    goal,
-    pendingCoverFile,
-    isCoverRemoved,
-    updateGoal,
-    editName,
-    editDescription,
-    editStatus,
-    reloadGoal,
-    t,
-  ]);
-
-  const handleStatusChange = useCallback((newStatus: GoalStatus) => {
-    setEditStatus(newStatus);
-  }, []);
-
-  const handleDeleteConfirm = useCallback(async () => {
-    await deleteGoal();
-    navigate(ROUTES.GOALS);
-  }, [deleteGoal, navigate]);
-
-  const isFocused = goal ? focusedGoalIds.includes(goal.id) : false;
-
-  const isFocusedGoalsVisible = menuOrder.some(
-    (c) => c.mode === "focused_goals" && c.visible,
-  );
-
-  const handleFocusToggle = useCallback(async () => {
-    if (!goal) return;
-
-    if (isFocused) {
-      await removeGoalFromFocus(goal.id);
-    } else {
-      const result = await addGoalToFocus(goal.id);
-      if (result === "limit_reached") {
-        setIsReplacementDialogOpen(true);
-      }
-    }
-  }, [goal, isFocused, addGoalToFocus, removeGoalFromFocus]);
-
-  const handleReplace = useCallback(
-    async (oldGoalId: string) => {
-      if (!goal) return;
-      await replaceGoalInFocus(oldGoalId, goal.id);
-      setIsReplacementDialogOpen(false);
-    },
-    [goal, replaceGoalInFocus],
-  );
-
-  const handleModeChange = useSidebarNavigation();
-
-  if (!isLoading && !goal) {
+  if (!state.isLoading && !state.goal) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-400 text-sm">{t("goal.notFound")}</p>
+        <p className="text-gray-400 text-sm">{state.t("goal.notFound")}</p>
       </div>
     );
   }
-
-  const activeStatus = isEditing ? editStatus : (goal?.status ?? "planning");
 
   return (
     <div
       data-testid="goal-detail-page"
       className="relative flex flex-1 overflow-hidden bg-white"
     >
-      <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
+      <div
+        ref={state.splitContainerRef}
+        className="flex flex-1 overflow-hidden"
+      >
         {/* Main content column */}
         <div
           className={cn(
             "flex flex-col overflow-hidden",
-            !isDesktop && selectedTask && "hidden",
+            !state.isDesktop && state.selectedTask && "hidden",
           )}
           style={
-            isDesktop && selectedTask
-              ? { width: `${ratio * 100}%`, flexShrink: 0 }
+            state.isDesktop && state.selectedTask
+              ? { width: `${state.ratio * 100}%`, flexShrink: 0 }
               : { flex: "1 1 0" }
           }
         >
           <CommandBar
             filter={{
               boxes: FULL_BOX_FILTER_ORDER,
-              activeBox,
-              onBoxChange: handleBoxChange,
+              activeBox: state.activeBox,
+              onBoxChange: state.handleBoxChange,
             }}
             eyeToggle={{
-              isVisible: showHidden,
-              onToggle: toggleShowHidden,
+              isVisible: state.showHidden,
+              onToggle: state.toggleShowHidden,
             }}
             entityIcon={CheckSquare}
-            placeholder={commandBarPlaceholder}
-            onSubmit={handleCommandBarSubmit}
+            placeholder={state.commandBarPlaceholder}
+            onSubmit={state.handleCommandBarSubmit}
           />
 
           {/* Header */}
           <header className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
             <button
               type="button"
-              aria-label={t("goal.back")}
-              onClick={() => navigate(ROUTES.GOALS)}
+              aria-label={state.t("goal.back")}
+              onClick={() => state.navigate(ROUTES.GOALS)}
               className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-semibold text-accent">
-              {t("selector.goal")}
+              {state.t("selector.goal")}
             </h1>
           </header>
 
@@ -407,300 +83,95 @@ export default function GoalDetailPage() {
           <main className="flex-1 overflow-y-auto">
             <div className="xl:max-w-3xl xl:mx-auto">
               {/* Goal card */}
-              {goal && (
+              {state.goal && (
                 <div
                   data-testid="goal-card"
                   className={cn(
                     "border-b border-gray-100 relative border-l-2 transition-colors",
-                    isUnsynced ? "border-l-amber-400" : "border-l-transparent",
-                    isEditing && "pb-2",
+                    state.isUnsynced
+                      ? "border-l-amber-400"
+                      : "border-l-transparent",
+                    state.isEditing && "pb-2",
                   )}
                 >
-                  {isEditing ? (
-                    /* Edit mode */
-                    <div className="px-4 pt-4 flex flex-col gap-4">
-                      {/* Cover + Name row */}
-                      <div className="flex items-center gap-3">
-                        <GoalCoverPicker
-                          previewSrc={coverPreviewSrc}
-                          onFileSelect={handleCoverSelect}
-                          onRemove={handleCoverRemove}
-                        />
-                        <div className="flex-1">
-                          <label htmlFor="goal-edit-name" className="sr-only">
-                            {t("goal.nameLabel")}
-                          </label>
-                          <textarea
-                            ref={editNameTextareaRef}
-                            id="goal-edit-name"
-                            rows={1}
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            placeholder={t("goal.namePlaceholder")}
-                            className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent resize-none overflow-hidden"
-                            data-testid="goal-name-input"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      <div>
-                        <label
-                          htmlFor="goal-edit-description"
-                          className="text-xs font-medium text-gray-500 mb-1 block"
-                        >
-                          {t("goal.descriptionLabel")}
-                        </label>
-                        <EditableDescription
-                          value={editDescription}
-                          onChange={setEditDescription}
-                          placeholder={t("goal.descriptionPlaceholder")}
-                          data-test-id="goal-description-input"
-                        />
-                      </div>
-
-                      {/* Status segmented control */}
-                      <div>
-                        <label className="text-xs font-medium text-gray-500 mb-2 block">
-                          {t("goal.statusLabel")}
-                        </label>
-                        <div className="flex rounded-full border border-accent overflow-hidden">
-                          {STATUS_OPTIONS.map(
-                            ({ status: optionStatus, icon: StatusIcon }) => {
-                              const isSelected = activeStatus === optionStatus;
-                              return (
-                                <button
-                                  key={optionStatus}
-                                  type="button"
-                                  aria-label={t(`goal.status.${optionStatus}`)}
-                                  aria-pressed={isSelected}
-                                  onClick={() =>
-                                    handleStatusChange(optionStatus)
-                                  }
-                                  className={cn(
-                                    "flex-1 flex items-center justify-center py-3 transition-colors",
-                                    isSelected
-                                      ? "bg-accent text-white"
-                                      : "text-accent bg-white hover:bg-accent/10",
-                                  )}
-                                >
-                                  <StatusIcon className="w-[1.125rem] h-[1.125rem]" />
-                                </button>
-                              );
-                            },
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Save error */}
-                      {saveError && (
-                        <p
-                          data-testid="goal-save-error"
-                          className="text-sm text-red-500"
-                        >
-                          {saveError}
-                        </p>
-                      )}
-
-                      {/* Footer buttons */}
-                      <div className="flex gap-2 pb-2">
-                        <button
-                          type="button"
-                          onClick={() => setIsConfirmingDelete(true)}
-                          aria-label={t("goal.delete")}
-                          data-testid="goal-delete-button"
-                          className="flex-1 py-2.5 text-sm text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
-                        >
-                          {t("goal.delete")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleCancelEdit}
-                          aria-label={t("goal.cancel")}
-                          className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                        >
-                          {t("goal.cancel")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleSave()}
-                          disabled={!canSave}
-                          aria-label={t("goal.save")}
-                          data-testid="goal-save-button"
-                          className="flex-1 py-2.5 text-sm text-white bg-accent rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
-                        >
-                          {isSaving
-                            ? t("goal.cover.uploading")
-                            : t("goal.save")}
-                        </button>
-                      </div>
-
-                      {/* Delete confirmation overlay */}
-                      {isConfirmingDelete && (
-                        <div
-                          data-testid="goal-delete-confirm"
-                          className="absolute inset-0 bg-white/95 rounded-b-none flex flex-col items-center justify-center gap-4 px-6 z-10"
-                        >
-                          <p className="text-base font-medium text-gray-800 text-center">
-                            {t("goal.deleteConfirmName")}
-                          </p>
-                          <p className="text-sm text-gray-500 text-center">
-                            {editName}
-                          </p>
-                          <div className="flex gap-3 w-full">
-                            <button
-                              type="button"
-                              data-testid="goal-delete-cancel"
-                              onClick={() => setIsConfirmingDelete(false)}
-                              aria-label={t("goal.cancel")}
-                              className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                            >
-                              {t("goal.cancel")}
-                            </button>
-                            <button
-                              type="button"
-                              data-testid="goal-delete-confirm-btn"
-                              onClick={() => void handleDeleteConfirm()}
-                              aria-label={t("goal.delete")}
-                              className="flex-1 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
-                            >
-                              {t("goal.delete")}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  {state.isEditing ? (
+                    <GoalCardEditMode
+                      coverPreviewSrc={state.coverPreviewSrc}
+                      editName={state.editName}
+                      editDescription={state.editDescription}
+                      editStatus={state.editStatus}
+                      isSaving={state.isSaving}
+                      saveError={state.saveError}
+                      canSave={state.canSave}
+                      isConfirmingDelete={state.isConfirmingDelete}
+                      onNameChange={state.setEditName}
+                      onDescriptionChange={state.setEditDescription}
+                      onStatusChange={state.handleStatusChange}
+                      onCoverSelect={state.handleCoverSelect}
+                      onCoverRemove={state.handleCoverRemove}
+                      onSave={() => void state.handleSave()}
+                      onCancel={state.handleCancelEdit}
+                      onDeleteRequest={() => state.setIsConfirmingDelete(true)}
+                      onDeleteConfirm={() => void state.handleDeleteConfirm()}
+                      onDeleteCancel={() => state.setIsConfirmingDelete(false)}
+                    />
                   ) : (
-                    /* View mode */
-                    <div className="flex items-start gap-3 px-4 py-4">
-                      {/* Cover */}
-                      <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                        <img
-                          src={existingCoverUrl ?? defaultCoverSvg}
-                          alt={existingCoverUrl ? goal.name : ""}
-                          aria-hidden={!existingCoverUrl}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      {/* Name + description + status */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-800 font-medium leading-snug">
-                          {goal.name}
-                        </p>
-                        {goal.description && (
-                          <LinkedText
-                            text={goal.description}
-                            className="text-xs text-gray-500 mt-0.5 leading-snug whitespace-pre-wrap"
-                          />
-                        )}
-                        <div className="mt-1">
-                          <GoalStatusBadge status={goal.status} />
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {/* Toggle focus button */}
-                        <button
-                          type="button"
-                          aria-label={
-                            isFocused
-                              ? t("goal.removeFromFocus")
-                              : t("goal.addToFocus")
-                          }
-                          aria-pressed={isFocused}
-                          data-testid="focus-icon"
-                          onClick={() => void handleFocusToggle()}
-                          className={cn(
-                            "w-8 h-8 flex items-center justify-center rounded-full transition-colors",
-                            isFocused
-                              ? "text-accent bg-accent/10 hover:bg-accent/20"
-                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
-                          )}
-                        >
-                          <Crosshair className="w-4 h-4" aria-hidden="true" />
-                        </button>
-
-                        {/* Toggle completed tasks button */}
-                        <button
-                          type="button"
-                          aria-label={
-                            showCompleted
-                              ? t("goal.hideCompleted")
-                              : t("goal.showCompleted")
-                          }
-                          data-testid="toggle-completed-button"
-                          onClick={() => setShowCompleted((prev) => !prev)}
-                          className={cn(
-                            "w-8 h-8 flex items-center justify-center rounded-full transition-colors",
-                            showCompleted
-                              ? "text-green-600 bg-green-50 hover:bg-green-100"
-                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
-                          )}
-                        >
-                          <CheckCheck className="w-4 h-4" aria-hidden="true" />
-                        </button>
-
-                        {/* Edit goal button */}
-                        <button
-                          type="button"
-                          aria-label={t("goal.editName")}
-                          data-testid="edit-goal-button"
-                          onClick={handleStartEdit}
-                          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                        >
-                          <Pencil className="w-4 h-4" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </div>
+                    <GoalCardViewMode
+                      goal={state.goal}
+                      existingCoverUrl={state.existingCoverUrl}
+                      isFocused={state.isFocused}
+                      showCompleted={state.showCompleted}
+                      onFocusToggle={() => void state.handleFocusToggle()}
+                      onShowCompletedToggle={state.handleShowCompletedToggle}
+                      onStartEdit={state.handleStartEdit}
+                    />
                   )}
                 </div>
               )}
 
               {/* Active tasks by box */}
               <BoxSectionList
-                isLoading={isLoading}
-                tasksByBox={tasksByBox}
-                goals={goals}
-                contexts={contexts}
-                categories={categories}
-                onComplete={handleCompleteTask}
-                onUpdate={updateTask}
-                onMove={moveTask}
-                onDelete={deleteTask}
-                onReorder={handleReorderTasks}
-                onSelect={handleTaskSelect}
-                selectedTaskId={selectedTaskId}
-                isFocusMode={isFocusMode}
-                focusDimmedOpacity={focusOpacity}
-                expandedTaskId={expandedTaskId}
-                onExpand={handleTaskExpand}
+                isLoading={state.isLoading}
+                tasksByBox={state.tasksByBox}
+                goals={state.goals}
+                contexts={state.contexts}
+                categories={state.categories}
+                onComplete={state.handleCompleteTask}
+                onUpdate={state.updateTask}
+                onMove={state.moveTask}
+                onDelete={state.handleDeletePanelTask}
+                onReorder={state.handleReorderTasks}
+                onSelect={state.handleTaskSelect}
+                selectedTaskId={state.selectedTaskId}
+                isFocusMode={state.isFocusMode}
+                focusDimmedOpacity={state.focusOpacity}
+                expandedTaskId={state.expandedTaskId}
+                onExpand={state.handleTaskExpand}
               />
 
               {/* Completed tasks section */}
-              {showCompleted && completedTasks.length > 0 && (
+              {state.showCompleted && state.completedTasks.length > 0 && (
                 <section>
                   <h2 className="px-4 py-2 text-sm font-semibold text-accent bg-white border-b border-gray-100 sticky top-0 z-10">
-                    {t("goal.completedSection", {
-                      count: completedTasks.length,
+                    {state.t("goal.completedSection", {
+                      count: state.completedTasks.length,
                     })}
                   </h2>
                   <TaskList
-                    tasks={completedTasks}
-                    goals={goals}
-                    contexts={contexts}
-                    categories={categories}
-                    onComplete={handleCompleteTask}
-                    onUpdate={updateTask}
-                    onMove={moveTask}
-                    onDelete={deleteTask}
-                    onSelect={handleTaskSelect}
-                    selectedTaskId={selectedTaskId}
-                    isFocusMode={isFocusMode}
-                    focusDimmedOpacity={focusOpacity}
-                    expandedTaskId={expandedTaskId}
-                    onExpand={handleTaskExpand}
+                    tasks={state.completedTasks}
+                    goals={state.goals}
+                    contexts={state.contexts}
+                    categories={state.categories}
+                    onComplete={state.handleCompleteTask}
+                    onUpdate={state.updateTask}
+                    onMove={state.moveTask}
+                    onDelete={state.handleDeletePanelTask}
+                    onSelect={state.handleTaskSelect}
+                    selectedTaskId={state.selectedTaskId}
+                    isFocusMode={state.isFocusMode}
+                    focusDimmedOpacity={state.focusOpacity}
+                    expandedTaskId={state.expandedTaskId}
+                    onExpand={state.handleTaskExpand}
                   />
                 </section>
               )}
@@ -709,34 +180,27 @@ export default function GoalDetailPage() {
         </div>
 
         {/* Resize handle between task list and detail panel */}
-        {isDesktop && selectedTask && (
+        {state.isDesktop && state.selectedTask && (
           <div
             className="w-1 flex-shrink-0 cursor-col-resize bg-gray-100 hover:bg-accent/30 active:bg-accent/50 transition-colors"
-            onMouseDown={handleResizeMouseDown}
+            onMouseDown={state.handleResizeMouseDown}
           />
         )}
 
         {/* Task detail panel */}
-        {selectedTask && (
+        {state.selectedTask && (
           <TaskDetailPanel
-            task={selectedTask}
-            goals={goals}
-            contexts={contexts}
-            categories={categories}
-            onUpdate={updateTask}
-            onDelete={(taskId) => {
-              setSelectedTaskId(null);
-              void deleteTask(taskId);
-            }}
-            onDuplicate={async (taskId) => {
-              const newTask = await duplicateTask(taskId);
-              setSelectedTaskId(newTask.id);
-              setSelectedTask(newTask);
-            }}
-            onClose={handleDetailPanelClose}
+            task={state.selectedTask}
+            goals={state.goals}
+            contexts={state.contexts}
+            categories={state.categories}
+            onUpdate={state.updateTask}
+            onDelete={state.handleDeletePanelTask}
+            onDuplicate={state.handleDuplicatePanelTask}
+            onClose={state.handleDetailPanelClose}
             style={
-              isDesktop
-                ? { width: `${(1 - ratio) * 100}%`, flexShrink: 0 }
+              state.isDesktop
+                ? { width: `${(1 - state.ratio) * 100}%`, flexShrink: 0 }
                 : { flex: "1 1 0" }
             }
           />
@@ -744,28 +208,30 @@ export default function GoalDetailPage() {
       </div>
 
       {/* Focus goal replacement dialog */}
-      {isReplacementDialogOpen && goal && (
+      {state.isReplacementDialogOpen && state.goal && (
         <FocusGoalReplacementDialog
-          isOpen={isReplacementDialogOpen}
-          goalToAdd={goal}
-          focusedGoals={focusedGoalIds
-            .map((id) => goals.find((g) => g.id === id))
+          isOpen={state.isReplacementDialogOpen}
+          goalToAdd={state.goal}
+          focusedGoals={state.focusedGoalIds
+            .map((goalId) => state.goals.find((g) => g.id === goalId))
             .filter((g): g is Goal => g !== undefined)}
-          onReplace={handleReplace}
-          onClose={() => setIsReplacementDialogOpen(false)}
+          onReplace={state.handleReplace}
+          onClose={() => state.setIsReplacementDialogOpen(false)}
         />
       )}
 
       {/* Right filter panel */}
       <Sidebar
-        mode={isFocused && isFocusedGoalsVisible ? null : "goals"}
-        isOpen={isPanelOpen}
-        side={panelSide}
+        mode={state.isFocused && state.isFocusedGoalsVisible ? null : "goals"}
+        isOpen={state.isPanelOpen}
+        side={state.panelSide}
         activeFocusedGoalId={
-          isFocused && isFocusedGoalsVisible ? goal?.id : undefined
+          state.isFocused && state.isFocusedGoalsVisible
+            ? state.goal?.id
+            : undefined
         }
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
+        onToggle={state.togglePanelOpen}
+        onModeChange={state.handleModeChange}
       />
     </div>
   );
