@@ -73,7 +73,10 @@ describe("TaskService", () => {
     it("should call repository.getByGoalId with the goalId", async () => {
       const { taskService, mockTaskRepository } = createTestContext();
       await taskService.getByGoalId("goal-abc");
-      expect(mockTaskRepository.getByGoalId).toHaveBeenCalledWith("goal-abc");
+      expect(mockTaskRepository.getByGoalId).toHaveBeenCalledWith(
+        "goal-abc",
+        undefined,
+      );
     });
   });
 

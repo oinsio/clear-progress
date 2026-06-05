@@ -29,11 +29,17 @@ export class TaskRepository {
     return db.tasks.get(id);
   }
 
-  async getByGoalId(goalId: string): Promise<Task[]> {
+  async getByGoalId(
+    goalId: string,
+    options?: { includeHidden?: boolean },
+  ): Promise<Task[]> {
     return db.tasks
       .where("goal_id")
       .equals(goalId)
-      .filter((task) => !task.is_deleted && !task.is_hidden)
+      .filter(
+        (task) =>
+          !task.is_deleted && (options?.includeHidden || !task.is_hidden),
+      )
       .toArray();
   }
 

@@ -27,6 +27,7 @@ export const SELECTOR_TYPE = {
   CONTEXT: "context",
   CATEGORY: "category",
   REPEAT: "repeat",
+  HIDE: "hide",
 } as const;
 
 export type SelectorType = (typeof SELECTOR_TYPE)[keyof typeof SELECTOR_TYPE];
@@ -36,6 +37,7 @@ export const SELECTOR_TITLE_KEYS: Record<SelectorType, string> = {
   [SELECTOR_TYPE.CONTEXT]: "selector.context",
   [SELECTOR_TYPE.CATEGORY]: "selector.category",
   [SELECTOR_TYPE.REPEAT]: "taskEdit.fieldRepeat",
+  [SELECTOR_TYPE.HIDE]: "selector.hide",
 };
 
 export const CHECKLIST_ITEM_VARIANT = {

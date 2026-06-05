@@ -30,6 +30,7 @@ import {
   parseRepeatRule,
   serializeRepeatRule,
 } from "@/utils/repeatRule";
+import { HideTaskPanel } from "./HideTaskPanel";
 import { RepeatRuleSelector } from "./RepeatRuleSelector";
 import { SortableChecklistItem } from "./SortableChecklistItem";
 import {
@@ -366,6 +367,19 @@ export function TaskDetailPanel({
     await onDuplicate(task.id);
   }, [task.id, onDuplicate]);
 
+  const handleHide = useCallback(
+    async (date: string) => {
+      await onUpdate(task.id, { is_hidden: true, appear_date: date });
+      setOpenSelector(null);
+    },
+    [task.id, onUpdate],
+  );
+
+  const handleUnhide = useCallback(async () => {
+    await onUpdate(task.id, { is_hidden: false, appear_date: "" });
+    setOpenSelector(null);
+  }, [task.id, onUpdate]);
+
   const handleNewItemKeyDown = useCallback(
     async (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === "Enter" && newItemName.trim()) {
@@ -591,6 +605,15 @@ export function TaskDetailPanel({
               onClick={() => setOpenSelector(SELECTOR_TYPE.REPEAT)}
             />
 
+            {!task.repeat_rule && (
+              <DrillDownRow
+                label={t("task.hideUntil")}
+                value={task.is_hidden ? task.appear_date : ""}
+                hasValue={task.is_hidden}
+                onClick={() => setOpenSelector(SELECTOR_TYPE.HIDE)}
+              />
+            )}
+
             {/* Duplicate button */}
             <button
               type="button"
@@ -654,6 +677,16 @@ export function TaskDetailPanel({
                       noSelectionLabel={t("selector.noCategory")}
                       onSelect={(id) => void handleCategoryChange(id)}
                     />
+                  )}
+                  {openSelector === SELECTOR_TYPE.HIDE && (
+                    <div className="px-4 py-3">
+                      <HideTaskPanel
+                        isHidden={task.is_hidden}
+                        appearDate={task.appear_date}
+                        onHide={handleHide}
+                        onUnhide={handleUnhide}
+                      />
+                    </div>
                   )}
                 </>
               )}

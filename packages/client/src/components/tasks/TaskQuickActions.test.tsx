@@ -366,4 +366,66 @@ describe("TaskQuickActions", () => {
       repeat_rule: expect.stringContaining('"type":"fixed"'),
     });
   });
+
+  // FR3: Hide button for non-recurring non-hidden task
+  it("should render hide button for non-recurring task", () => {
+    const task = buildTask({ repeat_rule: "" });
+    renderQuickActions({ task });
+    expect(
+      screen.getByRole("button", { name: /скрыть задачу/i }),
+    ).toBeInTheDocument();
+  });
+
+  // FR3: Eye button for hidden task
+  it("should render unhide button for hidden task", () => {
+    const task = buildTask({ is_hidden: true, appear_date: "2027-06-01" });
+    renderQuickActions({ task });
+    expect(
+      screen.getByRole("button", { name: /показать задачу/i }),
+    ).toBeInTheDocument();
+  });
+
+  // FR5: No hide button for recurring task
+  it("should not render hide button for recurring task", () => {
+    const task = buildTask({
+      repeat_rule: JSON.stringify({
+        type: "fixed",
+        frequency: "daily",
+        interval: 1,
+        target_box: "today",
+        advance_days: 0,
+      }),
+    });
+    renderQuickActions({ task });
+    expect(
+      screen.queryByRole("button", { name: /скрыть задачу/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /показать задачу/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  // FR3: Clicking EyeOff shows hide panel
+  it("should show hide panel when hide button clicked", async () => {
+    const task = buildTask({ repeat_rule: "" });
+    renderQuickActions({ task });
+    await userEvent.click(
+      screen.getByRole("button", { name: /скрыть задачу/i }),
+    );
+    expect(screen.getByTestId("hide-task-panel")).toBeInTheDocument();
+  });
+
+  // FR3: Clicking Eye unhides immediately
+  it("should call onUpdate to unhide when Eye button clicked", async () => {
+    const task = buildTask({ is_hidden: true, appear_date: "2027-06-01" });
+    const onUpdate = vi.fn().mockResolvedValue(undefined);
+    renderQuickActions({ task, onUpdate });
+    await userEvent.click(
+      screen.getByRole("button", { name: /показать задачу/i }),
+    );
+    expect(onUpdate).toHaveBeenCalledWith(task.id, {
+      is_hidden: false,
+      appear_date: "",
+    });
+  });
 });

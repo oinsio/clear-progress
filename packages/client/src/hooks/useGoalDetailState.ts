@@ -42,6 +42,7 @@ export function useGoalDetailState() {
     deleteGoal,
   } = useGoal(id ?? "");
   const { url: existingCoverUrl } = useCoverUrl(goal?.cover_hash ?? "");
+  const { showHidden, toggleShowHidden } = useShowHidden();
   const {
     tasks,
     completedTasks,
@@ -53,7 +54,7 @@ export function useGoalDetailState() {
     deleteTask,
     duplicateTask,
     reorderTasks,
-  } = useGoalTasks(id ?? "");
+  } = useGoalTasks(id ?? "", { showHidden });
   const { goals } = useGoals();
   const {
     focusedGoalIds,
@@ -75,7 +76,6 @@ export function useGoalDetailState() {
   } = usePanelSplit();
 
   const isUnsynced = useIsUnsynced(goal ?? { needsSync: false });
-  const { showHidden, toggleShowHidden } = useShowHidden();
   const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
   const targetBox = useTargetBox(activeBox);
 
