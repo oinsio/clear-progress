@@ -17,8 +17,8 @@ Run `git status --porcelain` to get all modified, staged, and untracked files. E
 Format each file as a numbered checklist item:
 
 ```
-- [ ] 1. path/to/file-a.ts
-- [ ] 2. path/to/file-b.ts
+1. [ ] path/to/file-a.ts
+2. [ ] path/to/file-b.ts
 ```
 
 Sort entries alphabetically. Write the result to `uncommitted-files.md` in the project root.
