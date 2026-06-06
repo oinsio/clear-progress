@@ -4,7 +4,7 @@ description: Diagnose uncommitted files for errors, code duplication, and unused
 
 # Diagnose Uncommitted Files
 
-Read `uncommitted-files.md` and analyze each listed file one-by-one using IDE diagnostics. Fix issues found, then mark the file as done in the checklist. Do not make any commits.
+Read `uncommitted-files.md` and analyze each listed file using sub-agents — one file per sub-agent, strictly sequentially. Fix issues found, mark each file as done after its sub-agent completes. Do not make any commits.
 
 ## Steps
 
@@ -12,24 +12,30 @@ Read `uncommitted-files.md` and analyze each listed file one-by-one using IDE di
 
 Read `uncommitted-files.md` in the project root. Parse the numbered checklist items. Only process files that are NOT yet checked (i.e., `[ ]`, skip `[x]`).
 
-### Step 2: Analyze files sequentially
+### Step 2: Analyze files sequentially via sub-agents
 
-For each unchecked file in order:
+For each unchecked file in order, launch a **foreground sub-agent** (Agent tool, subagent_type: general-purpose) with the following prompt template:
 
-1. **Run diagnostics** — call `mcp__ide__getDiagnostics` with the `uri` parameter set to the file's absolute path. Determine the project root from the current working directory and prepend it to the relative path from the checklist:
-   ```
-   mcp__ide__getDiagnostics(uri: "<project-root>/<relative-path-from-checklist>")
-   ```
-2. **Check for errors** — if there are `error`-level diagnostics, fix them immediately.
-3. **Check for code duplication** — look for duplicated logic that can be extracted into shared utilities or helpers. If duplication is found across files already processed, extract the common code.
-4. **Check for unused variables** — for each reported unused variable, verify it is genuinely unused (grep the codebase). If truly unused, remove it. If used elsewhere, the diagnostic is a false positive — leave it.
-5. **Mark as done** — once all issues for the file are resolved (or none were found), update `uncommitted-files.md` by changing `[ ]` to `[x]` for that file.
+```
+Analyze the file `<absolute-path>` for issues. Do NOT make any commits.
 
-IMPORTANT: Process files strictly one at a time. Do NOT start analyzing the next file until the current one is fully resolved and marked as done.
+1. Run `mcp__ide__getDiagnostics(uri: "<absolute-path>")`.
+2. If there are `error`-level diagnostics — fix them.
+3. Check for unused variables/imports — for each, grep the codebase to confirm it's truly unused. If unused, remove it. If used elsewhere, leave it.
+4. Check for code duplication within the file — extract common logic if reasonable.
+5. After fixing, re-run diagnostics to confirm no errors remain.
+6. Report what you found and fixed (or "no issues").
+```
+
+**CRITICAL**: Do NOT launch the next sub-agent until the current one finishes and returns its result.
+
+After each sub-agent completes successfully:
+- Update `uncommitted-files.md` by changing `[ ]` to `[x]` for that file.
+- Log the sub-agent's result summary before proceeding to the next file.
 
 ### Step 3: Final verification
 
-After all files are processed, run these checks sequentially:
+After all files are processed, run these checks **sequentially** (one at a time, wait for each to finish):
 
 1. `pnpm run lint:fix` — all should pass
 2. `pnpm run preflight` — all should pass
