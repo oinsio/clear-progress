@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -11,11 +12,17 @@ import { ContextService } from "@/services/ContextService";
 import { GoalService } from "@/services/GoalService";
 import { TaskService } from "@/services/TaskService";
 
+const defaultAttachmentRepository = new AttachmentRepository();
 const defaultTaskService = new TaskService(
   new TaskRepository(),
   new ChecklistRepository(),
+  undefined,
+  defaultAttachmentRepository,
 );
-const defaultGoalService = new GoalService(new GoalRepository());
+const defaultGoalService = new GoalService(
+  new GoalRepository(),
+  defaultAttachmentRepository,
+);
 const defaultContextService = new ContextService(new ContextRepository());
 const defaultCategoryService = new CategoryService(new CategoryRepository());
 const defaultChecklistService = new ChecklistService(new ChecklistRepository());

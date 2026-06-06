@@ -35,3 +35,18 @@ Feature: Sync Protocol — Chunked Push
     When push is called
     Then 2 sequential push requests are sent
     And all 250 tasks have needsSync false after push
+
+  @add-file-attachments @FR6
+  Scenario: Attachments are placed after parent entities in chunk fill order
+    Given client has 190 dirty tasks and 20 dirty attachments referencing those tasks
+    When push is called
+    Then chunk 1 contains 190 tasks and 10 attachments
+    And chunk 2 contains the remaining 10 attachments
+
+  @add-file-attachments @FR6
+  Scenario: New entity and its attachment land in correct order
+    Given client has 195 dirty goals and 10 dirty attachments referencing those goals
+    When push is called
+    Then chunk 1 contains 195 goals and 5 attachments
+    And chunk 2 contains the remaining 5 attachments
+    And no attachment appears in a chunk before its parent entity

@@ -14,6 +14,10 @@ import {
   jsonNotInitialized,
   jsonOk,
 } from "../helpers/response";
+import {
+  getAllAttachments,
+  upsertAttachments,
+} from "../sheets/attachments.sheet";
 import { getAllCategories, upsertCategories } from "../sheets/categories.sheet";
 import {
   getAllChecklistItems,
@@ -26,6 +30,7 @@ import { readNextRevision, saveNextRevision } from "../sheets/meta.sheet";
 import { getAllSettings, upsertSettings } from "../sheets/settings.sheet";
 import { getAllTasks, upsertTasks } from "../sheets/tasks.sheet";
 import type {
+  Attachment,
   Category,
   ChecklistItem,
   Context,
@@ -37,7 +42,14 @@ import type {
   Task,
 } from "../types";
 
-type AnyEntity = Task | Goal | Context | Category | Idea | ChecklistItem;
+type AnyEntity =
+  | Task
+  | Goal
+  | Context
+  | Category
+  | Idea
+  | ChecklistItem
+  | Attachment;
 type UpsertFn = (records: AnyEntity[]) => void;
 
 type EntityBatch = {
@@ -55,6 +67,7 @@ function hasWrittenResults(results: PushItemResult[]): boolean {
 }
 
 function getEntityLabel(entity: AnyEntity): string {
+  if ("filename" in entity) return entity.filename;
   return entity.name;
 }
 
@@ -66,6 +79,11 @@ function getInvalidForeignKeyReason(record: AnyEntity): string | null {
   if ("task_id" in record) {
     if (!isValidUuid(record.task_id)) {
       return ERROR_MESSAGES.INVALID_REQUIRED_FK;
+    }
+  }
+  if ("entity_id" in record) {
+    if (!isValidUuid(record.entity_id)) {
+      return ERROR_MESSAGES.INVALID_OPTIONAL_FK;
     }
   }
   if ("goal_id" in record) {
@@ -161,6 +179,7 @@ export function push(changes: {
   categories?: Category[];
   checklist_items?: ChecklistItem[];
   ideas?: Idea[];
+  attachments?: Attachment[];
   settings?: Setting[];
 }): GoogleAppsScript.Content.TextOutput {
   const lock = LockService.getScriptLock();
@@ -209,6 +228,12 @@ export function push(changes: {
         data: changes.ideas,
         getAll: getAllIdeas,
         upsert: upsertIdeas as UpsertFn,
+      },
+      {
+        key: "attachments",
+        data: changes.attachments,
+        getAll: getAllAttachments,
+        upsert: upsertAttachments as UpsertFn,
       },
     ];
 

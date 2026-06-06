@@ -8,7 +8,9 @@ export const DB_SCHEMA = {
     "id, task_id, is_deleted, sort_order, revision, needsSync, updated_at",
   ideas: "id, is_deleted, sort_order, revision, needsSync, updated_at",
   settings: "key, needsSync, updated_at",
-  covers: "data_hash",
-  pending_covers: "data_hash, goal_id",
+  files: "data_hash",
+  pending_files: "data_hash",
+  attachments:
+    "id, [entity_type+entity_id], data_hash, is_deleted, sort_order, revision, needsSync, updated_at",
   sync_meta: "key",
 } as const;

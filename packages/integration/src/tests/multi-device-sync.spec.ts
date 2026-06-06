@@ -15,7 +15,7 @@ import {
   closeAuthenticatedPage,
   createAuthenticatedPage,
   createMinimalPng,
-  getCoverFromServer,
+  getFileFromServer,
   pullFromServer,
   type ServerCallCredentials,
   triggerSyncAndWait,
@@ -201,21 +201,21 @@ test("App A uploads cover on goal → push → App B pulls → cover accessible"
   expect(serverGoal).toBeDefined();
   expect(serverGoal?.cover_hash).not.toBe("");
 
-  // Verify cover is accessible via get-cover edge function
-  const coverResponse = await getCoverFromServer(credentials, [
+  // Verify cover is accessible via get-file edge function
+  const fileResponse = await getFileFromServer(credentials, [
     serverGoal?.cover_hash ?? "",
   ]);
-  expect(coverResponse.ok).toBe(true);
-  expect(coverResponse.covers).toHaveLength(1);
+  expect(fileResponse.ok).toBe(true);
+  expect(fileResponse.files).toHaveLength(1);
 
-  const coverResult = coverResponse.covers[0];
-  expect(coverResult).toBeDefined();
-  if (!coverResult) return;
+  const fileResult = fileResponse.files[0];
+  expect(fileResult).toBeDefined();
+  if (!fileResult) return;
 
-  expect(coverResult.hash).toBe(serverGoal?.cover_hash);
-  expect(coverResult.mime_type).toContain("image");
-  expect(coverResult.data).toBeDefined();
+  expect(fileResult.hash).toBe(serverGoal?.cover_hash);
+  expect(fileResult.mime_type).toContain("image");
+  expect(fileResult.data).toBeDefined();
 
-  const decodedBytes = Buffer.from(coverResult.data ?? "", "base64");
+  const decodedBytes = Buffer.from(fileResult.data ?? "", "base64");
   expect(decodedBytes.length).toBeGreaterThan(0);
 });

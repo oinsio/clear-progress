@@ -8,7 +8,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { BOX_FILTER_ALL, ROUTES } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useFileUrl } from "@/hooks/useFileUrl";
 import { useFocusedGoals } from "@/hooks/useFocusedGoals";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoal } from "@/hooks/useGoal";
@@ -41,7 +41,7 @@ export function useGoalDetailState() {
     updateGoal,
     deleteGoal,
   } = useGoal(id ?? "");
-  const { url: existingCoverUrl } = useCoverUrl(goal?.cover_hash ?? "");
+  const { url: existingCoverUrl } = useFileUrl(goal?.cover_hash ?? "");
   const { showHidden, toggleShowHidden } = useShowHidden();
   const {
     tasks,

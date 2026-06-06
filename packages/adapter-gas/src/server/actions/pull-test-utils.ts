@@ -9,6 +9,7 @@ import {
   makeTask,
   parseResponse,
 } from "../../../tests/server/helpers";
+import { getAttachmentsByRevision } from "../sheets/attachments.sheet";
 import { getCategoriesByRevision } from "../sheets/categories.sheet";
 import { getChecklistItemsByRevision } from "../sheets/checklists.sheet";
 import { getContextsByRevision } from "../sheets/contexts.sheet";
@@ -28,6 +29,7 @@ export {
   expectSuccessResponse,
   expectValidServerTime,
   getAllSettings,
+  getAttachmentsByRevision,
   getCategoriesByRevision,
   getChecklistItemsByRevision,
   getContextsByRevision,
@@ -51,6 +53,7 @@ export function setupPullTests(): void {
     vi.mocked(getCategoriesByRevision).mockReturnValue([]);
     vi.mocked(getChecklistItemsByRevision).mockReturnValue([]);
     vi.mocked(getIdeasByRevision).mockReturnValue([]);
+    vi.mocked(getAttachmentsByRevision).mockReturnValue([]);
     vi.mocked(getAllSettings).mockReturnValue([]);
     vi.mocked(getSettingsChangedSince).mockReturnValue([]);
     vi.mocked(readNextRevision).mockReturnValue(1);

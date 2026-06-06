@@ -4,6 +4,7 @@ import {
   jsonNotInitialized,
   jsonOk,
 } from "../helpers/response";
+import { getAttachmentsByRevision } from "../sheets/attachments.sheet";
 import { getCategoriesByRevision } from "../sheets/categories.sheet";
 import { getChecklistItemsByRevision } from "../sheets/checklists.sheet";
 import { getContextsByRevision } from "../sheets/contexts.sheet";
@@ -35,6 +36,7 @@ export function pull({
       categories: getCategoriesByRevision(sinceRevision),
       checklist_items: getChecklistItemsByRevision(sinceRevision),
       ideas: getIdeasByRevision(sinceRevision),
+      attachments: getAttachmentsByRevision(sinceRevision),
       settings: settings_updated_at
         ? getSettingsChangedSince(settings_updated_at)
         : getAllSettings(),

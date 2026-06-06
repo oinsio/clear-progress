@@ -1,49 +1,25 @@
-import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { ArrowLeft, ChevronRight, Trash2, X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import type * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { EditableDescription } from "@/components/ui/EditableDescription";
+import { useAttachments } from "@/hooks/useAttachments";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useChecklist } from "@/hooks/useChecklist";
-import { useChecklistItemEditing } from "@/hooks/useChecklistItemEditing";
-import { useDndSensors } from "@/hooks/useDndSensors";
-import { useSettings } from "@/hooks/useSettings";
 import { useTaskEditLabels } from "@/hooks/useTaskEditLabels";
 import { useTaskFormState } from "@/hooks/useTaskFormState";
 import { cn } from "@/shared/lib/cn";
-import type { Box, RepeatRule } from "@/types/common";
-import type {
-  Category,
-  ChecklistItem,
-  Context,
-  Goal,
-  Task,
-} from "@/types/entities";
-import {
-  formatRepeatRuleLabel,
-  parseRepeatRule,
-  serializeRepeatRule,
-} from "@/utils/repeatRule";
-import { HideTaskPanel } from "./HideTaskPanel";
-import { RepeatRuleSelector } from "./RepeatRuleSelector";
-import { SortableChecklistItem } from "./SortableChecklistItem";
+import type { Category, Context, Goal, Task } from "@/types/entities";
+import { parseRepeatRule } from "@/utils/repeatRule";
+import { TaskAttachmentsTab } from "./TaskAttachmentsTab";
+import { TaskChecklistTab } from "./TaskChecklistTab";
+import { TaskDetailsTab } from "./TaskDetailsTab";
 import {
   ACTIVE_TAB,
   type ActiveTab,
-  BOX_ICONS,
-  BOX_OPTIONS,
-  CHECKLIST_ITEM_VARIANT,
-  type ChecklistItemVariant,
-  SELECTOR_TITLE_KEYS,
-  SELECTOR_TYPE,
   type SelectorType,
 } from "./taskEditShared";
+
+const ENTITY_TYPE_TASK = "task" as const;
 
 interface TaskDetailPanelProps {
   task: Task;
@@ -56,156 +32,6 @@ interface TaskDetailPanelProps {
   onDuplicate: (id: string) => Promise<void>;
   className?: string;
   style?: React.CSSProperties;
-}
-
-interface DrillDownRowProps {
-  label: string;
-  value: string;
-  hasValue: boolean;
-  onClick: () => void;
-}
-
-function DrillDownRow({ label, value, hasValue, onClick }: DrillDownRowProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center justify-between w-full py-2.5 text-sm border-b border-gray-100"
-    >
-      <span className="text-gray-500 font-medium">{label}</span>
-      <div className="flex items-center gap-1">
-        <span className={cn(hasValue ? "text-gray-800" : "text-gray-400")}>
-          {value}
-        </span>
-        <ChevronRight className="w-4 h-4 text-gray-400" />
-      </div>
-    </button>
-  );
-}
-
-interface SelectorOption {
-  id: string;
-  label: string;
-}
-
-interface SelectorOptionListProps {
-  options: SelectorOption[];
-  selectedId: string;
-  noSelectionLabel: string;
-  onSelect: (id: string) => void;
-}
-
-function SelectorOptionList({
-  options,
-  selectedId,
-  noSelectionLabel,
-  onSelect,
-}: SelectorOptionListProps) {
-  return (
-    <div className="px-4 py-3 flex flex-col gap-1">
-      <button
-        type="button"
-        onClick={() => onSelect("")}
-        className={cn(
-          "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
-          selectedId === ""
-            ? "bg-accent/10 text-accent font-medium"
-            : "text-gray-500 hover:bg-gray-100",
-        )}
-      >
-        {noSelectionLabel}
-      </button>
-      {options.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          onClick={() => onSelect(option.id)}
-          className={cn(
-            "text-left text-sm px-3 py-2.5 rounded-lg transition-colors",
-            selectedId === option.id
-              ? "bg-accent/10 text-accent font-medium"
-              : "text-gray-700 hover:bg-gray-100",
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-interface ChecklistSectionProps {
-  name: string;
-  items: ChecklistItem[];
-  editingItemId: string | null;
-  editingItemName: string;
-  variant: ChecklistItemVariant;
-  onDragEnd: (event: DragEndEvent) => void;
-  onToggle: (id: string) => void;
-  onStartEdit: (item: ChecklistItem) => void;
-  onEditChange: (value: string) => void;
-  onCommitEdit: (id: string) => void;
-  onEditKeyDown: (
-    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
-    id: string,
-  ) => void;
-  onDelete: (id: string) => void;
-  getToggleAriaLabel: (item: ChecklistItem) => string;
-  getDeleteAriaLabel: (item: ChecklistItem) => string;
-}
-
-function ChecklistSection({
-  name,
-  items,
-  editingItemId,
-  editingItemName,
-  variant,
-  onDragEnd,
-  onToggle,
-  onStartEdit,
-  onEditChange,
-  onCommitEdit,
-  onEditKeyDown,
-  onDelete,
-  getToggleAriaLabel,
-  getDeleteAriaLabel,
-}: ChecklistSectionProps) {
-  const sensors = useDndSensors();
-  return (
-    <div>
-      <p className="text-center text-sm font-medium text-accent mb-2">{name}</p>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={onDragEnd}
-      >
-        <SortableContext
-          items={items.map((item) => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="flex flex-col gap-1">
-            {items.map((item) => (
-              <SortableChecklistItem
-                key={item.id}
-                item={item}
-                isEditing={editingItemId === item.id}
-                editingName={editingItemName}
-                variant={variant}
-                toggleAriaLabel={getToggleAriaLabel(item)}
-                deleteAriaLabel={getDeleteAriaLabel(item)}
-                onToggle={() => onToggle(item.id)}
-                onStartEdit={() => onStartEdit(item)}
-                onEditChange={onEditChange}
-                onEditBlur={() => onCommitEdit(item.id)}
-                onEditKeyDown={(event) => onEditKeyDown(event, item.id)}
-                onDelete={() => onDelete(item.id)}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-    </div>
-  );
 }
 
 export function TaskDetailPanel({
@@ -221,7 +47,6 @@ export function TaskDetailPanel({
   style,
 }: TaskDetailPanelProps) {
   const { t } = useTranslation();
-  const { defaultBox } = useSettings();
   const {
     name,
     setName,
@@ -241,27 +66,22 @@ export function TaskDetailPanel({
   const [activeTab, setActiveTab] = useState<ActiveTab>(ACTIVE_TAB.DETAILS);
   const [openSelector, setOpenSelector] = useState<SelectorType | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const [newItemName, setNewItemName] = useState("");
 
   const nameTextareaRef = useAutoResizeTextarea(name);
 
   const {
     items,
     progress,
-    createItem: rawCreateItem,
+    createItem,
     toggleItem,
     deleteItem,
     updateItem,
-    reorderItems: rawReorderItems,
+    reorderItems,
   } = useChecklist(task.id);
-  const {
-    editingItemId,
-    editingItemName,
-    setEditingItemName,
-    handleItemNameClick,
-    commitItemEdit,
-    handleItemEditKeyDown,
-  } = useChecklistItemEditing(updateItem);
+
+  const { attachments } = useAttachments(ENTITY_TYPE_TASK, task.id);
+  const attachmentCount = attachments.length;
+
   // Reset state when selected task changes
   useEffect(() => {
     setName(task.name);
@@ -274,7 +94,6 @@ export function TaskDetailPanel({
     setActiveTab(ACTIVE_TAB.DETAILS);
     setOpenSelector(null);
     setIsConfirmingDelete(false);
-    setNewItemName("");
   }, [
     task.name,
     task.description,
@@ -299,119 +118,6 @@ export function TaskDetailPanel({
     }
   }, [name, task.name, task.id, onUpdate]);
 
-  const handleDescriptionBlur = useCallback(async () => {
-    if (description !== task.description) {
-      await onUpdate(task.id, { description });
-    }
-  }, [description, task.description, task.id, onUpdate]);
-
-  const handleBoxChange = useCallback(
-    async (box: Box) => {
-      setSelectedBox(box);
-      await onUpdate(task.id, { box });
-    },
-    [task.id, onUpdate, setSelectedBox],
-  );
-
-  const handleGoalChange = useCallback(
-    async (goalId: string) => {
-      setSelectedGoalId(goalId);
-      setOpenSelector(null);
-      await onUpdate(task.id, { goal_id: goalId });
-    },
-    [task.id, onUpdate, setSelectedGoalId],
-  );
-
-  const handleContextChange = useCallback(
-    async (contextId: string) => {
-      setSelectedContextId(contextId);
-      setOpenSelector(null);
-      await onUpdate(task.id, { context_id: contextId });
-    },
-    [task.id, onUpdate, setSelectedContextId],
-  );
-
-  const handleCategoryChange = useCallback(
-    async (categoryId: string) => {
-      setSelectedCategoryId(categoryId);
-      setOpenSelector(null);
-      await onUpdate(task.id, { category_id: categoryId });
-    },
-    [task.id, onUpdate, setSelectedCategoryId],
-  );
-
-  const handleRepeatChange = useCallback(
-    async (rule: RepeatRule | null) => {
-      setSelectedRepeatRule(rule);
-      setOpenSelector(null);
-      await onUpdate(task.id, {
-        repeat_rule: rule ? serializeRepeatRule(rule) : "",
-      });
-    },
-    [task.id, onUpdate, setSelectedRepeatRule],
-  );
-
-  const handleDeleteClick = useCallback(() => {
-    setIsConfirmingDelete(true);
-  }, []);
-
-  const handleDeleteConfirm = useCallback(() => {
-    onDelete(task.id);
-  }, [task.id, onDelete]);
-
-  const handleDeleteCancel = useCallback(() => {
-    setIsConfirmingDelete(false);
-  }, []);
-
-  const handleDuplicateTask = useCallback(async () => {
-    await onDuplicate(task.id);
-  }, [task.id, onDuplicate]);
-
-  const handleHide = useCallback(
-    async (date: string) => {
-      await onUpdate(task.id, { is_hidden: true, appear_date: date });
-      setOpenSelector(null);
-    },
-    [task.id, onUpdate],
-  );
-
-  const handleUnhide = useCallback(async () => {
-    await onUpdate(task.id, { is_hidden: false, appear_date: "" });
-    setOpenSelector(null);
-  }, [task.id, onUpdate]);
-
-  const handleNewItemKeyDown = useCallback(
-    async (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter" && newItemName.trim()) {
-        await rawCreateItem(newItemName.trim());
-        setNewItemName("");
-      }
-    },
-    [newItemName, rawCreateItem],
-  );
-
-  const handleNewItemBlur = useCallback(async () => {
-    if (newItemName.trim()) {
-      await rawCreateItem(newItemName.trim());
-      setNewItemName("");
-    }
-  }, [newItemName, rawCreateItem]);
-
-  const activeItems = items.filter((item) => !item.is_completed);
-  const completedItems = items.filter((item) => item.is_completed);
-
-  const handleSectionDragEnd = useCallback(
-    (sectionItems: ChecklistItem[], event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-      const oldIndex = sectionItems.findIndex((item) => item.id === active.id);
-      const newIndex = sectionItems.findIndex((item) => item.id === over.id);
-      const reordered = arrayMove(sectionItems, oldIndex, newIndex);
-      void rawReorderItems(reordered);
-    },
-    [rawReorderItems],
-  );
-
   const {
     selectedGoalName,
     selectedContextName,
@@ -427,21 +133,6 @@ export function TaskDetailPanel({
     progress,
   );
 
-  const newItemInputRef = useRef<HTMLInputElement>(null);
-
-  const goalOptions: SelectorOption[] = goals.map((goal) => ({
-    id: goal.id,
-    label: goal.name,
-  }));
-  const contextOptions: SelectorOption[] = contexts.map((context) => ({
-    id: context.id,
-    label: context.name,
-  }));
-  const categoryOptions: SelectorOption[] = categories.map((category) => ({
-    id: category.id,
-    label: category.name,
-  }));
-
   return (
     <div
       data-testid="task-detail-panel"
@@ -455,7 +146,7 @@ export function TaskDetailPanel({
       <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100 flex-shrink-0">
         <button
           type="button"
-          onClick={handleDeleteClick}
+          onClick={() => setIsConfirmingDelete(true)}
           aria-label={t("taskDetail.delete")}
           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
         >
@@ -471,7 +162,7 @@ export function TaskDetailPanel({
         </button>
       </div>
 
-      {/* Name field — always visible */}
+      {/* Name field */}
       <div className="px-4 pt-3 pb-2 flex-shrink-0">
         <label className="text-xs font-medium text-gray-500 mb-1 block">
           {t("taskEdit.fieldName")}
@@ -516,258 +207,68 @@ export function TaskDetailPanel({
         >
           {checklistTabLabel}
         </button>
+        <button
+          type="button"
+          data-testid="tab-attachments"
+          onClick={() => setActiveTab(ACTIVE_TAB.ATTACHMENTS)}
+          className={cn(
+            "flex-1 py-1.5 text-sm rounded-full border transition-colors",
+            activeTab === ACTIVE_TAB.ATTACHMENTS
+              ? "bg-accent text-white border-accent"
+              : "text-accent border-accent/40 hover:bg-accent/5",
+          )}
+        >
+          {t("task.tabs.attachments")}
+          {attachmentCount > 0 && (
+            <span className="ml-1 text-xs">({attachmentCount})</span>
+          )}
+        </button>
       </div>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Details tab */}
-        {activeTab === ACTIVE_TAB.DETAILS && openSelector === null && (
-          <div className="px-4 py-4 flex flex-col gap-4">
-            {/* Description */}
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
-                {t("taskEdit.fieldDescription")}
-              </label>
-              <EditableDescription
-                value={description}
-                onChange={setDescription}
-                onBlur={() => void handleDescriptionBlur()}
-                placeholder={t("taskEdit.descriptionPlaceholder")}
-                data-test-id="task-detail-description"
-              />
-            </div>
-
-            {/* Box selector */}
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-2 block">
-                {t("taskEdit.fieldBox")}
-              </label>
-              <div className="flex gap-1">
-                {BOX_OPTIONS.map((box) => {
-                  const BoxIcon = BOX_ICONS[box];
-                  const isBoxSelected = selectedBox === box;
-                  return (
-                    <button
-                      key={box}
-                      type="button"
-                      aria-label={t(`box.${box}`)}
-                      aria-pressed={isBoxSelected}
-                      onClick={() => void handleBoxChange(box)}
-                      className={cn(
-                        "flex items-center justify-center w-10 h-10 rounded-full transition-colors",
-                        isBoxSelected
-                          ? "text-accent"
-                          : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
-                      )}
-                    >
-                      <BoxIcon className="w-7 h-7" />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {goals.length > 0 && (
-              <DrillDownRow
-                label={t("selector.goal")}
-                value={selectedGoalName}
-                hasValue={!!selectedGoalId}
-                onClick={() => setOpenSelector(SELECTOR_TYPE.GOAL)}
-              />
-            )}
-
-            {contexts.length > 0 && (
-              <DrillDownRow
-                label={t("selector.context")}
-                value={selectedContextName}
-                hasValue={!!selectedContextId}
-                onClick={() => setOpenSelector(SELECTOR_TYPE.CONTEXT)}
-              />
-            )}
-
-            {categories.length > 0 && (
-              <DrillDownRow
-                label={t("selector.category")}
-                value={selectedCategoryName}
-                hasValue={!!selectedCategoryId}
-                onClick={() => setOpenSelector(SELECTOR_TYPE.CATEGORY)}
-              />
-            )}
-
-            <DrillDownRow
-              label={t("taskEdit.fieldRepeat")}
-              value={
-                selectedRepeatRule
-                  ? formatRepeatRuleLabel(selectedRepeatRule, t)
-                  : t("repeat.none")
-              }
-              hasValue={!!selectedRepeatRule}
-              onClick={() => setOpenSelector(SELECTOR_TYPE.REPEAT)}
-            />
-
-            {!task.repeat_rule && (
-              <DrillDownRow
-                label={t("task.hideUntil")}
-                value={task.is_hidden ? task.appear_date : ""}
-                hasValue={task.is_hidden}
-                onClick={() => setOpenSelector(SELECTOR_TYPE.HIDE)}
-              />
-            )}
-
-            {/* Duplicate button */}
-            <button
-              type="button"
-              onClick={() => void handleDuplicateTask()}
-              className="w-full py-2.5 text-sm text-accent border border-accent/40 rounded-lg hover:bg-accent/5 transition-colors mt-2"
-            >
-              {t("taskEdit.duplicateButton")}
-            </button>
-          </div>
+        {activeTab === ACTIVE_TAB.DETAILS && (
+          <TaskDetailsTab
+            task={task}
+            onUpdate={onUpdate}
+            onDuplicate={onDuplicate}
+            description={description}
+            setDescription={setDescription}
+            selectedBox={selectedBox}
+            setSelectedBox={setSelectedBox}
+            selectedGoalId={selectedGoalId}
+            setSelectedGoalId={setSelectedGoalId}
+            selectedGoalName={selectedGoalName}
+            selectedContextId={selectedContextId}
+            setSelectedContextId={setSelectedContextId}
+            selectedContextName={selectedContextName}
+            selectedCategoryId={selectedCategoryId}
+            setSelectedCategoryId={setSelectedCategoryId}
+            selectedCategoryName={selectedCategoryName}
+            selectedRepeatRule={selectedRepeatRule}
+            setSelectedRepeatRule={setSelectedRepeatRule}
+            goals={goals}
+            contexts={contexts}
+            categories={categories}
+            openSelector={openSelector}
+            onOpenSelector={setOpenSelector}
+            onCloseSelector={() => setOpenSelector(null)}
+          />
         )}
 
-        {/* Selector view — inline within panel */}
-        {activeTab === ACTIVE_TAB.DETAILS && openSelector !== null && (
-          <div className="flex flex-col h-full">
-            {/* Selector header */}
-            <div className="flex items-center gap-2 px-4 pt-4 pb-2 border-b border-gray-100 flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => setOpenSelector(null)}
-                aria-label={t("taskEdit.back")}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
-              </button>
-              <h3 className="text-base font-semibold text-gray-800">
-                {t(SELECTOR_TITLE_KEYS[openSelector])}
-              </h3>
-            </div>
-
-            {/* Selector content */}
-            <div className="flex-1 overflow-y-auto">
-              {openSelector === SELECTOR_TYPE.REPEAT ? (
-                <RepeatRuleSelector
-                  value={selectedRepeatRule}
-                  onChange={(rule) => void handleRepeatChange(rule)}
-                  onBack={() => setOpenSelector(null)}
-                  defaultBox={defaultBox}
-                />
-              ) : (
-                <>
-                  {openSelector === SELECTOR_TYPE.GOAL && (
-                    <SelectorOptionList
-                      options={goalOptions}
-                      selectedId={selectedGoalId}
-                      noSelectionLabel={t("selector.noGoal")}
-                      onSelect={(id) => void handleGoalChange(id)}
-                    />
-                  )}
-                  {openSelector === SELECTOR_TYPE.CONTEXT && (
-                    <SelectorOptionList
-                      options={contextOptions}
-                      selectedId={selectedContextId}
-                      noSelectionLabel={t("selector.noContext")}
-                      onSelect={(id) => void handleContextChange(id)}
-                    />
-                  )}
-                  {openSelector === SELECTOR_TYPE.CATEGORY && (
-                    <SelectorOptionList
-                      options={categoryOptions}
-                      selectedId={selectedCategoryId}
-                      noSelectionLabel={t("selector.noCategory")}
-                      onSelect={(id) => void handleCategoryChange(id)}
-                    />
-                  )}
-                  {openSelector === SELECTOR_TYPE.HIDE && (
-                    <div className="px-4 py-3">
-                      <HideTaskPanel
-                        isHidden={task.is_hidden}
-                        appearDate={task.appear_date}
-                        onHide={handleHide}
-                        onUnhide={handleUnhide}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Checklist tab */}
         {activeTab === ACTIVE_TAB.CHECKLIST && (
-          <div className="px-4 py-4 flex flex-col gap-4">
-            <ChecklistSection
-              name={t("taskEdit.activeSection", { count: activeItems.length })}
-              items={activeItems}
-              editingItemId={editingItemId}
-              editingItemName={editingItemName}
-              variant={CHECKLIST_ITEM_VARIANT.ACTIVE}
-              onDragEnd={(event) => handleSectionDragEnd(activeItems, event)}
-              onToggle={(id) => void toggleItem(id)}
-              onStartEdit={handleItemNameClick}
-              onEditChange={setEditingItemName}
-              onCommitEdit={(id) => void commitItemEdit(id)}
-              onEditKeyDown={(event, id) =>
-                void handleItemEditKeyDown(event, id)
-              }
-              onDelete={(id) => void deleteItem(id)}
-              getToggleAriaLabel={(item) =>
-                t("taskEdit.checkItemMark", { name: item.name })
-              }
-              getDeleteAriaLabel={(item) =>
-                t("taskEdit.checkItemDelete", { name: item.name })
-              }
-            />
+          <TaskChecklistTab
+            items={items}
+            createItem={createItem}
+            toggleItem={toggleItem}
+            deleteItem={deleteItem}
+            updateItem={updateItem}
+            reorderItems={reorderItems}
+          />
+        )}
 
-            {/* New item input */}
-            <div className="flex items-center gap-3 py-1.5">
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span className="w-3.5 h-5 flex-shrink-0" />
-                <span className="w-0.5 h-5" />
-                <div className="w-5 h-5 rounded border-2 border-gray-200 flex-shrink-0" />
-              </div>
-              <input
-                ref={newItemInputRef}
-                type="text"
-                value={newItemName}
-                onChange={(event) => setNewItemName(event.target.value)}
-                onKeyDown={(event) => void handleNewItemKeyDown(event)}
-                onBlur={() => void handleNewItemBlur()}
-                placeholder={t("taskEdit.newChecklistItemPlaceholder")}
-                className="flex-1 text-sm text-gray-400 outline-none placeholder:text-gray-300"
-              />
-            </div>
-
-            {completedItems.length > 0 && (
-              <ChecklistSection
-                name={t("taskEdit.doneSection", {
-                  count: completedItems.length,
-                })}
-                items={completedItems}
-                editingItemId={editingItemId}
-                editingItemName={editingItemName}
-                variant={CHECKLIST_ITEM_VARIANT.COMPLETED}
-                onDragEnd={(event) =>
-                  handleSectionDragEnd(completedItems, event)
-                }
-                onToggle={(id) => void toggleItem(id)}
-                onStartEdit={handleItemNameClick}
-                onEditChange={setEditingItemName}
-                onCommitEdit={(id) => void commitItemEdit(id)}
-                onEditKeyDown={(event, id) =>
-                  void handleItemEditKeyDown(event, id)
-                }
-                onDelete={(id) => void deleteItem(id)}
-                getToggleAriaLabel={(item) =>
-                  t("taskEdit.checkItemUnmark", { name: item.name })
-                }
-                getDeleteAriaLabel={(item) =>
-                  t("taskEdit.checkItemDelete", { name: item.name })
-                }
-              />
-            )}
-          </div>
+        {activeTab === ACTIVE_TAB.ATTACHMENTS && (
+          <TaskAttachmentsTab taskId={task.id} />
         )}
       </div>
 
@@ -781,7 +282,7 @@ export function TaskDetailPanel({
           <div className="flex gap-3 w-full">
             <button
               type="button"
-              onClick={handleDeleteCancel}
+              onClick={() => setIsConfirmingDelete(false)}
               className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
             >
               {t("taskEdit.deleteConfirmCancel")}
@@ -789,7 +290,7 @@ export function TaskDetailPanel({
             <button
               type="button"
               data-testid="task-detail-delete-confirm-btn"
-              onClick={handleDeleteConfirm}
+              onClick={() => onDelete(task.id)}
               className="flex-1 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
             >
               {t("taskEdit.deleteConfirmOk")}

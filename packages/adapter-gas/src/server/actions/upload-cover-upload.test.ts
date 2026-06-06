@@ -1,41 +1,41 @@
 import { describe, expect, it, vi } from "vitest";
 import { PROPERTY_KEYS } from "../helpers/constants";
-import { uploadCover } from "./upload-cover";
 import {
-  DEFAULT_COVERS_FOLDER_ID,
+  DEFAULT_FILES_FOLDER_ID,
   MOCK_HASH,
   MOCK_HASH_PREFIX,
-  mockExistingCover,
+  mockExistingFile,
   parseResponse,
   setScriptProperty,
-  setupUploadCoverTests,
+  setupUploadFileTests,
   validPayload,
 } from "./upload-cover-test-utils";
+import { uploadFile } from "./upload-file";
 
-describe("uploadCover", () => {
-  setupUploadCoverTests();
+describe("uploadFile", () => {
+  setupUploadFileTests();
 
   describe("deduplication (file already exists)", () => {
     it("should return reused: true when file with matching hash exists", () => {
-      mockExistingCover();
+      mockExistingFile();
 
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(parseResponse().reused).toBe(true);
     });
 
     it("should return existing data_hash when duplicate found", () => {
-      mockExistingCover();
+      mockExistingFile();
 
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(parseResponse().data_hash).toBeDefined();
     });
 
     it("should not create a new file when duplicate found", () => {
-      mockExistingCover();
+      mockExistingFile();
 
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(Drive.Files.create).not.toHaveBeenCalled();
     });
@@ -45,19 +45,19 @@ describe("uploadCover", () => {
         files: [{ id: "other-file-id", description: "different-hash" }],
       });
 
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(parseResponse().reused).toBe(false);
     });
 
-    it("should search for duplicates in the correct covers folder", () => {
-      setScriptProperty(PROPERTY_KEYS.COVERS_FOLDER_ID, "my-covers-folder");
+    it("should search for duplicates in the correct files folder", () => {
+      setScriptProperty(PROPERTY_KEYS.FILES_FOLDER_ID, "my-files-folder");
 
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(Drive.Files.list).toHaveBeenCalledWith(
         expect.objectContaining({
-          q: expect.stringContaining("my-covers-folder"),
+          q: expect.stringContaining("my-files-folder"),
         }),
       );
     });
@@ -65,13 +65,13 @@ describe("uploadCover", () => {
 
   describe("new file upload", () => {
     it("should return ok: true for a new upload", () => {
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(parseResponse().ok).toBe(true);
     });
 
     it("should return reused: false for a new upload", () => {
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(parseResponse().reused).toBe(false);
     });
@@ -79,22 +79,22 @@ describe("uploadCover", () => {
     it("should return data_hash of newly created file", () => {
       vi.mocked(Drive.Files.create).mockReturnValue({ id: "new-file-id" });
 
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(parseResponse().data_hash).toBe(MOCK_HASH);
     });
 
-    it("should upload new file to the covers folder", () => {
-      uploadCover(validPayload);
+    it("should upload new file to the files folder", () => {
+      uploadFile(validPayload);
 
       expect(Drive.Files.create).toHaveBeenCalledWith(
-        expect.objectContaining({ parents: [DEFAULT_COVERS_FOLDER_ID] }),
+        expect.objectContaining({ parents: [DEFAULT_FILES_FOLDER_ID] }),
         expect.anything(),
       );
     });
 
     it("should store the content hash as the file description", () => {
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(Drive.Files.create).toHaveBeenCalledWith(
         expect.objectContaining({ description: MOCK_HASH }),
@@ -110,7 +110,7 @@ describe("uploadCover", () => {
         ...Array(30).fill(0),
       ] as never);
 
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(Drive.Files.create).toHaveBeenCalledWith(
         expect.objectContaining({ description: `ff80${"00".repeat(30)}` }),
@@ -119,7 +119,7 @@ describe("uploadCover", () => {
     });
 
     it("should use hash prefix as the base of new filename", () => {
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(Drive.Files.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -130,7 +130,7 @@ describe("uploadCover", () => {
     });
 
     it("should use only the hash prefix length in the filename, not the full hash", () => {
-      uploadCover({ ...validPayload, filename: "cover.jpg" });
+      uploadFile({ ...validPayload, filename: "cover.jpg" });
 
       expect(Drive.Files.create).toHaveBeenCalledWith(
         expect.objectContaining({ name: `${MOCK_HASH_PREFIX}.jpg` }),
@@ -139,7 +139,7 @@ describe("uploadCover", () => {
     });
 
     it("should use extension from original filename", () => {
-      uploadCover({ ...validPayload, filename: "photo.png" });
+      uploadFile({ ...validPayload, filename: "photo.png" });
 
       expect(Drive.Files.create).toHaveBeenCalledWith(
         expect.objectContaining({ name: expect.stringMatching(/\.png$/) }),
@@ -148,7 +148,7 @@ describe("uploadCover", () => {
     });
 
     it("should create blob with correct mime_type and filename", () => {
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(Utilities.newBlob).toHaveBeenCalledWith(
         expect.anything(),
@@ -160,7 +160,7 @@ describe("uploadCover", () => {
     it("should set public reader permissions on new file", () => {
       vi.mocked(Drive.Files.create).mockReturnValue({ id: "new-file-id" });
 
-      uploadCover(validPayload);
+      uploadFile(validPayload);
 
       expect(Drive.Permissions.create).toHaveBeenCalledWith(
         { role: "reader", type: "anyone" },

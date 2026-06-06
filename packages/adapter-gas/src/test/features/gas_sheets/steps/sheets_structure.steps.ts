@@ -17,9 +17,9 @@ describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
     // @gas-adapter-specs-and-bdd @FR8
-    f.Scenario("Eight sheet names are defined", ({ Then }) => {
-      Then("SHEET_NAMES contains exactly 8 entries", (_ctx: TestContext) => {
-        expect(Object.keys(SHEET_NAMES)).toHaveLength(8);
+    f.Scenario("Nine sheet names are defined", ({ Then }) => {
+      Then("SHEET_NAMES contains exactly 9 entries", (_ctx: TestContext) => {
+        expect(Object.keys(SHEET_NAMES)).toHaveLength(9);
       });
     });
 

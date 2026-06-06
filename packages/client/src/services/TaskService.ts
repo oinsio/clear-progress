@@ -1,3 +1,4 @@
+import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { type Clock, systemClock, Temporal } from "@/lib/temporal";
@@ -20,6 +21,7 @@ export class TaskService {
     private readonly taskRepository: TaskRepository,
     private readonly checklistRepository: ChecklistRepository,
     private readonly clock: Clock = systemClock,
+    private readonly attachmentRepository?: AttachmentRepository,
   ) {}
 
   private sortBySortOrder(tasks: Task[]): Task[] {
@@ -282,10 +284,16 @@ export class TaskService {
       await this.checklistRepository.bulkUpsert(updatedItems);
     }
 
+    /** Implements FR14 of add-file-attachments */
+    if (this.attachmentRepository) {
+      await this.attachmentRepository.softDeleteByEntityTypeAndId("task", id);
+    }
+
     // Delete the original task
     return this.update(id, { is_deleted: true });
   }
 
+  /** Implements FR15 of add-file-attachments */
   async restore(id: string): Promise<Task> {
     // Cascade restore to all checklist items (FR2)
     const checklistItems = await this.checklistRepository.getAllByTaskId(id);
@@ -298,6 +306,11 @@ export class TaskService {
         updated_at: now,
       }));
       await this.checklistRepository.bulkUpsert(updatedItems);
+    }
+
+    // Cascade restore to attachments
+    if (this.attachmentRepository) {
+      await this.attachmentRepository.restoreByEntityTypeAndId("task", id);
     }
 
     return this.update(id, { is_deleted: false });

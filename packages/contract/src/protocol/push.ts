@@ -1,5 +1,6 @@
 import type {
   PushResultStatus,
+  WireAttachment,
   WireCategory,
   WireChecklistItem,
   WireContext,
@@ -16,6 +17,7 @@ export interface PushRequest {
   categories?: WireCategory[];
   ideas?: WireIdea[];
   checklist_items?: WireChecklistItem[];
+  attachments?: WireAttachment[]; // implements FR6 of add-file-attachments
   settings?: WireSetting[];
 }
 
@@ -28,7 +30,8 @@ export interface PushItemResult {
     | WireContext
     | WireCategory
     | WireIdea
-    | WireChecklistItem;
+    | WireChecklistItem
+    | WireAttachment;
   reason?: string;
 }
 
@@ -49,6 +52,7 @@ export interface PushResponse {
     categories?: PushItemResult[];
     ideas?: PushItemResult[];
     checklist_items?: PushItemResult[];
+    attachments?: PushItemResult[];
     settings?: PushSettingResult[];
   };
   server_time: string;

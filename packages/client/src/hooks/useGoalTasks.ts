@@ -1,6 +1,7 @@
 import { liveQuery } from "dexie";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { TaskService } from "@/services/TaskService";
@@ -11,6 +12,8 @@ import { useTaskMutations } from "./useTaskMutations";
 const defaultTaskService = new TaskService(
   new TaskRepository(),
   new ChecklistRepository(),
+  undefined,
+  new AttachmentRepository(),
 );
 
 export interface UseGoalTasksReturn {

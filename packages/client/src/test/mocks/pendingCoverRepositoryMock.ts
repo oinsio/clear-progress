@@ -1,11 +1,11 @@
 import { vi } from "vitest";
-import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
+import type { PendingFileRepository } from "@/db/repositories/PendingFileRepository";
 import { createMock } from "./createMock";
 
-export function createMockPendingCoverRepository(
-  overrides: Partial<Record<keyof PendingCoverRepository, unknown>> = {},
-): PendingCoverRepository {
-  return createMock<PendingCoverRepository>(
+export function createMockPendingFileRepository(
+  overrides: Partial<Record<keyof PendingFileRepository, unknown>> = {},
+): PendingFileRepository {
+  return createMock<PendingFileRepository>(
     {
       getAll: vi.fn().mockResolvedValue([]),
       getByHash: vi.fn().mockResolvedValue(undefined),

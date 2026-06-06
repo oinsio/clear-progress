@@ -1,6 +1,7 @@
 import { liveQuery } from "dexie";
 import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { defaultTaskService } from "@/services/defaultServices";
 import { GoalService } from "@/services/GoalService";
@@ -8,7 +9,10 @@ import type { TaskService } from "@/services/TaskService";
 import type { GoalStatus } from "@/types/common";
 import type { Goal, Task } from "@/types/entities";
 
-const defaultGoalService = new GoalService(new GoalRepository());
+const defaultGoalService = new GoalService(
+  new GoalRepository(),
+  new AttachmentRepository(),
+);
 
 export interface UseGoalReturn {
   goal: Goal | undefined;

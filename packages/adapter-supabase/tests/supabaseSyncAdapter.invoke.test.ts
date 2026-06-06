@@ -65,6 +65,7 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
             contexts: [],
             categories: [],
             checklist_items: [],
+            attachments: [],
             settings: [],
           },
           error: null,
@@ -101,7 +102,7 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
       });
     });
 
-    it("should call functions.invoke('upload-cover') for uploadCover()", async () => {
+    it("should call functions.invoke('upload-file') for uploadFile()", async () => {
       const request = {
         goal_id: "goal-1",
         filename: "cover.png",
@@ -117,16 +118,16 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
       });
       const adapter = new SupabaseSyncAdapter(client);
 
-      await adapter.uploadCover(request);
+      await adapter.uploadFile(request);
 
-      expect(client.functions.invoke).toHaveBeenCalledWith("upload-cover", {
+      expect(client.functions.invoke).toHaveBeenCalledWith("upload-file", {
         body: request,
       });
     });
 
-    it("should call functions.invoke('upload-covers') for uploadCovers()", async () => {
+    it("should call functions.invoke('upload-files') for uploadFiles()", async () => {
       const request = {
-        covers: [
+        files: [
           {
             local_id: "local-1",
             goal_id: "goal-1",
@@ -150,32 +151,32 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
       });
       const adapter = new SupabaseSyncAdapter(client);
 
-      await adapter.uploadCovers(request);
+      await adapter.uploadFiles(request);
 
-      expect(client.functions.invoke).toHaveBeenCalledWith("upload-covers", {
+      expect(client.functions.invoke).toHaveBeenCalledWith("upload-files", {
         body: request,
       });
     });
 
-    it("should call functions.invoke('get-cover') for getCover()", async () => {
+    it("should call functions.invoke('get-file') for getFile()", async () => {
       const request = { hashes: ["hash123"] };
       const client = createMockSupabaseClient({
         invokeResult: {
-          data: { ok: true, covers: [] },
+          data: { ok: true, files: [] },
           error: null,
         },
       });
       const adapter = new SupabaseSyncAdapter(client);
 
-      await adapter.getCover(request);
+      await adapter.getFile(request);
 
-      expect(client.functions.invoke).toHaveBeenCalledWith("get-cover", {
+      expect(client.functions.invoke).toHaveBeenCalledWith("get-file", {
         body: request,
       });
     });
 
-    it("should call functions.invoke('delete-cover') for deleteCover()", async () => {
-      const request = { hash: "hash123", goal_id: "goal-1" };
+    it("should call functions.invoke('delete-file') for deleteFile()", async () => {
+      const request = { hash: "hash123" };
       const client = createMockSupabaseClient({
         invokeResult: {
           data: { ok: true, deleted: true, ref_count: 0 },
@@ -184,9 +185,9 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
       });
       const adapter = new SupabaseSyncAdapter(client);
 
-      await adapter.deleteCover(request);
+      await adapter.deleteFile(request);
 
-      expect(client.functions.invoke).toHaveBeenCalledWith("delete-cover", {
+      expect(client.functions.invoke).toHaveBeenCalledWith("delete-file", {
         body: request,
       });
     });
@@ -203,6 +204,7 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
               categories: 0,
               checklist_items: 0,
               ideas: 0,
+              attachments: 0,
             },
             purge_revision: 1,
           },

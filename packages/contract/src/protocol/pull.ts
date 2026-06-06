@@ -1,4 +1,5 @@
 import type {
+  WireAttachment,
   WireCategory,
   WireChecklistItem,
   WireContext,
@@ -21,6 +22,7 @@ export interface PullResponse {
   categories: WireCategory[];
   ideas: WireIdea[];
   checklist_items: WireChecklistItem[];
+  attachments: WireAttachment[]; // implements FR6 of add-file-attachments
   settings: WireSetting[];
   current_revision: number;
   purge_revision: number;

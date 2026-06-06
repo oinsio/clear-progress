@@ -7,11 +7,11 @@ export type SyncTestContext = {
   mockPush: Mock;
   mockPing: Mock;
   mockInit: Mock;
-  mockCoverSync: Mock;
-  mockInitializeLocalCovers: Mock;
+  mockFileSync: Mock;
+  mockInitializeLocalFiles: Mock;
   mockResetAndPull: Mock;
-  mockReuploadLocalCovers: Mock;
-  mockEnsureServerCoversAreCached: Mock;
+  mockReuploadLocalFiles: Mock;
+  mockEnsureServerFilesAreCached: Mock;
   mockSignOut: Mock;
   mockSilentRefresh: Mock;
   syncProviderUnmount?: () => void;

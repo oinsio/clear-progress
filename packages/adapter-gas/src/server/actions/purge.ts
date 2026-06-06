@@ -1,6 +1,10 @@
 import { ERROR_MESSAGES } from "../helpers/constants";
 import { ERROR_CODES, jsonError, jsonOk } from "../helpers/response";
 import {
+  deleteAttachmentsByIds,
+  getAllAttachments,
+} from "../sheets/attachments.sheet";
+import {
   deleteCategoriesByIds,
   getAllCategories,
 } from "../sheets/categories.sheet";
@@ -38,6 +42,9 @@ export function purge(payload: {
       getDeletedIds(getAllChecklistItems()),
     );
     const ideas = deleteIdeasByIds(getDeletedIds(getAllIdeas()));
+    const attachments = deleteAttachmentsByIds(
+      getDeletedIds(getAllAttachments()),
+    );
 
     // Increment purge_revision
     const currentPurgeRevision = readPurgeRevision();
@@ -45,7 +52,15 @@ export function purge(payload: {
     savePurgeRevision(newPurgeRevision);
 
     return jsonOk({
-      purged: { tasks, goals, contexts, categories, checklist_items, ideas },
+      purged: {
+        tasks,
+        goals,
+        contexts,
+        categories,
+        checklist_items,
+        ideas,
+        attachments,
+      },
       purge_revision: newPurgeRevision,
     });
   } catch (e) {

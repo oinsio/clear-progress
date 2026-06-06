@@ -2,8 +2,8 @@ Feature: Google Sheets structure and schema
   Implements FR8 of gas-adapter-specs-and-bdd.
 
   @gas-adapter-specs-and-bdd @FR8
-  Scenario: Eight sheet names are defined
-    Then SHEET_NAMES contains exactly 8 entries
+  Scenario: Nine sheet names are defined
+    Then SHEET_NAMES contains exactly 9 entries
 
   @gas-adapter-specs-and-bdd @FR8
   Scenario: Tasks sheet name matches constant
