@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
 import { Sidebar } from "@/components/tasks/Sidebar";
+import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useContexts } from "@/hooks/useContexts";
@@ -30,6 +31,8 @@ import type { Context } from "@/types/entities";
 const defaultTaskService = new TaskService(
   new TaskRepository(),
   new ChecklistRepository(),
+  undefined,
+  new AttachmentRepository(),
 );
 
 function SortableContextItem({

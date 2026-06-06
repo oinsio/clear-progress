@@ -1,3 +1,4 @@
+/** Implements UX4 of add-file-attachments */
 import { Trash2, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -6,6 +7,7 @@ import { EditableDescription } from "@/components/ui/EditableDescription";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
+import { IdeaAttachmentsSection } from "./IdeaAttachmentsSection";
 
 interface IdeaDetailPanelProps {
   idea: Idea;
@@ -125,6 +127,9 @@ export function IdeaDetailPanel({
               data-test-id="idea-detail-description"
             />
           </div>
+
+          {/* Attachments */}
+          <IdeaAttachmentsSection ideaId={idea.id} />
         </div>
       </div>
 

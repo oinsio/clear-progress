@@ -29,7 +29,7 @@ Feature: In-memory adapter covers
   @adapter-inmemory-spec @FR8
   Scenario: Invalid mime type returns per-item error
     Given an initialized adapter
-    When a batch with one valid cover and one cover with mime_type "text/plain" is uploaded
+    When a batch with one valid cover and one cover with mime_type "application/zip" is uploaded
     Then the valid cover result has data_hash and the invalid cover result has error
 
   @adapter-inmemory-spec @FR9

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useFileUrl } from "@/hooks/useFileUrl";
 import type { Goal } from "@/types/entities";
 
 interface FocusGoalReplacementDialogProps {
@@ -19,7 +19,7 @@ interface ReplaceGoalButtonProps {
 
 function ReplaceGoalButton({ goal, onReplace }: ReplaceGoalButtonProps) {
   const { t } = useTranslation();
-  const { url: coverUrl } = useCoverUrl(goal.cover_hash);
+  const { url: coverUrl } = useFileUrl(goal.cover_hash);
 
   return (
     <button

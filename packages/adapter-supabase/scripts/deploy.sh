@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # implements FR17, M4 of add-supabase-adapter
+# implements FR4 of add-file-attachments
 # Automates: migrations apply, Edge Functions deploy, Storage bucket creation
 set -euo pipefail
 
@@ -13,7 +14,7 @@ error() { echo "[deploy] ERROR: $*" >&2; exit 1; }
 DEPLOY_ENV="${1:-}"
 [[ -n "${DEPLOY_ENV}" ]] || error "Environment argument is required. Usage: deploy.sh <dev|qa|prod>"
 
-COVERS_BUCKET="covers"
+FILES_BUCKET="files"
 
 # ---------------------------------------------------------------------------
 # Prerequisites
@@ -72,10 +73,10 @@ FUNCTIONS=(
   pull
   push
   purge
-  upload-cover
-  upload-covers
-  get-cover
-  delete-cover
+  upload-file
+  upload-files
+  get-file
+  delete-file
 )
 
 log "Deploying Edge Functions..."
@@ -90,7 +91,7 @@ log "Edge Functions deployed."
 # 3. Create Storage bucket
 # ---------------------------------------------------------------------------
 
-log "Creating Storage bucket '${COVERS_BUCKET}' (idempotent)..."
-supabase storage create "${COVERS_BUCKET}" --public=false 2>/dev/null || log "  Bucket already exists, skipping."
+log "Creating Storage bucket '${FILES_BUCKET}' (idempotent)..."
+supabase storage create "${FILES_BUCKET}" --public=false 2>/dev/null || log "  Bucket already exists, skipping."
 
 log "Deployment complete."

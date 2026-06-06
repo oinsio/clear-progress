@@ -59,7 +59,16 @@
     "today": "Today",
     "unhide": "Unhide",
     "unhideTask": "Unhide task",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "tabs": {
+      "attachments": "Attachments"
+    },
+    "attachments": {
+      "empty": "No attachments",
+      "confirmDelete": "Delete this attachment?",
+      "confirmDeleteMessage": "This action cannot be undone.",
+      "confirmDeleteButton": "Delete"
+    }
   },
   "section": {
     "inbox": "Inbox",
@@ -116,7 +125,19 @@
     "deleteConfirmName": "Delete goal?",
     "taskCount": "Tasks:",
     "addToFocus": "Add to focus",
-    "removeFromFocus": "Remove from focus"
+    "removeFromFocus": "Remove from focus",
+    "tabs": {
+      "details": "Details",
+      "attachments": "Attachments"
+    },
+    "attachments": {
+      "empty": "No attachments",
+      "confirmDelete": "Delete this attachment?",
+      "confirmDeleteMessage": "This action cannot be undone.",
+      "confirmDeleteButton": "Delete"
+    },
+    "expandDetails": "Expand details",
+    "collapseDetails": "Collapse details"
   },
   "focusGoalReplacementDialog": {
     "title": "Replace focused goal",
@@ -146,7 +167,13 @@
     "deleteConfirmCancel": "Cancel",
     "deleteConfirmOk": "Delete",
     "addTask": "Add task",
-    "taskPlaceholder": "Task name..."
+    "taskPlaceholder": "Task name...",
+    "attachments": {
+      "empty": "No attachments",
+      "confirmDelete": "Delete this attachment?",
+      "confirmDeleteMessage": "This action cannot be undone.",
+      "confirmDeleteButton": "Delete"
+    }
   },
   "context": {
     "empty": "No contexts yet",
@@ -505,6 +532,29 @@
     "filterByBox": "Filter by box",
     "toggleHiddenItems": "Toggle hidden items",
     "create": "Create"
+  },
+  "attachment": {
+    "list": {
+      "preview": "Preview {{filename}}",
+      "download": "Download {{filename}}",
+      "delete": "Delete {{filename}}"
+    },
+    "lightbox": {
+      "dialogLabel": "Preview: {{filename}}",
+      "close": "Close preview",
+      "previewNotAvailable": "Preview is not available for this file type",
+      "download": "Download",
+      "loading": "Loading...",
+      "loadError": "Failed to load file"
+    },
+    "attach": {
+      "button": "Attach file",
+      "errorSize": "File is too large (max 5 MB)",
+      "errorType": "This file type is not supported"
+    }
+  },
+  "confirmDialog": {
+    "cancel": "Cancel"
   },
   "pwa": {
     "appUpdated": "App updated",

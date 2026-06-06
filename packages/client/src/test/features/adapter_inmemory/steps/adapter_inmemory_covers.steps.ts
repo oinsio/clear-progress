@@ -3,10 +3,10 @@ import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { InMemorySyncAdapter } from "@clear-progress/adapter-inmemory";
 import type {
-  DeleteCoverResponse,
-  GetCoverResponse,
-  UploadCoverResponse,
-  UploadCoversResponse,
+  DeleteFileResponse,
+  GetFileResponse,
+  UploadFileResponse,
+  UploadFilesResponse,
 } from "@clear-progress/contract";
 import { expect, type TestContext } from "vitest";
 
@@ -18,10 +18,10 @@ describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
     let adapter: InMemorySyncAdapter;
-    let uploadResponse: UploadCoverResponse;
-    let batchResponse: UploadCoversResponse;
-    let getResponse: GetCoverResponse;
-    let deleteResponse: DeleteCoverResponse;
+    let uploadResponse: UploadFileResponse;
+    let batchResponse: UploadFilesResponse;
+    let getResponse: GetFileResponse;
+    let deleteResponse: DeleteFileResponse;
 
     f.BeforeEachScenario(async () => {
       adapter = new InMemorySyncAdapter();
@@ -36,7 +36,7 @@ describeFeature(
       When(
         'a cover is uploaded with data_hash "abc123"',
         async (_ctx: TestContext) => {
-          uploadResponse = await adapter.uploadCover({
+          uploadResponse = await adapter.uploadFile({
             goal_id: "goal-1",
             filename: "cover.jpg",
             mime_type: "image/jpeg",
@@ -65,7 +65,7 @@ describeFeature(
       And(
         'a cover with data_hash "abc123" already exists',
         async (_ctx: TestContext) => {
-          await adapter.uploadCover({
+          await adapter.uploadFile({
             goal_id: "goal-1",
             filename: "cover.jpg",
             mime_type: "image/jpeg",
@@ -78,8 +78,8 @@ describeFeature(
       When(
         'a cover is uploaded with data_hash "abc123"',
         async (_ctx: TestContext) => {
-          uploadResponse = await adapter.uploadCover({
-            goal_id: "goal-2",
+          uploadResponse = await adapter.uploadFile({
+            goal_id: "goal-1",
             filename: "cover2.jpg",
             mime_type: "image/jpeg",
             data: btoa("fake-image-data"),
@@ -102,8 +102,8 @@ describeFeature(
       When(
         "a batch of 2 covers with valid mime types is uploaded",
         async (_ctx: TestContext) => {
-          batchResponse = await adapter.uploadCovers({
-            covers: [
+          batchResponse = await adapter.uploadFiles({
+            files: [
               {
                 local_id: "local-1",
                 goal_id: "goal-1",
@@ -114,7 +114,7 @@ describeFeature(
               },
               {
                 local_id: "local-2",
-                goal_id: "goal-2",
+                goal_id: "goal-1",
                 filename: "cover2.jpg",
                 mime_type: "image/png",
                 data: btoa("image-2"),
@@ -141,15 +141,15 @@ describeFeature(
       });
 
       When("a batch of 11 covers is uploaded", async (_ctx: TestContext) => {
-        const covers = Array.from({ length: 11 }, (_, index) => ({
+        const files = Array.from({ length: 11 }, (_, index) => ({
           local_id: `local-${index}`,
-          goal_id: `goal-${index}`,
+          goal_id: "goal-1",
           filename: `cover${index}.jpg`,
           mime_type: "image/jpeg",
           data: btoa(`image-${index}`),
           data_hash: `hash-${index}`,
         }));
-        batchResponse = await adapter.uploadCovers({ covers });
+        batchResponse = await adapter.uploadFiles({ files });
       });
 
       Then("the batch response has ok false", async (_ctx: TestContext) => {
@@ -166,10 +166,10 @@ describeFeature(
         });
 
         When(
-          'a batch with one valid cover and one cover with mime_type "text/plain" is uploaded',
+          'a batch with one valid cover and one cover with mime_type "application/zip" is uploaded',
           async (_ctx: TestContext) => {
-            batchResponse = await adapter.uploadCovers({
-              covers: [
+            batchResponse = await adapter.uploadFiles({
+              files: [
                 {
                   local_id: "local-1",
                   goal_id: "goal-1",
@@ -180,9 +180,9 @@ describeFeature(
                 },
                 {
                   local_id: "local-2",
-                  goal_id: "goal-2",
+                  goal_id: "goal-1",
                   filename: "invalid.txt",
-                  mime_type: "text/plain",
+                  mime_type: "application/zip",
                   data: btoa("not-an-image"),
                   data_hash: "hash2",
                 },
@@ -210,7 +210,7 @@ describeFeature(
       And(
         'a cover with data_hash "abc123" already exists',
         async (_ctx: TestContext) => {
-          await adapter.uploadCover({
+          await adapter.uploadFile({
             goal_id: "goal-1",
             filename: "cover.jpg",
             mime_type: "image/jpeg",
@@ -223,7 +223,7 @@ describeFeature(
       When(
         'getCover is called with hash "abc123"',
         async (_ctx: TestContext) => {
-          getResponse = await adapter.getCover({ hashes: ["abc123"] });
+          getResponse = await adapter.getFile({ hashes: ["abc123"] });
         },
       );
 
@@ -231,9 +231,9 @@ describeFeature(
         "the cover response contains mime_type and data",
         async (_ctx: TestContext) => {
           expect(getResponse.ok).toBe(true);
-          expect(getResponse.covers).toHaveLength(1);
-          expect(getResponse.covers[0]?.mime_type).toBe("image/jpeg");
-          expect(getResponse.covers[0]?.data).toBeDefined();
+          expect(getResponse.files).toHaveLength(1);
+          expect(getResponse.files[0]?.mime_type).toBe("image/jpeg");
+          expect(getResponse.files[0]?.data).toBeDefined();
         },
       );
     });
@@ -247,14 +247,14 @@ describeFeature(
       When(
         'getCover is called with hash "nonexistent"',
         async (_ctx: TestContext) => {
-          getResponse = await adapter.getCover({
+          getResponse = await adapter.getFile({
             hashes: ["nonexistent"],
           });
         },
       );
 
       Then("the cover result has an error field", async (_ctx: TestContext) => {
-        expect(getResponse.covers[0]?.error).toBeDefined();
+        expect(getResponse.files[0]?.error).toBeDefined();
       });
     });
 
@@ -269,15 +269,15 @@ describeFeature(
         And(
           'a cover with data_hash "shared" has ref_count 2',
           async (_ctx: TestContext) => {
-            await adapter.uploadCover({
+            await adapter.uploadFile({
               goal_id: "goal-1",
               filename: "shared.jpg",
               mime_type: "image/jpeg",
               data: btoa("shared-image"),
               data_hash: "shared",
             });
-            await adapter.uploadCover({
-              goal_id: "goal-2",
+            await adapter.uploadFile({
+              goal_id: "goal-1",
               filename: "shared2.jpg",
               mime_type: "image/jpeg",
               data: btoa("shared-image"),
@@ -289,9 +289,8 @@ describeFeature(
         When(
           'deleteCover is called with hash "shared"',
           async (_ctx: TestContext) => {
-            deleteResponse = await adapter.deleteCover({
+            deleteResponse = await adapter.deleteFile({
               hash: "shared",
-              goal_id: "goal-1",
             });
           },
         );
@@ -318,7 +317,7 @@ describeFeature(
         And(
           'a cover with data_hash "single" has ref_count 1',
           async (_ctx: TestContext) => {
-            await adapter.uploadCover({
+            await adapter.uploadFile({
               goal_id: "goal-1",
               filename: "single.jpg",
               mime_type: "image/jpeg",
@@ -331,9 +330,8 @@ describeFeature(
         When(
           'deleteCover is called with hash "single"',
           async (_ctx: TestContext) => {
-            deleteResponse = await adapter.deleteCover({
+            deleteResponse = await adapter.deleteFile({
               hash: "single",
-              goal_id: "goal-1",
             });
           },
         );
@@ -358,9 +356,8 @@ describeFeature(
       When(
         'deleteCover is called with hash "nonexistent"',
         async (_ctx: TestContext) => {
-          deleteResponse = await adapter.deleteCover({
+          deleteResponse = await adapter.deleteFile({
             hash: "nonexistent",
-            goal_id: "goal-1",
           });
         },
       );

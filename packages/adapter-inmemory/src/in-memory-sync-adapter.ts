@@ -1,8 +1,8 @@
 import type {
-  DeleteCoverRequest,
-  DeleteCoverResponse,
-  GetCoverRequest,
-  GetCoverResponse,
+  DeleteFileRequest,
+  DeleteFileResponse,
+  GetFileRequest,
+  GetFileResponse,
   InitResponse,
   PingResponse,
   PullRequest,
@@ -13,10 +13,11 @@ import type {
   PushResponse,
   PushSettingResult,
   SyncAdapter,
-  UploadCoverRequest,
-  UploadCoverResponse,
-  UploadCoversRequest,
-  UploadCoversResponse,
+  UploadFileRequest,
+  UploadFileResponse,
+  UploadFilesRequest,
+  UploadFilesResponse,
+  WireAttachment,
   WireCategory,
   WireChecklistItem,
   WireContext,
@@ -25,6 +26,10 @@ import type {
   WireSetting,
   WireTask,
 } from "@clear-progress/contract";
+import {
+  ALLOWED_FILE_MIME_TYPES,
+  MAX_FILE_BATCH_SIZE,
+} from "@clear-progress/contract";
 
 const APP_NAME = "inmemory";
 const APP_VERSION = "0.1.0";
@@ -32,10 +37,8 @@ const APP_VERSION = "0.1.0";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const VALID_BOXES = new Set(["inbox", "today", "week", "later"]);
-const MAX_COVER_BATCH_SIZE = 10;
-const VALID_IMAGE_MIME_PREFIXES = ["image/"];
 
-interface CoverMetadata {
+interface FileMetadata {
   filename: string;
   mime_type: string;
   data: string;
@@ -49,7 +52,8 @@ type EntityWithId =
   | WireContext
   | WireCategory
   | WireIdea
-  | WireChecklistItem;
+  | WireChecklistItem
+  | WireAttachment;
 
 export class InMemorySyncAdapter implements SyncAdapter {
   private tasks = new Map<string, WireTask>();
@@ -58,8 +62,9 @@ export class InMemorySyncAdapter implements SyncAdapter {
   private categories = new Map<string, WireCategory>();
   private ideas = new Map<string, WireIdea>();
   private checklistItems = new Map<string, WireChecklistItem>();
+  private attachments = new Map<string, WireAttachment>();
   private settings = new Map<string, WireSetting>();
-  private covers = new Map<string, CoverMetadata>(); // data_hash → metadata
+  private files = new Map<string, FileMetadata>(); // data_hash → metadata
 
   private nextRevision = 1;
   private purgeRevision = 0;
@@ -98,6 +103,9 @@ export class InMemorySyncAdapter implements SyncAdapter {
     const checklistItems = Array.from(this.checklistItems.values()).filter(
       (item) => item.revision > request.since_revision,
     );
+    const attachments = Array.from(this.attachments.values()).filter(
+      (attachment) => attachment.revision > request.since_revision,
+    );
 
     let settings = Array.from(this.settings.values());
     const settingsUpdatedAt = request.settings_updated_at;
@@ -115,6 +123,7 @@ export class InMemorySyncAdapter implements SyncAdapter {
       categories,
       ideas,
       checklist_items: checklistItems,
+      attachments,
       settings,
       current_revision: this.nextRevision - 1,
       purge_revision: this.purgeRevision,
@@ -159,6 +168,12 @@ export class InMemorySyncAdapter implements SyncAdapter {
     if (request.checklist_items) {
       results.checklist_items = request.checklist_items.map((item) =>
         this.pushEntity(this.checklistItems, item, revision),
+      );
+    }
+
+    if (request.attachments) {
+      results.attachments = request.attachments.map((attachment) =>
+        this.pushEntity(this.attachments, attachment, revision),
       );
     }
 
@@ -216,7 +231,6 @@ export class InMemorySyncAdapter implements SyncAdapter {
 
     if (
       "name" in entity &&
-      typeof entity.name === "string" &&
       entity.name.trim() === ""
     ) {
       return "Name must not be blank";
@@ -249,69 +263,65 @@ export class InMemorySyncAdapter implements SyncAdapter {
     return { key: setting.key, status: "accepted" };
   }
 
-  async uploadCover(request: UploadCoverRequest): Promise<UploadCoverResponse> {
-    const existing = this.covers.get(request.data_hash);
+  async uploadFile(request: UploadFileRequest): Promise<UploadFileResponse> {
+    const existing = this.files.get(request.data_hash);
     if (existing) {
       existing.ref_count++;
       return { ok: true, data_hash: request.data_hash, reused: true };
     }
 
-    const metadata: CoverMetadata = {
+    const metadata: FileMetadata = {
       filename: request.filename,
       mime_type: request.mime_type,
       data: request.data,
       data_hash: request.data_hash,
       ref_count: 1,
     };
-    this.covers.set(request.data_hash, metadata);
+    this.files.set(request.data_hash, metadata);
 
     return { ok: true, data_hash: request.data_hash, reused: false };
   }
 
-  async uploadCovers(
-    request: UploadCoversRequest,
-  ): Promise<UploadCoversResponse> {
-    if (request.covers.length > MAX_COVER_BATCH_SIZE) {
+  async uploadFiles(request: UploadFilesRequest): Promise<UploadFilesResponse> {
+    if (request.files.length > MAX_FILE_BATCH_SIZE) {
       return { ok: false, results: [] };
     }
 
-    const results = request.covers.map((cover) => {
-      if (
-        !VALID_IMAGE_MIME_PREFIXES.some((prefix) =>
-          cover.mime_type.startsWith(prefix),
-        )
-      ) {
+    const allowedMimeTypes = new Set<string>(ALLOWED_FILE_MIME_TYPES);
+
+    const results = request.files.map((file) => {
+      if (!allowedMimeTypes.has(file.mime_type)) {
         return {
-          local_id: cover.local_id,
-          goal_id: cover.goal_id,
-          error: `Invalid mime type: ${cover.mime_type}`,
+          local_id: file.local_id,
+          goal_id: file.goal_id,
+          error: `Invalid mime type: ${file.mime_type}`,
         };
       }
 
-      const existing = this.covers.get(cover.data_hash);
+      const existing = this.files.get(file.data_hash);
       if (existing) {
         existing.ref_count++;
         return {
-          local_id: cover.local_id,
-          goal_id: cover.goal_id,
-          data_hash: cover.data_hash,
+          local_id: file.local_id,
+          goal_id: file.goal_id,
+          data_hash: file.data_hash,
           reused: true,
         };
       }
 
-      const metadata: CoverMetadata = {
-        filename: cover.filename,
-        mime_type: cover.mime_type,
-        data: cover.data,
-        data_hash: cover.data_hash,
+      const metadata: FileMetadata = {
+        filename: file.filename,
+        mime_type: file.mime_type,
+        data: file.data,
+        data_hash: file.data_hash,
         ref_count: 1,
       };
-      this.covers.set(cover.data_hash, metadata);
+      this.files.set(file.data_hash, metadata);
 
       return {
-        local_id: cover.local_id,
-        goal_id: cover.goal_id,
-        data_hash: cover.data_hash,
+        local_id: file.local_id,
+        goal_id: file.goal_id,
+        data_hash: file.data_hash,
         reused: false,
       };
     });
@@ -319,9 +329,9 @@ export class InMemorySyncAdapter implements SyncAdapter {
     return { ok: true, results };
   }
 
-  async getCover(request: GetCoverRequest): Promise<GetCoverResponse> {
-    const covers = request.hashes.map((hash) => {
-      const metadata = this.covers.get(hash);
+  async getFile(request: GetFileRequest): Promise<GetFileResponse> {
+    const files = request.hashes.map((hash) => {
+      const metadata = this.files.get(hash);
       if (!metadata) {
         return {
           hash,
@@ -337,12 +347,12 @@ export class InMemorySyncAdapter implements SyncAdapter {
 
     return {
       ok: true,
-      covers,
+      files,
     };
   }
 
-  async deleteCover(request: DeleteCoverRequest): Promise<DeleteCoverResponse> {
-    const metadata = this.covers.get(request.hash);
+  async deleteFile(request: DeleteFileRequest): Promise<DeleteFileResponse> {
+    const metadata = this.files.get(request.hash);
     if (!metadata) {
       return { ok: true, deleted: true, ref_count: 0 };
     }
@@ -350,7 +360,7 @@ export class InMemorySyncAdapter implements SyncAdapter {
     metadata.ref_count--;
 
     if (metadata.ref_count <= 0) {
-      this.covers.delete(request.hash);
+      this.files.delete(request.hash);
       return { ok: true, deleted: true, ref_count: 0 };
     }
 
@@ -366,6 +376,8 @@ export class InMemorySyncAdapter implements SyncAdapter {
       ideas: this.purgeDeleted(this.ideas),
       checklist_items: this.purgeDeleted(this.checklistItems),
     };
+
+    this.purgeAttachmentFiles();
 
     this.purgeRevision++;
 
@@ -387,5 +399,22 @@ export class InMemorySyncAdapter implements SyncAdapter {
       }
     }
     return count;
+  }
+
+  private purgeAttachmentFiles(): void {
+    const deletedAttachments = Array.from(this.attachments.values()).filter(
+      (attachment) => attachment.is_deleted,
+    );
+
+    for (const attachment of deletedAttachments) {
+      this.attachments.delete(attachment.id);
+      const fileMetadata = this.files.get(attachment.data_hash);
+      if (fileMetadata) {
+        fileMetadata.ref_count--;
+        if (fileMetadata.ref_count <= 0) {
+          this.files.delete(attachment.data_hash);
+        }
+      }
+    }
   }
 }

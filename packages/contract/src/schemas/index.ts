@@ -1,7 +1,7 @@
 export {
-  DeleteCoverResponseSchema,
-  GetCoverResponseSchema,
-  GetCoverResultSchema,
+  DeleteFileResponseSchema,
+  GetFileResponseSchema,
+  GetFileResultSchema,
   InitResponseSchema,
   PingResponseSchema,
   PullResponseSchema,
@@ -9,9 +9,9 @@ export {
   PushItemResultSchema,
   PushResponseSchema,
   PushSettingResultSchema,
-  UploadCoverBatchResultSchema,
-  UploadCoverResponseSchema,
-  UploadCoversResponseSchema,
+  UploadFileBatchResultSchema,
+  UploadFileResponseSchema,
+  UploadFilesResponseSchema,
 } from "./api";
 export type {
   BackendType,
@@ -26,6 +26,7 @@ export {
   SupabaseConnectionConfigSchema,
 } from "./connection";
 export type {
+  WireAttachment,
   WireCategory,
   WireChecklistItem,
   WireContext,
@@ -35,6 +36,7 @@ export type {
   WireTask,
 } from "./entities";
 export {
+  WireAttachmentSchema,
   WireCategorySchema,
   WireChecklistItemSchema,
   WireContextSchema,
@@ -50,9 +52,15 @@ export {
   MenuModeSchema,
   MenuOrderSchema,
 } from "./local-storage";
-export type { Box, GoalStatus, PushResultStatus } from "./primitives";
+export type {
+  Box,
+  EntityType,
+  GoalStatus,
+  PushResultStatus,
+} from "./primitives";
 export {
   BoxSchema,
+  EntityTypeSchema,
   GoalStatusSchema,
   ISODateOrEmptySchema,
   ISODateSchema,

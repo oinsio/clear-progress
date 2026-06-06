@@ -81,14 +81,14 @@ export function init(): GoogleAppsScript.Content.TextOutput {
   const rootFolderId = rootFolderFile.id;
   if (!rootFolderId) throw new Error("Drive API did not return root folder id");
 
-  const coversFolderFile = Drive.Files.create({
-    name: DRIVE_FOLDER_NAMES.COVERS,
+  const filesFolderFile = Drive.Files.create({
+    name: DRIVE_FOLDER_NAMES.FILES,
     mimeType: DRIVE_MIME_TYPES.FOLDER,
     parents: [rootFolderId],
   });
-  const coversFolderId = coversFolderFile.id;
-  if (!coversFolderId)
-    throw new Error("Drive API did not return covers folder id");
+  const filesFolderId = filesFolderFile.id;
+  if (!filesFolderId)
+    throw new Error("Drive API did not return files folder id");
 
   // Create spreadsheet
   const spreadsheetFile = Drive.Files.create({
@@ -122,7 +122,7 @@ export function init(): GoogleAppsScript.Content.TextOutput {
   props.setProperties({
     [PROPERTY_KEYS.SPREADSHEET_ID]: spreadsheet.getId(),
     [PROPERTY_KEYS.FOLDER_ID]: rootFolderId,
-    [PROPERTY_KEYS.COVERS_FOLDER_ID]: coversFolderId,
+    [PROPERTY_KEYS.FILES_FOLDER_ID]: filesFolderId,
   });
 
   // Write default settings

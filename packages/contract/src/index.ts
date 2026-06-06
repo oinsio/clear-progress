@@ -2,20 +2,25 @@
 
 // Constants
 export {
+  ALLOWED_FILE_MIME_TYPES,
   API_ACTIONS,
-  MAX_COVER_BATCH_SIZE,
+  FILE_MAGIC_BYTES,
+  MAX_ATTACHMENT_SIZE_BYTES,
   MAX_COVER_SIZE_BYTES,
+  MAX_FILE_BATCH_SIZE,
   MAX_FOCUSED_GOALS,
   PUSH_RESULT_STATUS,
   SETTINGS_KEYS,
   SYNC_ERRORS,
   SYNC_META_KEYS,
+  TEXT_PLAIN_NULL_CHECK_BYTES,
 } from "./constants";
 // Domain types (re-exported from schemas)
 export type {
   BackendType,
   Box,
   ConnectionConfig,
+  EntityType,
   GasConnectionConfig,
   GoalStatus,
   MenuItemConfig,
@@ -23,6 +28,7 @@ export type {
   PushResultStatus,
   RepeatRule,
   SupabaseConnectionConfig,
+  WireAttachment,
   WireCategory,
   WireChecklistItem,
   WireContext,
@@ -36,11 +42,11 @@ export { ApiAuthError, ApiValidationError } from "./errors";
 export type { SyncAdapter } from "./ports";
 // Protocol types
 export type {
-  DeleteCoverRequest,
-  DeleteCoverResponse,
-  GetCoverRequest,
-  GetCoverResponse,
-  GetCoverResult,
+  DeleteFileRequest,
+  DeleteFileResponse,
+  GetFileRequest,
+  GetFileResponse,
+  GetFileResult,
   InitResponse,
   PingResponse,
   PullRequest,
@@ -50,12 +56,12 @@ export type {
   PushRequest,
   PushResponse,
   PushSettingResult,
-  UploadCoverBatchItem,
-  UploadCoverBatchResult,
-  UploadCoverRequest,
-  UploadCoverResponse,
-  UploadCoversRequest,
-  UploadCoversResponse,
+  UploadFileBatchItem,
+  UploadFileBatchResult,
+  UploadFileRequest,
+  UploadFileResponse,
+  UploadFilesRequest,
+  UploadFilesResponse,
 } from "./protocol";
 // Schemas
 export {
@@ -64,10 +70,11 @@ export {
   CollapsedSectionsSchema,
   ConnectionConfigSchema,
   // API response schemas
-  DeleteCoverResponseSchema,
+  DeleteFileResponseSchema,
+  EntityTypeSchema,
   GasConnectionConfigSchema,
-  GetCoverResponseSchema,
-  GetCoverResultSchema,
+  GetFileResponseSchema,
+  GetFileResultSchema,
   GoalStatusSchema,
   InitResponseSchema,
   ISODateOrEmptySchema,
@@ -87,10 +94,11 @@ export {
   REPEAT_RULE_LIMITS,
   RepeatRuleSchema,
   SupabaseConnectionConfigSchema,
-  UploadCoverBatchResultSchema,
-  UploadCoverResponseSchema,
-  UploadCoversResponseSchema,
+  UploadFileBatchResultSchema,
+  UploadFileResponseSchema,
+  UploadFilesResponseSchema,
   UUIDSchema,
+  WireAttachmentSchema,
   WireCategorySchema,
   WireChecklistItemSchema,
   WireContextSchema,
@@ -99,3 +107,5 @@ export {
   WireSettingSchema,
   WireTaskSchema,
 } from "./schemas";
+// Validation
+export { validateMagicBytes } from "./validation";

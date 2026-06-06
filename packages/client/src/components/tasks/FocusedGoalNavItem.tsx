@@ -1,5 +1,5 @@
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useFileUrl } from "@/hooks/useFileUrl";
 import type { Goal } from "@/types/entities";
 
 interface FocusedGoalNavItemProps {
@@ -15,7 +15,7 @@ export function FocusedGoalNavItem({
   isActive,
   onClick,
 }: FocusedGoalNavItemProps) {
-  const { url: coverUrl } = useCoverUrl(goal.cover_hash ?? "");
+  const { url: coverUrl } = useFileUrl(goal.cover_hash ?? "");
 
   if (isExpanded) {
     return (

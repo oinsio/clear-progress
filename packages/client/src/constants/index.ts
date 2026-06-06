@@ -118,10 +118,10 @@ export const API_ACTIONS = {
   INIT: "init",
   PULL: "pull",
   PUSH: "push",
-  UPLOAD_COVER: "upload_cover",
-  UPLOAD_COVERS: "upload_covers",
-  DELETE_COVER: "delete_cover",
-  GET_COVER: "get_cover",
+  UPLOAD_FILE: "upload_file",
+  UPLOAD_FILES: "upload_files",
+  DELETE_FILE: "delete_file",
+  GET_FILE: "get_file",
   PURGE: "purge",
 } as const;
 
@@ -200,10 +200,13 @@ export const SETTING_KEYS = {
 } as const;
 
 export const MAX_COVER_SIZE_BYTES = 2 * 1024 * 1024;
-export const MAX_COVER_BATCH_SIZE = 10;
-export const COVER_HASH_PREFIX_LENGTH = 12;
-export const DEFAULT_COVER_EXTENSION = "jpg";
-export const FALLBACK_COVER_MIME_TYPE = "image/jpeg";
+export const MAX_FILE_BATCH_SIZE = 10;
+export const FILE_HASH_PREFIX_LENGTH = 12;
+export const DEFAULT_FILE_EXTENSION = "jpg";
+export const FALLBACK_FILE_MIME_TYPE = "image/jpeg";
+
+/** Implements FR3 of add-file-attachments */
+export { MAX_ATTACHMENT_SIZE_BYTES } from "@clear-progress/contract";
 
 export const PUSH_RESULT_STATUS = {
   CREATED: "created",

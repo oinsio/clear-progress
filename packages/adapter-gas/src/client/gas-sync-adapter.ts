@@ -1,8 +1,8 @@
 import type {
-  DeleteCoverRequest,
-  DeleteCoverResponse,
-  GetCoverRequest,
-  GetCoverResponse,
+  DeleteFileRequest,
+  DeleteFileResponse,
+  GetFileRequest,
+  GetFileResponse,
   InitResponse,
   PingResponse,
   PullRequest,
@@ -11,23 +11,23 @@ import type {
   PushRequest,
   PushResponse,
   SyncAdapter,
-  UploadCoverRequest,
-  UploadCoverResponse,
-  UploadCoversRequest,
-  UploadCoversResponse,
+  UploadFileRequest,
+  UploadFileResponse,
+  UploadFilesRequest,
+  UploadFilesResponse,
 } from "@clear-progress/contract";
 import {
   ApiAuthError,
   ApiValidationError,
-  DeleteCoverResponseSchema,
-  GetCoverResponseSchema,
+  DeleteFileResponseSchema,
+  GetFileResponseSchema,
   InitResponseSchema,
   PingResponseSchema,
   PullResponseSchema,
   PurgeResponseSchema,
   PushResponseSchema,
-  UploadCoverResponseSchema,
-  UploadCoversResponseSchema,
+  UploadFileResponseSchema,
+  UploadFilesResponseSchema,
 } from "@clear-progress/contract";
 import type { ZodType } from "zod";
 
@@ -127,33 +127,31 @@ export class GasSyncAdapter implements SyncAdapter {
     return this.request({ action: "push", ...request }, PushResponseSchema);
   }
 
-  async uploadCover(request: UploadCoverRequest): Promise<UploadCoverResponse> {
+  async uploadFile(request: UploadFileRequest): Promise<UploadFileResponse> {
     return this.request(
-      { action: "upload_cover", ...request },
-      UploadCoverResponseSchema,
+      { action: "upload_file", ...request },
+      UploadFileResponseSchema,
     );
   }
 
-  async uploadCovers(
-    request: UploadCoversRequest,
-  ): Promise<UploadCoversResponse> {
+  async uploadFiles(request: UploadFilesRequest): Promise<UploadFilesResponse> {
     return this.request(
-      { action: "upload_covers", ...request },
-      UploadCoversResponseSchema,
+      { action: "upload_files", ...request },
+      UploadFilesResponseSchema,
     );
   }
 
-  async getCover(request: GetCoverRequest): Promise<GetCoverResponse> {
+  async getFile(request: GetFileRequest): Promise<GetFileResponse> {
     return this.request(
-      { action: "get_cover", ...request },
-      GetCoverResponseSchema,
+      { action: "get_file", ...request },
+      GetFileResponseSchema,
     );
   }
 
-  async deleteCover(request: DeleteCoverRequest): Promise<DeleteCoverResponse> {
+  async deleteFile(request: DeleteFileRequest): Promise<DeleteFileResponse> {
     return this.request(
-      { action: "delete_cover", ...request },
-      DeleteCoverResponseSchema,
+      { action: "delete_file", ...request },
+      DeleteFileResponseSchema,
     );
   }
 

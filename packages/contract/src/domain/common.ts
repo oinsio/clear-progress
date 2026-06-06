@@ -1,1 +1,7 @@
-export type { Box, GoalStatus, PushResultStatus, RepeatRule } from "../schemas";
+export type {
+  Box,
+  EntityType,
+  GoalStatus,
+  PushResultStatus,
+  RepeatRule,
+} from "../schemas";

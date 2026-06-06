@@ -2,19 +2,19 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext, vi } from "vitest";
-import { MAX_COVER_BATCH_SIZE } from "@/constants";
+import { MAX_FILE_BATCH_SIZE } from "@/constants";
 import {
-  type CoverSyncDeps,
-  createCoverSyncScaffold,
-  createMockPendingCoverRepository,
+  createFileSyncScaffold,
+  createMockPendingFileRepository,
   createMockSyncAdapter,
-  createPendingCover,
+  createPendingFile,
+  type FileSyncDeps,
 } from "./coverSyncTestHelpers";
 
 const feature = await loadFeature("../cover_upload.feature");
 
-describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
-  const { deps, createService } = createCoverSyncScaffold(f);
+describeFeature(feature, (f: FeatureDescriibeCallbackParams<FileSyncDeps>) => {
+  const { deps, createService } = createFileSyncScaffold(f);
 
   // @spec-sync-protocol @FR8
   f.Scenario(
@@ -23,15 +23,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'a pending cover with hash "hash-abc" exists',
         async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
+          deps.pendingFileRepository = createMockPendingFileRepository({
             getAll: vi
               .fn()
               .mockResolvedValue([
-                createPendingCover({ data_hash: "hash-abc" }),
+                createPendingFile({ data_hash: "hash-abc" }),
               ]),
           });
           deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockResolvedValue({
+            uploadFiles: vi.fn().mockResolvedValue({
               ok: true,
               results: [{ data_hash: "hash-abc", reused: false }],
             }),
@@ -47,7 +47,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         'pending cover "hash-abc" is removed from repository',
         async (_ctx: TestContext) => {
-          expect(deps.pendingCoverRepository.delete).toHaveBeenCalledWith(
+          expect(deps.pendingFileRepository.delete).toHaveBeenCalledWith(
             "hash-abc",
           );
         },
@@ -59,7 +59,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
   f.Scenario(
     "Cover blob is saved to cover repository after upload",
     ({ Given, When, Then }) => {
-      const pendingCover = createPendingCover({
+      const pendingCover = createPendingFile({
         data_hash: "hash-upload",
         goal_id: "goal-1",
       });
@@ -67,11 +67,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'a pending cover with hash "hash-upload" exists for goal "goal-1"',
         async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
+          deps.pendingFileRepository = createMockPendingFileRepository({
             getAll: vi.fn().mockResolvedValue([pendingCover]),
           });
           deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockResolvedValue({
+            uploadFiles: vi.fn().mockResolvedValue({
               ok: true,
               results: [{ data_hash: "hash-upload", reused: false }],
             }),
@@ -87,7 +87,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         'cover repository contains a record with data_hash "hash-upload"',
         async (_ctx: TestContext) => {
-          expect(deps.coverRepository.save).toHaveBeenCalledWith(
+          expect(deps.fileRepository.save).toHaveBeenCalledWith(
             expect.objectContaining({
               data_hash: "hash-upload",
               data: pendingCover.data,
@@ -105,11 +105,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'a pending cover with hash "hash-reused" exists',
         async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
+          deps.pendingFileRepository = createMockPendingFileRepository({
             getAll: vi
               .fn()
               .mockResolvedValue([
-                createPendingCover({ data_hash: "hash-reused" }),
+                createPendingFile({ data_hash: "hash-reused" }),
               ]),
           });
         },
@@ -119,7 +119,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server will respond with reused true for "hash-reused"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockResolvedValue({
+            uploadFiles: vi.fn().mockResolvedValue({
               ok: true,
               results: [{ data_hash: "hash-reused", reused: true }],
             }),
@@ -133,13 +133,13 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then("cover repository save is not called", async (_ctx: TestContext) => {
-        expect(deps.coverRepository.save).not.toHaveBeenCalled();
+        expect(deps.fileRepository.save).not.toHaveBeenCalled();
       });
 
       And(
         'pending cover "hash-reused" is removed from repository',
         async (_ctx: TestContext) => {
-          expect(deps.pendingCoverRepository.delete).toHaveBeenCalledWith(
+          expect(deps.pendingFileRepository.delete).toHaveBeenCalledWith(
             "hash-reused",
           );
         },
@@ -149,17 +149,17 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
 
   // @spec-sync-protocol @FR9
   f.Scenario(
-    "Covers are uploaded in chunks of MAX_COVER_BATCH_SIZE",
+    "Covers are uploaded in chunks of MAX_FILE_BATCH_SIZE",
     ({ Given, When, Then }) => {
       Given(
-        "more pending covers than MAX_COVER_BATCH_SIZE exist",
+        "more pending covers than MAX_FILE_BATCH_SIZE exist",
         async (_ctx: TestContext) => {
-          const pendingCovers = Array.from(
-            { length: MAX_COVER_BATCH_SIZE + 1 },
-            (_, i) => createPendingCover({ data_hash: `hash-${i}` }),
+          const pendingFiles = Array.from(
+            { length: MAX_FILE_BATCH_SIZE + 1 },
+            (_, i) => createPendingFile({ data_hash: `hash-${i}` }),
           );
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue(pendingCovers),
+          deps.pendingFileRepository = createMockPendingFileRepository({
+            getAll: vi.fn().mockResolvedValue(pendingFiles),
           });
         },
       );
@@ -170,7 +170,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then("uploadCovers is called twice", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledTimes(2);
+        expect(deps.syncAdapter.uploadFiles).toHaveBeenCalledTimes(2);
       });
     },
   );
@@ -180,14 +180,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
     "Batch does not produce extra empty iteration on exact boundary",
     ({ Given, When, Then, And }) => {
       Given(
-        "exactly MAX_COVER_BATCH_SIZE pending covers exist",
+        "exactly MAX_FILE_BATCH_SIZE pending covers exist",
         async (_ctx: TestContext) => {
-          const pendingCovers = Array.from(
-            { length: MAX_COVER_BATCH_SIZE },
-            (_, i) => createPendingCover({ data_hash: `hash-${i}` }),
+          const pendingFiles = Array.from(
+            { length: MAX_FILE_BATCH_SIZE },
+            (_, i) => createPendingFile({ data_hash: `hash-${i}` }),
           );
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue(pendingCovers),
+          deps.pendingFileRepository = createMockPendingFileRepository({
+            getAll: vi.fn().mockResolvedValue(pendingFiles),
           });
         },
       );
@@ -198,19 +198,19 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then("uploadCovers is called exactly once", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledTimes(1);
+        expect(deps.syncAdapter.uploadFiles).toHaveBeenCalledTimes(1);
       });
 
       And("no empty batch is processed", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledWith(
+        expect(deps.syncAdapter.uploadFiles).toHaveBeenCalledWith(
           expect.objectContaining({
-            covers: expect.arrayContaining([
+            files: expect.arrayContaining([
               expect.objectContaining({ data_hash: expect.any(String) }),
             ]),
           }),
         );
-        const callArgs = vi.mocked(deps.syncAdapter.uploadCovers).mock.calls[0];
-        expect(callArgs[0].covers).toHaveLength(MAX_COVER_BATCH_SIZE);
+        const callArgs = vi.mocked(deps.syncAdapter.uploadFiles).mock.calls[0];
+        expect(callArgs[0].files).toHaveLength(MAX_FILE_BATCH_SIZE);
       });
     },
   );
@@ -222,13 +222,13 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'two pending covers exist: "hash-bad" and "hash-ok"',
         async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
+          deps.pendingFileRepository = createMockPendingFileRepository({
             getAll: vi.fn().mockResolvedValue([
-              createPendingCover({
+              createPendingFile({
                 data_hash: "hash-bad",
                 goal_id: "bad-goal",
               }),
-              createPendingCover({
+              createPendingFile({
                 data_hash: "hash-ok",
                 goal_id: "ok-goal",
               }),
@@ -241,7 +241,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server will respond with error for "hash-bad" and success for "hash-ok"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockResolvedValue({
+            uploadFiles: vi.fn().mockResolvedValue({
               ok: true,
               results: [
                 { data_hash: "hash-bad", error: "FILE_TOO_LARGE" },
@@ -260,7 +260,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         'pending cover "hash-ok" is removed from repository',
         async (_ctx: TestContext) => {
-          expect(deps.pendingCoverRepository.delete).toHaveBeenCalledWith(
+          expect(deps.pendingFileRepository.delete).toHaveBeenCalledWith(
             "hash-ok",
           );
         },
@@ -269,7 +269,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       And(
         'pending cover "hash-bad" is not removed from repository',
         async (_ctx: TestContext) => {
-          expect(deps.pendingCoverRepository.delete).not.toHaveBeenCalledWith(
+          expect(deps.pendingFileRepository.delete).not.toHaveBeenCalledWith(
             "hash-bad",
           );
         },
@@ -284,9 +284,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'a pending cover with hash "hash-error" exists',
         async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
+          deps.pendingFileRepository = createMockPendingFileRepository({
             getAll: vi.fn().mockResolvedValue([
-              createPendingCover({
+              createPendingFile({
                 data_hash: "hash-error",
                 goal_id: "goal-1",
               }),
@@ -299,7 +299,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server will respond with error flag true for "hash-error"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockResolvedValue({
+            uploadFiles: vi.fn().mockResolvedValue({
               ok: true,
               results: [
                 {
@@ -320,7 +320,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         'pending cover "hash-error" is not removed from repository',
         async (_ctx: TestContext) => {
-          expect(deps.pendingCoverRepository.delete).not.toHaveBeenCalledWith(
+          expect(deps.pendingFileRepository.delete).not.toHaveBeenCalledWith(
             "hash-error",
           );
         },
@@ -333,14 +333,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
     "API failure stops processing remaining chunks",
     ({ Given, And, When, Then }) => {
       Given(
-        "more pending covers than MAX_COVER_BATCH_SIZE exist",
+        "more pending covers than MAX_FILE_BATCH_SIZE exist",
         async (_ctx: TestContext) => {
-          const pendingCovers = Array.from(
-            { length: MAX_COVER_BATCH_SIZE + 1 },
-            (_, i) => createPendingCover({ data_hash: `hash-${i}` }),
+          const pendingFiles = Array.from(
+            { length: MAX_FILE_BATCH_SIZE + 1 },
+            (_, i) => createPendingFile({ data_hash: `hash-${i}` }),
           );
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
-            getAll: vi.fn().mockResolvedValue(pendingCovers),
+          deps.pendingFileRepository = createMockPendingFileRepository({
+            getAll: vi.fn().mockResolvedValue(pendingFiles),
           });
         },
       );
@@ -349,7 +349,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         "server will reject the first uploadCovers call",
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockRejectedValue(new Error("Network error")),
+            uploadFiles: vi.fn().mockRejectedValue(new Error("Network error")),
           });
         },
       );
@@ -360,7 +360,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then("uploadCovers is called only once", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.uploadCovers).toHaveBeenCalledTimes(1);
+        expect(deps.syncAdapter.uploadFiles).toHaveBeenCalledTimes(1);
       });
     },
   );

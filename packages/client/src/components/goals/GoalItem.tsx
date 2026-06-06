@@ -1,7 +1,7 @@
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useFileUrl } from "@/hooks/useFileUrl";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
@@ -34,7 +34,7 @@ export function GoalItem({
   const isFinished = FINISHED_GOAL_STATUSES.has(goal.status);
   const isUnsynced = useIsUnsynced(goal);
   const { panelSide } = usePanelSide();
-  const { url: coverUrl } = useCoverUrl(goal.cover_hash);
+  const { url: coverUrl } = useFileUrl(goal.cover_hash);
   return (
     <li
       ref={nodeRef}

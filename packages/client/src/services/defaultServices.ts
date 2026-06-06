@@ -1,19 +1,20 @@
 import { createGasAdapter } from "@clear-progress/adapter-gas";
 import { createSupabaseAdapter } from "@clear-progress/adapter-supabase";
 import type { SyncAdapter } from "@clear-progress/contract";
+import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
-import { CoverRepository } from "@/db/repositories/CoverRepository";
+import { FileRepository } from "@/db/repositories/FileRepository";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { IdeaRepository } from "@/db/repositories/IdeaRepository";
-import { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
+import { PendingFileRepository } from "@/db/repositories/PendingFileRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { CoverService } from "./CoverService";
-import { CoverSyncService } from "./CoverSyncService";
 import { getConnectionConfig } from "./connectionService";
+import { FileService } from "./FileService";
+import { FileSyncService } from "./FileSyncService";
 import { GoalService } from "./GoalService";
 import { IdeaService } from "./IdeaService";
 import { SyncService } from "./SyncService";
@@ -54,22 +55,32 @@ export const defaultSyncAdapter = (() => {
   }
 })();
 
+const defaultAttachmentRepository = new AttachmentRepository();
 export const defaultTaskService = new TaskService(
   new TaskRepository(),
   new ChecklistRepository(),
+  undefined,
+  defaultAttachmentRepository,
 );
-export const defaultGoalService = new GoalService(new GoalRepository());
-export const defaultIdeaService = new IdeaService(new IdeaRepository());
-export const defaultCoverService = new CoverService(
-  defaultSyncAdapter,
-  new CoverRepository(),
-  new PendingCoverRepository(),
-);
-export const defaultCoverSyncService = new CoverSyncService(
-  defaultSyncAdapter,
-  new PendingCoverRepository(),
-  new CoverRepository(),
+export const defaultGoalService = new GoalService(
   new GoalRepository(),
+  defaultAttachmentRepository,
+);
+export const defaultIdeaService = new IdeaService(
+  new IdeaRepository(),
+  defaultAttachmentRepository,
+);
+export const defaultFileService = new FileService(
+  defaultSyncAdapter,
+  new FileRepository(),
+  new PendingFileRepository(),
+);
+export const defaultFileSyncService = new FileSyncService(
+  defaultSyncAdapter,
+  new PendingFileRepository(),
+  new FileRepository(),
+  new GoalRepository(),
+  new AttachmentRepository(),
 );
 export const defaultSyncService = new SyncService(
   defaultSyncAdapter,
@@ -81,4 +92,5 @@ export const defaultSyncService = new SyncService(
   new ChecklistRepository(),
   new IdeaRepository(),
   new SettingsRepository(),
+  new AttachmentRepository(),
 );

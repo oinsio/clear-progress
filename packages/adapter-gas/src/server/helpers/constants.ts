@@ -10,6 +10,7 @@ export const SHEET_NAMES = {
   CATEGORIES: "Categories",
   CHECKLIST_ITEMS: "Checklist_Items",
   IDEAS: "Ideas",
+  ATTACHMENTS: "Attachments",
   SETTINGS: "Settings",
   META: "Meta",
 } as const;
@@ -26,7 +27,7 @@ export const META_INITIAL_PURGE_REVISION = 0;
 export const DRIVE_FOLDER_NAMES = {
   ROOT: "Clear_Progress",
   DATA_FILE: "Clear_Progress_Data",
-  COVERS: "Covers",
+  FILES: "Files",
 } as const;
 
 export const DRIVE_MIME_TYPES = {
@@ -37,7 +38,7 @@ export const DRIVE_MIME_TYPES = {
 export const PROPERTY_KEYS = {
   SPREADSHEET_ID: "SPREADSHEET_ID",
   FOLDER_ID: "FOLDER_ID",
-  COVERS_FOLDER_ID: "COVERS_FOLDER_ID",
+  FILES_FOLDER_ID: "FILES_FOLDER_ID",
   OWNER_EMAIL: "OWNER_EMAIL",
 } as const;
 
@@ -117,6 +118,21 @@ export const SHEET_HEADERS: Record<string, string[]> = {
     "updated_at",
     "revision",
   ],
+  // implements FR6 of add-file-attachments
+  [SHEET_NAMES.ATTACHMENTS]: [
+    "id",
+    "entity_type",
+    "entity_id",
+    "data_hash",
+    "filename",
+    "mime_type",
+    "file_size",
+    "sort_order",
+    "is_deleted",
+    "created_at",
+    "updated_at",
+    "revision",
+  ],
   [SHEET_NAMES.SETTINGS]: ["key", "value", "updated_at"],
 };
 
@@ -129,10 +145,10 @@ export const ACTIONS = {
   INIT: "init",
   PULL: "pull",
   PUSH: "push",
-  UPLOAD_COVER: "upload_cover",
-  UPLOAD_COVERS: "upload_covers",
-  DELETE_COVER: "delete_cover",
-  GET_COVER: "get_cover",
+  UPLOAD_FILE: "upload_file",
+  UPLOAD_FILES: "upload_files",
+  DELETE_FILE: "delete_file",
+  GET_FILE: "get_file",
   PURGE: "purge",
 } as const;
 
@@ -168,14 +184,14 @@ export const PUSH_STATUSES = {
 } as const;
 
 export const DRIVE_QUERY_FIELDS = {
-  COVER_FILES: "files(id,description)",
+  FOLDER_FILES: "files(id,description)",
   FILE_EXISTS: "id,trashed",
 } as const;
 
-export const COVER_HASH_PREFIX_LENGTH = 12;
-export const MAX_COVER_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
-export const MAX_COVER_BATCH_SIZE = 10;
-export const DEFAULT_COVER_EXTENSION = "jpg";
+export const FILE_HASH_PREFIX_LENGTH = 12;
+export const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
+export const MAX_FILE_BATCH_SIZE = 10;
+export const DEFAULT_FILE_EXTENSION = "jpg";
 
 export const DEFAULT_TASK_BOX = "inbox";
 export const DEFAULT_GOAL_STATUS = "planning";
@@ -223,7 +239,7 @@ export const ERROR_MESSAGES = {
   AUTH_EMAIL_NOT_VERIFIED: "Google account email is not verified",
   AUTH_WRONG_ACCOUNT: "Token belongs to a different account",
   INVALID_JSON: "Request body must be valid JSON",
-  COVER_TOO_LARGE: "Cover image must be 2 MB or less",
+  FILE_TOO_LARGE: "File must be 2 MB or less",
   HASH_REQUIRED: "hash is required",
   FILE_ID_REQUIRED: "file_id is required",
   FILE_NOT_FOUND: "File not found",
@@ -231,13 +247,15 @@ export const ERROR_MESSAGES = {
   INIT_REQUIRED: "Call init before using the API",
   PURGE_CONFIRM_REQUIRED: "confirm must be true to purge deleted records",
   FILE_IDS_REQUIRED: "file_ids must be a non-empty array",
-  FILE_IDS_TOO_MANY: `file_ids must contain at most ${MAX_COVER_BATCH_SIZE} items`,
+  FILE_IDS_TOO_MANY: `file_ids must contain at most ${MAX_FILE_BATCH_SIZE} items`,
   HASHES_REQUIRED: "hashes must be a non-empty array",
-  HASHES_TOO_MANY: `hashes must contain at most ${MAX_COVER_BATCH_SIZE} items`,
-  COVERS_REQUIRED: "covers must be a non-empty array",
-  COVERS_TOO_MANY: `covers must contain at most ${MAX_COVER_BATCH_SIZE} items`,
+  HASHES_TOO_MANY: `hashes must contain at most ${MAX_FILE_BATCH_SIZE} items`,
+  FILES_REQUIRED: "files must be a non-empty array",
+  FILES_TOO_MANY: `files must contain at most ${MAX_FILE_BATCH_SIZE} items`,
   DATA_REQUIRED: "data field is required",
-  COVER_INVALID_MIME: "mime_type must be an image type (image/*)",
+  FILE_INVALID_MIME: "mime_type is not in the allowed file types",
+  FILE_MAGIC_BYTES_MISMATCH:
+    "File content does not match declared MIME type (magic bytes validation failed)",
   BLANK_NAME: "name must not be blank",
   INVALID_ID: "id must be a valid UUID v4",
   INVALID_OPTIONAL_FK: "foreign key must be empty or a valid UUID v4",

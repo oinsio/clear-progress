@@ -1,10 +1,12 @@
 // implements FR4, FR14 of add-supabase-adapter
+// implements FR6 of add-file-attachments
 // POST /pull — returns all records with revision > since_revision for the authenticated user
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
 import { ErrorCode } from "../_shared/constants.ts";
 import { createAuthHandler, parseJsonBody } from "../_shared/handler.ts";
 import {
+  serializeAttachmentRow,
   serializeCategoryRow,
   serializeChecklistItemRow,
   serializeContextRow,
@@ -86,6 +88,7 @@ Deno.serve(
       contextsResult,
       categoriesResult,
       checklistResult,
+      attachmentsResult,
       settingsResult,
     ] = await Promise.all([
       entityQueryBase("tasks"),
@@ -94,6 +97,7 @@ Deno.serve(
       entityQueryBase("contexts"),
       entityQueryBase("categories"),
       entityQueryBase("checklist_items"),
+      entityQueryBase("attachments"),
       settingsQuery,
     ]);
 
@@ -104,6 +108,7 @@ Deno.serve(
       contextsResult.error ??
       categoriesResult.error ??
       checklistResult.error ??
+      attachmentsResult.error ??
       settingsResult.error;
 
     if (firstError) {
@@ -120,6 +125,7 @@ Deno.serve(
       checklist_items: (checklistResult.data ?? []).map(
         serializeChecklistItemRow,
       ),
+      attachments: (attachmentsResult.data ?? []).map(serializeAttachmentRow),
       settings: (settingsResult.data ?? []).map(serializeSettingRow),
       current_revision: currentRevision,
       purge_revision: purgeRevision,

@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
 import { GoalItem } from "@/components/goals/GoalItem";
 import { Sidebar } from "@/components/tasks/Sidebar";
+import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useDndSensors } from "@/hooks/useDndSensors";
@@ -80,6 +81,8 @@ function SortableGoalItem({
 const defaultTaskService = new TaskService(
   new TaskRepository(),
   new ChecklistRepository(),
+  undefined,
+  new AttachmentRepository(),
 );
 
 export default function GoalsPage() {

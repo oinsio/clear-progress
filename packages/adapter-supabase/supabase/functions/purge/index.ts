@@ -12,6 +12,7 @@ const ENTITY_TABLES = [
   "contexts",
   "categories",
   "checklist_items",
+  "attachments",
 ] as const;
 
 type EntityTable = (typeof ENTITY_TABLES)[number];

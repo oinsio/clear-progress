@@ -33,24 +33,24 @@ Feature: GAS adapter transport
     Then the request body action is "push"
 
   @gas-adapter-specs-and-bdd @FR2
-  Scenario: Upload cover sends action "upload_cover"
-    When adapter calls uploadCover
-    Then the request body action is "upload_cover"
+  Scenario: Upload file sends action "upload_file"
+    When adapter calls uploadFile
+    Then the request body action is "upload_file"
 
   @gas-adapter-specs-and-bdd @FR2
-  Scenario: Upload covers sends action "upload_covers"
-    When adapter calls uploadCovers
-    Then the request body action is "upload_covers"
+  Scenario: Upload files sends action "upload_files"
+    When adapter calls uploadFiles
+    Then the request body action is "upload_files"
 
   @gas-adapter-specs-and-bdd @FR2
-  Scenario: Get cover sends action "get_cover"
-    When adapter calls getCover
-    Then the request body action is "get_cover"
+  Scenario: Get file sends action "get_file"
+    When adapter calls getFile
+    Then the request body action is "get_file"
 
   @gas-adapter-specs-and-bdd @FR2
-  Scenario: Delete cover sends action "delete_cover"
-    When adapter calls deleteCover
-    Then the request body action is "delete_cover"
+  Scenario: Delete file sends action "delete_file"
+    When adapter calls deleteFile
+    Then the request body action is "delete_file"
 
   @gas-adapter-specs-and-bdd @FR2
   Scenario: Purge sends action "purge" with confirm true

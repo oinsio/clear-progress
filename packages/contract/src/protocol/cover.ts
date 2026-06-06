@@ -1,4 +1,5 @@
-export interface UploadCoverRequest {
+/** Implements FR4 of add-file-attachments */
+export interface UploadFileRequest {
   goal_id: string;
   filename: string;
   mime_type: string;
@@ -6,14 +7,15 @@ export interface UploadCoverRequest {
   data_hash: string;
 }
 
-// implements FR2 of content-addressable-covers
-export interface UploadCoverResponse {
+/** Implements FR4 of add-file-attachments */
+export interface UploadFileResponse {
   ok: boolean;
   data_hash: string;
   reused: boolean;
 }
 
-export interface UploadCoverBatchItem {
+/** Implements FR4 of add-file-attachments */
+export interface UploadFileBatchItem {
   local_id: string;
   goal_id: string;
   filename: string;
@@ -22,11 +24,13 @@ export interface UploadCoverBatchItem {
   data_hash: string;
 }
 
-export interface UploadCoversRequest {
-  covers: UploadCoverBatchItem[];
+/** Implements FR4 of add-file-attachments */
+export interface UploadFilesRequest {
+  files: UploadFileBatchItem[];
 }
 
-export interface UploadCoverBatchResult {
+/** Implements FR4 of add-file-attachments */
+export interface UploadFileBatchResult {
   local_id: string;
   goal_id: string;
   data_hash?: string;
@@ -34,36 +38,38 @@ export interface UploadCoverBatchResult {
   error?: string;
 }
 
-export interface UploadCoversResponse {
+/** Implements FR4 of add-file-attachments */
+export interface UploadFilesResponse {
   ok: boolean;
-  results: UploadCoverBatchResult[];
+  results: UploadFileBatchResult[];
 }
 
-// implements FR3 of content-addressable-covers
-export interface GetCoverRequest {
+/** Implements FR4 of add-file-attachments */
+export interface GetFileRequest {
   hashes: string[];
 }
 
-export interface GetCoverResult {
+/** Implements FR4 of add-file-attachments */
+export interface GetFileResult {
   hash: string;
   mime_type?: string;
   data?: string; // base64
   error?: string;
 }
 
-// implements FR3 of content-addressable-covers
-export interface GetCoverResponse {
+/** Implements FR4 of add-file-attachments */
+export interface GetFileResponse {
   ok: boolean;
-  covers: GetCoverResult[];
+  files: GetFileResult[];
 }
 
-// implements FR4 of content-addressable-covers
-export interface DeleteCoverRequest {
+/** Implements FR7 of add-file-attachments */
+export interface DeleteFileRequest {
   hash: string;
-  goal_id: string;
 }
 
-export interface DeleteCoverResponse {
+/** Implements FR4 of add-file-attachments */
+export interface DeleteFileResponse {
   ok: boolean;
   deleted: boolean;
   ref_count: number;

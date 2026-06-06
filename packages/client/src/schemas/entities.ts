@@ -1,4 +1,5 @@
 import {
+  WireAttachmentSchema,
   WireCategorySchema,
   WireChecklistItemSchema,
   WireContextSchema,
@@ -43,3 +44,9 @@ export const ClientSettingSchema = WireSettingSchema.extend({
   needsSync: z.boolean(),
 });
 export type ClientSetting = z.infer<typeof ClientSettingSchema>;
+
+/** Implements FR5 of add-file-attachments */
+export const ClientAttachmentSchema = WireAttachmentSchema.extend({
+  needsSync: z.boolean(),
+});
+export type ClientAttachment = z.infer<typeof ClientAttachmentSchema>;

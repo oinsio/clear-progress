@@ -56,6 +56,16 @@ export interface Idea extends NamedEntity {
   description: string;
 }
 
+/** Implements FR6 of add-file-attachments */
+export interface Attachment extends SortableEntity {
+  entity_type: string;
+  entity_id: string;
+  data_hash: string;
+  filename: string;
+  mime_type: string;
+  file_size: number;
+}
+
 export interface ChecklistItem extends SortableEntity {
   task_id: string;
   name: string;
@@ -71,7 +81,14 @@ export interface Setting {
 export interface PushItemResult {
   id: string;
   status: PushItemStatus;
-  server_record?: Task | Goal | Context | Category | Idea | ChecklistItem;
+  server_record?:
+    | Task
+    | Goal
+    | Context
+    | Category
+    | Idea
+    | ChecklistItem
+    | Attachment;
   reason?: string;
 }
 
