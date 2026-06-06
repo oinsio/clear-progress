@@ -16,11 +16,14 @@ Read `uncommitted-files.md` in the project root. Parse the numbered checklist it
 
 For each unchecked file in order:
 
-1. **Run diagnostics** — call `mcp__ide__getDiagnostics` for the file to get IDE-reported problems.
+1. **Run diagnostics** — call `mcp__ide__getDiagnostics` with the `uri` parameter set to the file's absolute path. Determine the project root from the current working directory and prepend it to the relative path from the checklist:
+   ```
+   mcp__ide__getDiagnostics(uri: "<project-root>/<relative-path-from-checklist>")
+   ```
 2. **Check for errors** — if there are `error`-level diagnostics, fix them immediately.
 3. **Check for code duplication** — look for duplicated logic that can be extracted into shared utilities or helpers. If duplication is found across files already processed, extract the common code.
 4. **Check for unused variables** — for each reported unused variable, verify it is genuinely unused (grep the codebase). If truly unused, remove it. If used elsewhere, the diagnostic is a false positive — leave it.
-5. **Mark as done** — once all issues for the file are resolved (or none were found), update `uncommitted-files.md` by changing `- [ ]` to `- [x]` for that file.
+5. **Mark as done** — once all issues for the file are resolved (or none were found), update `uncommitted-files.md` by changing `[ ]` to `[x]` for that file.
 
 IMPORTANT: Process files strictly one at a time. Do NOT start analyzing the next file until the current one is fully resolved and marked as done.
 
