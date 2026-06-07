@@ -167,11 +167,11 @@
 
 ## 17. Markdown rendering in FileLightbox (FR11, D13)
 
-- [ ] 17.1 Install `react-markdown`, `remark-gfm`, and `@tailwindcss/typography` in `packages/client`
-- [ ] 17.2 Create `MarkdownPreview` component in `packages/client/src/components/shared/MarkdownPreview.tsx` — fetch text content, render via `react-markdown` + `remark-gfm`, style with Tailwind `prose`
-- [ ] 17.3 Update `FilePreview` in `FileLightbox.tsx` — add `text/markdown` branch before `text/*`, route to `MarkdownPreview`
-- [ ] 17.4 Add unit tests for `MarkdownPreview` (loading, error, renders formatted markdown)
-- [ ] 17.5 Verify build (`pnpm run build`) and existing FileLightbox tests pass
+- [x] 17.1 Install `react-markdown`, `remark-gfm`, and `@tailwindcss/typography` in `packages/client`
+- [x] 17.2 Create `MarkdownPreview` component in `packages/client/src/components/shared/MarkdownPreview.tsx` — fetch text content, render via `react-markdown` + `remark-gfm`, style with Tailwind `prose`
+- [x] 17.3 Update `FilePreview` in `FileLightbox.tsx` — add `text/markdown` branch before `text/*`, route to `MarkdownPreview`
+- [x] 17.4 Add unit tests for `MarkdownPreview` (loading, error, renders formatted markdown)
+- [x] 17.5 Verify build (`pnpm run build`) and existing FileLightbox tests pass
 
 ## 18. Final verification
 
