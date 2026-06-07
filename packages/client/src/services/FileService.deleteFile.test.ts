@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FileService } from "./FileService";
+import { FileService, type LocalFileRefCounter } from "./FileService";
 import {
   createFileServiceMocks,
   createMockPendingFileRepository,
@@ -7,6 +7,12 @@ import {
   type FileServiceMocks,
 } from "./FileService.test-utils";
 import { localFileCache } from "./LocalFileCache";
+
+function createMockRefCounter(
+  countLocalRefs: (hash: string) => Promise<number>,
+): LocalFileRefCounter {
+  return { countLocalRefs };
+}
 
 describe("FileService — deleteCover", () => {
   let mocks: FileServiceMocks;
@@ -136,5 +142,105 @@ describe("FileService — deleteCover", () => {
     await service.deleteFile("pending-hash", "goal-1");
 
     expect(localFileCache.get("pending-hash")).toBeUndefined();
+  });
+});
+
+describe("FileService — deleteFile with local ref-counting", () => {
+  let mocks: FileServiceMocks;
+
+  beforeEach(() => {
+    mocks = createFileServiceMocks();
+  });
+
+  afterEach(() => {
+    localFileCache.clear();
+  });
+
+  it("should keep pending file and cache when local refs exist", async () => {
+    localFileCache.set("shared-hash", "blob:http://localhost/shared");
+    const mockPendingFileRepository = createMockPendingFileRepository({
+      getByHash: vi.fn().mockResolvedValue({
+        goal_id: "goal-1",
+        data: new Blob(["fake"]),
+        filename: "cover.jpg",
+        mime_type: "image/jpeg",
+        data_hash: "shared-hash",
+        created_at: "2026-01-01T00:00:00.000Z" as never,
+      }),
+    });
+    const refCounter = createMockRefCounter(async () => 1);
+    const service = new FileService(
+      mocks.mockSyncAdapter,
+      mocks.mockFileRepository,
+      mockPendingFileRepository,
+      refCounter,
+    );
+
+    await service.deleteFile("shared-hash", "goal-1");
+
+    expect(mockPendingFileRepository.delete).not.toHaveBeenCalled();
+    expect(localFileCache.get("shared-hash")).toBe(
+      "blob:http://localhost/shared",
+    );
+  });
+
+  it("should remove pending file and cache when no local refs exist", async () => {
+    localFileCache.set("lonely-hash", "blob:http://localhost/lonely");
+    const mockPendingFileRepository = createMockPendingFileRepository({
+      getByHash: vi.fn().mockResolvedValue({
+        goal_id: "goal-1",
+        data: new Blob(["fake"]),
+        filename: "cover.jpg",
+        mime_type: "image/jpeg",
+        data_hash: "lonely-hash",
+        created_at: "2026-01-01T00:00:00.000Z" as never,
+      }),
+    });
+    const refCounter = createMockRefCounter(async () => 0);
+    const service = new FileService(
+      mocks.mockSyncAdapter,
+      mocks.mockFileRepository,
+      mockPendingFileRepository,
+      refCounter,
+    );
+
+    await service.deleteFile("lonely-hash", "goal-1");
+
+    expect(mockPendingFileRepository.delete).toHaveBeenCalledWith(
+      "lonely-hash",
+    );
+    expect(localFileCache.get("lonely-hash")).toBeUndefined();
+  });
+
+  it("should keep file repo and cache when server deletes but local refs exist", async () => {
+    localFileCache.set("ref-hash", "blob:http://localhost/ref");
+    const refCounter = createMockRefCounter(async () => 2);
+    const service = new FileService(
+      mocks.mockSyncAdapter,
+      mocks.mockFileRepository,
+      mocks.mockPendingFileRepository,
+      refCounter,
+    );
+
+    await service.deleteFile("ref-hash", "goal-1");
+
+    expect(mocks.mockFileRepository.delete).not.toHaveBeenCalled();
+    expect(localFileCache.get("ref-hash")).toBe("blob:http://localhost/ref");
+  });
+
+  it("should remove file repo and cache when server deletes and no local refs", async () => {
+    localFileCache.set("no-ref-hash", "blob:http://localhost/no-ref");
+    const refCounter = createMockRefCounter(async () => 0);
+    const service = new FileService(
+      mocks.mockSyncAdapter,
+      mocks.mockFileRepository,
+      mocks.mockPendingFileRepository,
+      refCounter,
+    );
+
+    await service.deleteFile("no-ref-hash", "goal-1");
+
+    expect(mocks.mockFileRepository.delete).toHaveBeenCalledWith("no-ref-hash");
+    expect(localFileCache.get("no-ref-hash")).toBeUndefined();
   });
 });

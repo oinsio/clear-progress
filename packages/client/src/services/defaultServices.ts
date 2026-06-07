@@ -18,6 +18,7 @@ import { FileService } from "./FileService";
 import { FileSyncService } from "./FileSyncService";
 import { GoalService } from "./GoalService";
 import { IdeaService } from "./IdeaService";
+import { DexieLocalFileRefCounter } from "./LocalFileRefCounter";
 import { SyncService } from "./SyncService";
 import { getSupabaseClient } from "./supabaseClientManager";
 import { TaskService } from "./TaskService";
@@ -63,8 +64,9 @@ export const defaultTaskService = new TaskService(
   undefined,
   defaultAttachmentRepository,
 );
+const defaultGoalRepository = new GoalRepository();
 export const defaultGoalService = new GoalService(
-  new GoalRepository(),
+  defaultGoalRepository,
   defaultAttachmentRepository,
 );
 export const defaultIdeaService = new IdeaService(
@@ -75,6 +77,10 @@ export const defaultFileService = new FileService(
   defaultSyncAdapter,
   new FileRepository(),
   new PendingFileRepository(),
+  new DexieLocalFileRefCounter(
+    defaultGoalRepository,
+    defaultAttachmentRepository,
+  ),
 );
 export const defaultAttachmentService = new AttachmentService(
   defaultAttachmentRepository,

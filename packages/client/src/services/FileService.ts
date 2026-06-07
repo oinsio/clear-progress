@@ -10,6 +10,10 @@ import type { PendingFileRepository } from "@/db/repositories/PendingFileReposit
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { localFileCache } from "./LocalFileCache";
 
+export interface LocalFileRefCounter {
+  countLocalRefs(dataHash: string): Promise<number>;
+}
+
 const FILE_ERROR = {
   INVALID_TYPE: "INVALID_TYPE",
   FILE_TOO_LARGE: "FILE_TOO_LARGE",
@@ -55,6 +59,7 @@ export class FileService {
     private readonly syncAdapter: SyncAdapter,
     private readonly fileRepository: FileRepository,
     private readonly pendingFileRepository: PendingFileRepository,
+    private readonly localRefCounter?: LocalFileRefCounter,
   ) {}
 
   async uploadFile(
@@ -138,16 +143,28 @@ export class FileService {
   async deleteFile(dataHash: string, _goalId: string): Promise<void> {
     const pendingFile = await this.pendingFileRepository.getByHash(dataHash);
     if (pendingFile) {
-      await this.pendingFileRepository.delete(dataHash);
-      localFileCache.delete(dataHash);
+      const hasOtherLocalRefs = await this.hasLocalRefs(dataHash);
+      if (!hasOtherLocalRefs) {
+        await this.pendingFileRepository.delete(dataHash);
+        localFileCache.delete(dataHash);
+      }
       return;
     }
     const response = await this.syncAdapter.deleteFile({
       hash: dataHash,
     });
     if (response.deleted) {
-      await this.fileRepository.delete(dataHash);
-      localFileCache.delete(dataHash);
+      const hasOtherLocalRefs = await this.hasLocalRefs(dataHash);
+      if (!hasOtherLocalRefs) {
+        await this.fileRepository.delete(dataHash);
+        localFileCache.delete(dataHash);
+      }
     }
+  }
+
+  private async hasLocalRefs(dataHash: string): Promise<boolean> {
+    if (!this.localRefCounter) return false;
+    const refCount = await this.localRefCounter.countLocalRefs(dataHash);
+    return refCount > 0;
   }
 }

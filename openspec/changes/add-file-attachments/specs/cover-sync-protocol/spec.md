@@ -151,6 +151,33 @@ The purge operation SHALL clean up orphaned files as a safety net after hard-del
 - **THEN** file H1 has zero references
 - **AND** file H1 is deleted from storage
 
+### Requirement: Client-side local file cache ref-counting
+
+The client `FileService.deleteFile` SHALL check local references before removing a file from `localFileCache` and `pendingFileRepository`/`fileRepository`. A file SHALL only be removed from local cache when it has zero remaining local references (from `goals.cover_hash` and active `attachments.data_hash`). This prevents breaking cover display when a co-referencing attachment is deleted. Implements FR7, FR18 of add-file-attachments.
+
+#### Scenario: Cover preserved when same-hash attachment is deleted offline
+
+- **GIVEN** goal G1 has cover_hash = H1 (file in pending_files, displayed via localFileCache)
+- **AND** attachment A1 (entity_type "goal", entity_id G1, data_hash H1) exists
+- **WHEN** user deletes attachment A1 (soft-delete + deleteFile)
+- **THEN** localFileCache still has the blob URL for H1
+- **AND** goal G1's cover is still displayed
+
+#### Scenario: File removed from local cache when no local refs remain
+
+- **GIVEN** attachment A1 is the only local reference to file H1 (no goal cover uses H1)
+- **WHEN** user deletes attachment A1 and deleteFile is called
+- **AND** server returns `deleted: true`
+- **THEN** file H1 is removed from fileRepository and localFileCache
+
+#### Scenario: Pending file kept when goal cover still references it
+
+- **GIVEN** goal G1 has cover_hash = H1 (file in pending_files)
+- **AND** attachment A1 has data_hash = H1
+- **WHEN** user deletes attachment A1
+- **THEN** pending file H1 stays in pending_files
+- **AND** localFileCache still has blob URL for H1
+
 ### Requirement: Full sync reupload files
 During full sync, the system SHALL reupload all files referenced by active goals (via `cover_hash`) and active attachments (via `data_hash`) to ensure server has them. SHA-256 dedup prevents duplicate storage.
 

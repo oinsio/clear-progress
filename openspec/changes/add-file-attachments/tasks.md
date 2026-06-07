@@ -173,16 +173,24 @@
 - [x] 17.4 Add unit tests for `MarkdownPreview` (loading, error, renders formatted markdown)
 - [x] 17.5 Verify build (`pnpm run build`) and existing FileLightbox tests pass
 
-## 18. Final verification
+## 18. Bugfix — client-side local ref-counting in FileService.deleteFile (FR7, FR18)
 
-- [ ] 18.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
-- [x] 18.2 Verify no cover regression: existing goal cover functionality works after rename
-- [x] 18.3 Verify i18n completeness: all new keys present in both ru.json and en.json
-- [x] 18.4 Run `pnpm run lint:fix` — all should pass
-- [x] 18.5 Run `pnpm run preflight` — all should pass (5 pre-existing failures unrelated to this change: 1 TaskService recurring test + 4 e2e browser tests)
-- [x] 18.6 Run `pnpm run build` — verify no type errors
-- [x] 18.7 Run skill `/uncommitted-files` to save list of changed and added files
-- [x] 18.8 Run skill `/fix-uncommitted` to fix IDE highlighted issues (fixed GAS purge tests: added files count to expected response)
-- [x] 18.9 Run `pnpm run lint:fix` — all should pass (final checks)
-- [x] 18.10 Run `pnpm run preflight` — all should pass (final checks)
-- [x] 18.11 Run `pnpm run build` — verify no type errors (final checks)
+- [ ] 18.1 Add local ref-counting to `FileService.deleteFile`: before removing file from `localFileCache`/`pendingFileRepository`/`fileRepository`, check if any goal's `cover_hash` or active attachment's `data_hash` still references this hash locally
+- [ ] 18.2 BDD unit test: cover preserved when same-hash attachment deleted offline
+- [ ] 18.3 BDD unit test: file removed when no local refs remain
+- [ ] 18.4 Playwright E2E test: cover + attachment same file → delete attachment → cover still visible
+- [ ] 18.5 Mutation testing on updated FileService (target >= 95%)
+
+## 19. Final verification
+
+- [ ] 19.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
+- [x] 19.2 Verify no cover regression: existing goal cover functionality works after rename
+- [x] 19.3 Verify i18n completeness: all new keys present in both ru.json and en.json
+- [x] 19.4 Run `pnpm run lint:fix` — all should pass
+- [x] 19.5 Run `pnpm run preflight` — all should pass (5 pre-existing failures unrelated to this change: 1 TaskService recurring test + 4 e2e browser tests)
+- [x] 19.6 Run `pnpm run build` — verify no type errors
+- [x] 19.7 Run skill `/uncommitted-files` to save list of changed and added files
+- [x] 19.8 Run skill `/fix-uncommitted` to fix IDE highlighted issues (fixed GAS purge tests: added files count to expected response)
+- [x] 19.9 Run `pnpm run lint:fix` — all should pass (final checks)
+- [x] 19.10 Run `pnpm run preflight` — all should pass (final checks)
+- [x] 19.11 Run `pnpm run build` — verify no type errors (final checks)
