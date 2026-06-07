@@ -178,7 +178,7 @@
 - [x] 18.1 Add local ref-counting to `FileService.deleteFile`: before removing file from `localFileCache`/`pendingFileRepository`/`fileRepository`, check if any goal's `cover_hash` or active attachment's `data_hash` still references this hash locally
 - [x] 18.2 BDD unit test: cover preserved when same-hash attachment deleted offline
 - [x] 18.3 BDD unit test: file removed when no local refs remain
-- [ ] 18.4 Playwright E2E test: cover + attachment same file → delete attachment → cover still visible
+- [x] 18.4 Playwright E2E test: cover + attachment same file → delete attachment → cover still visible
 - [x] 18.5 Mutation testing on updated FileService (target >= 95%)
 
 ## 19. Final verification
