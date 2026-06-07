@@ -108,7 +108,7 @@ export class TaskService {
       throw new Error(`Task not found: ${id}`);
     }
 
-    const now = toISOTimestamp();
+    const now = toISOTimestamp(this.clock);
     /** Implements FR6 of hide-tasks */
     let finalCompletedTask = await this.update(id, {
       is_completed: true,
@@ -133,6 +133,7 @@ export class TaskService {
             rule,
             now,
             existingTask.next_date || undefined,
+            this.clock,
           );
           const appearDate = calculateAppearDate(nextDate, rule.advance_days);
 

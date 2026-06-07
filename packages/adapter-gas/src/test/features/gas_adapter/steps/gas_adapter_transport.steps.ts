@@ -3,126 +3,83 @@ import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext, vi } from "vitest";
 import { GasSyncAdapter } from "../../../../client";
+import {
+  createJsonResponse,
+  createValidInitResponse,
+  extractFetchOptions,
+  extractFetchUrl,
+  extractRequestBody,
+  type FeatureContext,
+  GAS_URL,
+  VALID_TOKEN,
+} from "./gas-adapter-test-utils";
 
 const feature = await loadFeature("../gas_adapter_transport.feature");
 
-type FeatureContext = Record<string, never>;
-
-const GAS_URL = "https://script.google.com/macros/s/test/exec";
-const VALID_TOKEN = "valid-test-token";
-
-function createValidInitResponse(): Response {
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
 function createValidPingResponse(): Response {
-  return new Response(
-    JSON.stringify({
-      ok: true,
-      app: "clear-progress",
-      version: "1.0",
-      initialized: true,
-    }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
+  return createJsonResponse({
+    ok: true,
+    app: "clear-progress",
+    version: "1.0",
+    initialized: true,
+  });
 }
 
 function createValidPullResponse(): Response {
-  return new Response(
-    JSON.stringify({
-      ok: true,
-      tasks: [],
-      goals: [],
-      contexts: [],
-      categories: [],
-      ideas: [],
-      checklist_items: [],
-      attachments: [],
-      settings: [],
-      current_revision: 0,
-      purge_revision: 0,
-      server_time: "2025-01-15T10:30:00.000Z",
-    }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
+  return createJsonResponse({
+    ok: true,
+    tasks: [],
+    goals: [],
+    contexts: [],
+    categories: [],
+    ideas: [],
+    checklist_items: [],
+    attachments: [],
+    settings: [],
+    current_revision: 0,
+    purge_revision: 0,
+    server_time: "2025-01-15T10:30:00.000Z",
+  });
 }
 
 function createValidPushResponse(): Response {
-  return new Response(
-    JSON.stringify({
-      ok: true,
-      results: {},
-      server_time: "2025-01-15T10:30:00.000Z",
-    }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
+  return createJsonResponse({
+    ok: true,
+    results: {},
+    server_time: "2025-01-15T10:30:00.000Z",
+  });
 }
 
 function createValidUploadFileResponse(): Response {
-  return new Response(
-    JSON.stringify({ ok: true, data_hash: "abc123", reused: false }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
+  return createJsonResponse({ ok: true, data_hash: "abc123", reused: false });
 }
 
 function createValidUploadFilesResponse(): Response {
-  return new Response(JSON.stringify({ ok: true, results: [] }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return createJsonResponse({ ok: true, results: [] });
 }
 
 function createValidGetFileResponse(): Response {
-  return new Response(JSON.stringify({ ok: true, files: [] }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return createJsonResponse({ ok: true, files: [] });
 }
 
 function createValidDeleteFileResponse(): Response {
-  return new Response(
-    JSON.stringify({ ok: true, deleted: true, ref_count: 0 }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
+  return createJsonResponse({ ok: true, deleted: true, ref_count: 0 });
 }
 
 function createValidPurgeResponse(): Response {
-  return new Response(
-    JSON.stringify({
-      ok: true,
-      purged: {
-        tasks: 0,
-        goals: 0,
-        contexts: 0,
-        categories: 0,
-        checklist_items: 0,
-        ideas: 0,
-        attachments: 0,
-      },
-      purge_revision: 1,
-    }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
-}
-
-function extractFetchOptions(mockFetch: ReturnType<typeof vi.fn>): RequestInit {
-  const [, fetchOptions] = mockFetch.mock.calls[0] as [string, RequestInit];
-  return fetchOptions;
-}
-
-function extractFetchUrl(mockFetch: ReturnType<typeof vi.fn>): string {
-  const [fetchUrl] = mockFetch.mock.calls[0] as [string, RequestInit];
-  return fetchUrl;
-}
-
-function extractRequestBody(
-  mockFetch: ReturnType<typeof vi.fn>,
-): Record<string, unknown> {
-  const fetchOptions = extractFetchOptions(mockFetch);
-  return JSON.parse(fetchOptions.body as string) as Record<string, unknown>;
+  return createJsonResponse({
+    ok: true,
+    purged: {
+      tasks: 0,
+      goals: 0,
+      contexts: 0,
+      categories: 0,
+      checklist_items: 0,
+      ideas: 0,
+      attachments: 0,
+    },
+    purge_revision: 1,
+  });
 }
 
 describeFeature(

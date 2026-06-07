@@ -349,6 +349,28 @@ async function reloadAndWaitForAutoSync(testPage: Page): Promise<boolean> {
 /**
  * Credentials needed to call Supabase Edge Functions directly from Node.js.
  */
+export interface RefCountPullResponse {
+  ok: boolean;
+  tasks: Array<{ id: string; name: string; is_deleted: boolean }>;
+  goals: Array<{
+    id: string;
+    name: string;
+    cover_hash: string;
+    is_deleted: boolean;
+  }>;
+  attachments: Array<{
+    id: string;
+    entity_type: string;
+    entity_id: string;
+    data_hash: string;
+    filename: string;
+    is_deleted: boolean;
+  }>;
+}
+
+/**
+ * Credentials needed to call Supabase Edge Functions directly from Node.js.
+ */
 export interface ServerCallCredentials {
   accessToken: string;
   supabaseUrl: string;
@@ -458,13 +480,22 @@ export async function purgeOnServer(
 }
 
 /**
- * Returns a minimal 1x1 pixel PNG buffer (67 bytes) for cover upload tests.
+ * Returns a minimal 1x1 pixel PNG buffer with a unique suffix appended after
+ * the IEND chunk. Each call produces a different SHA-256 hash, preventing
+ * cross-test file hash collisions on the shared server. Within a test, reuse
+ * the same buffer for "same hash" scenarios.
  */
+let pngSequence = 0;
 export function createMinimalPng(): Buffer {
-  return Buffer.from(
+  const base = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
     "base64",
   );
+  const suffix = Buffer.alloc(8);
+  const now = Date.now();
+  suffix.writeUInt32BE(Math.floor(now / 0x100000000) >>> 0, 0);
+  suffix.writeUInt32BE((now >>> 0) + pngSequence++, 4);
+  return Buffer.concat([base, suffix]);
 }
 
 /**
