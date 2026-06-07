@@ -129,11 +129,38 @@
 - [x] 13.6 Add integration test: cover + attachment same hash -> ref-counting correct
 - [x] 13.7 Add integration test: offline attachment creation -> pending file -> sync on reconnect -> file on server
 
-## 14. Final verification
+## 14. Dynamic ref-counting and purge file cleanup (FR7, FR17, FR18)
 
-- [x] 14.1 Run `pnpm run lint:fix` — all should pass
-- [x] 14.2 Run `pnpm run preflight` — all should pass
-- [x] 14.3 Run `pnpm run build` — verify no type errors
-- [x] 14.4 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
-- [x] 14.5 Verify no cover regression: existing goal cover functionality works after rename
-- [ ] 14.6 Verify i18n completeness: all new keys present in both ru.json and en.json
+- [ ] 14.1 Supabase: update `delete-file` edge function — replace stored `ref_count` decrement with dynamic reference counting (query `goals.cover_hash` + `attachments.data_hash` including soft-deleted records)
+- [ ] 14.2 Supabase: update `purge` edge function — after hard-deleting `is_deleted=true` records, find orphaned files (no references in `goals.cover_hash` or `attachments.data_hash`) and delete them from Storage + `files` table
+- [ ] 14.3 Supabase: remove `ref_count` column from `files` table (migration)
+- [ ] 14.4 Supabase: update `upload-file` and `upload-files` edge functions — remove `ref_count` increment logic (dedup by hash only, no counter)
+- [ ] 14.5 GAS: update `delete-file` action — extend dynamic counting to include Attachments `data_hash` (GAS already uses dynamic counting for covers via Goals sheet)
+- [ ] 14.6 GAS: update `purge` action — add orphaned file cleanup after hard-deleting records
+- [ ] 14.7 Client: add `deleteFile` call to `AttachmentService.deleteAttachment` after soft-delete (FR18)
+- [ ] 14.8 In-memory adapter: update `deleteFile` to use dynamic ref-counting; update `purge` to clean up orphaned files
+- [ ] 14.9 Contract tests: update `deleteFile` contract tests for idempotent dynamic counting behavior
+- [ ] 14.10 Contract tests: add contract tests for purge with file cleanup
+- [ ] 14.11 Integration tests: update ref-counting tests (13.5, 13.6) — soft-delete + deleteFile keeps file (soft-deleted record counts), purge removes file
+- [ ] 14.12 Integration test: two devices remove same cover from same goal, second goal still references file — file stays (idempotent)
+- [ ] 14.13 Integration test: soft-delete attachment, deleteFile called, file stays — purge hard-deletes, file removed
+- [ ] 14.14 Integration test: cover removed from goal (goal not deleted, cover_hash=""), no other refs — deleteFile removes file immediately
+- [ ] 14.15 Integration test: two attachments same hash, soft-delete both, deleteFile keeps file — purge removes
+- [ ] 14.16 Integration test: cover + attachment same hash, remove cover, deleteFile returns ref_count=1 — file stays
+
+## 15. Full sync UI rename covers → files (FR4)
+
+- [ ] 15.1 Update `FullSyncStep` type: `reupload_covers` → `reupload_files`, `upload_covers` → `upload_files`, `download_covers` → `download_files`
+- [ ] 15.2 Update `SyncProvider.tsx` `triggerFullSync`: step names and progress callbacks
+- [ ] 15.3 Update `ConfirmFullSyncDialog.tsx`: `PROGRESS_STEPS` keys, labelKeys, testIds
+- [ ] 15.4 Update i18n keys in `en.json`, `ru.json`, `house.json`: `fullSyncStepReuploadCovers` → `fullSyncStepReuploadFiles`, etc.
+- [ ] 15.5 Update tests referencing old step names/testIds
+
+## 16. Final verification
+
+- [ ] 16.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
+- [ ] 16.2 Verify no cover regression: existing goal cover functionality works after rename
+- [ ] 16.3 Verify i18n completeness: all new keys present in both ru.json and en.json
+- [ ] 16.4 Run `pnpm run lint:fix` — all should pass
+- [ ] 16.5 Run `pnpm run preflight` — all should pass
+- [ ] 16.6 Run `pnpm run build` — verify no type errors

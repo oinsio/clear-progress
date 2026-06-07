@@ -116,7 +116,7 @@ Users SHALL be able to attach files to tasks, goals, and ideas. The attachment o
 
 ### Requirement: Delete attachment
 
-Users SHALL be able to soft-delete an attachment. Soft-delete SHALL set `is_deleted = true` and `needsSync = true`. When synced, the server SHALL check ref-count for the file: if no other attachments or covers reference the same `data_hash`, the file SHALL be deleted from server storage. Implements FR13, FR16 of add-file-attachments.
+Users SHALL be able to soft-delete an attachment. Soft-delete SHALL set `is_deleted = true` and `needsSync = true`. After soft-delete, the client SHALL call `deleteFile` to attempt file cleanup. Because soft-deleted records still count as references in dynamic ref-counting, the file will stay on the server until purge hard-deletes the record. Implements FR7, FR13, FR16, FR18 of add-file-attachments.
 
 #### Scenario: Soft-delete attachment
 
@@ -129,17 +129,28 @@ Users SHALL be able to soft-delete an attachment. Soft-delete SHALL set `is_dele
 - **THEN** a confirmation dialog is shown
 - **AND** attachment is only deleted if user confirms
 
-#### Scenario: File removed from server when no references remain
+#### Scenario: deleteFile called after soft-delete — file stays (soft-deleted record counts)
 
-- **GIVEN** file H1 is referenced by only attachment A1 (no covers reference H1)
-- **WHEN** A1 is synced as deleted
-- **THEN** server deletes file H1 from storage
+- **GIVEN** file H1 is referenced by only attachment A1
+- **WHEN** A1 is soft-deleted and client calls deleteFile({ hash: H1 })
+- **THEN** server counts A1 as a reference (is_deleted=true, but record exists)
+- **AND** server returns `deleted: false, ref_count: 1`
+- **AND** file H1 stays on server
 
-#### Scenario: File kept on server when other references exist
+#### Scenario: File removed from server at purge
 
-- **GIVEN** file H1 is referenced by attachment A1 and goal G1's cover_hash
-- **WHEN** A1 is synced as deleted
-- **THEN** server keeps file H1 (ref_count > 0)
+- **GIVEN** attachment A1 (data_hash H1) is soft-deleted and synced
+- **AND** no other attachment or cover references H1
+- **WHEN** purge runs and hard-deletes A1
+- **THEN** orphan check finds zero references to H1
+- **AND** file H1 is deleted from server storage
+
+#### Scenario: Soft-delete then undo — file still accessible
+
+- **GIVEN** attachment A1 (data_hash H1) is the only reference to file H1
+- **WHEN** user soft-deletes A1 and client calls deleteFile (file stays, ref_count=1)
+- **AND** user undoes the deletion (A1.is_deleted = false)
+- **THEN** file H1 is still on server and accessible
 
 ### Requirement: Attachment offline access
 
