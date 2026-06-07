@@ -44,6 +44,7 @@ export const ALLOWED_FILE_MIME_TYPES: readonly string[] = [
   "image/webp",
   "image/gif",
   "text/plain",
+  "text/markdown",
   "application/pdf",
 ];
 
@@ -55,7 +56,7 @@ export const FILE_MAGIC_BYTES: Record<string, number[][]> = {
   "image/webp": [[0x52, 0x49, 0x46, 0x46]], // RIFF header
   "image/gif": [[0x47, 0x49, 0x46, 0x38]], // GIF8
   "application/pdf": [[0x25, 0x50, 0x44, 0x46]], // %PDF
-  // text/plain has no magic bytes — validated by absence of null bytes
+  // text/plain and text/markdown have no magic bytes — validated by absence of null bytes
 };
 
 // Duplicated from @clear-progress/contract

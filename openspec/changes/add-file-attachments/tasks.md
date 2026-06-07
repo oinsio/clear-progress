@@ -167,5 +167,5 @@
 - [x] 16.7 Run skill `/uncommitted-files` to save list of changed and added files
 - [x] 16.8 Run skill `/fix-uncommitted` to fix IDE highlighted issues (fixed GAS purge tests: added files count to expected response)
 - [x] 16.9 Run `pnpm run lint:fix` — all should pass (final checks)
-- [ ] 16.10 Run `pnpm run preflight` — all should pass (final checks)
+- [x] 16.10 Run `pnpm run preflight` — all should pass (final checks)
 - [x] 16.11 Run `pnpm run build` — verify no type errors (final checks)

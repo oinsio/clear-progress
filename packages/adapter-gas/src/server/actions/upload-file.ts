@@ -43,7 +43,7 @@ interface DriveFileEntry {
   description?: string;
 }
 
-const TEXT_PLAIN_MIME = "text/plain" as const;
+const TEXT_MIME_TYPES = ["text/plain", "text/markdown"] as const;
 const NULL_BYTE = 0x00;
 
 /**
@@ -56,7 +56,7 @@ const NULL_BYTE = 0x00;
 function validateGasMagicBytes(decoded: number[], mimeType: string): boolean {
   const unsigned = decoded.map((byte) => (byte < 0 ? byte + 256 : byte));
 
-  if (mimeType === TEXT_PLAIN_MIME) {
+  if ((TEXT_MIME_TYPES as readonly string[]).includes(mimeType)) {
     const bytesToCheck = Math.min(unsigned.length, TEXT_PLAIN_NULL_CHECK_BYTES);
     for (let i = 0; i < bytesToCheck; i++) {
       if (unsigned[i] === NULL_BYTE) return false;

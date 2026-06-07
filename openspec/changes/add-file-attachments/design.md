@@ -61,7 +61,7 @@ WireAttachment {
 ```typescript
 export const ALLOWED_FILE_MIME_TYPES = [
   "image/jpeg", "image/png", "image/webp", "image/gif",
-  "text/plain", "application/pdf",
+  "text/plain", "text/markdown", "application/pdf",
 ] as const;
 
 export const FILE_MAGIC_BYTES: Record<string, number[][]> = {
@@ -70,7 +70,7 @@ export const FILE_MAGIC_BYTES: Record<string, number[][]> = {
   "image/webp": [[0x52, 0x49, 0x46, 0x46]], // RIFF header
   "image/gif":  [[0x47, 0x49, 0x46, 0x38]],  // GIF8
   "application/pdf": [[0x25, 0x50, 0x44, 0x46]], // %PDF
-  // text/plain has no magic bytes — validated by absence of null bytes
+  // text/plain and text/markdown have no magic bytes — validated by absence of null bytes
 };
 ```
 
@@ -140,7 +140,7 @@ Driven by FR7, FR17, FR18.
 **Decision**: Extend existing CoverLightbox into a generic FileLightbox that renders content based on MIME type:
 - `image/*` — `<img>` tag with blob URL (existing pattern)
 - `application/pdf` — `<iframe sandbox="allow-same-origin">` with blob URL
-- `text/plain` — `<pre>` block with text content read via `FileReader`
+- `text/plain`, `text/markdown` — `<pre>` block with text content read via `FileReader`
 
 **Rationale**: iframe for PDF is zero-dependency and works well on desktop. If mobile rendering proves inadequate, pdf.js can be added later as a focused follow-up. Driven by FR9, FR10, FR11.
 

@@ -13,11 +13,12 @@ const MIME_TO_EXTENSION: Record<string, string> = {
   "image/gif": "gif",
   "image/webp": "webp",
   "text/plain": "txt",
+  "text/markdown": "md",
   "application/pdf": "pdf",
 };
 
 const DEFAULT_EXTENSION = "bin";
-const TEXT_PLAIN_MIME = "text/plain";
+const TEXT_MIME_TYPES = ["text/plain", "text/markdown"] as const;
 const NULL_BYTE = 0x00;
 
 export function getExtensionFromMimeType(mimeType: string): string {
@@ -44,14 +45,14 @@ export function validateMagicBytes(
     return false;
   }
 
-  if (mimeType === TEXT_PLAIN_MIME) {
-    return validateTextPlain(fileBytes);
+  if ((TEXT_MIME_TYPES as readonly string[]).includes(mimeType)) {
+    return validateTextContent(fileBytes);
   }
 
   return validateBinaryMagicBytes(fileBytes, mimeType);
 }
 
-function validateTextPlain(fileBytes: Uint8Array): boolean {
+function validateTextContent(fileBytes: Uint8Array): boolean {
   const bytesToCheck = Math.min(fileBytes.length, TEXT_PLAIN_NULL_CHECK_BYTES);
 
   for (let i = 0; i < bytesToCheck; i++) {

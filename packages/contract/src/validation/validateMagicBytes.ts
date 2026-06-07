@@ -4,15 +4,15 @@ import {
   TEXT_PLAIN_NULL_CHECK_BYTES,
 } from "../constants";
 
-const TEXT_PLAIN_MIME = "text/plain" as const;
+const TEXT_MIME_TYPES = ["text/plain", "text/markdown"] as const;
 const NULL_BYTE = 0x00;
 
 /**
  * Validates file content by checking magic bytes (file signature)
  * against known signatures for the declared MIME type.
  *
- * For text/plain, validates absence of null bytes in the first
- * TEXT_PLAIN_NULL_CHECK_BYTES bytes.
+ * For text types (text/plain, text/markdown), validates absence of
+ * null bytes in the first TEXT_PLAIN_NULL_CHECK_BYTES bytes.
  *
  * Implements FR2 of add-file-attachments.
  */
@@ -27,14 +27,14 @@ export function validateMagicBytes(
     return false;
   }
 
-  if (mimeType === TEXT_PLAIN_MIME) {
-    return validateTextPlain(buffer);
+  if ((TEXT_MIME_TYPES as readonly string[]).includes(mimeType)) {
+    return validateTextContent(buffer);
   }
 
   return validateBinaryMagicBytes(buffer, mimeType);
 }
 
-function validateTextPlain(buffer: ArrayBuffer): boolean {
+function validateTextContent(buffer: ArrayBuffer): boolean {
   const bytesToCheck = Math.min(buffer.byteLength, TEXT_PLAIN_NULL_CHECK_BYTES);
   const bytes = new Uint8Array(buffer, 0, bytesToCheck);
 

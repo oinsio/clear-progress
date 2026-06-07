@@ -32,7 +32,7 @@ Users need to attach supporting files (images, PDFs, text documents) to tasks, g
 
 ## Non-Goals
 
-- NG1: File type support beyond images, PDF, and plain text (future expansion)
+- NG1: File type support beyond images, PDF, plain text, and markdown (future expansion)
 - NG2: In-app file editing (e.g., annotating PDFs, cropping images)
 - NG3: Shared/collaborative file access between users
 - NG4: File versioning (replacing a file creates a new attachment)
@@ -53,7 +53,7 @@ Users need to attach supporting files (images, PDFs, text documents) to tasks, g
 
 ### Functional
 
-- FR1: System SHALL support a unified MIME type allowlist defined in `packages/contract`: `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `text/plain`, `application/pdf`. This allowlist SHALL be the single source of truth for client and server validation.
+- FR1: System SHALL support a unified MIME type allowlist defined in `packages/contract`: `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `text/plain`, `text/markdown`, `application/pdf`. This allowlist SHALL be the single source of truth for client and server validation.
 - FR2: System SHALL validate files using magic bytes (file signature) on both client and server, not only MIME type from the file object.
 - FR3: File size limit SHALL be 5 MB for attachments and 2 MB for covers. Limits SHALL be defined in `packages/contract`.
 - FR4: System SHALL rename all cover-specific file operations to generic file operations across contract, client, and all adapters (Big Bang migration).
@@ -65,7 +65,7 @@ Users need to attach supporting files (images, PDFs, text documents) to tasks, g
 - FR8: Users SHALL be able to attach files to tasks, goals, and ideas.
 - FR9: Users SHALL be able to view attached images inline in a lightbox modal.
 - FR10: Users SHALL be able to view attached PDFs in a sandboxed iframe (`sandbox="allow-same-origin"`) within a lightbox modal.
-- FR11: Users SHALL be able to view attached plain text files in a `<pre>` block within a lightbox modal.
+- FR11: Users SHALL be able to view attached plain text and markdown files in a `<pre>` block within a lightbox modal.
 - FR12: Users SHALL be able to download attached files. Download action SHALL require confirmation dialog.
 - FR13: Users SHALL be able to delete attachments. Delete action SHALL require confirmation dialog.
 - FR14: Attachments SHALL be available offline from IndexedDB cache.
@@ -153,7 +153,7 @@ Requires IA update:
 
 ## Success Metrics
 
-- M1: All allowed file types (image/jpeg, image/png, image/webp, image/gif, text/plain, application/pdf) can be attached, viewed, and downloaded
+- M1: All allowed file types (image/jpeg, image/png, image/webp, image/gif, text/plain, text/markdown, application/pdf) can be attached, viewed, and downloaded
 - M2: Files are available offline after initial cache
 - M3: Attachments sync reliably between devices (create, delete, purge cleans up orphaned files)
 - M4: Mutation testing score >= 95% on new services (FileService, AttachmentService, FileSyncService)
