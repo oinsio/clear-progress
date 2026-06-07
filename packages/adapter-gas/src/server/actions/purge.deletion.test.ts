@@ -35,23 +35,94 @@ import {
   setupAllEntitiesWithOneDeleted,
 } from "./purge-test-utils";
 
+type MockGetAll = ReturnType<typeof vi.fn>;
+type MockDeleteByIds = ReturnType<typeof vi.fn>;
+
+interface EntityDeletionTestCase {
+  entityLabel: string;
+  deletedId: string;
+  activeId: string;
+  purgedKey: string;
+  getGetAllMock: () => MockGetAll;
+  getDeleteByIdsMock: () => MockDeleteByIds;
+}
+
+const entityDeletionCases: EntityDeletionTestCase[] = [
+  {
+    entityLabel: "tasks",
+    deletedId: "task-1",
+    activeId: "task-2",
+    purgedKey: "tasks",
+    getGetAllMock: () => vi.mocked(getAllTasks),
+    getDeleteByIdsMock: () => vi.mocked(deleteTasksByIds),
+  },
+  {
+    entityLabel: "goals",
+    deletedId: "goal-1",
+    activeId: "goal-2",
+    purgedKey: "goals",
+    getGetAllMock: () => vi.mocked(getAllGoals),
+    getDeleteByIdsMock: () => vi.mocked(deleteGoalsByIds),
+  },
+  {
+    entityLabel: "contexts",
+    deletedId: "ctx-1",
+    activeId: "ctx-2",
+    purgedKey: "contexts",
+    getGetAllMock: () => vi.mocked(getAllContexts),
+    getDeleteByIdsMock: () => vi.mocked(deleteContextsByIds),
+  },
+  {
+    entityLabel: "categories",
+    deletedId: "cat-1",
+    activeId: "cat-2",
+    purgedKey: "categories",
+    getGetAllMock: () => vi.mocked(getAllCategories),
+    getDeleteByIdsMock: () => vi.mocked(deleteCategoriesByIds),
+  },
+  {
+    entityLabel: "checklist items",
+    deletedId: "cl-1",
+    activeId: "cl-2",
+    purgedKey: "checklist_items",
+    getGetAllMock: () => vi.mocked(getAllChecklistItems),
+    getDeleteByIdsMock: () => vi.mocked(deleteChecklistItemsByIds),
+  },
+  {
+    entityLabel: "ideas",
+    deletedId: "idea-1",
+    activeId: "idea-2",
+    purgedKey: "ideas",
+    getGetAllMock: () => vi.mocked(getAllIdeas),
+    getDeleteByIdsMock: () => vi.mocked(deleteIdeasByIds),
+  },
+];
+
 describe("purge — deletion", () => {
   beforeEach(() => {
     resetAllMocks();
   });
 
-  it("should delete soft-deleted tasks and return correct count", () => {
-    vi.mocked(getAllTasks).mockReturnValue([
-      createMockEntity("task-1", true),
-      createMockEntity("task-2", false),
+  it.each(
+    entityDeletionCases,
+  )("should delete soft-deleted $entityLabel and return correct count", ({
+    deletedId,
+    activeId,
+    purgedKey,
+    getGetAllMock,
+    getDeleteByIdsMock,
+  }) => {
+    getGetAllMock().mockReturnValue([
+      createMockEntity(deletedId, true),
+      createMockEntity(activeId, false),
     ]);
-    vi.mocked(deleteTasksByIds).mockReturnValue(1);
+    getDeleteByIdsMock().mockReturnValue(1);
 
     purge({ confirm: true });
     const response = expectSuccessResponse();
 
-    expect(deleteTasksByIds).toHaveBeenCalledWith(["task-1"]);
-    expect(response.purged).toMatchObject({ tasks: 1 });
+    expect(getDeleteByIdsMock()).toHaveBeenCalledWith([deletedId]);
+    expect(response.purged).toMatchObject({ [purgedKey]: 1 });
   });
 
   it("should not delete records where is_deleted is false", () => {
@@ -63,76 +134,6 @@ describe("purge — deletion", () => {
     purge({ confirm: true });
 
     expect(deleteTasksByIds).toHaveBeenCalledWith([]);
-  });
-
-  it("should delete soft-deleted goals and return correct count", () => {
-    vi.mocked(getAllGoals).mockReturnValue([
-      createMockEntity("goal-1", true),
-      createMockEntity("goal-2", false),
-    ]);
-    vi.mocked(deleteGoalsByIds).mockReturnValue(1);
-
-    purge({ confirm: true });
-    const response = expectSuccessResponse();
-
-    expect(deleteGoalsByIds).toHaveBeenCalledWith(["goal-1"]);
-    expect(response.purged).toMatchObject({ goals: 1 });
-  });
-
-  it("should delete only soft-deleted contexts and exclude active ones", () => {
-    vi.mocked(getAllContexts).mockReturnValue([
-      createMockEntity("ctx-1", true),
-      createMockEntity("ctx-2", false),
-    ]);
-    vi.mocked(deleteContextsByIds).mockReturnValue(1);
-
-    purge({ confirm: true });
-    const response = expectSuccessResponse();
-
-    expect(deleteContextsByIds).toHaveBeenCalledWith(["ctx-1"]);
-    expect(response.purged).toMatchObject({ contexts: 1 });
-  });
-
-  it("should delete only soft-deleted categories and exclude active ones", () => {
-    vi.mocked(getAllCategories).mockReturnValue([
-      createMockEntity("cat-1", true),
-      createMockEntity("cat-2", false),
-    ]);
-    vi.mocked(deleteCategoriesByIds).mockReturnValue(1);
-
-    purge({ confirm: true });
-    const response = expectSuccessResponse();
-
-    expect(deleteCategoriesByIds).toHaveBeenCalledWith(["cat-1"]);
-    expect(response.purged).toMatchObject({ categories: 1 });
-  });
-
-  it("should delete only soft-deleted checklist items and exclude active ones", () => {
-    vi.mocked(getAllChecklistItems).mockReturnValue([
-      createMockEntity("cl-1", true),
-      createMockEntity("cl-2", false),
-    ]);
-    vi.mocked(deleteChecklistItemsByIds).mockReturnValue(1);
-
-    purge({ confirm: true });
-    const response = expectSuccessResponse();
-
-    expect(deleteChecklistItemsByIds).toHaveBeenCalledWith(["cl-1"]);
-    expect(response.purged).toMatchObject({ checklist_items: 1 });
-  });
-
-  it("should delete only soft-deleted ideas and exclude active ones", () => {
-    vi.mocked(getAllIdeas).mockReturnValue([
-      createMockEntity("idea-1", true),
-      createMockEntity("idea-2", false),
-    ]);
-    vi.mocked(deleteIdeasByIds).mockReturnValue(1);
-
-    purge({ confirm: true });
-    const response = expectSuccessResponse();
-
-    expect(deleteIdeasByIds).toHaveBeenCalledWith(["idea-1"]);
-    expect(response.purged).toMatchObject({ ideas: 1 });
   });
 
   it("should return INTERNAL_ERROR when a sheet operation throws", () => {
@@ -188,6 +189,7 @@ describe("purge — deletion", () => {
       checklist_items: 1,
       ideas: 1,
       attachments: 1,
+      files: 0,
     });
   });
 });

@@ -40,6 +40,7 @@ function createValidPullResponse(): Response {
       categories: [],
       ideas: [],
       checklist_items: [],
+      attachments: [],
       settings: [],
       current_revision: 0,
       purge_revision: 0,
@@ -60,28 +61,28 @@ function createValidPushResponse(): Response {
   );
 }
 
-function createValidUploadCoverResponse(): Response {
+function createValidUploadFileResponse(): Response {
   return new Response(
     JSON.stringify({ ok: true, data_hash: "abc123", reused: false }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
 }
 
-function createValidUploadCoversResponse(): Response {
+function createValidUploadFilesResponse(): Response {
   return new Response(JSON.stringify({ ok: true, results: [] }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
 }
 
-function createValidGetCoverResponse(): Response {
-  return new Response(JSON.stringify({ ok: true, covers: [] }), {
+function createValidGetFileResponse(): Response {
+  return new Response(JSON.stringify({ ok: true, files: [] }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
 }
 
-function createValidDeleteCoverResponse(): Response {
+function createValidDeleteFileResponse(): Response {
   return new Response(
     JSON.stringify({ ok: true, deleted: true, ref_count: 0 }),
     { status: 200, headers: { "Content-Type": "application/json" } },
@@ -99,11 +100,29 @@ function createValidPurgeResponse(): Response {
         categories: 0,
         checklist_items: 0,
         ideas: 0,
+        attachments: 0,
       },
       purge_revision: 1,
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
+}
+
+function extractFetchOptions(mockFetch: ReturnType<typeof vi.fn>): RequestInit {
+  const [, fetchOptions] = mockFetch.mock.calls[0] as [string, RequestInit];
+  return fetchOptions;
+}
+
+function extractFetchUrl(mockFetch: ReturnType<typeof vi.fn>): string {
+  const [fetchUrl] = mockFetch.mock.calls[0] as [string, RequestInit];
+  return fetchUrl;
+}
+
+function extractRequestBody(
+  mockFetch: ReturnType<typeof vi.fn>,
+): Record<string, unknown> {
+  const fetchOptions = extractFetchOptions(mockFetch);
+  return JSON.parse(fetchOptions.body as string) as Record<string, unknown>;
 }
 
 describeFeature(
@@ -131,21 +150,13 @@ describeFeature(
         Then(
           "HTTP GET is sent to the GAS URL with action=ping",
           async (_ctx: TestContext) => {
-            const [fetchUrl, fetchOptions] = mockFetch.mock.calls[0] as [
-              string,
-              RequestInit,
-            ];
-            expect(fetchUrl).toBe(`${GAS_URL}?action=ping`);
-            expect(fetchOptions.method).toBeUndefined();
+            expect(extractFetchUrl(mockFetch)).toBe(`${GAS_URL}?action=ping`);
+            expect(extractFetchOptions(mockFetch).method).toBeUndefined();
           },
         );
 
         And("redirect follow is enabled", async (_ctx: TestContext) => {
-          const [, fetchOptions] = mockFetch.mock.calls[0] as [
-            string,
-            RequestInit,
-          ];
-          expect(fetchOptions.redirect).toBe("follow");
+          expect(extractFetchOptions(mockFetch).redirect).toBe("follow");
         });
       },
     );
@@ -162,13 +173,11 @@ describeFeature(
         Then(
           'the request Content-Type is "text/plain"',
           async (_ctx: TestContext) => {
-            const [, fetchOptions] = mockFetch.mock.calls[0] as [
+            const headers = extractFetchOptions(mockFetch).headers as Record<
               string,
-              RequestInit,
-            ];
-            expect(
-              (fetchOptions.headers as Record<string, string>)["Content-Type"],
-            ).toBe("text/plain");
+              string
+            >;
+            expect(headers["Content-Type"]).toBe("text/plain");
           },
         );
       },
@@ -186,14 +195,9 @@ describeFeature(
         Then(
           "the request body contains access_token",
           async (_ctx: TestContext) => {
-            const [, fetchOptions] = mockFetch.mock.calls[0] as [
-              string,
-              RequestInit,
-            ];
-            const parsedBody = JSON.parse(
-              fetchOptions.body as string,
-            ) as Record<string, unknown>;
-            expect(parsedBody.access_token).toBe(VALID_TOKEN);
+            expect(extractRequestBody(mockFetch).access_token).toBe(
+              VALID_TOKEN,
+            );
           },
         );
       },
@@ -207,15 +211,7 @@ describeFeature(
       });
 
       Then('the request body action is "init"', async (_ctx: TestContext) => {
-        const [, fetchOptions] = mockFetch.mock.calls[0] as [
-          string,
-          RequestInit,
-        ];
-        const parsedBody = JSON.parse(fetchOptions.body as string) as Record<
-          string,
-          unknown
-        >;
-        expect(parsedBody.action).toBe("init");
+        expect(extractRequestBody(mockFetch).action).toBe("init");
       });
     });
 
@@ -227,15 +223,7 @@ describeFeature(
       });
 
       Then('the request body action is "pull"', async (_ctx: TestContext) => {
-        const [, fetchOptions] = mockFetch.mock.calls[0] as [
-          string,
-          RequestInit,
-        ];
-        const parsedBody = JSON.parse(fetchOptions.body as string) as Record<
-          string,
-          unknown
-        >;
-        expect(parsedBody.action).toBe("pull");
+        expect(extractRequestBody(mockFetch).action).toBe("pull");
       });
     });
 
@@ -247,23 +235,15 @@ describeFeature(
       });
 
       Then('the request body action is "push"', async (_ctx: TestContext) => {
-        const [, fetchOptions] = mockFetch.mock.calls[0] as [
-          string,
-          RequestInit,
-        ];
-        const parsedBody = JSON.parse(fetchOptions.body as string) as Record<
-          string,
-          unknown
-        >;
-        expect(parsedBody.action).toBe("push");
+        expect(extractRequestBody(mockFetch).action).toBe("push");
       });
     });
 
     // @gas-adapter-specs-and-bdd @FR2
-    f.Scenario('Upload cover sends action "upload_cover"', ({ When, Then }) => {
-      When("adapter calls uploadCover", async (_ctx: TestContext) => {
-        mockFetch.mockResolvedValue(createValidUploadCoverResponse());
-        await adapter.uploadCover({
+    f.Scenario('Upload file sends action "upload_file"', ({ When, Then }) => {
+      When("adapter calls uploadFile", async (_ctx: TestContext) => {
+        mockFetch.mockResolvedValue(createValidUploadFileResponse());
+        await adapter.uploadFile({
           goal_id: "test-id",
           data: "base64data",
           mime_type: "image/png",
@@ -273,88 +253,54 @@ describeFeature(
       });
 
       Then(
-        'the request body action is "upload_cover"',
+        'the request body action is "upload_file"',
         async (_ctx: TestContext) => {
-          const [, fetchOptions] = mockFetch.mock.calls[0] as [
-            string,
-            RequestInit,
-          ];
-          const parsedBody = JSON.parse(fetchOptions.body as string) as Record<
-            string,
-            unknown
-          >;
-          expect(parsedBody.action).toBe("upload_cover");
+          expect(extractRequestBody(mockFetch).action).toBe("upload_file");
         },
       );
     });
 
     // @gas-adapter-specs-and-bdd @FR2
-    f.Scenario(
-      'Upload covers sends action "upload_covers"',
-      ({ When, Then }) => {
-        When("adapter calls uploadCovers", async (_ctx: TestContext) => {
-          mockFetch.mockResolvedValue(createValidUploadCoversResponse());
-          await adapter.uploadCovers({ covers: [] });
-        });
-
-        Then(
-          'the request body action is "upload_covers"',
-          async (_ctx: TestContext) => {
-            const [, fetchOptions] = mockFetch.mock.calls[0] as [
-              string,
-              RequestInit,
-            ];
-            const parsedBody = JSON.parse(
-              fetchOptions.body as string,
-            ) as Record<string, unknown>;
-            expect(parsedBody.action).toBe("upload_covers");
-          },
-        );
-      },
-    );
-
-    // @gas-adapter-specs-and-bdd @FR2
-    f.Scenario('Get cover sends action "get_cover"', ({ When, Then }) => {
-      When("adapter calls getCover", async (_ctx: TestContext) => {
-        mockFetch.mockResolvedValue(createValidGetCoverResponse());
-        await adapter.getCover({ hashes: [] });
+    f.Scenario('Upload files sends action "upload_files"', ({ When, Then }) => {
+      When("adapter calls uploadFiles", async (_ctx: TestContext) => {
+        mockFetch.mockResolvedValue(createValidUploadFilesResponse());
+        await adapter.uploadFiles({ files: [] });
       });
 
       Then(
-        'the request body action is "get_cover"',
+        'the request body action is "upload_files"',
         async (_ctx: TestContext) => {
-          const [, fetchOptions] = mockFetch.mock.calls[0] as [
-            string,
-            RequestInit,
-          ];
-          const parsedBody = JSON.parse(fetchOptions.body as string) as Record<
-            string,
-            unknown
-          >;
-          expect(parsedBody.action).toBe("get_cover");
+          expect(extractRequestBody(mockFetch).action).toBe("upload_files");
         },
       );
     });
 
     // @gas-adapter-specs-and-bdd @FR2
-    f.Scenario('Delete cover sends action "delete_cover"', ({ When, Then }) => {
-      When("adapter calls deleteCover", async (_ctx: TestContext) => {
-        mockFetch.mockResolvedValue(createValidDeleteCoverResponse());
-        await adapter.deleteCover({ goal_id: "test-id", hash: "abc123" });
+    f.Scenario('Get file sends action "get_file"', ({ When, Then }) => {
+      When("adapter calls getFile", async (_ctx: TestContext) => {
+        mockFetch.mockResolvedValue(createValidGetFileResponse());
+        await adapter.getFile({ hashes: [] });
       });
 
       Then(
-        'the request body action is "delete_cover"',
+        'the request body action is "get_file"',
         async (_ctx: TestContext) => {
-          const [, fetchOptions] = mockFetch.mock.calls[0] as [
-            string,
-            RequestInit,
-          ];
-          const parsedBody = JSON.parse(fetchOptions.body as string) as Record<
-            string,
-            unknown
-          >;
-          expect(parsedBody.action).toBe("delete_cover");
+          expect(extractRequestBody(mockFetch).action).toBe("get_file");
+        },
+      );
+    });
+
+    // @gas-adapter-specs-and-bdd @FR2
+    f.Scenario('Delete file sends action "delete_file"', ({ When, Then }) => {
+      When("adapter calls deleteFile", async (_ctx: TestContext) => {
+        mockFetch.mockResolvedValue(createValidDeleteFileResponse());
+        await adapter.deleteFile({ hash: "abc123" });
+      });
+
+      Then(
+        'the request body action is "delete_file"',
+        async (_ctx: TestContext) => {
+          expect(extractRequestBody(mockFetch).action).toBe("delete_file");
         },
       );
     });
@@ -371,28 +317,14 @@ describeFeature(
         Then(
           'the request body action is "purge"',
           async (_ctx: TestContext) => {
-            const [, fetchOptions] = mockFetch.mock.calls[0] as [
-              string,
-              RequestInit,
-            ];
-            const parsedBody = JSON.parse(
-              fetchOptions.body as string,
-            ) as Record<string, unknown>;
-            expect(parsedBody.action).toBe("purge");
+            expect(extractRequestBody(mockFetch).action).toBe("purge");
           },
         );
 
         And(
           "the request body contains confirm true",
           async (_ctx: TestContext) => {
-            const [, fetchOptions] = mockFetch.mock.calls[0] as [
-              string,
-              RequestInit,
-            ];
-            const parsedBody = JSON.parse(
-              fetchOptions.body as string,
-            ) as Record<string, unknown>;
-            expect(parsedBody.confirm).toBe(true);
+            expect(extractRequestBody(mockFetch).confirm).toBe(true);
           },
         );
       },
@@ -408,11 +340,7 @@ describeFeature(
       Then(
         "no access_token is included in the request",
         async (_ctx: TestContext) => {
-          const [, fetchOptions] = mockFetch.mock.calls[0] as [
-            string,
-            RequestInit,
-          ];
-          expect(fetchOptions.body).toBeUndefined();
+          expect(extractFetchOptions(mockFetch).body).toBeUndefined();
         },
       );
     });

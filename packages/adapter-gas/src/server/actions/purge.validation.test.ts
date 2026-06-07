@@ -63,6 +63,7 @@ describe("purge — validation", () => {
       checklist_items: 0,
       ideas: 0,
       attachments: 0,
+      files: 0,
     });
   });
 });
