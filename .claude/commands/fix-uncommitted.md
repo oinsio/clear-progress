@@ -4,56 +4,56 @@ description: Diagnose uncommitted files for errors, code duplication, and unused
 
 # Diagnose Uncommitted Files
 
-Read `uncommitted-files.md` and analyze each listed file using sub-agents — one file per sub-agent, strictly sequentially. Fix issues found, mark each file as done after its sub-agent completes. Do not make any commits.
+Read `uncommitted-files.md` and analyze each listed file via sub-agents — one per file, strictly sequentially. Fix issues found, mark each file done. No commits.
 
 ## Steps
 
 ### Step 1: Read the checklist
 
-Read `uncommitted-files.md` in the project root. Parse the numbered checklist items. Only process files that are NOT yet checked (i.e., `[ ]`, skip `[x]`).
+Read `uncommitted-files.md`. Only process unchecked items (`[ ]`), skip `[x]`.
 
 ### Step 2: Analyze files sequentially via sub-agents
 
-For each unchecked file in order, launch a **foreground sub-agent** (Agent tool, subagent_type: general-purpose) with the following prompt template:
+For each unchecked file, launch a **foreground sub-agent** (Agent tool, subagent_type: general-purpose) with:
 
 ```
-Analyze the file `<absolute-path>` for issues. Do NOT make any commits.
+Analyze `<absolute-path>` for issues. No commits. Up to 3 fix-verify cycles:
 
-Repeat the following cycle until a clean pass (no new fixes needed), up to 3 iterations:
+1. Run `mcp__jetbrains__get_file_problems(filePath: "<relative-path>", projectPath: "$ARGUMENTS", errorsOnly: false)`.
+2. Fix errors and warnings (ERROR, WARNING, WEAK WARNING) — except "Duplicated code fragment", handle those in step 3.
+3. Fix duplication — three layers, in priority order:
+   **A) IDE-reported**: handle any "Duplicated code fragment" from step 1. Read the other fragment's location, compare, extract shared code.
+   **B) Similar file names**: Glob for files with similar names in sibling dirs (e.g., `GoalAttachmentsTab` → `**/*AttachmentsTab*`). If candidates share >50% logic, extract shared component/hook/utility, reduce originals to thin wrappers.
+   **C) Duplicate definitions**: Grep for each function/constant defined in the file (`function <name>` or `const <name>`, with or without `export`). If defined in multiple files, move canonical definition to the best shared location (`test/mocks/`, `defaultServices.ts`, etc.), replace others with imports.
+   Run `get_file_problems` on ALL files changed during dedup (not just the original).
+4. Check unused variables/imports — Grep the codebase to confirm truly unused before removing.
+5. Re-run `get_file_problems`. If new issues appeared, repeat from step 2.
 
-1. Run `mcp__jetbrains__get_file_problems(filePath: "<relative-path-from-project-root>", projectPath: "$ARGUMENTS", errorsOnly: false)`.
-2. If there are problems (ERROR, WARNING, or WEAK WARNING) — fix them.
-3. Check for unused variables/imports — for each, grep the codebase to confirm it's truly unused. If unused, remove it. If used elsewhere, leave it.
-4. Check for code duplication within the file — extract common logic if reasonable.
-5. After fixing, re-run diagnostics and re-check for unused code and duplication. If new issues appeared (e.g., fixing duplication introduced an unused import, or fixing an error revealed more duplication) — go back to step 2 for the next iteration.
+**Note**: dedup in step 3 may modify files outside the current one. That's expected — later sub-agents will see those changes.
 
-If 3 iterations pass and issues remain, report the remaining issues without further attempts.
-
-Report what you found and fixed at each iteration (or "no issues — clean on first pass").
+Report what was found and fixed per iteration (or "clean on first pass").
 ```
 
-**CRITICAL**: Do NOT launch the next sub-agent until the current one finishes and returns its result.
+**CRITICAL**: Wait for each sub-agent to finish before launching the next.
 
-After each sub-agent completes successfully:
-- Update `uncommitted-files.md` by changing `[ ]` to `[x]` for that file.
-- Log the sub-agent's result summary before proceeding to the next file.
+After each sub-agent completes:
+- Mark `[ ]` → `[x]` in `uncommitted-files.md`
+- Log result summary
 
 ### Step 3: Final verification
 
-After all files are processed, run these checks **sequentially** (one at a time, wait for each to finish):
+Run **sequentially** (wait for each before starting next):
 
-1. `pnpm run lint:fix` — all should pass
-2. `pnpm run preflight` — all should pass
-3. `pnpm run build` — verify no type errors
+1. `pnpm run lint:fix`
+2. `pnpm run preflight`
+3. `pnpm run build`
 
-If any check fails, fix the issues before proceeding to the next one.
+Fix failures before proceeding to the next check.
 
 ### Step 4: Report
 
-After all files are processed and verification passes, print a summary:
+Summary:
 - Total files analyzed
-- Files with errors fixed
-- Files with duplication resolved
-- Files with unused variables removed
-- Files with no issues
-- Final verification status (lint / preflight / build)
+- Files with errors / duplication / unused vars fixed
+- Files clean
+- Verification status (lint / preflight / build)
