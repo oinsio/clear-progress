@@ -11,10 +11,10 @@ vi.mock("./actions/init", () => ({ init: vi.fn() }));
 vi.mock("./actions/pull", () => ({ pull: vi.fn() }));
 vi.mock("./actions/push", () => ({ push: vi.fn() }));
 vi.mock("./actions/purge", () => ({ purge: vi.fn() }));
-vi.mock("./actions/upload-cover", () => ({ uploadCover: vi.fn() }));
-vi.mock("./actions/upload-covers", () => ({ uploadCovers: vi.fn() }));
-vi.mock("./actions/delete-cover", () => ({ deleteCover: vi.fn() }));
-vi.mock("./actions/get-cover", () => ({ getCover: vi.fn() }));
+vi.mock("./actions/upload-file", () => ({ uploadFile: vi.fn() }));
+vi.mock("./actions/upload-files", () => ({ uploadFiles: vi.fn() }));
+vi.mock("./actions/delete-file", () => ({ deleteFile: vi.fn() }));
+vi.mock("./actions/get-file", () => ({ getFile: vi.fn() }));
 vi.mock("./helpers/auth", () => ({ verifyToken: vi.fn() }));
 
 import { init } from "./actions/init";
@@ -79,46 +79,22 @@ describe("doPost — authentication", () => {
     expect(parseResponse().error).toBe(ERROR_CODES.UNAUTHORIZED);
   });
 
-  it("should include NETWORK_ERROR message when verifyToken returns NETWORK_ERROR", () => {
-    vi.mocked(verifyToken).mockReturnValue({
-      ok: false,
-      reason: AUTH_FAILURE_REASONS.NETWORK_ERROR,
-    } as never);
-    globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
-
-    expect(parseResponse().message).toBe(ERROR_MESSAGES.AUTH_NETWORK_ERROR);
-  });
-
-  it("should include INVALID_RESPONSE message when verifyToken returns INVALID_RESPONSE", () => {
-    vi.mocked(verifyToken).mockReturnValue({
-      ok: false,
-      reason: AUTH_FAILURE_REASONS.INVALID_RESPONSE,
-    } as never);
-    globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
-
-    expect(parseResponse().message).toBe(ERROR_MESSAGES.AUTH_INVALID_RESPONSE);
-  });
-
-  it("should include EMAIL_NOT_VERIFIED message when verifyToken returns EMAIL_NOT_VERIFIED", () => {
-    vi.mocked(verifyToken).mockReturnValue({
-      ok: false,
-      reason: AUTH_FAILURE_REASONS.EMAIL_NOT_VERIFIED,
-    } as never);
-    globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
-
-    expect(parseResponse().message).toBe(
+  it.each([
+    [AUTH_FAILURE_REASONS.NETWORK_ERROR, ERROR_MESSAGES.AUTH_NETWORK_ERROR],
+    [
+      AUTH_FAILURE_REASONS.INVALID_RESPONSE,
+      ERROR_MESSAGES.AUTH_INVALID_RESPONSE,
+    ],
+    [
+      AUTH_FAILURE_REASONS.EMAIL_NOT_VERIFIED,
       ERROR_MESSAGES.AUTH_EMAIL_NOT_VERIFIED,
-    );
-  });
-
-  it("should include WRONG_ACCOUNT message when verifyToken returns WRONG_ACCOUNT", () => {
-    vi.mocked(verifyToken).mockReturnValue({
-      ok: false,
-      reason: AUTH_FAILURE_REASONS.WRONG_ACCOUNT,
-    } as never);
+    ],
+    [AUTH_FAILURE_REASONS.WRONG_ACCOUNT, ERROR_MESSAGES.AUTH_WRONG_ACCOUNT],
+  ])("should include correct message when verifyToken returns %s", (reason, expectedMessage) => {
+    vi.mocked(verifyToken).mockReturnValue({ ok: false, reason } as never);
     globals.doPost?.(makeAuthenticatedPostEvent({ action: ACTIONS.INIT }));
 
-    expect(parseResponse().message).toBe(ERROR_MESSAGES.AUTH_WRONG_ACCOUNT);
+    expect(parseResponse().message).toBe(expectedMessage);
   });
 
   it("should call verifyToken with the provided access_token", () => {
