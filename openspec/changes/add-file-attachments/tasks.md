@@ -175,15 +175,15 @@
 
 ## 18. Bugfix — client-side local ref-counting in FileService.deleteFile (FR7, FR18)
 
-- [ ] 18.1 Add local ref-counting to `FileService.deleteFile`: before removing file from `localFileCache`/`pendingFileRepository`/`fileRepository`, check if any goal's `cover_hash` or active attachment's `data_hash` still references this hash locally
-- [ ] 18.2 BDD unit test: cover preserved when same-hash attachment deleted offline
-- [ ] 18.3 BDD unit test: file removed when no local refs remain
+- [x] 18.1 Add local ref-counting to `FileService.deleteFile`: before removing file from `localFileCache`/`pendingFileRepository`/`fileRepository`, check if any goal's `cover_hash` or active attachment's `data_hash` still references this hash locally
+- [x] 18.2 BDD unit test: cover preserved when same-hash attachment deleted offline
+- [x] 18.3 BDD unit test: file removed when no local refs remain
 - [ ] 18.4 Playwright E2E test: cover + attachment same file → delete attachment → cover still visible
-- [ ] 18.5 Mutation testing on updated FileService (target >= 95%)
+- [x] 18.5 Mutation testing on updated FileService (target >= 95%)
 
 ## 19. Final verification
 
-- [ ] 19.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
+- [x] 19.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
 - [x] 19.2 Verify no cover regression: existing goal cover functionality works after rename
 - [x] 19.3 Verify i18n completeness: all new keys present in both ru.json and en.json
 - [x] 19.4 Run `pnpm run lint:fix` — all should pass

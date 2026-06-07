@@ -303,6 +303,19 @@ describe("FileService — uploadCover", () => {
     expect(pendingBlob.type).toBe("image/jpeg");
   });
 
+  it("should re-throw error when API throws with FILE_ERROR message instead of saving locally", async () => {
+    const mockSyncAdapter = createMockSyncAdapter({
+      uploadFile: vi.fn().mockRejectedValue(new Error("INVALID_TYPE")),
+    });
+    const service = createService({ mockSyncAdapter });
+
+    await expect(
+      service.uploadFile(createImageFile(), "goal-1", MAX_COVER_SIZE_BYTES),
+    ).rejects.toThrow("INVALID_TYPE");
+
+    expect(mocks.mockPendingFileRepository.save).not.toHaveBeenCalled();
+  });
+
   it("should return existing data_hash when same hash in pendingFileRepository", async () => {
     const existingDataHash = "some-hash";
     const existingObjectUrl = "blob:http://localhost/existing";

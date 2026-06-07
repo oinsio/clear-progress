@@ -120,6 +120,43 @@ describe("FileSyncService", () => {
       expect(localFileCache.get(FILE_ID)).toBeDefined();
     });
 
+    it("should allow a second call after first call fails (cleanup via .finally)", async () => {
+      let callCount = 0;
+      ctx.mockFileRepository = createMockFileRepository({
+        getByHash: vi.fn().mockResolvedValue(undefined),
+      });
+      ctx.mockPendingFileRepository = createMockPendingFileRepository({
+        getByHash: vi.fn().mockResolvedValue(null),
+      });
+      ctx.mockSyncAdapter = createMockSyncAdapter({
+        getFile: vi.fn().mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.reject(new Error("First call fails"));
+          }
+          return Promise.resolve({
+            ok: true,
+            files: [
+              {
+                hash: FILE_ID,
+                data: "SGVsbG8=",
+                mime_type: "image/jpeg",
+              },
+            ],
+          });
+        }),
+      });
+      const service = ctx.createService();
+
+      // First call — fails, should clear inFlightCaches via .finally()
+      await service.ensureFileCached(FILE_ID);
+      expect(localFileCache.get(FILE_ID)).toBeUndefined();
+
+      // Second call — should NOT reuse failed promise
+      await service.ensureFileCached(FILE_ID);
+      expect(localFileCache.get(FILE_ID)).toBeDefined();
+    });
+
     it("should make exactly one getFile call when called concurrently with the same fileId", async () => {
       ctx.mockSyncAdapter = createMockSyncAdapter({
         getFile: createMockGetFilesSuccess(FILE_ID),

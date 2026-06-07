@@ -141,6 +141,51 @@ describe("FileSyncService", () => {
       expect(ctx.mockSyncAdapter.getFile).toHaveBeenCalledTimes(2);
     });
 
+    it("should skip file with error and continue processing remaining files", async () => {
+      const HASH_ERR = "hash-err";
+      const HASH_OK = "hash-ok";
+      ctx.mockSyncAdapter = createMockSyncAdapter({
+        getFile: vi.fn().mockResolvedValue({
+          ok: true,
+          files: [
+            { hash: HASH_ERR, error: "FILE_NOT_FOUND" },
+            { hash: HASH_OK, mime_type: MOCK_MIME_TYPE, data: MOCK_BASE64 },
+          ],
+        }),
+      });
+      const service = ctx.createService();
+
+      await service.batchCacheFromServer([HASH_ERR, HASH_OK]);
+
+      expect(ctx.mockFileRepository.save).toHaveBeenCalledTimes(1);
+      expect(ctx.mockFileRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ data_hash: HASH_OK }),
+      );
+    });
+
+    it("should continue when individual file processing throws", async () => {
+      const HASH_BAD = "hash-bad-data";
+      const HASH_OK = "hash-ok-data";
+      // First file has invalid base64, second is valid
+      ctx.mockSyncAdapter = createMockSyncAdapter({
+        getFile: vi.fn().mockResolvedValue({
+          ok: true,
+          files: [
+            { hash: HASH_BAD, mime_type: MOCK_MIME_TYPE, data: "!!!invalid-base64!!!" },
+            { hash: HASH_OK, mime_type: MOCK_MIME_TYPE, data: MOCK_BASE64 },
+          ],
+        }),
+      });
+      const service = ctx.createService();
+
+      await service.batchCacheFromServer([HASH_BAD, HASH_OK]);
+
+      // Second file should still be processed
+      expect(ctx.mockFileRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ data_hash: HASH_OK }),
+      );
+    });
+
     it("should save blobs for all successfully fetched files", async () => {
       const HASH_A = "hash-a";
       const HASH_B = "hash-b";
