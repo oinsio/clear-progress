@@ -2,6 +2,14 @@ import { Download, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 const DEFAULT_DIALOG_TEST_ID = "file-lightbox";
 const DEFAULT_CLOSE_BUTTON_TEST_ID = "file-lightbox-close";
@@ -109,14 +117,7 @@ function FilePreview({ url, mimeType, filename }: FilePreviewProps) {
   }
 
   if (mimeType === "application/pdf") {
-    return (
-      <iframe
-        src={url}
-        title={filename}
-        sandbox="allow-same-origin"
-        className="w-full h-full max-w-4xl max-h-full rounded-lg bg-white"
-      />
-    );
+    return <PdfPreview url={url} />;
   }
 
   if (mimeType.startsWith("text/")) {
@@ -136,6 +137,60 @@ function FilePreview({ url, mimeType, filename }: FilePreviewProps) {
         <Download className="w-5 h-5" />
         {t("attachment.lightbox.download")}
       </a>
+    </div>
+  );
+}
+
+function PdfPreview({ url }: { url: string }) {
+  const { t } = useTranslation();
+  const [pageCount, setPageCount] = useState<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+    setPageCount(numPages);
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="max-w-4xl w-full max-h-full overflow-auto rounded-lg bg-white"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <Document
+        file={url}
+        onLoadSuccess={onDocumentLoadSuccess}
+        loading={
+          <div className="p-8 text-gray-500">
+            {t("attachment.lightbox.loading")}
+          </div>
+        }
+        error={
+          <div className="p-8 text-red-600">
+            {t("attachment.lightbox.loadError")}
+          </div>
+        }
+      >
+        {Array.from({ length: pageCount }, (_, index) => (
+          <Page
+            // biome-ignore lint/suspicious/noArrayIndexKey: PDF pages have a fixed order and are never reordered
+            key={`page-${index + 1}`}
+            pageNumber={index + 1}
+            width={containerWidth > 0 ? containerWidth : undefined}
+          />
+        ))}
+      </Document>
     </div>
   );
 }

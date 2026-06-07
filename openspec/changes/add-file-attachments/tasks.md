@@ -158,12 +158,12 @@
 
 ## 16. PDF viewer — replace iframe with react-pdf (FR10)
 
-- [ ] 16.1 Install `react-pdf` dependency in `packages/client`
-- [ ] 16.2 Configure pdf.js worker for Vite (lazy-loaded)
-- [ ] 16.3 Replace iframe PDF rendering in `FileLightbox.tsx` with react-pdf `Document` + `Page` components (canvas-based)
-- [ ] 16.4 Update `FileLightbox.test.tsx` — replace iframe assertions with canvas/react-pdf assertions
-- [ ] 16.5 Run `pnpm run build` to verify compilation
-- [ ] 16.6 Manual smoke test: open PDF attachment in lightbox, verify rendering
+- [x] 16.1 Install `react-pdf` and `pdfjs-dist` dependencies in `packages/client`
+- [x] 16.2 Configure pdf.js worker for Vite (lazy-loaded via `new URL` pattern)
+- [x] 16.3 Replace iframe PDF rendering in `FileLightbox.tsx` with react-pdf `Document` + `Page` components (canvas-based)
+- [x] 16.4 Update `FileLightbox.test.tsx` — replace iframe assertions with canvas/react-pdf assertions
+- [x] 16.5 Run `pnpm run build` to verify compilation
+- [x] 16.6 Manual smoke test: open PDF attachment in lightbox, verify rendering
 
 ## 17. Final verification
 

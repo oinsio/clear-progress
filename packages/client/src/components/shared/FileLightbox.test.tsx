@@ -20,6 +20,34 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("react-pdf", () => {
+  const { useEffect } = require("react");
+  return {
+    Document: ({
+      children,
+      onLoadSuccess,
+      file,
+    }: {
+      children: React.ReactNode;
+      onLoadSuccess?: (args: { numPages: number }) => void;
+      file: string;
+    }) => {
+      useEffect(() => {
+        onLoadSuccess?.({ numPages: 1 });
+      }, [onLoadSuccess]);
+      return (
+        <div data-testid="pdf-document" data-file={file}>
+          {children}
+        </div>
+      );
+    },
+    Page: ({ pageNumber }: { pageNumber: number }) => (
+      <canvas data-testid={`pdf-page-${pageNumber}`} />
+    ),
+    pdfjs: { GlobalWorkerOptions: { workerSrc: "" } },
+  };
+});
+
 function renderLightbox(
   overrides: Partial<React.ComponentProps<typeof FileLightbox>> = {},
 ) {
@@ -95,11 +123,11 @@ describe("FileLightbox a11y", () => {
     expect(image).toHaveAttribute("alt", "photo.png");
   });
 
-  it("should render iframe with title for pdf mime type", () => {
+  it("should render pdf document with canvas pages for pdf mime type", () => {
     renderLightbox({ mimeType: "application/pdf", filename: "doc.pdf" });
 
-    const iframe = screen.getByTitle("doc.pdf");
-    expect(iframe).toBeInTheDocument();
+    expect(screen.getByTestId("pdf-document")).toBeInTheDocument();
+    expect(screen.getByTestId("pdf-page-1")).toBeInTheDocument();
   });
 
   it("should render text content after fetch for text mime type", async () => {
