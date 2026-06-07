@@ -140,7 +140,8 @@ Driven by FR7, FR17, FR18.
 **Decision**: Extend existing CoverLightbox into a generic FileLightbox that renders content based on MIME type:
 - `image/*` — `<img>` tag with blob URL (existing pattern)
 - `application/pdf` — canvas rendering via `react-pdf` (wrapper over pdf.js)
-- `text/plain`, `text/markdown` — `<pre>` block with text content read via `FileReader`
+- `text/plain` — `<pre>` block with text content read via `FileReader`
+- `text/markdown` — formatted rendering via `react-markdown` + `remark-gfm`, styled with Tailwind `prose` (see D13)
 
 **Rationale**: Chrome blocks PDF plugins inside sandboxed iframes ([Chromium bug #41131921](https://issues.chromium.org/issues/41131921), open since 2014). The `sandbox` attribute disables all plugins, including the built-in PDF renderer — there is no `allow-plugins` token in the spec. Removing `sandbox` is insecure: PDF files can contain JavaScript, forms, and external resource links. `react-pdf` renders PDF pages onto `<canvas>` via pdf.js — no browser plugin involved, no script execution from PDF content, works identically across all browsers including mobile (where native PDF viewers are often absent). The ~2 MB worker is lazy-loaded only when a PDF is opened. Driven by FR9, FR10, FR11.
 
@@ -231,6 +232,16 @@ db.version(N).stores({
 **Decision**: Accept as a known limitation of the sync/purge protocol. This is not specific to files — the same ghost-record problem exists for all entities (a purged task can be "resurrected" by a stale device). The file dimension adds a recoverable data loss risk (file may need re-upload), but the existing `reuploadLocalFiles` mechanism provides automatic recovery in most cases.
 
 **Mitigation**: Document this limitation. A future protocol improvement could add a "tombstone" mechanism where the server returns IDs of recently purged records so that stale devices can clean up. This is out of scope for the current change.
+
+### D13: Markdown rendering via react-markdown
+
+**Decision**: Render `text/markdown` files with formatting using `react-markdown` + `remark-gfm` plugin, styled with Tailwind `prose` classes. Extract into a separate `MarkdownPreview` component (FileLightbox.tsx already at 249 lines). Plain `text/plain` files continue to use `<pre>` block.
+
+**Rationale**: Markdown files displayed as plain text lose their primary value — structured, readable formatting. `react-markdown` is the standard React solution (~1M weekly downloads), renders to React elements (no `dangerouslySetInnerHTML`), and sanitizes by default (no raw HTML pass-through). `remark-gfm` adds GitHub Flavored Markdown support (tables, strikethrough, task lists). Tailwind `@tailwindcss/typography` plugin provides `prose` classes for consistent typographic styling without custom CSS. Driven by FR11.
+
+**Alternatives considered**:
+- `marked` + `dangerouslySetInnerHTML` — rejected: XSS risk, requires separate sanitization (DOMPurify).
+- Keep as `<pre>` — rejected: defeats the purpose of markdown files.
 
 ## Risks / Trade-offs
 

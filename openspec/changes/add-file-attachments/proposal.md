@@ -65,7 +65,7 @@ Users need to attach supporting files (images, PDFs, text documents) to tasks, g
 - FR8: Users SHALL be able to attach files to tasks, goals, and ideas.
 - FR9: Users SHALL be able to view attached images inline in a lightbox modal.
 - FR10: Users SHALL be able to view attached PDFs rendered via react-pdf (canvas-based, pdf.js) within a lightbox modal. No browser PDF plugin or iframe is used — PDF content is rendered securely on canvas without script execution.
-- FR11: Users SHALL be able to view attached plain text and markdown files in a `<pre>` block within a lightbox modal.
+- FR11: Users SHALL be able to view attached plain text files in a `<pre>` block within a lightbox modal. Markdown files (`text/markdown`) SHALL be rendered with formatting (headings, lists, links, tables, code blocks) via `react-markdown`.
 - FR12: Users SHALL be able to download attached files. Download action SHALL require confirmation dialog.
 - FR13: Users SHALL be able to delete attachments. Delete action SHALL require confirmation dialog.
 - FR14: Attachments SHALL be available offline from IndexedDB cache.

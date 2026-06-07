@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { MarkdownPreview } from "./MarkdownPreview";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -118,6 +119,10 @@ function FilePreview({ url, mimeType, filename }: FilePreviewProps) {
 
   if (mimeType === "application/pdf") {
     return <PdfPreview url={url} />;
+  }
+
+  if (mimeType === "text/markdown") {
+    return <MarkdownPreview url={url} />;
   }
 
   if (mimeType.startsWith("text/")) {

@@ -11,6 +11,12 @@ import { createRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FileLightbox } from "./FileLightbox";
 
+vi.mock("./MarkdownPreview", () => ({
+  MarkdownPreview: ({ url }: { url: string }) => (
+    <div data-testid="markdown-preview" data-url={url} />
+  ),
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string>) => {
@@ -143,6 +149,18 @@ describe("FileLightbox a11y", () => {
     });
 
     vi.unstubAllGlobals();
+  });
+
+  it("should render MarkdownPreview for text/markdown mime type", () => {
+    renderLightbox({
+      url: "blob:markdown-url",
+      mimeType: "text/markdown",
+      filename: "notes.md",
+    });
+
+    const markdownPreview = screen.getByTestId("markdown-preview");
+    expect(markdownPreview).toBeInTheDocument();
+    expect(markdownPreview).toHaveAttribute("data-url", "blob:markdown-url");
   });
 
   it("should trap focus on Tab key", () => {

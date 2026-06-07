@@ -165,16 +165,24 @@
 - [x] 16.5 Run `pnpm run build` to verify compilation
 - [x] 16.6 Manual smoke test: open PDF attachment in lightbox, verify rendering
 
-## 17. Final verification
+## 17. Markdown rendering in FileLightbox (FR11, D13)
 
-- [ ] 17.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
-- [x] 17.2 Verify no cover regression: existing goal cover functionality works after rename
-- [x] 17.3 Verify i18n completeness: all new keys present in both ru.json and en.json
-- [x] 17.4 Run `pnpm run lint:fix` — all should pass
-- [x] 17.5 Run `pnpm run preflight` — all should pass (5 pre-existing failures unrelated to this change: 1 TaskService recurring test + 4 e2e browser tests)
-- [x] 17.6 Run `pnpm run build` — verify no type errors
-- [x] 17.7 Run skill `/uncommitted-files` to save list of changed and added files
-- [x] 17.8 Run skill `/fix-uncommitted` to fix IDE highlighted issues (fixed GAS purge tests: added files count to expected response)
-- [x] 17.9 Run `pnpm run lint:fix` — all should pass (final checks)
-- [x] 17.10 Run `pnpm run preflight` — all should pass (final checks)
-- [x] 17.11 Run `pnpm run build` — verify no type errors (final checks)
+- [ ] 17.1 Install `react-markdown`, `remark-gfm`, and `@tailwindcss/typography` in `packages/client`
+- [ ] 17.2 Create `MarkdownPreview` component in `packages/client/src/components/shared/MarkdownPreview.tsx` — fetch text content, render via `react-markdown` + `remark-gfm`, style with Tailwind `prose`
+- [ ] 17.3 Update `FilePreview` in `FileLightbox.tsx` — add `text/markdown` branch before `text/*`, route to `MarkdownPreview`
+- [ ] 17.4 Add unit tests for `MarkdownPreview` (loading, error, renders formatted markdown)
+- [ ] 17.5 Verify build (`pnpm run build`) and existing FileLightbox tests pass
+
+## 18. Final verification
+
+- [ ] 18.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
+- [x] 18.2 Verify no cover regression: existing goal cover functionality works after rename
+- [x] 18.3 Verify i18n completeness: all new keys present in both ru.json and en.json
+- [x] 18.4 Run `pnpm run lint:fix` — all should pass
+- [x] 18.5 Run `pnpm run preflight` — all should pass (5 pre-existing failures unrelated to this change: 1 TaskService recurring test + 4 e2e browser tests)
+- [x] 18.6 Run `pnpm run build` — verify no type errors
+- [x] 18.7 Run skill `/uncommitted-files` to save list of changed and added files
+- [x] 18.8 Run skill `/fix-uncommitted` to fix IDE highlighted issues (fixed GAS purge tests: added files count to expected response)
+- [x] 18.9 Run `pnpm run lint:fix` — all should pass (final checks)
+- [x] 18.10 Run `pnpm run preflight` — all should pass (final checks)
+- [x] 18.11 Run `pnpm run build` — verify no type errors (final checks)
