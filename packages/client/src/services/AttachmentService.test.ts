@@ -15,6 +15,7 @@ const TEST_DATA_HASH = "abc123hash";
 function createMockAttachmentRepository(): AttachmentRepository {
   return {
     getAll: vi.fn(),
+    getById: vi.fn().mockResolvedValue(undefined),
     getByEntityTypeAndId: vi.fn().mockResolvedValue([]),
     getAllByEntityTypeAndId: vi.fn(),
     getByHash: vi.fn(),
@@ -117,14 +118,33 @@ describe("AttachmentService", () => {
     });
   });
 
-  // FR13: kills mutant 6 (deleteAttachment body removed)
+  // FR13, FR18: kills mutant 6 (deleteAttachment body removed)
   describe("deleteAttachment", () => {
-    it("delegates to repository.delete", async () => {
+    it("delegates to repository.delete and calls fileService.deleteFile", async () => {
       const attachmentId = "attachment-uuid-456";
+      const mockAttachment = {
+        id: attachmentId,
+        data_hash: "file-hash-789",
+      } as Attachment;
+      vi.mocked(mockRepository.getById).mockResolvedValue(mockAttachment);
 
       await service.deleteAttachment(attachmentId);
 
+      expect(mockRepository.getById).toHaveBeenCalledWith(attachmentId);
       expect(mockRepository.delete).toHaveBeenCalledWith(attachmentId);
+      expect(mockFileService.deleteFile).toHaveBeenCalledWith(
+        "file-hash-789",
+        "",
+      );
+    });
+
+    it("skips deleteFile when attachment not found", async () => {
+      vi.mocked(mockRepository.getById).mockResolvedValue(undefined);
+
+      await service.deleteAttachment("non-existent");
+
+      expect(mockRepository.delete).toHaveBeenCalledWith("non-existent");
+      expect(mockFileService.deleteFile).not.toHaveBeenCalled();
     });
   });
 

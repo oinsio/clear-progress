@@ -79,7 +79,7 @@ Deno.serve(
       // Check for existing file with same hash for this user
       const { data: existingFiles, error: lookupError } = await serviceClient
         .from("files")
-        .select("file_id, data_hash, ref_count")
+        .select("file_id, data_hash")
         .eq("user_id", userId)
         .eq("data_hash", body.data_hash)
         .limit(1);
@@ -96,21 +96,7 @@ Deno.serve(
         const existingFile = existingFiles[0] as {
           file_id: string;
           data_hash: string;
-          ref_count: number;
         };
-
-        const { error: updateError } = await serviceClient
-          .from("files")
-          .update({ ref_count: existingFile.ref_count + 1 })
-          .eq("file_id", existingFile.file_id);
-
-        if (updateError) {
-          return errorResponse(
-            ErrorCode.INTERNAL_ERROR,
-            updateError.message,
-            500,
-          );
-        }
 
         return okResponse({
           ok: true,
@@ -147,7 +133,6 @@ Deno.serve(
         mime_type: body.mime_type,
         data_hash: body.data_hash,
         storage_path: storagePath,
-        ref_count: 1,
       });
 
       if (insertError) {

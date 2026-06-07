@@ -1,8 +1,15 @@
-import { ERROR_MESSAGES } from "../helpers/constants";
+// implements FR17 of add-file-attachments
+import {
+  buildFolderQuery,
+  DRIVE_QUERY_FIELDS,
+  ERROR_MESSAGES,
+  PROPERTY_KEYS,
+} from "../helpers/constants";
 import { ERROR_CODES, jsonError, jsonOk } from "../helpers/response";
 import {
   deleteAttachmentsByIds,
   getAllAttachments,
+  getDataHashes,
 } from "../sheets/attachments.sheet";
 import {
   deleteCategoriesByIds,
@@ -13,7 +20,11 @@ import {
   getAllChecklistItems,
 } from "../sheets/checklists.sheet";
 import { deleteContextsByIds, getAllContexts } from "../sheets/contexts.sheet";
-import { deleteGoalsByIds, getAllGoals } from "../sheets/goals.sheet";
+import {
+  deleteGoalsByIds,
+  getAllGoals,
+  getCoverHashes,
+} from "../sheets/goals.sheet";
 import { deleteIdeasByIds, getAllIdeas } from "../sheets/ideas.sheet";
 import { readPurgeRevision, savePurgeRevision } from "../sheets/meta.sheet";
 import { deleteTasksByIds, getAllTasks } from "../sheets/tasks.sheet";
@@ -51,6 +62,8 @@ export function purge(payload: {
     const newPurgeRevision = currentPurgeRevision + 1;
     savePurgeRevision(newPurgeRevision);
 
+    const files = trashOrphanedFiles();
+
     return jsonOk({
       purged: {
         tasks,
@@ -60,10 +73,41 @@ export function purge(payload: {
         checklist_items,
         ideas,
         attachments,
+        files,
       },
       purge_revision: newPurgeRevision,
     });
   } catch (e) {
     return jsonError(ERROR_CODES.INTERNAL_ERROR, String(e));
   }
+}
+
+function trashOrphanedFiles(): number {
+  const filesFolderId = PropertiesService.getScriptProperties().getProperty(
+    PROPERTY_KEYS.FILES_FOLDER_ID,
+  );
+
+  if (!filesFolderId) return 0;
+
+  const response = Drive.Files.list({
+    q: buildFolderQuery(filesFolderId),
+    fields: DRIVE_QUERY_FIELDS.FOLDER_FILES,
+  });
+
+  const driveFiles = response.files ?? [];
+  if (driveFiles.length === 0) return 0;
+
+  const referencedHashes = new Set([...getCoverHashes(), ...getDataHashes()]);
+
+  const orphanedFiles = driveFiles.filter(
+    (file) => !referencedHashes.has(file.description ?? ""),
+  );
+
+  for (const file of orphanedFiles) {
+    if (file.id) {
+      Drive.Files.update({ trashed: true }, file.id);
+    }
+  }
+
+  return orphanedFiles.length;
 }

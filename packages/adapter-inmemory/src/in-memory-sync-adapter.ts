@@ -43,7 +43,6 @@ interface FileMetadata {
   mime_type: string;
   data: string;
   data_hash: string;
-  ref_count: number;
 }
 
 type EntityWithId =
@@ -268,7 +267,6 @@ export class InMemorySyncAdapter implements SyncAdapter {
   }): boolean {
     const existing = this.files.get(file.data_hash);
     if (existing) {
-      existing.ref_count++;
       return true;
     }
 
@@ -277,7 +275,6 @@ export class InMemorySyncAdapter implements SyncAdapter {
       mime_type: file.mime_type,
       data: file.data,
       data_hash: file.data_hash,
-      ref_count: 1,
     };
     this.files.set(file.data_hash, metadata);
     return false;
@@ -339,19 +336,36 @@ export class InMemorySyncAdapter implements SyncAdapter {
   }
 
   async deleteFile(request: DeleteFileRequest): Promise<DeleteFileResponse> {
-    const metadata = this.files.get(request.hash);
-    if (!metadata) {
-      return { ok: true, deleted: true, ref_count: 0 };
+    const goalRefs = this.countGoalReferences(request.hash);
+    const attachmentRefs = this.countAttachmentReferences(request.hash);
+    const totalRefs = goalRefs + attachmentRefs;
+
+    if (totalRefs > 0) {
+      return { ok: true, deleted: false, ref_count: totalRefs };
     }
 
-    metadata.ref_count--;
+    this.files.delete(request.hash);
+    return { ok: true, deleted: true, ref_count: 0 };
+  }
 
-    if (metadata.ref_count <= 0) {
-      this.files.delete(request.hash);
-      return { ok: true, deleted: true, ref_count: 0 };
+  private countGoalReferences(hash: string): number {
+    let count = 0;
+    for (const goal of this.goals.values()) {
+      if (goal.cover_hash === hash) {
+        count++;
+      }
     }
+    return count;
+  }
 
-    return { ok: true, deleted: false, ref_count: metadata.ref_count };
+  private countAttachmentReferences(hash: string): number {
+    let count = 0;
+    for (const attachment of this.attachments.values()) {
+      if (attachment.data_hash === hash) {
+        count++;
+      }
+    }
+    return count;
   }
 
   async purge(): Promise<PurgeResponse> {
@@ -362,9 +376,10 @@ export class InMemorySyncAdapter implements SyncAdapter {
       categories: this.purgeDeleted(this.categories),
       ideas: this.purgeDeleted(this.ideas),
       checklist_items: this.purgeDeleted(this.checklistItems),
+      attachments: this.purgeDeleted(this.attachments),
     };
 
-    this.purgeAttachmentFiles();
+    this.purgeOrphanedFiles();
 
     this.purgeRevision++;
 
@@ -388,19 +403,12 @@ export class InMemorySyncAdapter implements SyncAdapter {
     return count;
   }
 
-  private purgeAttachmentFiles(): void {
-    const deletedAttachments = Array.from(this.attachments.values()).filter(
-      (attachment) => attachment.is_deleted,
-    );
-
-    for (const attachment of deletedAttachments) {
-      this.attachments.delete(attachment.id);
-      const fileMetadata = this.files.get(attachment.data_hash);
-      if (fileMetadata) {
-        fileMetadata.ref_count--;
-        if (fileMetadata.ref_count <= 0) {
-          this.files.delete(attachment.data_hash);
-        }
+  private purgeOrphanedFiles(): void {
+    for (const [hash] of this.files.entries()) {
+      const goalRefs = this.countGoalReferences(hash);
+      const attachmentRefs = this.countAttachmentReferences(hash);
+      if (goalRefs + attachmentRefs === 0) {
+        this.files.delete(hash);
       }
     }
   }

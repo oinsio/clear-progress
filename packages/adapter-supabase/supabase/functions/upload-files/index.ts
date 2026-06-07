@@ -91,7 +91,7 @@ async function processSingleFile(
 
   const { data: existingFiles, error: lookupError } = await serviceClient
     .from("files")
-    .select("file_id, ref_count")
+    .select("file_id")
     .eq("user_id", userId)
     .eq("data_hash", item.data_hash)
     .limit(1);
@@ -106,25 +106,6 @@ async function processSingleFile(
   }
 
   if (existingFiles && existingFiles.length > 0) {
-    const existingFile = existingFiles[0] as {
-      file_id: string;
-      ref_count: number;
-    };
-
-    const { error: updateError } = await serviceClient
-      .from("files")
-      .update({ ref_count: existingFile.ref_count + 1 })
-      .eq("file_id", existingFile.file_id);
-
-    if (updateError) {
-      return {
-        local_id: item.local_id,
-        goal_id: item.goal_id,
-        ok: false,
-        error: updateError.message,
-      };
-    }
-
     return {
       local_id: item.local_id,
       goal_id: item.goal_id,
@@ -163,7 +144,6 @@ async function processSingleFile(
     mime_type: item.mime_type,
     data_hash: item.data_hash,
     storage_path: storagePath,
-    ref_count: 1,
   });
 
   if (insertError) {

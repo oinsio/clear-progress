@@ -1,5 +1,5 @@
-// implements FR7 of add-file-attachments
-// POST /delete-file — decrement ref_count; delete file+row when ref_count reaches 0
+// implements FR7, FR17 of add-file-attachments
+// POST /delete-file — dynamic reference counting; delete file+row when no references remain
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
 import { createUserClient } from "../_shared/client.ts";
@@ -31,7 +31,7 @@ Deno.serve(
       // Fetch file metadata by (user_id, data_hash)
       const { data: fileRows, error: lookupError } = await serviceClient
         .from("files")
-        .select("file_id, storage_path, ref_count")
+        .select("file_id, storage_path")
         .eq("data_hash", body.hash)
         .eq("user_id", userId)
         .limit(1);
@@ -51,33 +51,49 @@ Deno.serve(
       const fileRecord = fileRows[0] as {
         file_id: string;
         storage_path: string;
-        ref_count: number;
       };
 
-      if (fileRecord.ref_count > 1) {
-        const newRefCount = fileRecord.ref_count - 1;
+      // Dynamic reference counting: query goals.cover_hash + attachments.data_hash
+      const { count: goalRefs, error: goalCountError } = await serviceClient
+        .from("goals")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("cover_hash", body.hash);
 
-        const { error: updateError } = await serviceClient
-          .from("files")
-          .update({ ref_count: newRefCount })
-          .eq("file_id", fileRecord.file_id);
+      if (goalCountError) {
+        return errorResponse(
+          ErrorCode.INTERNAL_ERROR,
+          goalCountError.message,
+          500,
+        );
+      }
 
-        if (updateError) {
-          return errorResponse(
-            ErrorCode.INTERNAL_ERROR,
-            updateError.message,
-            500,
-          );
-        }
+      const { count: attachmentRefs, error: attachmentCountError } =
+        await serviceClient
+          .from("attachments")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .eq("data_hash", body.hash);
 
+      if (attachmentCountError) {
+        return errorResponse(
+          ErrorCode.INTERNAL_ERROR,
+          attachmentCountError.message,
+          500,
+        );
+      }
+
+      const totalRefs = (goalRefs ?? 0) + (attachmentRefs ?? 0);
+
+      if (totalRefs > 0) {
         return okResponse({
           ok: true,
           deleted: false,
-          ref_count: newRefCount,
+          ref_count: totalRefs,
         });
       }
 
-      // Last reference — delete from Storage and remove row
+      // No references remain — delete from Storage and remove row
       const userClient = createUserClient(accessToken);
       const { error: storageError } = await userClient.storage
         .from(FILES_BUCKET)

@@ -784,11 +784,11 @@ export function createFullSyncThenSteps(
     thenProgressReportsStepsInOrder: (Then: StepTest["Then"]) => {
       Then("progress reports steps in order:", () => {
         const expectedSteps: import("@/types/common").FullSyncStep[] = [
-          "reupload_covers",
-          "upload_covers",
+          "reupload_files",
+          "upload_files",
           "push",
           "pull",
-          "download_covers",
+          "download_files",
           "done",
         ];
         expect(f.context.progressSteps).toEqual(expectedSteps);

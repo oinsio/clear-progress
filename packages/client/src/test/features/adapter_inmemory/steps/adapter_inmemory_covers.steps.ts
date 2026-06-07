@@ -260,14 +260,14 @@ describeFeature(
 
     // @adapter-inmemory-spec @FR10
     f.Scenario(
-      "Delete shared cover decrements ref_count",
+      "Delete file referenced by a goal keeps the file",
       ({ Given, And, When, Then }) => {
         Given("an initialized adapter", async (_ctx: TestContext) => {
           await adapter.init();
         });
 
         And(
-          'a cover with data_hash "shared" has ref_count 2',
+          'a cover with data_hash "shared" is uploaded',
           async (_ctx: TestContext) => {
             await adapter.uploadFile({
               goal_id: "goal-1",
@@ -276,12 +276,27 @@ describeFeature(
               data: btoa("shared-image"),
               data_hash: "shared",
             });
-            await adapter.uploadFile({
-              goal_id: "goal-1",
-              filename: "shared2.jpg",
-              mime_type: "image/jpeg",
-              data: btoa("shared-image"),
-              data_hash: "shared",
+          },
+        );
+
+        And(
+          'a goal with cover_hash "shared" is pushed',
+          async (_ctx: TestContext) => {
+            await adapter.push({
+              goals: [
+                {
+                  id: crypto.randomUUID(),
+                  name: "Goal with cover",
+                  description: "",
+                  cover_hash: "shared",
+                  status: "planning",
+                  sort_order: 0,
+                  is_deleted: false,
+                  created_at: "2025-01-15T10:00:00.000Z",
+                  updated_at: "2025-01-15T10:00:00.000Z",
+                  revision: 0,
+                },
+              ],
             });
           },
         );
@@ -308,14 +323,14 @@ describeFeature(
 
     // @adapter-inmemory-spec @FR10
     f.Scenario(
-      "Delete last reference removes cover",
+      "Delete file with no entity references removes it",
       ({ Given, And, When, Then }) => {
         Given("an initialized adapter", async (_ctx: TestContext) => {
           await adapter.init();
         });
 
         And(
-          'a cover with data_hash "single" has ref_count 1',
+          'a cover with data_hash "single" is uploaded',
           async (_ctx: TestContext) => {
             await adapter.uploadFile({
               goal_id: "goal-1",

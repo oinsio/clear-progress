@@ -43,10 +43,12 @@ describeFeature(
     let mockAttachmentRepo: {
       save: ReturnType<typeof vi.fn>;
       delete: ReturnType<typeof vi.fn>;
+      getById: ReturnType<typeof vi.fn>;
       getByEntityTypeAndId: ReturnType<typeof vi.fn>;
     };
     let mockFileService: {
       uploadFile: ReturnType<typeof vi.fn>;
+      deleteFile: ReturnType<typeof vi.fn>;
     };
     let service: AttachmentService;
 
@@ -54,10 +56,12 @@ describeFeature(
       mockAttachmentRepo = {
         save: vi.fn(),
         delete: vi.fn(),
+        getById: vi.fn().mockResolvedValue(undefined),
         getByEntityTypeAndId: vi.fn().mockResolvedValue([]),
       };
       mockFileService = {
         uploadFile: vi.fn().mockResolvedValue({ data_hash: "default-hash" }),
+        deleteFile: vi.fn().mockResolvedValue(undefined),
       };
       service = new AttachmentService(
         mockAttachmentRepo as unknown as AttachmentRepository,
@@ -187,10 +191,12 @@ describeFeature(
       },
     );
 
-    // @add-file-attachments @FR13
+    // @add-file-attachments @FR13 @FR18
     f.Scenario("Delete an attachment", ({ Given, When, Then }) => {
       Given('an attachment "att-1" exists', async (_ctx: TestContext) => {
-        // No setup needed — we only verify the repository call
+        mockAttachmentRepo.getById.mockResolvedValue(
+          buildMockAttachment({ id: "att-1", data_hash: "att-1-hash" }),
+        );
       });
 
       When(

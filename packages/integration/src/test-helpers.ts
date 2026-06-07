@@ -422,6 +422,42 @@ export async function getFileFromServer(
 }
 
 /**
+ * Calls the purge Edge Function to hard-delete is_deleted=true records
+ * and clean up orphaned files.
+ * Implements FR17 of add-file-attachments.
+ */
+export async function purgeOnServer(
+  credentials: ServerCallCredentials,
+): Promise<{
+  ok: boolean;
+  purged: Record<string, number>;
+  purge_revision: number;
+}> {
+  const response = await fetch(
+    `${credentials.supabaseUrl}/functions/v1/purge`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${credentials.accessToken}`,
+        apikey: credentials.anonKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `purge failed: ${response.status} ${await response.text()}`,
+    );
+  }
+  return (await response.json()) as {
+    ok: boolean;
+    purged: Record<string, number>;
+    purge_revision: number;
+  };
+}
+
+/**
  * Returns a minimal 1x1 pixel PNG buffer (67 bytes) for cover upload tests.
  */
 export function createMinimalPng(): Buffer {

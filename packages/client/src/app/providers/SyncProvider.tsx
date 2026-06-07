@@ -196,10 +196,10 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       isSyncingRef.current = true;
       setSyncStatus("syncing");
       try {
-        onProgress("reupload_covers");
+        onProgress("reupload_files");
         await defaultFileSyncService.reuploadLocalFiles();
 
-        onProgress("upload_covers");
+        onProgress("upload_files");
         await defaultFileSyncService.sync();
 
         onProgress("push");
@@ -208,7 +208,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         onProgress("pull");
         await syncService.resetAndPull();
 
-        onProgress("download_covers");
+        onProgress("download_files");
         await defaultFileSyncService.ensureServerFilesAreCached();
 
         const syncTimestamp = toISOTimestamp();

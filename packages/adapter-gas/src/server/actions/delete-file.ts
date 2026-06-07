@@ -1,4 +1,4 @@
-// implements FR4 of content-addressable-covers, FR6 of add-file-attachments
+// implements FR4 of content-addressable-covers, FR7 of add-file-attachments
 import {
   buildFolderQuery,
   DRIVE_QUERY_FIELDS,

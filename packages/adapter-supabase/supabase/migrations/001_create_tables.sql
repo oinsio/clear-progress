@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS sync_meta (
 );
 
 -- ─── Files metadata table (FR4 of add-file-attachments) ─────────────────────
--- File data lives in Storage bucket; this table tracks metadata and ref counts
+-- File data lives in Storage bucket; this table tracks metadata
 
 CREATE TABLE IF NOT EXISTS files (
   file_id      UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -70,8 +70,7 @@ CREATE TABLE IF NOT EXISTS files (
   filename     TEXT    NOT NULL,
   mime_type    TEXT    NOT NULL,
   data_hash    TEXT    NOT NULL,
-  storage_path TEXT    NOT NULL,
-  ref_count    INTEGER NOT NULL DEFAULT 1
+  storage_path TEXT    NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_files_user_hash ON files (user_id, data_hash);
 

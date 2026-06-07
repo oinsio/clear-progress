@@ -53,9 +53,13 @@ export class AttachmentService {
     return attachment;
   }
 
-  /** Implements FR13 of add-file-attachments */
+  /** Implements FR13, FR18 of add-file-attachments */
   async deleteAttachment(attachmentId: string): Promise<void> {
+    const attachment = await this.attachmentRepository.getById(attachmentId);
     await this.attachmentRepository.delete(attachmentId);
+    if (attachment) {
+      await this.fileService.deleteFile(attachment.data_hash, "");
+    }
   }
 
   /** Implements FR5 of add-file-attachments */

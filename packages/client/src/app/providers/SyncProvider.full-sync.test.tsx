@@ -79,11 +79,11 @@ describe("SyncProvider — triggerFullSync", () => {
       steps.push(step);
     });
     expect(steps).toEqual([
-      "reupload_covers",
-      "upload_covers",
+      "reupload_files",
+      "upload_files",
       "push",
       "pull",
-      "download_covers",
+      "download_files",
       "done",
     ]);
   });
