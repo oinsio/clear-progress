@@ -21,8 +21,8 @@ Analyze the file `<absolute-path>` for issues. Do NOT make any commits.
 
 Repeat the following cycle until a clean pass (no new fixes needed), up to 3 iterations:
 
-1. Run `mcp__ide__getDiagnostics(uri: "<absolute-path>")`.
-2. If there are `error`-level diagnostics — fix them.
+1. Run `mcp__jetbrains__get_file_problems(filePath: "<relative-path-from-project-root>", projectPath: "$ARGUMENTS", errorsOnly: false)`.
+2. If there are problems (ERROR, WARNING, or WEAK WARNING) — fix them.
 3. Check for unused variables/imports — for each, grep the codebase to confirm it's truly unused. If unused, remove it. If used elsewhere, leave it.
 4. Check for code duplication within the file — extract common logic if reasonable.
 5. After fixing, re-run diagnostics and re-check for unused code and duplication. If new issues appeared (e.g., fixing duplication introduced an unused import, or fixing an error revealed more duplication) — go back to step 2 for the next iteration.
