@@ -164,3 +164,8 @@
 - [ ] 16.4 Run `pnpm run lint:fix` — all should pass
 - [ ] 16.5 Run `pnpm run preflight` — all should pass
 - [ ] 16.6 Run `pnpm run build` — verify no type errors
+- [ ] 16.7 Run skill `/uncommitted-files` to save list of changed and added files
+- [ ] 16.8 Run skill `/fix-uncommitted` to fix IDE highlighted issues
+- [ ] 16.9 Run `pnpm run lint:fix` — all should pass (final checks)
+- [ ] 16.10 Run `pnpm run preflight` — all should pass (final checks)
+- [ ] 16.11 Run `pnpm run build` — verify no type errors (final checks)
