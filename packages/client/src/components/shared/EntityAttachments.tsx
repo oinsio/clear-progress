@@ -1,0 +1,93 @@
+/** Implements UX1, UX2, UX4, FR5 of add-file-attachments */
+
+import type { EntityType } from "@clear-progress/contract";
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useSync } from "@/app/providers/SyncProvider";
+import { useAttachments } from "@/hooks/useAttachments";
+import { defaultAttachmentService } from "@/services/defaultServices";
+import type { Attachment } from "@/types/entities";
+import { AttachFileButton } from "./AttachFileButton";
+import { AttachmentList } from "./AttachmentList";
+import { ConfirmDialog } from "./ConfirmDialog";
+
+interface EntityAttachmentsProps {
+  entityType: EntityType;
+  entityId: string;
+  i18nPrefix: string;
+}
+
+/** Implements UX1, UX2, UX4, FR5 of add-file-attachments */
+export function EntityAttachments({
+  entityType,
+  entityId,
+  i18nPrefix,
+}: EntityAttachmentsProps) {
+  const { t } = useTranslation();
+  const { schedulePush } = useSync();
+  const { attachments } = useAttachments(entityType, entityId);
+  const [deletingAttachment, setDeletingAttachment] =
+    useState<Attachment | null>(null);
+
+  const handleFileSelected = useCallback(
+    async (file: File) => {
+      await defaultAttachmentService.attachFile(file, entityType, entityId);
+      schedulePush();
+    },
+    [entityType, entityId, schedulePush],
+  );
+
+  const handleDeleteRequest = useCallback(
+    (attachmentId: string) => {
+      const found = attachments.find(
+        (attachment) => attachment.id === attachmentId,
+      );
+      if (found) {
+        setDeletingAttachment(found);
+      }
+    },
+    [attachments],
+  );
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deletingAttachment) return;
+    await defaultAttachmentService.deleteAttachment(deletingAttachment.id);
+    setDeletingAttachment(null);
+    schedulePush();
+  }, [deletingAttachment, schedulePush]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeletingAttachment(null);
+  }, []);
+
+  return (
+    <>
+      {attachments.length === 0 ? (
+        <p className="text-sm text-gray-400 text-center py-4">
+          {t(`${i18nPrefix}.empty`)}
+        </p>
+      ) : (
+        <AttachmentList
+          attachments={attachments}
+          onDelete={handleDeleteRequest}
+        />
+      )}
+
+      <AttachFileButton
+        onFileSelected={handleFileSelected}
+        className={attachments.length > 0 ? "mt-3" : ""}
+      />
+
+      {deletingAttachment && (
+        <ConfirmDialog
+          title={t(`${i18nPrefix}.confirmDelete`)}
+          message={t(`${i18nPrefix}.confirmDeleteMessage`)}
+          confirmLabel={t(`${i18nPrefix}.confirmDeleteButton`)}
+          variant="danger"
+          onConfirm={() => void handleDeleteConfirm()}
+          onCancel={handleDeleteCancel}
+        />
+      )}
+    </>
+  );
+}
