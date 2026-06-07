@@ -2,6 +2,8 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { createBdd, type DataTable } from "playwright-bdd";
 
+import { createGoalViaUI as createGoalViaUIBase } from "../../../e2e/helpers/goal-helpers";
+
 type GoalStatus =
   | "planning"
   | "in_progress"
@@ -11,7 +13,6 @@ type GoalStatus =
 
 const { Given, When, Then } = createBdd();
 
-const GOAL_CREATION_TIMEOUT_MS = 5000;
 const FOCUS_TOGGLE_TIMEOUT_MS = 3000;
 const FOCUS_PANEL_TIMEOUT_MS = 5000;
 
@@ -24,15 +25,7 @@ async function createGoalViaUI(
   name: string,
   status?: GoalStatus,
 ): Promise<void> {
-  await page.goto("/goals");
-  await page.getByTestId("add-goal-button").first().click();
-  const goalInput = page.getByTestId("add-goal-input");
-  await goalInput.waitFor({ state: "visible" });
-  await goalInput.fill(name);
-  await goalInput.press("Enter");
-  await page
-    .getByText(name)
-    .waitFor({ state: "visible", timeout: GOAL_CREATION_TIMEOUT_MS });
+  await createGoalViaUIBase(page, name);
 
   if (status && status !== "planning") {
     await setGoalStatusViaUI(page, name, status);
