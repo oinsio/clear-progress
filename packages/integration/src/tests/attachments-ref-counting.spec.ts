@@ -1,10 +1,12 @@
-// implements FR7 of add-file-attachments
+// implements FR7, FR17 of add-file-attachments
 // Integration tests for file ref-counting across attachments and covers.
 // Tasks 13.5-13.6 from add-file-attachments change.
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
+  attachFileToEntity,
   createGoal,
   createTask,
+  deleteFirstAttachment,
   navigateToGoals,
   openGoalDetail,
   openTaskDetail,
@@ -13,38 +15,13 @@ import {
   createMinimalPng,
   getFileFromServer,
   pullFromServer,
+  purgeOnServer,
+  type RefCountPullResponse,
   setupSingleDeviceTest,
   triggerSyncAndWait,
 } from "../test-helpers.js";
 
 const { getPage, getCredentials } = setupSingleDeviceTest();
-
-async function deleteFirstAttachment(page: Page): Promise<void> {
-  await page.locator('[data-testid^="attachment-delete-"]').first().click();
-  const confirmButton = page.getByTestId("confirm-dialog-confirm");
-  if (await confirmButton.isVisible().catch(() => false)) {
-    await confirmButton.click();
-  }
-}
-
-interface RefCountPullResponse {
-  ok: boolean;
-  tasks: Array<{ id: string; name: string; is_deleted: boolean }>;
-  goals: Array<{
-    id: string;
-    name: string;
-    cover_hash: string;
-    is_deleted: boolean;
-  }>;
-  attachments: Array<{
-    id: string;
-    entity_type: string;
-    entity_id: string;
-    data_hash: string;
-    filename: string;
-    is_deleted: boolean;
-  }>;
-}
 
 // State shared between sequential tests
 let taskNameA: string;
@@ -52,7 +29,7 @@ let taskNameB: string;
 let sharedFileHash: string;
 
 // ---------------------------------------------------------------------------
-// 13.5 — Two attachments same hash -> delete one -> file stays -> delete second -> file removed
+// 13.5 — Two attachments same hash -> delete one -> file stays
 // ---------------------------------------------------------------------------
 test("two attachments with same file -> delete first -> file stays", async () => {
   const page = getPage();
@@ -68,34 +45,21 @@ test("two attachments with same file -> delete first -> file stays", async () =>
 
   // Attach same file to task A
   await openTaskDetail(page, taskNameA);
-  await page.getByTestId("tab-attachments").click();
-  await page.getByTestId("attach-file-input").setInputFiles({
+  await attachFileToEntity(page, {
     name: "shared-file.png",
     mimeType: "image/png",
     buffer: pngBuffer,
   });
-  await page
-    .locator('[data-testid^="attachment-item-"]')
-    .first()
-    .waitFor({ state: "visible" });
-  // Navigate back to task list
   await page.goto("/tasks");
   await page.waitForSelector('[data-testid="active-tasks-page"]');
 
   // Attach same file to task B
   await openTaskDetail(page, taskNameB);
-  await page.getByTestId("tab-attachments").click();
-  await page.getByTestId("attach-file-input").setInputFiles({
+  await attachFileToEntity(page, {
     name: "shared-file.png",
     mimeType: "image/png",
     buffer: pngBuffer,
   });
-  await page
-    .locator('[data-testid^="attachment-item-"]')
-    .first()
-    .waitFor({ state: "visible" });
-
-  // Sync both attachments
   await triggerSyncAndWait(page);
 
   // Verify both attachments share the same data_hash on server
@@ -114,7 +78,7 @@ test("two attachments with same file -> delete first -> file stays", async () =>
   await deleteFirstAttachment(page);
   await triggerSyncAndWait(page);
 
-  // File should still be accessible (task A still references it)
+  // File should still be accessible (task A active + soft-deleted B both reference it)
   const fileResponse = await getFileFromServer(getCredentials(), [
     sharedFileHash,
   ]);
@@ -124,7 +88,7 @@ test("two attachments with same file -> delete first -> file stays", async () =>
   expect(fileResponse.files[0]?.error).toBeUndefined();
 });
 
-test("delete second attachment with same hash -> file removed from server", async () => {
+test("delete second attachment -> file stays until purge removes it", async () => {
   const page = getPage();
 
   // Close current panel and open task A
@@ -136,19 +100,29 @@ test("delete second attachment with same hash -> file removed from server", asyn
   await deleteFirstAttachment(page);
   await triggerSyncAndWait(page);
 
-  // File should now return an error (no more references)
-  const fileResponse = await getFileFromServer(getCredentials(), [
+  // File should STILL exist — soft-deleted records count as references
+  const fileBeforePurge = await getFileFromServer(getCredentials(), [
     sharedFileHash,
   ]);
-  expect(fileResponse.ok).toBe(true);
-  expect(fileResponse.files).toHaveLength(1);
-  expect(fileResponse.files[0]?.error).toBeDefined();
+  expect(fileBeforePurge.ok).toBe(true);
+  expect(fileBeforePurge.files[0]?.data).toBeDefined();
+  expect(fileBeforePurge.files[0]?.error).toBeUndefined();
+
+  // Purge hard-deletes soft-deleted records and cleans up orphaned files
+  await purgeOnServer(getCredentials());
+
+  // File should now be gone (no more references after purge)
+  const fileAfterPurge = await getFileFromServer(getCredentials(), [
+    sharedFileHash,
+  ]);
+  expect(fileAfterPurge.ok).toBe(true);
+  expect(fileAfterPurge.files[0]?.error).toBeDefined();
 });
 
 // ---------------------------------------------------------------------------
 // 13.6 — Cover + attachment same hash -> ref-counting correct
 // ---------------------------------------------------------------------------
-test("cover + attachment same hash -> delete cover -> file stays -> delete attachment -> file removed", async () => {
+test("cover + attachment same hash -> delete cover -> file stays -> delete attachment -> purge removes", async () => {
   const page = getPage();
   const pngBuffer = createMinimalPng();
   const goalName = `RefCount Goal ${Date.now()}`;
@@ -186,16 +160,11 @@ test("cover + attachment same hash -> delete cover -> file stays -> delete attac
   await createTask(page, attachTaskName);
   await triggerSyncAndWait(page);
   await openTaskDetail(page, attachTaskName);
-  await page.getByTestId("tab-attachments").click();
-  await page.getByTestId("attach-file-input").setInputFiles({
+  await attachFileToEntity(page, {
     name: "shared-image.png",
     mimeType: "image/png",
     buffer: pngBuffer,
   });
-  await page
-    .locator('[data-testid^="attachment-item-"]')
-    .first()
-    .waitFor({ state: "visible" });
   await triggerSyncAndWait(page);
 
   // Delete cover from goal
@@ -223,10 +192,17 @@ test("cover + attachment same hash -> delete cover -> file stays -> delete attac
   await deleteFirstAttachment(page);
   await triggerSyncAndWait(page);
 
-  // File should now be removed (no more references)
-  const fileAfterAllDelete = await getFileFromServer(getCredentials(), [
+  // File STILL exists — soft-deleted attachment record counts as reference
+  const fileBeforePurge = await getFileFromServer(getCredentials(), [
     coverHash,
   ]);
-  expect(fileAfterAllDelete.ok).toBe(true);
-  expect(fileAfterAllDelete.files[0]?.error).toBeDefined();
+  expect(fileBeforePurge.ok).toBe(true);
+  expect(fileBeforePurge.files[0]?.data).toBeDefined();
+
+  // Purge removes the soft-deleted record and cleans up orphaned file
+  await purgeOnServer(getCredentials());
+
+  const fileAfterPurge = await getFileFromServer(getCredentials(), [coverHash]);
+  expect(fileAfterPurge.ok).toBe(true);
+  expect(fileAfterPurge.files[0]?.error).toBeDefined();
 });
