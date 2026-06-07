@@ -7,10 +7,10 @@ vi.mock("./actions/init", () => ({ init: vi.fn() }));
 vi.mock("./actions/pull", () => ({ pull: vi.fn() }));
 vi.mock("./actions/push", () => ({ push: vi.fn() }));
 vi.mock("./actions/purge", () => ({ purge: vi.fn() }));
-vi.mock("./actions/upload-cover", () => ({ uploadCover: vi.fn() }));
-vi.mock("./actions/upload-covers", () => ({ uploadCovers: vi.fn() }));
-vi.mock("./actions/delete-cover", () => ({ deleteCover: vi.fn() }));
-vi.mock("./actions/get-cover", () => ({ getCover: vi.fn() }));
+vi.mock("./actions/upload-file", () => ({ uploadFile: vi.fn() }));
+vi.mock("./actions/upload-files", () => ({ uploadFiles: vi.fn() }));
+vi.mock("./actions/delete-file", () => ({ deleteFile: vi.fn() }));
+vi.mock("./actions/get-file", () => ({ getFile: vi.fn() }));
 vi.mock("./helpers/auth", () => ({ verifyToken: vi.fn() }));
 
 import { ping } from "./actions/ping";
