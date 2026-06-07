@@ -64,7 +64,7 @@ Users need to attach supporting files (images, PDFs, text documents) to tasks, g
 - FR18: Client SHALL call `deleteFile` when removing a cover (existing behavior) and when soft-deleting an attachment (new). Soft-deleted records still count as references, so `deleteFile` will not remove the file until purge hard-deletes the record and a subsequent `deleteFile` or purge finds zero references.
 - FR8: Users SHALL be able to attach files to tasks, goals, and ideas.
 - FR9: Users SHALL be able to view attached images inline in a lightbox modal.
-- FR10: Users SHALL be able to view attached PDFs in a sandboxed iframe (`sandbox="allow-same-origin"`) within a lightbox modal.
+- FR10: Users SHALL be able to view attached PDFs rendered via react-pdf (canvas-based, pdf.js) within a lightbox modal. No browser PDF plugin or iframe is used — PDF content is rendered securely on canvas without script execution.
 - FR11: Users SHALL be able to view attached plain text and markdown files in a `<pre>` block within a lightbox modal.
 - FR12: Users SHALL be able to download attached files. Download action SHALL require confirmation dialog.
 - FR13: Users SHALL be able to delete attachments. Delete action SHALL require confirmation dialog.

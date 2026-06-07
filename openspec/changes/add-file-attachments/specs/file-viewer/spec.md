@@ -29,22 +29,27 @@ The system SHALL display attached images in a full-screen lightbox modal using a
 
 ### Requirement: PDF preview in lightbox
 
-The system SHALL display attached PDFs in the lightbox using an `<iframe>` with `sandbox="allow-same-origin"` attribute and a blob URL as source. The iframe SHALL fill the available lightbox space. Implements FR10 of add-file-attachments.
+The system SHALL display attached PDFs in the lightbox using react-pdf (canvas-based rendering via pdf.js). PDF pages are rendered onto `<canvas>` elements — no browser PDF plugin or iframe is used. The pdf.js worker SHALL be lazy-loaded only when a PDF is opened. Implements FR10 of add-file-attachments.
 
 #### Scenario: Open PDF attachment in lightbox
 
 - **WHEN** user clicks on an attached PDF file
-- **THEN** a lightbox modal opens with the PDF rendered in a sandboxed iframe
+- **THEN** a lightbox modal opens with the PDF pages rendered on canvas
 
-#### Scenario: PDF iframe is sandboxed
+#### Scenario: PDF is rendered securely via canvas
 
 - **WHEN** a PDF is displayed in the lightbox
-- **THEN** the iframe has `sandbox="allow-same-origin"` attribute (no script execution)
+- **THEN** the PDF content is rendered on `<canvas>` elements (no script execution from PDF content)
 
-#### Scenario: PDF iframe is scrollable on mobile
+#### Scenario: Multipage PDF navigation
 
-- **WHEN** a multipage PDF is displayed on a mobile viewport
-- **THEN** the iframe content is scrollable within the lightbox
+- **WHEN** a multipage PDF is displayed in the lightbox
+- **THEN** all pages are rendered and the content area is scrollable
+
+#### Scenario: PDF is viewable on mobile
+
+- **WHEN** a PDF is displayed on a mobile viewport
+- **THEN** pages are scaled to fit the viewport width and the content is scrollable vertically
 
 ### Requirement: Text preview in lightbox
 

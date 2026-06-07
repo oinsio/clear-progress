@@ -156,16 +156,25 @@
 - [x] 15.4 Update i18n keys in `en.json`, `ru.json`, `house.json`: `fullSyncStepReuploadCovers` → `fullSyncStepReuploadFiles`, etc.
 - [x] 15.5 Update tests referencing old step names/testIds
 
-## 16. Final verification
+## 16. PDF viewer — replace iframe with react-pdf (FR10)
 
-- [ ] 16.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
-- [x] 16.2 Verify no cover regression: existing goal cover functionality works after rename
-- [x] 16.3 Verify i18n completeness: all new keys present in both ru.json and en.json
-- [x] 16.4 Run `pnpm run lint:fix` — all should pass
-- [x] 16.5 Run `pnpm run preflight` — all should pass (5 pre-existing failures unrelated to this change: 1 TaskService recurring test + 4 e2e browser tests)
-- [x] 16.6 Run `pnpm run build` — verify no type errors
-- [x] 16.7 Run skill `/uncommitted-files` to save list of changed and added files
-- [x] 16.8 Run skill `/fix-uncommitted` to fix IDE highlighted issues (fixed GAS purge tests: added files count to expected response)
-- [x] 16.9 Run `pnpm run lint:fix` — all should pass (final checks)
-- [x] 16.10 Run `pnpm run preflight` — all should pass (final checks)
-- [x] 16.11 Run `pnpm run build` — verify no type errors (final checks)
+- [ ] 16.1 Install `react-pdf` dependency in `packages/client`
+- [ ] 16.2 Configure pdf.js worker for Vite (lazy-loaded)
+- [ ] 16.3 Replace iframe PDF rendering in `FileLightbox.tsx` with react-pdf `Document` + `Page` components (canvas-based)
+- [ ] 16.4 Update `FileLightbox.test.tsx` — replace iframe assertions with canvas/react-pdf assertions
+- [ ] 16.5 Run `pnpm run build` to verify compilation
+- [ ] 16.6 Manual smoke test: open PDF attachment in lightbox, verify rendering
+
+## 17. Final verification
+
+- [ ] 17.1 Mutation testing on new client code (FileService, AttachmentService, FileSyncService) — target >= 95%
+- [x] 17.2 Verify no cover regression: existing goal cover functionality works after rename
+- [x] 17.3 Verify i18n completeness: all new keys present in both ru.json and en.json
+- [x] 17.4 Run `pnpm run lint:fix` — all should pass
+- [x] 17.5 Run `pnpm run preflight` — all should pass (5 pre-existing failures unrelated to this change: 1 TaskService recurring test + 4 e2e browser tests)
+- [x] 17.6 Run `pnpm run build` — verify no type errors
+- [x] 17.7 Run skill `/uncommitted-files` to save list of changed and added files
+- [x] 17.8 Run skill `/fix-uncommitted` to fix IDE highlighted issues (fixed GAS purge tests: added files count to expected response)
+- [x] 17.9 Run `pnpm run lint:fix` — all should pass (final checks)
+- [x] 17.10 Run `pnpm run preflight` — all should pass (final checks)
+- [x] 17.11 Run `pnpm run build` — verify no type errors (final checks)

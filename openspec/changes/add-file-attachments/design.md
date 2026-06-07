@@ -139,13 +139,15 @@ Driven by FR7, FR17, FR18.
 
 **Decision**: Extend existing CoverLightbox into a generic FileLightbox that renders content based on MIME type:
 - `image/*` — `<img>` tag with blob URL (existing pattern)
-- `application/pdf` — `<iframe sandbox="allow-same-origin">` with blob URL
+- `application/pdf` — canvas rendering via `react-pdf` (wrapper over pdf.js)
 - `text/plain`, `text/markdown` — `<pre>` block with text content read via `FileReader`
 
-**Rationale**: iframe for PDF is zero-dependency and works well on desktop. If mobile rendering proves inadequate, pdf.js can be added later as a focused follow-up. Driven by FR9, FR10, FR11.
+**Rationale**: Chrome blocks PDF plugins inside sandboxed iframes ([Chromium bug #41131921](https://issues.chromium.org/issues/41131921), open since 2014). The `sandbox` attribute disables all plugins, including the built-in PDF renderer — there is no `allow-plugins` token in the spec. Removing `sandbox` is insecure: PDF files can contain JavaScript, forms, and external resource links. `react-pdf` renders PDF pages onto `<canvas>` via pdf.js — no browser plugin involved, no script execution from PDF content, works identically across all browsers including mobile (where native PDF viewers are often absent). The ~2 MB worker is lazy-loaded only when a PDF is opened. Driven by FR9, FR10, FR11.
 
 **Alternatives considered**:
-- pdf.js/react-pdf — rejected for now: ~500KB bundle size, complex pagination UI. Can be reconsidered if iframe proves insufficient on mobile.
+- `<iframe sandbox="allow-same-origin">` — rejected: Chrome blocks PDF rendering inside sandboxed iframes. No workaround exists.
+- `<iframe>` without sandbox — rejected: allows JavaScript execution from within PDF files, violates security goals (G2).
+- `<object>` / `<embed>` — rejected: no sandbox support at all, same security concerns as unsandboxed iframe. Not available on many mobile browsers.
 
 ### D7: Download with confirmation
 
@@ -232,8 +234,8 @@ db.version(N).stores({
 
 ## Risks / Trade-offs
 
-- **[Risk] PDF rendering in iframe on mobile Safari** — may show only first page or prompt download instead of inline rendering.
-  Mitigation: Start with iframe (simplest), monitor user experience. If inadequate, replace with pdf.js in a focused follow-up change.
+- **[Trade-off] react-pdf bundle size (~2 MB worker)** — adds to total app size.
+  Mitigation: Worker is lazy-loaded only when user opens a PDF attachment. Zero impact on initial load. Acceptable for the security and cross-browser benefits.
 
 - **[Risk] Base64 transport for 5 MB files** — encoded size ~6.7 MB per file, could be slow on poor connections.
   Mitigation: Acceptable for personal app with low file volume. Streaming upload would require protocol changes across all adapters.
