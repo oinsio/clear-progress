@@ -42,6 +42,14 @@ vi.mock("@/components/goals/CoverLightbox", () => ({
   ),
 }));
 
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
+
+vi.mock("@/components/shared/AttachmentList", () => ({
+  AttachmentList: () => null,
+}));
+
 // FR3, FR5: focus and show-completed toggle buttons
 describe("GoalCardViewMode — toggles", () => {
   afterEach(() => {

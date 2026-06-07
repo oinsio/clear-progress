@@ -23,8 +23,11 @@ vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/useSidebarNavigation");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
-vi.mock("@/hooks/useCoverUrl");
-vi.mock("@/hooks/useCoverPreview");
+vi.mock("@/hooks/useFileUrl");
+vi.mock("@/hooks/useFilePreview");
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
 
 vi.mock("@/hooks/useShowHidden", () => ({
   useShowHidden: () => ({
@@ -119,6 +122,15 @@ afterEach(() => {
   }
 });
 
+function setupOverflowGoal(description: string) {
+  simulateOverflow();
+  mockUseGoal.mockReturnValue(
+    buildGoalHook({
+      goal: buildGoal({ name: "Моя цель", description }),
+    }),
+  );
+}
+
 // FR3, FR4: collapsible description
 describe("GoalDetailPage — Collapsible description", () => {
   it("should not show toggle when description is short", () => {
@@ -134,41 +146,23 @@ describe("GoalDetailPage — Collapsible description", () => {
     renderPage();
 
     expect(screen.getByText("Короткое описание")).toBeInTheDocument();
-    expect(screen.queryByTestId("description-toggle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
   });
 
   it("should show toggle when description overflows", () => {
-    simulateOverflow();
-
-    mockUseGoal.mockReturnValue(
-      buildGoalHook({
-        goal: buildGoal({
-          name: "Моя цель",
-          description: "Длинное описание, которое не помещается в две строки",
-        }),
-      }),
-    );
+    setupOverflowGoal("Длинное описание, которое не помещается в две строки");
 
     renderPage();
 
-    expect(screen.getByTestId("description-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("details-toggle")).toBeInTheDocument();
   });
 
   it("should expand and collapse description", () => {
-    simulateOverflow();
-
-    mockUseGoal.mockReturnValue(
-      buildGoalHook({
-        goal: buildGoal({
-          name: "Моя цель",
-          description: "Длинное описание",
-        }),
-      }),
-    );
+    setupOverflowGoal("Длинное описание");
 
     renderPage();
 
-    const toggleButton = screen.getByTestId("description-toggle");
+    const toggleButton = screen.getByTestId("details-toggle");
     expect(toggleButton).toHaveAttribute("aria-expanded", "false");
 
     fireEvent.click(toggleButton);
@@ -193,44 +187,6 @@ describe("GoalDetailPage — Collapsible description", () => {
     renderPage();
 
     expect(screen.getByText("Моя цель")).toBeInTheDocument();
-    expect(screen.queryByTestId("description-toggle")).not.toBeInTheDocument();
-  });
-
-  it("should have correct aria-expanded=false when collapsed", () => {
-    simulateOverflow();
-
-    mockUseGoal.mockReturnValue(
-      buildGoalHook({
-        goal: buildGoal({
-          name: "Моя цель",
-          description: "Длинное описание для проверки aria",
-        }),
-      }),
-    );
-
-    renderPage();
-
-    const toggleButton = screen.getByTestId("description-toggle");
-    expect(toggleButton).toHaveAttribute("aria-expanded", "false");
-  });
-
-  it("should have correct aria-expanded=true when expanded", () => {
-    simulateOverflow();
-
-    mockUseGoal.mockReturnValue(
-      buildGoalHook({
-        goal: buildGoal({
-          name: "Моя цель",
-          description: "Длинное описание для проверки aria",
-        }),
-      }),
-    );
-
-    renderPage();
-
-    const toggleButton = screen.getByTestId("description-toggle");
-    fireEvent.click(toggleButton);
-
-    expect(toggleButton).toHaveAttribute("aria-expanded", "true");
+    expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
   });
 });

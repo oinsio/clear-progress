@@ -48,6 +48,24 @@ vi.mock("@/components/goals/CoverLightbox", () => ({
   ),
 }));
 
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
+
+vi.mock("@/components/shared/AttachmentList", () => ({
+  AttachmentList: () => null,
+}));
+
+const LONG_DESCRIPTION = "A very long description that overflows the container";
+
+function expectNoDescriptionRow() {
+  const descriptionTexts = screen.queryAllByText(/.+/);
+  const hasDescriptionRow = descriptionTexts.some(
+    (element) => element.closest("div[class*='min-w-0']") !== null,
+  );
+  expect(hasDescriptionRow).toBe(false);
+}
+
 // M1: all 6 UI states from States Matrix
 describe("GoalCardViewMode — UI States Matrix", () => {
   useOverflowSetup();
@@ -64,7 +82,7 @@ describe("GoalCardViewMode — UI States Matrix", () => {
     expect(coverCircle.tagName).toBe("DIV");
 
     expect(screen.getByText("Short text")).toBeInTheDocument();
-    expect(screen.queryByTestId("description-toggle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
   });
 
   it("State 2: has cover, short description — clickable button, full text, no toggle, 3-row", () => {
@@ -80,7 +98,7 @@ describe("GoalCardViewMode — UI States Matrix", () => {
     expect(coverCircle).toHaveAttribute("aria-label", "goal.cover.viewFull");
 
     expect(screen.getByText("Short text")).toBeInTheDocument();
-    expect(screen.queryByTestId("description-toggle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
   });
 
   it("State 3: has cover, long description — clickable button, truncated with toggle, 3-row", () => {
@@ -88,7 +106,7 @@ describe("GoalCardViewMode — UI States Matrix", () => {
 
     renderViewMode({
       goal: createGoal({
-        description: "A very long description that overflows the container",
+        description: LONG_DESCRIPTION,
       }),
       existingCoverUrl: "https://example.com/cover.jpg",
     });
@@ -97,11 +115,9 @@ describe("GoalCardViewMode — UI States Matrix", () => {
     expect(coverCircle.tagName).toBe("BUTTON");
     expect(coverCircle).toHaveAttribute("aria-label", "goal.cover.viewFull");
 
-    expect(
-      screen.getByText("A very long description that overflows the container"),
-    ).toBeInTheDocument();
-    expect(screen.getByTestId("description-toggle")).toBeInTheDocument();
-    expect(screen.getByTestId("description-toggle")).toHaveAttribute(
+    expect(screen.getByText(LONG_DESCRIPTION)).toBeInTheDocument();
+    expect(screen.getByTestId("details-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("details-toggle")).toHaveAttribute(
       "aria-expanded",
       "false",
     );
@@ -112,7 +128,7 @@ describe("GoalCardViewMode — UI States Matrix", () => {
 
     renderViewMode({
       goal: createGoal({
-        description: "A very long description that overflows the container",
+        description: LONG_DESCRIPTION,
       }),
       existingCoverUrl: null,
     });
@@ -120,11 +136,9 @@ describe("GoalCardViewMode — UI States Matrix", () => {
     const coverCircle = screen.getByTestId("cover-circle");
     expect(coverCircle.tagName).toBe("DIV");
 
-    expect(
-      screen.getByText("A very long description that overflows the container"),
-    ).toBeInTheDocument();
-    expect(screen.getByTestId("description-toggle")).toBeInTheDocument();
-    expect(screen.getByTestId("description-toggle")).toHaveAttribute(
+    expect(screen.getByText(LONG_DESCRIPTION)).toBeInTheDocument();
+    expect(screen.getByTestId("details-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("details-toggle")).toHaveAttribute(
       "aria-expanded",
       "false",
     );
@@ -139,12 +153,8 @@ describe("GoalCardViewMode — UI States Matrix", () => {
     const coverCircle = screen.getByTestId("cover-circle");
     expect(coverCircle.tagName).toBe("DIV");
 
-    expect(screen.queryByTestId("description-toggle")).not.toBeInTheDocument();
-    const descriptionTexts = screen.queryAllByText(/.+/);
-    const hasDescriptionRow = descriptionTexts.some(
-      (element) => element.closest("div[class*='min-w-0']") !== null,
-    );
-    expect(hasDescriptionRow).toBe(false);
+    expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
+    expectNoDescriptionRow();
   });
 
   it("State 6: has cover, no description — clickable button, no description row, 2-row", () => {
@@ -157,11 +167,7 @@ describe("GoalCardViewMode — UI States Matrix", () => {
     expect(coverCircle.tagName).toBe("BUTTON");
     expect(coverCircle).toHaveAttribute("aria-label", "goal.cover.viewFull");
 
-    expect(screen.queryByTestId("description-toggle")).not.toBeInTheDocument();
-    const descriptionTexts = screen.queryAllByText(/.+/);
-    const hasDescriptionRow = descriptionTexts.some(
-      (element) => element.closest("div[class*='min-w-0']") !== null,
-    );
-    expect(hasDescriptionRow).toBe(false);
+    expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
+    expectNoDescriptionRow();
   });
 });

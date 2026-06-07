@@ -21,8 +21,11 @@ vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/useSidebarNavigation");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
-vi.mock("@/hooks/useCoverUrl");
-vi.mock("@/hooks/useCoverPreview");
+vi.mock("@/hooks/useFileUrl");
+vi.mock("@/hooks/useFilePreview");
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
 
 vi.mock("@/hooks/useShowHidden", () => ({
   useShowHidden: () => ({
@@ -57,7 +60,7 @@ vi.mock("@/hooks/useHandedness", () => ({
 }));
 
 import {
-  mockUseCoverUrl,
+  mockUseFileUrl,
   renderPage,
   setupDefaultMocks,
 } from "./GoalDetailPage.test-setup";
@@ -66,11 +69,10 @@ beforeEach(() => {
   setupDefaultMocks();
 });
 
-// FR1: cover circle clickability
 describe("GoalDetailPage — Cover circle", () => {
   // FR1: cover circle clickability
   it("should render cover circle as clickable button when real cover exists", () => {
-    mockUseCoverUrl.mockReturnValue({ url: "https://example.com/cover.jpg" });
+    mockUseFileUrl.mockReturnValue({ url: "https://example.com/cover.jpg" });
 
     renderPage();
 
@@ -80,7 +82,7 @@ describe("GoalDetailPage — Cover circle", () => {
 
   // FR1: cover circle clickability
   it("should render cover circle as non-interactive div when no cover", () => {
-    mockUseCoverUrl.mockReturnValue({ url: null });
+    mockUseFileUrl.mockReturnValue({ url: null });
 
     renderPage();
 
@@ -90,7 +92,7 @@ describe("GoalDetailPage — Cover circle", () => {
 
   // FR1: cover circle clickability
   it("should open lightbox when clicking cover with real cover", () => {
-    mockUseCoverUrl.mockReturnValue({ url: "https://example.com/cover.jpg" });
+    mockUseFileUrl.mockReturnValue({ url: "https://example.com/cover.jpg" });
 
     renderPage();
 
@@ -102,7 +104,7 @@ describe("GoalDetailPage — Cover circle", () => {
 
   // FR1: cover circle clickability
   it("should show hover scale class when real cover exists", () => {
-    mockUseCoverUrl.mockReturnValue({ url: "https://example.com/cover.jpg" });
+    mockUseFileUrl.mockReturnValue({ url: "https://example.com/cover.jpg" });
 
     renderPage();
 
@@ -112,7 +114,7 @@ describe("GoalDetailPage — Cover circle", () => {
 
   // FR1: cover circle clickability
   it("should not show hover scale class when no cover", () => {
-    mockUseCoverUrl.mockReturnValue({ url: null });
+    mockUseFileUrl.mockReturnValue({ url: null });
 
     renderPage();
 

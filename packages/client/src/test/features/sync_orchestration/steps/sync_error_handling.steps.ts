@@ -72,10 +72,10 @@ describeFeature(
 
     // @sync-orchestration @error-handling
     f.Scenario(
-      "Cover sync error does not fail the sync cycle",
+      "File sync error does not fail the sync cycle",
       ({ Given, When, Then, And }) => {
         givenSteps.givenSyncProviderHasMounted(Given);
-        whenSteps.whenPushAndPullSucceedButCoverSyncThrowsError(When);
+        whenSteps.whenPushAndPullSucceedButFileSyncThrowsError(When);
         thenSteps.thenSyncStatusBecomes(Then, "idle");
         thenSteps.thenSyncVersionIsIncremented(And);
       },

@@ -22,8 +22,11 @@ vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/useSidebarNavigation");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
-vi.mock("@/hooks/useCoverUrl");
-vi.mock("@/hooks/useCoverPreview");
+vi.mock("@/hooks/useFileUrl");
+vi.mock("@/hooks/useFilePreview");
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
 
 vi.mock("@/hooks/useShowHidden", () => ({
   useShowHidden: () => ({

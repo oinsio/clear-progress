@@ -1,121 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type {
-  Box,
-  SyncAdapter,
-  WireCategory,
-  WireChecklistItem,
-  WireContext,
-  WireGoal,
-  WireIdea,
-  WireTask,
-} from "../../src";
+import type { Box, SyncAdapter } from "../../src";
 import { SYNC_ERRORS } from "../../src";
-
-function createWireTask(overrides: Partial<WireTask> = {}): WireTask {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    name: "Test task",
-    description: "",
-    box: "inbox",
-    goal_id: "",
-    context_id: "",
-    category_id: "",
-    is_completed: false,
-    completed_at: "",
-    repeat_rule: "",
-    is_hidden: false,
-    next_date: "",
-    appear_date: "",
-    original_task_id: "",
-    sort_order: 0,
-    is_deleted: false,
-    created_at: now,
-    updated_at: now,
-    revision: 0,
-    ...overrides,
-  };
-}
-
-function createWireGoal(overrides: Partial<WireGoal> = {}): WireGoal {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    name: "Test goal",
-    description: "",
-    cover_hash: "",
-    status: "planning",
-    sort_order: 0,
-    is_deleted: false,
-    created_at: now,
-    updated_at: now,
-    revision: 0,
-    ...overrides,
-  };
-}
-
-function createWireContext(overrides: Partial<WireContext> = {}): WireContext {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    name: "Test context",
-    sort_order: 0,
-    is_deleted: false,
-    created_at: now,
-    updated_at: now,
-    revision: 0,
-    ...overrides,
-  };
-}
-
-function createWireCategory(
-  overrides: Partial<WireCategory> = {},
-): WireCategory {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    name: "Test category",
-    sort_order: 0,
-    is_deleted: false,
-    created_at: now,
-    updated_at: now,
-    revision: 0,
-    ...overrides,
-  };
-}
-
-function createWireIdea(overrides: Partial<WireIdea> = {}): WireIdea {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    name: "Test idea",
-    description: "",
-    sort_order: 0,
-    is_deleted: false,
-    created_at: now,
-    updated_at: now,
-    revision: 0,
-    ...overrides,
-  };
-}
-
-function createWireChecklistItem(
-  overrides: Partial<WireChecklistItem> = {},
-): WireChecklistItem {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    task_id: crypto.randomUUID(),
-    name: "Test checklist item",
-    is_completed: false,
-    sort_order: 0,
-    is_deleted: false,
-    created_at: now,
-    updated_at: now,
-    revision: 0,
-    ...overrides,
-  };
-}
+import {
+  createWireAttachment,
+  createWireCategory,
+  createWireChecklistItem,
+  createWireContext,
+  createWireGoal,
+  createWireIdea,
+  createWireTask,
+} from "./sync-adapter.factories";
 
 export function syncAdapterContract(
   setup: () => Promise<SyncAdapter> | SyncAdapter,
@@ -172,6 +66,7 @@ export function syncAdapterContract(
         expect(response.categories).toEqual([]);
         expect(response.ideas).toEqual([]);
         expect(response.checklist_items).toEqual([]);
+        expect(response.attachments).toEqual([]);
         expect(response.settings).toEqual([]);
         expect(response.current_revision).toBe(0);
         expect(response.purge_revision).toBe(0);
@@ -478,59 +373,49 @@ export function syncAdapterContract(
       });
     });
 
-    describe("Covers", () => {
-      it("should upload cover and return data_hash", async () => {
-        await adapter.init();
-        const response = await adapter.uploadCover({
+    describe("Files", () => {
+      const uploadDefaultTestFile = () =>
+        adapter.uploadFile({
           goal_id: "goal-1",
           filename: "cover.jpg",
           mime_type: "image/jpeg",
           data: btoa("fake-image-data"),
           data_hash: "abc123",
         });
+
+      it("should upload file and return data_hash", async () => {
+        await adapter.init();
+        const response = await uploadDefaultTestFile();
         expect(response.ok).toBe(true);
         expect(response.data_hash).toBeDefined();
       });
 
-      it("should get uploaded cover", async () => {
+      it("should get uploaded file", async () => {
         await adapter.init();
-        const uploadResponse = await adapter.uploadCover({
-          goal_id: "goal-1",
-          filename: "cover.jpg",
-          mime_type: "image/jpeg",
-          data: btoa("fake-image-data"),
-          data_hash: "abc123",
-        });
+        const uploadResponse = await uploadDefaultTestFile();
 
-        const getResponse = await adapter.getCover({
+        const getResponse = await adapter.getFile({
           hashes: [uploadResponse.data_hash],
         });
         expect(getResponse.ok).toBe(true);
-        expect(getResponse.covers).toHaveLength(1);
-        expect(getResponse.covers[0]?.hash).toBe(uploadResponse.data_hash);
+        expect(getResponse.files).toHaveLength(1);
+        expect(getResponse.files[0]?.hash).toBe(uploadResponse.data_hash);
       });
 
-      it("should delete cover", async () => {
+      it("should delete file", async () => {
         await adapter.init();
-        const uploadResponse = await adapter.uploadCover({
-          goal_id: "goal-1",
-          filename: "cover.jpg",
-          mime_type: "image/jpeg",
-          data: btoa("fake-image-data"),
-          data_hash: "abc123",
-        });
+        const uploadResponse = await uploadDefaultTestFile();
 
-        const deleteResponse = await adapter.deleteCover({
+        const deleteResponse = await adapter.deleteFile({
           hash: uploadResponse.data_hash,
-          goal_id: "goal-1",
         });
         expect(deleteResponse.ok).toBe(true);
       });
 
-      it("should upload multiple covers", async () => {
+      it("should upload multiple files", async () => {
         await adapter.init();
-        const response = await adapter.uploadCovers({
-          covers: [
+        const response = await adapter.uploadFiles({
+          files: [
             {
               local_id: "local-1",
               goal_id: "goal-1",
@@ -560,7 +445,7 @@ export function syncAdapterContract(
         const imageData = btoa("unique-image-data");
         const hash = "same-hash-123";
 
-        const upload1 = await adapter.uploadCover({
+        const upload1 = await adapter.uploadFile({
           goal_id: "goal-1",
           filename: "cover1.jpg",
           mime_type: "image/jpeg",
@@ -569,7 +454,7 @@ export function syncAdapterContract(
         });
         expect(upload1.reused).toBeFalsy();
 
-        const upload2 = await adapter.uploadCover({
+        const upload2 = await adapter.uploadFile({
           goal_id: "goal-2",
           filename: "cover2.jpg",
           mime_type: "image/jpeg",
@@ -580,12 +465,12 @@ export function syncAdapterContract(
         expect(upload2.data_hash).toBe(upload1.data_hash);
       });
 
-      // FR9: Partial batch failure (1 of N covers fails)
+      // FR9: Partial batch failure (1 of N files fails)
       it("should handle partial batch failure", async () => {
         await adapter.init();
 
-        const response = await adapter.uploadCovers({
-          covers: [
+        const response = await adapter.uploadFiles({
+          files: [
             {
               local_id: "local-1",
               goal_id: "goal-1",
@@ -597,9 +482,9 @@ export function syncAdapterContract(
             {
               local_id: "local-2",
               goal_id: "goal-2",
-              filename: "invalid.txt",
-              mime_type: "text/plain",
-              data: btoa("not-an-image"),
+              filename: "invalid.bin",
+              mime_type: "application/octet-stream",
+              data: btoa("not-a-valid-file"),
               data_hash: "hash2",
             },
           ],
@@ -615,74 +500,67 @@ export function syncAdapterContract(
       it("should reject batch with more than 10 items", async () => {
         await adapter.init();
 
-        const covers = Array.from({ length: 11 }, (_, i) => ({
+        const files = Array.from({ length: 11 }, (_, i) => ({
           local_id: `local-${i}`,
           goal_id: `goal-${i}`,
-          filename: `cover${i}.jpg`,
+          filename: `file${i}.jpg`,
           mime_type: "image/jpeg",
           data: btoa(`image-${i}`),
           data_hash: `hash-${i}`,
         }));
 
-        const response = await adapter.uploadCovers({ covers });
+        const response = await adapter.uploadFiles({ files });
         expect(response.ok).toBe(false);
       });
 
-      // FR10: Missing cover returns error per item
-      it("should return error for missing cover file", async () => {
+      // FR10: Missing file returns error per item
+      it("should return error for missing file", async () => {
         await adapter.init();
 
-        const response = await adapter.getCover({
+        const response = await adapter.getFile({
           hashes: ["non-existent-hash"],
         });
 
         expect(response.ok).toBe(true);
-        expect(response.covers).toHaveLength(1);
-        expect(response.covers[0]?.error).toBeDefined();
+        expect(response.files).toHaveLength(1);
+        expect(response.files[0]?.error).toBeDefined();
       });
 
-      // FR11: Reference counting — shared cover not deleted, ref_count decremented
-      it("should decrement ref_count but not delete shared cover", async () => {
+      // FR11: Dynamic reference counting — goal cover_hash keeps file alive
+      it("should not delete file when goal references it via cover_hash", async () => {
         await adapter.init();
 
-        const uploadResponse = await adapter.uploadCover({
+        const fileHash = "goal-cover-hash";
+
+        await adapter.uploadFile({
           goal_id: "goal-1",
-          filename: "shared.jpg",
+          filename: "cover.jpg",
           mime_type: "image/jpeg",
-          data: btoa("shared-image"),
-          data_hash: "shared-hash",
+          data: btoa("cover-image"),
+          data_hash: fileHash,
         });
 
-        // Simulate second goal using same cover (via dedup)
-        await adapter.uploadCover({
-          goal_id: "goal-2",
-          filename: "shared2.jpg",
-          mime_type: "image/jpeg",
-          data: btoa("shared-image"),
-          data_hash: "shared-hash",
-        });
+        // Push a goal that references the file via cover_hash
+        const goal = createWireGoal({ cover_hash: fileHash });
+        await adapter.push({ goals: [goal] });
 
-        const deleteResponse = await adapter.deleteCover({
-          hash: uploadResponse.data_hash,
-          goal_id: "goal-1",
-        });
+        const deleteResponse = await adapter.deleteFile({ hash: fileHash });
 
         expect(deleteResponse.ok).toBe(true);
         expect(deleteResponse.deleted).toBe(false);
-        expect(deleteResponse.ref_count).toBeGreaterThan(0);
+        expect(deleteResponse.ref_count).toBe(1);
 
-        // Cover should still be accessible
-        const getResponse = await adapter.getCover({
-          hashes: [uploadResponse.data_hash],
-        });
-        expect(getResponse.covers[0]?.hash).toBe(uploadResponse.data_hash);
-        expect(getResponse.covers[0]?.error).toBeUndefined();
+        // File should still be accessible
+        const getResponse = await adapter.getFile({ hashes: [fileHash] });
+        expect(getResponse.files[0]?.hash).toBe(fileHash);
+        expect(getResponse.files[0]?.error).toBeUndefined();
       });
 
-      it("should delete cover when ref_count reaches 0", async () => {
+      // FR11: Dynamic reference counting — no references means file is deleted
+      it("should delete file when no entity references it", async () => {
         await adapter.init();
 
-        const uploadResponse = await adapter.uploadCover({
+        const uploadResponse = await adapter.uploadFile({
           goal_id: "goal-1",
           filename: "single.jpg",
           mime_type: "image/jpeg",
@@ -690,14 +568,163 @@ export function syncAdapterContract(
           data_hash: "single-hash",
         });
 
-        const deleteResponse = await adapter.deleteCover({
+        const deleteResponse = await adapter.deleteFile({
           hash: uploadResponse.data_hash,
-          goal_id: "goal-1",
         });
 
         expect(deleteResponse.ok).toBe(true);
         expect(deleteResponse.deleted).toBe(true);
         expect(deleteResponse.ref_count).toBe(0);
+      });
+
+      // FR11: Cross-entity ref-counting — attachment data_hash keeps file alive
+      it("should not delete file when attachment references it via data_hash", async () => {
+        await adapter.init();
+
+        const sharedHash = "attachment-ref-hash";
+
+        await adapter.uploadFile({
+          goal_id: "goal-1",
+          filename: "shared.jpg",
+          mime_type: "image/jpeg",
+          data: btoa("shared-image"),
+          data_hash: sharedHash,
+        });
+
+        // Push an attachment that references the file via data_hash
+        const attachment = createWireAttachment({ data_hash: sharedHash });
+        await adapter.push({ attachments: [attachment] });
+
+        const deleteResponse = await adapter.deleteFile({ hash: sharedHash });
+        expect(deleteResponse.ok).toBe(true);
+        expect(deleteResponse.deleted).toBe(false);
+        expect(deleteResponse.ref_count).toBeGreaterThanOrEqual(1);
+
+        // File should still be accessible
+        const getResponse = await adapter.getFile({ hashes: [sharedHash] });
+        expect(getResponse.files[0]?.hash).toBe(sharedHash);
+        expect(getResponse.files[0]?.error).toBeUndefined();
+      });
+
+      // FR11: Idempotent deleteFile — multiple calls return same result
+      it("should be idempotent — calling deleteFile twice returns same result when references exist", async () => {
+        await adapter.init();
+
+        const fileHash = "idempotent-hash";
+
+        await adapter.uploadFile({
+          goal_id: "goal-1",
+          filename: "cover.jpg",
+          mime_type: "image/jpeg",
+          data: btoa("cover-image"),
+          data_hash: fileHash,
+        });
+
+        // Push a goal that references the file
+        const goal = createWireGoal({ cover_hash: fileHash });
+        await adapter.push({ goals: [goal] });
+
+        const firstDeleteResponse = await adapter.deleteFile({
+          hash: fileHash,
+        });
+        const secondDeleteResponse = await adapter.deleteFile({
+          hash: fileHash,
+        });
+
+        expect(firstDeleteResponse.ok).toBe(true);
+        expect(secondDeleteResponse.ok).toBe(true);
+        expect(firstDeleteResponse.deleted).toBe(false);
+        expect(secondDeleteResponse.deleted).toBe(false);
+        expect(firstDeleteResponse.ref_count).toBe(
+          secondDeleteResponse.ref_count,
+        );
+      });
+    });
+
+    // FR6: Attachment push/pull contract tests
+    describe("Attachments", () => {
+      it("should push and pull attachments", async () => {
+        await adapter.init();
+        const attachment = createWireAttachment();
+        await adapter.push({ attachments: [attachment] });
+
+        const pullResponse = await adapter.pull({ since_revision: 0 });
+        expect(pullResponse.attachments).toHaveLength(1);
+        expect(pullResponse.attachments[0]?.id).toBe(attachment.id);
+      });
+
+      it("should filter attachments by revision in pull", async () => {
+        await adapter.init();
+        const firstAttachment = createWireAttachment();
+        const firstPush = await adapter.push({
+          attachments: [firstAttachment],
+        });
+        const firstRevision = firstPush.revision ?? 0;
+
+        const secondAttachment = createWireAttachment();
+        await adapter.push({ attachments: [secondAttachment] });
+
+        const response = await adapter.pull({
+          since_revision: firstRevision,
+        });
+        expect(response.attachments).toHaveLength(1);
+        expect(response.attachments[0]?.id).toBe(secondAttachment.id);
+      });
+
+      it("should return push results for attachments", async () => {
+        await adapter.init();
+        const attachment = createWireAttachment();
+        const response = await adapter.push({ attachments: [attachment] });
+        expect(response.results.attachments?.[0]?.status).toBe("created");
+      });
+
+      it("should detect conflict for attachment with stale timestamp", async () => {
+        await adapter.init();
+
+        const attachment = createWireAttachment({
+          updated_at: "2026-01-01T00:00:00.000Z",
+        });
+        await adapter.push({ attachments: [attachment] });
+
+        const serverUpdate = {
+          ...attachment,
+          updated_at: "2026-01-02T00:00:00.000Z",
+        };
+        await adapter.push({ attachments: [serverUpdate] });
+
+        const staleUpdate = {
+          ...attachment,
+          updated_at: "2026-01-01T12:00:00.000Z",
+        };
+        const response = await adapter.push({ attachments: [staleUpdate] });
+
+        expect(response.results.attachments?.[0]?.status).toBe("conflict");
+        expect(response.results.attachments?.[0]?.server_record).toBeDefined();
+      });
+
+      it("should soft-delete attachment via push", async () => {
+        await adapter.init();
+
+        const attachment = createWireAttachment({
+          updated_at: "2026-01-01T00:00:00.000Z",
+        });
+        await adapter.push({ attachments: [attachment] });
+
+        const deletedAttachment = {
+          ...attachment,
+          is_deleted: true,
+          updated_at: "2026-01-02T00:00:00.000Z",
+        };
+        const response = await adapter.push({
+          attachments: [deletedAttachment],
+        });
+        expect(response.results.attachments?.[0]?.status).toBe("accepted");
+
+        const pullResponse = await adapter.pull({ since_revision: 0 });
+        const pulled = pullResponse.attachments.find(
+          (a) => a.id === attachment.id,
+        );
+        expect(pulled?.is_deleted).toBe(true);
       });
     });
 
@@ -792,6 +819,98 @@ export function syncAdapterContract(
 
         const secondPurge = await adapter.purge();
         expect(secondPurge.purge_revision).toBe(2);
+      });
+
+      // FR10: Purge cleans up orphaned files
+      it("should clean up orphaned files after purging attachment records", async () => {
+        await adapter.init();
+
+        const orphanHash = "orphan-hash";
+
+        await adapter.uploadFile({
+          goal_id: "any-id",
+          filename: "test.jpg",
+          mime_type: "image/jpeg",
+          data: btoa("test-data"),
+          data_hash: orphanHash,
+        });
+
+        const attachment = createWireAttachment({
+          data_hash: orphanHash,
+          is_deleted: true,
+        });
+        await adapter.push({ attachments: [attachment] });
+
+        await adapter.purge();
+
+        const getResponse = await adapter.getFile({ hashes: [orphanHash] });
+        expect(getResponse.files[0]?.error).toBeDefined();
+      });
+
+      // FR10: Purge preserves files still referenced by active records
+      it("should NOT clean up files still referenced by active records after purge", async () => {
+        await adapter.init();
+
+        const stillUsedHash = "still-used-hash";
+
+        await adapter.uploadFile({
+          goal_id: "any-id",
+          filename: "test.jpg",
+          mime_type: "image/jpeg",
+          data: btoa("test-data"),
+          data_hash: stillUsedHash,
+        });
+
+        const goal = createWireGoal({ cover_hash: stillUsedHash });
+        await adapter.push({ goals: [goal] });
+
+        const attachment = createWireAttachment({
+          data_hash: stillUsedHash,
+          is_deleted: true,
+        });
+        await adapter.push({ attachments: [attachment] });
+
+        await adapter.purge();
+
+        const getResponse = await adapter.getFile({
+          hashes: [stillUsedHash],
+        });
+        expect(getResponse.ok).toBe(true);
+        expect(getResponse.files[0]?.error).toBeUndefined();
+      });
+
+      // FR10: File cleaned up only when all references are purged
+      it("should clean up file only after all referencing records are purged", async () => {
+        await adapter.init();
+
+        const multiRefHash = "multi-ref-hash";
+
+        await adapter.uploadFile({
+          goal_id: "any-id",
+          filename: "test.jpg",
+          mime_type: "image/jpeg",
+          data: btoa("test-data"),
+          data_hash: multiRefHash,
+        });
+
+        const attachment1 = createWireAttachment({
+          data_hash: multiRefHash,
+          is_deleted: true,
+        });
+        const attachment2 = createWireAttachment({
+          data_hash: multiRefHash,
+          is_deleted: true,
+        });
+        await adapter.push({
+          attachments: [attachment1, attachment2],
+        });
+
+        await adapter.purge();
+
+        const getResponse = await adapter.getFile({
+          hashes: [multiRefHash],
+        });
+        expect(getResponse.files[0]?.error).toBeDefined();
       });
     });
   });
