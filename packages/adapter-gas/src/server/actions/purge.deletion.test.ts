@@ -11,6 +11,7 @@ vi.mock("../sheets/contexts.sheet");
 vi.mock("../sheets/categories.sheet");
 vi.mock("../sheets/checklists.sheet");
 vi.mock("../sheets/ideas.sheet");
+vi.mock("../sheets/attachments.sheet");
 vi.mock("../sheets/meta.sheet");
 
 import { purge } from "./purge";
@@ -177,6 +178,7 @@ describe("purge — deletion", () => {
       categories: ["category1"],
       checklistItems: ["checklist1"],
       ideas: ["idea1"],
+      attachments: ["attachment1"],
     });
     expect(response.purged).toEqual({
       tasks: 1,
@@ -185,6 +187,7 @@ describe("purge — deletion", () => {
       categories: 1,
       checklist_items: 1,
       ideas: 1,
+      attachments: 1,
     });
   });
 });

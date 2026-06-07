@@ -7,20 +7,20 @@ vi.mock("./actions/init", () => ({ init: vi.fn() }));
 vi.mock("./actions/pull", () => ({ pull: vi.fn() }));
 vi.mock("./actions/push", () => ({ push: vi.fn() }));
 vi.mock("./actions/purge", () => ({ purge: vi.fn() }));
-vi.mock("./actions/upload-cover", () => ({ uploadCover: vi.fn() }));
-vi.mock("./actions/upload-covers", () => ({ uploadCovers: vi.fn() }));
-vi.mock("./actions/delete-cover", () => ({ deleteCover: vi.fn() }));
-vi.mock("./actions/get-cover", () => ({ getCover: vi.fn() }));
+vi.mock("./actions/upload-file", () => ({ uploadFile: vi.fn() }));
+vi.mock("./actions/upload-files", () => ({ uploadFiles: vi.fn() }));
+vi.mock("./actions/delete-file", () => ({ deleteFile: vi.fn() }));
+vi.mock("./actions/get-file", () => ({ getFile: vi.fn() }));
 vi.mock("./helpers/auth", () => ({ verifyToken: vi.fn() }));
 
-import { deleteCover } from "./actions/delete-cover";
-import { getCover } from "./actions/get-cover";
+import { deleteFile } from "./actions/delete-file";
+import { getFile } from "./actions/get-file";
 import { init } from "./actions/init";
 import { pull } from "./actions/pull";
 import { purge } from "./actions/purge";
 import { push } from "./actions/push";
-import { uploadCover } from "./actions/upload-cover";
-import { uploadCovers } from "./actions/upload-covers";
+import { uploadFile } from "./actions/upload-file";
+import { uploadFiles } from "./actions/upload-files";
 import { verifyToken } from "./helpers/auth";
 
 import "./main";
@@ -81,8 +81,8 @@ describe("doPost — action routing", () => {
     expect(push).toHaveBeenCalledWith({ changes });
   });
 
-  it("should call uploadCover() with payload fields (excluding action and access_token)", () => {
-    const coverPayload = {
+  it("should call uploadFile() with payload fields (excluding action and access_token)", () => {
+    const filePayload = {
       goal_id: "goal-1",
       filename: "cover.jpg",
       mime_type: "image/jpeg",
@@ -91,28 +91,28 @@ describe("doPost — action routing", () => {
 
     globals.doPost?.(
       makeAuthenticatedPostEvent({
-        action: ACTIONS.UPLOAD_COVER,
-        ...coverPayload,
+        action: ACTIONS.UPLOAD_FILE,
+        ...filePayload,
       }),
     );
 
-    expect(uploadCover).toHaveBeenCalledWith(coverPayload);
+    expect(uploadFile).toHaveBeenCalledWith(filePayload);
   });
 
-  it("should call deleteCover() with payload fields (excluding action and access_token)", () => {
+  it("should call deleteFile() with payload fields (excluding action and access_token)", () => {
     globals.doPost?.(
       makeAuthenticatedPostEvent({
-        action: ACTIONS.DELETE_COVER,
+        action: ACTIONS.DELETE_FILE,
         hash: "hash-abc",
       }),
     );
 
-    expect(deleteCover).toHaveBeenCalledWith({ hash: "hash-abc" });
+    expect(deleteFile).toHaveBeenCalledWith({ hash: "hash-abc" });
   });
 
-  it("should call uploadCovers() with payload fields (excluding action and access_token)", () => {
-    const coversPayload = {
-      covers: [
+  it("should call uploadFiles() with payload fields (excluding action and access_token)", () => {
+    const filesPayload = {
+      files: [
         {
           goal_id: "g-1",
           filename: "a.jpg",
@@ -124,42 +124,42 @@ describe("doPost — action routing", () => {
 
     globals.doPost?.(
       makeAuthenticatedPostEvent({
-        action: ACTIONS.UPLOAD_COVERS,
-        ...coversPayload,
+        action: ACTIONS.UPLOAD_FILES,
+        ...filesPayload,
       }),
     );
 
-    expect(uploadCovers).toHaveBeenCalledWith(coversPayload);
+    expect(uploadFiles).toHaveBeenCalledWith(filesPayload);
   });
 
-  it("should return the result of uploadCovers()", () => {
+  it("should return the result of uploadFiles()", () => {
     const mockOutput = { setMimeType: vi.fn().mockReturnThis() };
-    vi.mocked(uploadCovers).mockReturnValue(mockOutput as never);
+    vi.mocked(uploadFiles).mockReturnValue(mockOutput as never);
 
     const result = globals.doPost?.(
-      makeAuthenticatedPostEvent({ action: ACTIONS.UPLOAD_COVERS }),
+      makeAuthenticatedPostEvent({ action: ACTIONS.UPLOAD_FILES }),
     );
 
     expect(result).toBe(mockOutput);
   });
 
-  it("should call getCover() with payload fields (excluding action and access_token)", () => {
+  it("should call getFile() with payload fields (excluding action and access_token)", () => {
     globals.doPost?.(
       makeAuthenticatedPostEvent({
-        action: ACTIONS.GET_COVER,
+        action: ACTIONS.GET_FILE,
         hashes: ["hash-1"],
       }),
     );
 
-    expect(getCover).toHaveBeenCalledWith({ hashes: ["hash-1"] });
+    expect(getFile).toHaveBeenCalledWith({ hashes: ["hash-1"] });
   });
 
-  it("should return the result of getCover()", () => {
+  it("should return the result of getFile()", () => {
     const mockOutput = { setMimeType: vi.fn().mockReturnThis() };
-    vi.mocked(getCover).mockReturnValue(mockOutput as never);
+    vi.mocked(getFile).mockReturnValue(mockOutput as never);
 
     const result = globals.doPost?.(
-      makeAuthenticatedPostEvent({ action: ACTIONS.GET_COVER }),
+      makeAuthenticatedPostEvent({ action: ACTIONS.GET_FILE }),
     );
 
     expect(result).toBe(mockOutput);

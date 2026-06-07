@@ -21,6 +21,7 @@ vi.mock("../sheets/contexts.sheet");
 vi.mock("../sheets/categories.sheet");
 vi.mock("../sheets/checklists.sheet");
 vi.mock("../sheets/ideas.sheet");
+vi.mock("../sheets/attachments.sheet");
 vi.mock("../sheets/settings.sheet");
 vi.mock("../sheets/meta.sheet");
 
@@ -85,6 +86,7 @@ describe("pull — response structure matches PullResponse contract", () => {
       categories: [],
       checklist_items: [],
       ideas: [],
+      attachments: [],
       settings: [mockSetting],
       current_revision: 5,
       purge_revision: 2,
@@ -109,6 +111,7 @@ describe("pull — response structure matches PullResponse contract", () => {
       categories: [],
       checklist_items: [],
       ideas: [],
+      attachments: [],
       settings: [],
       current_revision: 0,
       purge_revision: 0,

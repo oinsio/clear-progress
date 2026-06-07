@@ -10,6 +10,7 @@ vi.mock("../sheets/contexts.sheet");
 vi.mock("../sheets/categories.sheet");
 vi.mock("../sheets/checklists.sheet");
 vi.mock("../sheets/ideas.sheet");
+vi.mock("../sheets/attachments.sheet");
 vi.mock("../sheets/meta.sheet");
 
 import { purge } from "./purge";
@@ -61,6 +62,7 @@ describe("purge — validation", () => {
       categories: 0,
       checklist_items: 0,
       ideas: 0,
+      attachments: 0,
     });
   });
 });
