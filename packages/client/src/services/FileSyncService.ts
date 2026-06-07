@@ -37,15 +37,13 @@ export class FileSyncService {
 
     for (const file of files) {
       if (file.data && !localFileCache.get(file.data_hash)) {
-        const url = URL.createObjectURL(file.data);
-        localFileCache.set(file.data_hash, url);
+        this.populateLocalCache(file.data_hash, file.data);
       }
     }
 
     for (const pendingFile of pendingFiles) {
       if (!localFileCache.get(pendingFile.data_hash)) {
-        const url = URL.createObjectURL(pendingFile.data);
-        localFileCache.set(pendingFile.data_hash, url);
+        this.populateLocalCache(pendingFile.data_hash, pendingFile.data);
       }
     }
   }
@@ -89,6 +87,8 @@ export class FileSyncService {
         await this.handleSuccessfulUpload(pendingFile, result.reused ?? false);
       }
     }
+
+    await this.deleteOrphanedFiles();
   }
 
   async fullSync(): Promise<void> {
@@ -162,6 +162,11 @@ export class FileSyncService {
         });
       }
     }
+  }
+
+  private populateLocalCache(hash: string, data: Blob): void {
+    const url = URL.createObjectURL(data);
+    localFileCache.set(hash, url);
   }
 
   private readonly inFlightCaches = new Map<string, Promise<void>>();
@@ -291,6 +296,36 @@ export class FileSyncService {
           chunk,
           error,
         );
+      }
+    }
+  }
+
+  /**
+   * Deletes files from the server that are no longer referenced by any
+   * active goal cover or active attachment. Called after push so the server
+   * has up-to-date entity state for accurate ref counting.
+   *
+   * Implements FR7 of add-file-attachments
+   */
+  private async deleteOrphanedFiles(): Promise<void> {
+    const [allFiles, activeHashes] = await Promise.all([
+      this.fileRepository.getAll(),
+      this.collectActiveFileHashes(),
+    ]);
+
+    for (const file of allFiles) {
+      if (activeHashes.has(file.data_hash)) continue;
+
+      try {
+        const response = await this.syncAdapter.deleteFile({
+          hash: file.data_hash,
+        });
+        if (response.deleted) {
+          await this.fileRepository.delete(file.data_hash);
+          localFileCache.delete(file.data_hash);
+        }
+      } catch {
+        // Best-effort: will retry on next sync cycle
       }
     }
   }

@@ -4,13 +4,15 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { InitResponse } from "@clear-progress/contract";
 import { expect, type TestContext, vi } from "vitest";
 import { GasSyncAdapter } from "../../../../client";
+import {
+  createValidInitResponse,
+  extractFetchOptions,
+  type FeatureContext,
+  GAS_URL,
+  VALID_TOKEN,
+} from "./gas-adapter-test-utils";
 
 const feature = await loadFeature("../gas_adapter_timeout.feature");
-
-type FeatureContext = Record<string, never>;
-
-const GAS_URL = "https://script.google.com/macros/s/test/exec";
-const VALID_TOKEN = "valid-test-token";
 
 describeFeature(
   feature,
@@ -34,12 +36,7 @@ describeFeature(
       "Request completes within timeout normally",
       ({ Given, When, Then, And }) => {
         Given("the server responds quickly with a valid init response", () => {
-          mockFetch.mockResolvedValue(
-            new Response(JSON.stringify({ ok: true }), {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            }),
-          );
+          mockFetch.mockResolvedValue(createValidInitResponse());
         });
 
         When(
@@ -67,12 +64,7 @@ describeFeature(
       When(
         "adapter calls init with timeout tracking",
         async (_ctx: TestContext) => {
-          mockFetch.mockResolvedValue(
-            new Response(JSON.stringify({ ok: true }), {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            }),
-          );
+          mockFetch.mockResolvedValue(createValidInitResponse());
           await adapter.init();
         },
       );
@@ -80,11 +72,9 @@ describeFeature(
       Then(
         "the fetch request includes an AbortSignal",
         async (_ctx: TestContext) => {
-          const [, fetchOptions] = mockFetch.mock.calls[0] as [
-            string,
-            RequestInit,
-          ];
-          expect(fetchOptions.signal).toBeInstanceOf(AbortSignal);
+          expect(extractFetchOptions(mockFetch).signal).toBeInstanceOf(
+            AbortSignal,
+          );
         },
       );
     });

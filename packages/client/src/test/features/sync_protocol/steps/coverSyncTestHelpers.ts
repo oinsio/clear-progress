@@ -1,185 +1,102 @@
-// Shared test helpers for cover sync BDD scenarios
+// Shared test helpers for file sync BDD scenarios
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
 import { vi } from "vitest";
-import type { CoverRepository } from "@/db/repositories/CoverRepository";
+import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
+import type { FileRepository } from "@/db/repositories/FileRepository";
 import type { GoalRepository } from "@/db/repositories/GoalRepository";
-import type { PendingCoverRepository } from "@/db/repositories/PendingCoverRepository";
-import { CoverSyncService } from "@/services/CoverSyncService";
-import { localCoverCache } from "@/services/LocalCoverCache";
+import type { PendingFileRepository } from "@/db/repositories/PendingFileRepository";
+import { FileSyncService } from "@/services/FileSyncService";
+import {
+  createGoalWithFile,
+  createMockGetFilesNotFound,
+  createMockGetFilesSuccess,
+  createPendingFile,
+  MOCK_BASE64,
+  MOCK_MIME_TYPE,
+} from "@/services/FileSyncService-test-utils";
+import { localFileCache } from "@/services/LocalFileCache";
 import { createMockSyncAdapter } from "@/services/SyncService.test-helpers";
-import type { PendingCoverRecord } from "@/types/entities";
-import { toISOTimestamp } from "@/utils/dateHelpers";
+import { createMockAttachmentRepository } from "@/test/mocks/attachmentRepositoryMock";
+import { createMockFileRepository } from "@/test/mocks/fileRepositoryMock";
+import { createMockGoalRepository } from "@/test/mocks/goalRepositoryMock";
+import { createMockPendingFileRepository } from "@/test/mocks/pendingFileRepositoryMock";
 
-export { createMockSyncAdapter };
+export {
+  createMockFileRepository,
+  createMockGetFilesNotFound,
+  createMockGetFilesSuccess,
+  createMockGoalRepository,
+  createMockPendingFileRepository,
+  createMockSyncAdapter,
+  createPendingFile,
+  MOCK_BASE64,
+  MOCK_MIME_TYPE,
+};
 
-// jsdom does not implement Blob.prototype.arrayBuffer — polyfill for tests
-if (!Blob.prototype.arrayBuffer) {
-  Object.defineProperty(Blob.prototype, "arrayBuffer", {
-    value() {
-      return Promise.resolve(
-        new TextEncoder().encode("fake image content").buffer as ArrayBuffer,
-      );
-    },
-    configurable: true,
-    writable: true,
-  });
-}
-
-export const MOCK_BASE64 = btoa("fake image content");
-export const MOCK_MIME_TYPE = "image/jpeg";
-
-export function createMockPendingCoverRepository(
-  overrides: Partial<Record<keyof PendingCoverRepository, unknown>> = {},
-): PendingCoverRepository {
-  return {
-    getAll: vi.fn().mockResolvedValue([]),
-    getByHash: vi.fn().mockResolvedValue(undefined),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  } as PendingCoverRepository;
-}
-
-export function createMockCoverRepository(
-  overrides: Partial<Record<keyof CoverRepository, unknown>> = {},
-): CoverRepository {
-  return {
-    getAll: vi.fn().mockResolvedValue([]),
-    getByHash: vi.fn().mockResolvedValue(undefined),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  } as CoverRepository;
-}
-
-export function createMockGoalRepository(
-  overrides: Partial<Record<keyof GoalRepository, unknown>> = {},
-): GoalRepository {
-  return {
-    getById: vi.fn().mockResolvedValue(undefined),
-    getActive: vi.fn().mockResolvedValue([]),
-    update: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  } as unknown as GoalRepository;
-}
-
+/** Thin wrapper over createGoalWithFile accepting a single overrides object. */
 export function createGoal(overrides: Record<string, unknown> = {}) {
-  return {
-    id: "goal-1",
-    name: "Test Goal",
-    description: "",
-    cover_hash: "",
-    status: "in_progress" as const,
-    sort_order: 0,
-    is_deleted: false,
-    created_at: toISOTimestamp(),
-    updated_at: toISOTimestamp(),
-    needsSync: false,
-    ...overrides,
-  };
-}
-
-export function createPendingCover(
-  overrides: Partial<PendingCoverRecord> = {},
-): PendingCoverRecord {
-  return {
-    goal_id: "test-goal-id",
-    data: new Blob(["fake image content"], { type: MOCK_MIME_TYPE }),
-    filename: "cover.jpg",
-    mime_type: MOCK_MIME_TYPE,
-    data_hash: "test-hash-abc123",
-    created_at: toISOTimestamp(),
-    ...overrides,
-  };
-}
-
-export function createCoverRecord(
-  dataHash: string,
-  overrides: Record<string, unknown> = {},
-) {
-  return {
-    data_hash: dataHash,
-    data: new Blob(["img"], { type: MOCK_MIME_TYPE }),
-    ...overrides,
-  };
+  const goalId = (overrides.id as string) ?? "goal-1";
+  const coverHash = (overrides.cover_hash as string) ?? "";
+  const { id: _id, cover_hash: _coverHash, ...rest } = overrides;
+  return createGoalWithFile(goalId, coverHash, rest);
 }
 
 export function setupGoalWithCoverBlob(opts: {
   goalId: string;
   coverHash: string;
 }) {
-  const coverRecord = createCoverRecord(opts.coverHash);
+  const coverRecord = {
+    data_hash: opts.coverHash,
+    data: new Blob(["img"], { type: MOCK_MIME_TYPE }),
+  };
   const goalRepository = createMockGoalRepository({
-    getActive: vi.fn().mockResolvedValue([
-      createGoal({
-        id: opts.goalId,
-        cover_hash: opts.coverHash,
-      }),
-    ]),
+    getActive: vi
+      .fn()
+      .mockResolvedValue([createGoalWithFile(opts.goalId, opts.coverHash)]),
   });
-  const coverRepository = createMockCoverRepository({
+  const fileRepository = createMockFileRepository({
     getByHash: vi.fn().mockResolvedValue(coverRecord),
   });
-  return { goalRepository, coverRepository, coverRecord };
+  return { goalRepository, fileRepository, coverRecord };
 }
 
-export function createMockGetCoversSuccess(
-  hash: string,
-  overrides: Record<string, unknown> = {},
-) {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    covers: [
-      {
-        hash,
-        mime_type: MOCK_MIME_TYPE,
-        data: MOCK_BASE64,
-        ...overrides,
-      },
-    ],
-  });
-}
-
-export function createMockGetCoversNotFound(hash: string) {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    covers: [{ hash, error: "FILE_NOT_FOUND" }],
-  });
-}
-
-export type CoverSyncDeps = {
+export type FileSyncDeps = {
   syncAdapter: SyncAdapter;
-  pendingCoverRepository: PendingCoverRepository;
-  coverRepository: CoverRepository;
+  pendingFileRepository: PendingFileRepository;
+  fileRepository: FileRepository;
   goalRepository: GoalRepository;
+  attachmentRepository: AttachmentRepository;
 };
 
-export function createCoverSyncScaffold(
-  f: FeatureDescriibeCallbackParams<CoverSyncDeps>,
+export function createFileSyncScaffold(
+  f: FeatureDescriibeCallbackParams<FileSyncDeps>,
 ) {
-  const deps: CoverSyncDeps = {
+  const deps: FileSyncDeps = {
     syncAdapter: createMockSyncAdapter(),
-    pendingCoverRepository: createMockPendingCoverRepository(),
-    coverRepository: createMockCoverRepository(),
+    pendingFileRepository: createMockPendingFileRepository(),
+    fileRepository: createMockFileRepository(),
     goalRepository: createMockGoalRepository(),
+    attachmentRepository: createMockAttachmentRepository(),
   };
 
-  function createService(): CoverSyncService {
-    return new CoverSyncService(
+  function createService(): FileSyncService {
+    return new FileSyncService(
       deps.syncAdapter,
-      deps.pendingCoverRepository,
-      deps.coverRepository,
+      deps.pendingFileRepository,
+      deps.fileRepository,
       deps.goalRepository,
+      deps.attachmentRepository,
     );
   }
 
   f.BeforeEachScenario(async () => {
     deps.syncAdapter = createMockSyncAdapter();
-    deps.pendingCoverRepository = createMockPendingCoverRepository();
-    deps.coverRepository = createMockCoverRepository();
+    deps.pendingFileRepository = createMockPendingFileRepository();
+    deps.fileRepository = createMockFileRepository();
     deps.goalRepository = createMockGoalRepository();
-    localCoverCache.clear();
+    deps.attachmentRepository = createMockAttachmentRepository();
+    localFileCache.clear();
   });
 
   return { deps, createService };

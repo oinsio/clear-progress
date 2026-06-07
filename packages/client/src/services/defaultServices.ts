@@ -12,6 +12,7 @@ import { PendingFileRepository } from "@/db/repositories/PendingFileRepository";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
+import { AttachmentService } from "./AttachmentService";
 import { getConnectionConfig } from "./connectionService";
 import { FileService } from "./FileService";
 import { FileSyncService } from "./FileSyncService";
@@ -74,6 +75,10 @@ export const defaultFileService = new FileService(
   defaultSyncAdapter,
   new FileRepository(),
   new PendingFileRepository(),
+);
+export const defaultAttachmentService = new AttachmentService(
+  defaultAttachmentRepository,
+  defaultFileService,
 );
 export const defaultFileSyncService = new FileSyncService(
   defaultSyncAdapter,

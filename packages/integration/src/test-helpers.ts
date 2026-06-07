@@ -225,7 +225,7 @@ async function attemptSync(
       LAST_SYNC_STORAGE_KEY,
     );
 
-    // 3. Click sync and wait for completion (retry clicks if mutex-blocked).
+    // 4. Click sync and wait for completion (retry clicks if mutex-blocked).
     while (Date.now() < deadline) {
       const remainingMs = deadline - Date.now();
       if (remainingMs <= 0) break;
@@ -347,7 +347,8 @@ async function reloadAndWaitForAutoSync(testPage: Page): Promise<boolean> {
 }
 
 /**
- * Credentials needed to call Supabase Edge Functions directly from Node.js.
+ * Shape of the pull response that includes tasks, goals, and attachments.
+ * Used to type-narrow pullFromServer results in attachment/purge tests.
  */
 export interface RefCountPullResponse {
   ok: boolean;
@@ -396,7 +397,7 @@ export async function pullFromServer<T = Record<string, unknown>>(
   if (!response.ok) {
     throw new Error(`pull failed: ${response.status} ${await response.text()}`);
   }
-  return (await response.json()) as Promise<T>;
+  return (await response.json()) as T;
 }
 
 /**
@@ -432,7 +433,7 @@ export async function getFileFromServer(
       `get-file failed: ${response.status} ${await response.text()}`,
     );
   }
-  return (await response.json()) as Promise<{
+  return (await response.json()) as {
     ok: boolean;
     files: Array<{
       hash: string;
@@ -440,7 +441,7 @@ export async function getFileFromServer(
       data?: string;
       error?: string;
     }>;
-  }>;
+  };
 }
 
 /**

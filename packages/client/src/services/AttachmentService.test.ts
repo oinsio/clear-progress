@@ -4,6 +4,7 @@ import type { EntityType } from "@clear-progress/contract";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MAX_ATTACHMENT_SIZE_BYTES } from "@/constants";
 import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
+import { createMockAttachmentRepository } from "@/test/mocks/attachmentRepositoryMock";
 import type { Attachment } from "@/types/entities";
 import { AttachmentService } from "./AttachmentService";
 import type { FileService } from "./FileService";
@@ -11,24 +12,6 @@ import type { FileService } from "./FileService";
 const TEST_ENTITY_TYPE: EntityType = "goal";
 const TEST_ENTITY_ID = "entity-uuid-123";
 const TEST_DATA_HASH = "abc123hash";
-
-function createMockAttachmentRepository(): AttachmentRepository {
-  return {
-    getAll: vi.fn(),
-    getById: vi.fn().mockResolvedValue(undefined),
-    getByEntityTypeAndId: vi.fn().mockResolvedValue([]),
-    getAllByEntityTypeAndId: vi.fn(),
-    getByHash: vi.fn(),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-    bulkUpsert: vi.fn(),
-    getChangedSince: vi.fn(),
-    getNeedingSync: vi.fn(),
-    softDeleteByEntityTypeAndId: vi.fn(),
-    restoreByEntityTypeAndId: vi.fn(),
-    applyServerRecords: vi.fn(),
-  } as unknown as AttachmentRepository;
-}
 
 function createMockFileService(): FileService {
   return {

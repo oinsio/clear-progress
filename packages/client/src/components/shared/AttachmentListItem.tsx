@@ -1,5 +1,6 @@
 import { Download, Eye, File, FileText, ImageIcon, Trash2 } from "lucide-react";
-import React, { useCallback, useRef } from "react";
+import type React from "react";
+import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileUrl } from "@/hooks/useFileUrl";
 import type { Attachment } from "@/types/entities";
