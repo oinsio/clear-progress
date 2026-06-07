@@ -38,10 +38,11 @@ test("offline attachment creation -> pending file -> sync on reconnect -> file o
   // Go offline by blocking network requests to the Supabase API
   await page.context().setOffline(true);
 
-  // Open task detail and attach a file while offline
+  // Open task detail, switch to attachments tab, and attach a file while offline
   await openTaskDetail(page, taskName);
+  await page.getByTestId("tab-attachments").click();
   const pngBuffer = createMinimalPng();
-  await page.getByTestId("attachment-file-input").setInputFiles({
+  await page.getByTestId("attach-file-input").setInputFiles({
     name: "offline-attachment.png",
     mimeType: "image/png",
     buffer: pngBuffer,
@@ -49,7 +50,7 @@ test("offline attachment creation -> pending file -> sync on reconnect -> file o
 
   // Attachment should appear locally (pending state)
   await page
-    .getByTestId("attachment-item")
+    .locator('[data-testid^="attachment-item-"]')
     .first()
     .waitFor({ state: "visible" });
 

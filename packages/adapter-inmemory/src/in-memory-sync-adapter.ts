@@ -229,10 +229,7 @@ export class InMemorySyncAdapter implements SyncAdapter {
       return "Invalid UUID format";
     }
 
-    if (
-      "name" in entity &&
-      entity.name.trim() === ""
-    ) {
+    if ("name" in entity && entity.name.trim() === "") {
       return "Name must not be blank";
     }
 
@@ -263,23 +260,32 @@ export class InMemorySyncAdapter implements SyncAdapter {
     return { key: setting.key, status: "accepted" };
   }
 
-  async uploadFile(request: UploadFileRequest): Promise<UploadFileResponse> {
-    const existing = this.files.get(request.data_hash);
+  private storeFile(file: {
+    filename: string;
+    mime_type: string;
+    data: string;
+    data_hash: string;
+  }): boolean {
+    const existing = this.files.get(file.data_hash);
     if (existing) {
       existing.ref_count++;
-      return { ok: true, data_hash: request.data_hash, reused: true };
+      return true;
     }
 
     const metadata: FileMetadata = {
-      filename: request.filename,
-      mime_type: request.mime_type,
-      data: request.data,
-      data_hash: request.data_hash,
+      filename: file.filename,
+      mime_type: file.mime_type,
+      data: file.data,
+      data_hash: file.data_hash,
       ref_count: 1,
     };
-    this.files.set(request.data_hash, metadata);
+    this.files.set(file.data_hash, metadata);
+    return false;
+  }
 
-    return { ok: true, data_hash: request.data_hash, reused: false };
+  async uploadFile(request: UploadFileRequest): Promise<UploadFileResponse> {
+    const reused = this.storeFile(request);
+    return { ok: true, data_hash: request.data_hash, reused };
   }
 
   async uploadFiles(request: UploadFilesRequest): Promise<UploadFilesResponse> {
@@ -298,31 +304,12 @@ export class InMemorySyncAdapter implements SyncAdapter {
         };
       }
 
-      const existing = this.files.get(file.data_hash);
-      if (existing) {
-        existing.ref_count++;
-        return {
-          local_id: file.local_id,
-          goal_id: file.goal_id,
-          data_hash: file.data_hash,
-          reused: true,
-        };
-      }
-
-      const metadata: FileMetadata = {
-        filename: file.filename,
-        mime_type: file.mime_type,
-        data: file.data,
-        data_hash: file.data_hash,
-        ref_count: 1,
-      };
-      this.files.set(file.data_hash, metadata);
-
+      const reused = this.storeFile(file);
       return {
         local_id: file.local_id,
         goal_id: file.goal_id,
         data_hash: file.data_hash,
-        reused: false,
+        reused,
       };
     });
 

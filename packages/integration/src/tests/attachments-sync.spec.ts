@@ -47,10 +47,11 @@ test("attachment create -> sync -> appears on second device", async () => {
   await createTask(pageA, taskName);
   await triggerSyncAndWait(pageA);
 
-  // Device A: Open task detail and attach a file
+  // Device A: Open task detail, switch to attachments tab, and attach a file
   await openTaskDetail(pageA, taskName);
+  await pageA.getByTestId("tab-attachments").click();
   const pngBuffer = createMinimalPng();
-  await pageA.getByTestId("attachment-file-input").setInputFiles({
+  await pageA.getByTestId("attach-file-input").setInputFiles({
     name: "test-attachment.png",
     mimeType: "image/png",
     buffer: pngBuffer,
@@ -58,7 +59,7 @@ test("attachment create -> sync -> appears on second device", async () => {
 
   // Wait for attachment to appear in the list
   await pageA
-    .getByTestId("attachment-item")
+    .locator('[data-testid^="attachment-item-"]')
     .first()
     .waitFor({ state: "visible" });
 
@@ -87,14 +88,15 @@ test("attachment create -> sync -> appears on second device", async () => {
   // Device B: Sync and verify attachment is visible
   await triggerSyncAndWait(pageB);
   await openTaskDetail(pageB, taskName);
+  await pageB.getByTestId("tab-attachments").click();
 
   await pageB
-    .getByTestId("attachment-item")
+    .locator('[data-testid^="attachment-item-"]')
     .first()
     .waitFor({ state: "visible" });
 
   const attachmentText = await pageB
-    .getByTestId("attachment-item")
+    .locator('[data-testid^="attachment-item-"]')
     .first()
     .textContent();
   expect(attachmentText).toContain("test-attachment");
@@ -109,17 +111,17 @@ test("attachment soft-delete -> sync -> deleted on second device", async () => {
 
   // Device A: Should still have task detail open from 13.3
   // Delete the attachment
-  await pageA.getByTestId("attachment-delete-button").first().click();
+  await pageA.locator('[data-testid^="attachment-delete-"]').first().click();
 
   // Confirm deletion if there is a confirmation dialog
-  const confirmButton = pageA.getByTestId("attachment-delete-confirm");
+  const confirmButton = pageA.getByTestId("confirm-dialog-confirm");
   if (await confirmButton.isVisible().catch(() => false)) {
     await confirmButton.click();
   }
 
   // Wait for attachment to disappear
   await pageA
-    .getByTestId("attachment-item")
+    .locator('[data-testid^="attachment-item-"]')
     .first()
     .waitFor({ state: "detached" })
     .catch(() => {
@@ -141,10 +143,14 @@ test("attachment soft-delete -> sync -> deleted on second device", async () => {
   );
   expect(deletedAttachments.length).toBeGreaterThanOrEqual(1);
 
-  // Device B: Sync and verify attachment is gone
+  // Device B: Navigate back to task list, sync and verify attachment is gone
+  await pageB.goBack();
   await triggerSyncAndWait(pageB);
   await openTaskDetail(pageB, taskName);
+  await pageB.getByTestId("tab-attachments").click();
 
-  const attachmentCount = await pageB.getByTestId("attachment-item").count();
+  const attachmentCount = await pageB
+    .locator('[data-testid^="attachment-item-"]')
+    .count();
   expect(attachmentCount).toBe(0);
 });
