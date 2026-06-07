@@ -293,8 +293,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }, [accessToken, applySyncResult, stopPingInterval, handleSyncError]);
 
   useEffect(() => {
-    if (!accessToken || !config) return;
-
     defaultFileSyncService
       .initializeLocalFiles()
       .catch((coverInitError) =>
@@ -303,6 +301,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           coverInitError,
         ),
       );
+  }, []);
+
+  useEffect(() => {
+    if (!accessToken || !config) return;
+
     defaultFileSyncService
       .sync()
       .catch((coverSyncError) =>

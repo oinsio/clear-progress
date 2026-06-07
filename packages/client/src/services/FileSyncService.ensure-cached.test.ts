@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   createMockFileRepository,
   createMockGetFilesSuccess,
+  createMockPendingFileRepository,
   createMockSyncAdapter,
   localFileCache,
   setupFileSyncTests,
@@ -94,6 +95,29 @@ describe("FileSyncService", () => {
       await service.ensureFileCached(FILE_ID);
 
       expect(ctx.mockFileRepository.save).not.toHaveBeenCalled();
+    });
+
+    it("should create object URL from pendingFileRepository when fileRepository has no data", async () => {
+      const pendingBlob = new Blob(["pending-img"], { type: "image/jpeg" });
+      ctx.mockFileRepository = createMockFileRepository({
+        getByHash: vi.fn().mockResolvedValue(undefined),
+      });
+      ctx.mockPendingFileRepository = createMockPendingFileRepository({
+        getByHash: vi.fn().mockResolvedValue({
+          data_hash: FILE_ID,
+          data: pendingBlob,
+          goal_id: "goal-1",
+          filename: "photo.jpg",
+          mime_type: "image/jpeg",
+          created_at: "2025-01-01T00:00:00.000Z",
+        }),
+      });
+      const service = ctx.createService();
+
+      await service.ensureFileCached(FILE_ID);
+
+      expect(ctx.mockSyncAdapter.getFile).not.toHaveBeenCalled();
+      expect(localFileCache.get(FILE_ID)).toBeDefined();
     });
 
     it("should make exactly one getFile call when called concurrently with the same fileId", async () => {

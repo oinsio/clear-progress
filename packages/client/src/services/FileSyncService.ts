@@ -187,10 +187,16 @@ export class FileSyncService {
   private async fetchAndPopulateCache(hash: string): Promise<void> {
     const existingFile = await this.fileRepository.getByHash(hash);
     if (existingFile?.data) {
-      const url = URL.createObjectURL(existingFile.data);
-      localFileCache.set(hash, url);
+      this.populateLocalCache(hash, existingFile.data);
       return;
     }
+
+    const pendingFile = await this.pendingFileRepository.getByHash(hash);
+    if (pendingFile?.data) {
+      this.populateLocalCache(hash, pendingFile.data);
+      return;
+    }
+
     await this.cacheFromServer(hash);
   }
 
