@@ -132,6 +132,24 @@ export async function deleteGoalFromDetail(page: Page): Promise<void> {
   await page.waitForSelector('[data-testid="goals-page"]');
 }
 
+export async function uploadCoverToGoal(
+  page: Page,
+  file: { name: string; mimeType: string; buffer: Buffer },
+): Promise<void> {
+  await page.getByTestId("edit-goal-button").click();
+  await page.getByTestId("cover-file-input").setInputFiles(file);
+  await page.getByTestId("cover-preview-img").waitFor({ state: "visible" });
+  await page.getByTestId("goal-save-button").click();
+  await page.getByTestId("edit-goal-button").waitFor({ state: "visible" });
+}
+
+export async function removeCoverFromGoal(page: Page): Promise<void> {
+  await page.getByTestId("edit-goal-button").click();
+  await page.getByTestId("cover-remove-button").click();
+  await page.getByTestId("goal-save-button").click();
+  await page.getByTestId("edit-goal-button").waitFor({ state: "visible" });
+}
+
 // ---------------------------------------------------------------------------
 // Category actions
 // ---------------------------------------------------------------------------
