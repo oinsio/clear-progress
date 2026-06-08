@@ -1,6 +1,6 @@
 # Clear Progress
 
-Personal app suitable for working with the GTD method. Client-first architecture.
+Personal app for working with idea/goal/task. Client-first architecture.
 
 IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
@@ -51,7 +51,7 @@ Running test suites in parallel — or relaunching before the previous run finis
 
 ## Post-Edit Workflow
 
-1. Call `getDiagnostics` via JetBrains MCP for changed files — fix errors immediately
+1. Call `get_file_problems` via JetBrains MCP for changed files — fix errors immediately
 2. Run `pnpm run build` to verify build
 
 ## Process Invariants

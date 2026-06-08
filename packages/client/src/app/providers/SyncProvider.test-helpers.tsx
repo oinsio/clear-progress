@@ -4,11 +4,11 @@ import { useAuth } from "@/app/providers/AuthProvider";
 import type { FullSyncStep } from "@/types/common";
 import { SyncProvider, useSync } from "./SyncProvider";
 import {
-  mockCoverEnsureServerCovers,
-  mockCoverReuploadLocalCovers,
-  mockCoverSync,
+  mockFileEnsureServerFiles,
+  mockFileReuploadLocalFiles,
+  mockFileSync,
   mockInit,
-  mockInitializeLocalCovers,
+  mockInitializeLocalFiles,
   mockPing,
   mockPull,
   mockPush,
@@ -49,10 +49,10 @@ export function setupBeforeEach() {
   mockResetAndPull.mockResolvedValue(undefined);
   mockPing.mockResolvedValue(VALID_PING_INITIALIZED);
   mockInit.mockResolvedValue({ ok: true });
-  mockInitializeLocalCovers.mockResolvedValue(undefined);
-  mockCoverSync.mockResolvedValue(undefined);
-  mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
-  mockCoverEnsureServerCovers.mockResolvedValue(undefined);
+  mockInitializeLocalFiles.mockResolvedValue(undefined);
+  mockFileSync.mockResolvedValue(undefined);
+  mockFileReuploadLocalFiles.mockResolvedValue(undefined);
+  mockFileEnsureServerFiles.mockResolvedValue(undefined);
 
   vi.mocked(useAuth).mockReturnValue({
     accessToken: "mock-token",

@@ -2,20 +2,20 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext, vi } from "vitest";
-import { MAX_COVER_BATCH_SIZE } from "@/constants";
-import { localCoverCache } from "@/services/LocalCoverCache";
-import type { PendingCoverRecord } from "@/types/entities";
+import { MAX_FILE_BATCH_SIZE } from "@/constants";
+import { localFileCache } from "@/services/LocalFileCache";
+import type { PendingFileRecord } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import {
-  type CoverSyncDeps,
-  createCoverSyncScaffold,
+  createFileSyncScaffold,
   createGoal,
-  createMockCoverRepository,
-  createMockGetCoversNotFound,
-  createMockGetCoversSuccess,
+  createMockFileRepository,
+  createMockGetFilesNotFound,
+  createMockGetFilesSuccess,
   createMockGoalRepository,
-  createMockPendingCoverRepository,
+  createMockPendingFileRepository,
   createMockSyncAdapter,
+  type FileSyncDeps,
   MOCK_BASE64,
   MOCK_MIME_TYPE,
   setupGoalWithCoverBlob,
@@ -23,8 +23,8 @@ import {
 
 const feature = await loadFeature("../cover_lifecycle.feature");
 
-describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
-  const { deps, createService } = createCoverSyncScaffold(f);
+describeFeature(feature, (f: FeatureDescriibeCallbackParams<FileSyncDeps>) => {
+  const { deps, createService } = createFileSyncScaffold(f);
 
   // @spec-sync-protocol @FR10
   f.Scenario(
@@ -41,7 +41,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server has cover data for "remote-abc"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            getCover: createMockGetCoversSuccess("remote-abc"),
+            getFile: createMockGetFilesSuccess("remote-abc"),
           });
         },
       );
@@ -57,7 +57,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         'cover is saved to cover repository with data_hash "remote-abc"',
         async (_ctx: TestContext) => {
-          expect(deps.coverRepository.save).toHaveBeenCalledWith(
+          expect(deps.fileRepository.save).toHaveBeenCalledWith(
             expect.objectContaining({
               data_hash: "remote-abc",
               data: expect.any(Blob),
@@ -67,7 +67,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       );
 
       And("cover is added to local cover cache", async (_ctx: TestContext) => {
-        expect(localCoverCache.get("remote-abc")).toBeDefined();
+        expect(localFileCache.get("remote-abc")).toBeDefined();
       });
     },
   );
@@ -87,7 +87,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server returns FILE_NOT_FOUND for "missing-id"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            getCover: createMockGetCoversNotFound("missing-id"),
+            getFile: createMockGetFilesNotFound("missing-id"),
           });
         },
       );
@@ -103,14 +103,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         "cover is not saved to cover repository",
         async (_ctx: TestContext) => {
-          expect(deps.coverRepository.save).not.toHaveBeenCalled();
+          expect(deps.fileRepository.save).not.toHaveBeenCalled();
         },
       );
 
       And(
         "cover is not added to local cover cache",
         async (_ctx: TestContext) => {
-          expect(localCoverCache.get("missing-id")).toBeUndefined();
+          expect(localFileCache.get("missing-id")).toBeUndefined();
         },
       );
     },
@@ -123,14 +123,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       let hashes: string[];
 
       Given(
-        "more uncached hashes than MAX_COVER_BATCH_SIZE exist",
+        "more uncached hashes than MAX_FILE_BATCH_SIZE exist",
         async (_ctx: TestContext) => {
           hashes = Array.from(
-            { length: MAX_COVER_BATCH_SIZE + 1 },
+            { length: MAX_FILE_BATCH_SIZE + 1 },
             (_, i) => `hash-${i}`,
           );
           deps.syncAdapter = createMockSyncAdapter({
-            getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
+            getFile: vi.fn().mockResolvedValue({ ok: true, files: [] }),
           });
         },
       );
@@ -141,7 +141,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then("getCover API is called twice", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.getCover).toHaveBeenCalledTimes(2);
+        expect(deps.syncAdapter.getFile).toHaveBeenCalledTimes(2);
       });
     },
   );
@@ -153,10 +153,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       let hashes: string[];
 
       Given(
-        "more uncached hashes than MAX_COVER_BATCH_SIZE exist",
+        "more uncached hashes than MAX_FILE_BATCH_SIZE exist",
         async (_ctx: TestContext) => {
           hashes = Array.from(
-            { length: MAX_COVER_BATCH_SIZE + 1 },
+            { length: MAX_FILE_BATCH_SIZE + 1 },
             (_, i) => `hash-${i}`,
           );
         },
@@ -166,10 +166,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         "server will fail on the first getCover chunk",
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            getCover: vi
+            getFile: vi
               .fn()
               .mockRejectedValueOnce(new Error("Network error"))
-              .mockResolvedValueOnce({ ok: true, covers: [] }),
+              .mockResolvedValueOnce({ ok: true, files: [] }),
           });
         },
       );
@@ -180,44 +180,44 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       });
 
       Then("getCover API is called twice", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.getCover).toHaveBeenCalledTimes(2);
+        expect(deps.syncAdapter.getFile).toHaveBeenCalledTimes(2);
       });
     },
   );
 
   // @spec-sync-protocol @FR10
   f.Scenario(
-    "ensureCoverCached skips when already in cache",
+    "ensureFileCached skips when already in cache",
     ({ Given, When, Then }) => {
       Given(
         'cover "cached-id" is already in local cover cache',
         async (_ctx: TestContext) => {
-          localCoverCache.set("cached-id", "blob:http://localhost/cached");
+          localFileCache.set("cached-id", "blob:http://localhost/cached");
         },
       );
 
       When(
-        'ensureCoverCached is called for "cached-id"',
+        'ensureFileCached is called for "cached-id"',
         async (_ctx: TestContext) => {
           const service = createService();
-          await service.ensureCoverCached("cached-id");
+          await service.ensureFileCached("cached-id");
         },
       );
 
       Then("cover repository is not queried", async (_ctx: TestContext) => {
-        expect(deps.coverRepository.getByHash).not.toHaveBeenCalled();
+        expect(deps.fileRepository.getByHash).not.toHaveBeenCalled();
       });
     },
   );
 
   // @spec-sync-protocol @FR10
   f.Scenario(
-    "ensureCoverCached loads from IndexedDB without server call",
+    "ensureFileCached loads from IndexedDB without server call",
     ({ Given, When, Then, And }) => {
       Given(
         'cover "db-id" exists in cover repository with blob data',
         async (_ctx: TestContext) => {
-          deps.coverRepository = createMockCoverRepository({
+          deps.fileRepository = createMockFileRepository({
             getByHash: vi.fn().mockResolvedValue({
               data_hash: "db-id",
               data: new Blob(["img"], { type: MOCK_MIME_TYPE }),
@@ -227,21 +227,21 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       );
 
       When(
-        'ensureCoverCached is called for "db-id"',
+        'ensureFileCached is called for "db-id"',
         async (_ctx: TestContext) => {
           const service = createService();
-          await service.ensureCoverCached("db-id");
+          await service.ensureFileCached("db-id");
         },
       );
 
       Then("getCover API is not called", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.getCover).not.toHaveBeenCalled();
+        expect(deps.syncAdapter.getFile).not.toHaveBeenCalled();
       });
 
       And(
         'cover "db-id" is added to local cover cache',
         async (_ctx: TestContext) => {
-          expect(localCoverCache.get("db-id")).toBeDefined();
+          expect(localFileCache.get("db-id")).toBeDefined();
         },
       );
     },
@@ -249,12 +249,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
 
   // @spec-sync-protocol @FR10
   f.Scenario(
-    "Concurrent ensureCoverCached calls make only one server request",
+    "Concurrent ensureFileCached calls make only one server request",
     ({ Given, And, When, Then }) => {
       Given(
         'cover "concurrent-id" is not cached or in repository',
         async (_ctx: TestContext) => {
-          deps.coverRepository = createMockCoverRepository({
+          deps.fileRepository = createMockFileRepository({
             getByHash: vi.fn().mockResolvedValue(undefined),
           });
         },
@@ -264,25 +264,25 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server has cover data for "concurrent-id"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            getCover: createMockGetCoversSuccess("concurrent-id"),
+            getFile: createMockGetFilesSuccess("concurrent-id"),
           });
         },
       );
 
       When(
-        'ensureCoverCached is called three times concurrently for "concurrent-id"',
+        'ensureFileCached is called three times concurrently for "concurrent-id"',
         async (_ctx: TestContext) => {
           const service = createService();
           await Promise.all([
-            service.ensureCoverCached("concurrent-id"),
-            service.ensureCoverCached("concurrent-id"),
-            service.ensureCoverCached("concurrent-id"),
+            service.ensureFileCached("concurrent-id"),
+            service.ensureFileCached("concurrent-id"),
+            service.ensureFileCached("concurrent-id"),
           ]);
         },
       );
 
       Then("getCover API is called exactly once", async (_ctx: TestContext) => {
-        expect(deps.syncAdapter.getCover).toHaveBeenCalledTimes(1);
+        expect(deps.syncAdapter.getFile).toHaveBeenCalledTimes(1);
       });
     },
   );
@@ -294,7 +294,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'cover repository has a cover without blob data for "no-blob-file"',
         async (_ctx: TestContext) => {
-          deps.coverRepository = createMockCoverRepository({
+          deps.fileRepository = createMockFileRepository({
             getAll: vi.fn().mockResolvedValue([
               {
                 data_hash: "no-blob-file",
@@ -305,15 +305,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         },
       );
 
-      When("initializeLocalCovers is called", async (_ctx: TestContext) => {
+      When("initializeLocalFiles is called", async (_ctx: TestContext) => {
         const service = createService();
-        await service.initializeLocalCovers();
+        await service.initializeLocalFiles();
       });
 
       Then(
         'cover "no-blob-file" is not added to local cover cache',
         async (_ctx: TestContext) => {
-          expect(localCoverCache.get("no-blob-file")).toBeUndefined();
+          expect(localFileCache.get("no-blob-file")).toBeUndefined();
         },
       );
     },
@@ -334,9 +334,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server returns error flag true with hash for "error-but-id"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            getCover: vi.fn().mockResolvedValue({
+            getFile: vi.fn().mockResolvedValue({
               ok: true,
-              covers: [
+              files: [
                 {
                   hash: "error-but-id",
                   error: true, // error flag set
@@ -360,14 +360,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         "cover is not saved to cover repository",
         async (_ctx: TestContext) => {
-          expect(deps.coverRepository.save).not.toHaveBeenCalled();
+          expect(deps.fileRepository.save).not.toHaveBeenCalled();
         },
       );
 
       And(
         "cover is not added to local cover cache",
         async (_ctx: TestContext) => {
-          expect(localCoverCache.get("error-but-id")).toBeUndefined();
+          expect(localFileCache.get("error-but-id")).toBeUndefined();
         },
       );
     },
@@ -388,9 +388,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server returns cover data without mime_type for "no-mime"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            getCover: vi.fn().mockResolvedValue({
+            getFile: vi.fn().mockResolvedValue({
               ok: true,
-              covers: [
+              files: [
                 {
                   hash: "no-mime",
                   data: MOCK_BASE64,
@@ -413,7 +413,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         "cover is saved with fallback MIME type",
         async (_ctx: TestContext) => {
-          expect(deps.coverRepository.save).toHaveBeenCalledWith(
+          expect(deps.fileRepository.save).toHaveBeenCalledWith(
             expect.objectContaining({
               data_hash: "no-mime",
               data: expect.any(Blob),
@@ -423,7 +423,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       );
 
       And("cover is added to local cover cache", async (_ctx: TestContext) => {
-        expect(localCoverCache.get("no-mime")).toBeDefined();
+        expect(localFileCache.get("no-mime")).toBeDefined();
       });
     },
   );
@@ -440,7 +440,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
             coverHash: "server-file-1",
           });
           deps.goalRepository = setup.goalRepository;
-          deps.coverRepository = setup.coverRepository;
+          deps.fileRepository = setup.fileRepository;
         },
       );
 
@@ -448,7 +448,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server will respond with reused true for "server-file-1"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockResolvedValue({
+            uploadFiles: vi.fn().mockResolvedValue({
               ok: true,
               results: [
                 {
@@ -461,9 +461,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         },
       );
 
-      When("reuploadLocalCovers is called", async (_ctx: TestContext) => {
+      When("reuploadLocalFiles is called", async (_ctx: TestContext) => {
         const service = createService();
-        await service.reuploadLocalCovers();
+        await service.reuploadLocalFiles();
       });
 
       Then("goal is not updated", async (_ctx: TestContext) => {
@@ -484,7 +484,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
             coverHash: "server-hash-1",
           });
           deps.goalRepository = setup.goalRepository;
-          deps.coverRepository = setup.coverRepository;
+          deps.fileRepository = setup.fileRepository;
         },
       );
 
@@ -492,7 +492,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server will respond with reused false for "server-hash-1"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            uploadCovers: vi.fn().mockResolvedValue({
+            uploadFiles: vi.fn().mockResolvedValue({
               ok: true,
               results: [
                 {
@@ -505,15 +505,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         },
       );
 
-      When("reuploadLocalCovers is called", async (_ctx: TestContext) => {
+      When("reuploadLocalFiles is called", async (_ctx: TestContext) => {
         const service = createService();
-        await service.reuploadLocalCovers();
+        await service.reuploadLocalFiles();
       });
 
       Then(
         'cover repository saves a record with data_hash "server-hash-1"',
         async (_ctx: TestContext) => {
-          expect(deps.coverRepository.save).toHaveBeenCalledWith(
+          expect(deps.fileRepository.save).toHaveBeenCalledWith(
             expect.objectContaining({
               data_hash: "server-hash-1",
             }),
@@ -530,7 +530,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'cover repository has a cover with blob data for "init-file"',
         async (_ctx: TestContext) => {
-          deps.coverRepository = createMockCoverRepository({
+          deps.fileRepository = createMockFileRepository({
             getAll: vi.fn().mockResolvedValue([
               {
                 data_hash: "init-file",
@@ -541,15 +541,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         },
       );
 
-      When("initializeLocalCovers is called", async (_ctx: TestContext) => {
+      When("initializeLocalFiles is called", async (_ctx: TestContext) => {
         const service = createService();
-        await service.initializeLocalCovers();
+        await service.initializeLocalFiles();
       });
 
       Then(
         'cover "init-file" is added to local cover cache',
         async (_ctx: TestContext) => {
-          expect(localCoverCache.get("init-file")).toBeDefined();
+          expect(localFileCache.get("init-file")).toBeDefined();
         },
       );
     },
@@ -562,7 +562,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'pending cover repository has a cover with data_hash "init-pending"',
         async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
+          deps.pendingFileRepository = createMockPendingFileRepository({
             getAll: vi.fn().mockResolvedValue([
               {
                 data_hash: "init-pending",
@@ -571,21 +571,21 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
                 filename: "cover.jpg",
                 mime_type: MOCK_MIME_TYPE,
                 created_at: toISOTimestamp(),
-              } satisfies PendingCoverRecord,
+              } satisfies PendingFileRecord,
             ]),
           });
         },
       );
 
-      When("initializeLocalCovers is called", async (_ctx: TestContext) => {
+      When("initializeLocalFiles is called", async (_ctx: TestContext) => {
         const service = createService();
-        await service.initializeLocalCovers();
+        await service.initializeLocalFiles();
       });
 
       Then(
         'cover "init-pending" is added to local cover cache',
         async (_ctx: TestContext) => {
-          expect(localCoverCache.get("init-pending")).toBeDefined();
+          expect(localFileCache.get("init-pending")).toBeDefined();
         },
       );
     },
@@ -600,14 +600,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Given(
         'cover "already-cached" is already in local cover cache',
         async (_ctx: TestContext) => {
-          localCoverCache.set("already-cached", existingUrl);
+          localFileCache.set("already-cached", existingUrl);
         },
       );
 
       And(
         'pending cover repository has a cover with data_hash "already-cached"',
         async (_ctx: TestContext) => {
-          deps.pendingCoverRepository = createMockPendingCoverRepository({
+          deps.pendingFileRepository = createMockPendingFileRepository({
             getAll: vi.fn().mockResolvedValue([
               {
                 data_hash: "already-cached",
@@ -616,21 +616,21 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
                 filename: "cover.jpg",
                 mime_type: MOCK_MIME_TYPE,
                 created_at: toISOTimestamp(),
-              } satisfies PendingCoverRecord,
+              } satisfies PendingFileRecord,
             ]),
           });
         },
       );
 
-      When("initializeLocalCovers is called", async (_ctx: TestContext) => {
+      When("initializeLocalFiles is called", async (_ctx: TestContext) => {
         const service = createService();
-        await service.initializeLocalCovers();
+        await service.initializeLocalFiles();
       });
 
       Then(
         'cover "already-cached" retains its original cache URL',
         async (_ctx: TestContext) => {
-          expect(localCoverCache.get("already-cached")).toBe(existingUrl);
+          expect(localFileCache.get("already-cached")).toBe(existingUrl);
         },
       );
     },
@@ -638,7 +638,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
 
   // @spec-sync-protocol @FR11
   f.Scenario(
-    "Full sync ensureServerCoversAreCached downloads missing covers",
+    "Full sync ensureServerFilesAreCached downloads missing covers",
     ({ Given, And, When, Then }) => {
       Given(
         'a goal references cover "missing-server-file" not in cache or repository',
@@ -651,7 +651,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
               }),
             ]),
           });
-          deps.coverRepository = createMockCoverRepository({
+          deps.fileRepository = createMockFileRepository({
             getByHash: vi.fn().mockResolvedValue(undefined),
           });
         },
@@ -661,7 +661,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
         'server has cover data for "missing-server-file"',
         async (_ctx: TestContext) => {
           deps.syncAdapter = createMockSyncAdapter({
-            getCover: createMockGetCoversSuccess("missing-server-file"),
+            getFile: createMockGetFilesSuccess("missing-server-file"),
           });
         },
       );
@@ -674,7 +674,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<CoverSyncDeps>) => {
       Then(
         'cover "missing-server-file" is added to local cover cache',
         async (_ctx: TestContext) => {
-          expect(localCoverCache.get("missing-server-file")).toBeDefined();
+          expect(localFileCache.get("missing-server-file")).toBeDefined();
         },
       );
     },

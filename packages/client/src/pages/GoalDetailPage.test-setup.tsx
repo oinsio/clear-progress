@@ -3,8 +3,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { vi } from "vitest";
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
-import { useCoverPreview } from "@/hooks/useCoverPreview";
-import { useCoverUrl } from "@/hooks/useCoverUrl";
+import { useFilePreview } from "@/hooks/useFilePreview";
+import { useFileUrl } from "@/hooks/useFileUrl";
 import { useGoal } from "@/hooks/useGoal";
 import { useGoals } from "@/hooks/useGoals";
 import { useGoalTasks } from "@/hooks/useGoalTasks";
@@ -32,8 +32,8 @@ export const mockUsePanelOpen = vi.mocked(usePanelOpen);
 export const mockUseSidebarNavigation = vi.mocked(useSidebarNavigation);
 export const mockUseIsDesktop = vi.mocked(useIsDesktop);
 export const mockUsePanelSplit = vi.mocked(usePanelSplit);
-export const mockUseCoverUrl = vi.mocked(useCoverUrl);
-export const mockUseCoverPreview = vi.mocked(useCoverPreview);
+export const mockUseFileUrl = vi.mocked(useFileUrl);
+export const mockUseFilePreview = vi.mocked(useFilePreview);
 
 export function setupDefaultMocks() {
   mockUseGoal.mockReturnValue(buildGoalHook());
@@ -57,8 +57,8 @@ export function setupDefaultMocks() {
     containerRef: { current: null },
     handleResizeMouseDown: vi.fn(),
   });
-  mockUseCoverUrl.mockReturnValue({ url: null });
-  mockUseCoverPreview.mockReturnValue(null);
+  mockUseFileUrl.mockReturnValue({ url: null });
+  mockUseFilePreview.mockReturnValue(null);
 }
 
 export function renderPage() {

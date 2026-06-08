@@ -10,6 +10,26 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
+
+vi.mock("@/app/providers/SyncProvider", () => ({
+  useSync: () => ({ schedulePush: vi.fn() }),
+}));
+
+vi.mock("@/services/AttachmentService", () => ({
+  AttachmentService: vi.fn(),
+}));
+
+vi.mock("@/db/repositories/AttachmentRepository", () => ({
+  AttachmentRepository: vi.fn(),
+}));
+
+vi.mock("@/services/defaultServices", () => ({
+  defaultFileService: {},
+}));
+
 const mockIdea: Idea = {
   id: "idea-1",
   name: "Test Idea",

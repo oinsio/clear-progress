@@ -7,7 +7,7 @@ import {
 } from "../page-actions.js";
 import {
   createMinimalPng,
-  getCoverFromServer,
+  getFileFromServer,
   pullFromServer,
   setupSingleDeviceTest,
   triggerSyncAndWait,
@@ -85,14 +85,12 @@ test("upload cover for a goal → push → verify cover_hash on server", async (
 // 5.9.2 — Retrieve cover URL → verify file is accessible on server
 // ---------------------------------------------------------------------------
 test("retrieve cover from server → verify image data is accessible", async () => {
-  // Use the get-cover Edge Function to fetch the uploaded cover
-  const coverResponse = await getCoverFromServer(getCredentials(), [
-    coverFileId,
-  ]);
-  expect(coverResponse.ok).toBe(true);
-  expect(coverResponse.covers).toHaveLength(1);
+  // Use the get-file Edge Function to fetch the uploaded cover
+  const fileResponse = await getFileFromServer(getCredentials(), [coverFileId]);
+  expect(fileResponse.ok).toBe(true);
+  expect(fileResponse.files).toHaveLength(1);
 
-  const coverResult = coverResponse.covers[0];
+  const coverResult = fileResponse.files[0];
   expect(coverResult).toBeDefined();
   expect(coverResult?.hash).toBe(coverFileId);
   expect(coverResult?.mime_type).toContain("image");

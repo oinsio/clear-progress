@@ -42,6 +42,14 @@ vi.mock("@/components/goals/CoverLightbox", () => ({
   ),
 }));
 
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
+
+vi.mock("@/components/shared/AttachmentList", () => ({
+  AttachmentList: () => null,
+}));
+
 // FR1, FR3: goal name, status, and edit button
 describe("GoalCardViewMode — basics", () => {
   afterEach(() => {

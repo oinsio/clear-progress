@@ -4,13 +4,15 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { ApiAuthError } from "@clear-progress/contract";
 import { expect, type TestContext, vi } from "vitest";
 import { GasSyncAdapter } from "../../../../client";
+import {
+  createValidInitResponse,
+  extractRequestBody,
+  type FeatureContext,
+  GAS_URL,
+  VALID_TOKEN,
+} from "./gas-adapter-test-utils";
 
 const feature = await loadFeature("../gas_adapter_auth.feature");
-
-type FeatureContext = Record<string, never>;
-
-const GAS_URL = "https://script.google.com/macros/s/test/exec";
-const VALID_TOKEN = "valid-test-token";
 
 describeFeature(
   feature,
@@ -96,26 +98,16 @@ describeFeature(
         });
 
         When("adapter calls init", async (_ctx: TestContext) => {
-          mockFetch.mockResolvedValue(
-            new Response(JSON.stringify({ ok: true }), {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            }),
-          );
+          mockFetch.mockResolvedValue(createValidInitResponse());
           await adapter.init();
         });
 
         Then(
           "the request body contains the valid token",
           async (_ctx: TestContext) => {
-            const [, fetchOptions] = mockFetch.mock.calls[0] as [
-              string,
-              RequestInit,
-            ];
-            const parsedBody = JSON.parse(
-              fetchOptions.body as string,
-            ) as Record<string, unknown>;
-            expect(parsedBody.access_token).toBe(VALID_TOKEN);
+            expect(extractRequestBody(mockFetch).access_token).toBe(
+              VALID_TOKEN,
+            );
           },
         );
       },

@@ -4,9 +4,9 @@
  */
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ROUTES } from "@/constants";
-import { useCoverPreview } from "@/hooks/useCoverPreview";
-import { defaultCoverService } from "@/services/defaultServices";
+import { MAX_COVER_SIZE_BYTES, ROUTES } from "@/constants";
+import { useFilePreview } from "@/hooks/useFilePreview";
+import { defaultFileService } from "@/services/defaultServices";
 import type { GoalStatus } from "@/types/common";
 import type { Goal } from "@/types/entities";
 
@@ -41,7 +41,7 @@ export function useGoalEditForm({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  const coverPreviewSrc = useCoverPreview({
+  const coverPreviewSrc = useFilePreview({
     pendingCoverFile,
     isCoverRemoved,
     existingCoverUrl,
@@ -85,18 +85,19 @@ export function useGoalEditForm({
       let newCoverFileId = originalCoverFileId;
 
       if (pendingCoverFile) {
-        const uploadResult = await defaultCoverService.uploadCover(
+        const uploadResult = await defaultFileService.uploadFile(
           pendingCoverFile,
           goalId,
+          MAX_COVER_SIZE_BYTES,
         );
         newCoverFileId = uploadResult.data_hash;
         if (originalCoverFileId && originalCoverFileId !== newCoverFileId) {
-          void defaultCoverService.deleteCover(originalCoverFileId, goalId);
+          void defaultFileService.deleteFile(originalCoverFileId, goalId);
         }
       } else if (isCoverRemoved) {
         newCoverFileId = "";
         if (originalCoverFileId) {
-          void defaultCoverService.deleteCover(originalCoverFileId, goalId);
+          void defaultFileService.deleteFile(originalCoverFileId, goalId);
         }
       }
 

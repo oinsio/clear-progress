@@ -13,7 +13,7 @@ const ENTITY_TABLES = [
   "checklist_items",
   "settings",
   "sync_meta",
-  "covers",
+  "files",
 ] as const;
 
 const supabaseFunctionsUrl = process.env.TEST_SUPABASE_URL;
@@ -118,27 +118,27 @@ if (
     });
 
     // FR11, M2
-    it("User A cannot read User B's covers", async () => {
+    it("User A cannot read User B's files", async () => {
       const goalId = crypto.randomUUID();
-      const coverData = Buffer.from("fake-image-bytes").toString("base64");
+      const fileData = Buffer.from("fake-image-bytes").toString("base64");
       const dataHash = `hash-${crypto.randomUUID()}`;
 
-      const uploadResult = await adapterB.uploadCover({
+      const uploadResult = await adapterB.uploadFile({
         goal_id: goalId,
         filename: "cover.png",
         mime_type: "image/png",
-        data: coverData,
+        data: fileData,
         data_hash: dataHash,
       });
 
       expect(uploadResult.ok).toBe(true);
-      const coverResponse = await adapterA.getCover({ hashes: [dataHash] });
+      const fileResponse = await adapterA.getFile({ hashes: [dataHash] });
 
-      // User A should not be able to retrieve User B's cover
-      const coverResult = coverResponse.covers[0];
-      expect(coverResult).toBeDefined();
-      expect(coverResult?.data).toBeUndefined();
-      expect(coverResult?.error).toBeDefined();
+      // User A should not be able to retrieve User B's file
+      const fileResult = fileResponse.files[0];
+      expect(fileResult).toBeDefined();
+      expect(fileResult?.data).toBeUndefined();
+      expect(fileResult?.error).toBeDefined();
     });
 
     // FR3, FR8

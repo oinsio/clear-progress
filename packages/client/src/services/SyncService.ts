@@ -6,6 +6,7 @@ import {
   SYNC_META_KEYS,
 } from "@/constants";
 import { db } from "@/db/database";
+import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import type { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -17,6 +18,7 @@ import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { Temporal } from "@/lib/temporal";
 import type { PurgeResponse } from "@/types/api";
 import type {
+  Attachment,
   Category,
   ChecklistItem,
   Context,
@@ -39,6 +41,7 @@ export class SyncService {
     private readonly checklistRepository: ChecklistRepository,
     private readonly ideaRepository: IdeaRepository,
     private readonly settingsRepository: SettingsRepository,
+    private readonly attachmentRepository: AttachmentRepository,
   ) {}
 
   private async withLock<T>(fn: () => Promise<T>): Promise<T> {
@@ -148,6 +151,15 @@ export class SyncService {
           );
           throw error;
         }),
+      this.attachmentRepository
+        .applyServerRecords(pullResponse.attachments)
+        .catch((error) => {
+          console.error(
+            "[SyncService] applyServerRecords attachments failed:",
+            error,
+          );
+          throw error;
+        }),
       this.settingsRepository
         .bulkUpsert(pullResponse.settings)
         .catch((error) => {
@@ -202,6 +214,7 @@ export class SyncService {
       categories,
       checklist_items,
       ideas,
+      attachments,
       settings,
     ] = force
       ? await Promise.all([
@@ -211,6 +224,7 @@ export class SyncService {
           this.categoryRepository.getAll(),
           this.checklistRepository.getAll(),
           this.ideaRepository.getAll(),
+          this.attachmentRepository.getAll(),
           this.settingsRepository.getAll(),
         ])
       : await Promise.all([
@@ -220,6 +234,7 @@ export class SyncService {
           this.categoryRepository.getNeedingSync(),
           this.checklistRepository.getNeedingSync(),
           this.ideaRepository.getNeedingSync(),
+          this.attachmentRepository.getNeedingSync(),
           this.settingsRepository.getNeedingSync(),
         ]);
 
@@ -231,6 +246,7 @@ export class SyncService {
         categories.length > 0 ||
         checklist_items.length > 0 ||
         ideas.length > 0 ||
+        attachments.length > 0 ||
         settings.length > 0;
 
       if (!hasChanges) return;
@@ -286,6 +302,10 @@ export class SyncService {
         (item) => [item.id, item.updated_at] as [string, string],
       ),
       ...ideas.map((idea) => [idea.id, idea.updated_at] as [string, string]),
+      ...attachments.map(
+        (attachment) =>
+          [attachment.id, attachment.updated_at] as [string, string],
+      ),
     ]);
 
     const stripDirty = <T extends { needsSync?: boolean }>(
@@ -302,6 +322,7 @@ export class SyncService {
       categories,
       validChecklistItems,
       ideas,
+      attachments,
       settings,
     );
 
@@ -314,6 +335,7 @@ export class SyncService {
         categories: stripDirty(chunk.categories) as Category[],
         checklist_items: stripDirty(chunk.checklist_items) as ChecklistItem[],
         ideas: stripDirty(chunk.ideas) as Idea[],
+        attachments: stripDirty(chunk.attachments) as Attachment[],
         settings: stripDirty(chunk.settings) as Setting[],
       });
 
@@ -342,6 +364,7 @@ export class SyncService {
     categories: Category[],
     checklist_items: ChecklistItem[],
     ideas: Idea[],
+    attachments: Attachment[],
     settings: Setting[],
   ): Array<{
     tasks: Task[];
@@ -350,6 +373,7 @@ export class SyncService {
     categories: Category[];
     checklist_items: ChecklistItem[];
     ideas: Idea[];
+    attachments: Attachment[];
     settings: Setting[];
   }> {
     const allRecords = [
@@ -359,6 +383,7 @@ export class SyncService {
       ...categories,
       ...checklist_items,
       ...ideas,
+      ...attachments,
       ...settings,
     ];
 
@@ -373,6 +398,7 @@ export class SyncService {
           categories,
           checklist_items,
           ideas,
+          attachments,
           settings,
         },
       ];
@@ -385,6 +411,7 @@ export class SyncService {
       categories: Category[];
       checklist_items: ChecklistItem[];
       ideas: Idea[];
+      attachments: Attachment[];
       settings: Setting[];
     }> = [];
 
@@ -394,6 +421,7 @@ export class SyncService {
     const remainingCategories = [...categories];
     const remainingChecklistItems = [...checklist_items];
     const remainingIdeas = [...ideas];
+    const remainingAttachments = [...attachments];
     const remainingSettings = [...settings];
 
     while (
@@ -403,6 +431,7 @@ export class SyncService {
       remainingCategories.length > 0 ||
       remainingChecklistItems.length > 0 ||
       remainingIdeas.length > 0 ||
+      remainingAttachments.length > 0 ||
       remainingSettings.length > 0
     ) {
       const chunk = {
@@ -412,12 +441,13 @@ export class SyncService {
         categories: [] as Category[],
         checklist_items: [] as ChecklistItem[],
         ideas: [] as Idea[],
+        attachments: [] as Attachment[],
         settings: [] as Setting[],
       };
 
       let chunkSize = 0;
 
-      // Fill chunk in dependency order (FR19): contexts → categories → goals → ideas → tasks → checklist_items → settings
+      // Fill chunk in dependency order (FR19): contexts → categories → goals → ideas → tasks → checklist_items → attachments → settings
       const takeFromArray = <T>(arr: T[], remaining: number): T[] => {
         const toTake = Math.min(arr.length, remaining);
         return arr.splice(0, toTake);
@@ -467,6 +497,14 @@ export class SyncService {
           PUSH_CHUNK_SIZE - chunkSize,
         );
         chunkSize += chunk.checklist_items.length;
+      }
+
+      if (chunkSize < PUSH_CHUNK_SIZE) {
+        chunk.attachments = takeFromArray(
+          remainingAttachments,
+          PUSH_CHUNK_SIZE - chunkSize,
+        );
+        chunkSize += chunk.attachments.length;
       }
 
       if (chunkSize < PUSH_CHUNK_SIZE) {
@@ -523,6 +561,12 @@ export class SyncService {
         results.ideas ?? [],
         sentTimestamps,
         this.ideaRepository,
+        pushRevision,
+      ),
+      this._applyEntityPushResults(
+        results.attachments ?? [],
+        sentTimestamps,
+        this.attachmentRepository,
         pushRevision,
       ),
       this._applySettingsPushResults(results.settings ?? []),
@@ -613,6 +657,7 @@ export class SyncService {
     await db.categories.toCollection().modify({ needsSync: false });
     await db.checklist_items.toCollection().modify({ needsSync: false });
     await db.ideas.toCollection().modify({ needsSync: false });
+    await db.attachments.toCollection().modify({ needsSync: false });
     await db.settings.toCollection().modify({ needsSync: false });
 
     // 3. Fetch the full state from the server
@@ -629,6 +674,7 @@ export class SyncService {
         db.categories,
         db.checklist_items,
         db.ideas,
+        db.attachments,
       ],
       async () => {
         await db.tasks.filter((t) => t.is_deleted).delete();
@@ -637,6 +683,7 @@ export class SyncService {
         await db.categories.filter((c) => c.is_deleted).delete();
         await db.checklist_items.filter((i) => i.is_deleted).delete();
         await db.ideas.filter((i) => i.is_deleted).delete();
+        await db.attachments.filter((a) => a.is_deleted).delete();
       },
     );
   }

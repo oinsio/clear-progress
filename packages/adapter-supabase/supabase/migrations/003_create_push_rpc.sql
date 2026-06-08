@@ -1,4 +1,5 @@
 -- implements FR3, D1, D3, FR18, FR19 of add-supabase-adapter
+-- implements FR6 of add-file-attachments
 -- PostgreSQL RPC function: push_records
 --
 -- Security model: called by Edge Function using service role after validating the
@@ -6,34 +7,36 @@
 -- The function enforces data isolation by using p_user_id in all WHERE clauses.
 --
 -- Processing order follows dependency graph (FR19):
--- contexts → categories → goals → ideas → tasks → checklist_items → settings
+-- contexts → categories → goals → ideas → tasks → checklist_items → attachments → settings
 
 CREATE OR REPLACE FUNCTION push_records(
-  p_user_id        UUID,
-  p_tasks          JSONB DEFAULT '[]',
-  p_goals          JSONB DEFAULT '[]',
-  p_contexts       JSONB DEFAULT '[]',
-  p_categories     JSONB DEFAULT '[]',
-  p_ideas          JSONB DEFAULT '[]',
+  p_user_id         UUID,
+  p_tasks           JSONB DEFAULT '[]',
+  p_goals           JSONB DEFAULT '[]',
+  p_contexts        JSONB DEFAULT '[]',
+  p_categories      JSONB DEFAULT '[]',
+  p_ideas           JSONB DEFAULT '[]',
   p_checklist_items JSONB DEFAULT '[]',
-  p_settings       JSONB DEFAULT '[]'
+  p_attachments     JSONB DEFAULT '[]',
+  p_settings        JSONB DEFAULT '[]'
 )
 RETURNS JSONB
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  v_revision         BIGINT;
-  v_rec              JSONB;
-  v_rec_id           UUID;
-  v_server_rec       JSONB;
-  v_existing_ts      TIMESTAMPTZ;
-  v_context_results  JSONB := '[]';
-  v_category_results JSONB := '[]';
-  v_goal_results     JSONB := '[]';
-  v_idea_results     JSONB := '[]';
-  v_task_results     JSONB := '[]';
-  v_checklist_results JSONB := '[]';
-  v_setting_results  JSONB := '[]';
+  v_revision           BIGINT;
+  v_rec                JSONB;
+  v_rec_id             UUID;
+  v_server_rec         JSONB;
+  v_existing_ts        TIMESTAMPTZ;
+  v_context_results    JSONB := '[]';
+  v_category_results   JSONB := '[]';
+  v_goal_results       JSONB := '[]';
+  v_idea_results       JSONB := '[]';
+  v_task_results       JSONB := '[]';
+  v_checklist_results  JSONB := '[]';
+  v_attachment_results JSONB := '[]';
+  v_setting_results    JSONB := '[]';
 BEGIN
   -- Serialize concurrent pushes from the same user (D3)
   SET LOCAL lock_timeout = '10s';
@@ -286,6 +289,48 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- ── Attachments (FR6 of add-file-attachments) ──────────────────────────────
+  FOR v_rec IN SELECT value FROM jsonb_array_elements(p_attachments) AS value LOOP
+    v_rec_id := (v_rec->>'id')::UUID;
+    SELECT updated_at INTO v_existing_ts FROM attachments WHERE id = v_rec_id AND user_id = p_user_id;
+
+    IF NOT FOUND THEN
+      INSERT INTO attachments (id, user_id, entity_type, entity_id, data_hash, filename,
+        mime_type, file_size, sort_order, is_deleted, created_at, updated_at, revision)
+      VALUES (
+        v_rec_id, p_user_id, v_rec->>'entity_type', (v_rec->>'entity_id')::UUID,
+        v_rec->>'data_hash', v_rec->>'filename', v_rec->>'mime_type',
+        (v_rec->>'file_size')::INTEGER, (v_rec->>'sort_order')::INTEGER,
+        (v_rec->>'is_deleted')::BOOLEAN,
+        (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
+      );
+      v_attachment_results := v_attachment_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'created'));
+
+    ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
+      UPDATE attachments SET
+        entity_type = v_rec->>'entity_type', entity_id = (v_rec->>'entity_id')::UUID,
+        data_hash = v_rec->>'data_hash', filename = v_rec->>'filename',
+        mime_type = v_rec->>'mime_type', file_size = (v_rec->>'file_size')::INTEGER,
+        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
+      WHERE id = v_rec_id AND user_id = p_user_id;
+      v_attachment_results := v_attachment_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'accepted'));
+
+    ELSE
+      SELECT jsonb_build_object(
+        'id', id::text, 'entity_type', entity_type, 'entity_id', entity_id::text,
+        'data_hash', data_hash, 'filename', filename, 'mime_type', mime_type,
+        'file_size', file_size, 'sort_order', sort_order, 'is_deleted', is_deleted,
+        'created_at', format_timestamptz(created_at), 'updated_at', format_timestamptz(updated_at),
+        'revision', revision
+      ) INTO v_server_rec FROM attachments WHERE id = v_rec_id AND user_id = p_user_id;
+      v_attachment_results := v_attachment_results || jsonb_build_array(
+        jsonb_build_object('id', v_rec->>'id', 'status', 'conflict', 'server_record', v_server_rec));
+    END IF;
+  END LOOP;
+
   -- ── Settings ─────────────────────────────────────────────────────────────
   -- Settings have no revision; conflict is based on updated_at only
   FOR v_rec IN SELECT value FROM jsonb_array_elements(p_settings) AS value LOOP
@@ -325,6 +370,7 @@ BEGIN
       'categories',      v_category_results,
       'ideas',           v_idea_results,
       'checklist_items', v_checklist_results,
+      'attachments',     v_attachment_results,
       'settings',        v_setting_results
     )
   );

@@ -43,10 +43,10 @@ describe("init — first time setup", () => {
     });
   });
 
-  it("should create covers folder inside root folder", () => {
+  it("should create files folder inside root folder", () => {
     init();
     expect(vi.mocked(Drive.Files.create).mock.calls[1][0]).toMatchObject({
-      name: DRIVE_FOLDER_NAMES.COVERS,
+      name: DRIVE_FOLDER_NAMES.FILES,
       mimeType: DRIVE_MIME_TYPES.FOLDER,
       parents: [MOCK_ROOT_FOLDER_ID],
     });
@@ -105,12 +105,12 @@ describe("init — first time setup", () => {
     });
   });
 
-  it("should save SPREADSHEET_ID, FOLDER_ID, COVERS_FOLDER_ID to PropertiesService", () => {
+  it("should save SPREADSHEET_ID, FOLDER_ID, FILES_FOLDER_ID to PropertiesService", () => {
     init();
     const store = getScriptPropertiesStore();
     expect(store[PROPERTY_KEYS.SPREADSHEET_ID]).toBe(MOCK_SPREADSHEET_ID);
     expect(store[PROPERTY_KEYS.FOLDER_ID]).toBe(MOCK_ROOT_FOLDER_ID);
-    expect(store[PROPERTY_KEYS.COVERS_FOLDER_ID]).toBe("covers-folder-id");
+    expect(store[PROPERTY_KEYS.FILES_FOLDER_ID]).toBe("covers-folder-id");
   });
 
   it("should call initDefaults once", () => {

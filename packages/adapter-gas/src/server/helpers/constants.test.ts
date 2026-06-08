@@ -4,10 +4,10 @@ import {
   APP_NAME,
   coerceSheetGoalStatus,
   colMap,
-  DEFAULT_COVER_EXTENSION,
+  DEFAULT_FILE_EXTENSION,
   isValidUuid,
   LOCK_TIMEOUT_MS,
-  MAX_COVER_SIZE_BYTES,
+  MAX_FILE_SIZE_BYTES,
   META_KEYS,
   SHEET_HEADERS,
   SHEET_NAMES,
@@ -44,15 +44,15 @@ describe("VALID_GOAL_STATUSES", () => {
   });
 });
 
-describe("MAX_COVER_SIZE_BYTES", () => {
+describe("MAX_FILE_SIZE_BYTES", () => {
   it("should equal exactly 2 MB (2097152 bytes)", () => {
-    expect(MAX_COVER_SIZE_BYTES).toBe(2097152);
+    expect(MAX_FILE_SIZE_BYTES).toBe(2097152);
   });
 });
 
-describe("DEFAULT_COVER_EXTENSION", () => {
+describe("DEFAULT_FILE_EXTENSION", () => {
   it('should be "jpg"', () => {
-    expect(DEFAULT_COVER_EXTENSION).toBe("jpg");
+    expect(DEFAULT_FILE_EXTENSION).toBe("jpg");
   });
 });
 

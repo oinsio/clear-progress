@@ -1,8 +1,8 @@
 import { beforeEach, expect, type Mock, vi } from "vitest";
-import { setupCoverMocks } from "../../../tests/server/helpers/cover-mocks";
-import { COVER_HASH_PREFIX_LENGTH } from "../helpers/constants";
+import { setupFileMocks } from "../../../tests/server/helpers/cover-mocks";
+import { FILE_HASH_PREFIX_LENGTH } from "../helpers/constants";
 
-export { DEFAULT_COVERS_FOLDER_ID } from "../../../tests/server/helpers/cover-mocks";
+export { DEFAULT_FILES_FOLDER_ID } from "../../../tests/server/helpers/cover-mocks";
 export {
   resetScriptProperties,
   setScriptProperty,
@@ -10,7 +10,7 @@ export {
 
 // When computeDigest returns Array(32).fill(0), each byte maps to '00'
 export const MOCK_HASH = "00".repeat(32);
-export const MOCK_HASH_PREFIX = "0".repeat(COVER_HASH_PREFIX_LENGTH);
+export const MOCK_HASH_PREFIX = "0".repeat(FILE_HASH_PREFIX_LENGTH);
 
 export const validPayload = {
   goal_id: "goal-1",
@@ -37,13 +37,13 @@ export function expectErrorResponse(
   }
 }
 
-export function setupUploadCoverTests(): void {
+export function setupUploadFileTests(): void {
   beforeEach(() => {
-    setupCoverMocks();
+    setupFileMocks();
   });
 }
 
-export function mockExistingCover(
+export function mockExistingFile(
   fileId = "existing-file-id",
   hash = MOCK_HASH,
 ): void {

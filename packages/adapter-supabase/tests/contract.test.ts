@@ -13,7 +13,7 @@ const ENTITY_TABLES = [
   "checklist_items",
   "settings",
   "sync_meta",
-  "covers",
+  "files",
 ] as const;
 
 const supabaseFunctionsUrl = process.env.TEST_SUPABASE_URL;

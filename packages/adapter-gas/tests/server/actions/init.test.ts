@@ -20,6 +20,29 @@ vi.mock("../../../src/server/helpers/drive", () => ({
 
 const { driveFileExists } = await import("../../../src/server/helpers/drive");
 
+function setupSingleSheetSpreadsheet(
+  sheet: ReturnType<typeof createMockSheet>,
+) {
+  const mockSpreadsheet = {
+    getSheetByName: vi.fn().mockReturnValue(sheet),
+  };
+  vi.mocked(SpreadsheetApp.openById).mockReturnValue(mockSpreadsheet as never);
+}
+
+function setupNewSpreadsheetMock() {
+  const mockSheet = {
+    setName: vi.fn(),
+    getRange: vi.fn().mockReturnValue({ setValues: vi.fn() }),
+  };
+  const mockSpreadsheet = {
+    getSheets: vi.fn().mockReturnValue([mockSheet]),
+    insertSheet: vi.fn().mockReturnValue(mockSheet),
+    getId: vi.fn().mockReturnValue("spreadsheet-id"),
+  };
+  vi.mocked(SpreadsheetApp.openById).mockReturnValue(mockSpreadsheet as never);
+  return mockSpreadsheet;
+}
+
 function createMockSheet(headerRow: string[], dataRows: unknown[][] = []) {
   const mockHeaderRange = {
     getValues: vi.fn().mockReturnValue([headerRow]),
@@ -66,12 +89,7 @@ describe("init action", () => {
       vi.mocked(driveFileExists).mockReturnValue(true);
 
       const goalsSheet = createMockSheet(["id", "name", "cover_hash"]);
-      const mockSpreadsheet = {
-        getSheetByName: vi.fn().mockReturnValue(goalsSheet),
-      };
-      vi.mocked(SpreadsheetApp.openById).mockReturnValue(
-        mockSpreadsheet as never,
-      );
+      setupSingleSheetSpreadsheet(goalsSheet);
 
       init();
       const response = parseResponse();
@@ -156,12 +174,7 @@ describe("init action", () => {
         },
       );
 
-      const mockSpreadsheet = {
-        getSheetByName: vi.fn().mockReturnValue(goalsSheet),
-      };
-      vi.mocked(SpreadsheetApp.openById).mockReturnValue(
-        mockSpreadsheet as never,
-      );
+      setupSingleSheetSpreadsheet(goalsSheet);
 
       init();
       // Should write empty string for failed file lookup
@@ -173,12 +186,7 @@ describe("init action", () => {
       vi.mocked(driveFileExists).mockReturnValue(true);
 
       const goalsSheet = createMockSheet(["id", "name", "cover_hash"]);
-      const mockSpreadsheet = {
-        getSheetByName: vi.fn().mockReturnValue(goalsSheet),
-      };
-      vi.mocked(SpreadsheetApp.openById).mockReturnValue(
-        mockSpreadsheet as never,
-      );
+      setupSingleSheetSpreadsheet(goalsSheet);
 
       init();
       // No Drive.Files.get calls since there's nothing to migrate
@@ -194,12 +202,7 @@ describe("init action", () => {
       // lastRow = 1 (headers only)
       goalsSheet.getLastRow.mockReturnValue(1);
 
-      const mockSpreadsheet = {
-        getSheetByName: vi.fn().mockReturnValue(goalsSheet),
-      };
-      vi.mocked(SpreadsheetApp.openById).mockReturnValue(
-        mockSpreadsheet as never,
-      );
+      setupSingleSheetSpreadsheet(goalsSheet);
 
       init();
       // Should still rename the header even without data
@@ -216,18 +219,7 @@ describe("init action", () => {
         .mockReturnValueOnce({ id: "covers-folder-id" } as never)
         .mockReturnValueOnce({ id: "spreadsheet-id" } as never);
 
-      const mockSheet = {
-        setName: vi.fn(),
-        getRange: vi.fn().mockReturnValue({ setValues: vi.fn() }),
-      };
-      const mockSpreadsheet = {
-        getSheets: vi.fn().mockReturnValue([mockSheet]),
-        insertSheet: vi.fn().mockReturnValue(mockSheet),
-        getId: vi.fn().mockReturnValue("spreadsheet-id"),
-      };
-      vi.mocked(SpreadsheetApp.openById).mockReturnValue(
-        mockSpreadsheet as never,
-      );
+      setupNewSpreadsheetMock();
 
       init();
       const response = parseResponse();
@@ -243,12 +235,12 @@ describe("init action", () => {
       expect(() => init()).toThrow("Drive API did not return root folder id");
     });
 
-    it("should throw when Drive API returns no covers folder id", () => {
+    it("should throw when Drive API returns no files folder id", () => {
       vi.mocked(Drive.Files.create)
         .mockReturnValueOnce({ id: "root-id" } as never)
         .mockReturnValueOnce({} as never);
 
-      expect(() => init()).toThrow("Drive API did not return covers folder id");
+      expect(() => init()).toThrow("Drive API did not return files folder id");
     });
 
     it("should throw when Drive API returns no spreadsheet id", () => {

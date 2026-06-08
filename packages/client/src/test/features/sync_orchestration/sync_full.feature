@@ -12,11 +12,11 @@ Feature: Sync Orchestration — Full Sync (Manual)
     When user triggers full sync
     Then progress reports steps in order:
       | step             |
-      | reupload_covers  |
-      | upload_covers    |
+      | reupload_files  |
+      | upload_files    |
       | push             |
       | pull             |
-      | download_covers  |
+      | download_files  |
       | done             |
 
   @sync-orchestration @T7

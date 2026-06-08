@@ -29,7 +29,7 @@ Feature: In-memory adapter covers
   @adapter-inmemory-spec @FR8
   Scenario: Invalid mime type returns per-item error
     Given an initialized adapter
-    When a batch with one valid cover and one cover with mime_type "text/plain" is uploaded
+    When a batch with one valid cover and one cover with mime_type "application/zip" is uploaded
     Then the valid cover result has data_hash and the invalid cover result has error
 
   @adapter-inmemory-spec @FR9
@@ -46,16 +46,17 @@ Feature: In-memory adapter covers
     Then the cover result has an error field
 
   @adapter-inmemory-spec @FR10
-  Scenario: Delete shared cover decrements ref_count
+  Scenario: Delete file referenced by a goal keeps the file
     Given an initialized adapter
-    And a cover with data_hash "shared" has ref_count 2
+    And a cover with data_hash "shared" is uploaded
+    And a goal with cover_hash "shared" is pushed
     When deleteCover is called with hash "shared"
     Then the delete response has deleted false and ref_count 1
 
   @adapter-inmemory-spec @FR10
-  Scenario: Delete last reference removes cover
+  Scenario: Delete file with no entity references removes it
     Given an initialized adapter
-    And a cover with data_hash "single" has ref_count 1
+    And a cover with data_hash "single" is uploaded
     When deleteCover is called with hash "single"
     Then the delete response has deleted true and ref_count 0
 

@@ -132,6 +132,24 @@ export async function deleteGoalFromDetail(page: Page): Promise<void> {
   await page.waitForSelector('[data-testid="goals-page"]');
 }
 
+export async function uploadCoverToGoal(
+  page: Page,
+  file: { name: string; mimeType: string; buffer: Buffer },
+): Promise<void> {
+  await page.getByTestId("edit-goal-button").click();
+  await page.getByTestId("cover-file-input").setInputFiles(file);
+  await page.getByTestId("cover-preview-img").waitFor({ state: "visible" });
+  await page.getByTestId("goal-save-button").click();
+  await page.getByTestId("edit-goal-button").waitFor({ state: "visible" });
+}
+
+export async function removeCoverFromGoal(page: Page): Promise<void> {
+  await page.getByTestId("edit-goal-button").click();
+  await page.getByTestId("cover-remove-button").click();
+  await page.getByTestId("goal-save-button").click();
+  await page.getByTestId("edit-goal-button").waitFor({ state: "visible" });
+}
+
 // ---------------------------------------------------------------------------
 // Category actions
 // ---------------------------------------------------------------------------
@@ -174,4 +192,28 @@ export async function deleteCategoryFromDetail(page: Page): Promise<void> {
   await page.getByTestId("category-delete-btn").click();
   await page.getByTestId("category-delete-confirm-btn").click();
   await page.waitForSelector('[data-testid="categories-page"]');
+}
+
+// ---------------------------------------------------------------------------
+// Attachment actions
+// ---------------------------------------------------------------------------
+
+export async function deleteFirstAttachment(page: Page): Promise<void> {
+  await page.locator('[data-testid^="attachment-delete-"]').first().click();
+  const confirmButton = page.getByTestId("confirm-dialog-confirm");
+  if (await confirmButton.isVisible().catch(() => false)) {
+    await confirmButton.click();
+  }
+}
+
+export async function attachFileToEntity(
+  page: Page,
+  file: { name: string; mimeType: string; buffer: Buffer },
+): Promise<void> {
+  await page.getByTestId("tab-attachments").click();
+  await page.getByTestId("attach-file-input").setInputFiles(file);
+  await page
+    .locator('[data-testid^="attachment-item-"]')
+    .first()
+    .waitFor({ state: "visible" });
 }

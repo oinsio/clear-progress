@@ -36,7 +36,7 @@ export async function closeAuthenticatedPage(
 }
 
 /**
- * Creates a browser context pre-loaded with auth state from the shared setup,
+ * Creates a browser context preloaded with auth state from the shared setup,
  * navigates to /tasks, and waits for the initial auto-sync to complete.
  * This ensures the sync engine is idle before tests begin.
  */
@@ -225,7 +225,7 @@ async function attemptSync(
       LAST_SYNC_STORAGE_KEY,
     );
 
-    // 3. Click sync and wait for completion (retry clicks if mutex-blocked).
+    // 4. Click sync and wait for completion (retry clicks if mutex-blocked).
     while (Date.now() < deadline) {
       const remainingMs = deadline - Date.now();
       if (remainingMs <= 0) break;
@@ -347,11 +347,28 @@ async function reloadAndWaitForAutoSync(testPage: Page): Promise<boolean> {
 }
 
 /**
- * Triggers a sync by clicking the sync button, then waits for completion.
- * If sync times out, reloads the page to reset SyncProvider state and retries.
- * The page reload triggers a fresh auto-sync which often resolves race conditions
- * between concurrent cover syncs and the main sync cycle.
+ * Shape of the pull response that includes tasks, goals, and attachments.
+ * Used to type-narrow pullFromServer results in attachment/purge tests.
  */
+export interface RefCountPullResponse {
+  ok: boolean;
+  tasks: Array<{ id: string; name: string; is_deleted: boolean }>;
+  goals: Array<{
+    id: string;
+    name: string;
+    cover_hash: string;
+    is_deleted: boolean;
+  }>;
+  attachments: Array<{
+    id: string;
+    entity_type: string;
+    entity_id: string;
+    data_hash: string;
+    filename: string;
+    is_deleted: boolean;
+  }>;
+}
+
 /**
  * Credentials needed to call Supabase Edge Functions directly from Node.js.
  */
@@ -380,18 +397,19 @@ export async function pullFromServer<T = Record<string, unknown>>(
   if (!response.ok) {
     throw new Error(`pull failed: ${response.status} ${await response.text()}`);
   }
-  return (await response.json()) as Promise<T>;
+  return (await response.json()) as T;
 }
 
 /**
- * Calls the get-cover Edge Function to retrieve cover data by hash.
+ * Calls the get-file Edge Function to retrieve file data by hash.
+ * Implements FR4 of add-file-attachments.
  */
-export async function getCoverFromServer(
+export async function getFileFromServer(
   credentials: ServerCallCredentials,
   hashes: string[],
 ): Promise<{
   ok: boolean;
-  covers: Array<{
+  files: Array<{
     hash: string;
     mime_type?: string;
     data?: string;
@@ -399,7 +417,7 @@ export async function getCoverFromServer(
   }>;
 }> {
   const response = await fetch(
-    `${credentials.supabaseUrl}/functions/v1/get-cover`,
+    `${credentials.supabaseUrl}/functions/v1/get-file`,
     {
       method: "POST",
       headers: {
@@ -412,28 +430,73 @@ export async function getCoverFromServer(
   );
   if (!response.ok) {
     throw new Error(
-      `get-cover failed: ${response.status} ${await response.text()}`,
+      `get-file failed: ${response.status} ${await response.text()}`,
     );
   }
-  return (await response.json()) as Promise<{
+  return (await response.json()) as {
     ok: boolean;
-    covers: Array<{
+    files: Array<{
       hash: string;
       mime_type?: string;
       data?: string;
       error?: string;
     }>;
-  }>;
+  };
 }
 
 /**
- * Returns a minimal 1x1 pixel PNG buffer (67 bytes) for cover upload tests.
+ * Calls the purge Edge Function to hard-delete is_deleted=true records
+ * and clean up orphaned files.
+ * Implements FR17 of add-file-attachments.
  */
+export async function purgeOnServer(
+  credentials: ServerCallCredentials,
+): Promise<{
+  ok: boolean;
+  purged: Record<string, number>;
+  purge_revision: number;
+}> {
+  const response = await fetch(
+    `${credentials.supabaseUrl}/functions/v1/purge`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${credentials.accessToken}`,
+        apikey: credentials.anonKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `purge failed: ${response.status} ${await response.text()}`,
+    );
+  }
+  return (await response.json()) as {
+    ok: boolean;
+    purged: Record<string, number>;
+    purge_revision: number;
+  };
+}
+
+/**
+ * Returns a minimal 1x1 pixel PNG buffer with a unique suffix appended after
+ * the IEND chunk. Each call produces a different SHA-256 hash, preventing
+ * cross-test file hash collisions on the shared server. Within a test, reuse
+ * the same buffer for "same hash" scenarios.
+ */
+let pngSequence = 0;
 export function createMinimalPng(): Buffer {
-  return Buffer.from(
+  const base = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
     "base64",
   );
+  const suffix = Buffer.alloc(8);
+  const now = Date.now();
+  suffix.writeUInt32BE(Math.floor(now / 0x100000000) >>> 0, 0);
+  suffix.writeUInt32BE((now >>> 0) + pngSequence++, 4);
+  return Buffer.concat([base, suffix]);
 }
 
 /**
@@ -512,9 +575,7 @@ export async function triggerSyncAndWait(testPage: Page): Promise<void> {
     if (attempt < SYNC_MAX_RETRIES) {
       // Page reload resets SyncProvider state (isSyncingRef, syncStatus).
       // The fresh page triggers auto-sync which may push pending changes.
-      const autoSynced = await reloadAndWaitForAutoSync(testPage);
-      if (autoSynced) {
-      }
+      await reloadAndWaitForAutoSync(testPage);
     }
   }
 

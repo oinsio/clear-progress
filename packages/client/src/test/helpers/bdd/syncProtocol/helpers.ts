@@ -1,5 +1,6 @@
 import type { SyncAdapter } from "@clear-progress/contract";
 import { vi } from "vitest";
+import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import type { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -120,6 +121,14 @@ export function createMockRepositories() {
     clearNeedsSyncByKey: vi.fn().mockResolvedValue(undefined),
   } as unknown as SettingsRepository;
 
+  const attachmentRepository = {
+    getNeedingSync: vi.fn().mockResolvedValue([]),
+    getAll: vi.fn().mockResolvedValue([]),
+    getById: vi.fn().mockResolvedValue(undefined),
+    update: vi.fn().mockResolvedValue(undefined),
+    applyServerRecords: vi.fn().mockResolvedValue(undefined),
+  } as unknown as AttachmentRepository;
+
   const syncMetaRepository = {
     getValue: vi.fn().mockResolvedValue(0),
     setValue: vi.fn().mockResolvedValue(undefined),
@@ -132,6 +141,7 @@ export function createMockRepositories() {
     categoryRepository,
     checklistRepository,
     ideaRepository,
+    attachmentRepository,
     settingsRepository,
     syncMetaRepository,
   };
@@ -146,6 +156,7 @@ export function mockAllRepositoriesGetAll(
     categories?: unknown[];
     checklists?: unknown[];
     ideas?: unknown[];
+    attachments?: unknown[];
     settings?: unknown[];
   } = {},
 ): void {
@@ -168,6 +179,9 @@ export function mockAllRepositoriesGetAll(
     repositories.ideaRepository.getAll as ReturnType<typeof vi.fn>
   ).mockResolvedValue(overrides.ideas ?? []);
   (
+    repositories.attachmentRepository.getAll as ReturnType<typeof vi.fn>
+  ).mockResolvedValue(overrides.attachments ?? []);
+  (
     repositories.settingsRepository.getAll as ReturnType<typeof vi.fn>
   ).mockResolvedValue(overrides.settings ?? []);
 }
@@ -186,5 +200,6 @@ export function createSyncService(
     repositories.checklistRepository,
     repositories.ideaRepository,
     repositories.settingsRepository,
+    repositories.attachmentRepository,
   );
 }

@@ -17,16 +17,16 @@ vi.mock("../../../../server/actions/init", () => ({ init: vi.fn() }));
 vi.mock("../../../../server/actions/pull", () => ({ pull: vi.fn() }));
 vi.mock("../../../../server/actions/push", () => ({ push: vi.fn() }));
 vi.mock("../../../../server/actions/purge", () => ({ purge: vi.fn() }));
-vi.mock("../../../../server/actions/upload-cover", () => ({
-  uploadCover: vi.fn(),
+vi.mock("../../../../server/actions/upload-file", () => ({
+  uploadFile: vi.fn(),
 }));
-vi.mock("../../../../server/actions/upload-covers", () => ({
-  uploadCovers: vi.fn(),
+vi.mock("../../../../server/actions/upload-files", () => ({
+  uploadFiles: vi.fn(),
 }));
-vi.mock("../../../../server/actions/delete-cover", () => ({
-  deleteCover: vi.fn(),
+vi.mock("../../../../server/actions/delete-file", () => ({
+  deleteFile: vi.fn(),
 }));
-vi.mock("../../../../server/actions/get-cover", () => ({ getCover: vi.fn() }));
+vi.mock("../../../../server/actions/get-file", () => ({ getFile: vi.fn() }));
 
 import "../../../../server/main";
 

@@ -1,11 +1,15 @@
 import { liveQuery } from "dexie";
 import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
+import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { IdeaService } from "@/services/IdeaService";
 import type { Idea } from "@/types/entities";
 
-const defaultIdeaService = new IdeaService(new IdeaRepository());
+const defaultIdeaService = new IdeaService(
+  new IdeaRepository(),
+  new AttachmentRepository(),
+);
 
 export interface UseIdeasReturn {
   ideas: Idea[];

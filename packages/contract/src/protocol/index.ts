@@ -1,15 +1,15 @@
 export type {
-  DeleteCoverRequest,
-  DeleteCoverResponse,
-  GetCoverRequest,
-  GetCoverResponse,
-  GetCoverResult,
-  UploadCoverBatchItem,
-  UploadCoverBatchResult,
-  UploadCoverRequest,
-  UploadCoverResponse,
-  UploadCoversRequest,
-  UploadCoversResponse,
+  DeleteFileRequest,
+  DeleteFileResponse,
+  GetFileRequest,
+  GetFileResponse,
+  GetFileResult,
+  UploadFileBatchItem,
+  UploadFileBatchResult,
+  UploadFileRequest,
+  UploadFileResponse,
+  UploadFilesRequest,
+  UploadFilesResponse,
 } from "./cover";
 export type { InitResponse, PingResponse } from "./ping";
 export type { PullRequest, PullResponse } from "./pull";

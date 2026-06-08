@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
         registerType: "prompt",
         manifest: false,
         workbox: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+          globPatterns: ["**/*.{js,mjs,css,html,ico,png,svg}"],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/lh3\.googleusercontent\.com\/.*/i,

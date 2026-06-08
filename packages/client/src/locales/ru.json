@@ -59,7 +59,16 @@
     "today": "Сегодня",
     "unhide": "Показать",
     "unhideTask": "Показать задачу",
-    "yesterday": "Вчера"
+    "yesterday": "Вчера",
+    "tabs": {
+      "attachments": "Вложения"
+    },
+    "attachments": {
+      "empty": "Нет вложений",
+      "confirmDelete": "Удалить это вложение?",
+      "confirmDeleteMessage": "Это действие нельзя отменить.",
+      "confirmDeleteButton": "Удалить"
+    }
   },
   "section": {
     "inbox": "Входящие",
@@ -116,7 +125,19 @@
     "deleteConfirmName": "Удалить цель?",
     "taskCount": "Задач:",
     "addToFocus": "Добавить в фокус",
-    "removeFromFocus": "Убрать из фокуса"
+    "removeFromFocus": "Убрать из фокуса",
+    "tabs": {
+      "details": "Детали",
+      "attachments": "Вложения"
+    },
+    "attachments": {
+      "empty": "Нет вложений",
+      "confirmDelete": "Удалить это вложение?",
+      "confirmDeleteMessage": "Это действие нельзя отменить.",
+      "confirmDeleteButton": "Удалить"
+    },
+    "expandDetails": "Развернуть детали",
+    "collapseDetails": "Свернуть детали"
   },
   "focusGoalReplacementDialog": {
     "title": "Заменить цель в фокусе",
@@ -146,7 +167,13 @@
     "deleteConfirmCancel": "Отмена",
     "deleteConfirmOk": "Удалить",
     "addTask": "Добавить задачу",
-    "taskPlaceholder": "Название задачи..."
+    "taskPlaceholder": "Название задачи...",
+    "attachments": {
+      "empty": "Нет вложений",
+      "confirmDelete": "Удалить это вложение?",
+      "confirmDeleteMessage": "Это действие нельзя отменить.",
+      "confirmDeleteButton": "Удалить"
+    }
   },
   "context": {
     "empty": "Нет ни одного контекста",
@@ -233,11 +260,11 @@
     "fullSync": "Полная синхронизация",
     "fullSyncConfirmName": "Запустить полную синхронизацию?",
     "fullSyncConfirmDescription": "Все данные будут синхронизированы между устройством и сервером. Конфликты разрешаются по времени последнего изменения.",
-    "fullSyncStepReuploadCovers": "Перезагрузка обложек на сервер",
-    "fullSyncStepUploadCovers": "Загрузка новых обложек на сервер",
+    "fullSyncStepReuploadFiles": "Перезагрузка файлов на сервер",
+    "fullSyncStepUploadFiles": "Загрузка новых файлов на сервер",
     "fullSyncStepPush": "Отправка данных на сервер",
     "fullSyncStepPull": "Загрузка данных с сервера",
-    "fullSyncStepDownloadCovers": "Загрузка обложек с сервера",
+    "fullSyncStepDownloadFiles": "Загрузка файлов с сервера",
     "fullSyncSuccess": "Синхронизация завершена",
     "fullSyncError": "Ошибка синхронизации",
     "fullSyncCancel": "Отмена",
@@ -502,6 +529,29 @@
     "filterByBox": "Фильтр по коробочке",
     "toggleHiddenItems": "Переключить скрытые элементы",
     "create": "Создать"
+  },
+  "attachment": {
+    "list": {
+      "preview": "Предпросмотр {{filename}}",
+      "download": "Скачать {{filename}}",
+      "delete": "Удалить {{filename}}"
+    },
+    "lightbox": {
+      "dialogLabel": "Предпросмотр: {{filename}}",
+      "close": "Закрыть предпросмотр",
+      "previewNotAvailable": "Предпросмотр недоступен для этого типа файла",
+      "download": "Скачать",
+      "loading": "Загрузка...",
+      "loadError": "Не удалось загрузить файл"
+    },
+    "attach": {
+      "button": "Прикрепить файл",
+      "errorSize": "Файл слишком большой (макс. 5 МБ)",
+      "errorType": "Этот тип файла не поддерживается"
+    }
+  },
+  "confirmDialog": {
+    "cancel": "Отмена"
   },
   "pwa": {
     "appUpdated": "Приложение обновлено",

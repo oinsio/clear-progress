@@ -4,6 +4,7 @@ import type {
   SyncAdapter,
 } from "@clear-progress/contract";
 import { vi } from "vitest";
+import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import type { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -13,6 +14,7 @@ import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import type {
+  Attachment,
   Category,
   ChecklistItem,
   Context,
@@ -34,6 +36,7 @@ export function makePullResponse(
     contexts: [],
     categories: [],
     checklist_items: [],
+    attachments: [],
     settings: [],
     current_revision: 10,
     purge_revision: 0,
@@ -58,28 +61,28 @@ export function createMockSyncAdapter(
   overrides: Partial<SyncAdapter> = {},
 ): SyncAdapter {
   return {
-    uploadCover: vi.fn().mockResolvedValue({
+    uploadFile: vi.fn().mockResolvedValue({
       ok: true,
       data_hash: "new-data-hash",
       reused: false,
     }),
-    uploadCovers: vi
+    uploadFiles: vi
       .fn()
       .mockImplementation(
-        (request: { covers: Array<{ data_hash: string; goal_id: string }> }) =>
+        (request: { files: Array<{ data_hash: string; goal_id: string }> }) =>
           Promise.resolve({
             ok: true,
-            results: request.covers.map((cover) => ({
-              data_hash: cover.data_hash,
-              goal_id: cover.goal_id,
+            results: request.files.map((file) => ({
+              data_hash: file.data_hash,
+              goal_id: file.goal_id,
               reused: false,
             })),
           }),
       ),
-    deleteCover: vi
+    deleteFile: vi
       .fn()
       .mockResolvedValue({ ok: true, deleted: true, ref_count: 0 }),
-    getCover: vi.fn().mockResolvedValue({ ok: true, covers: [] }),
+    getFile: vi.fn().mockResolvedValue({ ok: true, files: [] }),
     ping: vi.fn(),
     init: vi.fn(),
     pull: vi.fn().mockResolvedValue(makePullResponse()),
@@ -193,6 +196,27 @@ export function makeChecklistItem(
   };
 }
 
+export function makeAttachment(
+  overrides: Partial<Attachment> = {},
+): Attachment {
+  return {
+    id: "att-id",
+    entity_type: "task",
+    entity_id: "task-id",
+    data_hash: "test-hash",
+    filename: "test-file.pdf",
+    mime_type: "application/pdf",
+    file_size: 1024,
+    sort_order: 0,
+    is_deleted: false,
+    created_at: toISOTimestamp(),
+    updated_at: toISOTimestamp(),
+    revision: 0,
+    needsSync: true,
+    ...overrides,
+  };
+}
+
 export function createEntityRepoMock() {
   return {
     getNeedingSync: vi.fn().mockResolvedValue([]),
@@ -231,6 +255,7 @@ export interface SyncTestContext {
   categoryRepository: CategoryRepository;
   checklistRepository: ChecklistRepository;
   ideaRepository: IdeaRepository;
+  attachmentRepository: AttachmentRepository;
   settingsRepository: SettingsRepository;
   syncMetaRepository: SyncMetaRepository;
 }
@@ -245,6 +270,8 @@ export function setupSyncTestContext(): SyncTestContext {
     checklistRepository:
       createEntityRepoMock() as unknown as ChecklistRepository,
     ideaRepository: createEntityRepoMock() as unknown as IdeaRepository,
+    attachmentRepository:
+      createEntityRepoMock() as unknown as AttachmentRepository,
     settingsRepository: createSettingsRepoMock(),
     syncMetaRepository: createSyncMetaRepoMock(),
   };
@@ -261,6 +288,7 @@ export function createService(ctx: SyncTestContext): SyncService {
     ctx.checklistRepository,
     ctx.ideaRepository,
     ctx.settingsRepository,
+    ctx.attachmentRepository,
   );
 }
 
@@ -311,7 +339,8 @@ type EntityType =
   | "context"
   | "category"
   | "checklist"
-  | "idea";
+  | "idea"
+  | "attachment";
 
 export function setupEntityForPush<T extends { id: string }>(
   ctx: SyncTestContext,
@@ -325,6 +354,7 @@ export function setupEntityForPush<T extends { id: string }>(
     category: ctx.categoryRepository,
     checklist: ctx.checklistRepository,
     idea: ctx.ideaRepository,
+    attachment: ctx.attachmentRepository,
   };
   const repo = repoMap[entityType];
   asMock(repo.getNeedingSync).mockResolvedValue([entity]);
@@ -342,6 +372,7 @@ export function setupEmptyRepositories(ctx: SyncTestContext): void {
   ctx.categoryRepository = withGetAll(ctx.categoryRepository, []);
   ctx.checklistRepository = withGetAll(ctx.checklistRepository, []);
   ctx.ideaRepository = withGetAll(ctx.ideaRepository, []);
+  ctx.attachmentRepository = withGetAll(ctx.attachmentRepository, []);
   ctx.settingsRepository = withGetAll(ctx.settingsRepository, []);
 }
 

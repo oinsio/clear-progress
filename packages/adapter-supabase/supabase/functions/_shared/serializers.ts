@@ -1,4 +1,5 @@
 // implements FR14 of add-supabase-adapter
+// implements FR5 of add-file-attachments
 // Row-to-wire serializers: map raw DB rows to protocol wire types
 
 import { serializeDateOnly, serializeTimestamptz } from "./datetime.ts";
@@ -87,6 +88,24 @@ export function serializeChecklistItemRow(row: DbRow) {
     task_id: row.task_id as string,
     name: row.name as string,
     is_completed: row.is_completed as boolean,
+    sort_order: row.sort_order as number,
+    is_deleted: row.is_deleted as boolean,
+    created_at: serializeTimestamptz(row.created_at),
+    updated_at: serializeTimestamptz(row.updated_at),
+    revision: row.revision as number,
+  };
+}
+
+/** Implements FR5 of add-file-attachments */
+export function serializeAttachmentRow(row: DbRow) {
+  return {
+    id: row.id as string,
+    entity_type: row.entity_type as string,
+    entity_id: row.entity_id as string,
+    data_hash: row.data_hash as string,
+    filename: row.filename as string,
+    mime_type: row.mime_type as string,
+    file_size: row.file_size as number,
     sort_order: row.sort_order as number,
     is_deleted: row.is_deleted as boolean,
     created_at: serializeTimestamptz(row.created_at),

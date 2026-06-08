@@ -20,7 +20,7 @@ export { initDefaults } from "../sheets/settings.sheet";
 export { init } from "./init";
 
 export const MOCK_ROOT_FOLDER_ID = "root-folder-id";
-export const MOCK_COVERS_FOLDER_ID = "covers-folder-id";
+export const MOCK_FILES_FOLDER_ID = "covers-folder-id";
 export const MOCK_SPREADSHEET_FILE_ID = "spreadsheet-file-id";
 export const MOCK_SPREADSHEET_ID = "mock-spreadsheet-id";
 
@@ -60,7 +60,7 @@ export function setupFirstTimeInit(): {
 
   vi.mocked(Drive.Files.create)
     .mockReturnValueOnce({ id: MOCK_ROOT_FOLDER_ID })
-    .mockReturnValueOnce({ id: MOCK_COVERS_FOLDER_ID })
+    .mockReturnValueOnce({ id: MOCK_FILES_FOLDER_ID })
     .mockReturnValueOnce({ id: MOCK_SPREADSHEET_FILE_ID });
 
   vi.mocked(SpreadsheetApp.openById).mockReturnValue(spreadsheetMock as never);

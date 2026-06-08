@@ -1,5 +1,6 @@
 -- implements FR7, FR12, FR13, FR14, FR18 of add-supabase-adapter
--- Entity tables, sync_meta, settings, covers + helper functions
+-- implements FR4, FR5 of add-file-attachments
+-- Entity tables, sync_meta, settings, files, attachments + helper functions
 
 -- ─── Helper functions ───────────────────────────────────────────────────────
 
@@ -60,19 +61,42 @@ CREATE TABLE IF NOT EXISTS sync_meta (
   PRIMARY KEY (user_id, key)
 );
 
--- ─── Covers metadata table (FR10) ───────────────────────────────────────────
--- File data lives in Storage bucket; this table tracks metadata and ref counts
+-- ─── Files metadata table (FR4 of add-file-attachments) ─────────────────────
+-- File data lives in Storage bucket; this table tracks metadata
 
-CREATE TABLE IF NOT EXISTS covers (
+CREATE TABLE IF NOT EXISTS files (
   file_id      UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   filename     TEXT    NOT NULL,
   mime_type    TEXT    NOT NULL,
   data_hash    TEXT    NOT NULL,
-  storage_path TEXT    NOT NULL,
-  ref_count    INTEGER NOT NULL DEFAULT 1
+  storage_path TEXT    NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_covers_user_hash ON covers (user_id, data_hash);
+CREATE INDEX IF NOT EXISTS idx_files_user_hash ON files (user_id, data_hash);
+
+-- ─── Attachments table (FR5 of add-file-attachments) ────────────────────────
+
+CREATE TABLE IF NOT EXISTS attachments (
+  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  entity_type TEXT        NOT NULL CHECK (entity_type IN ('task', 'goal', 'idea')),
+  entity_id   UUID        NOT NULL,
+  data_hash   TEXT        NOT NULL,
+  filename    TEXT        NOT NULL,
+  mime_type   TEXT        NOT NULL,
+  file_size   INTEGER     NOT NULL,
+  sort_order  INTEGER     NOT NULL DEFAULT 0,
+  is_deleted  BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at  TIMESTAMPTZ NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL,
+  revision    BIGINT      NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_user_revision
+  ON attachments (user_id, revision);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_entity
+  ON attachments (entity_type, entity_id);
 
 -- ─── Entity tables (dependency order for FK constraints, FR18) ────────────────
 

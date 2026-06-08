@@ -13,6 +13,7 @@ vi.mock("../sheets/contexts.sheet");
 vi.mock("../sheets/categories.sheet");
 vi.mock("../sheets/checklists.sheet");
 vi.mock("../sheets/ideas.sheet");
+vi.mock("../sheets/attachments.sheet");
 vi.mock("../sheets/settings.sheet");
 vi.mock("../sheets/meta.sheet");
 

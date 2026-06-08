@@ -23,8 +23,11 @@ vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/useSidebarNavigation");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
-vi.mock("@/hooks/useCoverUrl");
-vi.mock("@/hooks/useCoverPreview");
+vi.mock("@/hooks/useFileUrl");
+vi.mock("@/hooks/useFilePreview");
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
 
 vi.mock("@/hooks/useShowHidden", () => ({
   useShowHidden: () => ({
@@ -59,7 +62,7 @@ vi.mock("@/hooks/useHandedness", () => ({
 }));
 
 import {
-  mockUseCoverUrl,
+  mockUseFileUrl,
   mockUseGoal,
   renderPage,
   setupDefaultMocks,
@@ -81,7 +84,7 @@ describe("GoalDetailPage — View mode layout", () => {
         }),
       }),
     );
-    mockUseCoverUrl.mockReturnValue({ url: "https://example.com/cover.jpg" });
+    mockUseFileUrl.mockReturnValue({ url: "https://example.com/cover.jpg" });
 
     renderPage();
 

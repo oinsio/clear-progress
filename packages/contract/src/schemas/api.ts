@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+  WireAttachmentSchema,
   WireCategorySchema,
   WireChecklistItemSchema,
   WireContextSchema,
@@ -38,6 +39,7 @@ export const PullResponseSchema = z.object({
   categories: z.array(WireCategorySchema),
   ideas: z.array(WireIdeaSchema),
   checklist_items: z.array(WireChecklistItemSchema),
+  attachments: z.array(WireAttachmentSchema), // implements FR6 of add-file-attachments
   settings: z.array(WireSettingSchema),
   current_revision: z.number().int().nonnegative(),
   purge_revision: z.number().int().nonnegative(),
@@ -53,6 +55,7 @@ const WireEntitySchema = z.union([
   WireCategorySchema,
   WireIdeaSchema,
   WireChecklistItemSchema,
+  WireAttachmentSchema,
 ]);
 
 export const PushItemResultSchema = z.object({
@@ -79,22 +82,23 @@ export const PushResponseSchema = z.object({
     categories: z.array(PushItemResultSchema).optional(),
     ideas: z.array(PushItemResultSchema).optional(),
     checklist_items: z.array(PushItemResultSchema).optional(),
+    attachments: z.array(PushItemResultSchema).optional(), // implements FR6 of add-file-attachments
     settings: z.array(PushSettingResultSchema).optional(),
   }),
   server_time: ISOTimestampSchema,
 });
 
-// --- Covers ---
+// --- Files ---
 
-// implements FR2 of content-addressable-covers
-export const UploadCoverResponseSchema = z.object({
+/** Implements FR4 of add-file-attachments */
+export const UploadFileResponseSchema = z.object({
   ok: z.boolean(),
   data_hash: z.string(),
   reused: z.boolean(),
 });
 
-// implements FR2 of content-addressable-covers
-export const UploadCoverBatchResultSchema = z.object({
+/** Implements FR4 of add-file-attachments */
+export const UploadFileBatchResultSchema = z.object({
   local_id: z.string(),
   goal_id: z.string(),
   data_hash: z.string().optional(),
@@ -102,25 +106,28 @@ export const UploadCoverBatchResultSchema = z.object({
   error: z.string().optional(),
 });
 
-export const UploadCoversResponseSchema = z.object({
+/** Implements FR4 of add-file-attachments */
+export const UploadFilesResponseSchema = z.object({
   ok: z.boolean(),
-  results: z.array(UploadCoverBatchResultSchema),
+  results: z.array(UploadFileBatchResultSchema),
 });
 
-// implements FR3 of content-addressable-covers
-export const GetCoverResultSchema = z.object({
+/** Implements FR4 of add-file-attachments */
+export const GetFileResultSchema = z.object({
   hash: z.string(),
   mime_type: z.string().optional(),
   data: z.string().optional(),
   error: z.string().optional(),
 });
 
-export const GetCoverResponseSchema = z.object({
+/** Implements FR4 of add-file-attachments */
+export const GetFileResponseSchema = z.object({
   ok: z.boolean(),
-  covers: z.array(GetCoverResultSchema),
+  files: z.array(GetFileResultSchema),
 });
 
-export const DeleteCoverResponseSchema = z.object({
+/** Implements FR4 of add-file-attachments */
+export const DeleteFileResponseSchema = z.object({
   ok: z.boolean(),
   deleted: z.boolean(),
   ref_count: z.number().int().nonnegative(),
@@ -137,6 +144,7 @@ export const PurgeResponseSchema = z.object({
     categories: z.number().int().nonnegative(),
     checklist_items: z.number().int().nonnegative(),
     ideas: z.number().int().nonnegative(),
+    attachments: z.number().int().nonnegative(), // implements FR6 of add-file-attachments
   }),
   purge_revision: z.number().int().nonnegative(),
 });

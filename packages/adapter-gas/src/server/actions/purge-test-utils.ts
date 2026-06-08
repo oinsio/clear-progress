@@ -1,6 +1,10 @@
 import { expect, vi } from "vitest";
 import { createMockEntity } from "../../../tests/server/helpers";
 import {
+  deleteAttachmentsByIds,
+  getAllAttachments,
+} from "../sheets/attachments.sheet";
+import {
   deleteCategoriesByIds,
   getAllCategories,
 } from "../sheets/categories.sheet";
@@ -15,12 +19,14 @@ import { readPurgeRevision, savePurgeRevision } from "../sheets/meta.sheet";
 import { deleteTasksByIds, getAllTasks } from "../sheets/tasks.sheet";
 
 export {
+  deleteAttachmentsByIds,
   deleteCategoriesByIds,
   deleteChecklistItemsByIds,
   deleteContextsByIds,
   deleteGoalsByIds,
   deleteIdeasByIds,
   deleteTasksByIds,
+  getAllAttachments,
   getAllCategories,
   getAllChecklistItems,
   getAllContexts,
@@ -39,12 +45,14 @@ export function resetAllMocks(): void {
   vi.mocked(getAllCategories).mockReturnValue([]);
   vi.mocked(getAllChecklistItems).mockReturnValue([]);
   vi.mocked(getAllIdeas).mockReturnValue([]);
+  vi.mocked(getAllAttachments).mockReturnValue([]);
   vi.mocked(deleteTasksByIds).mockReturnValue(0);
   vi.mocked(deleteGoalsByIds).mockReturnValue(0);
   vi.mocked(deleteContextsByIds).mockReturnValue(0);
   vi.mocked(deleteCategoriesByIds).mockReturnValue(0);
   vi.mocked(deleteChecklistItemsByIds).mockReturnValue(0);
   vi.mocked(deleteIdeasByIds).mockReturnValue(0);
+  vi.mocked(deleteAttachmentsByIds).mockReturnValue(0);
   vi.mocked(readPurgeRevision).mockReturnValue(0);
   vi.mocked(savePurgeRevision).mockReturnValue(undefined);
 }
@@ -62,12 +70,16 @@ export function setupAllEntitiesWithOneDeleted(): void {
     createMockEntity("checklist1", true),
   ]);
   vi.mocked(getAllIdeas).mockReturnValue([createMockEntity("idea1", true)]);
+  vi.mocked(getAllAttachments).mockReturnValue([
+    createMockEntity("attachment1", true),
+  ]);
   vi.mocked(deleteTasksByIds).mockReturnValue(1);
   vi.mocked(deleteGoalsByIds).mockReturnValue(1);
   vi.mocked(deleteContextsByIds).mockReturnValue(1);
   vi.mocked(deleteCategoriesByIds).mockReturnValue(1);
   vi.mocked(deleteChecklistItemsByIds).mockReturnValue(1);
   vi.mocked(deleteIdeasByIds).mockReturnValue(1);
+  vi.mocked(deleteAttachmentsByIds).mockReturnValue(1);
 }
 
 export function expectAllDeleteCallsWithIds(
@@ -81,4 +93,5 @@ export function expectAllDeleteCallsWithIds(
     ids.checklistItems || [],
   );
   expect(deleteIdeasByIds).toHaveBeenCalledWith(ids.ideas || []);
+  expect(deleteAttachmentsByIds).toHaveBeenCalledWith(ids.attachments || []);
 }

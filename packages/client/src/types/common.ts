@@ -26,11 +26,11 @@ export type SyncStatus =
 
 export type FullSyncStep =
   | "idle"
-  | "reupload_covers"
-  | "upload_covers"
+  | "reupload_files"
+  | "upload_files"
   | "push"
   | "pull"
-  | "download_covers"
+  | "download_files"
   | "done"
   | "error";
 

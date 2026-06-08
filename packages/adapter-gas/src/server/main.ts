@@ -1,12 +1,12 @@
-import { deleteCover } from "./actions/delete-cover";
-import { getCover } from "./actions/get-cover";
+import { deleteFile } from "./actions/delete-file";
+import { getFile } from "./actions/get-file";
 import { init } from "./actions/init";
 import { ping } from "./actions/ping";
 import { pull } from "./actions/pull";
 import { purge } from "./actions/purge";
 import { push } from "./actions/push";
-import { uploadCover } from "./actions/upload-cover";
-import { uploadCovers } from "./actions/upload-covers";
+import { uploadFile } from "./actions/upload-file";
+import { uploadFiles } from "./actions/upload-files";
 import { verifyToken } from "./helpers/auth";
 import {
   ACTIONS,
@@ -70,14 +70,14 @@ function doPost(
       return pull(payload as Parameters<typeof pull>[0]);
     case ACTIONS.PUSH:
       return push(payload as Parameters<typeof push>[0]);
-    case ACTIONS.UPLOAD_COVER:
-      return uploadCover(payload as Parameters<typeof uploadCover>[0]);
-    case ACTIONS.UPLOAD_COVERS:
-      return uploadCovers(payload as Parameters<typeof uploadCovers>[0]);
-    case ACTIONS.DELETE_COVER:
-      return deleteCover(payload as Parameters<typeof deleteCover>[0]);
-    case ACTIONS.GET_COVER:
-      return getCover(payload as Parameters<typeof getCover>[0]);
+    case ACTIONS.UPLOAD_FILE:
+      return uploadFile(payload as Parameters<typeof uploadFile>[0]);
+    case ACTIONS.UPLOAD_FILES:
+      return uploadFiles(payload as Parameters<typeof uploadFiles>[0]);
+    case ACTIONS.DELETE_FILE:
+      return deleteFile(payload as Parameters<typeof deleteFile>[0]);
+    case ACTIONS.GET_FILE:
+      return getFile(payload as Parameters<typeof getFile>[0]);
     case ACTIONS.PURGE:
       return purge(payload as Parameters<typeof purge>[0]);
     default:

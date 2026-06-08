@@ -7,6 +7,7 @@ import { LaterBoxIcon, TodayBoxIcon, WeekBoxIcon } from "./BoxIcons";
 export const ACTIVE_TAB = {
   DETAILS: "details",
   CHECKLIST: "checklist",
+  ATTACHMENTS: "attachments",
 } as const;
 
 export type ActiveTab = (typeof ACTIVE_TAB)[keyof typeof ACTIVE_TAB];

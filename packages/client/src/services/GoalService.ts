@@ -1,4 +1,5 @@
 import { GOAL_STATUS_SORT_ORDER } from "@/constants";
+import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import type { GoalStatus } from "@/types/common";
 import type { Goal } from "@/types/entities";
@@ -6,7 +7,10 @@ import { toISOTimestamp } from "@/utils/dateHelpers";
 import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class GoalService {
-  constructor(private readonly goalRepository: GoalRepository) {}
+  constructor(
+    private readonly goalRepository: GoalRepository,
+    private readonly attachmentRepository?: AttachmentRepository,
+  ) {}
 
   async getAll(): Promise<Goal[]> {
     const goals = await this.goalRepository.getActive();
@@ -68,11 +72,19 @@ export class GoalService {
     return this.update(id, { status });
   }
 
+  /** Implements FR14 of add-file-attachments */
   async softDelete(id: string): Promise<Goal> {
+    if (this.attachmentRepository) {
+      await this.attachmentRepository.softDeleteByEntityTypeAndId("goal", id);
+    }
     return this.update(id, { is_deleted: true });
   }
 
+  /** Implements FR15 of add-file-attachments */
   async restore(id: string): Promise<Goal> {
+    if (this.attachmentRepository) {
+      await this.attachmentRepository.restoreByEntityTypeAndId("goal", id);
+    }
     return this.update(id, { is_deleted: false });
   }
 

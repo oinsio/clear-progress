@@ -7,7 +7,7 @@ See root `CLAUDE.md` for data model, API protocol, shared conventions.
 - `src/` — client-side adapter (`SupabaseSyncAdapter` implementing `SyncAdapter` port)
 - `supabase/functions/` — Deno Edge Functions (server-side sync logic)
 - `supabase/migrations/` — PostgreSQL migrations (tables, RLS policies, `push_records` RPC)
-- `scripts/` — deploy and reset-db helpers
+- `scripts/` — deploy and reset helpers
 
 ## Deploy
 
@@ -15,7 +15,7 @@ See root `CLAUDE.md` for data model, API protocol, shared conventions.
 bash scripts/deploy.sh prod     # deploy to production
 bash scripts/deploy.sh qa       # deploy to QA
 bash scripts/deploy.sh dev      # deploy to dev
-bash scripts/reset-db.sh qa     # wipe and re-apply migrations for QA
+bash scripts/reset.sh qa        # wipe DB + storage and re-apply migrations for QA
 # Environment argument is required — no default to prevent accidental deploys
 ```
 
@@ -28,11 +28,11 @@ Env files: copy `.env.{env}` → `.env.{env}.local` and fill in real values.
 - **`push_records` RPC** — atomic revision assignment with `FOR UPDATE` lock; concurrent pushes from the same user may hit `SYNC_LOCK_TIMEOUT`
 - **Auth** — JWT extracted from `Authorization` header via `supabase.auth.getUser()`; `ApiAuthError` thrown on 401
 - **Response validation** — every Edge Function response is validated with Zod schemas from `@clear-progress/contract`
-- **Cover storage** — Supabase Storage bucket `covers` with content-addressable paths: `{userId[0:2]}/{userId}/{dataHash[0:2]}/{fileId}.{ext}`
+- **File storage** — Supabase Storage bucket `files` with content-addressable paths: `{userId[0:2]}/{userId}/{dataHash[0:2]}/{fileId}.{ext}`
 
 ## Edge Functions
 
-`ping`, `init`, `pull`, `push`, `purge`, `upload-cover`, `upload-covers`, `get-cover`, `delete-cover`
+`ping`, `init`, `pull`, `push`, `purge`, `upload-file`, `upload-files`, `get-file`, `delete-file`
 
 ## Testing
 

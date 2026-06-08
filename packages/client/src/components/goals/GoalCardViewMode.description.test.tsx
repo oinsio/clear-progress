@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   createGoal,
   renderViewMode,
+  simulateNoOverflow,
   simulateOverflow,
   useOverflowSetup,
 } from "./GoalCardViewMode.test-setup";
@@ -47,6 +48,14 @@ vi.mock("@/components/goals/CoverLightbox", () => ({
   ),
 }));
 
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
+
+vi.mock("@/components/shared/AttachmentList", () => ({
+  AttachmentList: () => null,
+}));
+
 // FR1, FR4: description rendering, overflow, and expand/collapse
 describe("GoalCardViewMode — description", () => {
   useOverflowSetup();
@@ -55,9 +64,7 @@ describe("GoalCardViewMode — description", () => {
     it("should not render description section when empty", () => {
       renderViewMode({ goal: createGoal({ description: "" }) });
 
-      expect(
-        screen.queryByTestId("description-toggle"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
     });
 
     it("should render description text when present", () => {
@@ -73,9 +80,7 @@ describe("GoalCardViewMode — description", () => {
         goal: createGoal({ description: "Short description" }),
       });
 
-      expect(
-        screen.queryByTestId("description-toggle"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
     });
 
     it("should apply line-clamp-2 when description is not expanded", () => {
@@ -91,27 +96,14 @@ describe("GoalCardViewMode — description", () => {
   });
 
   describe("description overflow and expand/collapse", () => {
-    it("should not show toggle when scrollHeight equals clientHeight", () => {
-      Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
-        configurable: true,
-        get() {
-          return 40;
-        },
-      });
-      Object.defineProperty(HTMLElement.prototype, "clientHeight", {
-        configurable: true,
-        get() {
-          return 40;
-        },
-      });
+    it("should not show toggle when description does not overflow", () => {
+      simulateNoOverflow();
 
       renderViewMode({
         goal: createGoal({ description: "Exact fit description" }),
       });
 
-      expect(
-        screen.queryByTestId("description-toggle"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("details-toggle")).not.toBeInTheDocument();
     });
 
     it("should show expand button when description overflows", () => {
@@ -121,14 +113,14 @@ describe("GoalCardViewMode — description", () => {
         goal: createGoal({ description: "Overflowing text content" }),
       });
 
-      expect(screen.getByTestId("description-toggle")).toBeInTheDocument();
-      expect(screen.getByTestId("description-toggle")).toHaveAttribute(
+      expect(screen.getByTestId("details-toggle")).toBeInTheDocument();
+      expect(screen.getByTestId("details-toggle")).toHaveAttribute(
         "aria-expanded",
         "false",
       );
-      expect(screen.getByTestId("description-toggle")).toHaveAttribute(
+      expect(screen.getByTestId("details-toggle")).toHaveAttribute(
         "aria-label",
-        "goal.expandDescription",
+        "goal.expandDetails",
       );
     });
 
@@ -139,13 +131,13 @@ describe("GoalCardViewMode — description", () => {
         goal: createGoal({ description: "Overflowing text content" }),
       });
 
-      const toggleButton = screen.getByTestId("description-toggle");
+      const toggleButton = screen.getByTestId("details-toggle");
       fireEvent.click(toggleButton);
 
       expect(toggleButton).toHaveAttribute("aria-expanded", "true");
       expect(toggleButton).toHaveAttribute(
         "aria-label",
-        "goal.collapseDescription",
+        "goal.collapseDetails",
       );
     });
 
@@ -161,7 +153,7 @@ describe("GoalCardViewMode — description", () => {
         .closest("div[class*='min-w-0']") as HTMLElement;
       expect(descriptionContainer.className).toContain("line-clamp-2");
 
-      fireEvent.click(screen.getByTestId("description-toggle"));
+      fireEvent.click(screen.getByTestId("details-toggle"));
 
       expect(descriptionContainer.className).not.toContain("line-clamp-2");
     });

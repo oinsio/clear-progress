@@ -18,10 +18,10 @@ const {
   mockPull,
   mockPush,
   mockResetAndPull,
-  mockInitializeLocalCovers,
-  mockCoverSync,
-  mockEnsureServerCoversAreCached,
-  mockReuploadLocalCovers,
+  mockInitializeLocalFiles,
+  mockFileSync,
+  mockEnsureServerFilesAreCached,
+  mockReuploadLocalFiles,
   mockSignOut,
   mockSilentRefresh,
   STABLE_CONNECTION_CONFIG,
@@ -35,10 +35,10 @@ const {
     mockPull: vi.fn(),
     mockPush: vi.fn(),
     mockResetAndPull: vi.fn(),
-    mockInitializeLocalCovers: vi.fn().mockResolvedValue(undefined),
-    mockCoverSync: vi.fn().mockResolvedValue(undefined),
-    mockEnsureServerCoversAreCached: vi.fn().mockResolvedValue(undefined),
-    mockReuploadLocalCovers: vi.fn().mockResolvedValue(undefined),
+    mockInitializeLocalFiles: vi.fn().mockResolvedValue(undefined),
+    mockFileSync: vi.fn().mockResolvedValue(undefined),
+    mockEnsureServerFilesAreCached: vi.fn().mockResolvedValue(undefined),
+    mockReuploadLocalFiles: vi.fn().mockResolvedValue(undefined),
     mockSignOut: signOut,
     mockSilentRefresh: silentRefresh,
     STABLE_CONNECTION_CONFIG: {
@@ -80,11 +80,11 @@ vi.mock("@/services/defaultServices", () => ({
     ping: mockPing,
     init: mockInit,
   },
-  defaultCoverSyncService: {
-    initializeLocalCovers: mockInitializeLocalCovers,
-    sync: mockCoverSync,
-    ensureServerCoversAreCached: mockEnsureServerCoversAreCached,
-    reuploadLocalCovers: mockReuploadLocalCovers,
+  defaultFileSyncService: {
+    initializeLocalFiles: mockInitializeLocalFiles,
+    sync: mockFileSync,
+    ensureServerFilesAreCached: mockEnsureServerFilesAreCached,
+    reuploadLocalFiles: mockReuploadLocalFiles,
   },
 }));
 
@@ -195,11 +195,11 @@ export function setupScenarioHooks(
     f.context.mockPush.mockReset();
     f.context.mockPing.mockReset();
     f.context.mockInit.mockReset();
-    f.context.mockCoverSync.mockReset();
-    f.context.mockInitializeLocalCovers.mockReset();
+    f.context.mockFileSync.mockReset();
+    f.context.mockInitializeLocalFiles.mockReset();
     f.context.mockResetAndPull.mockReset();
-    f.context.mockReuploadLocalCovers.mockReset();
-    f.context.mockEnsureServerCoversAreCached.mockReset();
+    f.context.mockReuploadLocalFiles.mockReset();
+    f.context.mockEnsureServerFilesAreCached.mockReset();
 
     f.context.mockPull.mockResolvedValue(undefined);
     f.context.mockPush.mockResolvedValue(undefined);
@@ -210,11 +210,11 @@ export function setupScenarioHooks(
       initialized: true,
     });
     f.context.mockInit.mockResolvedValue(undefined);
-    f.context.mockCoverSync.mockResolvedValue(undefined);
-    f.context.mockInitializeLocalCovers.mockResolvedValue(undefined);
+    f.context.mockFileSync.mockResolvedValue(undefined);
+    f.context.mockInitializeLocalFiles.mockResolvedValue(undefined);
     f.context.mockResetAndPull.mockResolvedValue(undefined);
-    f.context.mockReuploadLocalCovers.mockResolvedValue(undefined);
-    f.context.mockEnsureServerCoversAreCached.mockResolvedValue(undefined);
+    f.context.mockReuploadLocalFiles.mockResolvedValue(undefined);
+    f.context.mockEnsureServerFilesAreCached.mockResolvedValue(undefined);
 
     f.context.progressSteps = [];
     f.context.initialSyncVersion = 0;
@@ -236,11 +236,11 @@ export function createBackgroundSteps(
   f.context.mockPush = mockPush;
   f.context.mockPing = mockPing;
   f.context.mockInit = mockInit;
-  f.context.mockCoverSync = mockCoverSync;
-  f.context.mockInitializeLocalCovers = mockInitializeLocalCovers;
+  f.context.mockFileSync = mockFileSync;
+  f.context.mockInitializeLocalFiles = mockInitializeLocalFiles;
   f.context.mockResetAndPull = mockResetAndPull;
-  f.context.mockReuploadLocalCovers = mockReuploadLocalCovers;
-  f.context.mockEnsureServerCoversAreCached = mockEnsureServerCoversAreCached;
+  f.context.mockReuploadLocalFiles = mockReuploadLocalFiles;
+  f.context.mockEnsureServerFilesAreCached = mockEnsureServerFilesAreCached;
   f.context.mockSignOut = mockSignOut;
   f.context.mockSilentRefresh = mockSilentRefresh;
 
@@ -298,7 +298,7 @@ export function createGivenSteps(
         f.context.mockPull.mockClear();
         f.context.mockPush.mockClear();
         f.context.mockPing.mockClear();
-        f.context.mockCoverSync.mockClear();
+        f.context.mockFileSync.mockClear();
       });
     },
     givenNavigatorIsOffline: (Given: StepTest["Given"]) => {
@@ -354,7 +354,7 @@ export function createGivenSteps(
         await flushSyncCycle();
         f.context.mockPull.mockClear();
         f.context.mockPush.mockClear();
-        f.context.mockCoverSync.mockClear();
+        f.context.mockFileSync.mockClear();
       });
     },
   };
@@ -536,12 +536,12 @@ export function createWhenSteps(
         await flushSyncCycle();
       });
     },
-    whenPushAndPullSucceedButCoverSyncThrowsError: (When: StepTest["When"]) => {
-      When("push and pull succeed but cover sync throws an error", async () => {
+    whenPushAndPullSucceedButFileSyncThrowsError: (When: StepTest["When"]) => {
+      When("push and pull succeed but file sync throws an error", async () => {
         f.context.mockPush.mockResolvedValueOnce(undefined);
         f.context.mockPull.mockResolvedValueOnce(undefined);
-        f.context.mockCoverSync.mockRejectedValueOnce(
-          new Error("Cover sync failed"),
+        f.context.mockFileSync.mockRejectedValueOnce(
+          new Error("File sync failed"),
         );
         f.context.initialSyncVersion = 0;
         await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
@@ -713,7 +713,7 @@ export function createThenSteps(
     thenSyncVersionIsIncremented: (And: StepTest["Then"]) => {
       And("syncVersion is incremented", async () => {
         await vi.advanceTimersByTimeAsync(0);
-        // Verify sync completed successfully despite cover sync error
+        // Verify sync completed successfully despite file sync error
         expect(f.context.mockPush).toHaveBeenCalled();
         expect(f.context.mockPull).toHaveBeenCalled();
       });
@@ -784,11 +784,11 @@ export function createFullSyncThenSteps(
     thenProgressReportsStepsInOrder: (Then: StepTest["Then"]) => {
       Then("progress reports steps in order:", () => {
         const expectedSteps: import("@/types/common").FullSyncStep[] = [
-          "reupload_covers",
-          "upload_covers",
+          "reupload_files",
+          "upload_files",
           "push",
           "pull",
-          "download_covers",
+          "download_files",
           "done",
         ];
         expect(f.context.progressSteps).toEqual(expectedSteps);
@@ -818,7 +818,7 @@ export function createFullSyncThenSteps(
     thenFullSyncDoesNotStart: (Then: StepTest["Then"]) => {
       Then("full sync does not start", () => {
         expect(f.context.mockResetAndPull).not.toHaveBeenCalled();
-        expect(f.context.mockReuploadLocalCovers).not.toHaveBeenCalled();
+        expect(f.context.mockReuploadLocalFiles).not.toHaveBeenCalled();
       });
     },
   };
@@ -844,7 +844,7 @@ export function createFullSyncBackgroundSteps(
         f.context.mockPull.mockClear();
         f.context.mockPush.mockClear();
         f.context.mockPing.mockClear();
-        f.context.mockCoverSync.mockClear();
+        f.context.mockFileSync.mockClear();
         f.context.progressSteps = [];
       });
     },

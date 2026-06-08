@@ -17,17 +17,17 @@ vi.mock("../../../../server/actions/init", () => ({ init: vi.fn() }));
 vi.mock("../../../../server/actions/pull", () => ({ pull: vi.fn() }));
 vi.mock("../../../../server/actions/push", () => ({ push: vi.fn() }));
 vi.mock("../../../../server/actions/purge", () => ({ purge: vi.fn() }));
-vi.mock("../../../../server/actions/upload-cover", () => ({
-  uploadCover: vi.fn(),
+vi.mock("../../../../server/actions/upload-file", () => ({
+  uploadFile: vi.fn(),
 }));
-vi.mock("../../../../server/actions/upload-covers", () => ({
-  uploadCovers: vi.fn(),
+vi.mock("../../../../server/actions/upload-files", () => ({
+  uploadFiles: vi.fn(),
 }));
-vi.mock("../../../../server/actions/delete-cover", () => ({
-  deleteCover: vi.fn(),
+vi.mock("../../../../server/actions/delete-file", () => ({
+  deleteFile: vi.fn(),
 }));
-vi.mock("../../../../server/actions/get-cover", () => ({
-  getCover: vi.fn(),
+vi.mock("../../../../server/actions/get-file", () => ({
+  getFile: vi.fn(),
 }));
 vi.mock("../../../../server/helpers/auth", () => ({
   verifyToken: vi.fn(),
@@ -40,6 +40,17 @@ import { push } from "../../../../server/actions/push";
 import { verifyToken } from "../../../../server/helpers/auth";
 
 import "../../../../server/main";
+
+function assertInvalidActionResponse(): void {
+  const response = parseResponse();
+  expect(response.ok).toBe(false);
+  expect(response.error).toBe("INVALID_ACTION");
+}
+
+function assertUnknownActionMessage(): void {
+  const response = parseResponse();
+  expect(response.message).toContain("Unknown action");
+}
 
 const feature = await loadFeature("../gas_server_routing.feature");
 
@@ -82,15 +93,12 @@ describeFeature(
         Then(
           'response is an error with code "INVALID_ACTION"',
           (_ctx: TestContext) => {
-            const response = parseResponse();
-            expect(response.ok).toBe(false);
-            expect(response.error).toBe("INVALID_ACTION");
+            assertInvalidActionResponse();
           },
         );
 
         And('error message contains "Unknown action"', (_ctx: TestContext) => {
-          const response = parseResponse();
-          expect(response.message).toContain("Unknown action");
+          assertUnknownActionMessage();
         });
       },
     );
@@ -106,15 +114,12 @@ describeFeature(
         Then(
           'response is an error with code "INVALID_ACTION"',
           (_ctx: TestContext) => {
-            const response = parseResponse();
-            expect(response.ok).toBe(false);
-            expect(response.error).toBe("INVALID_ACTION");
+            assertInvalidActionResponse();
           },
         );
 
         And('error message contains "Unknown action"', (_ctx: TestContext) => {
-          const response = parseResponse();
-          expect(response.message).toContain("Unknown action");
+          assertUnknownActionMessage();
         });
       },
     );
@@ -184,15 +189,12 @@ describeFeature(
         Then(
           'response is an error with code "INVALID_ACTION"',
           (_ctx: TestContext) => {
-            const response = parseResponse();
-            expect(response.ok).toBe(false);
-            expect(response.error).toBe("INVALID_ACTION");
+            assertInvalidActionResponse();
           },
         );
 
         And('error message contains "Unknown action"', (_ctx: TestContext) => {
-          const response = parseResponse();
-          expect(response.message).toContain("Unknown action");
+          assertUnknownActionMessage();
         });
       },
     );

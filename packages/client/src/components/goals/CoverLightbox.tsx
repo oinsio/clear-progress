@@ -1,7 +1,9 @@
-import { X } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
+import { FileLightbox } from "@/components/shared/FileLightbox";
+
+const COVER_MIME_TYPE = "image/jpeg";
+const COVER_LIGHTBOX_TEST_ID = "cover-lightbox";
+const COVER_LIGHTBOX_CLOSE_TEST_ID = "cover-lightbox-close";
 
 interface CoverLightboxProps {
   imageUrl: string;
@@ -12,6 +14,7 @@ interface CoverLightboxProps {
 
 /**
  * Implements FR1, FR2, NFR-A1 of goal-detail-card-refactor.
+ * Thin wrapper around FileLightbox for backward compatibility.
  */
 export function CoverLightbox({
   imageUrl,
@@ -19,69 +22,15 @@ export function CoverLightbox({
   onClose,
   triggerRef,
 }: CoverLightboxProps) {
-  const { t } = useTranslation();
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-
-  // Focus close button on mount
-  useEffect(() => {
-    closeButtonRef.current?.focus();
-  }, []);
-
-  // Return focus to trigger on unmount
-  useEffect(() => {
-    const trigger = triggerRef.current;
-    return () => {
-      trigger?.focus();
-    };
-  }, [triggerRef]);
-
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      } else if (event.key === "Tab") {
-        // Focus trap: keep focus on close button
-        event.preventDefault();
-        closeButtonRef.current?.focus();
-      }
-    },
-    [onClose],
-  );
-
-  const handleBackdropClick = useCallback(
-    (event: React.MouseEvent) => {
-      // Close only if clicking the backdrop itself, not the image
-      if (event.target === event.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose],
-  );
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      data-testid="cover-lightbox"
-      onKeyDown={handleKeyDown}
-      onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-8"
-    >
-      <button
-        ref={closeButtonRef}
-        type="button"
-        data-testid="cover-lightbox-close"
-        aria-label={t("goal.cover.closeLightbox")}
-        onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
-      >
-        <X className="w-6 h-6" />
-      </button>
-      <img
-        src={imageUrl}
-        alt={imageAlt}
-        className="max-w-full max-h-full object-contain rounded-lg"
-      />
-    </div>
+    <FileLightbox
+      url={imageUrl}
+      mimeType={COVER_MIME_TYPE}
+      filename={imageAlt}
+      onClose={onClose}
+      triggerRef={triggerRef}
+      dialogTestId={COVER_LIGHTBOX_TEST_ID}
+      closeButtonTestId={COVER_LIGHTBOX_CLOSE_TEST_ID}
+    />
   );
 }

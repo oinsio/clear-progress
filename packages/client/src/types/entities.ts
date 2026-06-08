@@ -12,6 +12,7 @@ export type ISODate = string & { readonly __brand: "ISODate" };
 
 // Client entities (Wire types + needsSync field)
 export type {
+  ClientAttachment as Attachment,
   ClientCategory as Category,
   ClientChecklistItem as ChecklistItem,
   ClientContext as Context,
@@ -28,13 +29,15 @@ export interface SyncMeta {
 }
 
 // implements FR5, FR6 of content-addressable-covers
-export interface CoverRecord {
+// renamed CoverRecord -> FileRecord as part of D1 (add-file-attachments)
+export interface FileRecord {
   data_hash: string;
   data?: Blob;
 }
 
 // implements FR5, FR6 of content-addressable-covers
-export interface PendingCoverRecord {
+// renamed PendingCoverRecord -> PendingFileRecord as part of D1 (add-file-attachments)
+export interface PendingFileRecord {
   goal_id: string;
   data: Blob;
   filename: string;

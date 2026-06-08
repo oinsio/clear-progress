@@ -96,6 +96,7 @@ export default function GoalDetailPage() {
                 >
                   {state.isEditing ? (
                     <GoalCardEditMode
+                      goalId={state.goal.id}
                       coverPreviewSrc={state.coverPreviewSrc}
                       editName={state.editName}
                       editDescription={state.editDescription}

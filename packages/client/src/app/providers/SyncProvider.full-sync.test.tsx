@@ -14,9 +14,9 @@ import {
   setupBeforeEach,
 } from "./SyncProvider.test-helpers";
 import {
-  mockCoverEnsureServerCovers,
-  mockCoverReuploadLocalCovers,
-  mockCoverSync,
+  mockFileEnsureServerFiles,
+  mockFileReuploadLocalFiles,
+  mockFileSync,
   mockPush,
   mockResetAndPull,
 } from "./SyncProvider.test-mocks";
@@ -44,9 +44,9 @@ describe("SyncProvider — triggerFullSync", () => {
     vi.clearAllMocks();
     mockPush.mockResolvedValue(undefined);
     mockResetAndPull.mockResolvedValue(undefined);
-    mockCoverSync.mockResolvedValue(undefined);
-    mockCoverReuploadLocalCovers.mockResolvedValue(undefined);
-    mockCoverEnsureServerCovers.mockResolvedValue(undefined);
+    mockFileSync.mockResolvedValue(undefined);
+    mockFileReuploadLocalFiles.mockResolvedValue(undefined);
+    mockFileEnsureServerFiles.mockResolvedValue(undefined);
   }
 
   async function setupAndTriggerFullSync(
@@ -66,11 +66,11 @@ describe("SyncProvider — triggerFullSync", () => {
     expect(mockResetAndPull).toHaveBeenCalledTimes(1);
   });
 
-  it("should call coverSyncService.sync, reuploadLocalCovers and ensureServerCoversAreCached during full sync", async () => {
+  it("should call fileSyncService.sync, reuploadLocalFiles and ensureServerFilesAreCached during full sync", async () => {
     await setupAndTriggerFullSync();
-    expect(mockCoverSync).toHaveBeenCalledTimes(1);
-    expect(mockCoverReuploadLocalCovers).toHaveBeenCalledTimes(1);
-    expect(mockCoverEnsureServerCovers).toHaveBeenCalledTimes(1);
+    expect(mockFileSync).toHaveBeenCalledTimes(1);
+    expect(mockFileReuploadLocalFiles).toHaveBeenCalledTimes(1);
+    expect(mockFileEnsureServerFiles).toHaveBeenCalledTimes(1);
   });
 
   it("should report progress steps in order", async () => {
@@ -79,11 +79,11 @@ describe("SyncProvider — triggerFullSync", () => {
       steps.push(step);
     });
     expect(steps).toEqual([
-      "reupload_covers",
-      "upload_covers",
+      "reupload_files",
+      "upload_files",
       "push",
       "pull",
-      "download_covers",
+      "download_files",
       "done",
     ]);
   });

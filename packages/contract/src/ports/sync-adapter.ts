@@ -1,8 +1,8 @@
 import type {
-  DeleteCoverRequest,
-  DeleteCoverResponse,
-  GetCoverRequest,
-  GetCoverResponse,
+  DeleteFileRequest,
+  DeleteFileResponse,
+  GetFileRequest,
+  GetFileResponse,
   InitResponse,
   PingResponse,
   PullRequest,
@@ -10,20 +10,21 @@ import type {
   PurgeResponse,
   PushRequest,
   PushResponse,
-  UploadCoverRequest,
-  UploadCoverResponse,
-  UploadCoversRequest,
-  UploadCoversResponse,
+  UploadFileRequest,
+  UploadFileResponse,
+  UploadFilesRequest,
+  UploadFilesResponse,
 } from "../protocol";
 
+/** Implements FR4 of add-file-attachments */
 export interface SyncAdapter {
   ping(): Promise<PingResponse>;
   init(): Promise<InitResponse>;
   pull(request: PullRequest): Promise<PullResponse>;
   push(request: PushRequest): Promise<PushResponse>;
-  uploadCover(request: UploadCoverRequest): Promise<UploadCoverResponse>;
-  uploadCovers(request: UploadCoversRequest): Promise<UploadCoversResponse>;
-  getCover(request: GetCoverRequest): Promise<GetCoverResponse>;
-  deleteCover(request: DeleteCoverRequest): Promise<DeleteCoverResponse>;
+  uploadFile(request: UploadFileRequest): Promise<UploadFileResponse>;
+  uploadFiles(request: UploadFilesRequest): Promise<UploadFilesResponse>;
+  getFile(request: GetFileRequest): Promise<GetFileResponse>;
+  deleteFile(request: DeleteFileRequest): Promise<DeleteFileResponse>;
   purge(): Promise<PurgeResponse>;
 }

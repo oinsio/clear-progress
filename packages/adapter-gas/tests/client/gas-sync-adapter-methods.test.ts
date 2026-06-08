@@ -18,6 +18,13 @@ function jsonResponse(body: object, status = 200): Response {
   });
 }
 
+function getCapturedRequestBody(): Record<string, unknown> {
+  return JSON.parse(mockFetch.mock.calls[0][1].body as string) as Record<
+    string,
+    unknown
+  >;
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
   adapter = new GasSyncAdapter(GAS_URL, () => VALID_TOKEN);
@@ -76,7 +83,7 @@ describe("init", () => {
   it("should send action=init in request body", async () => {
     mockFetch.mockResolvedValue(jsonResponse({ ok: true }));
     await adapter.init();
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = getCapturedRequestBody();
     expect(body.action).toBe("init");
   });
 
@@ -105,6 +112,7 @@ describe("pull", () => {
     categories: [],
     ideas: [],
     checklist_items: [],
+    attachments: [],
     settings: [],
     current_revision: 0,
     purge_revision: 0,
@@ -120,7 +128,7 @@ describe("pull", () => {
   it("should include since_revision in request body", async () => {
     mockFetch.mockResolvedValue(jsonResponse(pullData));
     await adapter.pull({ since_revision: 5 });
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = getCapturedRequestBody();
     expect(body.since_revision).toBe(5);
   });
 
@@ -128,7 +136,7 @@ describe("pull", () => {
   it("should send action=pull in request body", async () => {
     mockFetch.mockResolvedValue(jsonResponse(pullData));
     await adapter.pull({ since_revision: 0 });
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = getCapturedRequestBody();
     expect(body.action).toBe("pull");
   });
 
@@ -136,7 +144,7 @@ describe("pull", () => {
   it("should spread request params into body", async () => {
     mockFetch.mockResolvedValue(jsonResponse(pullData));
     await adapter.pull({ since_revision: 42 });
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = getCapturedRequestBody();
     expect(body).toMatchObject({ action: "pull", since_revision: 42 });
   });
 });
@@ -159,104 +167,98 @@ describe("push", () => {
   it("should send action=push with request data in body", async () => {
     mockFetch.mockResolvedValue(jsonResponse(pushData));
     await adapter.push({ tasks: [] } as never);
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = getCapturedRequestBody();
     expect(body.action).toBe("push");
     expect(body.tasks).toEqual([]);
   });
 });
 
-describe("uploadCover", () => {
+describe("uploadFile", () => {
   const uploadData = { ok: true, data_hash: "abc123", reused: false };
+  const uploadFileRequest = {
+    goal_id: "test-id",
+    data: "base64data",
+    mime_type: "image/png",
+    filename: "cover.png",
+    data_hash: "abc123",
+  };
 
-  it("should return parsed upload cover response", async () => {
+  it("should return parsed upload file response", async () => {
     mockFetch.mockResolvedValue(jsonResponse(uploadData));
-    const result = await adapter.uploadCover({
-      goal_id: "test-id",
-      data: "base64data",
-      mime_type: "image/png",
-      filename: "cover.png",
-      data_hash: "abc123",
-    });
+    const result = await adapter.uploadFile(uploadFileRequest);
     expect(result).toEqual(uploadData);
   });
 
-  // Kills StringLiteral L132: action: "upload_cover" → ""
-  // Kills ObjectLiteral L132: { action: "upload_cover", ...request } → {}
-  it("should send action=upload_cover with request data", async () => {
+  // Kills StringLiteral: action: "upload_file" → ""
+  // Kills ObjectLiteral: { action: "upload_file", ...request } → {}
+  it("should send action=upload_file with request data", async () => {
     mockFetch.mockResolvedValue(jsonResponse(uploadData));
-    await adapter.uploadCover({
-      goal_id: "test-id",
-      data: "base64data",
-      mime_type: "image/png",
-      filename: "cover.png",
-      data_hash: "abc123",
-    });
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.action).toBe("upload_cover");
+    await adapter.uploadFile(uploadFileRequest);
+    const body = getCapturedRequestBody();
+    expect(body.action).toBe("upload_file");
     expect(body.goal_id).toBe("test-id");
   });
 });
 
-describe("uploadCovers", () => {
+describe("uploadFiles", () => {
   const uploadBatchData = { ok: true, results: [] };
 
-  it("should return parsed upload covers response", async () => {
+  it("should return parsed upload files response", async () => {
     mockFetch.mockResolvedValue(jsonResponse(uploadBatchData));
-    const result = await adapter.uploadCovers({ covers: [] });
+    const result = await adapter.uploadFiles({ files: [] });
     expect(result).toEqual(uploadBatchData);
   });
 
-  // Kills StringLiteral L141: action: "upload_covers" → ""
-  // Kills ObjectLiteral L141: { action: "upload_covers", ...request } → {}
-  it("should send action=upload_covers with request data", async () => {
+  // Kills StringLiteral: action: "upload_files" → ""
+  // Kills ObjectLiteral: { action: "upload_files", ...request } → {}
+  it("should send action=upload_files with request data", async () => {
     mockFetch.mockResolvedValue(jsonResponse(uploadBatchData));
-    await adapter.uploadCovers({ covers: [] });
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.action).toBe("upload_covers");
-    expect(body.covers).toEqual([]);
+    await adapter.uploadFiles({ files: [] });
+    const body = getCapturedRequestBody();
+    expect(body.action).toBe("upload_files");
+    expect(body.files).toEqual([]);
   });
 });
 
-describe("getCover", () => {
-  const getCoverData = { ok: true, covers: [] };
+describe("getFile", () => {
+  const getFileData = { ok: true, files: [] };
 
-  it("should return parsed get cover response", async () => {
-    mockFetch.mockResolvedValue(jsonResponse(getCoverData));
-    const result = await adapter.getCover({ hashes: [] });
-    expect(result).toEqual(getCoverData);
+  it("should return parsed get file response", async () => {
+    mockFetch.mockResolvedValue(jsonResponse(getFileData));
+    const result = await adapter.getFile({ hashes: [] });
+    expect(result).toEqual(getFileData);
   });
 
-  // Kills StringLiteral L148: action: "get_cover" → ""
-  // Kills ObjectLiteral L148: { action: "get_cover", ...request } → {}
-  it("should send action=get_cover with request data", async () => {
-    mockFetch.mockResolvedValue(jsonResponse(getCoverData));
-    await adapter.getCover({ hashes: ["hash1"] });
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.action).toBe("get_cover");
+  // Kills StringLiteral: action: "get_file" → ""
+  // Kills ObjectLiteral: { action: "get_file", ...request } → {}
+  it("should send action=get_file with request data", async () => {
+    mockFetch.mockResolvedValue(jsonResponse(getFileData));
+    await adapter.getFile({ hashes: ["hash1"] });
+    const body = getCapturedRequestBody();
+    expect(body.action).toBe("get_file");
     expect(body.hashes).toEqual(["hash1"]);
   });
 });
 
-describe("deleteCover", () => {
+describe("deleteFile", () => {
   const deleteData = { ok: true, deleted: true, ref_count: 0 };
 
-  it("should return parsed delete cover response", async () => {
+  it("should return parsed delete file response", async () => {
     mockFetch.mockResolvedValue(jsonResponse(deleteData));
-    const result = await adapter.deleteCover({
-      goal_id: "test-id",
+    const result = await adapter.deleteFile({
       hash: "abc123",
     });
     expect(result).toEqual(deleteData);
   });
 
-  // Kills StringLiteral L155: action: "delete_cover" → ""
-  // Kills ObjectLiteral L155: { action: "delete_cover", ...request } → {}
-  it("should send action=delete_cover with request data", async () => {
+  // Kills StringLiteral: action: "delete_file" → ""
+  // Kills ObjectLiteral: { action: "delete_file", ...request } → {}
+  it("should send action=delete_file with request data", async () => {
     mockFetch.mockResolvedValue(jsonResponse(deleteData));
-    await adapter.deleteCover({ goal_id: "test-id", hash: "abc123" });
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.action).toBe("delete_cover");
-    expect(body.goal_id).toBe("test-id");
+    await adapter.deleteFile({ hash: "abc123" });
+    const body = getCapturedRequestBody();
+    expect(body.action).toBe("delete_file");
+    expect(body.hash).toBe("abc123");
   });
 });
 
@@ -270,6 +272,7 @@ describe("purge", () => {
       categories: 0,
       checklist_items: 0,
       ideas: 0,
+      attachments: 0,
     },
     purge_revision: 1,
   };
@@ -283,7 +286,7 @@ describe("purge", () => {
   it("should send confirm true in body", async () => {
     mockFetch.mockResolvedValue(jsonResponse(purgeData));
     await adapter.purge();
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = getCapturedRequestBody();
     expect(body.confirm).toBe(true);
   });
 
@@ -291,7 +294,7 @@ describe("purge", () => {
   it("should send action=purge in request body", async () => {
     mockFetch.mockResolvedValue(jsonResponse(purgeData));
     await adapter.purge();
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    const body = getCapturedRequestBody();
     expect(body.action).toBe("purge");
   });
 });

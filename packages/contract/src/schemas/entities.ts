@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   BoxSchema,
+  EntityTypeSchema,
   GoalStatusSchema,
   ISODateOrEmptySchema,
   ISOTimestampOrEmptySchema,
@@ -93,6 +94,23 @@ export const WireChecklistItemSchema = z.object({
   revision: z.number().int().nonnegative(),
 });
 export type WireChecklistItem = z.infer<typeof WireChecklistItemSchema>;
+
+/** Implements FR5 of add-file-attachments */
+export const WireAttachmentSchema = z.object({
+  id: UUIDSchema,
+  entity_type: EntityTypeSchema,
+  entity_id: UUIDSchema,
+  data_hash: z.string(),
+  filename: z.string(),
+  mime_type: z.string(),
+  file_size: z.number(),
+  sort_order: z.number(),
+  is_deleted: z.boolean(),
+  created_at: ISOTimestampSchema,
+  updated_at: ISOTimestampSchema,
+  revision: z.number().int().nonnegative(),
+});
+export type WireAttachment = z.infer<typeof WireAttachmentSchema>;
 
 export const WireSettingSchema = z.object({
   key: z.string(),

@@ -30,6 +30,10 @@ export const GoalStatusSchema = z.enum([
 ]);
 export type GoalStatus = z.infer<typeof GoalStatusSchema>;
 
+/** Implements FR5 of add-file-attachments */
+export const EntityTypeSchema = z.enum(["task", "goal", "idea"]);
+export type EntityType = z.infer<typeof EntityTypeSchema>;
+
 export const PushResultStatusSchema = z.enum([
   "created",
   "accepted",

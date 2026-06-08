@@ -1,17 +1,17 @@
 import {
-  mockCoverEnsureServerCovers,
-  mockCoverReuploadLocalCovers,
-  mockCoverSync,
+  mockFileEnsureServerFiles,
+  mockFileReuploadLocalFiles,
+  mockFileSync,
   mockInit,
-  mockInitializeLocalCovers,
+  mockInitializeLocalFiles,
   mockPing,
 } from "@/app/providers/SyncProvider.test-mocks";
 
 export const defaultSyncAdapter = { ping: mockPing, init: mockInit };
 
-export const defaultCoverSyncService = {
-  initializeLocalCovers: mockInitializeLocalCovers,
-  sync: mockCoverSync,
-  reuploadLocalCovers: mockCoverReuploadLocalCovers,
-  ensureServerCoversAreCached: mockCoverEnsureServerCovers,
+export const defaultFileSyncService = {
+  initializeLocalFiles: mockInitializeLocalFiles,
+  sync: mockFileSync,
+  reuploadLocalFiles: mockFileReuploadLocalFiles,
+  ensureServerFilesAreCached: mockFileEnsureServerFiles,
 };

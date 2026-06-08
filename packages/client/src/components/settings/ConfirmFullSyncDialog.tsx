@@ -11,24 +11,19 @@ interface ConfirmFullSyncDialogProps {
 }
 
 const PROGRESS_STEPS: Array<{
-  key:
-    | "reupload_covers"
-    | "upload_covers"
-    | "push"
-    | "pull"
-    | "download_covers";
+  key: "reupload_files" | "upload_files" | "push" | "pull" | "download_files";
   labelKey: string;
   testId: string;
 }> = [
   {
-    key: "reupload_covers",
-    labelKey: "settings.fullSyncStepReuploadCovers",
-    testId: "full-sync-step-reupload-covers",
+    key: "reupload_files",
+    labelKey: "settings.fullSyncStepReuploadFiles",
+    testId: "full-sync-step-reupload-files",
   },
   {
-    key: "upload_covers",
-    labelKey: "settings.fullSyncStepUploadCovers",
-    testId: "full-sync-step-upload-covers",
+    key: "upload_files",
+    labelKey: "settings.fullSyncStepUploadFiles",
+    testId: "full-sync-step-upload-files",
   },
   {
     key: "push",
@@ -41,28 +36,28 @@ const PROGRESS_STEPS: Array<{
     testId: "full-sync-step-pull",
   },
   {
-    key: "download_covers",
-    labelKey: "settings.fullSyncStepDownloadCovers",
-    testId: "full-sync-step-download-covers",
+    key: "download_files",
+    labelKey: "settings.fullSyncStepDownloadFiles",
+    testId: "full-sync-step-download-files",
   },
 ];
 
 const STEP_ORDER: FullSyncStep[] = [
-  "reupload_covers",
-  "upload_covers",
+  "reupload_files",
+  "upload_files",
   "push",
   "pull",
-  "download_covers",
+  "download_files",
 ];
 
 function isStepDone(
   currentStep: FullSyncStep,
   stepKey:
-    | "reupload_covers"
-    | "upload_covers"
+    | "reupload_files"
+    | "upload_files"
     | "push"
     | "pull"
-    | "download_covers",
+    | "download_files",
 ): boolean {
   const currentIndex = STEP_ORDER.indexOf(currentStep);
   const stepIndex = STEP_ORDER.indexOf(stepKey);

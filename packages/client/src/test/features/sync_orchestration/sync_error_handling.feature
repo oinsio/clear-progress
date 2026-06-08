@@ -36,8 +36,8 @@ Feature: Sync Orchestration — Error Handling
     And the counter starts from 1 again
 
   @sync-orchestration @error-handling
-  Scenario: Cover sync error does not fail the sync cycle
+  Scenario: File sync error does not fail the sync cycle
     Given SyncProvider has mounted
-    When push and pull succeed but cover sync throws an error
+    When push and pull succeed but file sync throws an error
     Then sync status becomes "idle"
     And syncVersion is incremented

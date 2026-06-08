@@ -1,4 +1,5 @@
 -- implements FR8, FR10, FR11 of add-supabase-adapter
+-- implements FR4, FR5 of add-file-attachments
 -- Row Level Security policies on all tables + Storage bucket
 
 -- ─── Enable RLS ─────────────────────────────────────────────────────────────
@@ -11,7 +12,8 @@ ALTER TABLE categories      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE checklist_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sync_meta       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE covers          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE files           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attachments     ENABLE ROW LEVEL SECURITY;
 
 -- ─── Entity table policies ───────────────────────────────────────────────────
 -- Each user can only read/write rows where user_id = auth.uid()
@@ -56,7 +58,12 @@ CREATE POLICY sync_meta_user_isolation ON sync_meta
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY covers_user_isolation ON covers
+CREATE POLICY files_user_isolation ON files
+  FOR ALL TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY attachments_user_isolation ON attachments
   FOR ALL TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
@@ -73,7 +80,7 @@ DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'buckets') THEN
     INSERT INTO storage.buckets (id, name, public)
-    VALUES ('covers', 'covers', FALSE)
+    VALUES ('files', 'files', FALSE)
     ON CONFLICT (id) DO NOTHING;
   END IF;
 END $$;
@@ -81,15 +88,15 @@ END $$;
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'objects') THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'covers_storage_user_isolation') THEN
-      CREATE POLICY covers_storage_user_isolation ON storage.objects
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'files_storage_user_isolation') THEN
+      CREATE POLICY files_storage_user_isolation ON storage.objects
         FOR ALL TO authenticated
         USING (
-          bucket_id = 'covers'
+          bucket_id = 'files'
           AND (storage.foldername(name))[2] = auth.uid()::text
         )
         WITH CHECK (
-          bucket_id = 'covers'
+          bucket_id = 'files'
           AND (storage.foldername(name))[2] = auth.uid()::text
         );
     END IF;

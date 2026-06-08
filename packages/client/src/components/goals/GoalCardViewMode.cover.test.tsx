@@ -42,6 +42,16 @@ vi.mock("@/components/goals/CoverLightbox", () => ({
   ),
 }));
 
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
+
+vi.mock("@/components/shared/AttachmentList", () => ({
+  AttachmentList: () => null,
+}));
+
+const EXAMPLE_COVER_URL = "https://example.com/cover.jpg";
+
 // FR1, FR4: cover circle and lightbox
 describe("GoalCardViewMode — cover", () => {
   afterEach(() => {
@@ -59,7 +69,7 @@ describe("GoalCardViewMode — cover", () => {
     });
 
     it("should render clickable cover when existing cover url is present", () => {
-      renderViewMode({ existingCoverUrl: "https://example.com/cover.jpg" });
+      renderViewMode({ existingCoverUrl: EXAMPLE_COVER_URL });
 
       const coverCircle = screen.getByTestId("cover-circle");
       expect(coverCircle.tagName).toBe("BUTTON");
@@ -69,7 +79,7 @@ describe("GoalCardViewMode — cover", () => {
     it("should show goal name as cover alt when cover exists", () => {
       renderViewMode({
         goal: createGoal({ name: "Named Goal" }),
-        existingCoverUrl: "https://example.com/cover.jpg",
+        existingCoverUrl: EXAMPLE_COVER_URL,
       });
 
       const coverImage = screen
@@ -88,7 +98,7 @@ describe("GoalCardViewMode — cover", () => {
 
   describe("lightbox", () => {
     it("should open lightbox when clicking cover circle with real cover", () => {
-      renderViewMode({ existingCoverUrl: "https://example.com/cover.jpg" });
+      renderViewMode({ existingCoverUrl: EXAMPLE_COVER_URL });
 
       expect(screen.queryByTestId("cover-lightbox")).not.toBeInTheDocument();
 
@@ -98,7 +108,7 @@ describe("GoalCardViewMode — cover", () => {
     });
 
     it("should close lightbox when onClose is called", () => {
-      renderViewMode({ existingCoverUrl: "https://example.com/cover.jpg" });
+      renderViewMode({ existingCoverUrl: EXAMPLE_COVER_URL });
 
       fireEvent.click(screen.getByTestId("cover-circle"));
       expect(screen.getByTestId("cover-lightbox")).toBeInTheDocument();

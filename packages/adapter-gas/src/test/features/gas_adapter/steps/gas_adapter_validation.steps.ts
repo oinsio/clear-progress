@@ -5,13 +5,14 @@ import type { InitResponse } from "@clear-progress/contract";
 import { ApiValidationError } from "@clear-progress/contract";
 import { expect, type TestContext, vi } from "vitest";
 import { GasSyncAdapter } from "../../../../client";
+import {
+  createValidInitResponse,
+  type FeatureContext,
+  GAS_URL,
+  VALID_TOKEN,
+} from "./gas-adapter-test-utils";
 
 const feature = await loadFeature("../gas_adapter_validation.feature");
-
-type FeatureContext = Record<string, never>;
-
-const GAS_URL = "https://script.google.com/macros/s/test/exec";
-const VALID_TOKEN = "valid-test-token";
 
 describeFeature(
   feature,
@@ -35,12 +36,7 @@ describeFeature(
       "Valid response passes Zod validation",
       ({ Given, When, Then }) => {
         Given("the server responds with a valid init response", () => {
-          mockFetch.mockResolvedValue(
-            new Response(JSON.stringify({ ok: true }), {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            }),
-          );
+          mockFetch.mockResolvedValue(createValidInitResponse());
         });
 
         When("adapter calls init", async (_ctx: TestContext) => {

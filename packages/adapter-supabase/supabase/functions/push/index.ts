@@ -1,4 +1,5 @@
 // implements FR3, NFR-P2, D1 of add-supabase-adapter
+// implements FR6 of add-file-attachments
 // POST /push — delegates transactional logic to push_records PostgreSQL RPC function
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
@@ -19,6 +20,7 @@ Deno.serve(
       categories?: unknown[];
       ideas?: unknown[];
       checklist_items?: unknown[];
+      attachments?: unknown[];
       settings?: unknown[];
     };
 
@@ -30,6 +32,7 @@ Deno.serve(
       p_categories: body.categories ?? [],
       p_ideas: body.ideas ?? [],
       p_checklist_items: body.checklist_items ?? [],
+      p_attachments: body.attachments ?? [],
       p_settings: body.settings ?? [],
     });
 
@@ -59,6 +62,7 @@ Deno.serve(
         categories: unknown[];
         ideas: unknown[];
         checklist_items: unknown[];
+        attachments: unknown[];
         settings: unknown[];
       };
     };

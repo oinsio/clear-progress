@@ -1,3 +1,4 @@
+import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { Temporal } from "@/lib/temporal";
 import type { Idea } from "@/types/entities";
@@ -5,7 +6,10 @@ import { toISOTimestamp } from "@/utils/dateHelpers";
 import { hasEntityChanged } from "@/utils/deepEqual";
 
 export class IdeaService {
-  constructor(private readonly ideaRepository: IdeaRepository) {}
+  constructor(
+    private readonly ideaRepository: IdeaRepository,
+    private readonly attachmentRepository?: AttachmentRepository,
+  ) {}
 
   async getAll(): Promise<Idea[]> {
     const ideas = await this.ideaRepository.getActive();
@@ -61,11 +65,19 @@ export class IdeaService {
     return updatedIdea;
   }
 
+  /** Implements FR14 of add-file-attachments */
   async softDelete(id: string): Promise<Idea> {
+    if (this.attachmentRepository) {
+      await this.attachmentRepository.softDeleteByEntityTypeAndId("idea", id);
+    }
     return this.update(id, { is_deleted: true });
   }
 
+  /** Implements FR15 of add-file-attachments */
   async restore(id: string): Promise<Idea> {
+    if (this.attachmentRepository) {
+      await this.attachmentRepository.restoreByEntityTypeAndId("idea", id);
+    }
     return this.update(id, { is_deleted: false });
   }
 

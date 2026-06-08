@@ -117,7 +117,7 @@ describe("ConfirmFullSyncDialog", () => {
       fireEvent.click(screen.getByTestId("full-sync-start-btn"));
     });
     act(() => {
-      sendProgress("upload_covers");
+      sendProgress("upload_files");
       sendProgress("push");
     });
 
@@ -135,7 +135,7 @@ describe("ConfirmFullSyncDialog", () => {
       fireEvent.click(screen.getByTestId("full-sync-start-btn"));
     });
     act(() => {
-      sendProgress("upload_covers");
+      sendProgress("upload_files");
       sendProgress("push");
       sendProgress("pull");
     });
@@ -146,7 +146,7 @@ describe("ConfirmFullSyncDialog", () => {
     );
   });
 
-  it("should show upload_covers step as active during upload_covers progress", async () => {
+  it("should show upload_files step as active during upload_files progress", async () => {
     const { onSync, sendProgress } = createHangingOnSync();
     renderDialog({ onSync });
 
@@ -154,16 +154,16 @@ describe("ConfirmFullSyncDialog", () => {
       fireEvent.click(screen.getByTestId("full-sync-start-btn"));
     });
     act(() => {
-      sendProgress("upload_covers");
+      sendProgress("upload_files");
     });
 
-    expect(screen.getByTestId("full-sync-step-upload-covers")).toHaveAttribute(
+    expect(screen.getByTestId("full-sync-step-upload-files")).toHaveAttribute(
       "data-active",
       "true",
     );
   });
 
-  it("should show download_covers step as active during download_covers progress", async () => {
+  it("should show download_files step as active during download_files progress", async () => {
     const { onSync, sendProgress } = createHangingOnSync();
     renderDialog({ onSync });
 
@@ -171,23 +171,24 @@ describe("ConfirmFullSyncDialog", () => {
       fireEvent.click(screen.getByTestId("full-sync-start-btn"));
     });
     act(() => {
-      sendProgress("upload_covers");
+      sendProgress("upload_files");
       sendProgress("push");
       sendProgress("pull");
-      sendProgress("download_covers");
+      sendProgress("download_files");
     });
 
-    expect(
-      screen.getByTestId("full-sync-step-download-covers"),
-    ).toHaveAttribute("data-active", "true");
+    expect(screen.getByTestId("full-sync-step-download-files")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
   });
 
   it("should show success message when done", async () => {
     const onSync = createResolvingOnSync([
-      "upload_covers",
+      "upload_files",
       "push",
       "pull",
-      "download_covers",
+      "download_files",
       "done",
     ]);
     renderDialog({ onSync });
@@ -242,7 +243,7 @@ describe("ConfirmFullSyncDialog", () => {
       fireEvent.click(screen.getByTestId("full-sync-start-btn"));
     });
     act(() => {
-      sendProgress("upload_covers");
+      sendProgress("upload_files");
     });
 
     expect(screen.getByTestId("full-sync-start-btn")).toBeDisabled();

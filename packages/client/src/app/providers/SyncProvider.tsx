@@ -18,6 +18,7 @@ import {
   SYNC_DEBOUNCE_MS,
   SYNC_INTERVAL_MS,
 } from "@/constants";
+import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
@@ -28,7 +29,7 @@ import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 import {
-  defaultCoverSyncService,
+  defaultFileSyncService,
   defaultSyncAdapter,
 } from "@/services/defaultServices";
 import { SyncService } from "@/services/SyncService";
@@ -57,6 +58,7 @@ const syncService = new SyncService(
   new ChecklistRepository(),
   new IdeaRepository(),
   new SettingsRepository(),
+  new AttachmentRepository(),
 );
 
 function persistLastSync(timestamp: string): void {
@@ -110,14 +112,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     console.log("[SyncProvider] applySyncResult: push done, starting pull");
     await syncService.pull();
     console.log(
-      "[SyncProvider] applySyncResult: pull done, starting cover sync",
+      "[SyncProvider] applySyncResult: pull done, starting file sync",
     );
-    // Cover sync runs after entities — errors are caught separately so they don't
+    // File sync runs after entities — errors are caught separately so they don't
     // roll back the already-completed entity sync.
     try {
-      await defaultCoverSyncService.sync();
+      await defaultFileSyncService.sync();
     } catch (coverError) {
-      console.error("[SyncProvider] Cover sync failed:", coverError);
+      console.error("[SyncProvider] File sync failed:", coverError);
     }
     console.log(
       "[SyncProvider] applySyncResult: all done, persisting lastSync",
@@ -194,11 +196,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       isSyncingRef.current = true;
       setSyncStatus("syncing");
       try {
-        onProgress("reupload_covers");
-        await defaultCoverSyncService.reuploadLocalCovers();
+        onProgress("reupload_files");
+        await defaultFileSyncService.reuploadLocalFiles();
 
-        onProgress("upload_covers");
-        await defaultCoverSyncService.sync();
+        onProgress("upload_files");
+        await defaultFileSyncService.sync();
 
         onProgress("push");
         await syncService.push(true);
@@ -206,8 +208,8 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         onProgress("pull");
         await syncService.resetAndPull();
 
-        onProgress("download_covers");
-        await defaultCoverSyncService.ensureServerCoversAreCached();
+        onProgress("download_files");
+        await defaultFileSyncService.ensureServerFilesAreCached();
 
         const syncTimestamp = toISOTimestamp();
         persistLastSync(syncTimestamp);
@@ -291,21 +293,24 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   }, [accessToken, applySyncResult, stopPingInterval, handleSyncError]);
 
   useEffect(() => {
-    if (!accessToken || !config) return;
-
-    defaultCoverSyncService
-      .initializeLocalCovers()
+    defaultFileSyncService
+      .initializeLocalFiles()
       .catch((coverInitError) =>
         console.error(
-          "[SyncProvider] cover initializeLocalCovers error:",
+          "[SyncProvider] initializeLocalFiles error:",
           coverInitError,
         ),
       );
-    defaultCoverSyncService
+  }, []);
+
+  useEffect(() => {
+    if (!accessToken || !config) return;
+
+    defaultFileSyncService
       .sync()
       .catch((coverSyncError) =>
         console.error(
-          "[SyncProvider] cover sync on mount error:",
+          "[SyncProvider] file sync on mount error:",
           coverSyncError,
         ),
       );

@@ -24,14 +24,14 @@ Feature: Cover Sync Protocol — Upload
     And pending cover "hash-reused" is removed from repository
 
   @spec-sync-protocol @FR9
-  Scenario: Covers are uploaded in chunks of MAX_COVER_BATCH_SIZE
-    Given more pending covers than MAX_COVER_BATCH_SIZE exist
+  Scenario: Covers are uploaded in chunks of MAX_FILE_BATCH_SIZE
+    Given more pending covers than MAX_FILE_BATCH_SIZE exist
     When cover sync runs
     Then uploadCovers is called twice
 
   @spec-sync-protocol @FR9
   Scenario: Batch does not produce extra empty iteration on exact boundary
-    Given exactly MAX_COVER_BATCH_SIZE pending covers exist
+    Given exactly MAX_FILE_BATCH_SIZE pending covers exist
     When cover sync runs
     Then uploadCovers is called exactly once
     And no empty batch is processed
@@ -53,7 +53,7 @@ Feature: Cover Sync Protocol — Upload
 
   @spec-sync-protocol @FR9
   Scenario: API failure stops processing remaining chunks
-    Given more pending covers than MAX_COVER_BATCH_SIZE exist
+    Given more pending covers than MAX_FILE_BATCH_SIZE exist
     And server will reject the first uploadCovers call
     When cover sync runs
     Then uploadCovers is called only once

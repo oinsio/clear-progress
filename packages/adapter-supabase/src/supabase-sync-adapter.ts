@@ -1,9 +1,10 @@
 // implements FR8 of add-supabase-ui
+// implements FR4 of add-file-attachments
 import type {
-  DeleteCoverRequest,
-  DeleteCoverResponse,
-  GetCoverRequest,
-  GetCoverResponse,
+  DeleteFileRequest,
+  DeleteFileResponse,
+  GetFileRequest,
+  GetFileResponse,
   InitResponse,
   PingResponse,
   PullRequest,
@@ -12,23 +13,23 @@ import type {
   PushRequest,
   PushResponse,
   SyncAdapter,
-  UploadCoverRequest,
-  UploadCoverResponse,
-  UploadCoversRequest,
-  UploadCoversResponse,
+  UploadFileRequest,
+  UploadFileResponse,
+  UploadFilesRequest,
+  UploadFilesResponse,
 } from "@clear-progress/contract";
 import {
   ApiAuthError,
   ApiValidationError,
-  DeleteCoverResponseSchema,
-  GetCoverResponseSchema,
+  DeleteFileResponseSchema,
+  GetFileResponseSchema,
   InitResponseSchema,
   PingResponseSchema,
   PullResponseSchema,
   PurgeResponseSchema,
   PushResponseSchema,
-  UploadCoverResponseSchema,
-  UploadCoversResponseSchema,
+  UploadFileResponseSchema,
+  UploadFilesResponseSchema,
 } from "@clear-progress/contract";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ZodType } from "zod";
@@ -99,22 +100,20 @@ export class SupabaseSyncAdapter implements SyncAdapter {
     return this.invoke("push", request, PushResponseSchema);
   }
 
-  async uploadCover(request: UploadCoverRequest): Promise<UploadCoverResponse> {
-    return this.invoke("upload-cover", request, UploadCoverResponseSchema);
+  async uploadFile(request: UploadFileRequest): Promise<UploadFileResponse> {
+    return this.invoke("upload-file", request, UploadFileResponseSchema);
   }
 
-  async uploadCovers(
-    request: UploadCoversRequest,
-  ): Promise<UploadCoversResponse> {
-    return this.invoke("upload-covers", request, UploadCoversResponseSchema);
+  async uploadFiles(request: UploadFilesRequest): Promise<UploadFilesResponse> {
+    return this.invoke("upload-files", request, UploadFilesResponseSchema);
   }
 
-  async getCover(request: GetCoverRequest): Promise<GetCoverResponse> {
-    return this.invoke("get-cover", request, GetCoverResponseSchema);
+  async getFile(request: GetFileRequest): Promise<GetFileResponse> {
+    return this.invoke("get-file", request, GetFileResponseSchema);
   }
 
-  async deleteCover(request: DeleteCoverRequest): Promise<DeleteCoverResponse> {
-    return this.invoke("delete-cover", request, DeleteCoverResponseSchema);
+  async deleteFile(request: DeleteFileRequest): Promise<DeleteFileResponse> {
+    return this.invoke("delete-file", request, DeleteFileResponseSchema);
   }
 
   async purge(): Promise<PurgeResponse> {

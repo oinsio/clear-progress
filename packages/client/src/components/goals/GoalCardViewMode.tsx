@@ -1,7 +1,9 @@
 /**
  * View mode card for goal detail page.
- * Renders cover circle, status badge, action buttons, name, and collapsible description.
+ * Renders cover circle, status badge, action buttons, name, and collapsible details section
+ * (description + read-only attachments).
  * Implements FR1, FR3, FR4, FR5 of goal-detail-card-refactor.
+ * Implements UX2, UX3 of add-file-attachments.
  */
 import {
   CheckCheck,
@@ -15,9 +17,14 @@ import { useTranslation } from "react-i18next";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
 import { CoverLightbox } from "@/components/goals/CoverLightbox";
 import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
+import { AttachmentList } from "@/components/shared/AttachmentList";
 import { LinkedText } from "@/components/ui/LinkedText";
+import { useAttachments } from "@/hooks/useAttachments";
 import { cn } from "@/shared/lib/cn";
 import type { Goal } from "@/types/entities";
+
+const ENTITY_TYPE_GOAL = "goal" as const;
+const NOOP_DELETE = () => {};
 
 interface GoalCardViewModeProps {
   goal: Goal;
@@ -40,7 +47,7 @@ export function GoalCardViewMode({
 }: GoalCardViewModeProps) {
   const { t } = useTranslation();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const [isDescriptionOverflowing, setIsDescriptionOverflowing] =
     useState(false);
   const descriptionRef = useRef<HTMLDivElement>(null);
@@ -48,10 +55,17 @@ export function GoalCardViewMode({
 
   const hasRealCover = Boolean(existingCoverUrl);
 
+  const { attachments } = useAttachments(ENTITY_TYPE_GOAL, goal.id);
+  const hasAttachments = attachments.length > 0;
+  const hasDescription = Boolean(goal.description);
+
+  const shouldShowChevron =
+    hasAttachments || isDescriptionOverflowing || isDetailsExpanded;
+
   useLayoutEffect(() => {
     const description = goal.description;
     const element = descriptionRef.current;
-    if (!element || !description || isDescriptionExpanded) return;
+    if (!element || !description || isDetailsExpanded) return;
 
     const checkOverflow = () => {
       setIsDescriptionOverflowing(element.scrollHeight > element.clientHeight);
@@ -63,7 +77,7 @@ export function GoalCardViewMode({
     resizeObserver.observe(element);
 
     return () => resizeObserver.disconnect();
-  }, [goal.description, isDescriptionExpanded]);
+  }, [goal.description, isDetailsExpanded]);
 
   return (
     <div className="flex flex-col px-4 py-4 gap-2">
@@ -161,40 +175,56 @@ export function GoalCardViewMode({
         {goal.name}
       </p>
 
-      {/* Row 3: description (only if exists) */}
-      {goal.description && (
-        <div className="flex items-start gap-1">
-          <div
-            ref={descriptionRef}
-            className={cn(
-              "flex-1 min-w-0",
-              !isDescriptionExpanded && "line-clamp-2",
+      {/* Row 3: collapsible details (description + attachments) */}
+      {(hasDescription || hasAttachments) && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start gap-1">
+            {hasDescription && (
+              <div
+                ref={descriptionRef}
+                className={cn(
+                  "flex-1 min-w-0",
+                  !isDetailsExpanded && "line-clamp-2",
+                )}
+              >
+                <LinkedText
+                  text={goal.description}
+                  className="text-xs text-gray-500 leading-snug whitespace-pre-wrap"
+                />
+              </div>
             )}
-          >
-            <LinkedText
-              text={goal.description}
-              className="text-xs text-gray-500 leading-snug whitespace-pre-wrap"
-            />
+            {!hasDescription && <div className="flex-1" />}
+            {shouldShowChevron && (
+              <button
+                type="button"
+                data-testid="details-toggle"
+                aria-expanded={isDetailsExpanded}
+                aria-label={
+                  isDetailsExpanded
+                    ? t("goal.collapseDetails")
+                    : t("goal.expandDetails")
+                }
+                onClick={() => setIsDetailsExpanded((previous) => !previous)}
+                className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {isDetailsExpanded ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
+            )}
           </div>
-          {isDescriptionOverflowing && (
-            <button
-              type="button"
-              data-testid="description-toggle"
-              aria-expanded={isDescriptionExpanded}
-              aria-label={
-                isDescriptionExpanded
-                  ? t("goal.collapseDescription")
-                  : t("goal.expandDescription")
-              }
-              onClick={() => setIsDescriptionExpanded((previous) => !previous)}
-              className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              {isDescriptionExpanded ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
+
+          {/* Attachments (read-only, shown only when expanded) */}
+          {isDetailsExpanded && hasAttachments && (
+            <div className="mt-1" data-testid="view-mode-attachments">
+              <AttachmentList
+                attachments={attachments}
+                onDelete={NOOP_DELETE}
+                isReadOnly
+              />
+            </div>
           )}
         </div>
       )}

@@ -5,13 +5,15 @@ import {
 } from "../../../tests/server/setup/gas-mocks";
 import { PROPERTY_KEYS } from "../helpers/constants";
 import { ERROR_CODES } from "../helpers/response";
-import { deleteCover } from "./delete-cover";
+import { deleteFile } from "./delete-file";
 
 vi.mock("../sheets/goals.sheet", () => ({ getCoverHashes: vi.fn() }));
+vi.mock("../sheets/attachments.sheet", () => ({ getDataHashes: vi.fn() }));
 
+import { getDataHashes } from "../sheets/attachments.sheet";
 import { getCoverHashes } from "../sheets/goals.sheet";
 
-const DEFAULT_COVERS_FOLDER_ID = "covers-folder-id";
+const DEFAULT_FILES_FOLDER_ID = "files-folder-id";
 const MOCK_DRIVE_FILE_ID = "drive-file-id-abc";
 
 function parseResponse(): Record<string, unknown> {
@@ -21,12 +23,13 @@ function parseResponse(): Record<string, unknown> {
   return JSON.parse(lastCall[0]);
 }
 
-describe("deleteCover", () => {
+describe("deleteFile", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetScriptProperties();
-    setScriptProperty(PROPERTY_KEYS.COVERS_FOLDER_ID, DEFAULT_COVERS_FOLDER_ID);
+    setScriptProperty(PROPERTY_KEYS.FILES_FOLDER_ID, DEFAULT_FILES_FOLDER_ID);
     vi.mocked(getCoverHashes).mockReturnValue([]);
+    vi.mocked(getDataHashes).mockReturnValue([]);
     vi.mocked(Drive.Files.list).mockReturnValue({
       files: [{ id: MOCK_DRIVE_FILE_ID, description: "hash-abc" }],
     } as never);
@@ -34,7 +37,7 @@ describe("deleteCover", () => {
 
   describe("payload validation", () => {
     it("should return INVALID_PAYLOAD error when hash is empty string", () => {
-      deleteCover({ hash: "" });
+      deleteFile({ hash: "" });
 
       const response = parseResponse();
       expect(response.ok).toBe(false);
@@ -42,7 +45,7 @@ describe("deleteCover", () => {
     });
 
     it("should not call getCoverHashes when hash is missing", () => {
-      deleteCover({ hash: "" });
+      deleteFile({ hash: "" });
 
       expect(getCoverHashes).not.toHaveBeenCalled();
     });
@@ -52,7 +55,7 @@ describe("deleteCover", () => {
     it("should return deleted: false when hash is referenced by one goal", () => {
       vi.mocked(getCoverHashes).mockReturnValue(["hash-abc"]);
 
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       expect(parseResponse()).toMatchObject({
         ok: true,
@@ -68,7 +71,7 @@ describe("deleteCover", () => {
         "hash-abc",
       ]);
 
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       expect(parseResponse().ref_count).toBe(3);
     });
@@ -76,7 +79,7 @@ describe("deleteCover", () => {
     it("should not call Drive.Files.update when hash is still referenced", () => {
       vi.mocked(getCoverHashes).mockReturnValue(["hash-abc"]);
 
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       expect(Drive.Files.update).not.toHaveBeenCalled();
     });
@@ -84,7 +87,7 @@ describe("deleteCover", () => {
     it("should not count other hashes toward ref_count", () => {
       vi.mocked(getCoverHashes).mockReturnValue(["hash-other", "hash-abc"]);
 
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       expect(parseResponse().ref_count).toBe(1);
     });
@@ -94,7 +97,7 @@ describe("deleteCover", () => {
     it("should return deleted: true when hash has no references", () => {
       vi.mocked(getCoverHashes).mockReturnValue([]);
 
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       expect(parseResponse()).toMatchObject({
         ok: true,
@@ -104,7 +107,7 @@ describe("deleteCover", () => {
     });
 
     it("should call Drive.Files.update with trashed: true", () => {
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       expect(Drive.Files.update).toHaveBeenCalledWith(
         { trashed: true },
@@ -113,7 +116,7 @@ describe("deleteCover", () => {
     });
 
     it("should trash the file matching the given hash", () => {
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       expect(Drive.Files.update).toHaveBeenCalledWith(
         expect.anything(),
@@ -128,7 +131,7 @@ describe("deleteCover", () => {
         throw new Error("Not found");
       });
 
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       const response = parseResponse();
       expect(response.ok).toBe(false);
@@ -140,7 +143,7 @@ describe("deleteCover", () => {
         throw new Error("Not found");
       });
 
-      deleteCover({ hash: "hash-abc" });
+      deleteFile({ hash: "hash-abc" });
 
       expect(parseResponse().message).toContain("hash-abc");
     });

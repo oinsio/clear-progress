@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ERROR_CODES } from "../helpers/response";
-import { getCover } from "./get-cover";
 import {
   HASH_1,
   HASH_2,
@@ -10,56 +9,57 @@ import {
   parseResponse,
   setupDriveMocks,
 } from "./get-cover-test-utils";
+import { getFile } from "./get-file";
 
-describe("getCover — retrieval", () => {
+describe("getFile — retrieval", () => {
   beforeEach(() => {
     setupDriveMocks();
   });
 
   describe("single file retrieval", () => {
     it("should return ok: true for a valid file", () => {
-      getCover({ hashes: [HASH_1] });
+      getFile({ hashes: [HASH_1] });
 
       expect(parseResponse().ok).toBe(true);
     });
 
-    it("should return covers array for a valid file", () => {
-      getCover({ hashes: [HASH_1] });
+    it("should return files array for a valid file", () => {
+      getFile({ hashes: [HASH_1] });
 
       const response = parseResponse();
-      expect(Array.isArray(response.covers)).toBe(true);
+      expect(Array.isArray(response.files)).toBe(true);
     });
 
-    it("should return one cover item for one hash", () => {
-      getCover({ hashes: [HASH_1] });
+    it("should return one file item for one hash", () => {
+      getFile({ hashes: [HASH_1] });
 
       const response = parseResponse();
-      expect((response.covers as unknown[]).length).toBe(1);
+      expect((response.files as unknown[]).length).toBe(1);
     });
 
-    it("should return hash in cover item", () => {
-      getCover({ hashes: [HASH_1] });
+    it("should return hash in file item", () => {
+      getFile({ hashes: [HASH_1] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].hash).toBe(HASH_1);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].hash).toBe(HASH_1);
     });
 
-    it("should return base64 data in cover item", () => {
-      getCover({ hashes: [HASH_1] });
+    it("should return base64 data in file item", () => {
+      getFile({ hashes: [HASH_1] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].data).toBe(MOCK_BASE64);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].data).toBe(MOCK_BASE64);
     });
 
-    it("should return mime_type in cover item", () => {
-      getCover({ hashes: [HASH_1] });
+    it("should return mime_type in file item", () => {
+      getFile({ hashes: [HASH_1] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].mime_type).toBe(MOCK_MIME_TYPE);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].mime_type).toBe(MOCK_MIME_TYPE);
     });
 
     it("should call DriveApp.getFileById with the Drive file id matched by hash", () => {
-      getCover({ hashes: [HASH_1] });
+      getFile({ hashes: [HASH_1] });
 
       expect(DriveApp.getFileById).toHaveBeenCalledWith(MOCK_FILE_ID_1);
     });
@@ -73,33 +73,33 @@ describe("getCover — retrieval", () => {
         }),
       } as never);
 
-      getCover({ hashes: [HASH_1] });
+      getFile({ hashes: [HASH_1] });
 
       expect(Utilities.base64Encode).toHaveBeenCalledWith(mockBytes);
     });
   });
 
   describe("FILE_NOT_FOUND handling", () => {
-    it("should return FILE_NOT_FOUND error in cover item when file does not exist", () => {
+    it("should return FILE_NOT_FOUND error in file item when file does not exist", () => {
       vi.mocked(DriveApp.getFileById).mockImplementation(() => {
         throw new Error("File not found");
       });
 
-      getCover({ hashes: [HASH_1] });
+      getFile({ hashes: [HASH_1] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].error).toBe(ERROR_CODES.FILE_NOT_FOUND);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].error).toBe(ERROR_CODES.FILE_NOT_FOUND);
     });
 
-    it("should return hash in error cover item", () => {
+    it("should return hash in error file item", () => {
       vi.mocked(DriveApp.getFileById).mockImplementation(() => {
         throw new Error("File not found");
       });
 
-      getCover({ hashes: [HASH_1] });
+      getFile({ hashes: [HASH_1] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].hash).toBe(HASH_1);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].hash).toBe(HASH_1);
     });
 
     it("should not return data when file does not exist", () => {
@@ -107,10 +107,10 @@ describe("getCover — retrieval", () => {
         throw new Error("File not found");
       });
 
-      getCover({ hashes: [HASH_1] });
+      getFile({ hashes: [HASH_1] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].data).toBeUndefined();
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].data).toBeUndefined();
     });
 
     it("should still return ok: true even when a file is not found", () => {
@@ -118,18 +118,18 @@ describe("getCover — retrieval", () => {
         throw new Error("File not found");
       });
 
-      getCover({ hashes: [HASH_1] });
+      getFile({ hashes: [HASH_1] });
 
       expect(parseResponse().ok).toBe(true);
     });
   });
 
   describe("batch retrieval", () => {
-    it("should return two cover items for two hashes", () => {
-      getCover({ hashes: [HASH_1, HASH_2] });
+    it("should return two file items for two hashes", () => {
+      getFile({ hashes: [HASH_1, HASH_2] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers.length).toBe(2);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files.length).toBe(2);
     });
 
     it("should return partial success when some files exist and some do not", () => {
@@ -144,11 +144,11 @@ describe("getCover — retrieval", () => {
           throw new Error("File not found");
         });
 
-      getCover({ hashes: [HASH_1, HASH_2] });
+      getFile({ hashes: [HASH_1, HASH_2] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].data).toBe(MOCK_BASE64);
-      expect(covers[1].error).toBe(ERROR_CODES.FILE_NOT_FOUND);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].data).toBe(MOCK_BASE64);
+      expect(files[1].error).toBe(ERROR_CODES.FILE_NOT_FOUND);
     });
 
     it("should process remaining files after one fails", () => {
@@ -163,19 +163,19 @@ describe("getCover — retrieval", () => {
           }),
         } as never);
 
-      getCover({ hashes: [HASH_1, HASH_2] });
+      getFile({ hashes: [HASH_1, HASH_2] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].error).toBe(ERROR_CODES.FILE_NOT_FOUND);
-      expect(covers[1].data).toBe(MOCK_BASE64);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].error).toBe(ERROR_CODES.FILE_NOT_FOUND);
+      expect(files[1].data).toBe(MOCK_BASE64);
     });
 
     it("should preserve hash order in response", () => {
-      getCover({ hashes: [HASH_1, HASH_2] });
+      getFile({ hashes: [HASH_1, HASH_2] });
 
-      const covers = parseResponse().covers as Array<Record<string, unknown>>;
-      expect(covers[0].hash).toBe(HASH_1);
-      expect(covers[1].hash).toBe(HASH_2);
+      const files = parseResponse().files as Array<Record<string, unknown>>;
+      expect(files[0].hash).toBe(HASH_1);
+      expect(files[1].hash).toBe(HASH_2);
     });
   });
 });

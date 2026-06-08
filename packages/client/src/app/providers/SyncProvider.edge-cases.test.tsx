@@ -14,7 +14,7 @@ import {
   SyncStatusDisplay,
   setupBeforeEach,
 } from "./SyncProvider.test-helpers";
-import { mockCoverSync, mockPull, mockPush } from "./SyncProvider.test-mocks";
+import { mockFileSync, mockPull, mockPush } from "./SyncProvider.test-mocks";
 
 beforeEach(() => setupBeforeEach());
 afterEach(() => vi.useRealTimers());
@@ -76,9 +76,9 @@ describe("SyncProvider — sync mutex", () => {
   });
 });
 
-describe("SyncProvider — cover sync error handling", () => {
-  it("should complete sync and set status to idle even if cover sync throws", async () => {
-    mockCoverSync.mockRejectedValue(new Error("Cover sync failed"));
+describe("SyncProvider — file sync error handling", () => {
+  it("should complete sync and set status to idle even if file sync throws", async () => {
+    mockFileSync.mockRejectedValue(new Error("File sync failed"));
     renderProvider();
     await act(async () => {});
     expect(screen.getByTestId("status").textContent).toBe("idle");
@@ -86,8 +86,8 @@ describe("SyncProvider — cover sync error handling", () => {
     expect(mockPull).toHaveBeenCalled();
   });
 
-  it("should not propagate cover sync error to the main sync error handler", async () => {
-    mockCoverSync.mockRejectedValue(new Error("Cover sync failed"));
+  it("should not propagate file sync error to the main sync error handler", async () => {
+    mockFileSync.mockRejectedValue(new Error("File sync failed"));
     renderProvider();
     await act(async () => {});
     expect(screen.getByTestId("status").textContent).not.toBe("error");

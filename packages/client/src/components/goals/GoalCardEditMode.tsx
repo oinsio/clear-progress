@@ -1,31 +1,27 @@
 /**
  * Edit mode card for goal detail page.
- * Renders cover picker, name/description inputs, status control, save/delete buttons.
+ * Renders cover picker, name input (always visible), Details/Attachments tabs, footer buttons.
  * Implements FR2 of goal-detail-card-refactor.
+ * Implements UX2, UX3 of add-file-attachments.
  */
-import type { LucideIcon } from "lucide-react";
-import { Check, CircleMinus, Pause, Play, Square } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { GoalAttachmentsTab } from "@/components/goals/GoalAttachmentsTab";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
-import { EditableDescription } from "@/components/ui/EditableDescription";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { cn } from "@/shared/lib/cn";
 import type { GoalStatus } from "@/types/common";
+import { GoalEditDetailsTab } from "./GoalEditDetailsTab";
 
-interface GoalStatusOption {
-  status: GoalStatus;
-  icon: LucideIcon;
-}
+const GOAL_EDIT_TAB = {
+  DETAILS: "details",
+  ATTACHMENTS: "attachments",
+} as const;
 
-const STATUS_OPTIONS: GoalStatusOption[] = [
-  { status: "cancelled", icon: CircleMinus },
-  { status: "paused", icon: Pause },
-  { status: "planning", icon: Square },
-  { status: "in_progress", icon: Play },
-  { status: "completed", icon: Check },
-];
+type GoalEditTab = (typeof GOAL_EDIT_TAB)[keyof typeof GOAL_EDIT_TAB];
 
 interface GoalCardEditModeProps {
+  goalId: string;
   coverPreviewSrc: string | null;
   editName: string;
   editDescription: string;
@@ -47,6 +43,7 @@ interface GoalCardEditModeProps {
 }
 
 export function GoalCardEditMode({
+  goalId,
   coverPreviewSrc,
   editName,
   editDescription,
@@ -68,10 +65,13 @@ export function GoalCardEditMode({
 }: GoalCardEditModeProps) {
   const { t } = useTranslation();
   const editNameTextareaRef = useAutoResizeTextarea(editName);
+  const [activeTab, setActiveTab] = useState<GoalEditTab>(
+    GOAL_EDIT_TAB.DETAILS,
+  );
 
   return (
     <div className="px-4 pt-4 flex flex-col gap-4">
-      {/* Cover + Name row */}
+      {/* Top section: Cover + Name (always visible) */}
       <div className="flex items-center gap-3">
         <GoalCoverPicker
           previewSrc={coverPreviewSrc}
@@ -95,50 +95,49 @@ export function GoalCardEditMode({
         </div>
       </div>
 
-      {/* Description */}
-      <div>
-        <label
-          htmlFor="goal-edit-description"
-          className="text-xs font-medium text-gray-500 mb-1 block"
+      {/* Tab switcher */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          data-testid="goal-tab-details"
+          onClick={() => setActiveTab(GOAL_EDIT_TAB.DETAILS)}
+          className={cn(
+            "flex-1 py-1.5 text-sm rounded-full border transition-colors",
+            activeTab === GOAL_EDIT_TAB.DETAILS
+              ? "bg-accent text-white border-accent"
+              : "text-accent border-accent/40 hover:bg-accent/5",
+          )}
         >
-          {t("goal.descriptionLabel")}
-        </label>
-        <EditableDescription
-          value={editDescription}
-          onChange={onDescriptionChange}
-          placeholder={t("goal.descriptionPlaceholder")}
-          data-test-id="goal-description-input"
-        />
+          {t("goal.tabs.details")}
+        </button>
+        <button
+          type="button"
+          data-testid="goal-tab-attachments"
+          onClick={() => setActiveTab(GOAL_EDIT_TAB.ATTACHMENTS)}
+          className={cn(
+            "flex-1 py-1.5 text-sm rounded-full border transition-colors",
+            activeTab === GOAL_EDIT_TAB.ATTACHMENTS
+              ? "bg-accent text-white border-accent"
+              : "text-accent border-accent/40 hover:bg-accent/5",
+          )}
+        >
+          {t("goal.tabs.attachments")}
+        </button>
       </div>
 
-      {/* Status segmented control */}
-      <div>
-        <label className="text-xs font-medium text-gray-500 mb-2 block">
-          {t("goal.statusLabel")}
-        </label>
-        <div className="flex rounded-full border border-accent overflow-hidden">
-          {STATUS_OPTIONS.map(({ status: optionStatus, icon: StatusIcon }) => {
-            const isSelected = editStatus === optionStatus;
-            return (
-              <button
-                key={optionStatus}
-                type="button"
-                aria-label={t(`goal.status.${optionStatus}`)}
-                aria-pressed={isSelected}
-                onClick={() => onStatusChange(optionStatus)}
-                className={cn(
-                  "flex-1 flex items-center justify-center py-3 transition-colors",
-                  isSelected
-                    ? "bg-accent text-white"
-                    : "text-accent bg-white hover:bg-accent/10",
-                )}
-              >
-                <StatusIcon className="w-[1.125rem] h-[1.125rem]" />
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Tab content */}
+      {activeTab === GOAL_EDIT_TAB.DETAILS && (
+        <GoalEditDetailsTab
+          editDescription={editDescription}
+          editStatus={editStatus}
+          onDescriptionChange={onDescriptionChange}
+          onStatusChange={onStatusChange}
+        />
+      )}
+
+      {activeTab === GOAL_EDIT_TAB.ATTACHMENTS && (
+        <GoalAttachmentsTab goalId={goalId} />
+      )}
 
       {/* Save error */}
       {saveError && (
@@ -147,7 +146,7 @@ export function GoalCardEditMode({
         </p>
       )}
 
-      {/* Footer buttons */}
+      {/* Footer buttons (always visible) */}
       <div className="flex gap-2 pb-2">
         <button
           type="button"
