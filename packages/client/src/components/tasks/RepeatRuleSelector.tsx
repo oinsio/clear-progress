@@ -1,6 +1,7 @@
 import { REPEAT_RULE_LIMITS, type RepeatRule } from "@clear-progress/contract";
 import { ArrowLeft, ChevronDown, Inbox } from "lucide-react";
-import React, { useCallback, useState } from "react";
+import type React from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/cn";
 import type { Box } from "@/types/common";
