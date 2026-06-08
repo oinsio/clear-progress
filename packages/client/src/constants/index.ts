@@ -172,6 +172,7 @@ export const STORAGE_KEYS = {
   FOCUS_OPACITY: "focus_opacity",
   HANDEDNESS: "handedness",
   DAY_BOUNDARY: "day_boundary",
+  ONBOARDING_SHOWN: "onboarding_shown",
 } as const;
 
 export const DEFAULT_FOCUS_OPACITY = 30;

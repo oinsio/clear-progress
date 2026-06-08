@@ -21,6 +21,14 @@ setup(
     await page.goto("/settings");
     await page.waitForLoadState("networkidle");
 
+    // Dismiss onboarding dialog if it appears
+    const onboardingDialog = page.getByTestId("onboarding-dialog-decline");
+    if (
+      await onboardingDialog.isVisible({ timeout: 2000 }).catch(() => false)
+    ) {
+      await onboardingDialog.click();
+    }
+
     await page.getByTestId("server-connect-supabase").click();
     await page.getByTestId("server-supabase-url").fill(config.supabaseUrl);
     await page.getByTestId("server-supabase-anon-key").fill(config.anonKey);

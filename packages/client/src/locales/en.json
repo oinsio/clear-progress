@@ -565,5 +565,23 @@
     "newVersionAvailable": "New version available",
     "ok": "OK",
     "update": "Update"
+  },
+  "onboarding": {
+    "goalName": "Get to know Clear Progress",
+    "goalDescription": "Complete the tasks below to learn the core features of the app. After you're done, delete this goal.",
+    "task1Name": "Swipe a task to the right or tap the checkbox to complete it",
+    "task1Description": "",
+    "task2Name": "Tap a task to quickly edit it",
+    "task2Description": "",
+    "task3Name": "Long-press a task to open the full edit dialog",
+    "task3Description": "",
+    "task4Name": "Check the settings in the main menu in the sidebar",
+    "task4Description": "",
+    "task5Name": "Toggle the menu items you need in settings",
+    "task5Description": "",
+    "dialogTitle": "Welcome to Clear Progress!",
+    "dialogBody": "Would you like to start with an onboarding goal? We'll create a goal with tasks to help you learn the app's core features.",
+    "dialogAccept": "Start",
+    "dialogDecline": "Skip"
   }
 }
