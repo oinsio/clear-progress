@@ -1,11 +1,13 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EditableDescription } from "@/components/ui/EditableDescription";
+import { useRepeatRuleChangeDialog } from "@/hooks/useRepeatRuleChangeDialog";
 import { useSettings } from "@/hooks/useSettings";
 import { cn } from "@/shared/lib/cn";
 import type { Box, RepeatRule } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
-import { formatRepeatRuleLabel, serializeRepeatRule } from "@/utils/repeatRule";
+import { formatRepeatRuleLabel } from "@/utils/repeatRule";
 import { DrillDownRow } from "./DrillDownRow";
 import { type SelectorOption, TaskDetailSelector } from "./TaskDetailSelector";
 import {
@@ -71,12 +73,25 @@ export function TaskDetailsTab({
   const { t } = useTranslation();
   const { defaultBox } = useSettings();
 
+  // Implements FR6, UX1, UX2 of repeating-task-rule-change
+  const {
+    pendingRuleChange,
+    handleRepeatChange,
+    handleRuleChangeConfirm,
+    handleRuleChangeCancel,
+  } = useRepeatRuleChangeDialog(
+    task,
+    selectedRepeatRule,
+    setSelectedRepeatRule,
+    onUpdate,
+    onCloseSelector,
+  );
+
   const handleDescriptionBlur = useCallback(async () => {
     if (description !== task.description) {
       await onUpdate(task.id, { description });
     }
   }, [description, task.description, task.id, onUpdate]);
-
   const handleBoxChange = useCallback(
     async (box: Box) => {
       setSelectedBox(box);
@@ -112,17 +127,6 @@ export function TaskDetailsTab({
     [task.id, onUpdate, setSelectedCategoryId, onCloseSelector],
   );
 
-  const handleRepeatChange = useCallback(
-    async (rule: RepeatRule | null) => {
-      setSelectedRepeatRule(rule);
-      onCloseSelector();
-      await onUpdate(task.id, {
-        repeat_rule: rule ? serializeRepeatRule(rule) : "",
-      });
-    },
-    [task.id, onUpdate, setSelectedRepeatRule, onCloseSelector],
-  );
-
   const handleHide = useCallback(
     async (date: string) => {
       await onUpdate(task.id, { is_hidden: true, appear_date: date });
@@ -130,12 +134,10 @@ export function TaskDetailsTab({
     },
     [task.id, onUpdate, onCloseSelector],
   );
-
   const handleUnhide = useCallback(async () => {
     await onUpdate(task.id, { is_hidden: false, appear_date: "" });
     onCloseSelector();
   }, [task.id, onUpdate, onCloseSelector]);
-
   const handleDuplicateTask = useCallback(async () => {
     await onDuplicate(task.id);
   }, [task.id, onDuplicate]);
@@ -152,6 +154,21 @@ export function TaskDetailsTab({
     id: category.id,
     label: category.name,
   }));
+
+  // Implements FR6, UX1, UX2 of repeating-task-rule-change
+  if (pendingRuleChange) {
+    return (
+      <ConfirmDialog
+        title={t("repeat.confirmChangeTitle")}
+        message={t("repeat.confirmChangeMessage", {
+          nextDate: pendingRuleChange.nextDate,
+        })}
+        confirmLabel={t("repeat.confirmChangeButton")}
+        onConfirm={() => void handleRuleChangeConfirm()}
+        onCancel={handleRuleChangeCancel}
+      />
+    );
+  }
 
   if (openSelector !== null) {
     return (

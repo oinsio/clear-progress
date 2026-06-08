@@ -345,3 +345,9 @@ export function formatRepeatRuleLabel(rule: RepeatRule, t: TFunction): string {
       return t("repeat.none");
   }
 }
+
+export {
+  calculateNextDateOnRuleChange,
+  computeRuleChangeUpdates,
+  shouldRecalculateNextDate,
+} from "./repeatRuleChange";

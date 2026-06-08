@@ -62,7 +62,7 @@ After each sub-agent completes:
 
 Run **sequentially** (wait for each before starting next):
 
-1. `pnpm run lint:fix`
+1. `pnpm run lint:fix` — if there are remaining **warnings** (not just errors), fix them in the reported files. Re-run `pnpm run lint:fix` to confirm zero warnings. Repeat up to 3 times.
 2. `pnpm run preflight`
 3. `pnpm run build`
 
