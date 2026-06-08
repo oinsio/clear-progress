@@ -146,7 +146,10 @@ describe("calculateNextDateOnRuleChange", () => {
   it("should throw for unknown frequency", () => {
     const rule = {
       type: "fixed" as const,
-      frequency: "biweekly" as any,
+      frequency: "biweekly" as unknown as Extract<
+        RepeatRule,
+        { type: "fixed" }
+      >["frequency"],
       interval: 1,
       target_box: "today" as const,
       advance_days: 0,
