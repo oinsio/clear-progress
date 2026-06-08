@@ -1,12 +1,12 @@
 import { REPEAT_RULE_LIMITS, type RepeatRule } from "@clear-progress/contract";
 import { ArrowLeft, ChevronDown, Inbox } from "lucide-react";
-import type React from "react";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/cn";
 import type { Box } from "@/types/common";
 import { getCurrentDateDefaults, getDaysInMonth } from "@/utils/dateHelpers";
 import { LaterBoxIcon, TodayBoxIcon, WeekBoxIcon } from "./BoxIcons";
+import { ClampedNumericInput } from "./ClampedNumericInput";
 
 const TARGET_BOX_ICONS: Record<Box, React.FC<{ className?: string }>> = {
   inbox: ({ className }: { className?: string }) => (
@@ -130,18 +130,9 @@ export function RepeatRuleSelector({
     [],
   );
 
-  const handleIntervalChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const parsed = parseInt(event.target.value, 10);
-      if (!Number.isNaN(parsed)) {
-        setState((prev) => ({
-          ...prev,
-          interval: Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, parsed)),
-        }));
-      }
-    },
-    [],
-  );
+  const handleIntervalChange = useCallback((value: number) => {
+    setState((prev) => ({ ...prev, interval: value }));
+  }, []);
 
   const handleWeekdayToggle = useCallback((day: number) => {
     setState((prev) => ({
@@ -152,21 +143,9 @@ export function RepeatRuleSelector({
     }));
   }, []);
 
-  const handleDayOfMonthChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const parsed = parseInt(event.target.value, 10);
-      if (!Number.isNaN(parsed)) {
-        setState((prev) => ({
-          ...prev,
-          dayOfMonth: Math.min(
-            MAX_DAY_OF_MONTH,
-            Math.max(MIN_DAY_OF_MONTH, parsed),
-          ),
-        }));
-      }
-    },
-    [],
-  );
+  const handleDayOfMonthChange = useCallback((value: number) => {
+    setState((prev) => ({ ...prev, dayOfMonth: value }));
+  }, []);
 
   const handleMonthSelect = useCallback((month: number) => {
     setState((prev) => {
@@ -196,57 +175,30 @@ export function RepeatRuleSelector({
     setMonthPanelOpen(false);
   }, []);
 
-  const handleDayChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const parsed = parseInt(event.target.value, 10);
-      if (!Number.isNaN(parsed)) {
-        setState((prev) => {
-          const maxDaysInMonth = getDaysInMonth(prev.monthAndDay.month);
-          return {
-            ...prev,
-            monthAndDay: {
-              ...prev.monthAndDay,
-              day: Math.min(maxDaysInMonth, Math.max(MIN_DAY_OF_MONTH, parsed)),
-            },
-          };
-        });
-      }
-    },
-    [],
-  );
+  const handleDayChange = useCallback((value: number) => {
+    setState((prev) => {
+      const maxDaysInMonth = getDaysInMonth(prev.monthAndDay.month);
+      return {
+        ...prev,
+        monthAndDay: {
+          ...prev.monthAndDay,
+          day: Math.min(maxDaysInMonth, Math.max(MIN_DAY_OF_MONTH, value)),
+        },
+      };
+    });
+  }, []);
 
-  const handleDelayDaysChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const parsed = parseInt(event.target.value, 10);
-      if (!Number.isNaN(parsed)) {
-        setState((prev) => ({
-          ...prev,
-          delayDays: Math.min(MAX_DELAY_DAYS, Math.max(MIN_DELAY_DAYS, parsed)),
-        }));
-      }
-    },
-    [],
-  );
+  const handleDelayDaysChange = useCallback((value: number) => {
+    setState((prev) => ({ ...prev, delayDays: value }));
+  }, []);
 
   const handleTargetBoxSelect = useCallback((targetBox: Box) => {
     setState((prev) => ({ ...prev, targetBox }));
   }, []);
 
-  const handleAdvanceDaysChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const parsed = parseInt(event.target.value, 10);
-      if (!Number.isNaN(parsed)) {
-        setState((prev) => ({
-          ...prev,
-          advanceDays: Math.min(
-            MAX_ADVANCE_DAYS,
-            Math.max(MIN_ADVANCE_DAYS, parsed),
-          ),
-        }));
-      }
-    },
-    [],
-  );
+  const handleAdvanceDaysChange = useCallback((value: number) => {
+    setState((prev) => ({ ...prev, advanceDays: value }));
+  }, []);
 
   const handleFixedParamsNext = useCallback(() => {
     // Validation
@@ -417,9 +369,8 @@ export function RepeatRuleSelector({
                 {state.frequency === "yearly" &&
                   t("repeat.intervalYears", { count: state.interval })}
               </label>
-              <input
+              <ClampedNumericInput
                 id="repeat-interval"
-                type="number"
                 data-testid="repeat-interval-input"
                 value={state.interval}
                 min={MIN_INTERVAL}
@@ -473,9 +424,8 @@ export function RepeatRuleSelector({
                   ordinal: true,
                 })}
               </label>
-              <input
+              <ClampedNumericInput
                 id="repeat-day-of-month"
-                type="number"
                 data-testid="repeat-day-of-month-input"
                 value={state.dayOfMonth}
                 min={MIN_DAY_OF_MONTH}
@@ -559,9 +509,8 @@ export function RepeatRuleSelector({
                   >
                     {t("repeat.dayOfMonth")}
                   </label>
-                  <input
+                  <ClampedNumericInput
                     id="repeat-day-input"
-                    type="number"
                     data-testid="repeat-day-input"
                     value={state.monthAndDay.day}
                     min={MIN_DAY_OF_MONTH}
@@ -618,9 +567,8 @@ export function RepeatRuleSelector({
             >
               {t("repeat.delayDays")}
             </label>
-            <input
+            <ClampedNumericInput
               id="repeat-delay-days"
-              type="number"
               data-testid="repeat-delay-days-input"
               value={state.delayDays}
               min={MIN_DELAY_DAYS}
@@ -695,9 +643,8 @@ export function RepeatRuleSelector({
             >
               {t("repeat.advanceDays", { count: state.advanceDays })}
             </label>
-            <input
+            <ClampedNumericInput
               id="repeat-advance-days"
-              type="number"
               data-testid="repeat-advance-days-input"
               value={state.advanceDays}
               min={MIN_ADVANCE_DAYS}

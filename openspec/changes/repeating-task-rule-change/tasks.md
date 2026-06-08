@@ -40,3 +40,10 @@
 ## 6. Mutation testing
 
 - [x] 6.1 Run Stryker on new/changed files — 93.98% (8 equivalent mutants remain, all analyzed)
+
+## 7. Bug fix: numeric inputs block clearing (FR8)
+
+- [x] 7.1 Create `ClampedNumericInput` component with internal string state, onChange/onBlur clamping
+- [x] 7.2 Replace all 5 `<input type="number">` in `RepeatRuleSelector` with `ClampedNumericInput`
+- [x] 7.3 Simplify 5 change handlers (remove parseInt/clamp logic, now just setState)
+- [x] 7.4 Verify all 51 existing tests pass

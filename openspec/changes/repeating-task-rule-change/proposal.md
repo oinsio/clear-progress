@@ -24,11 +24,16 @@ When a user edits the repeat rule of a recurring task and then completes it, the
 - FR5: When user changes only `target_box` — do NOT recalculate `next_date`
 - FR6: Show confirmation dialog with the calculated next date when rule changes affect `next_date`
 - FR7: When `delay_days` changes within `after_completion` — `next_date` stays `""` (unknown until completion)
+- FR8: Numeric input fields (interval, delay_days, day_of_month, day, advance_days) must allow clearing the value before typing a new one
 
 ## UX Requirements
 
 - UX1: Confirmation dialog shows the new calculated date in human-readable format
 - UX2: User can cancel the rule change from the dialog
+
+## Bug: Numeric inputs block clearing (FR8)
+
+All `<input type="number">` in `RepeatRuleSelector` used `parseInt()` in `onChange`. When the user pressed backspace to clear the field, `parseInt("")` returned `NaN`, the handler ignored the update, and React restored the old value — making it impossible to clear the field before typing a new number.
 
 ## Success Metrics
 

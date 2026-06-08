@@ -1,4 +1,4 @@
-# implements FR1, FR2, FR3, FR4, FR5, FR7 of repeating-task-rule-change
+# implements FR1, FR2, FR3, FR4, FR5, FR7, FR8 of repeating-task-rule-change
 
 ## ADDED Requirements
 
@@ -103,3 +103,19 @@ When a user changes the repeat rule and the change affects next_date, the system
 #### Scenario: Dialog not shown for advance_days-only change
 - **WHEN** user changes only advance_days
 - **THEN** system saves the change without showing a dialog
+
+### Requirement: Numeric input fields allow clearing before entering a new value
+
+All numeric inputs in RepeatRuleSelector (interval, delay_days, day_of_month, day, advance_days) MUST allow the user to clear the current value (via backspace or select-all + delete) before typing a new number. The field MAY be temporarily empty during editing. On blur, if the field is empty or invalid, the system MUST restore the last valid value clamped to the allowed range.
+
+#### Scenario: User clears interval field and types new value
+- **WHEN** interval input shows "3"
+- **AND** user presses backspace to clear the field
+- **THEN** the field becomes empty (not blocked)
+- **AND** user types "4"
+- **THEN** interval value is 4
+
+#### Scenario: User leaves numeric field empty and blurs
+- **WHEN** user clears a numeric input field
+- **AND** user moves focus away (blur)
+- **THEN** the field restores the last valid value
