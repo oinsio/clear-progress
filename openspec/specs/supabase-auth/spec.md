@@ -33,7 +33,9 @@ When the user returns from OAuth redirect to `/setup?code=xxx`, the Supabase SDK
 
 `SupabaseAuthSync` SHALL call `setAccessToken()` on auth events. Token persistence SHALL be handled by the configured `TokenPersistence` strategy (set to `noopPersistence` for Supabase), NOT by direct localStorage writes in tokenManager.
 
-`SupabaseAuthSync` SHALL accept `onUserEmailUpdate` and `onUserPictureUpdate` callbacks via props and extract user profile data from `session.user` during auth events.
+`SupabaseAuthSync` SHALL accept `onUserEmailUpdate`, `onUserPictureUpdate`, and `onAuthProviderUpdate` callbacks via props and extract user profile data from `session.user` during auth events.
+
+`SupabaseAuthSync` SHALL extract `session.user.app_metadata.provider` on `SIGNED_IN` and `INITIAL_SESSION` events and call `onAuthProviderUpdate(provider)` with the provider string. On `TOKEN_REFRESHED` events, `onAuthProviderUpdate` SHALL NOT be called. On `SIGNED_OUT`, auth provider is cleared via `onClear`.
 
 #### Scenario: Auth state synchronized on sign-in
 - **WHEN** Supabase SDK fires `SIGNED_IN` event
@@ -44,6 +46,12 @@ When the user returns from OAuth redirect to `/setup?code=xxx`, the Supabase SDK
 - **AND** `SupabaseAuthSync` calls `onUserPictureUpdate` with `session.user.user_metadata.avatar_url` (fallback to `user_metadata.picture`)
 - **AND** avatar URL is cached in `localStorage[USER_PICTURE]`
 - **AND** `signInRef`, `signOutRef`, `silentRefreshRef` are populated with Supabase-specific functions
+- **AND** `SupabaseAuthSync` calls `onAuthProviderUpdate` with `session.user.app_metadata.provider`
+
+#### Scenario: Provider extracted on initial session
+- **WHEN** Supabase SDK fires `INITIAL_SESSION` event
+- **AND** session exists
+- **THEN** `SupabaseAuthSync` calls `onAuthProviderUpdate` with `session.user.app_metadata.provider`
 
 #### Scenario: Profile restored from session on initial load
 - **WHEN** Supabase SDK fires `INITIAL_SESSION` event
@@ -62,9 +70,14 @@ When the user returns from OAuth redirect to `/setup?code=xxx`, the Supabase SDK
 - **AND** token is updated in memory only
 - **AND** `SupabaseAuthSync` SHALL NOT call `onUserEmailUpdate` or `onUserPictureUpdate`
 
+#### Scenario: Provider not updated on token refresh
+- **WHEN** Supabase SDK fires `TOKEN_REFRESHED` event
+- **THEN** `SupabaseAuthSync` SHALL NOT call `onAuthProviderUpdate`
+
 #### Scenario: Auth state synchronized on sign-out
 - **WHEN** Supabase SDK fires `SIGNED_OUT` event
 - **THEN** `SupabaseAuthSync` calls `setAccessToken(null)` and `onClear`
+- **AND** `onClear` resets `authProvider` to `null` in AuthProvider
 - **AND** no localStorage cleanup of `access_token` keys is needed (they were never written)
 - **AND** refs are reset to no-ops
 
@@ -80,7 +93,9 @@ When the user returns from OAuth redirect to `/setup?code=xxx`, the Supabase SDK
 
 `AuthProvider` SHALL initialize `accessToken` state via `getAccessToken()` (which returns the token restored by the configured persistence strategy, or null if noopPersistence is active).
 
-`AuthProvider` SHALL pass `handleUserEmailUpdate` and `handleUserPictureUpdate` callbacks to `SupabaseAuthSync`.
+`AuthProvider` SHALL pass `handleUserEmailUpdate`, `handleUserPictureUpdate`, and `handleAuthProviderUpdate` callbacks to `SupabaseAuthSync`.
+
+`AuthProvider` SHALL expose `authProvider: string | null` in its context value. The value SHALL be `null` when no provider info is available (GAS backend, no backend, or signed out).
 
 #### Scenario: GAS backend uses Google auth
 - **WHEN** connection config has `type: "gas"` with a clientId
@@ -92,10 +107,23 @@ When the user returns from OAuth redirect to `/setup?code=xxx`, the Supabase SDK
 - **AND** tokenManager restores token from localStorage if not expired
 - **AND** initial `accessToken` state reflects the restored token
 
-#### Scenario: Supabase backend uses Supabase auth
+#### Scenario: Supabase backend uses Supabase auth with provider
 - **WHEN** connection config has `type: "supabase"`
 - **THEN** `SupabaseAuthSync` is rendered with the Supabase client instance
-- **AND** `onUserEmailUpdate` and `onUserPictureUpdate` callbacks are passed to `SupabaseAuthSync`
+- **AND** `onUserEmailUpdate`, `onUserPictureUpdate`, and `onAuthProviderUpdate` callbacks are passed to `SupabaseAuthSync`
+- **AND** `authProvider` is exposed in context
+
+#### Scenario: GAS backend has null authProvider
+- **WHEN** connection config has `type: "gas"`
+- **THEN** `authProvider` in context is `null`
+
+#### Scenario: No backend has null authProvider
+- **WHEN** no connection config exists
+- **THEN** `authProvider` in context is `null`
+
+#### Scenario: authProvider reset on disconnect
+- **WHEN** user disconnects from Supabase backend
+- **THEN** `authProvider` in context is reset to `null`
 
 #### Scenario: Supabase backend starts with null token
 - **WHEN** connection config has `type: "supabase"`
