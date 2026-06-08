@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react/pure";
+import { afterEach, describe, expect, it } from "vitest";
 import { ProviderIcon } from "./ProviderIcon";
 
 describe("ProviderIcon", () => {
