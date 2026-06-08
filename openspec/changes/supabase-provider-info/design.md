@@ -55,6 +55,16 @@ Driven by FR1–FR10 from proposal.
 
 **Rationale**: Single source of truth for provider-to-icon mapping. Buttons use `inline-flex` with `gap-2` for icon+text alignment (FR11).
 
+### D6: Backend logos as inline SVGs in ProviderIcon
+
+**Decision**: Add `supabase` and `gas` entries to the `PROVIDER_ICONS` mapping in `ProviderIcon`. Supabase uses the official green lightning bolt logo (2 paths + linear gradient). Google Apps Script uses the official 4-color stick-and-ball logo (4 paths). Both are inline SVG components, same as Google and Microsoft icons.
+
+**Alternative**: Import logos as static SVG assets via Vite. Rejected — all other icons in `ProviderIcon` are inline SVG components; mixing approaches adds complexity for no gain.
+
+**Alternative**: Use separate icon components in `ServerBackendSelection` instead of reusing `ProviderIcon`. Rejected — centralizing all provider/backend icons in one component keeps a single mapping and avoids duplication (FR12, FR13).
+
+**Rationale**: Consistent with D3 pattern. `ProviderIcon` becomes the single source of truth for all service brand icons used across the app.
+
 ## Risks / Trade-offs
 
 - [Risk] `app_metadata.provider` may be absent for email/password auth → Mitigation: treat empty/undefined as `null`, provider row is not rendered (FR7 condition: non-empty authProvider)

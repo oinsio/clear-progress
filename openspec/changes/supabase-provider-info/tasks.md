@@ -21,7 +21,14 @@
 - [x] 3b.1 Add `ProviderIcon` to each provider button in `ServerOAuthProviders` (FR11, UX2)
 - [x] 3b.2 TDD: Unit test for `ServerOAuthProviders` — provider icon rendered on button for known provider
 
-## 4. Verification
+## 5. Backend Selection Logos
 
-- [x] 4.1 Mutation testing on changed files: `SupabaseAuthSync`, `AuthProvider`, `ProviderIcon`, `ServerConnectedStatus` — target >= 95% (M2)
-- [x] 4.2 Build verification: `pnpm run build` passes
+- [ ] 5.1 Add `SupabaseIcon` (green lightning bolt, inline SVG with gradient) and `GasIcon` (Google Apps Script 4-color logo, inline SVG) to `ProviderIcon` component, mapped as `supabase` and `gas` in `PROVIDER_ICONS` (FR12)
+- [ ] 5.2 TDD: Unit tests for `ProviderIcon` — renders correct icon for `supabase` and `gas` providers, both have `aria-hidden="true"` (NFR-A3)
+- [ ] 5.3 Add `ProviderIcon` to `ServerBackendSelection` buttons: `supabase` icon on Supabase button, `gas` icon on GAS button, inline-flex layout with gap (FR13)
+- [ ] 5.4 TDD: Unit tests for `ServerBackendSelection` — both buttons render corresponding icons with `aria-hidden="true"`
+
+## 6. Verification
+
+- [ ] 6.1 Mutation testing on changed files: `ProviderIcon`, `ServerBackendSelection` — target >= 95% (M2)
+- [ ] 6.2 Build verification: `pnpm run build` passes

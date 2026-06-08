@@ -42,17 +42,19 @@ The provider row SHALL display an icon before the provider name when a matching 
 
 `ProviderIcon` component SHALL accept a `provider` string prop and render the corresponding icon. The mapping SHALL be:
 
-| Provider   | Icon source                  |
-|------------|------------------------------|
-| `google`   | Inline SVG (Google logo)     |
-| `azure`    | Inline SVG (Microsoft logo)  |
-| `github`   | `Github` from lucide-react   |
-| `apple`    | `Apple` from lucide-react    |
-| `facebook` | `Facebook` from lucide-react |
-| `twitter`  | `Twitter` from lucide-react  |
-| `gitlab`   | `Gitlab` from lucide-react   |
-| `slack`    | `Slack` from lucide-react    |
-| `linkedin` | `Linkedin` from lucide-react |
+| Provider   | Icon source                                     |
+|------------|-------------------------------------------------|
+| `google`   | Inline SVG (Google logo)                        |
+| `azure`    | Inline SVG (Microsoft logo)                     |
+| `github`   | `Github` from lucide-react                      |
+| `apple`    | `Apple` from lucide-react                       |
+| `facebook` | `Facebook` from lucide-react                    |
+| `twitter`  | `Twitter` from lucide-react                     |
+| `gitlab`   | `Gitlab` from lucide-react                      |
+| `slack`    | `Slack` from lucide-react                       |
+| `linkedin` | `Linkedin` from lucide-react                    |
+| `supabase` | Inline SVG (Supabase green lightning bolt logo) |
+| `gas`      | Inline SVG (Google Apps Script 4-color logo)    |
 
 For any provider not in the table, `ProviderIcon` SHALL return `null`.
 
@@ -63,6 +65,14 @@ For any provider not in the table, `ProviderIcon` SHALL return `null`.
 #### Scenario: GitHub provider renders lucide icon
 - **WHEN** `provider` is `"github"`
 - **THEN** `Github` icon from lucide-react is rendered with `aria-hidden="true"`
+
+#### Scenario: Supabase provider renders inline SVG
+- **WHEN** `provider` is `"supabase"`
+- **THEN** an inline SVG with the Supabase lightning bolt logo is rendered with `aria-hidden="true"`
+
+#### Scenario: GAS provider renders inline SVG
+- **WHEN** `provider` is `"gas"`
+- **THEN** an inline SVG with the Google Apps Script 4-color logo is rendered with `aria-hidden="true"`
 
 #### Scenario: Unknown provider renders nothing
 - **WHEN** `provider` is `"saml"`
@@ -104,3 +114,15 @@ The label SHALL use i18n key `settings.server.oauthProvider`. Russian value: `"O
 #### Scenario: Label localized in English
 - **WHEN** app language is English
 - **THEN** provider label is "OAuth provider"
+
+### Requirement: Backend selection buttons display logos
+
+`ServerBackendSelection` SHALL display a `ProviderIcon` with `provider="supabase"` on the Supabase button and `ProviderIcon` with `provider="gas"` on the GAS button. Icons SHALL be positioned before the button text using inline-flex layout with gap. Icons SHALL have `aria-hidden="true"` (inherited from `ProviderIcon`).
+
+#### Scenario: Supabase button shows Supabase logo
+- **WHEN** backend selection is displayed
+- **THEN** Supabase button contains the Supabase lightning bolt icon before the text
+
+#### Scenario: GAS button shows Google Apps Script logo
+- **WHEN** backend selection is displayed
+- **THEN** GAS button contains the Google Apps Script icon before the text

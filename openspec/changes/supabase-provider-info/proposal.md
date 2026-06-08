@@ -8,7 +8,8 @@ When connected to a Supabase backend, the Settings page shows the server URL and
 
 - **ADDED**: Extract `app_metadata.provider` from Supabase session in `SupabaseAuthSync` and propagate through `AuthProvider` context
 - **ADDED**: Display OAuth provider name with icon in `ServerConnectedStatus` between URL and account rows (Supabase only)
-- **ADDED**: Provider icon component with inline SVG for Google/Microsoft, lucide-react icons for GitHub/Apple/Facebook/Twitter/GitLab/Slack/LinkedIn, text-only fallback for unknown providers
+- **ADDED**: Provider icon component with inline SVG for Google/Microsoft/Supabase/Google Apps Script, lucide-react icons for GitHub/Apple/Facebook/Twitter/GitLab/Slack/LinkedIn, text-only fallback for unknown providers
+- **ADDED**: Backend selection buttons (`ServerBackendSelection`) display Supabase and Google Apps Script logos next to button text
 
 ## Goals
 
@@ -19,7 +20,7 @@ When connected to a Supabase backend, the Settings page shows the server URL and
 
 - NG1: Displaying provider info for GAS backend (always Google, implicit)
 - NG2: Allowing users to switch providers from the connected state
-- NG3: Supporting provider-specific icons beyond Google, Microsoft, and lucide-react set
+- NG3: Supporting provider-specific icons beyond Google, Microsoft, Supabase, Google Apps Script, and lucide-react set
 
 ## Users & Scenarios
 
@@ -42,6 +43,8 @@ When connected to a Supabase backend, the Settings page shows the server URL and
 - FR9: Provider icon mapping: `google` → inline SVG, `azure` → inline Microsoft SVG, `github`/`apple`/`facebook`/`twitter`/`gitlab`/`slack`/`linkedin` → lucide-react icons
 - FR10: Unknown providers SHALL display only capitalized text without icon (fallback)
 - FR11: `ServerOAuthProviders` SHALL display `ProviderIcon` on each OAuth provider button next to the capitalized provider name
+- FR12: `ProviderIcon` SHALL support `supabase` provider with inline SVG (green lightning bolt logo) and `gas` provider with inline SVG (Google Apps Script 4-color logo)
+- FR13: `ServerBackendSelection` SHALL display `ProviderIcon` with `supabase` on the Supabase button and `ProviderIcon` with `gas` on the GAS button, positioned before the button text
 
 ### Non-Functional
 
@@ -49,6 +52,7 @@ When connected to a Supabase backend, the Settings page shows the server URL and
 
 - NFR-A1: Provider row SHALL have appropriate semantic markup (no interactive elements, informational only)
 - NFR-A2: Provider icons SHALL have `aria-hidden="true"` since the text label is always present
+- NFR-A3: Backend selection button icons SHALL have `aria-hidden="true"` since the button text label is always present
 
 ## UX Acceptance Criteria
 
@@ -67,7 +71,7 @@ No changes — the provider info row is added within the existing ServerConnecte
 ## Success Metrics
 
 - M1: OAuth provider is visible in ServerConnectedStatus for 100% of authenticated Supabase sessions
-- M2: All provider icon mappings covered by unit tests with mutation score >= 95%
+- M2: All provider icon mappings (including supabase and gas) covered by unit tests with mutation score >= 95%
 
 ## Open Questions
 
