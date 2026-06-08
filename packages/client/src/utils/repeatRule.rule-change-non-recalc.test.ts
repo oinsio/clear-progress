@@ -2,16 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { RepeatRule } from "@/types/common";
 import { computeRuleChangeUpdates } from "./repeatRule";
-
-function fixedDaily(interval: number, advance_days = 0): RepeatRule {
-  return {
-    type: "fixed",
-    frequency: "daily",
-    interval,
-    target_box: "today",
-    advance_days,
-  };
-}
+import { fixedDaily } from "./repeatRule.test-factories";
 
 describe("computeRuleChangeUpdates — non-recalculating changes", () => {
   it("should keep next_date and recalculate appear_date when only advance_days changes", () => {

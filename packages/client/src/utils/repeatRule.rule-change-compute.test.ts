@@ -1,29 +1,10 @@
 // implements FR1, FR4, FR5 of repeating-task-rule-change
 import { describe, expect, it } from "vitest";
 import { fakeClock } from "@/lib/temporal";
-import type { RepeatRule } from "@/types/common";
 import { computeRuleChangeUpdates } from "./repeatRule";
+import { afterCompletion, fixedDaily } from "./repeatRule.test-factories";
 
 const CLOCK = fakeClock("2026-06-08T10:00:00Z");
-
-function fixedDaily(interval: number, advanceDays = 0): RepeatRule {
-  return {
-    type: "fixed",
-    frequency: "daily",
-    interval,
-    target_box: "today",
-    advance_days: advanceDays,
-  };
-}
-
-function afterCompletion(delayDays: number): RepeatRule {
-  return {
-    type: "after_completion",
-    delay_days: delayDays,
-    target_box: "today",
-    advance_days: 0,
-  };
-}
 
 describe("computeRuleChangeUpdates — recalculating path", () => {
   // FR1: daily interval change triggers recalculation

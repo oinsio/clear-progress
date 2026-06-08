@@ -3,52 +3,15 @@ import { describe, expect, it } from "vitest";
 import { fakeClock } from "@/lib/temporal";
 import type { RepeatRule } from "@/types/common";
 import { calculateNextDateOnRuleChange } from "./repeatRule";
+import {
+  fixedDaily,
+  fixedMonthly,
+  fixedWeekly,
+  fixedYearly,
+} from "./repeatRule.test-factories";
 
 const DATE_OF_CHANGE = "2026-06-08"; // Monday
 const CLOCK = fakeClock("2026-06-08T10:00:00Z");
-
-function fixedDaily(interval: number): RepeatRule {
-  return {
-    type: "fixed",
-    frequency: "daily",
-    interval,
-    target_box: "today",
-    advance_days: 0,
-  };
-}
-
-function fixedWeekly(weekdays: number[]): RepeatRule {
-  return {
-    type: "fixed",
-    frequency: "weekly",
-    interval: 1,
-    weekdays,
-    target_box: "today",
-    advance_days: 0,
-  };
-}
-
-function fixedMonthly(dayOfMonth: number): RepeatRule {
-  return {
-    type: "fixed",
-    frequency: "monthly",
-    interval: 1,
-    day_of_month: dayOfMonth,
-    target_box: "today",
-    advance_days: 0,
-  };
-}
-
-function fixedYearly(month: number, day: number): RepeatRule {
-  return {
-    type: "fixed",
-    frequency: "yearly",
-    interval: 1,
-    month_and_day: { month, day },
-    target_box: "today",
-    advance_days: 0,
-  };
-}
 
 describe("calculateNextDateOnRuleChange", () => {
   it.each([
