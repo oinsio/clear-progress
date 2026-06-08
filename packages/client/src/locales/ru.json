@@ -416,7 +416,10 @@
     "monthGenitive11": "ноября",
     "monthGenitive12": "декабря",
     "monthAndDayWithValue": "Дата: {{count}} {{month}}",
-    "yearlyDate": "{{count}} {{month}}"
+    "yearlyDate": "{{count}} {{month}}",
+    "confirmChangeTitle": "Изменение правила повтора",
+    "confirmChangeMessage": "Следующая дата: {{nextDate}}",
+    "confirmChangeButton": "Сохранить"
   },
   "taskEdit": {
     "name": "Редактировать задачу",

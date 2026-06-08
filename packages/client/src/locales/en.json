@@ -419,7 +419,10 @@
     "yearlyDate_ordinal_one": "{{month}} {{count}}st",
     "yearlyDate_ordinal_two": "{{month}} {{count}}nd",
     "yearlyDate_ordinal_few": "{{month}} {{count}}rd",
-    "yearlyDate_ordinal_other": "{{month}} {{count}}th"
+    "yearlyDate_ordinal_other": "{{month}} {{count}}th",
+    "confirmChangeTitle": "Repeat rule change",
+    "confirmChangeMessage": "Next date: {{nextDate}}",
+    "confirmChangeButton": "Save"
   },
   "taskEdit": {
     "name": "Edit task",
