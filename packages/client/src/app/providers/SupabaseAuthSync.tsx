@@ -15,6 +15,7 @@ export interface SupabaseAuthSyncProps {
   onTokenUpdate: (token: string, expiresIn: number) => void;
   onUserEmailUpdate: (email: string) => void;
   onUserPictureUpdate: (picture: string | null) => void;
+  onAuthProviderUpdate: (provider: string) => void;
   onClear: () => void;
   signInRef: React.MutableRefObject<() => void>;
   signOutRef: React.MutableRefObject<() => void>;
@@ -26,6 +27,7 @@ export function SupabaseAuthSync({
   onTokenUpdate,
   onUserEmailUpdate,
   onUserPictureUpdate,
+  onAuthProviderUpdate,
   onClear,
   signInRef,
   signOutRef,
@@ -47,6 +49,11 @@ export function SupabaseAuthSync({
           const userEmail = session.user.email;
           if (userEmail) {
             onUserEmailUpdate(userEmail);
+          }
+
+          const authProvider = session.user.app_metadata.provider;
+          if (typeof authProvider === "string" && authProvider) {
+            onAuthProviderUpdate(authProvider);
           }
 
           const hasCachedPicture = !!localStorage.getItem(
@@ -84,6 +91,7 @@ export function SupabaseAuthSync({
     onTokenUpdate,
     onUserEmailUpdate,
     onUserPictureUpdate,
+    onAuthProviderUpdate,
     onClear,
   ]);
 

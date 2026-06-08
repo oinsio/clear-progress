@@ -56,6 +56,7 @@ export function setupBeforeEach() {
 
   vi.mocked(useAuth).mockReturnValue({
     accessToken: "mock-token",
+    authProvider: null,
     userEmail: "test@example.com",
     userPicture: null,
     signIn: vi.fn(),

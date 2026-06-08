@@ -25,6 +25,11 @@ vi.mock("@/services/supabaseConnection", () => ({
   fetchSupabaseProviders: (...args: unknown[]) =>
     mockFetchSupabaseProviders(...args),
 }));
+vi.mock("./ProviderIcon", () => ({
+  ProviderIcon: ({ provider }: { provider: string }) => (
+    <span data-testid="provider-icon">{provider}</span>
+  ),
+}));
 vi.mock("@/shared/lib/cn", () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
 }));
@@ -42,11 +47,16 @@ import {
 import type { ConnectionConfig } from "@/types/connection";
 import { ServerConnectedStatus } from "./ServerConnectedStatus";
 
-function setupAuth(accessToken: string | null, userEmail: string | null) {
+function setupAuth(
+  accessToken: string | null,
+  userEmail: string | null,
+  authProvider: string | null = null,
+) {
   mockUseAuth.mockReturnValue({
     accessToken,
     userEmail,
     userPicture: null,
+    authProvider,
     signIn: mockSignIn,
     signOut: vi.fn(),
     silentRefresh: vi.fn(),
@@ -248,6 +258,44 @@ describe("ServerConnectedStatus", () => {
     expect(
       screen.queryByTestId("server-signin-required"),
     ).not.toBeInTheDocument();
+  });
+
+  it("should show provider row for Supabase with authProvider", () => {
+    setupAuth("test-token", "user@example.com", "google");
+    renderConnected(supabaseConfig);
+    const providerRow = screen.getByTestId("server-connected-provider");
+    expect(providerRow).toBeInTheDocument();
+    expect(providerRow).toHaveTextContent("Google");
+  });
+
+  it("should hide provider row when authProvider is null", () => {
+    setupAuth("test-token", "user@example.com");
+    renderConnected(supabaseConfig);
+    expect(
+      screen.queryByTestId("server-connected-provider"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("should hide provider row for GAS even with authProvider", () => {
+    setupAuth("test-token", "user@example.com", "google");
+    renderConnected(gasConfig);
+    expect(
+      screen.queryByTestId("server-connected-provider"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("should render ProviderIcon inside provider row", () => {
+    setupAuth("test-token", "user@example.com", "github");
+    renderConnected(supabaseConfig);
+    expect(screen.getByTestId("provider-icon")).toBeInTheDocument();
+  });
+
+  it("should show i18n key for provider label", () => {
+    setupAuth("test-token", "user@example.com", "google");
+    renderConnected(supabaseConfig);
+    expect(
+      screen.getByText(/settings\.server\.oauthProvider/),
+    ).toBeInTheDocument();
   });
 
   // implements FR3 of split-error-offline-status

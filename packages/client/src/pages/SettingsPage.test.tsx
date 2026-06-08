@@ -114,6 +114,7 @@ describe("SettingsPage", () => {
     localStorageMock.clear();
     mockUseAuth.mockReturnValue({
       accessToken: null,
+      authProvider: null,
       userEmail: null,
       userPicture: null,
       signIn: vi.fn(),

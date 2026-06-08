@@ -311,6 +311,7 @@
       "initError": "Initialization failed.",
       "initializing": "Initializing...",
       "noProviders": "No OAuth providers configured. Enable providers in your Supabase Dashboard.",
+      "oauthProvider": "OAuth provider",
       "projectUrl": "Supabase Project URL or ID",
       "projectUrlDescription": "Enter the Project URL or ID from your Supabase Dashboard.",
       "projectUrlPlaceholder": "https://xxxxx.supabase.co or project ID",

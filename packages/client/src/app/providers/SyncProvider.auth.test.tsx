@@ -33,6 +33,7 @@ afterEach(() => vi.useRealTimers());
 function mockUnauthenticated() {
   vi.mocked(useAuth).mockReturnValue({
     accessToken: null,
+    authProvider: null,
     userEmail: null,
     userPicture: null,
     signIn: vi.fn(),

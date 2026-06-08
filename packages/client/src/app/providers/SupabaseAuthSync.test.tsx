@@ -75,6 +75,7 @@ describe("SupabaseAuthSync", () => {
   let onTokenUpdate: ReturnType<typeof vi.fn>;
   let onUserEmailUpdate: ReturnType<typeof vi.fn>;
   let onUserPictureUpdate: ReturnType<typeof vi.fn>;
+  let onAuthProviderUpdate: ReturnType<typeof vi.fn>;
   let onClear: ReturnType<typeof vi.fn>;
   let refs: ReturnType<typeof makeRefs>;
 
@@ -84,6 +85,7 @@ describe("SupabaseAuthSync", () => {
     onTokenUpdate = vi.fn();
     onUserEmailUpdate = vi.fn();
     onUserPictureUpdate = vi.fn();
+    onAuthProviderUpdate = vi.fn();
     onClear = vi.fn();
     refs = makeRefs();
   });
@@ -95,6 +97,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -279,6 +282,86 @@ describe("SupabaseAuthSync", () => {
     expect(onTokenUpdate).toHaveBeenCalled();
   });
 
+  it("should call onAuthProviderUpdate with provider on SIGNED_IN", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        ...createMockSession().user,
+        app_metadata: { provider: "google" },
+      },
+    } as Partial<Session>);
+    act(() => {
+      fireAuthEvent("SIGNED_IN", session);
+    });
+
+    expect(onAuthProviderUpdate).toHaveBeenCalledWith("google");
+  });
+
+  it("should call onAuthProviderUpdate with provider on INITIAL_SESSION", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        ...createMockSession().user,
+        app_metadata: { provider: "github" },
+      },
+    } as Partial<Session>);
+    act(() => {
+      fireAuthEvent("INITIAL_SESSION", session);
+    });
+
+    expect(onAuthProviderUpdate).toHaveBeenCalledWith("github");
+  });
+
+  it("should NOT call onAuthProviderUpdate on TOKEN_REFRESHED", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        ...createMockSession().user,
+        app_metadata: { provider: "google" },
+      },
+    } as Partial<Session>);
+    act(() => {
+      fireAuthEvent("TOKEN_REFRESHED", session);
+    });
+
+    expect(onAuthProviderUpdate).not.toHaveBeenCalled();
+  });
+
+  it("should NOT call onAuthProviderUpdate when provider is empty string", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession({
+      user: {
+        ...createMockSession().user,
+        app_metadata: { provider: "" },
+      },
+    } as Partial<Session>);
+    act(() => {
+      fireAuthEvent("SIGNED_IN", session);
+    });
+
+    expect(onAuthProviderUpdate).not.toHaveBeenCalled();
+  });
+
+  it("should NOT call onAuthProviderUpdate when app_metadata has no provider", () => {
+    const { mockClient, fireAuthEvent } = createMockSupabaseClient();
+    renderSync(mockClient);
+
+    const session = createMockSession();
+    act(() => {
+      fireAuthEvent("SIGNED_IN", session);
+    });
+
+    expect(onAuthProviderUpdate).not.toHaveBeenCalled();
+  });
+
   it("should call onClear when SIGNED_OUT event fires", () => {
     const { mockClient, fireAuthEvent } = createMockSupabaseClient();
     renderSync(mockClient);
@@ -456,6 +539,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -469,6 +553,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -490,6 +575,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -503,6 +589,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={newOnTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -524,6 +611,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -537,6 +625,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={newOnClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -558,6 +647,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -571,6 +661,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -596,6 +687,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -609,6 +701,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -634,6 +727,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -647,6 +741,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -672,6 +767,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={onClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
@@ -689,6 +785,7 @@ describe("SupabaseAuthSync", () => {
         onTokenUpdate={onTokenUpdate}
         onUserEmailUpdate={onUserEmailUpdate}
         onUserPictureUpdate={onUserPictureUpdate}
+        onAuthProviderUpdate={onAuthProviderUpdate}
         onClear={newOnClear}
         signInRef={refs.signInRef}
         signOutRef={refs.signOutRef}
