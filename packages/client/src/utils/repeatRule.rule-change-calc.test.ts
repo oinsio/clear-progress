@@ -150,6 +150,20 @@ describe("calculateNextDateOnRuleChange", () => {
     ).toThrow("No matching weekday found");
   });
 
+  // Covers no-coverage: weekdays ?? [] default when weekdays is undefined
+  it("should throw error when weekly has undefined weekdays", () => {
+    const rule = {
+      type: "fixed" as const,
+      frequency: "weekly" as const,
+      interval: 1,
+      target_box: "today" as const,
+      advance_days: 0,
+    } as RepeatRule;
+    expect(() =>
+      calculateNextDateOnRuleChange(rule, DATE_OF_CHANGE, CLOCK),
+    ).toThrow("No matching weekday found");
+  });
+
   // FR3: yearly Feb 29 falling on leap year — kills year+1 → year-1 mutant
   it("should handle yearly Feb 29 falling on leap year correctly", () => {
     const clock = fakeClock("2027-06-08T10:00:00Z");
