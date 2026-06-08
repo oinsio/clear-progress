@@ -19,6 +19,7 @@ import { FileSyncService } from "./FileSyncService";
 import { GoalService } from "./GoalService";
 import { IdeaService } from "./IdeaService";
 import { DexieLocalFileRefCounter } from "./LocalFileRefCounter";
+import { OnboardingService } from "./OnboardingService";
 import { SyncService } from "./SyncService";
 import { getSupabaseClient } from "./supabaseClientManager";
 import { TaskService } from "./TaskService";
@@ -104,4 +105,9 @@ export const defaultSyncService = new SyncService(
   new IdeaRepository(),
   new SettingsRepository(),
   new AttachmentRepository(),
+);
+export const defaultOnboardingService = new OnboardingService(
+  new GoalRepository(),
+  new TaskRepository(),
+  new ChecklistRepository(),
 );

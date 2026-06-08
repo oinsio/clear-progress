@@ -1,4 +1,5 @@
 import { RouterProvider } from "react-router-dom";
+import { OnboardingGate } from "@/components/onboarding/OnboardingGate";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
 import { useHiddenTasksReveal } from "@/hooks/useHiddenTasksReveal";
 import { AuthProvider } from "./providers/AuthProvider";
@@ -24,6 +25,7 @@ export default function App() {
               <InterfaceScaleProvider>
                 <PanelSettingsProvider>
                   <UpdateNotification />
+                  <OnboardingGate />
                   <RouterProvider router={router} />
                 </PanelSettingsProvider>
               </InterfaceScaleProvider>
