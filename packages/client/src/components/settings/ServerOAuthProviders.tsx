@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ProviderIcon } from "./ProviderIcon";
 
 interface ServerOAuthProvidersProps {
   providers: string[];
@@ -47,8 +48,9 @@ export function ServerOAuthProviders({
                   key={provider}
                   data-testid={`server-oauth-${provider}`}
                   onClick={() => onSignIn(provider)}
-                  className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300"
+                  className="flex-1 items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300 inline-flex justify-center"
                 >
+                  <ProviderIcon provider={provider} className="h-4 w-4" />
                   {capitalizedProvider}
                 </button>
               );

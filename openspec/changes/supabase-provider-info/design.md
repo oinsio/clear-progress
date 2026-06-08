@@ -47,6 +47,14 @@ Driven by FR1–FR10 from proposal.
 
 **Rationale**: Matches existing pattern in SupabaseAuthSync for email/avatar (FR1, FR2).
 
+### D5: Reuse ProviderIcon in OAuth sign-in buttons
+
+**Decision**: Import `ProviderIcon` into `ServerOAuthProviders` and render it inside each provider button alongside the capitalized name. The same component and icon mapping is used in both ServerConnectedStatus (provider row) and ServerOAuthProviders (sign-in buttons).
+
+**Alternative**: Create separate icon components for buttons vs. info rows. Rejected — same providers, same icons, no reason to duplicate.
+
+**Rationale**: Single source of truth for provider-to-icon mapping. Buttons use `inline-flex` with `gap-2` for icon+text alignment (FR11).
+
 ## Risks / Trade-offs
 
 - [Risk] `app_metadata.provider` may be absent for email/password auth → Mitigation: treat empty/undefined as `null`, provider row is not rendered (FR7 condition: non-empty authProvider)

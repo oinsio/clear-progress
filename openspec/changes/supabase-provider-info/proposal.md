@@ -41,6 +41,7 @@ When connected to a Supabase backend, the Settings page shows the server URL and
 - FR8: Provider row SHALL show provider icon (if available) and capitalized provider name
 - FR9: Provider icon mapping: `google` → inline SVG, `azure` → inline Microsoft SVG, `github`/`apple`/`facebook`/`twitter`/`gitlab`/`slack`/`linkedin` → lucide-react icons
 - FR10: Unknown providers SHALL display only capitalized text without icon (fallback)
+- FR11: `ServerOAuthProviders` SHALL display `ProviderIcon` on each OAuth provider button next to the capitalized provider name
 
 ### Non-Functional
 

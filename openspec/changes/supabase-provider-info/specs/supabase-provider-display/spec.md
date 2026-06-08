@@ -68,6 +68,22 @@ For any provider not in the table, `ProviderIcon` SHALL return `null`.
 - **WHEN** `provider` is `"saml"`
 - **THEN** `ProviderIcon` returns `null`
 
+### Requirement: Provider icons on OAuth sign-in buttons
+
+`ServerOAuthProviders` SHALL display a `ProviderIcon` on each OAuth provider button, positioned before the capitalized provider name. For unknown providers where `ProviderIcon` returns `null`, only the text name is shown. Icons SHALL use the same `ProviderIcon` component and mapping as the connected status row.
+
+#### Scenario: Known provider button shows icon and name
+- **WHEN** OAuth provider buttons are displayed
+- **AND** provider is `"google"`
+- **THEN** Google icon SVG is rendered inside the button with `aria-hidden="true"`
+- **AND** "Google" text label is displayed after the icon
+
+#### Scenario: Unknown provider button shows only name
+- **WHEN** OAuth provider buttons are displayed
+- **AND** provider is `"keycloak"`
+- **THEN** no icon is rendered inside the button
+- **AND** "Keycloak" text label is displayed
+
 ### Requirement: Provider row styling matches existing info rows
 
 The provider row SHALL use the same CSS classes as the URL and account rows: `text-xs text-gray-400`. The row SHALL have `data-testid="server-connected-provider"` for testing.
