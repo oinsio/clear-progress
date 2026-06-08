@@ -126,6 +126,23 @@ export function setupFileSyncTests(): FileSyncTestContext {
   return context;
 }
 
+export function setupReusedUploadTest(
+  ctx: FileSyncTestContext,
+  dataHash: string,
+) {
+  const pendingFile = createPendingFile({ data_hash: dataHash });
+  ctx.mockPendingFileRepository = createMockPendingFileRepository({
+    getAll: vi.fn().mockResolvedValue([pendingFile]),
+  });
+  ctx.mockSyncAdapter = createMockSyncAdapter({
+    uploadFiles: vi.fn().mockResolvedValue({
+      ok: true,
+      results: [{ data_hash: dataHash, reused: true }],
+    }),
+  });
+  return pendingFile;
+}
+
 export interface OrphanTestOverrides {
   fileHash: string;
   deleteFileResponse?: { deleted: boolean; ref_count?: number };
