@@ -4,6 +4,7 @@
 import { errorResponse, okResponse } from "../_shared/auth.ts";
 import { createUserClient } from "../_shared/client.ts";
 import { ErrorCode, FILES_BUCKET } from "../_shared/constants.ts";
+import { uint8ArrayToBase64 } from "../_shared/files.ts";
 import { createAuthHandler, parseJsonBody } from "../_shared/handler.ts";
 
 interface FileRecord {
@@ -42,7 +43,7 @@ async function fetchFile(
 
   const arrayBuffer = await fileData.arrayBuffer();
   const bytes = new Uint8Array(arrayBuffer);
-  const base64 = btoa(String.fromCharCode(...bytes));
+  const base64 = uint8ArrayToBase64(bytes);
 
   return { hash, mime_type: fileRecord.mime_type, data: base64 };
 }
