@@ -48,6 +48,7 @@ const {
     },
     STABLE_AUTH_VALUE: {
       accessToken: "mock-token",
+      authProvider: null,
       userEmail: "test@example.com",
       userPicture: null,
       signIn: vi.fn(),
@@ -255,6 +256,7 @@ export function createBackgroundSteps(
       Given("user has no access token", () => {
         vi.mocked(useAuth).mockReturnValue({
           accessToken: null,
+          authProvider: null,
           userEmail: null,
           userPicture: null,
           signIn: vi.fn(),

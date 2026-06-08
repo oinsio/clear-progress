@@ -60,4 +60,22 @@ describe("ServerBackendSelection", () => {
     fireEvent.click(screen.getByTestId("server-connect-gas"));
     expect(onSelectGas).toHaveBeenCalledOnce();
   });
+
+  // implements FR13, NFR-A3 of supabase-provider-info
+  it("renders Supabase icon with aria-hidden on Supabase button", () => {
+    render(<ServerBackendSelection {...defaultProps} />);
+    const supabaseButton = screen.getByTestId("server-connect-supabase");
+    const supabaseIcon = supabaseButton.querySelector("svg");
+    expect(supabaseIcon).not.toBeNull();
+    expect(supabaseIcon?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  // implements FR13, NFR-A3 of supabase-provider-info
+  it("renders GAS icon with aria-hidden on GAS button", () => {
+    render(<ServerBackendSelection {...defaultProps} />);
+    const gasButton = screen.getByTestId("server-connect-gas");
+    const gasIcon = gasButton.querySelector("svg");
+    expect(gasIcon).not.toBeNull();
+    expect(gasIcon?.getAttribute("aria-hidden")).toBe("true");
+  });
 });

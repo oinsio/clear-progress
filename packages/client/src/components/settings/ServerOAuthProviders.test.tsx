@@ -80,6 +80,23 @@ describe("ServerOAuthProviders", () => {
     );
   });
 
+  it("renders provider icon inside button for known provider", () => {
+    render(<ServerOAuthProviders providers={["google"]} onSignIn={vi.fn()} />);
+    const providerButton = screen.getByTestId("server-oauth-google");
+    const icon = providerButton.querySelector("svg");
+    expect(icon).not.toBeNull();
+    expect(icon?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("does not render icon for unknown provider", () => {
+    render(
+      <ServerOAuthProviders providers={["keycloak"]} onSignIn={vi.fn()} />,
+    );
+    const providerButton = screen.getByTestId("server-oauth-keycloak");
+    const icon = providerButton.querySelector("svg");
+    expect(icon).toBeNull();
+  });
+
   it("renders correct data-testid for each provider", () => {
     render(
       <ServerOAuthProviders

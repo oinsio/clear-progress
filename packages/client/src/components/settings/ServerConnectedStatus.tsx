@@ -11,6 +11,7 @@ import {
 import { fetchSupabaseProviders } from "@/services/supabaseConnection";
 import { cn } from "@/shared/lib/cn";
 import type { ConnectionConfig } from "@/types/connection";
+import { ProviderIcon } from "./ProviderIcon";
 
 interface ServerConnectedStatusProps {
   config: ConnectionConfig;
@@ -31,7 +32,7 @@ export function ServerConnectedStatus({
 }: ServerConnectedStatusProps) {
   const { t } = useTranslation();
   const connectionStatus = useConnectionStatus();
-  const { accessToken, userEmail, signIn } = useAuth();
+  const { accessToken, userEmail, authProvider, signIn } = useAuth();
   const [providers, setProviders] = useState<string[]>([]);
 
   const isSupabaseNeedsAuth =
@@ -115,6 +116,16 @@ export function ServerConnectedStatus({
         >
           {displayUrl}
         </p>
+        {authProvider && config.type === "supabase" && (
+          <p
+            data-testid="server-connected-provider"
+            className="text-xs text-gray-400 flex items-center gap-1"
+          >
+            {t("settings.server.oauthProvider")}:{" "}
+            <ProviderIcon provider={authProvider} className="size-4" />
+            {authProvider.charAt(0).toUpperCase() + authProvider.slice(1)}
+          </p>
+        )}
         {userEmail && (
           <p
             data-testid="server-connected-account"

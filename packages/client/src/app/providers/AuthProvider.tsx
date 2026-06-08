@@ -27,6 +27,7 @@ import { SupabaseAuthSync } from "./SupabaseAuthSync";
 
 interface AuthContextValue {
   accessToken: string | null;
+  authProvider: string | null;
   userEmail: string | null;
   userPicture: string | null;
   signIn: () => void;
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return getAccessToken();
   });
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authProvider, setAuthProvider] = useState<string | null>(null);
   const [userPicture, setUserPicture] = useState<string | null>(() =>
     localStorage.getItem(STORAGE_KEYS.USER_PICTURE),
   );
@@ -107,8 +109,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const handleAuthProviderUpdate = useCallback((provider: string) => {
+    setAuthProvider(provider);
+  }, []);
+
   const handleClear = useCallback(() => {
     setAccessTokenState(null);
+    setAuthProvider(null);
     setUserEmail(null);
     setUserPicture(null);
     setAccessToken(null);
@@ -141,13 +148,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const contextValue = useMemo<AuthContextValue>(
     () => ({
       accessToken,
+      authProvider,
       userEmail,
       userPicture,
       signIn,
       signOut,
       silentRefresh,
     }),
-    [accessToken, userEmail, userPicture, signIn, signOut, silentRefresh],
+    [
+      accessToken,
+      authProvider,
+      userEmail,
+      userPicture,
+      signIn,
+      signOut,
+      silentRefresh,
+    ],
   );
 
   return (
@@ -176,6 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           onTokenUpdate={handleTokenUpdate}
           onUserEmailUpdate={handleUserEmailUpdate}
           onUserPictureUpdate={handleUserPictureUpdate}
+          onAuthProviderUpdate={handleAuthProviderUpdate}
           onClear={handleClear}
           signInRef={signInRef}
           signOutRef={signOutRef}
