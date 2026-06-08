@@ -1,7 +1,10 @@
 /** Kills Stryker mutants with inline setup to ensure per-test coverage */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { FileSyncService } from "./FileSyncService";
-import { localFileCache, MOCK_BASE64 } from "./FileSyncService-test-utils";
+import {
+  localFileCache,
+  MOCK_BASE64,
+  makeService,
+} from "./FileSyncService-test-utils";
 
 function makePending(hash: string) {
   return {
@@ -12,50 +15,6 @@ function makePending(hash: string) {
     data_hash: hash,
     created_at: "2025-01-15T10:30:00.000Z",
   };
-}
-
-function makeService(overrides: Record<string, unknown> = {}) {
-  const adapter = {
-    init: vi.fn(),
-    pull: vi.fn(),
-    push: vi.fn(),
-    purge: vi.fn(),
-    uploadFile: vi.fn(),
-    uploadFiles: vi.fn().mockResolvedValue({ ok: true, results: [] }),
-    getFile: vi.fn().mockResolvedValue({ ok: true, files: [] }),
-    deleteFile: vi.fn(),
-    ...overrides,
-  };
-  const pendingRepo = {
-    getAll: vi.fn().mockResolvedValue([]),
-    delete: vi.fn(),
-    save: vi.fn(),
-    getByHash: vi.fn(),
-    ...((overrides.pendingRepo as Record<string, unknown>) ?? {}),
-  };
-  const fileRepo = {
-    getAll: vi.fn().mockResolvedValue([]),
-    getByHash: vi.fn().mockResolvedValue(null),
-    save: vi.fn(),
-    delete: vi.fn(),
-    ...((overrides.fileRepo as Record<string, unknown>) ?? {}),
-  };
-  const goalRepo = {
-    getActive: vi.fn().mockResolvedValue([]),
-    ...((overrides.goalRepo as Record<string, unknown>) ?? {}),
-  };
-  const attachRepo = {
-    getAll: vi.fn().mockResolvedValue([]),
-    ...((overrides.attachRepo as Record<string, unknown>) ?? {}),
-  };
-  const service = new FileSyncService(
-    adapter as never,
-    pendingRepo as never,
-    fileRepo as never,
-    goalRepo as never,
-    attachRepo as never,
-  );
-  return { service, adapter, pendingRepo, fileRepo, goalRepo, attachRepo };
 }
 
 afterEach(() => localFileCache.clear());

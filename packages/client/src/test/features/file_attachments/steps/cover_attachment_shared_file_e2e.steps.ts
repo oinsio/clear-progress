@@ -4,6 +4,11 @@ import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { createBdd } from "playwright-bdd";
 
+import {
+  createGoalViaUI,
+  openGoalEditMode,
+} from "../../../e2e/helpers/goal-helpers";
+
 const { Given, When, Then } = createBdd();
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -12,34 +17,18 @@ const TEST_IMAGE_PATH = path.resolve(
   "../../../fixtures/test-cover-image.png",
 );
 
-const GOAL_CREATION_TIMEOUT_MS = 5000;
 const COVER_UPLOAD_TIMEOUT_MS = 5000;
 
 // Verifies FR7, FR18 of add-file-attachments
-Given(
-  "user creates a goal {string}",
-  async ({ page }, goalName: string) => {
-    await page.goto("/goals");
-    await page.getByTestId("add-goal-button").first().click();
-    const goalInput = page.getByTestId("add-goal-input");
-    await goalInput.waitFor({ state: "visible" });
-    await goalInput.fill(goalName);
-    await goalInput.press("Enter");
-    await page
-      .getByText(goalName)
-      .waitFor({ state: "visible", timeout: GOAL_CREATION_TIMEOUT_MS });
-  },
-);
+Given("user creates a goal {string}", async ({ page }, goalName: string) => {
+  await createGoalViaUI(page, goalName);
+});
 
 // Verifies FR7, FR18 of add-file-attachments
 Given(
   "user opens goal {string} in edit mode",
   async ({ page }, goalName: string) => {
-    await page.getByText(goalName).click();
-    await page
-      .getByTestId("goal-detail-page")
-      .waitFor({ state: "visible" });
-    await page.getByTestId("edit-goal-button").click();
+    await openGoalEditMode(page, goalName);
   },
 );
 

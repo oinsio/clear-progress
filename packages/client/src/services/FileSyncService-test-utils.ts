@@ -126,6 +126,37 @@ export function setupFileSyncTests(): FileSyncTestContext {
   return context;
 }
 
+export interface OrphanTestOverrides {
+  fileHash: string;
+  deleteFileResponse?: { deleted: boolean; ref_count?: number };
+  goalRepositoryOverrides?: Record<string, unknown>;
+  attachmentRepositoryOverrides?: Record<string, unknown>;
+}
+
+export function setupOrphanedFileTest(
+  ctx: FileSyncTestContext,
+  overrides: OrphanTestOverrides,
+) {
+  const orphanedFile = {
+    data_hash: overrides.fileHash,
+    data: new Blob(["img"], { type: MOCK_MIME_TYPE }),
+  };
+  ctx.mockFileRepository = createMockFileRepository({
+    getAll: vi.fn().mockResolvedValue([orphanedFile]),
+  });
+  ctx.mockGoalRepository = createMockGoalRepository(
+    overrides.goalRepositoryOverrides,
+  );
+  ctx.mockAttachmentRepository = createMockAttachmentRepository(
+    overrides.attachmentRepositoryOverrides,
+  );
+  const deleteFileResponse = overrides.deleteFileResponse ?? { deleted: true };
+  ctx.mockSyncAdapter = createMockSyncAdapter({
+    deleteFile: vi.fn().mockResolvedValue(deleteFileResponse),
+  });
+  return orphanedFile;
+}
+
 export const EXISTING_SERVER_FILE_ID = "existing-server-file-id";
 
 export function setupReuploadDefaults(ctx: FileSyncTestContext) {
@@ -163,6 +194,67 @@ export function createFileRecord(dataHash = "cover-hash-xyz") {
   return {
     data_hash: dataHash,
     data: new Blob(["img data"], { type: MOCK_MIME_TYPE }),
+  };
+}
+
+export interface MakeServiceResult {
+  service: FileSyncService;
+  adapter: ReturnType<typeof vi.fn> & Record<string, ReturnType<typeof vi.fn>>;
+  pendingRepo: Record<string, ReturnType<typeof vi.fn>>;
+  fileRepo: Record<string, ReturnType<typeof vi.fn>>;
+  goalRepo: Record<string, ReturnType<typeof vi.fn>>;
+  attachRepo: Record<string, ReturnType<typeof vi.fn>>;
+}
+
+export function makeService(
+  overrides: Record<string, unknown> = {},
+): MakeServiceResult {
+  const adapter = {
+    init: vi.fn(),
+    pull: vi.fn(),
+    push: vi.fn(),
+    purge: vi.fn(),
+    uploadFile: vi.fn(),
+    deleteFile: vi.fn().mockResolvedValue({ deleted: true }),
+    uploadFiles: vi.fn().mockResolvedValue({ ok: true, results: [] }),
+    getFile: vi.fn().mockResolvedValue({ ok: true, files: [] }),
+    ...overrides,
+  };
+  const pendingRepo = {
+    getAll: vi.fn().mockResolvedValue([]),
+    delete: vi.fn(),
+    save: vi.fn(),
+    getByHash: vi.fn().mockResolvedValue(null),
+    ...((overrides.pendingRepo as Record<string, unknown>) ?? {}),
+  };
+  const fileRepo = {
+    getAll: vi.fn().mockResolvedValue([]),
+    getByHash: vi.fn().mockResolvedValue(null),
+    save: vi.fn(),
+    delete: vi.fn(),
+    ...((overrides.fileRepo as Record<string, unknown>) ?? {}),
+  };
+  const goalRepo = {
+    getActive: vi.fn().mockResolvedValue([]),
+    ...((overrides.goalRepo as Record<string, unknown>) ?? {}),
+  };
+  const attachRepo = {
+    getAll: vi.fn().mockResolvedValue([]),
+    ...((overrides.attachRepo as Record<string, unknown>) ?? {}),
+  };
+  return {
+    service: new FileSyncService(
+      adapter as never,
+      pendingRepo as never,
+      fileRepo as never,
+      goalRepo as never,
+      attachRepo as never,
+    ),
+    adapter: adapter as never,
+    pendingRepo,
+    fileRepo,
+    goalRepo,
+    attachRepo,
   };
 }
 

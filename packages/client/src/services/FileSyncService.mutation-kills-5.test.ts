@@ -1,68 +1,6 @@
 /** Final Stryker mutant kills for FileSyncService.ts */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { FileSyncService } from "./FileSyncService";
-import { localFileCache } from "./LocalFileCache";
-
-// jsdom polyfill
-if (!Blob.prototype.arrayBuffer) {
-  Object.defineProperty(Blob.prototype, "arrayBuffer", {
-    value() {
-      return Promise.resolve(
-        new TextEncoder().encode("fake image content").buffer as ArrayBuffer,
-      );
-    },
-    configurable: true,
-    writable: true,
-  });
-}
-
-function makeService(overrides: Record<string, unknown> = {}) {
-  const adapter = {
-    init: vi.fn(),
-    pull: vi.fn(),
-    push: vi.fn(),
-    purge: vi.fn(),
-    uploadFile: vi.fn(),
-    deleteFile: vi.fn(),
-    uploadFiles: vi.fn().mockResolvedValue({ ok: true, results: [] }),
-    getFile: vi.fn().mockResolvedValue({ ok: true, files: [] }),
-    ...overrides,
-  };
-  const pendingRepo = {
-    getAll: vi.fn().mockResolvedValue([]),
-    delete: vi.fn(),
-    save: vi.fn(),
-    getByHash: vi.fn(),
-    ...((overrides.pendingRepo as Record<string, unknown>) ?? {}),
-  };
-  const fileRepo = {
-    getAll: vi.fn().mockResolvedValue([]),
-    getByHash: vi.fn().mockResolvedValue(null),
-    save: vi.fn(),
-    delete: vi.fn(),
-    ...((overrides.fileRepo as Record<string, unknown>) ?? {}),
-  };
-  const goalRepo = {
-    getActive: vi.fn().mockResolvedValue([]),
-    ...((overrides.goalRepo as Record<string, unknown>) ?? {}),
-  };
-  const attachRepo = {
-    getAll: vi.fn().mockResolvedValue([]),
-    ...((overrides.attachRepo as Record<string, unknown>) ?? {}),
-  };
-  return {
-    service: new FileSyncService(
-      adapter as never,
-      pendingRepo as never,
-      fileRepo as never,
-      goalRepo as never,
-      attachRepo as never,
-    ),
-    adapter,
-    pendingRepo,
-    fileRepo,
-  };
-}
+import { localFileCache, makeService } from "./FileSyncService-test-utils";
 
 afterEach(() => localFileCache.clear());
 

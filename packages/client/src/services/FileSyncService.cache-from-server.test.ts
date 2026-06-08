@@ -15,12 +15,14 @@ const HASH = "cache-from-server-id";
 describe("FileSyncService", () => {
   const ctx = setupFileSyncTests();
 
+  function createServiceWithGetFile(getFile: ReturnType<typeof vi.fn>) {
+    ctx.mockSyncAdapter = createMockSyncAdapter({ getFile });
+    return ctx.createService();
+  }
+
   describe("cacheFromServer", () => {
     it("should call getFile with the given hash", async () => {
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: createMockGetFilesSuccess(HASH),
-      });
-      const service = ctx.createService();
+      const service = createServiceWithGetFile(createMockGetFilesSuccess(HASH));
 
       await service.cacheFromServer(HASH);
 
@@ -30,10 +32,7 @@ describe("FileSyncService", () => {
     });
 
     it("should add file to localFileCache after successful fetch", async () => {
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: createMockGetFilesSuccess(HASH),
-      });
-      const service = ctx.createService();
+      const service = createServiceWithGetFile(createMockGetFilesSuccess(HASH));
 
       await service.cacheFromServer(HASH);
 
@@ -41,10 +40,7 @@ describe("FileSyncService", () => {
     });
 
     it("should save file to fileRepository after successful fetch", async () => {
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: createMockGetFilesSuccess(HASH),
-      });
-      const service = ctx.createService();
+      const service = createServiceWithGetFile(createMockGetFilesSuccess(HASH));
 
       await service.cacheFromServer(HASH);
 
@@ -54,10 +50,9 @@ describe("FileSyncService", () => {
     });
 
     it("should not add to localFileCache when server returns FILE_NOT_FOUND", async () => {
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: createMockGetFilesNotFound(HASH),
-      });
-      const service = ctx.createService();
+      const service = createServiceWithGetFile(
+        createMockGetFilesNotFound(HASH),
+      );
 
       await service.cacheFromServer(HASH);
 
@@ -65,22 +60,20 @@ describe("FileSyncService", () => {
     });
 
     it("should not throw when getFile throws", async () => {
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: vi.fn().mockRejectedValue(new Error("Network error")),
-      });
-      const service = ctx.createService();
+      const service = createServiceWithGetFile(
+        vi.fn().mockRejectedValue(new Error("Network error")),
+      );
 
       await expect(service.cacheFromServer(HASH)).resolves.toBeUndefined();
     });
 
     it("should use FALLBACK_FILE_MIME_TYPE when mime_type is absent in response", async () => {
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: vi.fn().mockResolvedValue({
+      const service = createServiceWithGetFile(
+        vi.fn().mockResolvedValue({
           ok: true,
           files: [{ hash: HASH, data: MOCK_BASE64 }],
         }),
-      });
-      const service = ctx.createService();
+      );
 
       await service.cacheFromServer(HASH);
 
@@ -91,52 +84,42 @@ describe("FileSyncService", () => {
   });
 
   describe("batchCacheFromServer", () => {
-    it("should call getFile for each chunk of hashes", async () => {
-      const hashes = Array.from(
-        { length: MAX_FILE_BATCH_SIZE + 1 },
-        (_, i) => `hash-${i}`,
-      );
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: vi.fn().mockResolvedValue({ ok: true, files: [] }),
-      });
-      const service = ctx.createService();
+    const oversizedHashes = Array.from(
+      { length: MAX_FILE_BATCH_SIZE + 1 },
+      (_, i) => `hash-${i}`,
+    );
 
-      await service.batchCacheFromServer(hashes);
+    it("should call getFile for each chunk of hashes", async () => {
+      const service = createServiceWithGetFile(
+        vi.fn().mockResolvedValue({ ok: true, files: [] }),
+      );
+
+      await service.batchCacheFromServer(oversizedHashes);
 
       expect(ctx.mockSyncAdapter.getFile).toHaveBeenCalledTimes(2);
     });
 
     it("should process first chunk with MAX_FILE_BATCH_SIZE items", async () => {
-      const hashes = Array.from(
-        { length: MAX_FILE_BATCH_SIZE + 1 },
-        (_, i) => `hash-${i}`,
+      const service = createServiceWithGetFile(
+        vi.fn().mockResolvedValue({ ok: true, files: [] }),
       );
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: vi.fn().mockResolvedValue({ ok: true, files: [] }),
-      });
-      const service = ctx.createService();
 
-      await service.batchCacheFromServer(hashes);
+      await service.batchCacheFromServer(oversizedHashes);
 
       const firstCall = vi.mocked(ctx.mockSyncAdapter.getFile).mock.calls[0][0];
       expect(firstCall.hashes.length).toBe(MAX_FILE_BATCH_SIZE);
     });
 
     it("should continue processing after one chunk fails", async () => {
-      const hashes = Array.from(
-        { length: MAX_FILE_BATCH_SIZE + 1 },
-        (_, i) => `hash-${i}`,
-      );
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: vi
+      const service = createServiceWithGetFile(
+        vi
           .fn()
           .mockRejectedValueOnce(new Error("Network error"))
           .mockResolvedValueOnce({ ok: true, files: [] }),
-      });
-      const service = ctx.createService();
+      );
 
       await expect(
-        service.batchCacheFromServer(hashes),
+        service.batchCacheFromServer(oversizedHashes),
       ).resolves.toBeUndefined();
       expect(ctx.mockSyncAdapter.getFile).toHaveBeenCalledTimes(2);
     });
@@ -144,16 +127,15 @@ describe("FileSyncService", () => {
     it("should skip file with error and continue processing remaining files", async () => {
       const HASH_ERR = "hash-err";
       const HASH_OK = "hash-ok";
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: vi.fn().mockResolvedValue({
+      const service = createServiceWithGetFile(
+        vi.fn().mockResolvedValue({
           ok: true,
           files: [
             { hash: HASH_ERR, error: "FILE_NOT_FOUND" },
             { hash: HASH_OK, mime_type: MOCK_MIME_TYPE, data: MOCK_BASE64 },
           ],
         }),
-      });
-      const service = ctx.createService();
+      );
 
       await service.batchCacheFromServer([HASH_ERR, HASH_OK]);
 
@@ -166,21 +148,22 @@ describe("FileSyncService", () => {
     it("should continue when individual file processing throws", async () => {
       const HASH_BAD = "hash-bad-data";
       const HASH_OK = "hash-ok-data";
-      // First file has invalid base64, second is valid
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: vi.fn().mockResolvedValue({
+      const service = createServiceWithGetFile(
+        vi.fn().mockResolvedValue({
           ok: true,
           files: [
-            { hash: HASH_BAD, mime_type: MOCK_MIME_TYPE, data: "!!!invalid-base64!!!" },
+            {
+              hash: HASH_BAD,
+              mime_type: MOCK_MIME_TYPE,
+              data: "!!!invalid-base64!!!",
+            },
             { hash: HASH_OK, mime_type: MOCK_MIME_TYPE, data: MOCK_BASE64 },
           ],
         }),
-      });
-      const service = ctx.createService();
+      );
 
       await service.batchCacheFromServer([HASH_BAD, HASH_OK]);
 
-      // Second file should still be processed
       expect(ctx.mockFileRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ data_hash: HASH_OK }),
       );
@@ -189,24 +172,15 @@ describe("FileSyncService", () => {
     it("should save blobs for all successfully fetched files", async () => {
       const HASH_A = "hash-a";
       const HASH_B = "hash-b";
-      ctx.mockSyncAdapter = createMockSyncAdapter({
-        getFile: vi.fn().mockResolvedValue({
+      const service = createServiceWithGetFile(
+        vi.fn().mockResolvedValue({
           ok: true,
           files: [
-            {
-              hash: HASH_A,
-              mime_type: MOCK_MIME_TYPE,
-              data: MOCK_BASE64,
-            },
-            {
-              hash: HASH_B,
-              mime_type: MOCK_MIME_TYPE,
-              data: MOCK_BASE64,
-            },
+            { hash: HASH_A, mime_type: MOCK_MIME_TYPE, data: MOCK_BASE64 },
+            { hash: HASH_B, mime_type: MOCK_MIME_TYPE, data: MOCK_BASE64 },
           ],
         }),
-      });
-      const service = ctx.createService();
+      );
 
       await service.batchCacheFromServer([HASH_A, HASH_B]);
 
