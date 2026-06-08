@@ -90,6 +90,64 @@ function LinkedInIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+function SupabaseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 109 113" fill="none" aria-hidden="true" {...props}>
+      <defs>
+        <linearGradient
+          id="supabase-grad-a"
+          x1="12.56"
+          y1="117.44"
+          x2="68.59"
+          y2="78.24"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#249361" />
+          <stop offset="1" stopColor="#3ECF8E" />
+        </linearGradient>
+        <linearGradient
+          id="supabase-grad-b"
+          x1="1.17"
+          y1="-.87"
+          x2="48.12"
+          y2="36.47"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#1C1C1C" />
+          <stop offset="1" stopColor="#1C1C1C" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M63.71 110.28c-2.33 2.94-7.19 1.36-7.24-2.36l-.71-53.3h44.82c8.12 0 12.61 9.39 7.49 15.65L63.71 110.28z"
+        fill="url(#supabase-grad-a)"
+      />
+      <path
+        d="M63.71 110.28c-2.33 2.94-7.19 1.36-7.24-2.36l-.71-53.3h44.82c8.12 0 12.61 9.39 7.49 15.65L63.71 110.28z"
+        fill="url(#supabase-grad-b)"
+        fillOpacity=".2"
+      />
+      <path
+        d="M45.32 2.72c2.33-2.94 7.19-1.36 7.24 2.36l.35 53.3H8.71c-8.12 0-12.61-9.39-7.49-15.65L45.32 2.72z"
+        fill="#3ECF8E"
+      />
+    </svg>
+  );
+}
+
+function GasIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true" {...props}>
+      <path
+        d="M38 6H26l-2 2 6 6-10 10-6-6-2 2v12h12l2-2-6-6 10-10 6 6 2-2V6z"
+        fill="#EA4335"
+      />
+      <path d="M10 18l-2 2v12h12l2-2-6-6" fill="#4285F4" />
+      <path d="M26 6h12v12l-2 2-6-6" fill="#34A853" />
+      <path d="M20 32l2 2h12V22l-2-2-6 6" fill="#FBBC04" />
+    </svg>
+  );
+}
+
 const PROVIDER_ICONS: Record<
   string,
   ComponentType<{
@@ -106,6 +164,8 @@ const PROVIDER_ICONS: Record<
   gitlab: GitLabIcon,
   slack: SlackIcon,
   linkedin: LinkedInIcon,
+  supabase: SupabaseIcon,
+  gas: GasIcon,
 };
 
 interface ProviderIconProps {
@@ -114,7 +174,7 @@ interface ProviderIconProps {
 }
 
 /**
- * Implements FR9, FR10 of supabase-provider-info.
+ * Implements FR9, FR10, FR12 of supabase-provider-info.
  */
 export function ProviderIcon({ provider, className }: ProviderIconProps) {
   const IconComponent = PROVIDER_ICONS[provider];

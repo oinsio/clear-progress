@@ -50,6 +50,16 @@ describe("ProviderIcon", () => {
     expect(container.querySelector("svg")).not.toBeNull();
   });
 
+  it("should render Supabase icon for 'supabase' provider", () => {
+    const { container } = render(<ProviderIcon provider="supabase" />);
+    expect(container.querySelector("svg")).not.toBeNull();
+  });
+
+  it("should render Google Apps Script icon for 'gas' provider", () => {
+    const { container } = render(<ProviderIcon provider="gas" />);
+    expect(container.querySelector("svg")).not.toBeNull();
+  });
+
   it("should return null for unknown provider 'keycloak'", () => {
     const { container } = render(<ProviderIcon provider="keycloak" />);
     expect(container.innerHTML).toBe("");
@@ -70,6 +80,8 @@ describe("ProviderIcon", () => {
     "gitlab",
     "slack",
     "linkedin",
+    "supabase",
+    "gas",
   ];
 
   it.each(

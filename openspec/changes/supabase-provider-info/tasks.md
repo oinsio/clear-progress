@@ -23,12 +23,12 @@
 
 ## 5. Backend Selection Logos
 
-- [ ] 5.1 Add `SupabaseIcon` (green lightning bolt, inline SVG with gradient) and `GasIcon` (Google Apps Script 4-color logo, inline SVG) to `ProviderIcon` component, mapped as `supabase` and `gas` in `PROVIDER_ICONS` (FR12)
-- [ ] 5.2 TDD: Unit tests for `ProviderIcon` — renders correct icon for `supabase` and `gas` providers, both have `aria-hidden="true"` (NFR-A3)
-- [ ] 5.3 Add `ProviderIcon` to `ServerBackendSelection` buttons: `supabase` icon on Supabase button, `gas` icon on GAS button, inline-flex layout with gap (FR13)
-- [ ] 5.4 TDD: Unit tests for `ServerBackendSelection` — both buttons render corresponding icons with `aria-hidden="true"`
+- [x] 5.1 Add `SupabaseIcon` (green lightning bolt, inline SVG with gradient) and `GasIcon` (Google Apps Script 4-color logo, inline SVG) to `ProviderIcon` component, mapped as `supabase` and `gas` in `PROVIDER_ICONS` (FR12)
+- [x] 5.2 TDD: Unit tests for `ProviderIcon` — renders correct icon for `supabase` and `gas` providers, both have `aria-hidden="true"` (NFR-A3)
+- [x] 5.3 Add `ProviderIcon` to `ServerBackendSelection` buttons: `supabase` icon on Supabase button, `gas` icon on GAS button, inline-flex layout with gap (FR13)
+- [x] 5.4 TDD: Unit tests for `ServerBackendSelection` — both buttons render corresponding icons with `aria-hidden="true"`
 
 ## 6. Verification
 
-- [ ] 6.1 Mutation testing on changed files: `ProviderIcon`, `ServerBackendSelection` — target >= 95% (M2)
-- [ ] 6.2 Build verification: `pnpm run build` passes
+- [x] 6.1 Mutation testing on changed files: `ProviderIcon`, `ServerBackendSelection` — target >= 95% (M2)
+- [x] 6.2 Build verification: `pnpm run build` passes
