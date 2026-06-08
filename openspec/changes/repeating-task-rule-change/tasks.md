@@ -46,4 +46,5 @@
 - [x] 7.1 Create `ClampedNumericInput` component with internal string state, onChange/onBlur clamping
 - [x] 7.2 Replace all 5 `<input type="number">` in `RepeatRuleSelector` with `ClampedNumericInput`
 - [x] 7.3 Simplify 5 change handlers (remove parseInt/clamp logic, now just setState)
-- [x] 7.4 Verify all 51 existing tests pass
+- [x] 7.4 Verify all 51 existing RepeatRuleSelector tests pass
+- [x] 7.5 Unit tests for ClampedNumericInput: clearing, retyping, blur restore, clamping, external sync (10 tests)
