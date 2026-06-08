@@ -82,3 +82,19 @@ function validateBinaryMagicBytes(
     );
   });
 }
+
+const BASE64_CHUNK_SIZE = 8192;
+
+/**
+ * Converts a Uint8Array to a base64-encoded string using chunked processing.
+ * Implements FR1 of fix-get-file-large-payload.
+ */
+export function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK_SIZE) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(offset, offset + BASE64_CHUNK_SIZE),
+    );
+  }
+  return btoa(binary);
+}
