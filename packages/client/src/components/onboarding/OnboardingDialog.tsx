@@ -8,7 +8,7 @@ interface OnboardingDialogProps {
 }
 
 const ACCEPT_BUTTON_STYLE =
-  "rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors";
+  "rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/80 transition-colors";
 
 const DECLINE_BUTTON_STYLE =
   "rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors";
