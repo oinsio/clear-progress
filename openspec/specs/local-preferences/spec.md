@@ -2,7 +2,7 @@
 
 ### Requirement: Color scheme preference
 
-The system SHALL store the color scheme preference ("system", "light", "dark") in localStorage under key `STORAGE_KEYS.COLOR_SCHEME`. Default value SHALL be "system".
+The system SHALL store the color scheme preference ("system", "light", "dark") in localStorage under key `STORAGE_KEYS.COLOR_SCHEME` via `LocalPreferencesService`. Default value SHALL be "system". Reading SHALL use `getPreference` with type `"enum"`. Self-healing SHALL remove corrupted values and return "system".
 
 #### Scenario: Default color scheme is system
 - **WHEN** no color scheme has been saved
@@ -12,9 +12,14 @@ The system SHALL store the color scheme preference ("system", "light", "dark") i
 - **WHEN** color scheme is set to "dark"
 - **THEN** localStorage contains "dark" under the color scheme key
 
+#### Scenario: Corrupted color scheme self-heals
+- **WHEN** localStorage contains "invalid_scheme" under the color scheme key
+- **THEN** the color scheme falls back to "system"
+- **AND** the corrupted key is removed from localStorage
+
 ### Requirement: Panel side preference
 
-The system SHALL store the panel side ("left", "right") in localStorage. Default value SHALL be "right".
+The system SHALL store the panel side ("left", "right") in localStorage via `LocalPreferencesService`. Default value SHALL be "right". Self-healing SHALL remove corrupted values and return "right".
 
 #### Scenario: Default panel side is right
 - **WHEN** no panel side has been saved
@@ -24,9 +29,14 @@ The system SHALL store the panel side ("left", "right") in localStorage. Default
 - **WHEN** panel side is set to "left"
 - **THEN** localStorage contains "left" under the panel side key
 
+#### Scenario: Corrupted panel side self-heals
+- **WHEN** localStorage contains "center" under the panel side key
+- **THEN** the panel side falls back to "right"
+- **AND** the corrupted key is removed from localStorage
+
 ### Requirement: Panel open state
 
-The system SHALL store whether the panel is open (boolean) in localStorage. The system SHALL also store the panel always-open preference (boolean) separately.
+The system SHALL store whether the panel is open (boolean) in localStorage via `LocalPreferencesService`. The system SHALL also store the panel always-open preference (boolean) separately. Self-healing SHALL remove corrupted values and return `false`.
 
 #### Scenario: Panel open state persists
 - **WHEN** panel open is set to `true`
@@ -36,9 +46,14 @@ The system SHALL store whether the panel is open (boolean) in localStorage. The 
 - **WHEN** panel always-open is set to `true`
 - **THEN** localStorage contains "true" under the panel always-open key
 
+#### Scenario: Corrupted panel open self-heals
+- **WHEN** localStorage contains "maybe" under the panel open key
+- **THEN** panel open falls back to `false`
+- **AND** the corrupted key is removed from localStorage
+
 ### Requirement: Focus mode with opacity
 
-The system SHALL store focus mode (boolean, default `true`) and focus opacity (number, default 30) in localStorage. Opacity SHALL be parsed as a number on load, falling back to default if parsing fails.
+The system SHALL store focus mode (boolean, default `true`) and focus opacity (number, default 30) in localStorage via `LocalPreferencesService`. Self-healing SHALL remove corrupted values and return defaults.
 
 #### Scenario: Default focus mode is enabled
 - **WHEN** no focus mode has been saved
@@ -56,13 +71,14 @@ The system SHALL store focus mode (boolean, default `true`) and focus opacity (n
 - **WHEN** focus opacity is set to 15
 - **THEN** localStorage contains "15" under the focus opacity key
 
-#### Scenario: Invalid opacity falls back to default
+#### Scenario: Invalid opacity self-heals
 - **WHEN** localStorage contains "not-a-number" under the focus opacity key
 - **THEN** focus opacity is 30
+- **AND** the corrupted key is removed from localStorage
 
 ### Requirement: Interface scale preference
 
-The system SHALL store the interface scale ("small", "normal", "large", "xLarge") in localStorage. Default value SHALL be "normal".
+The system SHALL store the interface scale ("small", "normal", "large", "xLarge") in localStorage via `LocalPreferencesService`. Default value SHALL be "normal". Self-healing SHALL remove corrupted values and return "normal".
 
 #### Scenario: Default interface scale is normal
 - **WHEN** no interface scale has been saved
@@ -72,9 +88,14 @@ The system SHALL store the interface scale ("small", "normal", "large", "xLarge"
 - **WHEN** interface scale is set to "large"
 - **THEN** localStorage contains "large" under the interface scale key
 
+#### Scenario: Corrupted interface scale self-heals
+- **WHEN** localStorage contains "huge" under the interface scale key
+- **THEN** the interface scale falls back to "normal"
+- **AND** the corrupted key is removed from localStorage
+
 ### Requirement: Filter bar position preference
 
-The system SHALL store the filter bar position ("top", "bottom") in localStorage. Default value SHALL be "bottom".
+The system SHALL store the filter bar position ("top", "bottom") in localStorage via `LocalPreferencesService`. Default value SHALL be "bottom". Self-healing SHALL remove corrupted values and return "bottom".
 
 #### Scenario: Default filter bar position is bottom
 - **WHEN** no filter bar position has been saved
@@ -84,9 +105,14 @@ The system SHALL store the filter bar position ("top", "bottom") in localStorage
 - **WHEN** filter bar position is set to "top"
 - **THEN** localStorage contains "top" under the filter bar position key
 
+#### Scenario: Corrupted filter bar position self-heals
+- **WHEN** localStorage contains "middle" under the filter bar position key
+- **THEN** the filter bar position falls back to "bottom"
+- **AND** the corrupted key is removed from localStorage
+
 ### Requirement: Section collapse state
 
-The system SHALL store section collapse states as a JSON object (`Record<string, boolean>`) in localStorage. Each section is identified by a string key. Default state for any section SHALL be expanded (not collapsed).
+The system SHALL store section collapse states as a JSON object (`Record<string, boolean>`) in localStorage via `LocalPreferencesService`. Default state for any section SHALL be expanded (not collapsed). Self-healing SHALL remove corrupted JSON and return empty object.
 
 #### Scenario: Section is expanded by default
 - **WHEN** no collapse state has been saved for section "inbox"
@@ -96,13 +122,14 @@ The system SHALL store section collapse states as a JSON object (`Record<string,
 - **WHEN** section "inbox" is collapsed
 - **THEN** localStorage contains a JSON object with "inbox" set to `true`
 
-#### Scenario: Invalid JSON falls back to empty state
+#### Scenario: Invalid JSON self-heals
 - **WHEN** localStorage contains invalid JSON under the section collapse key
 - **THEN** all sections are treated as expanded
+- **AND** the corrupted key is removed from localStorage
 
 ### Requirement: Language preference
 
-The system SHALL store the language code in localStorage. Default value SHALL be "en". The system SHALL detect the browser language on first load and use it if a matching translation exists.
+The system SHALL store the language code in localStorage via `LocalPreferencesService`. Default value SHALL be "en". The system SHALL detect the browser language on first load and use it if a matching translation exists. The key value `"language"` SHALL remain stable as it is also used by i18next-browser-languagedetector.
 
 #### Scenario: Default language is English
 - **WHEN** no language has been saved and browser language detection yields no match
@@ -114,7 +141,7 @@ The system SHALL store the language code in localStorage. Default value SHALL be
 
 ### Requirement: Show hidden tasks preference
 
-The system SHALL store whether to show hidden (future-dated) tasks as a boolean in localStorage. Default value SHALL be `false`.
+The system SHALL store whether to show hidden (future-dated) tasks as a boolean in localStorage via `LocalPreferencesService`. Default value SHALL be `false`. Self-healing SHALL remove corrupted values and return `false`.
 
 #### Scenario: Hidden tasks are not shown by default
 - **WHEN** no show-hidden-tasks preference has been saved
@@ -126,7 +153,7 @@ The system SHALL store whether to show hidden (future-dated) tasks as a boolean 
 
 ### Requirement: Handedness preference
 
-The system SHALL store the handedness preference ("right", "left") in localStorage under key `STORAGE_KEYS.HANDEDNESS`. Default value SHALL be "right". The `useHandedness` hook SHALL return the current value and a setter function.
+The system SHALL store the handedness preference ("right", "left") in localStorage via `LocalPreferencesService`. Default value SHALL be "right". Self-healing SHALL remove corrupted values and return "right".
 
 #### Scenario: Default handedness is right
 - **WHEN** no handedness has been saved
@@ -136,25 +163,32 @@ The system SHALL store the handedness preference ("right", "left") in localStora
 - **WHEN** handedness is set to "left"
 - **THEN** localStorage contains "left" under the handedness key
 
-#### Scenario: Invalid stored value falls back to default
+#### Scenario: Invalid stored value self-heals
 - **WHEN** localStorage contains "invalid" under the handedness key
 - **THEN** the handedness is "right"
+- **AND** the corrupted key is removed from localStorage
 
 ### Requirement: Synced settings localStorage cache
 
-Synced settings (default_box, accent_color, custom accent colors) SHALL be cached in localStorage for instant access before IndexedDB loads. The cache SHALL be updated after every IndexedDB read.
+Synced settings (default_box, accent_color, custom accent colors, day_boundary) SHALL be cached in localStorage via `LocalPreferencesService.syncCache()`. Cache SHALL be updated only after IndexedDB load. Accent color caching SHALL happen only in `ThemeProvider` (not in `useSettings`).
 
 #### Scenario: Cached default box provides instant value
 - **WHEN** localStorage has "today" cached for default box
 - **AND** the settings hook initializes
 - **THEN** the initial value is "today" (before IndexedDB loads)
 
-#### Scenario: Invalid cached value falls back to default
+#### Scenario: Invalid cached value self-heals
 - **WHEN** localStorage has "invalid_box" cached for default box
 - **AND** the settings hook initializes
 - **THEN** the initial value falls back to "inbox"
+- **AND** the corrupted key is removed from localStorage
 
 #### Scenario: Cache updated after IndexedDB load
 - **WHEN** localStorage has "inbox" cached but IndexedDB has "week" for default box
 - **AND** the settings hook loads from IndexedDB
 - **THEN** localStorage cache is updated to "week"
+
+#### Scenario: Accent color cache written only by ThemeProvider
+- **WHEN** accent color is loaded from IndexedDB
+- **THEN** only `ThemeProvider` calls `syncCache` for accent_color
+- **AND** `useSettings` does NOT write accent_color to localStorage

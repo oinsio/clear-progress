@@ -133,7 +133,7 @@ When accent color is set to "custom", the system SHALL store two additional sync
 
 ### Requirement: Service provides typed defaults
 
-The `SettingsService` SHALL provide typed accessors for known settings with default fallbacks: `getDefaultBox()` returns `BOX.INBOX` when unset, `getAccentColor()` returns `DEFAULT_ACCENT_COLOR` ("green") when unset, `getDayBoundary()` returns `DEFAULT_DAY_BOUNDARY` ("00:00") when unset. The `day_boundary` setting SHALL be stored as an HH:mm string and synced to the server via the existing Settings key-value infrastructure.
+The `SettingsService` SHALL provide typed accessors for known settings with default fallbacks: `getDefaultBox()` returns `BOX.INBOX` when unset, `getAccentColor()` returns `DEFAULT_ACCENT_COLOR` ("green") when unset, `getDayBoundary()` returns `DEFAULT_DAY_BOUNDARY` ("00:00") when unset. The service SHALL reference `STORAGE_KEYS` constants for setting keys (the separate `SETTING_KEYS` constant SHALL be removed).  # implements FR13 of localstorage-refactor
 
 #### Scenario: Default box returns inbox when unset
 - **WHEN** no setting with key "default_box" exists
