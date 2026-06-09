@@ -2,6 +2,7 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import {
   createScenarioContext,
   getChecklistItem,
@@ -15,141 +16,88 @@ type Context = Record<string, never>;
 describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   const ctx = createScenarioContext();
   let taskId: string;
+  let caughtError: Error | undefined;
 
   f.BeforeEachScenario(async () => {
     await ctx.reset();
     taskId = crypto.randomUUID();
+    caughtError = undefined;
   });
+
+  function givenItemsABCExist(Given: Function) {
+    Given(
+      'checklist items "A", "B", "C" exist with ascending sort_order',
+      async (_ctx: TestContext) => {
+        await seedChecklistItemsWithOrder(
+          ctx.checklistItemIds,
+          ["A", "B", "C"],
+          taskId,
+        );
+      },
+    );
+  }
+
+  function whenMoveCBeforeA(When: Function) {
+    When('user moves item "C" before item "A"', async (_ctx: TestContext) => {
+      const itemA = await getChecklistItem(ctx.checklistItemIds, "A");
+      const itemC = await getChecklistItem(ctx.checklistItemIds, "C");
+      const newKey = generateKeyBetween(null, String(itemA.sort_order));
+      await ctx.checklistService.reorderItems(itemC.id, newKey);
+    });
+  }
 
   // @add-checklist-specs @FR5
   f.Scenario(
-    "Reorder assigns sequential sort_order",
-    ({ Given, When, Then, And }) => {
-      Given(
-        'checklist items "A", "B", "C" exist with sort_order 0, 1, 2',
-        async (_ctx: TestContext) => {
-          await seedChecklistItemsWithOrder(
-            ctx.checklistItemIds,
-            ["A", "B", "C"],
-            taskId,
-          );
-        },
-      );
+    "Reorder places item at new position via fractional key",
+    ({ Given, When, Then }) => {
+      givenItemsABCExist(Given);
+      whenMoveCBeforeA(When);
 
-      When(
-        'user reorders items to "B", "C", "A"',
-        async (_ctx: TestContext) => {
-          const items = await ctx.checklistService.getByTaskId(taskId);
-          const reordered = ["B", "C", "A"]
-            .map((name) => items.find((item) => item.name === name))
-            .filter((item) => item !== undefined);
-          await ctx.checklistService.reorderItems(reordered);
-        },
-      );
-
-      Then('item "B" has sort_order 0', async (_ctx: TestContext) => {
-        const item = await getChecklistItem(ctx.checklistItemIds, "B");
-        expect(item.sort_order).toBe(0);
-      });
-
-      And('item "C" has sort_order 1', async (_ctx: TestContext) => {
-        const item = await getChecklistItem(ctx.checklistItemIds, "C");
-        expect(item.sort_order).toBe(1);
-      });
-
-      And('item "A" has sort_order 2', async (_ctx: TestContext) => {
-        const item = await getChecklistItem(ctx.checklistItemIds, "A");
-        expect(item.sort_order).toBe(2);
+      Then('items are ordered "C", "A", "B"', async (_ctx: TestContext) => {
+        const allItems = await ctx.checklistService.getByTaskId(taskId);
+        expect(allItems[0].name).toBe("C");
+        expect(allItems[1].name).toBe("A");
+        expect(allItems[2].name).toBe("B");
       });
     },
   );
 
   // @add-checklist-specs @FR5
   f.Scenario(
-    "Only changed items marked for sync",
+    "Reorder marks moved item for sync",
     ({ Given, When, Then, And }) => {
-      Given(
-        'checklist items "A", "B", "C" exist with sort_order 0, 1, 2',
-        async (_ctx: TestContext) => {
-          await seedChecklistItemsWithOrder(
-            ctx.checklistItemIds,
-            ["A", "B", "C"],
-            taskId,
-          );
-        },
-      );
+      givenItemsABCExist(Given);
+      whenMoveCBeforeA(When);
 
-      When(
-        'user reorders items to "A", "C", "B"',
-        async (_ctx: TestContext) => {
-          const items = await ctx.checklistService.getByTaskId(taskId);
-          const reordered = ["A", "C", "B"]
-            .map((name) => items.find((item) => item.name === name))
-            .filter((item) => item !== undefined);
-          await ctx.checklistService.reorderItems(reordered);
-        },
-      );
+      Then('item "C" has needsSync true', async (_ctx: TestContext) => {
+        const item = await getChecklistItem(ctx.checklistItemIds, "C");
+        expect(item.needsSync).toBe(true);
+      });
 
-      Then('item "A" has needsSync false', async (_ctx: TestContext) => {
+      And('item "A" has needsSync false', async (_ctx: TestContext) => {
         const item = await getChecklistItem(ctx.checklistItemIds, "A");
         expect(item.needsSync).toBe(false);
       });
 
-      And('item "C" has needsSync true', async (_ctx: TestContext) => {
-        const item = await getChecklistItem(ctx.checklistItemIds, "C");
-        expect(item.needsSync).toBe(true);
-      });
-
-      And('item "B" has needsSync true', async (_ctx: TestContext) => {
+      And('item "B" has needsSync false', async (_ctx: TestContext) => {
         const item = await getChecklistItem(ctx.checklistItemIds, "B");
-        expect(item.needsSync).toBe(true);
+        expect(item.needsSync).toBe(false);
       });
     },
   );
 
   // @add-checklist-specs @FR5
-  f.Scenario("Empty reorder is no-op", ({ When, Then }) => {
-    let caughtError: Error | undefined;
-
-    When("user reorders an empty array", async (_ctx: TestContext) => {
+  f.Scenario("Reorder throws for non-existent item", ({ When, Then }) => {
+    When("user reorders non-existent item", async (_ctx: TestContext) => {
       try {
-        await ctx.checklistService.reorderItems([]);
+        await ctx.checklistService.reorderItems("nonexistent-id", "a1");
       } catch (error) {
         caughtError = error as Error;
       }
     });
 
-    Then("no error occurs", async (_ctx: TestContext) => {
-      expect(caughtError).toBeUndefined();
-    });
-  });
-
-  // @add-checklist-specs @FR5
-  f.Scenario("Same order is no-op", ({ Given, When, Then, And }) => {
-    Given(
-      'checklist items "A", "B" exist with sort_order 0, 1',
-      async (_ctx: TestContext) => {
-        await seedChecklistItemsWithOrder(
-          ctx.checklistItemIds,
-          ["A", "B"],
-          taskId,
-        );
-      },
-    );
-
-    When('user reorders items to "A", "B"', async (_ctx: TestContext) => {
-      const items = await ctx.checklistService.getByTaskId(taskId);
-      await ctx.checklistService.reorderItems(items);
-    });
-
-    Then('item "A" has needsSync false', async (_ctx: TestContext) => {
-      const item = await getChecklistItem(ctx.checklistItemIds, "A");
-      expect(item.needsSync).toBe(false);
-    });
-
-    And('item "B" has needsSync false', async (_ctx: TestContext) => {
-      const item = await getChecklistItem(ctx.checklistItemIds, "B");
-      expect(item.needsSync).toBe(false);
+    Then("an error is thrown", async (_ctx: TestContext) => {
+      expect(caughtError).toBeDefined();
     });
   });
 });
