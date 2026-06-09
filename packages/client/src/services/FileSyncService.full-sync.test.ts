@@ -19,7 +19,7 @@ function createActiveGoal(fileHash: string) {
     description: "",
     cover_hash: fileHash,
     status: "in_progress" as const,
-    sort_order: 0,
+    sort_order: "0",
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),

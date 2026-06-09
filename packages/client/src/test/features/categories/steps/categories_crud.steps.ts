@@ -136,9 +136,9 @@ describeFeature(
       let returnedCategories: Category[];
 
       Given("categories with sort_order 2, 0, 1", async (_ctx: TestContext) => {
-        await seedCategory(ctx.categoryIds, "Cat A", { sort_order: 2 });
-        await seedCategory(ctx.categoryIds, "Cat B", { sort_order: 0 });
-        await seedCategory(ctx.categoryIds, "Cat C", { sort_order: 1 });
+        await seedCategory(ctx.categoryIds, "Cat A", { sort_order: "2" });
+        await seedCategory(ctx.categoryIds, "Cat B", { sort_order: "0" });
+        await seedCategory(ctx.categoryIds, "Cat C", { sort_order: "1" });
       });
 
       When("user requests all categories", async (_ctx: TestContext) => {

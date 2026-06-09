@@ -20,12 +20,12 @@ describe("hasEntityChanged", () => {
     it("should detect number field changes", () => {
       const existing = {
         id: "1",
-        sort_order: 0,
+        sort_order: "0",
       };
 
       const updated = {
         ...existing,
-        sort_order: 1,
+        sort_order: "1",
       };
 
       expect(hasEntityChanged(existing, updated)).toBe(true);

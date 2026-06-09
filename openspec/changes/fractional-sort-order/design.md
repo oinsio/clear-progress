@@ -11,7 +11,6 @@
 
 **Non-Goals:**
 - Separate sort_order per view (NG1 from proposal)
-- Backend (Supabase) migration in this change — backend accepts any value the client sends; column type change is a separate follow-up
 
 ## Decisions
 
@@ -60,17 +59,14 @@
 
 **Rationale**: Dexie's `upgrade()` runs once per version bump, handles the transition transparently (FR10).
 
-### D6: Contract schema — sort_order becomes `z.union([z.number(), z.string()])`
+### D6: Contract schema — sort_order is `z.string()`
 
-**Decision**: During migration period, the Wire schemas in `@clear-progress/contract` accept both number and string for `sort_order`. This allows the client to send string keys while the Supabase backend still has INTEGER columns. The backend push RPC already casts `(v_rec->>'sort_order')::INTEGER` — this will need a separate backend migration later.
+**Decision**: Wire schemas in `@clear-progress/contract` use `z.string()` for `sort_order`. Supabase columns are `TEXT`, push RPC passes `sort_order` as text (no `::INTEGER` cast). Client-side `normalizeSortOrder` utility handles legacy numeric values that may exist in local IndexedDB during migration.
 
-**Alternative**: Change to `z.string()` immediately. Rejected — breaks existing backend without coordinated deploy. The contract package is shared.
-
-**Rationale**: Gradual migration. Client moves to strings, backend continues accepting integers via JSON text parsing. Backend migration is a separate change (FR1, FR10).
+**Rationale**: Client and backend both use string sort_order. No gradual migration needed since the app is pre-production (FR1, FR10).
 
 ## Risks / Trade-offs
 
-- [Risk] Backend Supabase columns are `INTEGER NOT NULL` — client sends string, `::INTEGER` cast will fail → **Mitigation**: Backend migration must happen before or alongside deploy. Mark as blocking dependency. Alternatively, backend can be updated to use `TEXT` column type in a new migration.
-- [Risk] Sync conflict: client sends string sort_order, server returns integer on pull → **Mitigation**: Client normalizes pulled values (convert number to string if needed) during sync processing.
+- [Risk] Sync conflict: client may have legacy numeric sort_order in local IndexedDB → **Mitigation**: Client normalizes pulled values (convert number to string if needed) via `normalizeSortOrder` utility during sync processing.
 - [Trade-off] Rebalancing updates all items in scope (same as old integer approach) → Acceptable because it happens extremely rarely (<1% of operations).
 - [Trade-off] Key strings use slightly more storage than integers → Negligible for list sizes under 1000.

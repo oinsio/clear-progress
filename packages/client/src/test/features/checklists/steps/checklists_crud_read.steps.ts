@@ -35,15 +35,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await seedChecklistItem(ctx.checklistItemIds, "Item A", {
             task_id: taskId,
-            sort_order: 2,
+            sort_order: "2",
           });
           await seedChecklistItem(ctx.checklistItemIds, "Item B", {
             task_id: taskId,
-            sort_order: 0,
+            sort_order: "0",
           });
           await seedChecklistItem(ctx.checklistItemIds, "Item C", {
             task_id: taskId,
-            sort_order: 1,
+            sort_order: "1",
           });
         },
       );

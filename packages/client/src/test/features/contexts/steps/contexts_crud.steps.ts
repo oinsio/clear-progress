@@ -133,9 +133,9 @@ describeFeature(
       let returnedContexts: ContextEntity[];
 
       Given("contexts with sort_order 2, 0, 1", async (_ctx: TestContext) => {
-        await seedContext(ctx.contextIds, "Context A", { sort_order: 2 });
-        await seedContext(ctx.contextIds, "Context B", { sort_order: 0 });
-        await seedContext(ctx.contextIds, "Context C", { sort_order: 1 });
+        await seedContext(ctx.contextIds, "Context A", { sort_order: "2" });
+        await seedContext(ctx.contextIds, "Context B", { sort_order: "0" });
+        await seedContext(ctx.contextIds, "Context C", { sort_order: "1" });
       });
 
       When("user requests all contexts", async (_ctx: TestContext) => {
