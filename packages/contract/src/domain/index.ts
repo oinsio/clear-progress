@@ -1,6 +1,7 @@
 export type {
   BackendType,
   ConnectionConfig,
+  ConnectionStore,
   GasConnectionConfig,
   MenuItemConfig,
   MenuMode,

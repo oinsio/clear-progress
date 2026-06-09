@@ -1,10 +1,10 @@
-// implements FR2 of connection-management-spec
+// implements FR10 of localstorage-refactor
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
+import type { ConnectionStore } from "@clear-progress/contract";
 import { expect, type TestContext } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
-import { disconnect } from "@/services/connectionService";
-import type { ConnectionConfig } from "@/types/connection";
+import { connect, disconnect } from "@/services/connectionService";
 import {
   type EventDispatchState,
   setupEventListeners,
@@ -13,6 +13,12 @@ import {
 const feature = await loadFeature("../connection_service_disconnect.feature");
 
 type FeatureContext = Record<string, never>;
+
+function readStore(): ConnectionStore | null {
+  const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
+  if (!raw) return null;
+  return JSON.parse(raw) as ConnectionStore;
+}
 
 describeFeature(
   feature,
@@ -28,23 +34,18 @@ describeFeature(
 
     setupEventListeners(f, eventState);
 
-    // @connection-management-spec @FR2
+    // @localstorage-refactor @FR10
     f.Scenario(
-      "Disconnect sets isActive to false",
+      "Disconnect sets activeType to null and preserves configs",
       ({ Given, When, Then, And }) => {
         Given(
-          'an active GAS connection config with url "https://example.com" and clientId "client-123"',
+          'an active GAS connection with url "https://example.com" and clientId "client-123"',
           (_ctx: TestContext) => {
-            const config: ConnectionConfig = {
+            connect({
               type: "gas",
               url: "https://example.com",
               clientId: "client-123",
-              isActive: true,
-            };
-            localStorage.setItem(
-              STORAGE_KEYS.CONNECTION_CONFIG,
-              JSON.stringify(config),
-            );
+            });
           },
         );
 
@@ -52,48 +53,40 @@ describeFeature(
           disconnect();
         });
 
-        Then("the saved config has isActive false", (_ctx: TestContext) => {
-          const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
-          const saved = JSON.parse(raw ?? "") as ConnectionConfig;
-          expect(saved.isActive).toBe(false);
+        Then("the store has activeType null", (_ctx: TestContext) => {
+          const store = readStore();
+          expect(store?.activeType).toBeNull();
         });
 
         And(
-          'the saved config has url "https://example.com"',
+          'the store has gas config with url "https://example.com"',
           (_ctx: TestContext) => {
-            const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
-            const saved = JSON.parse(raw ?? "") as ConnectionConfig;
-            expect(saved.url).toBe("https://example.com");
+            const store = readStore();
+            expect(store?.configs.gas?.url).toBe("https://example.com");
           },
         );
 
         And(
-          'the saved config has clientId "client-123"',
+          'the store has gas config with clientId "client-123"',
           (_ctx: TestContext) => {
-            const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
-            const saved = JSON.parse(raw ?? "") as ConnectionConfig;
-            expect(saved.type === "gas" && saved.clientId).toBe("client-123");
+            const store = readStore();
+            expect(store?.configs.gas?.clientId).toBe("client-123");
           },
         );
       },
     );
 
-    // @connection-management-spec @FR2
+    // @localstorage-refactor @FR10
     f.Scenario(
       "Disconnect removes auth and sync keys",
       ({ Given, And, When, Then }) => {
         Given(
-          'an active GAS connection config with url "https://example.com"',
+          'an active GAS connection with url "https://example.com"',
           (_ctx: TestContext) => {
-            const config: ConnectionConfig = {
+            connect({
               type: "gas",
               url: "https://example.com",
-              isActive: true,
-            };
-            localStorage.setItem(
-              STORAGE_KEYS.CONNECTION_CONFIG,
-              JSON.stringify(config),
-            );
+            });
           },
         );
 
@@ -135,7 +128,7 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR2
+    // @localstorage-refactor @FR10
     f.Scenario(
       "Disconnect handles missing config gracefully",
       ({ Given, When, Then }) => {
@@ -158,20 +151,15 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR2
+    // @localstorage-refactor @FR10
     f.Scenario("Disconnect dispatches events", ({ Given, When, Then, And }) => {
       Given(
-        'an active GAS connection config with url "https://example.com"',
+        'an active GAS connection with url "https://example.com"',
         (_ctx: TestContext) => {
-          const config: ConnectionConfig = {
+          connect({
             type: "gas",
             url: "https://example.com",
-            isActive: true,
-          };
-          localStorage.setItem(
-            STORAGE_KEYS.CONNECTION_CONFIG,
-            JSON.stringify(config),
-          );
+          });
         },
       );
 

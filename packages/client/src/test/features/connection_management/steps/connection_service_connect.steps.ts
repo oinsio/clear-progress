@@ -1,6 +1,7 @@
-// implements FR1 of connection-management-spec
+// implements FR9 of localstorage-refactor
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
+import type { ConnectionStore } from "@clear-progress/contract";
 import { expect, type TestContext } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
 import { connect } from "@/services/connectionService";
@@ -14,9 +15,9 @@ const feature = await loadFeature("../connection_service_connect.feature");
 
 type FeatureContext = Record<string, never>;
 
-function readSavedConfig(): ConnectionConfig {
+function readStore(): ConnectionStore {
   const raw = localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG);
-  return JSON.parse(raw ?? "") as ConnectionConfig;
+  return JSON.parse(raw ?? "null") as ConnectionStore;
 }
 
 describeFeature(
@@ -34,9 +35,9 @@ describeFeature(
 
     setupEventListeners(f, eventState);
 
-    // @connection-management-spec @FR1
+    // @localstorage-refactor @FR9
     f.Scenario(
-      "Connect saves config with isActive true",
+      "Connect saves config with activeType set",
       ({ Given, When, Then, And }) => {
         Given(
           'a GAS config with url "https://example.com" and clientId "client-123"',
@@ -45,7 +46,6 @@ describeFeature(
               type: "gas",
               url: "https://example.com",
               clientId: "client-123",
-              isActive: false,
             };
           },
         );
@@ -54,50 +54,51 @@ describeFeature(
           connect(inputConfig);
         });
 
-        Then("the saved config has isActive true", (_ctx: TestContext) => {
-          expect(readSavedConfig().isActive).toBe(true);
+        Then('the store has activeType "gas"', (_ctx: TestContext) => {
+          expect(readStore().activeType).toBe("gas");
         });
 
         And(
-          'the saved config has url "https://example.com"',
+          'the store has gas config with url "https://example.com"',
           (_ctx: TestContext) => {
-            expect(readSavedConfig().url).toBe("https://example.com");
+            expect(readStore().configs.gas?.url).toBe("https://example.com");
           },
         );
 
         And(
-          'the saved config has clientId "client-123"',
+          'the store has gas config with clientId "client-123"',
           (_ctx: TestContext) => {
-            const saved = readSavedConfig();
-            expect(saved.type === "gas" && saved.clientId).toBe("client-123");
+            expect(readStore().configs.gas?.clientId).toBe("client-123");
           },
         );
       },
     );
 
-    // @connection-management-spec @FR1
+    // @localstorage-refactor @FR9
     f.Scenario(
-      "Connect overwrites isActive false to true",
+      "Connect sets activeType to the config type",
       ({ Given, When, Then }) => {
-        Given("a GAS config with isActive false", (_ctx: TestContext) => {
-          inputConfig = {
-            type: "gas",
-            url: "https://example.com",
-            isActive: false,
-          };
-        });
+        Given(
+          'a GAS config with url "https://example.com"',
+          (_ctx: TestContext) => {
+            inputConfig = {
+              type: "gas",
+              url: "https://example.com",
+            };
+          },
+        );
 
         When("connect is called with the config", (_ctx: TestContext) => {
           connect(inputConfig);
         });
 
-        Then("the saved config has isActive true", (_ctx: TestContext) => {
-          expect(readSavedConfig().isActive).toBe(true);
+        Then('the store has activeType "gas"', (_ctx: TestContext) => {
+          expect(readStore().activeType).toBe("gas");
         });
       },
     );
 
-    // @connection-management-spec @FR1
+    // @localstorage-refactor @FR9
     f.Scenario(
       "Connect dispatches backend connection event",
       ({ Given, When, Then }) => {
@@ -107,7 +108,6 @@ describeFeature(
             inputConfig = {
               type: "gas",
               url: "https://example.com",
-              isActive: false,
             };
           },
         );
@@ -125,7 +125,7 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR1
+    // @localstorage-refactor @FR9
     f.Scenario(
       "Connect dispatches Google client ID event for GAS with clientId",
       ({ Given, When, Then }) => {
@@ -136,7 +136,6 @@ describeFeature(
               type: "gas",
               url: "https://example.com",
               clientId: "client-123",
-              isActive: false,
             };
           },
         );
@@ -151,7 +150,7 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR1
+    // @localstorage-refactor @FR9
     f.Scenario(
       "Connect does not dispatch Google client ID event for GAS without clientId",
       ({ Given, When, Then }) => {
@@ -161,7 +160,6 @@ describeFeature(
             inputConfig = {
               type: "gas",
               url: "https://example.com",
-              isActive: false,
             };
           },
         );

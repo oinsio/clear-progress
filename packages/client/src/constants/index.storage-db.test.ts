@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DB_NAME, SETTING_KEYS, STORAGE_KEYS } from "./index";
+import { DB_NAME, STORAGE_KEYS } from "./index";
 
 describe("DB_NAME", () => {
   it("should be 'clear-progress'", () => {
@@ -7,6 +7,7 @@ describe("DB_NAME", () => {
   });
 });
 
+// implements FR16 of localstorage-refactor
 describe("STORAGE_KEYS", () => {
   it("should have non-empty string values", () => {
     for (const value of Object.values(STORAGE_KEYS)) {
@@ -15,25 +16,48 @@ describe("STORAGE_KEYS", () => {
     }
   });
 
-  it("should define LAST_SYNC key", () => {
-    expect(STORAGE_KEYS.LAST_SYNC).toBe("last_sync");
+  const ALL_STORAGE_KEY_ENTRIES: [string, string][] = [
+    ["CONNECTION_CONFIG", "connection_config"],
+    ["LAST_SYNC", "last_sync"],
+    ["ACCENT_COLOR", "accent_color"],
+    ["CUSTOM_ACCENT_LIGHT", "custom_accent_light"],
+    ["CUSTOM_ACCENT_DARK", "custom_accent_dark"],
+    ["DEFAULT_BOX", "default_box"],
+    ["PANEL_SIDE", "panel_side"],
+    ["PANEL_OPEN", "panel_open"],
+    ["LANGUAGE", "language"],
+    ["PANEL_SPLIT", "panel_split"],
+    ["PANEL_ALWAYS_OPEN", "panel_always_open"],
+    ["FILTER_BAR_POSITION", "filter_bar_position"],
+    ["INTERFACE_SCALE", "interface_scale"],
+    ["MENU_ORDER", "menu_order"],
+    ["SECTION_COLLAPSE", "section_collapse"],
+    ["COLOR_SCHEME", "color_scheme"],
+    ["USER_PICTURE", "user_picture"],
+    ["ACCESS_TOKEN", "access_token"],
+    ["ACCESS_TOKEN_EXPIRES_AT", "access_token_expires_at"],
+    ["SHOW_HIDDEN_TASKS", "show_hidden_tasks"],
+    ["SETTINGS_UPDATED_AT", "settings_updated_at"],
+    ["FOCUS_MODE", "focus_mode"],
+    ["FOCUS_OPACITY", "focus_opacity"],
+    ["HANDEDNESS", "handedness"],
+    ["DAY_BOUNDARY", "day_boundary"],
+    ["ONBOARDING_SHOWN", "onboarding_shown"],
+  ];
+
+  it.each(
+    ALL_STORAGE_KEY_ENTRIES,
+  )('STORAGE_KEYS.%s should be "%s"', (keyName, expectedValue) => {
+    expect(STORAGE_KEYS[keyName as keyof typeof STORAGE_KEYS]).toBe(
+      expectedValue,
+    );
   });
 
-  it("should define ACCENT_COLOR key", () => {
-    expect(STORAGE_KEYS.ACCENT_COLOR).toBe("accent_color");
-  });
-
-  it("should define DEFAULT_BOX key", () => {
-    expect(STORAGE_KEYS.DEFAULT_BOX).toBe("default_box");
+  it("should cover every key in STORAGE_KEYS (completeness)", () => {
+    const testedKeyNames = ALL_STORAGE_KEY_ENTRIES.map(([keyName]) => keyName);
+    const actualKeyNames = Object.keys(STORAGE_KEYS);
+    expect(testedKeyNames.sort()).toEqual(actualKeyNames.sort());
   });
 });
 
-describe("SETTING_KEYS", () => {
-  it("should define DEFAULT_BOX key", () => {
-    expect(SETTING_KEYS.DEFAULT_BOX).toBe("default_box");
-  });
-
-  it("should define ACCENT_COLOR key", () => {
-    expect(SETTING_KEYS.ACCENT_COLOR).toBe("accent_color");
-  });
-});
+// implements FR13 of localstorage-refactor — SETTING_KEYS removed; all code uses STORAGE_KEYS instead

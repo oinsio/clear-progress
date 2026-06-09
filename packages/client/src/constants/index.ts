@@ -146,8 +146,6 @@ export const SYNC_META_KEYS = {
 
 export const STORAGE_KEYS = {
   CONNECTION_CONFIG: "connection_config",
-  SAVED_SUPABASE_CONFIG: "saved_supabase_config",
-  SAVED_GAS_CONFIG: "saved_gas_config",
   LAST_SYNC: "last_sync",
   ACCENT_COLOR: "accent_color",
   CUSTOM_ACCENT_LIGHT: "custom_accent_light",
@@ -192,13 +190,7 @@ export const PANEL_SPLIT_MAX_RATIO = 0.8;
 export const DEFAULT_LANGUAGE = "en";
 export const LANGUAGE_SEARCH_THRESHOLD = 10;
 
-export const SETTING_KEYS = {
-  DEFAULT_BOX: "default_box",
-  ACCENT_COLOR: "accent_color",
-  CUSTOM_ACCENT_LIGHT: "custom_accent_light",
-  CUSTOM_ACCENT_DARK: "custom_accent_dark",
-  DAY_BOUNDARY: "day_boundary",
-} as const;
+// implements FR13 of localstorage-refactor — SETTING_KEYS removed; use STORAGE_KEYS instead
 
 export const MAX_COVER_SIZE_BYTES = 2 * 1024 * 1024;
 export const MAX_FILE_BATCH_SIZE = 10;

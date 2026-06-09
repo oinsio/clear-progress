@@ -210,10 +210,7 @@ describe("AuthProvider — session & persistence", () => {
     });
 
     it("should not subscribe to Supabase auth when connection type is gas", () => {
-      mockGetConnectionConfig.mockReturnValue({
-        ...GAS_CONNECTION_CONFIG,
-        isActive: true,
-      });
+      mockGetConnectionConfig.mockReturnValue(GAS_CONNECTION_CONFIG);
       render(
         <AuthProvider>
           <TestConsumer />

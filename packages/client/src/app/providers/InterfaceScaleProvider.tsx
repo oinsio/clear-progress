@@ -1,10 +1,12 @@
+// implements FR6, FR7 of localstorage-refactor
 import type * as React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect } from "react";
 import {
   DEFAULT_INTERFACE_SCALE,
   INTERFACE_SCALES,
   STORAGE_KEYS,
 } from "@/constants";
+import { usePreference } from "@/hooks/usePreference";
 import type { InterfaceScale } from "@/types/common";
 
 interface InterfaceScaleContextValue {
@@ -16,18 +18,6 @@ const InterfaceScaleContext = createContext<InterfaceScaleContextValue | null>(
   null,
 );
 
-function getInitialInterfaceScale(): InterfaceScale {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.INTERFACE_SCALE);
-    if (cached && INTERFACE_SCALES.includes(cached as InterfaceScale)) {
-      return cached as InterfaceScale;
-    }
-  } catch (error) {
-    console.error("Failed to get interface scale from localStorage:", error);
-  }
-  return DEFAULT_INTERFACE_SCALE;
-}
-
 function applyInterfaceScale(scale: InterfaceScale): void {
   document.documentElement.setAttribute("data-scale", scale);
 }
@@ -37,23 +27,16 @@ export function InterfaceScaleProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [interfaceScale, setInterfaceScaleState] = useState<InterfaceScale>(
-    getInitialInterfaceScale,
-  );
+  const [interfaceScale, setInterfaceScale] = usePreference<InterfaceScale>({
+    type: "enum",
+    key: STORAGE_KEYS.INTERFACE_SCALE,
+    values: INTERFACE_SCALES,
+    defaultValue: DEFAULT_INTERFACE_SCALE,
+  });
 
   useEffect(() => {
     applyInterfaceScale(interfaceScale);
   }, [interfaceScale]);
-
-  const setInterfaceScale = (scale: InterfaceScale): void => {
-    applyInterfaceScale(scale);
-    setInterfaceScaleState(scale);
-    try {
-      localStorage.setItem(STORAGE_KEYS.INTERFACE_SCALE, scale);
-    } catch (error) {
-      console.error("Failed to save interface scale to localStorage:", error);
-    }
-  };
 
   return (
     <InterfaceScaleContext.Provider

@@ -59,7 +59,6 @@ describe("AuthProvider — authProvider context field", () => {
       type: "gas",
       url: "https://example.com",
       clientId: "123",
-      isActive: true,
     });
 
     render(

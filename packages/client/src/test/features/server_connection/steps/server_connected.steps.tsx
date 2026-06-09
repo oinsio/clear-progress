@@ -18,8 +18,8 @@ const feature = await loadFeature("../server_connected.feature");
 function setupConnectedState(type: "supabase" | "gas", url: string): void {
   const config =
     type === "supabase"
-      ? { type, url, anonKey: "test-anon-key", isActive: true }
-      : { type, url, clientId: "123456789", isActive: true };
+      ? { type, url, anonKey: "test-anon-key" }
+      : { type, url, clientId: "123456789" };
 
   mockUseConnectionConfig.mockReturnValue(config);
   mockUseConnectionStatus.mockReturnValue("synced");
