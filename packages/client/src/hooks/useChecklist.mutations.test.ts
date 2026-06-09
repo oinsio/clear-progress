@@ -8,6 +8,7 @@ import {
   mockSchedulePush,
   setupBeforeEach,
   setupWithItem,
+  setupWithTwoItems,
 } from "./useChecklist.test-utils";
 
 vi.mock("@/app/providers/SyncProvider", () => ({
@@ -114,34 +115,21 @@ describe("useChecklist — mutations", () => {
   });
 
   it("should reorder items when reorderItems is called", async () => {
-    const taskId = crypto.randomUUID();
-    const item1 = buildChecklistItem({ task_id: taskId, sort_order: 0 });
-    const item2 = buildChecklistItem({ task_id: taskId, sort_order: 1 });
-    await db.checklist_items.bulkAdd([item1, item2]);
+    const { item2, result } = await setupWithTwoItems();
 
-    const { result } = renderHook(() => useChecklist(taskId, checklistService));
-    await waitFor(() => expect(result.current.items).toHaveLength(2));
-
+    // Move item2 before item1 by giving it a key before item1's key
     await act(async () => {
-      await result.current.reorderItems([item2, item1]);
+      await result.current.reorderItems(item2.id, "Zz");
     });
 
     await waitFor(() => expect(result.current.items[0].id).toBe(item2.id));
   });
 
   it("should schedule push when reorderItems is called", async () => {
-    const taskId = crypto.randomUUID();
-    const items = [
-      buildChecklistItem({ task_id: taskId, sort_order: 0 }),
-      buildChecklistItem({ task_id: taskId, sort_order: 1 }),
-    ];
-    await db.checklist_items.bulkAdd(items);
-
-    const { result } = renderHook(() => useChecklist(taskId, checklistService));
-    await waitFor(() => expect(result.current.items).toHaveLength(2));
+    const { item2, result } = await setupWithTwoItems();
 
     await act(async () => {
-      await result.current.reorderItems([items[1], items[0]]);
+      await result.current.reorderItems(item2.id, "Zz");
     });
 
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);

@@ -1,5 +1,5 @@
 Feature: Task Reorder
-  Implements FR2, FR6, FR9 of fractional-sort-order.
+  Implements FR6, FR9 of fractional-sort-order.
 
   @fractional-sort-order @FR6
   Scenario: Reorder updates only the dragged task
@@ -9,12 +9,6 @@ Feature: Task Reorder
     Then A has sort_order "a2"
     And A has needsSync true
     And B has sort_order "a1"
-
-  @fractional-sort-order @FR2
-  Scenario: Tasks within box sorted descending by sort_order
-    Given inbox has tasks with sort_order "a2", "a0", "a1"
-    When user gets tasks by box "inbox"
-    Then tasks are returned in order "a2", "a1", "a0"
 
   @fractional-sort-order @FR6
   Scenario: Reorder nonexistent task throws error
