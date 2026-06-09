@@ -74,3 +74,16 @@ export function compareSortKeys(keyA: string, keyB: string): number {
   if (keyA > keyB) return 1;
   return 0;
 }
+
+/**
+ * Comparator for completed tasks: by completed_at descending, then by sort_order descending.
+ */
+export function compareCompletedTasks(
+  taskA: { completed_at: string; sort_order: string | number },
+  taskB: { completed_at: string; sort_order: string | number },
+): number {
+  if (taskA.completed_at && taskB.completed_at) {
+    return taskB.completed_at > taskA.completed_at ? 1 : -1;
+  }
+  return compareSortKeys(String(taskB.sort_order), String(taskA.sort_order));
+}
