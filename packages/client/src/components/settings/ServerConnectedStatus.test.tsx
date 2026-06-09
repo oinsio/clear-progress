@@ -85,14 +85,12 @@ const supabaseConfig: ConnectionConfig = {
   type: "supabase",
   url: "https://myproject.supabase.co",
   anonKey: "test-anon-key",
-  isActive: true,
 };
 
 const gasConfig: ConnectionConfig = {
   type: "gas",
   url: "https://script.google.com/macros/s/ABC/exec",
   clientId: "123456789",
-  isActive: true,
 };
 
 describe("ServerConnectedStatus", () => {

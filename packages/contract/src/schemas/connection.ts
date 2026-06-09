@@ -26,7 +26,6 @@ export const GasConnectionConfigSchema = z.object({
   type: z.literal("gas"),
   url: HttpUrlSchema,
   clientId: z.string().optional(),
-  isActive: z.boolean(),
 });
 
 export type GasConnectionConfig = z.infer<typeof GasConnectionConfigSchema>;
@@ -38,7 +37,6 @@ export const SupabaseConnectionConfigSchema = z.object({
   type: z.literal("supabase"),
   url: HttpUrlSchema,
   anonKey: z.string().min(1),
-  isActive: z.boolean(),
 });
 
 export type SupabaseConnectionConfig = z.infer<
@@ -54,3 +52,27 @@ export const ConnectionConfigSchema = z.discriminatedUnion("type", [
 ]);
 
 export type ConnectionConfig = z.infer<typeof ConnectionConfigSchema>;
+
+/**
+ * ConnectionStoreSchema — single JSON key for connection config storage.
+ * implements FR8 of localstorage-refactor
+ */
+export const ConnectionStoreSchema = z.object({
+  activeType: z.enum(["supabase", "gas"]).nullable(),
+  configs: z.object({
+    supabase: z
+      .object({
+        url: z.string(),
+        anonKey: z.string(),
+      })
+      .optional(),
+    gas: z
+      .object({
+        url: z.string(),
+        clientId: z.string().optional(),
+      })
+      .optional(),
+  }),
+});
+
+export type ConnectionStore = z.infer<typeof ConnectionStoreSchema>;

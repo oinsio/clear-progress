@@ -1,6 +1,8 @@
+// implements FR6, FR7 of localstorage-refactor
 import type * as React from "react";
-import { createContext, useCallback, useState } from "react";
+import { createContext } from "react";
 import { STORAGE_KEYS } from "@/constants";
+import { usePreference } from "@/hooks/usePreference";
 
 interface PanelSettingsContextValue {
   isPanelAlwaysOpen: boolean;
@@ -10,32 +12,16 @@ interface PanelSettingsContextValue {
 export const PanelSettingsContext =
   createContext<PanelSettingsContextValue | null>(null);
 
-function getCachedPanelAlwaysOpen(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEYS.PANEL_ALWAYS_OPEN) === "true";
-  } catch {
-    // localStorage is unavailable
-  }
-  return false;
-}
-
 export function PanelSettingsProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [isPanelAlwaysOpen, setIsPanelAlwaysOpenState] = useState<boolean>(
-    getCachedPanelAlwaysOpen,
-  );
-
-  const setPanelAlwaysOpen = useCallback((value: boolean) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.PANEL_ALWAYS_OPEN, String(value));
-    } catch {
-      // localStorage is unavailable
-    }
-    setIsPanelAlwaysOpenState(value);
-  }, []);
+  const [isPanelAlwaysOpen, setPanelAlwaysOpen] = usePreference<boolean>({
+    type: "boolean",
+    key: STORAGE_KEYS.PANEL_ALWAYS_OPEN,
+    defaultValue: false,
+  });
 
   return (
     <PanelSettingsContext.Provider

@@ -33,6 +33,14 @@
     </script>
     <script>
       try {
+        // implements FR14, FR15 of localstorage-refactor
+        const colorScheme = localStorage.getItem("color_scheme");
+        if (colorScheme === "dark" ||
+            (colorScheme !== "light" &&
+             window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.classList.add("dark");
+        }
+
         // Helper function to convert hex to RGB
         function hexToRgb(hex) {
           const cleanHex = hex.replace(/^#/, "");

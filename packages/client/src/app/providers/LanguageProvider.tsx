@@ -1,3 +1,4 @@
+// implements FR6, FR7 of localstorage-refactor
 import type * as React from "react";
 import {
   createContext,
@@ -12,6 +13,10 @@ import {
   getBaseLanguageCodes,
   isValidLocaleCode,
 } from "@/services/localeRegistry";
+import {
+  getPreference,
+  setPreference,
+} from "@/services/localPreferencesService";
 
 interface LanguageContextValue {
   language: string;
@@ -37,18 +42,20 @@ function detectBrowserLanguage(): string | null {
 }
 
 function getInitialLanguage(): string {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
-    if (stored && isValidLocaleCode(stored)) {
-      return stored;
-    }
-    const detectedLanguage = detectBrowserLanguage() ?? DEFAULT_LANGUAGE;
-    localStorage.setItem(STORAGE_KEYS.LANGUAGE, detectedLanguage);
-    return detectedLanguage;
-  } catch {
-    // localStorage is unavailable
-    return detectBrowserLanguage() ?? DEFAULT_LANGUAGE;
+  const stored = getPreference<string>({
+    type: "enum",
+    key: STORAGE_KEYS.LANGUAGE,
+    values: getBaseLanguageCodes(),
+    defaultValue: "",
+  });
+
+  if (stored && isValidLocaleCode(stored)) {
+    return stored;
   }
+
+  const detectedLanguage = detectBrowserLanguage() ?? DEFAULT_LANGUAGE;
+  setPreference(STORAGE_KEYS.LANGUAGE, detectedLanguage);
+  return detectedLanguage;
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -62,7 +69,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const setLanguage = useCallback((lang: string) => {
     setLanguageState(lang);
-    localStorage.setItem(STORAGE_KEYS.LANGUAGE, lang);
+    setPreference(STORAGE_KEYS.LANGUAGE, lang);
     void i18n.changeLanguage(lang);
   }, []);
 

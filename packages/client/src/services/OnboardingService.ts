@@ -4,6 +4,10 @@ import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository"
 import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { GoalService } from "@/services/GoalService";
+import {
+  getPreference,
+  setPreference,
+} from "@/services/localPreferencesService";
 import { TaskService } from "@/services/TaskService";
 
 /**
@@ -18,8 +22,12 @@ export class OnboardingService {
   ) {}
 
   async shouldShowOnboarding(): Promise<boolean> {
-    const flagValue = localStorage.getItem(STORAGE_KEYS.ONBOARDING_SHOWN);
-    if (flagValue !== null) {
+    const isShown = getPreference<boolean>({
+      type: "boolean",
+      key: STORAGE_KEYS.ONBOARDING_SHOWN,
+      defaultValue: false,
+    });
+    if (isShown) {
       return false;
     }
 
@@ -27,7 +35,7 @@ export class OnboardingService {
     const activeTasks = await this.taskRepository.getActive();
 
     if (activeGoals.length > 0 || activeTasks.length > 0) {
-      localStorage.setItem(STORAGE_KEYS.ONBOARDING_SHOWN, "true");
+      setPreference(STORAGE_KEYS.ONBOARDING_SHOWN, true);
       return false;
     }
 
@@ -61,6 +69,6 @@ export class OnboardingService {
       });
     }
 
-    localStorage.setItem(STORAGE_KEYS.ONBOARDING_SHOWN, "true");
+    setPreference(STORAGE_KEYS.ONBOARDING_SHOWN, true);
   }
 }

@@ -41,7 +41,7 @@ interface ServerSectionProps {
 
 /**
  * Implements FR1, FR2, FR3 of simplify-backend-connection.
- * Orchestrator component managing all server connection sub-components.
+ * Orchestrator component managing all server connection subcomponents.
  */
 export function ServerSection({ oauthError = "" }: ServerSectionProps) {
   const { t } = useTranslation();
@@ -91,7 +91,6 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
           type: "supabase",
           url: resolvedUrl,
           anonKey,
-          isActive: true,
         });
 
         createSupabaseClient(resolvedUrl, anonKey);
@@ -129,7 +128,6 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
           type: "gas",
           url: resolvedUrl,
           clientId: normalizedClientId,
-          isActive: true,
         });
 
         setNeedsGasInit(!response.initialized);

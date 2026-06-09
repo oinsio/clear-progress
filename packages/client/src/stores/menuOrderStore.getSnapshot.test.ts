@@ -50,10 +50,8 @@ describe("menuOrderStore", () => {
       expect(snapshot[0].mode).toBe("inbox");
     });
 
-    it("should return defaults and log error when Zod validation fails", () => {
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+    it("should return defaults and log warning when Zod validation fails", () => {
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       localStorage.setItem(
         STORAGE_KEYS.MENU_ORDER,
@@ -65,8 +63,7 @@ describe("menuOrderStore", () => {
       expect(snapshot[0].mode).toBe("inbox");
       expect(snapshot).toHaveLength(9);
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Invalid menu order:",
-        expect.anything(),
+        expect.stringContaining("Corrupted"),
       );
 
       consoleSpy.mockRestore();

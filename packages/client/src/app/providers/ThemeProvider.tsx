@@ -1,3 +1,4 @@
+// implements FR6, FR7, FR18, FR19, FR20 of localstorage-refactor
 import type * as React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
@@ -8,10 +9,10 @@ import {
   COLOR_SCHEMES,
   DEFAULT_ACCENT_COLOR,
   DEFAULT_COLOR_SCHEME,
-  SETTING_KEYS,
   STORAGE_KEYS,
 } from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import { getPreference, syncCache } from "@/services/localPreferencesService";
 import type { AccentColor, ColorScheme } from "@/types/common";
 import { hexToRgb } from "@/utils/colorHelpers";
 
@@ -33,27 +34,21 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const settingsRepository = new SettingsRepository();
 
 function getInitialAccentColor(): AccentColor {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.ACCENT_COLOR);
-    if (cached && ACCENT_COLORS.includes(cached as AccentColor)) {
-      return cached as AccentColor;
-    }
-  } catch {
-    // localStorage is unavailable — use default
-  }
-  return DEFAULT_ACCENT_COLOR;
+  return getPreference<AccentColor>({
+    type: "enum",
+    key: STORAGE_KEYS.ACCENT_COLOR,
+    values: ACCENT_COLORS,
+    defaultValue: DEFAULT_ACCENT_COLOR,
+  });
 }
 
 function getInitialColorScheme(): ColorScheme {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.COLOR_SCHEME);
-    if (cached && COLOR_SCHEMES.includes(cached as ColorScheme)) {
-      return cached as ColorScheme;
-    }
-  } catch {
-    // localStorage is unavailable — use default
-  }
-  return DEFAULT_COLOR_SCHEME;
+  return getPreference<ColorScheme>({
+    type: "enum",
+    key: STORAGE_KEYS.COLOR_SCHEME,
+    values: COLOR_SCHEMES,
+    defaultValue: DEFAULT_COLOR_SCHEME,
+  });
 }
 
 function applyColorScheme(scheme: ColorScheme): void {
@@ -76,16 +71,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(
     getInitialColorScheme,
   );
-  const [customAccentLight, setCustomAccentLight] = useState<string>(
-    () =>
-      localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT) ||
-      DEFAULT_CUSTOM_LIGHT,
-  );
-  const [customAccentDark, setCustomAccentDark] = useState<string>(
-    () =>
-      localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK) ||
-      DEFAULT_CUSTOM_DARK,
-  );
+  const [customAccentLight, setCustomAccentLight] = useState<string>(() => {
+    try {
+      return (
+        localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT) ||
+        DEFAULT_CUSTOM_LIGHT
+      );
+    } catch {
+      return DEFAULT_CUSTOM_LIGHT;
+    }
+  });
+  const [customAccentDark, setCustomAccentDark] = useState<string>(() => {
+    try {
+      return (
+        localStorage.getItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK) ||
+        DEFAULT_CUSTOM_DARK
+      );
+    } catch {
+      return DEFAULT_CUSTOM_DARK;
+    }
+  });
   const { syncVersion } = useSync();
 
   useEffect(() => {
@@ -98,7 +103,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const loadSettings = async () => {
       try {
         const storedColor = await settingsRepository.getValue(
-          SETTING_KEYS.ACCENT_COLOR,
+          STORAGE_KEYS.ACCENT_COLOR,
         );
 
         // Validate color
@@ -110,34 +115,34 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           // If custom, load user-defined colors
           if (color === "custom") {
             lightHex = await settingsRepository.getValue(
-              SETTING_KEYS.CUSTOM_ACCENT_LIGHT,
+              STORAGE_KEYS.CUSTOM_ACCENT_LIGHT,
             );
             darkHex = await settingsRepository.getValue(
-              SETTING_KEYS.CUSTOM_ACCENT_DARK,
+              STORAGE_KEYS.CUSTOM_ACCENT_DARK,
             );
 
             if (lightHex) {
               setCustomAccentLight(lightHex);
-              localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
+              syncCache(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
             }
             if (darkHex) {
               setCustomAccentDark(darkHex);
-              localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK, darkHex);
+              syncCache(STORAGE_KEYS.CUSTOM_ACCENT_DARK, darkHex);
             }
           }
 
           applyAccentColor(color, lightHex, darkHex);
           setAccentColorState(color);
-          localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, color);
+          syncCache(STORAGE_KEYS.ACCENT_COLOR, color);
         } else if (storedColor) {
           // Invalid color — set default and sync
           await settingsRepository.set(
-            SETTING_KEYS.ACCENT_COLOR,
+            STORAGE_KEYS.ACCENT_COLOR,
             DEFAULT_ACCENT_COLOR,
           );
           applyAccentColor(DEFAULT_ACCENT_COLOR);
           setAccentColorState(DEFAULT_ACCENT_COLOR);
-          localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, DEFAULT_ACCENT_COLOR);
+          syncCache(STORAGE_KEYS.ACCENT_COLOR, DEFAULT_ACCENT_COLOR);
         }
       } catch (error) {
         console.error("Failed to load accent color settings:", error);
@@ -165,8 +170,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setAccentColor = async (color: AccentColor): Promise<void> => {
     applyAccentColor(color, customAccentLight, customAccentDark);
     setAccentColorState(color);
-    localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, color);
-    await settingsRepository.set(SETTING_KEYS.ACCENT_COLOR, color);
+    syncCache(STORAGE_KEYS.ACCENT_COLOR, color);
+    await settingsRepository.set(STORAGE_KEYS.ACCENT_COLOR, color);
   };
 
   const setCustomAccentColors = async (
@@ -175,10 +180,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   ): Promise<void> => {
     setCustomAccentLight(lightHex);
     setCustomAccentDark(darkHex);
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK, darkHex);
-    await settingsRepository.set(SETTING_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
-    await settingsRepository.set(SETTING_KEYS.CUSTOM_ACCENT_DARK, darkHex);
+    syncCache(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
+    syncCache(STORAGE_KEYS.CUSTOM_ACCENT_DARK, darkHex);
+    await settingsRepository.set(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, lightHex);
+    await settingsRepository.set(STORAGE_KEYS.CUSTOM_ACCENT_DARK, darkHex);
     if (accentColor === "custom") {
       applyAccentColor("custom", lightHex, darkHex);
     }
@@ -187,7 +192,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setColorScheme = (scheme: ColorScheme): void => {
     applyColorScheme(scheme);
     setColorSchemeState(scheme);
-    localStorage.setItem(STORAGE_KEYS.COLOR_SCHEME, scheme);
+    syncCache(STORAGE_KEYS.COLOR_SCHEME, scheme);
     applyAccentColor(accentColor, customAccentLight, customAccentDark);
   };
 

@@ -94,7 +94,6 @@ describeFeature(feature, (f) => {
           expect(mockConnect).toHaveBeenCalledWith(
             expect.objectContaining({
               type: "supabase",
-              isActive: true,
             }),
           );
         });

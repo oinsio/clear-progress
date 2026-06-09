@@ -1,6 +1,8 @@
+// implements FR6, FR7 of localstorage-refactor
 import type React from "react";
-import { createContext, useCallback, useState } from "react";
+import { createContext, useCallback } from "react";
 import { STORAGE_KEYS } from "@/constants";
+import { usePreference } from "@/hooks/usePreference";
 
 interface ShowHiddenContextValue {
   showHidden: boolean;
@@ -16,17 +18,15 @@ export function ShowHiddenProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [showHidden, setShowHidden] = useState(() => {
-    return localStorage.getItem(STORAGE_KEYS.SHOW_HIDDEN_TASKS) === "true";
+  const [showHidden, setShowHidden] = usePreference<boolean>({
+    type: "boolean",
+    key: STORAGE_KEYS.SHOW_HIDDEN_TASKS,
+    defaultValue: false,
   });
 
   const toggleShowHidden = useCallback(() => {
-    setShowHidden((previous) => {
-      const newValue = !previous;
-      localStorage.setItem(STORAGE_KEYS.SHOW_HIDDEN_TASKS, String(newValue));
-      return newValue;
-    });
-  }, []);
+    setShowHidden(!showHidden);
+  }, [showHidden, setShowHidden]);
 
   return (
     <ShowHiddenContext.Provider value={{ showHidden, toggleShowHidden }}>

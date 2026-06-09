@@ -67,10 +67,13 @@ Given("user has completed Supabase OAuth flow", async ({ page }) => {
     localStorage.setItem(
       "connection_config",
       JSON.stringify({
-        type: "supabase",
-        url: "https://myproject.supabase.co",
-        anonKey: "test-anon-key",
-        isActive: true,
+        activeType: "supabase",
+        configs: {
+          supabase: {
+            url: "https://myproject.supabase.co",
+            anonKey: "test-anon-key",
+          },
+        },
       }),
     );
   });
@@ -92,10 +95,13 @@ Given(
         localStorage.setItem("connection_config", JSON.stringify(config));
       },
       {
-        type: "supabase",
-        url: "https://myproject.supabase.co",
-        anonKey: "test-anon-key",
-        isActive: true,
+        activeType: "supabase",
+        configs: {
+          supabase: {
+            url: "https://myproject.supabase.co",
+            anonKey: "test-anon-key",
+          },
+        },
       },
     );
     await page.goto(

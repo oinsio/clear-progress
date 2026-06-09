@@ -44,7 +44,6 @@ const {
     STABLE_CONNECTION_CONFIG: {
       type: "gas" as const,
       url: "https://test.example.com",
-      isActive: true,
     },
     STABLE_AUTH_VALUE: {
       accessToken: "mock-token",

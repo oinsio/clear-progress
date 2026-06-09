@@ -12,7 +12,6 @@ export const SUPABASE_CONNECTION_CONFIG = {
   type: "supabase" as const,
   url: "https://test-project.supabase.co",
   anonKey: "test-anon-key",
-  isActive: true,
 };
 
 interface AuthMocks {

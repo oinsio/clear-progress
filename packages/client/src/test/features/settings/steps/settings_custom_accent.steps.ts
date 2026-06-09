@@ -2,7 +2,7 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
-import { SETTING_KEYS, STORAGE_KEYS } from "@/constants";
+import { STORAGE_KEYS } from "@/constants";
 import { db } from "@/db/database";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { buildSetting } from "@/db/repositories/SettingsRepository.test-utils";
@@ -31,8 +31,8 @@ describeFeature(
       When(
         'setCustomAccentColors is called with light "#ff0000" and dark "#00ff00"',
         async (_ctx: TestContext) => {
-          await repository.set(SETTING_KEYS.CUSTOM_ACCENT_LIGHT, "#ff0000");
-          await repository.set(SETTING_KEYS.CUSTOM_ACCENT_DARK, "#00ff00");
+          await repository.set(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, "#ff0000");
+          await repository.set(STORAGE_KEYS.CUSTOM_ACCENT_DARK, "#00ff00");
           localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, "#ff0000");
           localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK, "#00ff00");
         },
@@ -42,7 +42,7 @@ describeFeature(
         'the repository contains "custom_accent_light" set to "#ff0000" with needsSync true',
         async (_ctx: TestContext) => {
           const setting = await db.settings.get(
-            SETTING_KEYS.CUSTOM_ACCENT_LIGHT,
+            STORAGE_KEYS.CUSTOM_ACCENT_LIGHT,
           );
           expect(setting).toBeDefined();
           expect(setting?.value).toBe("#ff0000");
@@ -54,7 +54,7 @@ describeFeature(
         'the repository contains "custom_accent_dark" set to "#00ff00" with needsSync true',
         async (_ctx: TestContext) => {
           const setting = await db.settings.get(
-            SETTING_KEYS.CUSTOM_ACCENT_DARK,
+            STORAGE_KEYS.CUSTOM_ACCENT_DARK,
           );
           expect(setting).toBeDefined();
           expect(setting?.value).toBe("#00ff00");
@@ -84,7 +84,7 @@ describeFeature(
 
         Given('accent color setting is "custom"', async (_ctx: TestContext) => {
           await db.settings.add(
-            buildSetting({ key: SETTING_KEYS.ACCENT_COLOR, value: "custom" }),
+            buildSetting({ key: STORAGE_KEYS.ACCENT_COLOR, value: "custom" }),
           );
           localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, "custom");
         });
@@ -94,13 +94,13 @@ describeFeature(
           async (_ctx: TestContext) => {
             await db.settings.add(
               buildSetting({
-                key: SETTING_KEYS.CUSTOM_ACCENT_LIGHT,
+                key: STORAGE_KEYS.CUSTOM_ACCENT_LIGHT,
                 value: "#abc123",
               }),
             );
             await db.settings.add(
               buildSetting({
-                key: SETTING_KEYS.CUSTOM_ACCENT_DARK,
+                key: STORAGE_KEYS.CUSTOM_ACCENT_DARK,
                 value: "#def456",
               }),
             );
@@ -111,10 +111,10 @@ describeFeature(
           "the accent color provider initializes",
           async (_ctx: TestContext) => {
             loadedLight = await repository.getValue(
-              SETTING_KEYS.CUSTOM_ACCENT_LIGHT,
+              STORAGE_KEYS.CUSTOM_ACCENT_LIGHT,
             );
             loadedDark = await repository.getValue(
-              SETTING_KEYS.CUSTOM_ACCENT_DARK,
+              STORAGE_KEYS.CUSTOM_ACCENT_DARK,
             );
             if (loadedLight) {
               localStorage.setItem(
@@ -159,7 +159,7 @@ describeFeature(
 
         Given('accent color setting is "custom"', async (_ctx: TestContext) => {
           await db.settings.add(
-            buildSetting({ key: SETTING_KEYS.ACCENT_COLOR, value: "custom" }),
+            buildSetting({ key: STORAGE_KEYS.ACCENT_COLOR, value: "custom" }),
           );
           localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, "custom");
         });
@@ -176,10 +176,10 @@ describeFeature(
           "the accent color provider initializes",
           async (_ctx: TestContext) => {
             loadedLight = await repository.getValue(
-              SETTING_KEYS.CUSTOM_ACCENT_LIGHT,
+              STORAGE_KEYS.CUSTOM_ACCENT_LIGHT,
             );
             loadedDark = await repository.getValue(
-              SETTING_KEYS.CUSTOM_ACCENT_DARK,
+              STORAGE_KEYS.CUSTOM_ACCENT_DARK,
             );
           },
         );
@@ -202,7 +202,7 @@ describeFeature(
       ({ Given, When, Then, But }) => {
         Given('accent color setting is "blue"', async (_ctx: TestContext) => {
           await db.settings.add(
-            buildSetting({ key: SETTING_KEYS.ACCENT_COLOR, value: "blue" }),
+            buildSetting({ key: STORAGE_KEYS.ACCENT_COLOR, value: "blue" }),
           );
           localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, "blue");
         });
@@ -210,8 +210,8 @@ describeFeature(
         When(
           'setCustomAccentColors is called with light "#ff0000" and dark "#00ff00"',
           async (_ctx: TestContext) => {
-            await repository.set(SETTING_KEYS.CUSTOM_ACCENT_LIGHT, "#ff0000");
-            await repository.set(SETTING_KEYS.CUSTOM_ACCENT_DARK, "#00ff00");
+            await repository.set(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, "#ff0000");
+            await repository.set(STORAGE_KEYS.CUSTOM_ACCENT_DARK, "#00ff00");
             localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_LIGHT, "#ff0000");
             localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_DARK, "#00ff00");
           },
@@ -221,10 +221,10 @@ describeFeature(
           "the hex values are persisted in the repository",
           async (_ctx: TestContext) => {
             const lightSetting = await db.settings.get(
-              SETTING_KEYS.CUSTOM_ACCENT_LIGHT,
+              STORAGE_KEYS.CUSTOM_ACCENT_LIGHT,
             );
             const darkSetting = await db.settings.get(
-              SETTING_KEYS.CUSTOM_ACCENT_DARK,
+              STORAGE_KEYS.CUSTOM_ACCENT_DARK,
             );
             expect(lightSetting?.value).toBe("#ff0000");
             expect(darkSetting?.value).toBe("#00ff00");

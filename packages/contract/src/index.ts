@@ -20,6 +20,7 @@ export type {
   BackendType,
   Box,
   ConnectionConfig,
+  ConnectionStore,
   EntityType,
   GasConnectionConfig,
   GoalStatus,
@@ -69,6 +70,7 @@ export {
   BoxSchema,
   CollapsedSectionsSchema,
   ConnectionConfigSchema,
+  ConnectionStoreSchema,
   // API response schemas
   DeleteFileResponseSchema,
   EntityTypeSchema,

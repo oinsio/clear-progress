@@ -1,6 +1,7 @@
-// implements FR3, FR4, FR5 of connection-management-spec
+// implements FR11, FR12 of localstorage-refactor
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
+import type { ConnectionStore } from "@clear-progress/contract";
 import { expect, type TestContext } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
 import {
@@ -14,6 +15,10 @@ const feature = await loadFeature("../connection_service_read.feature");
 
 type FeatureContext = Record<string, never>;
 
+function writeStore(store: ConnectionStore): void {
+  localStorage.setItem(STORAGE_KEYS.CONNECTION_CONFIG, JSON.stringify(store));
+}
+
 describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
@@ -26,22 +31,17 @@ describeFeature(
       returnedBackendType = null;
     });
 
-    // @connection-management-spec @FR3
+    // @localstorage-refactor @FR12
     f.Scenario(
-      "getConnectionConfig returns active config",
+      "getConnectionConfig returns config when activeType is set",
       ({ Given, When, Then }) => {
         Given(
-          "a valid GAS config with isActive true exists in localStorage",
+          'a connection store with activeType "gas" and gas config url "https://example.com"',
           (_ctx: TestContext) => {
-            const config: ConnectionConfig = {
-              type: "gas",
-              url: "https://example.com",
-              isActive: true,
-            };
-            localStorage.setItem(
-              STORAGE_KEYS.CONNECTION_CONFIG,
-              JSON.stringify(config),
-            );
+            writeStore({
+              activeType: "gas",
+              configs: { gas: { url: "https://example.com" } },
+            });
           },
         );
 
@@ -56,22 +56,17 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR3
+    // @localstorage-refactor @FR12
     f.Scenario(
-      "getConnectionConfig returns null for inactive config",
+      "getConnectionConfig returns null when activeType is null",
       ({ Given, When, Then }) => {
         Given(
-          "a valid GAS config with isActive false exists in localStorage",
+          'a connection store with activeType null and gas config url "https://example.com"',
           (_ctx: TestContext) => {
-            const config: ConnectionConfig = {
-              type: "gas",
-              url: "https://example.com",
-              isActive: false,
-            };
-            localStorage.setItem(
-              STORAGE_KEYS.CONNECTION_CONFIG,
-              JSON.stringify(config),
-            );
+            writeStore({
+              activeType: null,
+              configs: { gas: { url: "https://example.com" } },
+            });
           },
         );
 
@@ -85,7 +80,7 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR3
+    // @localstorage-refactor @FR12
     f.Scenario(
       "getConnectionConfig returns null for missing config",
       ({ Given, When, Then }) => {
@@ -106,7 +101,7 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR3
+    // @localstorage-refactor @FR12
     f.Scenario(
       "getConnectionConfig returns null for invalid config",
       ({ Given, When, Then }) => {
@@ -130,22 +125,17 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR4
+    // @localstorage-refactor @FR12
     f.Scenario(
-      "getSavedConnectionConfig returns inactive config",
+      "getSavedConnectionConfig returns config when activeType is null",
       ({ Given, When, Then }) => {
         Given(
-          "a valid GAS config with isActive false exists in localStorage",
+          'a connection store with activeType null and gas config url "https://example.com"',
           (_ctx: TestContext) => {
-            const config: ConnectionConfig = {
-              type: "gas",
-              url: "https://example.com",
-              isActive: false,
-            };
-            localStorage.setItem(
-              STORAGE_KEYS.CONNECTION_CONFIG,
-              JSON.stringify(config),
-            );
+            writeStore({
+              activeType: null,
+              configs: { gas: { url: "https://example.com" } },
+            });
           },
         );
 
@@ -160,22 +150,17 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR4
+    // @localstorage-refactor @FR12
     f.Scenario(
-      "getSavedConnectionConfig returns active config",
+      "getSavedConnectionConfig returns config when activeType is set",
       ({ Given, When, Then }) => {
         Given(
-          "a valid GAS config with isActive true exists in localStorage",
+          'a connection store with activeType "gas" and gas config url "https://example.com"',
           (_ctx: TestContext) => {
-            const config: ConnectionConfig = {
-              type: "gas",
-              url: "https://example.com",
-              isActive: true,
-            };
-            localStorage.setItem(
-              STORAGE_KEYS.CONNECTION_CONFIG,
-              JSON.stringify(config),
-            );
+            writeStore({
+              activeType: "gas",
+              configs: { gas: { url: "https://example.com" } },
+            });
           },
         );
 
@@ -190,7 +175,7 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR4
+    // @localstorage-refactor @FR12
     f.Scenario(
       "getSavedConnectionConfig returns null for missing config",
       ({ Given, When, Then }) => {
@@ -211,20 +196,15 @@ describeFeature(
       },
     );
 
-    // @connection-management-spec @FR5
+    // @localstorage-refactor @FR12
     f.Scenario("getBackendType returns gas", ({ Given, When, Then }) => {
       Given(
-        "a valid GAS config with isActive true exists in localStorage",
+        'a connection store with activeType "gas" and gas config url "https://example.com"',
         (_ctx: TestContext) => {
-          const config: ConnectionConfig = {
-            type: "gas",
-            url: "https://example.com",
-            isActive: true,
-          };
-          localStorage.setItem(
-            STORAGE_KEYS.CONNECTION_CONFIG,
-            JSON.stringify(config),
-          );
+          writeStore({
+            activeType: "gas",
+            configs: { gas: { url: "https://example.com" } },
+          });
         },
       );
 
@@ -237,21 +217,20 @@ describeFeature(
       });
     });
 
-    // @connection-management-spec @FR5
+    // @localstorage-refactor @FR12
     f.Scenario("getBackendType returns supabase", ({ Given, When, Then }) => {
       Given(
-        "a valid Supabase config with isActive true exists in localStorage",
+        'a connection store with activeType "supabase" and supabase config url "https://example.supabase.co"',
         (_ctx: TestContext) => {
-          const config: ConnectionConfig = {
-            type: "supabase",
-            url: "https://example.supabase.co",
-            anonKey: "anon-key-123",
-            isActive: true,
-          };
-          localStorage.setItem(
-            STORAGE_KEYS.CONNECTION_CONFIG,
-            JSON.stringify(config),
-          );
+          writeStore({
+            activeType: "supabase",
+            configs: {
+              supabase: {
+                url: "https://example.supabase.co",
+                anonKey: "anon-key-123",
+              },
+            },
+          });
         },
       );
 
@@ -264,7 +243,7 @@ describeFeature(
       });
     });
 
-    // @connection-management-spec @FR5
+    // @localstorage-refactor @FR12
     f.Scenario(
       "getBackendType returns null when no active config",
       ({ Given, When, Then }) => {

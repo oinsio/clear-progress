@@ -1,11 +1,13 @@
+// implements FR6, FR7 of localstorage-refactor
 import type * as React from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import {
   PANEL_SPLIT_DEFAULT_RATIO,
   PANEL_SPLIT_MAX_RATIO,
   PANEL_SPLIT_MIN_RATIO,
   STORAGE_KEYS,
 } from "@/constants";
+import { usePreference } from "@/hooks/usePreference";
 
 function clampRatio(value: number): number {
   return Math.min(
@@ -14,32 +16,20 @@ function clampRatio(value: number): number {
   );
 }
 
-function readStoredRatio(): number {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.PANEL_SPLIT);
-    if (stored !== null) {
-      const parsed = parseFloat(stored);
-      if (!Number.isNaN(parsed)) return clampRatio(parsed);
-    }
-  } catch {
-    // localStorage unavailable
-  }
-  return PANEL_SPLIT_DEFAULT_RATIO;
-}
-
 export function usePanelSplit() {
-  const [ratio, setRatioState] = useState<number>(readStoredRatio);
+  const [ratio, setRatioRaw] = usePreference<number>({
+    type: "number",
+    key: STORAGE_KEYS.PANEL_SPLIT,
+    defaultValue: PANEL_SPLIT_DEFAULT_RATIO,
+  });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const setRatio = useCallback((newRatio: number) => {
-    const clamped = clampRatio(newRatio);
-    setRatioState(clamped);
-    try {
-      localStorage.setItem(STORAGE_KEYS.PANEL_SPLIT, String(clamped));
-    } catch {
-      // localStorage unavailable
-    }
-  }, []);
+  const setRatio = useCallback(
+    (newRatio: number) => {
+      setRatioRaw(clampRatio(newRatio));
+    },
+    [setRatioRaw],
+  );
 
   const handleResizeMouseDown = useCallback(
     (event: React.MouseEvent) => {

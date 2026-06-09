@@ -1,18 +1,7 @@
-import { useCallback, useState } from "react";
+// implements FR6, FR7 of localstorage-refactor
 import { DEFAULT_PANEL_SIDE, PANEL_SIDES, STORAGE_KEYS } from "@/constants";
+import { usePreference } from "@/hooks/usePreference";
 import type { PanelSide } from "@/types/common";
-
-function getCachedPanelSide(): PanelSide {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.PANEL_SIDE);
-    if (cached && PANEL_SIDES.includes(cached as PanelSide)) {
-      return cached as PanelSide;
-    }
-  } catch {
-    // localStorage is not available
-  }
-  return DEFAULT_PANEL_SIDE;
-}
 
 export interface UsePanelSideReturn {
   panelSide: PanelSide;
@@ -20,17 +9,12 @@ export interface UsePanelSideReturn {
 }
 
 export function usePanelSide(): UsePanelSideReturn {
-  const [panelSide, setPanelSideState] =
-    useState<PanelSide>(getCachedPanelSide);
-
-  const setPanelSide = useCallback((side: PanelSide) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.PANEL_SIDE, side);
-    } catch {
-      // localStorage is not available
-    }
-    setPanelSideState(side);
-  }, []);
+  const [panelSide, setPanelSide] = usePreference<PanelSide>({
+    type: "enum",
+    key: STORAGE_KEYS.PANEL_SIDE,
+    values: PANEL_SIDES,
+    defaultValue: DEFAULT_PANEL_SIDE,
+  });
 
   return { panelSide, setPanelSide };
 }
