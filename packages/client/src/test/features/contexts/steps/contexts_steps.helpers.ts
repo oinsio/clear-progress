@@ -1,4 +1,3 @@
-import { expect } from "vitest";
 import { db } from "@/db/database";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { ContextService } from "@/services/ContextService";
@@ -43,32 +42,29 @@ export async function getContext(
   return (await db.contexts.get(getIdOrThrow(contextIds, name))) as Context;
 }
 
-export async function expectNeedsSync(
-  contextIds: Map<string, string>,
-  name: string,
-  expected: boolean,
-) {
-  const context = await getContext(contextIds, name);
-  expect(context.needsSync).toBe(expected);
-}
-
-export async function expectSortOrder(
-  contextIds: Map<string, string>,
-  name: string,
-  expected: number,
-) {
-  const context = await getContext(contextIds, name);
-  expect(context.sort_order).toBe(expected);
-}
-
 export async function seedContextsWithOrder(
   contextIds: Map<string, string>,
   names: string[],
 ) {
+  const { rebalanceKeys } = await import("@/services/SortOrderService");
+  const keys = rebalanceKeys(names.length);
   for (let i = 0; i < names.length; i++) {
     await seedContext(contextIds, names[i], {
-      sort_order: i,
+      sort_order: keys[i],
       needsSync: false,
     });
   }
+}
+
+export async function moveContextBefore(
+  contextIds: Map<string, string>,
+  contextService: ContextService,
+  movedName: string,
+  beforeName: string,
+) {
+  const { generateKeyBetween } = await import("@/services/SortOrderService");
+  const targetContext = await getContext(contextIds, beforeName);
+  const movedContext = await getContext(contextIds, movedName);
+  const newKey = generateKeyBetween(null, String(targetContext.sort_order));
+  await contextService.reorderContexts(movedContext.id, newKey);
 }
