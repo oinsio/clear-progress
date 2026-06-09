@@ -1,12 +1,11 @@
 // implements FR6 of add-context-category-specs
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
-import type { TestContext } from "vitest";
+import { expect, type TestContext } from "vitest";
 import {
   createScenarioContext,
-  expectNeedsSync,
-  expectSortOrder,
   getContext,
+  moveContextBefore,
   seedContextsWithOrder,
 } from "./contexts_steps.helpers";
 
@@ -18,131 +17,111 @@ describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
     const ctx = createScenarioContext();
+    let caughtError: Error | undefined;
 
     f.BeforeEachScenario(async () => {
       await ctx.reset();
+      caughtError = undefined;
     });
 
     // @add-context-category-specs @FR6
     f.Scenario(
-      "Reorder assigns sequential sort_order",
-      ({ Given, When, Then, And }) => {
+      "Reorder places context at new position via fractional key",
+      ({ Given, When, Then }) => {
         Given(
-          "contexts A with sort_order 0, B with sort_order 1, C with sort_order 2",
+          "contexts A, B, C with ascending sort_order",
           async (_ctx: TestContext) => {
             await seedContextsWithOrder(ctx.contextIds, ["A", "B", "C"]);
           },
         );
 
-        When("user reorders contexts to B, C, A", async (_ctx: TestContext) => {
-          const contextB = await getContext(ctx.contextIds, "B");
-          const contextC = await getContext(ctx.contextIds, "C");
-          const contextA = await getContext(ctx.contextIds, "A");
-          await ctx.contextService.reorderContexts([
-            contextB,
-            contextC,
-            contextA,
-          ]);
-        });
+        When(
+          "user moves context C before context A",
+          async (_ctx: TestContext) => {
+            await moveContextBefore(
+              ctx.contextIds,
+              ctx.contextService,
+              "C",
+              "A",
+            );
+          },
+        );
 
-        Then("context B has sort_order 0", async (_ctx: TestContext) => {
-          await expectSortOrder(ctx.contextIds, "B", 0);
-        });
-
-        And("context C has sort_order 1", async (_ctx: TestContext) => {
-          await expectSortOrder(ctx.contextIds, "C", 1);
-        });
-
-        And("context A has sort_order 2", async (_ctx: TestContext) => {
-          await expectSortOrder(ctx.contextIds, "A", 2);
+        Then("contexts are ordered C, A, B", async (_ctx: TestContext) => {
+          const allContexts = await ctx.contextService.getAll();
+          expect(allContexts[0].id).toBe(ctx.contextIds.get("C"));
+          expect(allContexts[1].id).toBe(ctx.contextIds.get("A"));
+          expect(allContexts[2].id).toBe(ctx.contextIds.get("B"));
         });
       },
     );
 
     // @add-context-category-specs @FR6
     f.Scenario(
-      "Only changed contexts marked for sync",
+      "Reorder marks moved context for sync",
       ({ Given, When, Then, And }) => {
         Given(
-          "contexts A with sort_order 0, B with sort_order 1, C with sort_order 2",
+          "contexts A, B, C with ascending sort_order",
           async (_ctx: TestContext) => {
             await seedContextsWithOrder(ctx.contextIds, ["A", "B", "C"]);
           },
         );
 
-        When("user reorders contexts to A, C, B", async (_ctx: TestContext) => {
-          const contextA = await getContext(ctx.contextIds, "A");
-          const contextC = await getContext(ctx.contextIds, "C");
-          const contextB = await getContext(ctx.contextIds, "B");
-          await ctx.contextService.reorderContexts([
-            contextA,
-            contextC,
-            contextB,
-          ]);
+        When(
+          "user moves context C before context A",
+          async (_ctx: TestContext) => {
+            await moveContextBefore(
+              ctx.contextIds,
+              ctx.contextService,
+              "C",
+              "A",
+            );
+          },
+        );
+
+        Then("context C has needsSync true", async (_ctx: TestContext) => {
+          const context = await getContext(ctx.contextIds, "C");
+          expect(context.needsSync).toBe(true);
         });
 
-        Then("context A has needsSync false", async (_ctx: TestContext) => {
-          await expectNeedsSync(ctx.contextIds, "A", false);
+        And("context A has needsSync false", async (_ctx: TestContext) => {
+          const context = await getContext(ctx.contextIds, "A");
+          expect(context.needsSync).toBe(false);
         });
 
-        And("context C has needsSync true", async (_ctx: TestContext) => {
-          await expectNeedsSync(ctx.contextIds, "C", true);
-        });
-
-        And("context B has needsSync true", async (_ctx: TestContext) => {
-          await expectNeedsSync(ctx.contextIds, "B", true);
+        And("context B has needsSync false", async (_ctx: TestContext) => {
+          const context = await getContext(ctx.contextIds, "B");
+          expect(context.needsSync).toBe(false);
         });
       },
     );
 
     // @add-context-category-specs @FR6
-    f.Scenario("Empty reorder is no-op", ({ Given, When, Then, And }) => {
-      Given(
-        "contexts A with sort_order 0, B with sort_order 1, C with sort_order 2",
-        async (_ctx: TestContext) => {
-          await seedContextsWithOrder(ctx.contextIds, ["A", "B", "C"]);
-        },
-      );
+    f.Scenario(
+      "Reorder throws for non-existent context",
+      ({ Given, When, Then }) => {
+        Given(
+          "contexts A, B with ascending sort_order",
+          async (_ctx: TestContext) => {
+            await seedContextsWithOrder(ctx.contextIds, ["A", "B"]);
+          },
+        );
 
-      When("user reorders with empty array", async (_ctx: TestContext) => {
-        await ctx.contextService.reorderContexts([]);
-      });
+        When(
+          "user reorders non-existent context",
+          async (_ctx: TestContext) => {
+            try {
+              await ctx.contextService.reorderContexts("nonexistent-id", "a1");
+            } catch (error) {
+              caughtError = error as Error;
+            }
+          },
+        );
 
-      Then("context A has needsSync false", async (_ctx: TestContext) => {
-        await expectNeedsSync(ctx.contextIds, "A", false);
-      });
-
-      And("context B has needsSync false", async (_ctx: TestContext) => {
-        await expectNeedsSync(ctx.contextIds, "B", false);
-      });
-
-      And("context C has needsSync false", async (_ctx: TestContext) => {
-        await expectNeedsSync(ctx.contextIds, "C", false);
-      });
-    });
-
-    // @add-context-category-specs @FR6
-    f.Scenario("Same order is no-op", ({ Given, When, Then, And }) => {
-      Given(
-        "contexts A with sort_order 0, B with sort_order 1",
-        async (_ctx: TestContext) => {
-          await seedContextsWithOrder(ctx.contextIds, ["A", "B"]);
-        },
-      );
-
-      When("user reorders contexts to A, B", async (_ctx: TestContext) => {
-        const contextA = await getContext(ctx.contextIds, "A");
-        const contextB = await getContext(ctx.contextIds, "B");
-        await ctx.contextService.reorderContexts([contextA, contextB]);
-      });
-
-      Then("context A has needsSync false", async (_ctx: TestContext) => {
-        await expectNeedsSync(ctx.contextIds, "A", false);
-      });
-
-      And("context B has needsSync false", async (_ctx: TestContext) => {
-        await expectNeedsSync(ctx.contextIds, "B", false);
-      });
-    });
+        Then("an error is thrown", async (_ctx: TestContext) => {
+          expect(caughtError).toBeDefined();
+        });
+      },
+    );
   },
 );
