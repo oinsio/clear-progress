@@ -1,7 +1,8 @@
-// implements FR5 of task-core-specs
+// implements FR6, FR9 of fractional-sort-order
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
+import { SORT_ORDER_REBALANCE_THRESHOLD } from "@/constants";
 import { db } from "@/db/database";
 import {
   createScenarioContext,
@@ -20,128 +21,92 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     await ctx.reset();
   });
 
-  // @task-core-specs @FR5
+  // @fractional-sort-order @FR6
   f.Scenario(
-    "Reorder assigns sequential sort_order",
+    "Reorder updates only the dragged task",
     ({ Given, When, Then, And }) => {
-      Given(
-        "tasks A, B, C with sort_order 0, 1, 2",
+      Given('task A with sort_order "a0"', async (_ctx: TestContext) => {
+        await seedTask(ctx.taskIds, "A", { sort_order: "a0", box: "inbox" });
+      });
+
+      And('task B with sort_order "a1"', async (_ctx: TestContext) => {
+        await seedTask(ctx.taskIds, "B", { sort_order: "a1", box: "inbox" });
+      });
+
+      When(
+        'user reorders task A to sort_order "a2"',
         async (_ctx: TestContext) => {
-          await seedTask(ctx.taskIds, "A", { sort_order: 0 });
-          await seedTask(ctx.taskIds, "B", { sort_order: 1 });
-          await seedTask(ctx.taskIds, "C", { sort_order: 2 });
+          const taskA = await getTask(ctx.taskIds, "A");
+          await ctx.taskService.reorderTasks(taskA.id, "a2");
         },
       );
 
-      When("user reorders to B, C, A", async (_ctx: TestContext) => {
-        const taskB = await getTask(ctx.taskIds, "B");
-        const taskC = await getTask(ctx.taskIds, "C");
-        const taskA = await getTask(ctx.taskIds, "A");
-        await ctx.taskService.reorderTasks([taskB, taskC, taskA]);
-      });
-
-      Then("B has sort_order 0", async (_ctx: TestContext) => {
-        const task = await getTask(ctx.taskIds, "B");
-        expect(task.sort_order).toBe(0);
-      });
-
-      And("C has sort_order 1", async (_ctx: TestContext) => {
-        const task = await getTask(ctx.taskIds, "C");
-        expect(task.sort_order).toBe(1);
-      });
-
-      And("A has sort_order 2", async (_ctx: TestContext) => {
+      Then('A has sort_order "a2"', async (_ctx: TestContext) => {
         const task = await getTask(ctx.taskIds, "A");
-        expect(task.sort_order).toBe(2);
+        expect(task.sort_order).toBe("a2");
+      });
+
+      And("A has needsSync true", async (_ctx: TestContext) => {
+        const task = await getTask(ctx.taskIds, "A");
+        expect(task.needsSync).toBe(true);
+      });
+
+      And('B has sort_order "a1"', async (_ctx: TestContext) => {
+        const task = await getTask(ctx.taskIds, "B");
+        expect(task.sort_order).toBe("a1");
       });
     },
   );
 
-  // @task-core-specs @FR5
+  // @fractional-sort-order @FR6
+  f.Scenario("Reorder nonexistent task throws error", ({ When, Then }) => {
+    let thrownError: Error;
+
+    When("user reorders nonexistent task", async (_ctx: TestContext) => {
+      try {
+        await ctx.taskService.reorderTasks(crypto.randomUUID(), "a1");
+      } catch (error) {
+        thrownError = error as Error;
+      }
+    });
+
+    Then('error "Task not found" is thrown', async (_ctx: TestContext) => {
+      expect(thrownError).toBeDefined();
+      expect(thrownError.message).toContain("Task not found");
+    });
+  });
+
+  // @fractional-sort-order @FR9
   f.Scenario(
-    "Only changed tasks marked for sync",
-    ({ Given, When, Then, And }) => {
+    "Reorder triggers rebalancing when key exceeds threshold",
+    ({ Given, When, Then }) => {
       Given(
-        "tasks A, B, C with sort_order 0, 1, 2 and needsSync false",
+        'tasks A, B in inbox with sort_order "a0", "a1"',
         async (_ctx: TestContext) => {
-          await seedTask(ctx.taskIds, "A", {
-            sort_order: 0,
-            needsSync: false,
-          });
-          await seedTask(ctx.taskIds, "B", {
-            sort_order: 1,
-            needsSync: false,
-          });
-          await seedTask(ctx.taskIds, "C", {
-            sort_order: 2,
-            needsSync: false,
-          });
+          await seedTask(ctx.taskIds, "A", { sort_order: "a0", box: "inbox" });
+          await seedTask(ctx.taskIds, "B", { sort_order: "a1", box: "inbox" });
         },
       );
 
-      When("user reorders to A, C, B", async (_ctx: TestContext) => {
-        const taskA = await getTask(ctx.taskIds, "A");
-        const taskC = await getTask(ctx.taskIds, "C");
-        const taskB = await getTask(ctx.taskIds, "B");
-        await ctx.taskService.reorderTasks([taskA, taskC, taskB]);
-      });
+      When(
+        "user reorders task A with a long key exceeding threshold",
+        async (_ctx: TestContext) => {
+          const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+          const taskA = await getTask(ctx.taskIds, "A");
+          await ctx.taskService.reorderTasks(taskA.id, longKey);
+        },
+      );
 
-      Then("A has needsSync false", async (_ctx: TestContext) => {
-        const task = await getTask(ctx.taskIds, "A");
-        expect(task.needsSync).toBe(false);
-      });
-
-      And("C has needsSync true", async (_ctx: TestContext) => {
-        const task = await getTask(ctx.taskIds, "C");
-        expect(task.needsSync).toBe(true);
-      });
-
-      And("B has needsSync true", async (_ctx: TestContext) => {
-        const task = await getTask(ctx.taskIds, "B");
-        expect(task.needsSync).toBe(true);
-      });
+      Then(
+        "all tasks in inbox are rebalanced with fresh keys",
+        async (_ctx: TestContext) => {
+          const allTasks = await db.tasks.toArray();
+          for (const task of allTasks) {
+            expect(typeof task.sort_order).toBe("string");
+            expect(task.needsSync).toBe(true);
+          }
+        },
+      );
     },
   );
-
-  // @task-core-specs @FR5
-  f.Scenario("Empty reorder is no-op", ({ When, Then }) => {
-    let taskCountBefore: number;
-
-    When("user reorders with empty array", async (_ctx: TestContext) => {
-      taskCountBefore = await db.tasks.count();
-      await ctx.taskService.reorderTasks([]);
-    });
-
-    Then("no database write occurs", async (_ctx: TestContext) => {
-      const taskCountAfter = await db.tasks.count();
-      expect(taskCountAfter).toBe(taskCountBefore);
-    });
-  });
-
-  // @task-core-specs @FR5
-  f.Scenario("Same order is no-op", ({ Given, When, Then, And }) => {
-    Given(
-      "tasks A, B with sort_order 0, 1 and needsSync false",
-      async (_ctx: TestContext) => {
-        await seedTask(ctx.taskIds, "A", { sort_order: 0, needsSync: false });
-        await seedTask(ctx.taskIds, "B", { sort_order: 1, needsSync: false });
-      },
-    );
-
-    When("user reorders to A, B", async (_ctx: TestContext) => {
-      const taskA = await getTask(ctx.taskIds, "A");
-      const taskB = await getTask(ctx.taskIds, "B");
-      await ctx.taskService.reorderTasks([taskA, taskB]);
-    });
-
-    Then("A has needsSync false", async (_ctx: TestContext) => {
-      const task = await getTask(ctx.taskIds, "A");
-      expect(task.needsSync).toBe(false);
-    });
-
-    And("B has needsSync false", async (_ctx: TestContext) => {
-      const task = await getTask(ctx.taskIds, "B");
-      expect(task.needsSync).toBe(false);
-    });
-  });
 });
