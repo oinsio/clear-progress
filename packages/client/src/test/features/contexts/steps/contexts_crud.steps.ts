@@ -148,7 +148,7 @@ describeFeature(
           const sortOrders = returnedContexts.map(
             (context) => context.sort_order,
           );
-          expect(sortOrders).toEqual([0, 1, 2]);
+          expect(sortOrders).toEqual(["0", "1", "2"]);
         },
       );
     });

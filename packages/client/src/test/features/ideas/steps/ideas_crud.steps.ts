@@ -168,7 +168,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
     Then("ideas are returned in order 0, 1, 2", async (_ctx: TestContext) => {
       const sortOrders = returnedIdeas.map((idea) => idea.sort_order);
-      expect(sortOrders).toEqual([0, 1, 2]);
+      expect(sortOrders).toEqual(["0", "1", "2"]);
     });
   });
 

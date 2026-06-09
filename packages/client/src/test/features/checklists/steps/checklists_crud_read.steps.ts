@@ -59,7 +59,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         "checklist items are returned in order 0, 1, 2",
         async (_ctx: TestContext) => {
           const sortOrders = returnedItems.map((item) => item.sort_order);
-          expect(sortOrders).toEqual([0, 1, 2]);
+          expect(sortOrders).toEqual(["0", "1", "2"]);
         },
       );
     },

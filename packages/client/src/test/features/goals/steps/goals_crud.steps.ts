@@ -199,7 +199,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
     Then("goals are returned in order 0, 1, 2", async (_ctx: TestContext) => {
       const sortOrders = returnedGoals.map((goal) => goal.sort_order);
-      expect(sortOrders).toEqual([0, 1, 2]);
+      expect(sortOrders).toEqual(["0", "1", "2"]);
     });
   });
 

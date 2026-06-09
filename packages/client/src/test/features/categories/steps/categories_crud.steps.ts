@@ -151,7 +151,7 @@ describeFeature(
           const sortOrders = returnedCategories.map(
             (category) => category.sort_order,
           );
-          expect(sortOrders).toEqual([0, 1, 2]);
+          expect(sortOrders).toEqual(["0", "1", "2"]);
         },
       );
     });
