@@ -52,6 +52,19 @@ export async function expectCategoryNeedsSync(
   expect(category.needsSync).toBe(expectedNeedsSync);
 }
 
+export async function moveCategoryBefore(
+  categoryIds: Map<string, string>,
+  categoryService: CategoryService,
+  movedName: string,
+  beforeName: string,
+) {
+  const { generateKeyBetween } = await import("@/services/SortOrderService");
+  const targetCategory = await getCategory(categoryIds, beforeName);
+  const movedCategory = await getCategory(categoryIds, movedName);
+  const newKey = generateKeyBetween(null, String(targetCategory.sort_order));
+  await categoryService.reorderCategories(movedCategory.id, newKey);
+}
+
 export async function seedCategoriesWithOrder(
   categoryIds: Map<string, string>,
   names: string[],
