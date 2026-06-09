@@ -3,12 +3,13 @@ import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import { getIdOrThrow } from "@/test/helpers/getIdOrThrow";
-import type { Idea } from "@/types/entities";
 import {
   createScenarioContext,
   getIdea,
   seedIdea,
+  seedIdeasWithOrder,
 } from "./ideas_steps.helpers";
 
 const feature = await loadFeature("../ideas_dirty_flag.feature");
@@ -68,37 +69,24 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @add-ideas-specs @FR10
   f.Scenario(
-    "Reorder marks only changed ideas for sync",
+    "Reorder marks only moved idea for sync",
     ({ Given, When, Then, And }) => {
       Given(
-        "ideas A, B, C with sort_order 0, 1, 2",
+        "ideas A, B, C with ascending sort_order",
         async (_ctx: TestContext) => {
-          await seedIdea(ctx.ideaIds, "A", {
-            sort_order: 0,
-            needsSync: false,
-          });
-          await seedIdea(ctx.ideaIds, "B", {
-            sort_order: 1,
-            needsSync: false,
-          });
-          await seedIdea(ctx.ideaIds, "C", {
-            sort_order: 2,
-            needsSync: false,
-          });
+          await seedIdeasWithOrder(ctx.ideaIds, ["A", "B", "C"]);
         },
       );
 
-      When("user reorders to A, C, B", async (_ctx: TestContext) => {
-        const ideaA = (await db.ideas.get(
-          getIdOrThrow(ctx.ideaIds, "A"),
-        )) as Idea;
-        const ideaC = (await db.ideas.get(
-          getIdOrThrow(ctx.ideaIds, "C"),
-        )) as Idea;
-        const ideaB = (await db.ideas.get(
-          getIdOrThrow(ctx.ideaIds, "B"),
-        )) as Idea;
-        await ctx.ideaService.reorderIdeas([ideaA, ideaC, ideaB]);
+      When("user moves idea C between A and B", async (_ctx: TestContext) => {
+        const ideaA = await getIdea(ctx.ideaIds, "A");
+        const ideaB = await getIdea(ctx.ideaIds, "B");
+        const ideaC = await getIdea(ctx.ideaIds, "C");
+        const newKey = generateKeyBetween(
+          String(ideaA.sort_order),
+          String(ideaB.sort_order),
+        );
+        await ctx.ideaService.reorderIdeas(ideaC.id, newKey);
       });
 
       Then("idea A has needsSync false", async (_ctx: TestContext) => {
@@ -106,14 +94,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         expect(ideaA?.needsSync).toBe(false);
       });
 
+      And("idea B has needsSync false", async (_ctx: TestContext) => {
+        const ideaB = await db.ideas.get(getIdOrThrow(ctx.ideaIds, "B"));
+        expect(ideaB?.needsSync).toBe(false);
+      });
+
       And("idea C has needsSync true", async (_ctx: TestContext) => {
         const ideaC = await db.ideas.get(getIdOrThrow(ctx.ideaIds, "C"));
         expect(ideaC?.needsSync).toBe(true);
-      });
-
-      And("idea B has needsSync true", async (_ctx: TestContext) => {
-        const ideaB = await db.ideas.get(getIdOrThrow(ctx.ideaIds, "B"));
-        expect(ideaB?.needsSync).toBe(true);
       });
     },
   );

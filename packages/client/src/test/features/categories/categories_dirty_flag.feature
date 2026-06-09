@@ -10,9 +10,9 @@ Feature: Categories Dirty Flag
     And category updated_at is unchanged
 
   @add-context-category-specs @FR6
-  Scenario: Reorder marks only changed categories for sync
-    Given categories A, B, C with sort_order 0, 1, 2
-    When user reorders to A, C, B
+  Scenario: Reorder marks only moved category for sync
+    Given categories A, B, C with ascending sort_order
+    When user moves category C between A and B
     Then category A has needsSync false
+    And category B has needsSync false
     And category C has needsSync true
-    And category B has needsSync true

@@ -2,6 +2,7 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import { getIdOrThrow } from "@/test/helpers/getIdOrThrow";
 import {
   createScenarioContext,
@@ -65,36 +66,39 @@ describeFeature(
 
     // @add-context-category-specs @FR6
     f.Scenario(
-      "Reorder marks only changed categories for sync",
+      "Reorder marks only moved category for sync",
       ({ Given, When, Then, And }) => {
         Given(
-          "categories A, B, C with sort_order 0, 1, 2",
+          "categories A, B, C with ascending sort_order",
           async (_ctx: TestContext) => {
             await seedCategoriesWithOrder(ctx.categoryIds, ["A", "B", "C"]);
           },
         );
 
-        When("user reorders to A, C, B", async (_ctx: TestContext) => {
-          const categoryA = await getCategory(ctx.categoryIds, "A");
-          const categoryC = await getCategory(ctx.categoryIds, "C");
-          const categoryB = await getCategory(ctx.categoryIds, "B");
-          await ctx.categoryService.reorderCategories([
-            categoryA,
-            categoryC,
-            categoryB,
-          ]);
-        });
+        When(
+          "user moves category C between A and B",
+          async (_ctx: TestContext) => {
+            const categoryA = await getCategory(ctx.categoryIds, "A");
+            const categoryB = await getCategory(ctx.categoryIds, "B");
+            const categoryC = await getCategory(ctx.categoryIds, "C");
+            const newKey = generateKeyBetween(
+              String(categoryA.sort_order),
+              String(categoryB.sort_order),
+            );
+            await ctx.categoryService.reorderCategories(categoryC.id, newKey);
+          },
+        );
 
         Then("category A has needsSync false", async (_ctx: TestContext) => {
           await expectCategoryNeedsSync(ctx.categoryIds, "A", false);
         });
 
-        And("category C has needsSync true", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "C", true);
+        And("category B has needsSync false", async (_ctx: TestContext) => {
+          await expectCategoryNeedsSync(ctx.categoryIds, "B", false);
         });
 
-        And("category B has needsSync true", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "B", true);
+        And("category C has needsSync true", async (_ctx: TestContext) => {
+          await expectCategoryNeedsSync(ctx.categoryIds, "C", true);
         });
       },
     );

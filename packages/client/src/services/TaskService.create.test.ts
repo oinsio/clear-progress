@@ -57,8 +57,9 @@ describe("TaskService", () => {
       expect(createdTask.needsSync).toBe(true);
     });
 
-    it("should create task with sort_order 0 by default", () => {
-      expect(createdTask.sort_order).toBe(0);
+    it("should create task with a string sort_order (fractional key)", () => {
+      expect(typeof createdTask.sort_order).toBe("string");
+      expect(createdTask.sort_order).not.toBe("");
     });
 
     it("should call repository.create with the constructed task", () => {

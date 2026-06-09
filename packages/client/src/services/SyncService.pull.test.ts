@@ -59,8 +59,13 @@ describe("SyncService — pull", () => {
 
     await service.pull();
 
+    // After normalization, sort_order is converted from number to string
+    const normalizedTasks = serverTasks.map((task) => ({
+      ...task,
+      sort_order: String(task.sort_order),
+    }));
     expect(ctx.taskRepository.applyServerRecords).toHaveBeenCalledWith(
-      serverTasks,
+      normalizedTasks,
     );
     expect(ctx.goalRepository.applyServerRecords).toHaveBeenCalledWith([]);
     expect(ctx.contextRepository.applyServerRecords).toHaveBeenCalledWith([]);
@@ -192,5 +197,53 @@ describe("SyncService — pull", () => {
 
     window.removeEventListener("sync_complete", handler);
     expect(eventFired).toBe(true);
+  });
+
+  // Implements FR1 of fractional-sort-order
+  it("should normalize numeric sort_order to string when pulling tasks", async () => {
+    const serverTask = makeTask({
+      id: "t-num",
+      sort_order: 7 as unknown as string,
+      needsSync: false,
+    });
+    ctx.mockSyncAdapter = createMockSyncAdapter({
+      pull: vi.fn().mockResolvedValue(
+        makePullResponse({
+          tasks: [serverTask],
+          current_revision: 5,
+        }),
+      ),
+    });
+    const service = createService(ctx);
+
+    await service.pull();
+
+    const passedTasks = asMock(ctx.taskRepository.applyServerRecords).mock
+      .calls[0][0];
+    expect(passedTasks[0].sort_order).toBe("7");
+  });
+
+  // Implements FR1 of fractional-sort-order
+  it("should leave string sort_order unchanged when pulling tasks", async () => {
+    const serverTask = makeTask({
+      id: "t-str",
+      sort_order: "a0" as unknown as string,
+      needsSync: false,
+    });
+    ctx.mockSyncAdapter = createMockSyncAdapter({
+      pull: vi.fn().mockResolvedValue(
+        makePullResponse({
+          tasks: [serverTask],
+          current_revision: 5,
+        }),
+      ),
+    });
+    const service = createService(ctx);
+
+    await service.pull();
+
+    const passedTasks = asMock(ctx.taskRepository.applyServerRecords).mock
+      .calls[0][0];
+    expect(passedTasks[0].sort_order).toBe("a0");
   });
 });

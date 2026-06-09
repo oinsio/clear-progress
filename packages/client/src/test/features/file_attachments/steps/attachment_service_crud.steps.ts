@@ -20,7 +20,7 @@ function buildMockAttachment(overrides: Partial<Attachment> = {}): Attachment {
     filename: "test.pdf",
     mime_type: "application/pdf",
     file_size: 1024,
-    sort_order: 0,
+    sort_order: "a0",
     is_deleted: false,
     created_at: now,
     updated_at: now,
@@ -102,7 +102,7 @@ describeFeature(
           const saved = mockAttachmentRepo.save.mock.calls[0][0] as Attachment;
           expect(saved.data_hash).toBe("abc123");
           expect(saved.filename).toBe("report.pdf");
-          expect(saved.sort_order).toBe(0);
+          expect(typeof saved.sort_order).toBe("string");
         },
       );
 
@@ -132,8 +132,8 @@ describeFeature(
           '2 existing attachments for task "task-1"',
           async (_ctx: TestContext) => {
             mockAttachmentRepo.getByEntityTypeAndId.mockResolvedValue([
-              buildMockAttachment({ sort_order: 0 }),
-              buildMockAttachment({ sort_order: 1 }),
+              buildMockAttachment({ sort_order: "a0" }),
+              buildMockAttachment({ sort_order: "a1" }),
             ]);
           },
         );
@@ -151,7 +151,8 @@ describeFeature(
           async (_ctx: TestContext) => {
             const saved = mockAttachmentRepo.save.mock
               .calls[0][0] as Attachment;
-            expect(saved.sort_order).toBe(2);
+            expect(typeof saved.sort_order).toBe("string");
+            expect(String(saved.sort_order) > "a1").toBe(true);
           },
         );
       },

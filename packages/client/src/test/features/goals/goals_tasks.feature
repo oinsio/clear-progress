@@ -16,7 +16,7 @@ Feature: Goals Tasks Grouping
 
   @add-goals-specs @FR12
   Scenario: Completed tasks fallback to sort_order descending
-    Given goal has completed task A with sort_order 1 and task B with sort_order 3 without completed_at
+    Given goal has completed task A with sort_order "a1" and task B with sort_order "a3" without completed_at
     When user views completed tasks
     Then task B appears before task A
 

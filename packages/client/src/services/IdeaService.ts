@@ -1,6 +1,12 @@
 import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { Temporal } from "@/lib/temporal";
+import {
+  compareSortKeys,
+  generateAppendKey,
+  needsRebalancing,
+  rebalanceKeys,
+} from "@/services/SortOrderService";
 import type { Idea } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { hasEntityChanged } from "@/utils/deepEqual";
@@ -13,7 +19,9 @@ export class IdeaService {
 
   async getAll(): Promise<Idea[]> {
     const ideas = await this.ideaRepository.getActive();
-    return ideas.sort((ideaA, ideaB) => ideaA.sort_order - ideaB.sort_order);
+    return ideas.sort((ideaA, ideaB) =>
+      compareSortKeys(String(ideaA.sort_order), String(ideaB.sort_order)),
+    );
   }
 
   async getById(id: string): Promise<Idea | undefined> {
@@ -22,9 +30,10 @@ export class IdeaService {
 
   async create(partialIdea: Pick<Idea, "name"> & Partial<Idea>): Promise<Idea> {
     const existingIdeas = await this.ideaRepository.getActive();
+    const existingKeys = existingIdeas.map((idea) => String(idea.sort_order));
     const now = toISOTimestamp();
     const idea: Idea = {
-      sort_order: existingIdeas.length,
+      sort_order: generateAppendKey(existingKeys),
       ...partialIdea,
       id: crypto.randomUUID(),
       description: partialIdea.description ?? "",
@@ -98,27 +107,36 @@ export class IdeaService {
       );
   }
 
-  async reorderIdeas(orderedIdeas: Idea[]): Promise<void> {
-    if (orderedIdeas.length === 0) return;
-
-    // Check if at least one sort_order has changed
-    const hasAnyOrderChanged = orderedIdeas.some(
-      (idea, index) => idea.sort_order !== index,
-    );
-    if (!hasAnyOrderChanged) {
-      return; // Nothing changed, skip sync
-    }
+  async reorderIdeas(ideaId: string, newSortOrder: string): Promise<void> {
+    const idea = await this.ideaRepository.getById(ideaId);
+    if (!idea) throw new Error(`Idea not found: ${ideaId}`);
 
     const now = toISOTimestamp();
-    const updatedIdeas = orderedIdeas.map((idea, index) => {
-      const orderChanged = idea.sort_order !== index;
-      return {
-        ...idea,
-        sort_order: index,
-        updated_at: orderChanged ? now : idea.updated_at,
-        needsSync: orderChanged,
-      };
+    await this.ideaRepository.update({
+      ...idea,
+      sort_order: newSortOrder,
+      updated_at: now,
+      needsSync: true,
     });
-    await this.ideaRepository.bulkUpsert(updatedIdeas);
+
+    if (needsRebalancing(newSortOrder)) {
+      await this.rebalanceAllIdeas();
+    }
+  }
+
+  private async rebalanceAllIdeas(): Promise<void> {
+    const ideas = await this.ideaRepository.getActive();
+    const sorted = ideas.sort((ideaA, ideaB) =>
+      compareSortKeys(String(ideaA.sort_order), String(ideaB.sort_order)),
+    );
+    const newKeys = rebalanceKeys(sorted.length);
+    const now = toISOTimestamp();
+    const rebalancedIdeas = sorted.map((idea, index) => ({
+      ...idea,
+      sort_order: newKeys[index],
+      updated_at: now,
+      needsSync: true,
+    }));
+    await this.ideaRepository.bulkUpsert(rebalancedIdeas);
   }
 }

@@ -27,6 +27,7 @@ import type {
   Setting,
   Task,
 } from "@/types/entities";
+import { normalizeSortOrder } from "@/utils/normalizeSortOrder";
 
 export class SyncService {
   private syncMutex: Promise<void> = Promise.resolve();
@@ -96,27 +97,30 @@ export class SyncService {
       );
     }
 
+    // Normalize sort_order: server may send INTEGER, client expects string
+    // Implements FR1 of fractional-sort-order
+    const normalizedTasks = pullResponse.tasks.map(normalizeSortOrder);
+    const normalizedGoals = pullResponse.goals.map(normalizeSortOrder);
+    const normalizedContexts = pullResponse.contexts.map(normalizeSortOrder);
+    const normalizedCategories =
+      pullResponse.categories.map(normalizeSortOrder);
+    const normalizedChecklistItems =
+      pullResponse.checklist_items.map(normalizeSortOrder);
+    const normalizedIdeas = pullResponse.ideas.map(normalizeSortOrder);
+    const normalizedAttachments =
+      pullResponse.attachments.map(normalizeSortOrder);
+
     await Promise.all([
-      this.taskRepository
-        .applyServerRecords(pullResponse.tasks)
-        .catch((error) => {
-          console.error(
-            "[SyncService] applyServerRecords tasks failed:",
-            error,
-          );
-          throw error;
-        }),
-      this.goalRepository
-        .applyServerRecords(pullResponse.goals)
-        .catch((error) => {
-          console.error(
-            "[SyncService] applyServerRecords goals failed:",
-            error,
-          );
-          throw error;
-        }),
+      this.taskRepository.applyServerRecords(normalizedTasks).catch((error) => {
+        console.error("[SyncService] applyServerRecords tasks failed:", error);
+        throw error;
+      }),
+      this.goalRepository.applyServerRecords(normalizedGoals).catch((error) => {
+        console.error("[SyncService] applyServerRecords goals failed:", error);
+        throw error;
+      }),
       this.contextRepository
-        .applyServerRecords(pullResponse.contexts)
+        .applyServerRecords(normalizedContexts)
         .catch((error) => {
           console.error(
             "[SyncService] applyServerRecords contexts failed:",
@@ -125,7 +129,7 @@ export class SyncService {
           throw error;
         }),
       this.categoryRepository
-        .applyServerRecords(pullResponse.categories)
+        .applyServerRecords(normalizedCategories)
         .catch((error) => {
           console.error(
             "[SyncService] applyServerRecords categories failed:",
@@ -134,7 +138,7 @@ export class SyncService {
           throw error;
         }),
       this.checklistRepository
-        .applyServerRecords(pullResponse.checklist_items)
+        .applyServerRecords(normalizedChecklistItems)
         .catch((error) => {
           console.error(
             "[SyncService] applyServerRecords checklist_items failed:",
@@ -142,17 +146,12 @@ export class SyncService {
           );
           throw error;
         }),
-      this.ideaRepository
-        .applyServerRecords(pullResponse.ideas)
-        .catch((error) => {
-          console.error(
-            "[SyncService] applyServerRecords ideas failed:",
-            error,
-          );
-          throw error;
-        }),
+      this.ideaRepository.applyServerRecords(normalizedIdeas).catch((error) => {
+        console.error("[SyncService] applyServerRecords ideas failed:", error);
+        throw error;
+      }),
       this.attachmentRepository
-        .applyServerRecords(pullResponse.attachments)
+        .applyServerRecords(normalizedAttachments)
         .catch((error) => {
           console.error(
             "[SyncService] applyServerRecords attachments failed:",

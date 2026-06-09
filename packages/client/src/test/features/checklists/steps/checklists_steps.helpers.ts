@@ -51,10 +51,12 @@ export async function seedChecklistItemsWithOrder(
   names: string[],
   taskId: string,
 ) {
+  const { rebalanceKeys } = await import("@/services/SortOrderService");
+  const keys = rebalanceKeys(names.length);
   for (let i = 0; i < names.length; i++) {
     await seedChecklistItem(checklistItemIds, names[i], {
       task_id: taskId,
-      sort_order: i,
+      sort_order: keys[i],
       needsSync: false,
     });
   }

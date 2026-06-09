@@ -59,7 +59,7 @@ BEGIN
       INSERT INTO contexts (id, user_id, name, sort_order, is_deleted, created_at, updated_at, revision)
       VALUES (
         v_rec_id, p_user_id, v_rec->>'name',
-        (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
+        v_rec->>'sort_order', (v_rec->>'is_deleted')::BOOLEAN,
         (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
       );
       v_context_results := v_context_results || jsonb_build_array(
@@ -67,7 +67,7 @@ BEGIN
 
     ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
       UPDATE contexts SET
-        name = v_rec->>'name', sort_order = (v_rec->>'sort_order')::INTEGER,
+        name = v_rec->>'name', sort_order = v_rec->>'sort_order',
         is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
         updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
       WHERE id = v_rec_id AND user_id = p_user_id;
@@ -94,7 +94,7 @@ BEGIN
       INSERT INTO categories (id, user_id, name, sort_order, is_deleted, created_at, updated_at, revision)
       VALUES (
         v_rec_id, p_user_id, v_rec->>'name',
-        (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
+        v_rec->>'sort_order', (v_rec->>'is_deleted')::BOOLEAN,
         (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
       );
       v_category_results := v_category_results || jsonb_build_array(
@@ -102,7 +102,7 @@ BEGIN
 
     ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
       UPDATE categories SET
-        name = v_rec->>'name', sort_order = (v_rec->>'sort_order')::INTEGER,
+        name = v_rec->>'name', sort_order = v_rec->>'sort_order',
         is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
         updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
       WHERE id = v_rec_id AND user_id = p_user_id;
@@ -130,7 +130,7 @@ BEGIN
       VALUES (
         v_rec_id, p_user_id, v_rec->>'name', COALESCE(v_rec->>'description', ''),
         COALESCE(v_rec->>'cover_hash', ''), v_rec->>'status',
-        (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
+        v_rec->>'sort_order', (v_rec->>'is_deleted')::BOOLEAN,
         (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
       );
       v_goal_results := v_goal_results || jsonb_build_array(
@@ -140,7 +140,7 @@ BEGIN
       UPDATE goals SET
         name = v_rec->>'name', description = COALESCE(v_rec->>'description', ''),
         cover_hash = COALESCE(v_rec->>'cover_hash', ''), status = v_rec->>'status',
-        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        sort_order = v_rec->>'sort_order', is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
         updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
       WHERE id = v_rec_id AND user_id = p_user_id;
       v_goal_results := v_goal_results || jsonb_build_array(
@@ -168,7 +168,7 @@ BEGIN
       INSERT INTO ideas (id, user_id, name, description, sort_order, is_deleted, created_at, updated_at, revision)
       VALUES (
         v_rec_id, p_user_id, v_rec->>'name', COALESCE(v_rec->>'description', ''),
-        (v_rec->>'sort_order')::INTEGER, (v_rec->>'is_deleted')::BOOLEAN,
+        v_rec->>'sort_order', (v_rec->>'is_deleted')::BOOLEAN,
         (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
       );
       v_idea_results := v_idea_results || jsonb_build_array(
@@ -177,7 +177,7 @@ BEGIN
     ELSIF (v_rec->>'updated_at')::TIMESTAMPTZ >= v_existing_ts THEN
       UPDATE ideas SET
         name = v_rec->>'name', description = COALESCE(v_rec->>'description', ''),
-        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        sort_order = v_rec->>'sort_order', is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
         updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
       WHERE id = v_rec_id AND user_id = p_user_id;
       v_idea_results := v_idea_results || jsonb_build_array(
@@ -212,7 +212,7 @@ BEGIN
         parse_repeat_rule(v_rec->>'repeat_rule'), (v_rec->>'is_hidden')::BOOLEAN,
         parse_date(v_rec->>'next_date'),     parse_date(v_rec->>'appear_date'),
         NULLIF(v_rec->>'original_task_id', '')::UUID,
-        (v_rec->>'sort_order')::INTEGER,     (v_rec->>'is_deleted')::BOOLEAN,
+        v_rec->>'sort_order',     (v_rec->>'is_deleted')::BOOLEAN,
         (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ,
         v_revision
       );
@@ -228,7 +228,7 @@ BEGIN
         repeat_rule = parse_repeat_rule(v_rec->>'repeat_rule'), is_hidden = (v_rec->>'is_hidden')::BOOLEAN,
         next_date = parse_date(v_rec->>'next_date'), appear_date = parse_date(v_rec->>'appear_date'),
         original_task_id = NULLIF(v_rec->>'original_task_id', '')::UUID,
-        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        sort_order = v_rec->>'sort_order', is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
         updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
       WHERE id = v_rec_id AND user_id = p_user_id;
       v_task_results := v_task_results || jsonb_build_array(
@@ -260,7 +260,7 @@ BEGIN
       INSERT INTO checklist_items (id, user_id, task_id, name, is_completed, sort_order, is_deleted, created_at, updated_at, revision)
       VALUES (
         v_rec_id, p_user_id, (v_rec->>'task_id')::UUID, v_rec->>'name',
-        (v_rec->>'is_completed')::BOOLEAN, (v_rec->>'sort_order')::INTEGER,
+        (v_rec->>'is_completed')::BOOLEAN, v_rec->>'sort_order',
         (v_rec->>'is_deleted')::BOOLEAN,
         (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
       );
@@ -271,7 +271,7 @@ BEGIN
       UPDATE checklist_items SET
         task_id = (v_rec->>'task_id')::UUID, name = v_rec->>'name',
         is_completed = (v_rec->>'is_completed')::BOOLEAN,
-        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        sort_order = v_rec->>'sort_order', is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
         updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
       WHERE id = v_rec_id AND user_id = p_user_id;
       v_checklist_results := v_checklist_results || jsonb_build_array(
@@ -300,7 +300,7 @@ BEGIN
       VALUES (
         v_rec_id, p_user_id, v_rec->>'entity_type', (v_rec->>'entity_id')::UUID,
         v_rec->>'data_hash', v_rec->>'filename', v_rec->>'mime_type',
-        (v_rec->>'file_size')::INTEGER, (v_rec->>'sort_order')::INTEGER,
+        (v_rec->>'file_size')::INTEGER, v_rec->>'sort_order',
         (v_rec->>'is_deleted')::BOOLEAN,
         (v_rec->>'created_at')::TIMESTAMPTZ, (v_rec->>'updated_at')::TIMESTAMPTZ, v_revision
       );
@@ -312,7 +312,7 @@ BEGIN
         entity_type = v_rec->>'entity_type', entity_id = (v_rec->>'entity_id')::UUID,
         data_hash = v_rec->>'data_hash', filename = v_rec->>'filename',
         mime_type = v_rec->>'mime_type', file_size = (v_rec->>'file_size')::INTEGER,
-        sort_order = (v_rec->>'sort_order')::INTEGER, is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
+        sort_order = v_rec->>'sort_order', is_deleted = (v_rec->>'is_deleted')::BOOLEAN,
         updated_at = (v_rec->>'updated_at')::TIMESTAMPTZ, revision = v_revision
       WHERE id = v_rec_id AND user_id = p_user_id;
       v_attachment_results := v_attachment_results || jsonb_build_array(

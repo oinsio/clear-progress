@@ -1,0 +1,99 @@
+import {
+  generateKeyBetween as fractionalGenerateKeyBetween,
+  generateNKeysBetween,
+} from "fractional-indexing";
+import { SORT_ORDER_REBALANCE_THRESHOLD } from "@/constants";
+
+/**
+ * Checks whether a key is a valid fractional-indexing key.
+ * Filters out legacy numeric sort_order values (e.g., "0", "1", "2")
+ * that were converted to strings during the migration period.
+ */
+function isValidFractionalKey(key: string): boolean {
+  return key.length > 0 && /^[a-zA-Z]/.test(key);
+}
+
+/**
+ * Generates a sort key above the current maximum of existing keys.
+ * Used for inserting at the top (DESC sort) or appending (ASC sort).
+ * Filters out invalid legacy numeric keys during migration period.
+ */
+export function generateTopKey(existingKeys: string[]): string {
+  const validKeys = existingKeys.filter(isValidFractionalKey);
+
+  if (validKeys.length === 0) {
+    return fractionalGenerateKeyBetween(null, null);
+  }
+
+  const maxKey = validKeys.reduce((maximum, current) =>
+    current > maximum ? current : maximum,
+  );
+
+  return fractionalGenerateKeyBetween(maxKey, null);
+}
+
+/**
+ * Alias for generateTopKey. Both generate a key above the max;
+ * the sort direction determines whether it appears at "top" or "end".
+ */
+export const generateAppendKey = generateTopKey;
+
+/**
+ * Sanitizes a key argument: returns null if the key is a legacy numeric string,
+ * so fractional-indexing treats it as an open boundary.
+ */
+function sanitizeKey(key: string | null): string | null {
+  if (key === null) return null;
+  return isValidFractionalKey(key) ? key : null;
+}
+
+/**
+ * Generates a sort key between two neighboring keys.
+ * Pass null for lower to insert before upper, or null for upper to insert after lower.
+ * Legacy numeric string keys (e.g. "3") are treated as null to avoid crashes.
+ */
+export function generateKeyBetween(
+  lower: string | null,
+  upper: string | null,
+): string {
+  return fractionalGenerateKeyBetween(sanitizeKey(lower), sanitizeKey(upper));
+}
+
+/**
+ * Generates N evenly distributed sort keys spanning the full key space.
+ * Used when rebalancing all items in a list.
+ */
+export function rebalanceKeys(count: number): string[] {
+  return generateNKeysBetween(null, null, count);
+}
+
+/**
+ * Checks whether a key exceeds the length threshold,
+ * indicating the list should be rebalanced.
+ */
+export function needsRebalancing(key: string): boolean {
+  return key.length > SORT_ORDER_REBALANCE_THRESHOLD;
+}
+
+/**
+ * Comparator for sorting entities by their sort_order key in ascending order.
+ * Compatible with Array.prototype.sort.
+ */
+export function compareSortKeys(keyA: string, keyB: string): number {
+  if (keyA < keyB) return -1;
+  if (keyA > keyB) return 1;
+  return 0;
+}
+
+/**
+ * Comparator for completed tasks: by completed_at descending, then by sort_order descending.
+ */
+export function compareCompletedTasks(
+  taskA: { completed_at: string; sort_order: string | number },
+  taskB: { completed_at: string; sort_order: string | number },
+): number {
+  if (taskA.completed_at && taskB.completed_at) {
+    return taskB.completed_at > taskA.completed_at ? 1 : -1;
+  }
+  return compareSortKeys(String(taskB.sort_order), String(taskA.sort_order));
+}

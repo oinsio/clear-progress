@@ -1,12 +1,11 @@
 // implements FR6 of add-context-category-specs
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
-import type { TestContext } from "vitest";
+import { expect, type TestContext } from "vitest";
 import {
   createScenarioContext,
-  expectCategoryNeedsSync,
-  expectCategorySortOrder,
   getCategory,
+  moveCategoryBefore,
   seedCategoriesWithOrder,
 } from "./categories_steps.helpers";
 
@@ -18,137 +17,114 @@ describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
     const ctx = createScenarioContext();
+    let caughtError: Error | undefined;
 
     f.BeforeEachScenario(async () => {
       await ctx.reset();
+      caughtError = undefined;
     });
 
     // @add-context-category-specs @FR6
     f.Scenario(
-      "Reorder assigns sequential sort_order",
-      ({ Given, When, Then, And }) => {
+      "Reorder places category at new position via fractional key",
+      ({ Given, When, Then }) => {
         Given(
-          "categories A with sort_order 0, B with sort_order 1, C with sort_order 2",
+          "categories A, B, C with ascending sort_order",
           async (_ctx: TestContext) => {
             await seedCategoriesWithOrder(ctx.categoryIds, ["A", "B", "C"]);
           },
         );
 
         When(
-          "user reorders categories to B, C, A",
+          "user moves category C before category A",
           async (_ctx: TestContext) => {
-            const categoryB = await getCategory(ctx.categoryIds, "B");
-            const categoryC = await getCategory(ctx.categoryIds, "C");
-            const categoryA = await getCategory(ctx.categoryIds, "A");
-            await ctx.categoryService.reorderCategories([
-              categoryB,
-              categoryC,
-              categoryA,
-            ]);
+            await moveCategoryBefore(
+              ctx.categoryIds,
+              ctx.categoryService,
+              "C",
+              "A",
+            );
           },
         );
 
-        Then("category B has sort_order 0", async (_ctx: TestContext) => {
-          await expectCategorySortOrder(ctx.categoryIds, "B", 0);
-        });
-
-        And("category C has sort_order 1", async (_ctx: TestContext) => {
-          await expectCategorySortOrder(ctx.categoryIds, "C", 1);
-        });
-
-        And("category A has sort_order 2", async (_ctx: TestContext) => {
-          await expectCategorySortOrder(ctx.categoryIds, "A", 2);
+        Then("categories are ordered C, A, B", async (_ctx: TestContext) => {
+          const allCategories = await ctx.categoryService.getAll();
+          expect(allCategories[0].id).toBe(ctx.categoryIds.get("C"));
+          expect(allCategories[1].id).toBe(ctx.categoryIds.get("A"));
+          expect(allCategories[2].id).toBe(ctx.categoryIds.get("B"));
         });
       },
     );
 
     // @add-context-category-specs @FR6
     f.Scenario(
-      "Only changed categories marked for sync",
+      "Reorder marks moved category for sync",
       ({ Given, When, Then, And }) => {
         Given(
-          "categories A with sort_order 0, B with sort_order 1, C with sort_order 2",
+          "categories A, B, C with ascending sort_order",
           async (_ctx: TestContext) => {
             await seedCategoriesWithOrder(ctx.categoryIds, ["A", "B", "C"]);
           },
         );
 
         When(
-          "user reorders categories to A, C, B",
+          "user moves category C before category A",
           async (_ctx: TestContext) => {
-            const categoryA = await getCategory(ctx.categoryIds, "A");
-            const categoryC = await getCategory(ctx.categoryIds, "C");
-            const categoryB = await getCategory(ctx.categoryIds, "B");
-            await ctx.categoryService.reorderCategories([
-              categoryA,
-              categoryC,
-              categoryB,
-            ]);
+            await moveCategoryBefore(
+              ctx.categoryIds,
+              ctx.categoryService,
+              "C",
+              "A",
+            );
           },
         );
 
-        Then("category A has needsSync false", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "A", false);
+        Then("category C has needsSync true", async (_ctx: TestContext) => {
+          const category = await getCategory(ctx.categoryIds, "C");
+          expect(category.needsSync).toBe(true);
         });
 
-        And("category C has needsSync true", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "C", true);
+        And("category A has needsSync false", async (_ctx: TestContext) => {
+          const category = await getCategory(ctx.categoryIds, "A");
+          expect(category.needsSync).toBe(false);
         });
 
-        And("category B has needsSync true", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "B", true);
+        And("category B has needsSync false", async (_ctx: TestContext) => {
+          const category = await getCategory(ctx.categoryIds, "B");
+          expect(category.needsSync).toBe(false);
         });
       },
     );
 
     // @add-context-category-specs @FR6
-    f.Scenario("Empty reorder is no-op", ({ Given, When, Then, And }) => {
-      Given(
-        "categories A with sort_order 0, B with sort_order 1, C with sort_order 2",
-        async (_ctx: TestContext) => {
-          await seedCategoriesWithOrder(ctx.categoryIds, ["A", "B", "C"]);
-        },
-      );
+    f.Scenario(
+      "Reorder throws for non-existent category",
+      ({ Given, When, Then }) => {
+        Given(
+          "categories A, B with ascending sort_order",
+          async (_ctx: TestContext) => {
+            await seedCategoriesWithOrder(ctx.categoryIds, ["A", "B"]);
+          },
+        );
 
-      When("user reorders with empty array", async (_ctx: TestContext) => {
-        await ctx.categoryService.reorderCategories([]);
-      });
+        When(
+          "user reorders non-existent category",
+          async (_ctx: TestContext) => {
+            try {
+              await ctx.categoryService.reorderCategories(
+                "nonexistent-id",
+                "a1",
+              );
+            } catch (error) {
+              caughtError = error as Error;
+            }
+          },
+        );
 
-      Then("category A has needsSync false", async (_ctx: TestContext) => {
-        await expectCategoryNeedsSync(ctx.categoryIds, "A", false);
-      });
-
-      And("category B has needsSync false", async (_ctx: TestContext) => {
-        await expectCategoryNeedsSync(ctx.categoryIds, "B", false);
-      });
-
-      And("category C has needsSync false", async (_ctx: TestContext) => {
-        await expectCategoryNeedsSync(ctx.categoryIds, "C", false);
-      });
-    });
-
-    // @add-context-category-specs @FR6
-    f.Scenario("Same order is no-op", ({ Given, When, Then, And }) => {
-      Given(
-        "categories A with sort_order 0, B with sort_order 1",
-        async (_ctx: TestContext) => {
-          await seedCategoriesWithOrder(ctx.categoryIds, ["A", "B"]);
-        },
-      );
-
-      When("user reorders categories to A, B", async (_ctx: TestContext) => {
-        const categoryA = await getCategory(ctx.categoryIds, "A");
-        const categoryB = await getCategory(ctx.categoryIds, "B");
-        await ctx.categoryService.reorderCategories([categoryA, categoryB]);
-      });
-
-      Then("category A has needsSync false", async (_ctx: TestContext) => {
-        await expectCategoryNeedsSync(ctx.categoryIds, "A", false);
-      });
-
-      And("category B has needsSync false", async (_ctx: TestContext) => {
-        await expectCategoryNeedsSync(ctx.categoryIds, "B", false);
-      });
-    });
+        Then("an error is thrown", async (_ctx: TestContext) => {
+          expect(caughtError).toBeDefined();
+        });
+      },
+    );
   },
 );

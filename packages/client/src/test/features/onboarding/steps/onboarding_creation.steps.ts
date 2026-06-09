@@ -99,14 +99,29 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       And('task 1 is in box "today"', async (_ctx: TestContext) => {
-        const firstTask = createdTasks.find((task) => task.sort_order === 0);
-        expect(firstTask?.box).toBe("today");
+        const sortedTasks = [...createdTasks].sort((taskA, taskB) =>
+          (() => {
+            const keyA = String(taskA.sort_order);
+            const keyB = String(taskB.sort_order);
+            if (keyA < keyB) return -1;
+            if (keyA > keyB) return 1;
+            return 0;
+          })(),
+        );
+        expect(sortedTasks[0]?.box).toBe("today");
       });
 
       And('tasks 2 through 5 are in box "later"', async (_ctx: TestContext) => {
-        const laterTasks = createdTasks.filter(
-          (task) => task.sort_order >= 1 && task.sort_order <= 4,
+        const sortedTasks = [...createdTasks].sort((taskA, taskB) =>
+          (() => {
+            const keyA = String(taskA.sort_order);
+            const keyB = String(taskB.sort_order);
+            if (keyA < keyB) return -1;
+            if (keyA > keyB) return 1;
+            return 0;
+          })(),
         );
+        const laterTasks = sortedTasks.slice(1);
         expect(laterTasks).toHaveLength(4);
         for (const task of laterTasks) {
           expect(task.box).toBe("later");
@@ -134,9 +149,17 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
     Then("tasks are ordered 0 through 4", async (_ctx: TestContext) => {
       const sortOrders = createdTasks
-        .map((task) => task.sort_order)
-        .sort((orderA, orderB) => orderA - orderB);
-      expect(sortOrders).toEqual([0, 1, 2, 3, 4]);
+        .map((task) => String(task.sort_order))
+        .sort((orderA, orderB) => {
+          if (orderA < orderB) return -1;
+          if (orderA > orderB) return 1;
+          return 0;
+        });
+      expect(sortOrders).toHaveLength(5);
+      // Verify all sort_orders are unique and in ascending order
+      for (let i = 1; i < sortOrders.length; i++) {
+        expect(sortOrders[i] > sortOrders[i - 1]).toBe(true);
+      }
     });
   });
 
@@ -165,8 +188,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then("each task has a translated name", async (_ctx: TestContext) => {
-        const sortedTasks = [...createdTasks].sort(
-          (taskA, taskB) => taskA.sort_order - taskB.sort_order,
+        const sortedTasks = [...createdTasks].sort((taskA, taskB) =>
+          (() => {
+            const keyA = String(taskA.sort_order);
+            const keyB = String(taskB.sort_order);
+            if (keyA < keyB) return -1;
+            if (keyA > keyB) return 1;
+            return 0;
+          })(),
         );
         expect(sortedTasks[0].name).toBe("Task 1");
         expect(sortedTasks[1].name).toBe("Task 2");
@@ -178,8 +207,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       And(
         "each task has a translated description",
         async (_ctx: TestContext) => {
-          const sortedTasks = [...createdTasks].sort(
-            (taskA, taskB) => taskA.sort_order - taskB.sort_order,
+          const sortedTasks = [...createdTasks].sort((taskA, taskB) =>
+            (() => {
+              const keyA = String(taskA.sort_order);
+              const keyB = String(taskB.sort_order);
+              if (keyA < keyB) return -1;
+              if (keyA > keyB) return 1;
+              return 0;
+            })(),
           );
           expect(sortedTasks[0].description).toBe("Task 1 Description");
           expect(sortedTasks[1].description).toBe("Task 2 Description");

@@ -21,6 +21,23 @@ export async function setupWithItem(
   return { item, taskId, result };
 }
 
+export async function setupWithTwoItems() {
+  const taskId = crypto.randomUUID();
+  const item1 = buildChecklistItem({
+    task_id: taskId,
+    sort_order: "a0",
+  });
+  const item2 = buildChecklistItem({
+    task_id: taskId,
+    sort_order: "a1",
+  });
+  await db.checklist_items.bulkAdd([item1, item2]);
+
+  const { result } = renderHook(() => useChecklist(taskId, checklistService));
+  await waitFor(() => expect(result.current.items).toHaveLength(2));
+  return { item1, item2, taskId, result };
+}
+
 export function setupBeforeEach() {
   beforeEach(async () => {
     await db.checklist_items.clear();

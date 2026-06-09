@@ -23,7 +23,7 @@ const MOCK_ATTACHMENT_BASE: Omit<Attachment, "id" | "filename"> = {
   data_hash: "abc123",
   mime_type: "image/png",
   file_size: 1024,
-  sort_order: 0,
+  sort_order: "0",
   is_deleted: false,
   created_at: "2026-01-01T00:00:00.000Z" as Attachment["created_at"],
   updated_at: "2026-01-01T00:00:00.000Z" as Attachment["updated_at"],

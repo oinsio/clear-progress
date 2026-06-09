@@ -10,9 +10,9 @@ Feature: Goals Dirty Flag
     And goal updated_at is unchanged
 
   @add-goals-specs @FR10
-  Scenario: Reorder marks only changed goals for sync
-    Given goals A, B, C with sort_order 0, 1, 2
-    When user reorders to A, C, B
+  Scenario: Reorder marks only moved goal for sync
+    Given goals A, B, C with ascending sort_order
+    When user moves goal C between A and B
     Then goal A has needsSync false
+    And goal B has needsSync false
     And goal C has needsSync true
-    And goal B has needsSync true

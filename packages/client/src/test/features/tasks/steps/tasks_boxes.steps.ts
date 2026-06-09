@@ -22,24 +22,24 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @task-core-specs @FR2
   f.Scenario(
-    "Get tasks by box sorted by sort_order",
+    "Get tasks by box sorted by sort_order descending",
     ({ Given, When, Then }) => {
       let returnedTasks: Task[];
 
       Given(
-        "inbox has tasks with sort_order 2, 0, 1",
+        'inbox has tasks with sort_order "a2", "a0", "a1"',
         async (_ctx: TestContext) => {
           await seedTask(ctx.taskIds, "Task A", {
             box: "inbox",
-            sort_order: 2,
+            sort_order: "a2",
           });
           await seedTask(ctx.taskIds, "Task B", {
             box: "inbox",
-            sort_order: 0,
+            sort_order: "a0",
           });
           await seedTask(ctx.taskIds, "Task C", {
             box: "inbox",
-            sort_order: 1,
+            sort_order: "a1",
           });
         },
       );
@@ -48,9 +48,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         returnedTasks = await ctx.taskService.getByBox("inbox");
       });
 
-      Then("tasks are returned in order 0, 1, 2", async (_ctx: TestContext) => {
-        expect(returnedTasks.map((task) => task.sort_order)).toEqual([0, 1, 2]);
-      });
+      Then(
+        "tasks are returned in descending sort_order",
+        async (_ctx: TestContext) => {
+          const sortOrders = returnedTasks.map((task) =>
+            String(task.sort_order),
+          );
+          expect(sortOrders).toEqual(["a2", "a1", "a0"]);
+        },
+      );
     },
   );
 
@@ -78,15 +84,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await seedTask(ctx.taskIds, "Active 1", {
             box: "inbox",
-            sort_order: 0,
+            sort_order: "0",
           });
           await seedTask(ctx.taskIds, "Active 2", {
             box: "inbox",
-            sort_order: 1,
+            sort_order: "1",
           });
           await seedTask(ctx.taskIds, "Deleted", {
             box: "inbox",
-            sort_order: 2,
+            sort_order: "2",
             is_deleted: true,
           });
         },
@@ -160,4 +166,45 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(movedTask.updated_at).toBe(fixedUpdatedAt);
     });
   });
+
+  // @fractional-sort-order @FR4
+  f.Scenario(
+    "Moved task appears at top of destination box",
+    ({ Given, When, Then, And }) => {
+      let movedTask: Task;
+
+      Given(
+        'today has tasks with sort_order "a0", "a1"',
+        async (_ctx: TestContext) => {
+          await seedTask(ctx.taskIds, "Today A", {
+            box: "today",
+            sort_order: "a0",
+          });
+          await seedTask(ctx.taskIds, "Today B", {
+            box: "today",
+            sort_order: "a1",
+          });
+        },
+      );
+
+      And(
+        'task "Buy groceries" exists in box "inbox"',
+        async (_ctx: TestContext) => {
+          await seedTask(ctx.taskIds, "Buy groceries", { box: "inbox" });
+        },
+      );
+
+      When('user moves task to box "today"', async (_ctx: TestContext) => {
+        movedTask = await ctx.taskService.moveToBox(
+          getIdOrThrow(ctx.taskIds, "Buy groceries"),
+          "today",
+        );
+      });
+
+      Then('task has sort_order above "a1"', async (_ctx: TestContext) => {
+        const sortOrder = String(movedTask.sort_order);
+        expect(sortOrder > "a1").toBe(true);
+      });
+    },
+  );
 });

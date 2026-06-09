@@ -11,11 +11,11 @@ Feature: Tasks CRUD
     And task has is_deleted false
     And task has is_completed false
 
-  @task-core-specs @FR1
-  Scenario: Sort order defaults to end of box
-    Given inbox has 3 tasks
+  @fractional-sort-order @FR3
+  Scenario: New task created at top of box
+    Given inbox has tasks with sort_order "a0", "a1", "a2"
     When user creates task "New task" in box "inbox"
-    Then task has sort_order 3
+    Then task has sort_order above "a2"
 
   @task-core-specs @FR1
   Scenario: UUID generated client-side

@@ -28,15 +28,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       async (_ctx: TestContext) => {
         await seedTask(ctx.taskIds, "Goal1 Task A", {
           goal_id: "g1",
-          sort_order: 1,
+          sort_order: "a1",
         });
         await seedTask(ctx.taskIds, "Goal1 Task B", {
           goal_id: "g1",
-          sort_order: 0,
+          sort_order: "a0",
         });
         await seedTask(ctx.taskIds, "Goal2 Task A", {
           goal_id: "g2",
-          sort_order: 0,
+          sort_order: "a0",
         });
       },
     );
@@ -49,7 +49,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       "2 tasks are returned sorted by sort_order",
       async (_ctx: TestContext) => {
         expect(returnedTasks).toHaveLength(2);
-        expect(returnedTasks.map((task) => task.sort_order)).toEqual([0, 1]);
+        expect(returnedTasks.map((task) => task.sort_order)).toEqual([
+          "a1",
+          "a0",
+        ]);
       },
     );
   });
@@ -65,12 +68,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await seedTask(ctx.taskIds, "Incomplete Task", {
             context_id: "c1",
-            sort_order: 0,
+            sort_order: "a0",
             is_completed: false,
           });
           await seedTask(ctx.taskIds, "Completed Task", {
             context_id: "c1",
-            sort_order: 1,
+            sort_order: "a1",
             is_completed: true,
             completed_at: "2026-01-01T10:00:00.000Z",
           });
@@ -98,11 +101,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       async (_ctx: TestContext) => {
         await seedTask(ctx.taskIds, "Cat Task A", {
           category_id: "cat1",
-          sort_order: 1,
+          sort_order: "a1",
         });
         await seedTask(ctx.taskIds, "Cat Task B", {
           category_id: "cat1",
-          sort_order: 0,
+          sort_order: "a0",
         });
       },
     );
@@ -115,7 +118,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       "2 tasks are returned sorted by sort_order",
       async (_ctx: TestContext) => {
         expect(returnedTasks).toHaveLength(2);
-        expect(returnedTasks.map((task) => task.sort_order)).toEqual([0, 1]);
+        expect(returnedTasks.map((task) => task.sort_order)).toEqual([
+          "a1",
+          "a0",
+        ]);
       },
     );
   });
@@ -129,15 +135,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       async (_ctx: TestContext) => {
         await seedTask(ctx.taskIds, "G1 Task A", {
           goal_id: "g1",
-          sort_order: 0,
+          sort_order: "0",
         });
         await seedTask(ctx.taskIds, "G1 Task B", {
           goal_id: "g1",
-          sort_order: 1,
+          sort_order: "1",
         });
         await seedTask(ctx.taskIds, "G2 Task A", {
           goal_id: "g2",
-          sort_order: 0,
+          sort_order: "0",
         });
       },
     );
@@ -162,7 +168,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await seedTask(ctx.taskIds, "No Goal Task", {
             goal_id: "",
-            sort_order: 0,
+            sort_order: "0",
           });
         },
       );

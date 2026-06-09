@@ -2,6 +2,7 @@ import { expect } from "vitest";
 import { db } from "@/db/database";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
 import { GoalService } from "@/services/GoalService";
+import { compareCompletedTasks } from "@/services/SortOrderService";
 import { buildGoal } from "@/test/factories/goalFactory";
 import { getIdOrThrow } from "@/test/helpers/getIdOrThrow";
 import type { Goal, Task } from "@/types/entities";
@@ -48,32 +49,31 @@ export async function seedGoalsWithOrder(
   goalIds: Map<string, string>,
   names: string[],
 ) {
+  const { rebalanceKeys } = await import("@/services/SortOrderService");
+  const keys = rebalanceKeys(names.length);
   for (let i = 0; i < names.length; i++) {
     await seedGoal(goalIds, names[i], {
-      sort_order: i,
+      sort_order: keys[i],
       needsSync: false,
     });
   }
 }
 
 export function sortCompletedTasks(tasks: Task[]): Task[] {
-  return tasks
-    .filter((task) => task.is_completed)
-    .sort((taskA, taskB) => {
-      if (taskA.completed_at && taskB.completed_at) {
-        return taskB.completed_at > taskA.completed_at ? 1 : -1;
-      }
-      return taskB.sort_order - taskA.sort_order;
-    });
+  return tasks.filter((task) => task.is_completed).sort(compareCompletedTasks);
 }
 
-export async function expectGoalSortOrder(
+export async function moveGoalBefore(
   goalIds: Map<string, string>,
-  name: string,
-  expectedOrder: number,
+  goalService: GoalService,
+  movedName: string,
+  beforeName: string,
 ) {
-  const goal = await getGoal(goalIds, name);
-  expect(goal.sort_order).toBe(expectedOrder);
+  const { generateKeyBetween } = await import("@/services/SortOrderService");
+  const targetGoal = await getGoal(goalIds, beforeName);
+  const movedGoal = await getGoal(goalIds, movedName);
+  const newKey = generateKeyBetween(null, String(targetGoal.sort_order));
+  await goalService.reorderGoals(movedGoal.id, newKey);
 }
 
 export async function expectGoalNeedsSync(

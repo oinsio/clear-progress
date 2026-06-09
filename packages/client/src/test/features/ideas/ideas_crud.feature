@@ -16,11 +16,11 @@ Feature: Ideas CRUD
     Then idea is persisted with name "Learn Rust"
     And idea has description "Systems programming"
 
-  @add-ideas-specs @FR1 @FR8
-  Scenario: Sort order defaults to end of list
+  @fractional-sort-order @FR8
+  Scenario: New idea appended to end of list
     Given 3 active ideas exist
     When user creates idea "New Idea"
-    Then idea has sort_order 3
+    Then idea has sort_order above existing maximum
 
   @add-ideas-specs @FR1 @FR8
   Scenario: UUID generated client-side

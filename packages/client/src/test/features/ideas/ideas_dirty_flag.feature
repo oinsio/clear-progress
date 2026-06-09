@@ -10,9 +10,9 @@ Feature: Ideas Dirty Flag
     And idea updated_at is unchanged
 
   @add-ideas-specs @FR10
-  Scenario: Reorder marks only changed ideas for sync
-    Given ideas A, B, C with sort_order 0, 1, 2
-    When user reorders to A, C, B
+  Scenario: Reorder marks only moved idea for sync
+    Given ideas A, B, C with ascending sort_order
+    When user moves idea C between A and B
     Then idea A has needsSync false
+    And idea B has needsSync false
     And idea C has needsSync true
-    And idea B has needsSync true

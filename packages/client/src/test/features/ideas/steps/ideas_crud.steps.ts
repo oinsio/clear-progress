@@ -84,23 +84,35 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     );
   });
 
-  // @add-ideas-specs @FR1 @FR8
-  f.Scenario("Sort order defaults to end of list", ({ Given, When, Then }) => {
+  // @fractional-sort-order @FR8
+  f.Scenario("New idea appended to end of list", ({ Given, When, Then }) => {
     let createdIdea: Idea;
 
     Given("3 active ideas exist", async (_ctx: TestContext) => {
-      await seedIdea(ctx.ideaIds, "Idea A", { sort_order: 0 });
-      await seedIdea(ctx.ideaIds, "Idea B", { sort_order: 1 });
-      await seedIdea(ctx.ideaIds, "Idea C", { sort_order: 2 });
+      await seedIdea(ctx.ideaIds, "Idea A", { sort_order: "0" });
+      await seedIdea(ctx.ideaIds, "Idea B", { sort_order: "1" });
+      await seedIdea(ctx.ideaIds, "Idea C", { sort_order: "2" });
     });
 
     When('user creates idea "New Idea"', async (_ctx: TestContext) => {
       createdIdea = await ctx.ideaService.create({ name: "New Idea" });
     });
 
-    Then("idea has sort_order 3", async (_ctx: TestContext) => {
-      expect(createdIdea.sort_order).toBe(3);
-    });
+    Then(
+      "idea has sort_order above existing maximum",
+      async (_ctx: TestContext) => {
+        expect(typeof createdIdea.sort_order).toBe("string");
+        const allIdeas = await ctx.ideaService.getAll();
+        const otherIdeas = allIdeas.filter(
+          (idea) => idea.id !== createdIdea.id,
+        );
+        for (const idea of otherIdeas) {
+          expect(String(createdIdea.sort_order) > String(idea.sort_order)).toBe(
+            true,
+          );
+        }
+      },
+    );
   });
 
   // @add-ideas-specs @FR1 @FR8
@@ -145,9 +157,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let returnedIdeas: Idea[];
 
     Given("ideas with sort_order 2, 0, 1", async (_ctx: TestContext) => {
-      await seedIdea(ctx.ideaIds, "Idea A", { sort_order: 2 });
-      await seedIdea(ctx.ideaIds, "Idea B", { sort_order: 0 });
-      await seedIdea(ctx.ideaIds, "Idea C", { sort_order: 1 });
+      await seedIdea(ctx.ideaIds, "Idea A", { sort_order: "2" });
+      await seedIdea(ctx.ideaIds, "Idea B", { sort_order: "0" });
+      await seedIdea(ctx.ideaIds, "Idea C", { sort_order: "1" });
     });
 
     When("user requests all ideas", async (_ctx: TestContext) => {
@@ -156,7 +168,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
     Then("ideas are returned in order 0, 1, 2", async (_ctx: TestContext) => {
       const sortOrders = returnedIdeas.map((idea) => idea.sort_order);
-      expect(sortOrders).toEqual([0, 1, 2]);
+      expect(sortOrders).toEqual(["0", "1", "2"]);
     });
   });
 

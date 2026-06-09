@@ -33,7 +33,7 @@ interface BoxSectionProps {
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
   onMove: (id: string, box: Box) => Promise<void>;
   onDelete: (id: string) => void;
-  onReorder?: (tasks: Task[]) => Promise<void>;
+  onReorder?: (taskId: string, newSortOrder: string) => Promise<void>;
   onSelect?: (id: string) => void;
   selectedTaskId?: string | null;
   isFocusMode?: boolean;
@@ -112,7 +112,7 @@ interface BoxSectionListProps {
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
   onMove: (id: string, box: Box) => Promise<void>;
   onDelete: (id: string) => void;
-  onReorder?: (box: Box, tasks: Task[]) => Promise<void>;
+  onReorder?: (box: Box, taskId: string, newSortOrder: string) => Promise<void>;
   onSelect?: (id: string) => void;
   selectedTaskId?: string | null;
   isFocusMode?: boolean;
@@ -175,7 +175,11 @@ export function BoxSectionList({
             onUpdate={onUpdate}
             onMove={onMove}
             onDelete={onDelete}
-            onReorder={onReorder ? (tasks) => onReorder(box, tasks) : undefined}
+            onReorder={
+              onReorder
+                ? (taskId, newSortOrder) => onReorder(box, taskId, newSortOrder)
+                : undefined
+            }
             onSelect={onSelect}
             selectedTaskId={selectedTaskId}
             isFocusMode={isFocusMode}

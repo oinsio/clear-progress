@@ -42,13 +42,28 @@ export async function getIdea(
   return (await db.ideas.get(getIdOrThrow(ideaIds, name))) as Idea;
 }
 
+export async function moveIdeaBefore(
+  ideaIds: Map<string, string>,
+  ideaService: IdeaService,
+  movedName: string,
+  beforeName: string,
+) {
+  const { generateKeyBetween } = await import("@/services/SortOrderService");
+  const targetIdea = await getIdea(ideaIds, beforeName);
+  const movedIdea = await getIdea(ideaIds, movedName);
+  const newKey = generateKeyBetween(null, String(targetIdea.sort_order));
+  await ideaService.reorderIdeas(movedIdea.id, newKey);
+}
+
 export async function seedIdeasWithOrder(
   ideaIds: Map<string, string>,
   names: string[],
 ) {
+  const { rebalanceKeys } = await import("@/services/SortOrderService");
+  const keys = rebalanceKeys(names.length);
   for (let i = 0; i < names.length; i++) {
     await seedIdea(ideaIds, names[i], {
-      sort_order: i,
+      sort_order: keys[i],
       needsSync: false,
     });
   }

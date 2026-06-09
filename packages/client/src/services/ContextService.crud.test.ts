@@ -22,18 +22,21 @@ describe("ContextService", () => {
 
     it("should return contexts sorted by sort_order ascending", async () => {
       const unsortedContexts = [
-        buildContext({ sort_order: 3 }),
-        buildContext({ sort_order: 1 }),
-        buildContext({ sort_order: 2 }),
+        buildContext({ sort_order: "a2" }),
+        buildContext({ sort_order: "a0" }),
+        buildContext({ sort_order: "a1" }),
       ];
       mockContextRepository = createMockContextRepository({
         getActive: vi.fn().mockResolvedValue(unsortedContexts),
       });
       const contextService = new ContextService(mockContextRepository);
       const contexts = await contextService.getAll();
-      expect(contexts[0].sort_order).toBe(1);
-      expect(contexts[1].sort_order).toBe(2);
-      expect(contexts[2].sort_order).toBe(3);
+      expect(
+        String(contexts[0].sort_order) < String(contexts[1].sort_order),
+      ).toBe(true);
+      expect(
+        String(contexts[1].sort_order) < String(contexts[2].sort_order),
+      ).toBe(true);
     });
 
     it("should call repository.getActive", async () => {

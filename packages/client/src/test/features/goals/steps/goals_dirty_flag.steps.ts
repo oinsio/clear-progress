@@ -3,10 +3,12 @@ import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import {
   createScenarioContext,
   getGoal,
   seedGoal,
+  seedGoalsWithOrder,
 } from "@/test/helpers/bdd/goals/helpers";
 import { getIdOrThrow } from "@/test/helpers/getIdOrThrow";
 
@@ -67,31 +69,24 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @add-goals-specs @FR10
   f.Scenario(
-    "Reorder marks only changed goals for sync",
+    "Reorder marks only moved goal for sync",
     ({ Given, When, Then, And }) => {
       Given(
-        "goals A, B, C with sort_order 0, 1, 2",
+        "goals A, B, C with ascending sort_order",
         async (_ctx: TestContext) => {
-          await seedGoal(ctx.goalIds, "A", {
-            sort_order: 0,
-            needsSync: false,
-          });
-          await seedGoal(ctx.goalIds, "B", {
-            sort_order: 1,
-            needsSync: false,
-          });
-          await seedGoal(ctx.goalIds, "C", {
-            sort_order: 2,
-            needsSync: false,
-          });
+          await seedGoalsWithOrder(ctx.goalIds, ["A", "B", "C"]);
         },
       );
 
-      When("user reorders to A, C, B", async (_ctx: TestContext) => {
+      When("user moves goal C between A and B", async (_ctx: TestContext) => {
         const goalA = await getGoal(ctx.goalIds, "A");
-        const goalC = await getGoal(ctx.goalIds, "C");
         const goalB = await getGoal(ctx.goalIds, "B");
-        await ctx.goalService.reorderGoals([goalA, goalC, goalB]);
+        const goalC = await getGoal(ctx.goalIds, "C");
+        const newKey = generateKeyBetween(
+          String(goalA.sort_order),
+          String(goalB.sort_order),
+        );
+        await ctx.goalService.reorderGoals(goalC.id, newKey);
       });
 
       Then("goal A has needsSync false", async (_ctx: TestContext) => {
@@ -99,14 +94,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         expect(goalA?.needsSync).toBe(false);
       });
 
+      And("goal B has needsSync false", async (_ctx: TestContext) => {
+        const goalB = await db.goals.get(getIdOrThrow(ctx.goalIds, "B"));
+        expect(goalB?.needsSync).toBe(false);
+      });
+
       And("goal C has needsSync true", async (_ctx: TestContext) => {
         const goalC = await db.goals.get(getIdOrThrow(ctx.goalIds, "C"));
         expect(goalC?.needsSync).toBe(true);
-      });
-
-      And("goal B has needsSync true", async (_ctx: TestContext) => {
-        const goalB = await db.goals.get(getIdOrThrow(ctx.goalIds, "B"));
-        expect(goalB?.needsSync).toBe(true);
       });
     },
   );

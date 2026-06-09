@@ -131,15 +131,16 @@ describe("useGoals", () => {
   });
 
   it("should update goal order and schedule push when reorderGoals is called", async () => {
-    const goal1 = buildGoal({ sort_order: 0 });
-    const goal2 = buildGoal({ sort_order: 1 });
+    const goal1 = buildGoal({ sort_order: "a1" });
+    const goal2 = buildGoal({ sort_order: "a2" });
     await db.goals.bulkAdd([goal1, goal2]);
 
     const { result } = renderHook(() => useGoals(goalService));
     await waitFor(() => expect(result.current.goals).toHaveLength(2));
 
+    // Move goal2 before goal1 by giving it a key before goal1's key
     await act(async () => {
-      await result.current.reorderGoals([goal2, goal1]);
+      await result.current.reorderGoals(goal2.id, "Zz");
     });
 
     await waitFor(() => expect(result.current.goals[0].id).toBe(goal2.id));

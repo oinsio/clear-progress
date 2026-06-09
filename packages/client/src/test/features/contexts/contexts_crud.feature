@@ -13,7 +13,7 @@ Feature: Contexts CRUD
   Scenario: Sort order defaults to end of list
     Given 3 active contexts exist
     When user creates context "@new"
-    Then context has sort_order 3
+    Then context has sort_order above existing maximum
 
   @add-context-category-specs @FR1
   Scenario: UUID generated client-side

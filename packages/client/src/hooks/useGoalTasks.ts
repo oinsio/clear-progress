@@ -1,20 +1,12 @@
 import { liveQuery } from "dexie";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
-import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
-import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { TaskService } from "@/services/TaskService";
+import { defaultTaskService } from "@/services/defaultServices";
+import { compareCompletedTasks } from "@/services/SortOrderService";
+import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
 import type { Task } from "@/types/entities";
 import { useTaskMutations } from "./useTaskMutations";
-
-const defaultTaskService = new TaskService(
-  new TaskRepository(),
-  new ChecklistRepository(),
-  undefined,
-  new AttachmentRepository(),
-);
 
 export interface UseGoalTasksReturn {
   tasks: Task[];
@@ -26,7 +18,7 @@ export interface UseGoalTasksReturn {
   moveTask: (id: string, box: Box) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   duplicateTask: (id: string) => Promise<Task>;
-  reorderTasks: (orderedTasks: Task[]) => Promise<void>;
+  reorderTasks: (taskId: string, newSortOrder: string) => Promise<void>;
 }
 
 /** Implements FR9 of hide-tasks */
@@ -54,12 +46,7 @@ export function useGoalTasks(
         setCompletedTasks(
           allGoalTasks
             .filter((task) => task.is_completed)
-            .sort((taskA, taskB) => {
-              if (taskA.completed_at && taskB.completed_at) {
-                return taskB.completed_at > taskA.completed_at ? 1 : -1;
-              }
-              return taskB.sort_order - taskA.sort_order;
-            }),
+            .sort(compareCompletedTasks),
         );
         setIsLoading(false);
       },
@@ -75,9 +62,8 @@ export function useGoalTasks(
   );
 
   const reorderTasks = useCallback(
-    async (orderedTasks: Task[]) => {
-      setTasks(orderedTasks);
-      await taskService.reorderTasks(orderedTasks);
+    async (taskId: string, newSortOrder: string) => {
+      await taskService.reorderTasks(taskId, newSortOrder);
       schedulePush();
     },
     [taskService, schedulePush],

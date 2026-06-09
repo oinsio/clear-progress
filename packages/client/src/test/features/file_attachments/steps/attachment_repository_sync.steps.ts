@@ -22,7 +22,7 @@ function buildWireAttachment(
     filename: "server-file.pdf",
     mime_type: "application/pdf",
     file_size: 2048,
-    sort_order: 0,
+    sort_order: "0",
     is_deleted: false,
     created_at: now,
     updated_at: now,

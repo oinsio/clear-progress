@@ -26,7 +26,7 @@ const MOCK_TASK: Task = {
   is_completed: false,
   is_deleted: false,
   version: 1,
-  sort_order: 0,
+  sort_order: "0",
   description: "",
   goal_id: "",
   context_id: "",

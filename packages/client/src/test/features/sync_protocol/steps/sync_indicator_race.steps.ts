@@ -16,7 +16,7 @@ function makeChecklistItem(
     task_id: "task-1",
     name: "Test Item",
     is_completed: false,
-    sort_order: 0,
+    sort_order: "0",
     is_deleted: false,
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),

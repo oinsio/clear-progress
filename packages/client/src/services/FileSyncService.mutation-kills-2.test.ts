@@ -24,7 +24,7 @@ function createActiveAttachment(
     data_hash: dataHash,
     filename: "file.jpg",
     mime_type: "image/jpeg",
-    sort_order: 0,
+    sort_order: "0",
     is_deleted: false,
     version: 1,
     created_at: toISOTimestamp(),

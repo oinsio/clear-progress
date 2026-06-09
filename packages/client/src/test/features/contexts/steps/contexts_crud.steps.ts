@@ -64,18 +64,30 @@ describeFeature(
         let createdContext: ContextEntity;
 
         Given("3 active contexts exist", async (_ctx: TestContext) => {
-          await seedContext(ctx.contextIds, "Context A", { sort_order: 0 });
-          await seedContext(ctx.contextIds, "Context B", { sort_order: 1 });
-          await seedContext(ctx.contextIds, "Context C", { sort_order: 2 });
+          await seedContext(ctx.contextIds, "Context A", { sort_order: "a0" });
+          await seedContext(ctx.contextIds, "Context B", { sort_order: "a1" });
+          await seedContext(ctx.contextIds, "Context C", { sort_order: "a2" });
         });
 
         When('user creates context "@new"', async (_ctx: TestContext) => {
           createdContext = await ctx.contextService.create("@new");
         });
 
-        Then("context has sort_order 3", async (_ctx: TestContext) => {
-          expect(createdContext.sort_order).toBe(3);
-        });
+        Then(
+          "context has sort_order above existing maximum",
+          async (_ctx: TestContext) => {
+            expect(typeof createdContext.sort_order).toBe("string");
+            const allContexts = await ctx.contextService.getAll();
+            const others = allContexts.filter(
+              (entity) => entity.id !== createdContext.id,
+            );
+            for (const other of others) {
+              expect(
+                String(createdContext.sort_order) > String(other.sort_order),
+              ).toBe(true);
+            }
+          },
+        );
       },
     );
 
@@ -121,9 +133,9 @@ describeFeature(
       let returnedContexts: ContextEntity[];
 
       Given("contexts with sort_order 2, 0, 1", async (_ctx: TestContext) => {
-        await seedContext(ctx.contextIds, "Context A", { sort_order: 2 });
-        await seedContext(ctx.contextIds, "Context B", { sort_order: 0 });
-        await seedContext(ctx.contextIds, "Context C", { sort_order: 1 });
+        await seedContext(ctx.contextIds, "Context A", { sort_order: "2" });
+        await seedContext(ctx.contextIds, "Context B", { sort_order: "0" });
+        await seedContext(ctx.contextIds, "Context C", { sort_order: "1" });
       });
 
       When("user requests all contexts", async (_ctx: TestContext) => {
@@ -136,7 +148,7 @@ describeFeature(
           const sortOrders = returnedContexts.map(
             (context) => context.sort_order,
           );
-          expect(sortOrders).toEqual([0, 1, 2]);
+          expect(sortOrders).toEqual(["0", "1", "2"]);
         },
       );
     });

@@ -190,4 +190,49 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
     },
   );
+
+  // @fractional-sort-order @FR5
+  f.Scenario(
+    "Uncompleted task appears at top of its box",
+    ({ Given, When, Then, And }) => {
+      let uncompleted: Task;
+
+      Given(
+        'inbox has tasks with sort_order "a0", "a1"',
+        async (_ctx: TestContext) => {
+          await seedTask(ctx.taskIds, "Inbox A", {
+            box: "inbox",
+            sort_order: "a0",
+          });
+          await seedTask(ctx.taskIds, "Inbox B", {
+            box: "inbox",
+            sort_order: "a1",
+          });
+        },
+      );
+
+      And(
+        'completed task "Buy groceries" exists in box "inbox"',
+        async (_ctx: TestContext) => {
+          await seedTask(ctx.taskIds, "Buy groceries", {
+            box: "inbox",
+            is_completed: true,
+            completed_at: "2026-01-15T10:00:00.000Z",
+            sort_order: "a0V",
+          });
+        },
+      );
+
+      When("user uncompletes the task", async (_ctx: TestContext) => {
+        uncompleted = await ctx.taskService.noncomplete(
+          getIdOrThrow(ctx.taskIds, "Buy groceries"),
+        );
+      });
+
+      Then('task has sort_order above "a1"', async (_ctx: TestContext) => {
+        const sortOrder = String(uncompleted.sort_order);
+        expect(sortOrder > "a1").toBe(true);
+      });
+    },
+  );
 });

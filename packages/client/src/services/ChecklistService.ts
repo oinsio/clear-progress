@@ -1,4 +1,10 @@
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
+import {
+  compareSortKeys,
+  generateAppendKey,
+  needsRebalancing,
+  rebalanceKeys,
+} from "@/services/SortOrderService";
 import type { ChecklistItem } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { hasEntityChanged } from "@/utils/deepEqual";
@@ -13,7 +19,9 @@ export class ChecklistService {
 
   async getByTaskId(taskId: string): Promise<ChecklistItem[]> {
     const items = await this.checklistRepository.getActiveByTaskId(taskId);
-    return items.sort((itemA, itemB) => itemA.sort_order - itemB.sort_order);
+    return items.sort((itemA, itemB) =>
+      compareSortKeys(String(itemA.sort_order), String(itemB.sort_order)),
+    );
   }
 
   async getById(id: string): Promise<ChecklistItem | undefined> {
@@ -23,13 +31,14 @@ export class ChecklistService {
   async create(taskId: string, name: string): Promise<ChecklistItem> {
     const existingItems =
       await this.checklistRepository.getActiveByTaskId(taskId);
+    const existingKeys = existingItems.map((item) => String(item.sort_order));
     const now = toISOTimestamp();
     const item: ChecklistItem = {
       id: crypto.randomUUID(),
       task_id: taskId,
       name,
       is_completed: false,
-      sort_order: existingItems.length,
+      sort_order: generateAppendKey(existingKeys),
       is_deleted: false,
       created_at: now,
       updated_at: now,
@@ -63,28 +72,37 @@ export class ChecklistService {
     return this.applyChanges(id, { is_deleted: false });
   }
 
-  async reorderItems(items: ChecklistItem[]): Promise<void> {
-    if (items.length === 0) return;
-
-    // Check if at least one sort_order has changed
-    const hasAnyOrderChanged = items.some(
-      (item, index) => item.sort_order !== index,
-    );
-    if (!hasAnyOrderChanged) {
-      return; // Nothing changed, skip sync
-    }
+  async reorderItems(itemId: string, newSortOrder: string): Promise<void> {
+    const item = await this.checklistRepository.getById(itemId);
+    if (!item) throw new Error(`ChecklistItem not found: ${itemId}`);
 
     const now = toISOTimestamp();
-    const updatedItems = items.map((item, index) => {
-      const orderChanged = item.sort_order !== index;
-      return {
-        ...item,
-        sort_order: index,
-        updated_at: orderChanged ? now : item.updated_at,
-        needsSync: orderChanged,
-      };
+    await this.checklistRepository.update({
+      ...item,
+      sort_order: newSortOrder,
+      updated_at: now,
+      needsSync: true,
     });
-    await this.checklistRepository.bulkUpsert(updatedItems);
+
+    if (needsRebalancing(newSortOrder)) {
+      await this.rebalanceTaskItems(item.task_id);
+    }
+  }
+
+  private async rebalanceTaskItems(taskId: string): Promise<void> {
+    const items = await this.checklistRepository.getActiveByTaskId(taskId);
+    const sorted = items.sort((itemA, itemB) =>
+      compareSortKeys(String(itemA.sort_order), String(itemB.sort_order)),
+    );
+    const newKeys = rebalanceKeys(sorted.length);
+    const now = toISOTimestamp();
+    const rebalancedItems = sorted.map((item, index) => ({
+      ...item,
+      sort_order: newKeys[index],
+      updated_at: now,
+      needsSync: true,
+    }));
+    await this.checklistRepository.bulkUpsert(rebalancedItems);
   }
 
   async getProgress(taskId: string): Promise<ChecklistProgress> {

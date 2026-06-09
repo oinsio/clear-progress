@@ -76,7 +76,7 @@ describe("SyncService — push results > undefined results for entity types", ()
       entityName: "contexts",
       setupRepo: (context: SyncTestContext) => {
         context.contextRepository = withNeedingSync(context.contextRepository, [
-          makeContext({ id: "ctx1", name: "Home", sort_order: 0 }),
+          makeContext({ id: "ctx1", name: "Home", sort_order: "0" }),
         ]);
       },
       getUpdateMock: (context: SyncTestContext) =>

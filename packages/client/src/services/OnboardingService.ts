@@ -57,7 +57,7 @@ export class OnboardingService {
         description: translate(taskTemplate.descriptionKey),
         box: taskTemplate.box,
         goal_id: goal.id,
-        sort_order: i,
+        sort_order: String(i),
       });
     }
 

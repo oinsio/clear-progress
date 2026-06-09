@@ -55,7 +55,7 @@ describe("AttachmentService", () => {
       expect(result.file_size).toBe(7); // "content".length
       expect(result.is_deleted).toBe(false);
       expect(result.needsSync).toBe(true);
-      expect(result.sort_order).toBe(0);
+      expect(typeof result.sort_order).toBe("string");
       expect(result.revision).toBe(0);
     });
 
@@ -84,8 +84,11 @@ describe("AttachmentService", () => {
       expect(mockRepository.save).toHaveBeenCalledWith(result);
     });
 
-    it("sets sort_order based on existing attachment count", async () => {
-      const existingAttachments = [{ id: "a1" }, { id: "a2" }] as Attachment[];
+    it("sets sort_order above existing attachments", async () => {
+      const existingAttachments = [
+        { id: "a1", sort_order: "a0" },
+        { id: "a2", sort_order: "a1" },
+      ] as Attachment[];
       vi.mocked(mockRepository.getByEntityTypeAndId).mockResolvedValue(
         existingAttachments,
       );
@@ -97,7 +100,8 @@ describe("AttachmentService", () => {
         TEST_ENTITY_ID,
       );
 
-      expect(result.sort_order).toBe(2);
+      expect(typeof result.sort_order).toBe("string");
+      expect(String(result.sort_order) > "a1").toBe(true);
     });
   });
 

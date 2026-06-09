@@ -33,9 +33,10 @@ describe("TaskService", () => {
 
   describe("noncomplete", () => {
     it("should set is_completed to false", async () => {
-      const task = buildTask({ is_completed: true });
+      const task = buildTask({ is_completed: true, box: "inbox" });
       const { taskService } = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
+        getByBox: vi.fn().mockResolvedValue([]),
       });
       const result = await taskService.noncomplete(task.id);
       expect(result.is_completed).toBe(false);
@@ -44,15 +45,33 @@ describe("TaskService", () => {
     it("should clear completed_at to empty string", async () => {
       const task = buildTask({
         is_completed: true,
+        box: "inbox",
         completed_at: toISOTimestamp(
           Temporal.Instant.from("2025-01-01T10:00:00.000Z"),
         ),
       });
       const { taskService } = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
+        getByBox: vi.fn().mockResolvedValue([]),
       });
       const result = await taskService.noncomplete(task.id);
       expect(result.completed_at).toBe("");
+    });
+
+    it("should recalculate sort_order as top key in task box", async () => {
+      const existingTask = buildTask({ sort_order: "a0", box: "inbox" });
+      const task = buildTask({
+        is_completed: true,
+        box: "inbox",
+        sort_order: "a0",
+      });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+        getByBox: vi.fn().mockResolvedValue([existingTask]),
+      });
+      const result = await taskService.noncomplete(task.id);
+      expect(typeof result.sort_order).toBe("string");
+      expect(String(result.sort_order) > "a0").toBe(true);
     });
 
     it("should throw when task not found", async () => {
@@ -146,12 +165,57 @@ describe("TaskService", () => {
 
   describe("moveToBox", () => {
     it("should update task box", async () => {
-      const task = buildTask({ box: "inbox" });
+      const task = buildTask({ box: "inbox", sort_order: "a0" });
       const { taskService } = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
+        getByBox: vi.fn().mockResolvedValue([]),
       });
       const moved = await taskService.moveToBox(task.id, BOX.TODAY);
       expect(moved.box).toBe("today");
+    });
+
+    it("should throw when task not found", async () => {
+      const { taskService } = createTestContext();
+      await expect(
+        taskService.moveToBox("nonexistent", BOX.TODAY),
+      ).rejects.toThrow("Task not found: nonexistent");
+    });
+
+    it("should recalculate sort_order as top key in destination box", async () => {
+      const task = buildTask({ box: "inbox", sort_order: "a0" });
+      const destinationTask = buildTask({ box: "today", sort_order: "a0" });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+        getByBox: vi.fn().mockResolvedValue([destinationTask]),
+      });
+      const moved = await taskService.moveToBox(task.id, BOX.TODAY);
+      expect(typeof moved.sort_order).toBe("string");
+      expect(String(moved.sort_order) > "a0").toBe(true);
+    });
+
+    it("should not recalculate sort_order when moving to same box", async () => {
+      const task = buildTask({
+        box: "inbox",
+        sort_order: "a0",
+        needsSync: false,
+        updated_at: "2025-01-01T00:00:00.000Z",
+      });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+      const moved = await taskService.moveToBox(task.id, "inbox");
+      expect(moved.sort_order).toBe("a0");
+    });
+
+    it("should generate sort_order for empty destination box", async () => {
+      const task = buildTask({ box: "inbox", sort_order: "a0" });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+        getByBox: vi.fn().mockResolvedValue([]),
+      });
+      const moved = await taskService.moveToBox(task.id, BOX.TODAY);
+      expect(typeof moved.sort_order).toBe("string");
+      expect(moved.sort_order).not.toBe("");
     });
   });
 });

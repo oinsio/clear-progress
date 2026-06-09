@@ -5,8 +5,7 @@ import type { TestContext } from "vitest";
 import {
   createScenarioContext,
   expectGoalNeedsSync,
-  expectGoalSortOrder,
-  getGoal,
+  moveGoalBefore,
   seedGoalsWithOrder,
 } from "@/test/helpers/bdd/goals/helpers";
 
@@ -16,122 +15,88 @@ type Context = Record<string, never>;
 
 describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   const ctx = createScenarioContext();
+  let caughtError: Error | undefined;
 
   f.BeforeEachScenario(async () => {
     await ctx.reset();
+    caughtError = undefined;
   });
 
   // @add-goals-specs @FR6 @FR10
   f.Scenario(
-    "Reorder assigns sequential sort_order",
-    ({ Given, When, Then, And }) => {
+    "Reorder places goal at new position via fractional key",
+    ({ Given, When, Then }) => {
       Given(
-        "goals A with sort_order 0, B with sort_order 1, C with sort_order 2",
+        "goals A, B, C with ascending sort_order",
         async (_ctx: TestContext) => {
           await seedGoalsWithOrder(ctx.goalIds, ["A", "B", "C"]);
         },
       );
 
-      When("user reorders goals to B, C, A", async (_ctx: TestContext) => {
-        const goalB = await getGoal(ctx.goalIds, "B");
-        const goalC = await getGoal(ctx.goalIds, "C");
-        const goalA = await getGoal(ctx.goalIds, "A");
-        await ctx.goalService.reorderGoals([goalB, goalC, goalA]);
+      When("user moves goal C before goal A", async (_ctx: TestContext) => {
+        await moveGoalBefore(ctx.goalIds, ctx.goalService, "C", "A");
       });
 
-      Then("goal B has sort_order 0", async (_ctx: TestContext) => {
-        await expectGoalSortOrder(ctx.goalIds, "B", 0);
-      });
-
-      And("goal C has sort_order 1", async (_ctx: TestContext) => {
-        await expectGoalSortOrder(ctx.goalIds, "C", 1);
-      });
-
-      And("goal A has sort_order 2", async (_ctx: TestContext) => {
-        await expectGoalSortOrder(ctx.goalIds, "A", 2);
+      Then("goals are ordered C, A, B", async (_ctx: TestContext) => {
+        const allGoals = await ctx.goalService.getAll();
+        expect(allGoals[0].id).toBe(ctx.goalIds.get("C"));
+        expect(allGoals[1].id).toBe(ctx.goalIds.get("A"));
+        expect(allGoals[2].id).toBe(ctx.goalIds.get("B"));
       });
     },
   );
 
   // @add-goals-specs @FR6 @FR10
   f.Scenario(
-    "Only changed goals marked for sync",
+    "Reorder marks moved goal for sync",
     ({ Given, When, Then, And }) => {
       Given(
-        "goals A with sort_order 0, B with sort_order 1, C with sort_order 2",
+        "goals A, B, C with ascending sort_order",
         async (_ctx: TestContext) => {
           await seedGoalsWithOrder(ctx.goalIds, ["A", "B", "C"]);
         },
       );
 
-      When("user reorders goals to A, C, B", async (_ctx: TestContext) => {
-        const goalA = await getGoal(ctx.goalIds, "A");
-        const goalC = await getGoal(ctx.goalIds, "C");
-        const goalB = await getGoal(ctx.goalIds, "B");
-        await ctx.goalService.reorderGoals([goalA, goalC, goalB]);
+      When("user moves goal C before goal A", async (_ctx: TestContext) => {
+        await moveGoalBefore(ctx.goalIds, ctx.goalService, "C", "A");
       });
 
-      Then("goal A has needsSync false", async (_ctx: TestContext) => {
-        await expectGoalNeedsSync(ctx.goalIds, "A", false);
-      });
-
-      And("goal C has needsSync true", async (_ctx: TestContext) => {
+      Then("goal C has needsSync true", async (_ctx: TestContext) => {
         await expectGoalNeedsSync(ctx.goalIds, "C", true);
       });
 
-      And("goal B has needsSync true", async (_ctx: TestContext) => {
-        await expectGoalNeedsSync(ctx.goalIds, "B", true);
+      And("goal A has needsSync false", async (_ctx: TestContext) => {
+        await expectGoalNeedsSync(ctx.goalIds, "A", false);
+      });
+
+      And("goal B has needsSync false", async (_ctx: TestContext) => {
+        await expectGoalNeedsSync(ctx.goalIds, "B", false);
       });
     },
   );
 
   // @add-goals-specs @FR6 @FR10
-  f.Scenario("Empty reorder is no-op", ({ Given, When, Then, And }) => {
-    Given(
-      "goals A with sort_order 0, B with sort_order 1, C with sort_order 2",
-      async (_ctx: TestContext) => {
-        await seedGoalsWithOrder(ctx.goalIds, ["A", "B", "C"]);
-      },
-    );
+  f.Scenario(
+    "Reorder throws for non-existent goal",
+    ({ Given, When, Then }) => {
+      Given(
+        "goals A, B with ascending sort_order",
+        async (_ctx: TestContext) => {
+          await seedGoalsWithOrder(ctx.goalIds, ["A", "B"]);
+        },
+      );
 
-    When("user reorders with empty array", async (_ctx: TestContext) => {
-      await ctx.goalService.reorderGoals([]);
-    });
+      When("user reorders non-existent goal", async (_ctx: TestContext) => {
+        try {
+          await ctx.goalService.reorderGoals("nonexistent-id", "a1");
+        } catch (error) {
+          caughtError = error as Error;
+        }
+      });
 
-    Then("goal A has needsSync false", async (_ctx: TestContext) => {
-      await expectGoalNeedsSync(ctx.goalIds, "A", false);
-    });
-
-    And("goal B has needsSync false", async (_ctx: TestContext) => {
-      await expectGoalNeedsSync(ctx.goalIds, "B", false);
-    });
-
-    And("goal C has needsSync false", async (_ctx: TestContext) => {
-      await expectGoalNeedsSync(ctx.goalIds, "C", false);
-    });
-  });
-
-  // @add-goals-specs @FR6 @FR10
-  f.Scenario("Same order is no-op", ({ Given, When, Then, And }) => {
-    Given(
-      "goals A with sort_order 0, B with sort_order 1",
-      async (_ctx: TestContext) => {
-        await seedGoalsWithOrder(ctx.goalIds, ["A", "B"]);
-      },
-    );
-
-    When("user reorders goals to A, B", async (_ctx: TestContext) => {
-      const goalA = await getGoal(ctx.goalIds, "A");
-      const goalB = await getGoal(ctx.goalIds, "B");
-      await ctx.goalService.reorderGoals([goalA, goalB]);
-    });
-
-    Then("goal A has needsSync false", async (_ctx: TestContext) => {
-      await expectGoalNeedsSync(ctx.goalIds, "A", false);
-    });
-
-    And("goal B has needsSync false", async (_ctx: TestContext) => {
-      await expectGoalNeedsSync(ctx.goalIds, "B", false);
-    });
-  });
+      Then("an error is thrown", async (_ctx: TestContext) => {
+        expect(caughtError).toBeDefined();
+      });
+    },
+  );
 });

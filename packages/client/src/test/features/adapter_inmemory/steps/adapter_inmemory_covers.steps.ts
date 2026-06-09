@@ -290,7 +290,7 @@ describeFeature(
                   description: "",
                   cover_hash: "shared",
                   status: "planning",
-                  sort_order: 0,
+                  sort_order: "0",
                   is_deleted: false,
                   created_at: "2025-01-15T10:00:00.000Z",
                   updated_at: "2025-01-15T10:00:00.000Z",

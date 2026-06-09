@@ -1,5 +1,11 @@
 import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { type Clock, systemClock } from "@/lib/temporal";
+import {
+  compareSortKeys,
+  generateAppendKey,
+  needsRebalancing,
+  rebalanceKeys,
+} from "@/services/SortOrderService";
 import type { Category } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { hasEntityChanged } from "@/utils/deepEqual";
@@ -12,8 +18,11 @@ export class CategoryService {
 
   async getAll(): Promise<Category[]> {
     const categories = await this.categoryRepository.getActive();
-    return categories.sort(
-      (categoryA, categoryB) => categoryA.sort_order - categoryB.sort_order,
+    return categories.sort((categoryA, categoryB) =>
+      compareSortKeys(
+        String(categoryA.sort_order),
+        String(categoryB.sort_order),
+      ),
     );
   }
 
@@ -23,11 +32,14 @@ export class CategoryService {
 
   async create(name: string): Promise<Category> {
     const existingCategories = await this.categoryRepository.getActive();
+    const existingKeys = existingCategories.map((category) =>
+      String(category.sort_order),
+    );
     const now = toISOTimestamp(this.clock);
     const category: Category = {
       id: crypto.randomUUID(),
       name,
-      sort_order: existingCategories.length,
+      sort_order: generateAppendKey(existingKeys),
       is_deleted: false,
       created_at: now,
       updated_at: now,
@@ -50,28 +62,43 @@ export class CategoryService {
     return this.applyChanges(id, { is_deleted: false });
   }
 
-  async reorderCategories(orderedCategories: Category[]): Promise<void> {
-    if (orderedCategories.length === 0) return;
-
-    // Check if at least one sort_order has changed
-    const hasAnyOrderChanged = orderedCategories.some(
-      (category, index) => category.sort_order !== index,
-    );
-    if (!hasAnyOrderChanged) {
-      return; // Nothing changed, skip sync
-    }
+  async reorderCategories(
+    categoryId: string,
+    newSortOrder: string,
+  ): Promise<void> {
+    const category = await this.categoryRepository.getById(categoryId);
+    if (!category) throw new Error(`Category not found: ${categoryId}`);
 
     const now = toISOTimestamp(this.clock);
-    const updated = orderedCategories.map((category, index) => {
-      const orderChanged = category.sort_order !== index;
-      return {
-        ...category,
-        sort_order: index,
-        updated_at: orderChanged ? now : category.updated_at,
-        needsSync: orderChanged,
-      };
+    await this.categoryRepository.update({
+      ...category,
+      sort_order: newSortOrder,
+      updated_at: now,
+      needsSync: true,
     });
-    await this.categoryRepository.bulkUpsert(updated);
+
+    if (needsRebalancing(newSortOrder)) {
+      await this.rebalanceAllCategories();
+    }
+  }
+
+  private async rebalanceAllCategories(): Promise<void> {
+    const categories = await this.categoryRepository.getActive();
+    const sorted = categories.sort((categoryA, categoryB) =>
+      compareSortKeys(
+        String(categoryA.sort_order),
+        String(categoryB.sort_order),
+      ),
+    );
+    const newKeys = rebalanceKeys(sorted.length);
+    const now = toISOTimestamp(this.clock);
+    const rebalancedCategories = sorted.map((category, index) => ({
+      ...category,
+      sort_order: newKeys[index],
+      updated_at: now,
+      needsSync: true,
+    }));
+    await this.categoryRepository.bulkUpsert(rebalancedCategories);
   }
 
   private async applyChanges(

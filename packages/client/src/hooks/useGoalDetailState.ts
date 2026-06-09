@@ -173,8 +173,8 @@ export function useGoalDetailState() {
   const commandBarPlaceholder = t(`commandBar.placeholder.${targetBox}`);
 
   const handleReorderTasks = useCallback(
-    async (_box: Box, orderedTasks: Task[]) => {
-      await reorderTasks(orderedTasks);
+    async (_box: Box, taskId: string, newSortOrder: string) => {
+      await reorderTasks(taskId, newSortOrder);
     },
     [reorderTasks],
   );

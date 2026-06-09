@@ -64,9 +64,9 @@ describeFeature(
         let createdCategory: Category;
 
         Given("3 active categories exist", async (_ctx: TestContext) => {
-          await seedCategory(ctx.categoryIds, "Cat A", { sort_order: 0 });
-          await seedCategory(ctx.categoryIds, "Cat B", { sort_order: 1 });
-          await seedCategory(ctx.categoryIds, "Cat C", { sort_order: 2 });
+          await seedCategory(ctx.categoryIds, "Cat A", { sort_order: "a0" });
+          await seedCategory(ctx.categoryIds, "Cat B", { sort_order: "a1" });
+          await seedCategory(ctx.categoryIds, "Cat C", { sort_order: "a2" });
         });
 
         When(
@@ -76,9 +76,21 @@ describeFeature(
           },
         );
 
-        Then("category has sort_order 3", async (_ctx: TestContext) => {
-          expect(createdCategory.sort_order).toBe(3);
-        });
+        Then(
+          "category has sort_order above existing maximum",
+          async (_ctx: TestContext) => {
+            expect(typeof createdCategory.sort_order).toBe("string");
+            const allCategories = await ctx.categoryService.getAll();
+            const others = allCategories.filter(
+              (entity) => entity.id !== createdCategory.id,
+            );
+            for (const other of others) {
+              expect(
+                String(createdCategory.sort_order) > String(other.sort_order),
+              ).toBe(true);
+            }
+          },
+        );
       },
     );
 
@@ -124,9 +136,9 @@ describeFeature(
       let returnedCategories: Category[];
 
       Given("categories with sort_order 2, 0, 1", async (_ctx: TestContext) => {
-        await seedCategory(ctx.categoryIds, "Cat A", { sort_order: 2 });
-        await seedCategory(ctx.categoryIds, "Cat B", { sort_order: 0 });
-        await seedCategory(ctx.categoryIds, "Cat C", { sort_order: 1 });
+        await seedCategory(ctx.categoryIds, "Cat A", { sort_order: "2" });
+        await seedCategory(ctx.categoryIds, "Cat B", { sort_order: "0" });
+        await seedCategory(ctx.categoryIds, "Cat C", { sort_order: "1" });
       });
 
       When("user requests all categories", async (_ctx: TestContext) => {
@@ -139,7 +151,7 @@ describeFeature(
           const sortOrders = returnedCategories.map(
             (category) => category.sort_order,
           );
-          expect(sortOrders).toEqual([0, 1, 2]);
+          expect(sortOrders).toEqual(["0", "1", "2"]);
         },
       );
     });

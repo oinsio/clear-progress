@@ -4,10 +4,9 @@ import { buildTask } from "@/test/factories/taskFactory";
 import type { Task } from "@/types/entities";
 import { createTestContext } from "./TaskService-test-utils";
 
-function expectSortedAscendingByOrder(tasks: Task[]) {
-  expect(tasks[0].sort_order).toBe(1);
-  expect(tasks[1].sort_order).toBe(2);
-  expect(tasks[2].sort_order).toBe(3);
+function expectSortedDescendingByOrder(tasks: Task[]) {
+  expect(String(tasks[0].sort_order) > String(tasks[1].sort_order)).toBe(true);
+  expect(String(tasks[1].sort_order) > String(tasks[2].sort_order)).toBe(true);
 }
 
 describe("TaskService", () => {
@@ -18,17 +17,17 @@ describe("TaskService", () => {
       expect(tasks).toEqual([]);
     });
 
-    it("should return tasks sorted by sort_order ascending", async () => {
+    it("should return tasks sorted by sort_order descending", async () => {
       const unsortedTasks = [
-        buildTask({ box: "today", sort_order: 3 }),
-        buildTask({ box: "today", sort_order: 1 }),
-        buildTask({ box: "today", sort_order: 2 }),
+        buildTask({ box: "today", sort_order: "a2" }),
+        buildTask({ box: "today", sort_order: "a0" }),
+        buildTask({ box: "today", sort_order: "a1" }),
       ];
       const { taskService } = createTestContext({
         getByBox: vi.fn().mockResolvedValue(unsortedTasks),
       });
       const tasks = await taskService.getByBox(BOX.TODAY);
-      expectSortedAscendingByOrder(tasks);
+      expectSortedDescendingByOrder(tasks);
     });
   });
 
@@ -56,18 +55,18 @@ describe("TaskService", () => {
       expect(tasks).toEqual([]);
     });
 
-    it("should return tasks sorted by sort_order ascending", async () => {
+    it("should return tasks sorted by sort_order descending", async () => {
       const goalId = "goal-1";
       const unsortedTasks = [
-        buildTask({ goal_id: goalId, sort_order: 3 }),
-        buildTask({ goal_id: goalId, sort_order: 1 }),
-        buildTask({ goal_id: goalId, sort_order: 2 }),
+        buildTask({ goal_id: goalId, sort_order: "a2" }),
+        buildTask({ goal_id: goalId, sort_order: "a0" }),
+        buildTask({ goal_id: goalId, sort_order: "a1" }),
       ];
       const { taskService } = createTestContext({
         getByGoalId: vi.fn().mockResolvedValue(unsortedTasks),
       });
       const tasks = await taskService.getByGoalId(goalId);
-      expectSortedAscendingByOrder(tasks);
+      expectSortedDescendingByOrder(tasks);
     });
 
     it("should call repository.getByGoalId with the goalId", async () => {
@@ -87,18 +86,18 @@ describe("TaskService", () => {
       expect(tasks).toEqual([]);
     });
 
-    it("should return tasks sorted by sort_order ascending", async () => {
+    it("should return tasks sorted by sort_order descending", async () => {
       const categoryId = "cat-1";
       const unsortedTasks = [
-        buildTask({ category_id: categoryId, sort_order: 3 }),
-        buildTask({ category_id: categoryId, sort_order: 1 }),
-        buildTask({ category_id: categoryId, sort_order: 2 }),
+        buildTask({ category_id: categoryId, sort_order: "a2" }),
+        buildTask({ category_id: categoryId, sort_order: "a0" }),
+        buildTask({ category_id: categoryId, sort_order: "a1" }),
       ];
       const { taskService } = createTestContext({
         getByCategoryId: vi.fn().mockResolvedValue(unsortedTasks),
       });
       const tasks = await taskService.getByCategoryId(categoryId);
-      expectSortedAscendingByOrder(tasks);
+      expectSortedDescendingByOrder(tasks);
     });
 
     it("should call repository.getByCategoryId with the categoryId", async () => {
@@ -117,18 +116,18 @@ describe("TaskService", () => {
       expect(tasks).toEqual([]);
     });
 
-    it("should return tasks sorted by sort_order ascending", async () => {
+    it("should return tasks sorted by sort_order descending", async () => {
       const contextId = "ctx-1";
       const unsortedTasks = [
-        buildTask({ context_id: contextId, sort_order: 3 }),
-        buildTask({ context_id: contextId, sort_order: 1 }),
-        buildTask({ context_id: contextId, sort_order: 2 }),
+        buildTask({ context_id: contextId, sort_order: "a2" }),
+        buildTask({ context_id: contextId, sort_order: "a0" }),
+        buildTask({ context_id: contextId, sort_order: "a1" }),
       ];
       const { taskService } = createTestContext({
         getByContextId: vi.fn().mockResolvedValue(unsortedTasks),
       });
       const tasks = await taskService.getByContextId(contextId);
-      expectSortedAscendingByOrder(tasks);
+      expectSortedDescendingByOrder(tasks);
     });
 
     it("should call repository.getByContextId with the contextId", async () => {

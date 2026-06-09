@@ -4,7 +4,6 @@
  */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
@@ -24,6 +23,7 @@ import { useGoals } from "@/hooks/useGoals";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import type { Goal } from "@/types/entities";
 
@@ -118,8 +118,28 @@ export default function GoalsPage() {
       if (!over || active.id === over.id) return;
       const oldIndex = activeGoals.findIndex((goal) => goal.id === active.id);
       const newIndex = activeGoals.findIndex((goal) => goal.id === over.id);
-      const reordered = arrayMove(activeGoals, oldIndex, newIndex);
-      void reorderGoals(reordered);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      // List is sorted ASC: index 0 = lowest key, last index = highest key
+      const lowerNeighbor =
+        newIndex > 0 ? String(activeGoals[newIndex - 1].sort_order) : null;
+      const upperNeighbor =
+        newIndex < activeGoals.length - 1
+          ? String(activeGoals[newIndex + 1].sort_order)
+          : null;
+
+      // When moving down, displaced item moves up, so neighbors shift
+      const lowerKey =
+        oldIndex < newIndex
+          ? String(activeGoals[newIndex].sort_order)
+          : lowerNeighbor;
+      const upperKey =
+        oldIndex > newIndex
+          ? String(activeGoals[newIndex].sort_order)
+          : upperNeighbor;
+
+      const newSortOrder = generateKeyBetween(lowerKey, upperKey);
+      void reorderGoals(String(active.id), newSortOrder);
     },
     [activeGoals, reorderGoals],
   );

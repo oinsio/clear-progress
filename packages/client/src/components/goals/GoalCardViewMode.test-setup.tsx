@@ -9,7 +9,7 @@ export const BASE_GOAL: Goal = {
   description: "",
   cover_hash: "",
   status: "in_progress",
-  sort_order: 0,
+  sort_order: "0",
   is_deleted: false,
   created_at: "2026-01-01T00:00:00.000Z" as Goal["created_at"],
   updated_at: "2026-01-01T00:00:00.000Z" as Goal["updated_at"],

@@ -47,7 +47,7 @@ function makeTask(id: string): WireTask {
     next_date: "",
     appear_date: "",
     original_task_id: "",
-    sort_order: 0,
+    sort_order: "0",
     is_deleted: false,
     created_at: now,
     updated_at: now,

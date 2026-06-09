@@ -51,6 +51,7 @@ export interface EntityDetailLayoutProps {
   onMoveTask: (id: string, box: Box) => Promise<void>;
   onDeleteTask: (id: string) => void;
   onDuplicateTask: (id: string) => Promise<Task>;
+  onReorder?: (box: Box, taskId: string, newSortOrder: string) => Promise<void>;
   onModeChange: (mode: SidebarMode) => void;
 }
 
@@ -74,6 +75,7 @@ export function EntityDetailLayout({
   onMoveTask,
   onDeleteTask,
   onDuplicateTask,
+  onReorder,
   onModeChange,
 }: EntityDetailLayoutProps) {
   const { t } = useTranslation();
@@ -300,6 +302,7 @@ export function EntityDetailLayout({
                 onUpdate={onUpdateTask}
                 onMove={onMoveTask}
                 onDelete={onDeleteTask}
+                onReorder={onReorder}
                 onSelect={handleTaskSelect}
                 selectedTaskId={selectedTaskId}
                 isFocusMode={isFocusMode}

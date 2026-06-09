@@ -36,8 +36,8 @@ describe("IdeaService", () => {
       expect(createdIdea.description).toBe("");
     });
 
-    it("should create idea with sort_order 0 by default", () => {
-      expect(createdIdea.sort_order).toBe(0);
+    it("should create idea with string sort_order by default", () => {
+      expect(typeof createdIdea.sort_order).toBe("string");
     });
 
     it("should create idea with needsSync true", () => {
@@ -63,8 +63,8 @@ describe("IdeaService", () => {
 
     it("should preserve provided sort_order", async () => {
       const ideaService = new IdeaService(mockIdeaRepository);
-      const idea = await ideaService.create({ name: "Test", sort_order: 5 });
-      expect(idea.sort_order).toBe(5);
+      const idea = await ideaService.create({ name: "Test", sort_order: "a5" });
+      expect(idea.sort_order).toBe("a5");
     });
   });
 });

@@ -183,7 +183,7 @@ describe("SyncService — push chunks — basic", () => {
       payloadKey: "contexts",
       setupRepo: (context: SyncTestContext) => {
         context.contextRepository = withNeedingSync(context.contextRepository, [
-          makeContext({ id: "ctx-only-1", name: "Home", sort_order: 0 }),
+          makeContext({ id: "ctx-only-1", name: "Home", sort_order: "0" }),
         ]);
       },
     },

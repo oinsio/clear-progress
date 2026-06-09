@@ -22,18 +22,21 @@ describe("IdeaService", () => {
 
     it("should return ideas sorted by sort_order ascending", async () => {
       const unsortedIdeas = [
-        buildIdea({ sort_order: 3 }),
-        buildIdea({ sort_order: 1 }),
-        buildIdea({ sort_order: 2 }),
+        buildIdea({ sort_order: "a2" }),
+        buildIdea({ sort_order: "a0" }),
+        buildIdea({ sort_order: "a1" }),
       ];
       mockIdeaRepository = createMockIdeaRepository({
         getActive: vi.fn().mockResolvedValue(unsortedIdeas),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
       const ideas = await ideaService.getAll();
-      expect(ideas[0].sort_order).toBe(1);
-      expect(ideas[1].sort_order).toBe(2);
-      expect(ideas[2].sort_order).toBe(3);
+      expect(String(ideas[0].sort_order) < String(ideas[1].sort_order)).toBe(
+        true,
+      );
+      expect(String(ideas[1].sort_order) < String(ideas[2].sort_order)).toBe(
+        true,
+      );
     });
 
     it("should call repository.getActive", async () => {

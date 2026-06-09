@@ -143,13 +143,13 @@ describe("TaskService", () => {
       const originalTask = buildTask();
       const originalItem = buildChecklistItem({
         task_id: originalTask.id,
-        sort_order: 5,
+        sort_order: "a3",
       });
       const { mockChecklistRepository } = await setupDuplicateTest({}, [
         originalItem,
       ]);
       const copiedItem = getCreatedItem(mockChecklistRepository);
-      expect(copiedItem.sort_order).toBe(5);
+      expect(copiedItem.sort_order).toBe("a3");
     });
 
     it("should not copy checklist items when task has no checklist", async () => {

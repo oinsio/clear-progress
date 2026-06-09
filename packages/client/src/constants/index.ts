@@ -248,3 +248,5 @@ export const HANDEDNESS_OPTIONS: Handedness[] = ["right", "left"];
 export const COMMAND_BAR_CSS_VAR = "--command-bar-height";
 
 export const COMMAND_BAR_STACKED_CLASS = "command-bar-stacked";
+
+export const SORT_ORDER_REBALANCE_THRESHOLD = 10;

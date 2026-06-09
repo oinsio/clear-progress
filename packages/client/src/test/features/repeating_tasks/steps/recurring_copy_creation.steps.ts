@@ -182,21 +182,21 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
               task_id: TASK_CHECKLIST_ID,
               name: "Step 1",
               is_completed: true,
-              sort_order: 0,
+              sort_order: "0",
             }),
             buildChecklistItem({
               id: ITEM_2_ID,
               task_id: TASK_CHECKLIST_ID,
               name: "Step 2",
               is_completed: true,
-              sort_order: 1,
+              sort_order: "1",
             }),
             buildChecklistItem({
               id: ITEM_3_ID,
               task_id: TASK_CHECKLIST_ID,
               name: "Step 3",
               is_completed: false,
-              sort_order: 2,
+              sort_order: "2",
             }),
           ];
           await db.checklist_items.bulkAdd(items);

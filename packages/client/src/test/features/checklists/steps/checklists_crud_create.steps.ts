@@ -83,15 +83,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await seedChecklistItem(ctx.checklistItemIds, "Item A", {
             task_id: taskId,
-            sort_order: 0,
+            sort_order: "a0",
           });
           await seedChecklistItem(ctx.checklistItemIds, "Item B", {
             task_id: taskId,
-            sort_order: 1,
+            sort_order: "a1",
           });
           await seedChecklistItem(ctx.checklistItemIds, "Item C", {
             task_id: taskId,
-            sort_order: 2,
+            sort_order: "a2",
           });
         },
       );
@@ -103,9 +103,21 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      Then("checklist item has sort_order 3", async (_ctx: TestContext) => {
-        expect(createdItem.sort_order).toBe(3);
-      });
+      Then(
+        "checklist item has sort_order above existing maximum",
+        async (_ctx: TestContext) => {
+          expect(typeof createdItem.sort_order).toBe("string");
+          const allItems = await ctx.checklistService.getByTaskId(taskId);
+          const others = allItems.filter(
+            (entity) => entity.id !== createdItem.id,
+          );
+          for (const other of others) {
+            expect(
+              String(createdItem.sort_order) > String(other.sort_order),
+            ).toBe(true);
+          }
+        },
+      );
     },
   );
 

@@ -13,7 +13,7 @@ Feature: Categories CRUD
   Scenario: Sort order defaults to end of list
     Given 3 active categories exist
     When user creates category "New Category"
-    Then category has sort_order 3
+    Then category has sort_order above existing maximum
 
   @add-context-category-specs @FR1
   Scenario: UUID generated client-side

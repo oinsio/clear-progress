@@ -32,21 +32,26 @@ describe("useTasks — reorderTasks", () => {
     mockSchedulePush.mockClear();
   });
 
-  it("should update task order after reordering", async () => {
-    const { result, task1, task2 } = await setupHookWithTwoTasks();
+  it("should update task sort_order after reordering", async () => {
+    const { result, task1 } = await setupHookWithTwoTasks();
 
     await act(async () => {
-      await result.current.reorderTasks([task2, task1]);
+      await result.current.reorderTasks(task1.id, "a2");
     });
 
-    await waitFor(() => expect(result.current.tasks[0].id).toBe(task2.id));
+    await waitFor(() => {
+      const reorderedTask = result.current.tasks.find(
+        (task) => task.id === task1.id,
+      );
+      expect(reorderedTask?.sort_order).toBe("a2");
+    });
   });
 
   it("should schedule push when reorderTasks is called", async () => {
-    const { result, task1, task2 } = await setupHookWithTwoTasks();
+    const { result, task1 } = await setupHookWithTwoTasks();
 
     await act(async () => {
-      await result.current.reorderTasks([task2, task1]);
+      await result.current.reorderTasks(task1.id, "a2");
     });
 
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
