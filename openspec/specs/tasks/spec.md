@@ -9,17 +9,24 @@ Core task management. Tasks live in boxes (inbox, today, week, later), support c
 ### Requirement: User can create a task
 # implements FR1 of task-core-specs
 
-User SHALL be able to create a task by providing a name and box. System MUST generate a UUID v4 client-side, set `revision` to 0, `needsSync` to true, `is_deleted` to false, `is_completed` to false, `completed_at` to empty string, `is_hidden` to false. Optional fields (`description`, `goal_id`, `context_id`, `category_id`, `repeat_rule`, `next_date`, `appear_date`, `original_task_id`) MUST default to empty string. The `sort_order` MUST default to the count of existing tasks in the same box. Timestamps `created_at` and `updated_at` MUST be set to current time in ISO 8601 with Z suffix.
+User SHALL be able to create a task by providing a name and box. System MUST generate a UUID v4 client-side, set `revision` to 0, `needsSync` to true, `is_deleted` to false, `is_completed` to false, `completed_at` to empty string, `is_hidden` to false. Optional fields (`description`, `goal_id`, `context_id`, `category_id`, `repeat_rule`, `next_date`, `appear_date`, `original_task_id`) MUST default to empty string. The `sort_order` MUST be a lexicographically sortable string generated via fractional indexing, inserted as a key above the current maximum `sort_order` in the target box (global, not filtered). The new task appears at the top of the box list. Timestamps `created_at` and `updated_at` MUST be set to current time in ISO 8601 with Z suffix.
 
 #### Scenario: Create task with name and box
 - **GIVEN** inbox has 0 tasks
 - **WHEN** user creates a task with name "Buy groceries" in box "inbox"
 - **THEN** task is persisted with name "Buy groceries", box "inbox", revision 0, needsSync true, is_deleted false, is_completed false
 
-#### Scenario: Sort order defaults to end of box
-- **GIVEN** inbox has 3 tasks
-- **WHEN** user creates a new task in inbox
-- **THEN** new task has sort_order = 3
+#### Scenario: New task appears at top of box
+- **GIVEN** today box has tasks with sort_order "a1", "a0"
+- **WHEN** user creates a new task in today box
+- **THEN** new task has sort_order greater than "a1"
+- **AND** new task appears first when sorted descending
+
+#### Scenario: New task from Goal Detail uses global box maximum
+- **GIVEN** today box has tasks with sort_order "a2", "a1", "a0"
+- **AND** goal "Fitness" contains tasks "a2" and "a0"
+- **WHEN** user creates a task for goal "Fitness" in today box
+- **THEN** new task has sort_order greater than "a2" (global max, not goal max)
 
 #### Scenario: UUID generated client-side
 - **WHEN** user creates a task
@@ -69,12 +76,12 @@ User SHALL be able to update task fields. System MUST use smart dirty flag: if t
 ### Requirement: User can get tasks by box
 # implements FR2 of task-core-specs
 
-User SHALL be able to retrieve all non-deleted tasks for a given box, sorted by `sort_order` ascending. Soft-deleted tasks MUST NOT appear. Hidden tasks are included (box-level query does not filter by is_hidden).
+User SHALL be able to retrieve all non-deleted tasks for a given box, sorted by `sort_order` descending (higher key = top of list). Soft-deleted tasks MUST NOT appear. Hidden tasks are included (box-level query does not filter by is_hidden).
 
-#### Scenario: Get tasks by box sorted by sort_order
-- **GIVEN** inbox has tasks with sort_order 2, 0, 1
-- **WHEN** user gets tasks by box "inbox"
-- **THEN** tasks are returned in order: sort_order 0, 1, 2
+#### Scenario: Tasks sorted by sort_order descending
+- **GIVEN** tasks with sort_order "a2", "a0", "a1"
+- **WHEN** user gets tasks by box
+- **THEN** tasks are returned in order: "a2", "a1", "a0"
 
 #### Scenario: Empty box
 - **GIVEN** inbox has no tasks
@@ -89,17 +96,19 @@ User SHALL be able to retrieve all non-deleted tasks for a given box, sorted by 
 ### Requirement: User can move a task between boxes
 # implements FR2 of task-core-specs
 
-User SHALL be able to move a task from one box to another by updating its `box` field.
+User SHALL be able to move a task from one box to another by updating its `box` field. When moving to a different box, `sort_order` MUST be recalculated as a key above the current maximum in the destination box.
 
-#### Scenario: Move task from inbox to today
-- **GIVEN** task "Buy groceries" is in box "inbox"
-- **WHEN** user moves task to box "today"
-- **THEN** task.box is "today", needsSync is true
+#### Scenario: Moved task appears at top of destination box
+- **GIVEN** task "Buy groceries" is in inbox with sort_order "a1"
+- **AND** today box has tasks with sort_order "a3", "a2"
+- **WHEN** user moves task to today
+- **THEN** task sort_order is greater than "a3"
+- **AND** task appears first in today
 
-#### Scenario: Move task to same box is no-op
-- **GIVEN** task "Buy groceries" is in box "inbox"
-- **WHEN** user moves task to box "inbox"
-- **THEN** needsSync remains false, updated_at is unchanged
+#### Scenario: Move to same box is no-op
+- **GIVEN** task "Buy groceries" is in inbox with sort_order "a1"
+- **WHEN** user moves task to inbox (same box)
+- **THEN** sort_order remains "a1", needsSync remains false
 
 ### Requirement: User can complete a task
 # implements FR3 of task-core-specs
@@ -137,12 +146,15 @@ User SHALL be able to mark a task as completed. System MUST set `is_completed` t
 ### Requirement: User can uncomplete a task
 # implements FR3 of task-core-specs
 
-User SHALL be able to undo task completion. System MUST set `is_completed` to false and `completed_at` to empty string.
+User SHALL be able to undo task completion. System MUST set `is_completed` to false, `completed_at` to empty string, and `sort_order` MUST be recalculated as a key above the current maximum in the task's box.
 
-#### Scenario: Uncomplete a task
-- **GIVEN** completed task "Buy groceries" exists
+#### Scenario: Uncompleted task appears at top of box
+- **GIVEN** completed task "Buy groceries" was in today box
+- **AND** today box has tasks with sort_order "a3", "a2"
 - **WHEN** user uncompletes the task
-- **THEN** is_completed is false, completed_at is empty string, needsSync is true
+- **THEN** task sort_order is greater than "a3"
+- **AND** task appears first in today
+- **AND** is_completed is false, completed_at is empty string, needsSync is true
 
 #### Scenario: Uncomplete nonexistent task throws error
 - **WHEN** user attempts to uncomplete a task with a nonexistent ID
@@ -169,28 +181,27 @@ User SHALL be able to view all completed tasks sorted by `completed_at` descendi
 - **THEN** the soft-deleted task does not appear
 
 ### Requirement: User can reorder tasks within a box
-# implements FR5 of task-core-specs
+# implements FR5 of task-core-specs, FR6 of fractional-sort-order
 
-User SHALL be able to reorder tasks via drag-and-drop. System MUST assign sequential `sort_order` values (0, 1, 2...) based on position. Only tasks whose `sort_order` actually changed MUST be marked for sync. All changed tasks MUST share the same `updated_at` timestamp. Empty array MUST be a no-op. If order is unchanged, no database write occurs.
+User SHALL be able to reorder tasks via drag-and-drop. System MUST generate a new `sort_order` key between the two neighbors at the drop position. Only the dragged task is updated.
 
-#### Scenario: Reorder assigns sequential sort_order
-- **GIVEN** tasks A (sort_order=0), B (sort_order=1), C (sort_order=2)
-- **WHEN** user reorders to B, C, A
-- **THEN** B has sort_order=0, C has sort_order=1, A has sort_order=2
+#### Scenario: Reorder updates only dragged task
+- **GIVEN** tasks A (sort_order="a2"), B ("a1"), C ("a0") in today
+- **WHEN** user drags C between A and B
+- **THEN** C has new sort_order between "a1" and "a2"
+- **AND** A and B sort_order values are unchanged
 
-#### Scenario: Only changed tasks marked for sync
-- **GIVEN** tasks A (sort_order=0), B (sort_order=1), C (sort_order=2)
-- **WHEN** user reorders to A, C, B
-- **THEN** A has needsSync=false (unchanged), C has needsSync=true, B has needsSync=true
+#### Scenario: Reorder to first position
+- **GIVEN** tasks A ("a2"), B ("a1"), C ("a0") in today
+- **WHEN** user drags C to first position (before A)
+- **THEN** C has sort_order greater than "a2"
+- **AND** A and B are unchanged
 
-#### Scenario: Empty reorder is no-op
-- **WHEN** user reorders with an empty array
-- **THEN** no database write occurs
-
-#### Scenario: Same order is no-op
-- **GIVEN** tasks A (sort_order=0), B (sort_order=1)
-- **WHEN** user reorders to A, B (same order)
-- **THEN** no database write occurs
+#### Scenario: Reorder to last position
+- **GIVEN** tasks A ("a2"), B ("a1"), C ("a0") in today
+- **WHEN** user drags A to last position (after C)
+- **THEN** A has sort_order less than "a0"
+- **AND** B and C are unchanged
 
 ### Requirement: User can search tasks by name and description
 # implements FR6 of task-core-specs
@@ -250,7 +261,7 @@ User SHALL be able to duplicate a task. System MUST create a new task with the s
 ### Requirement: User can get tasks by goal
 # implements FR8 of task-core-specs
 
-User SHALL be able to retrieve all active, non-hidden tasks associated with a goal, sorted by `sort_order` ascending.
+User SHALL be able to retrieve all active, non-hidden tasks associated with a goal, sorted by `sort_order` descending.
 
 #### Scenario: Get tasks by goal
 - **GIVEN** 2 tasks associated with goal "Learn TypeScript" and 1 task with a different goal
@@ -264,7 +275,7 @@ User SHALL be able to retrieve all active, non-hidden tasks associated with a go
 ### Requirement: User can get tasks by context
 # implements FR8 of task-core-specs
 
-User SHALL be able to retrieve all active, non-hidden, incomplete tasks associated with a context, sorted by `sort_order` ascending.
+User SHALL be able to retrieve all active, non-hidden, incomplete tasks associated with a context, sorted by `sort_order` descending.
 
 #### Scenario: Get tasks by context
 - **GIVEN** 2 incomplete tasks associated with context "@home"
@@ -279,7 +290,7 @@ User SHALL be able to retrieve all active, non-hidden, incomplete tasks associat
 ### Requirement: User can get tasks by category
 # implements FR8 of task-core-specs
 
-User SHALL be able to retrieve all active, non-hidden, incomplete tasks associated with a category, sorted by `sort_order` ascending.
+User SHALL be able to retrieve all active, non-hidden, incomplete tasks associated with a category, sorted by `sort_order` descending.
 
 #### Scenario: Get tasks by category
 - **GIVEN** 2 incomplete tasks associated with category "Work"
@@ -367,3 +378,20 @@ Swiping left on a task item MUST be cancelled immediately. No action SHALL be tr
 #### Scenario: Swipe left does nothing
 - **WHEN** user swipes left on a task
 - **THEN** translateX remains 0, no action is triggered
+
+### Requirement: Lazy rebalancing when key exceeds threshold
+# implements FR9 of fractional-sort-order
+
+When a newly generated sort_order key exceeds 10 characters, the system MUST rebalance all tasks in the same box with evenly distributed keys preserving current display order.
+
+#### Scenario: Rebalancing triggered by long key
+- **GIVEN** today box has tasks with deeply nested sort_order keys
+- **WHEN** a drag-drop produces a key longer than 10 characters
+- **THEN** all tasks in today box get fresh evenly distributed keys
+- **AND** display order is preserved
+- **AND** all rebalanced tasks are marked needsSync=true
+
+#### Scenario: Rebalancing not triggered for short keys
+- **GIVEN** today box has tasks with short sort_order keys
+- **WHEN** a drag-drop produces a key of 4 characters
+- **THEN** only the dragged task is updated
