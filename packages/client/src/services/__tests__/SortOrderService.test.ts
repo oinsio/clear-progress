@@ -63,6 +63,35 @@ describe("SortOrderService", () => {
 
       expect(resultKey > lowerKey).toBe(true);
     });
+
+    it("should handle legacy numeric string as lower key", () => {
+      const legacyLowerKey = "3";
+      const validUpperKey = "a5";
+
+      const resultKey = generateKeyBetween(legacyLowerKey, validUpperKey);
+
+      expect(typeof resultKey).toBe("string");
+      expect(resultKey < validUpperKey).toBe(true);
+    });
+
+    it("should handle legacy numeric string as upper key", () => {
+      const validLowerKey = "a1";
+      const legacyUpperKey = "3";
+
+      const resultKey = generateKeyBetween(validLowerKey, legacyUpperKey);
+
+      expect(typeof resultKey).toBe("string");
+      expect(resultKey > validLowerKey).toBe(true);
+    });
+
+    it("should handle both keys as legacy numeric strings", () => {
+      const legacyLowerKey = "2";
+      const legacyUpperKey = "5";
+
+      const resultKey = generateKeyBetween(legacyLowerKey, legacyUpperKey);
+
+      expect(typeof resultKey).toBe("string");
+    });
   });
 
   describe("rebalanceKeys", () => {

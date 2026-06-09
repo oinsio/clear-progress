@@ -39,14 +39,24 @@ export function generateTopKey(existingKeys: string[]): string {
 export const generateAppendKey = generateTopKey;
 
 /**
+ * Sanitizes a key argument: returns null if the key is a legacy numeric string,
+ * so fractional-indexing treats it as an open boundary.
+ */
+function sanitizeKey(key: string | null): string | null {
+  if (key === null) return null;
+  return isValidFractionalKey(key) ? key : null;
+}
+
+/**
  * Generates a sort key between two neighboring keys.
  * Pass null for lower to insert before upper, or null for upper to insert after lower.
+ * Legacy numeric string keys (e.g. "3") are treated as null to avoid crashes.
  */
 export function generateKeyBetween(
   lower: string | null,
   upper: string | null,
 ): string {
-  return fractionalGenerateKeyBetween(lower, upper);
+  return fractionalGenerateKeyBetween(sanitizeKey(lower), sanitizeKey(upper));
 }
 
 /**
