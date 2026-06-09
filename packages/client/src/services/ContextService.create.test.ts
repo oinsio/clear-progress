@@ -32,8 +32,8 @@ describe("ContextService", () => {
       );
     });
 
-    it("should create context with sort_order 0", () => {
-      expect(createdContext.sort_order).toBe(0);
+    it("should create context with string sort_order", () => {
+      expect(typeof createdContext.sort_order).toBe("string");
     });
 
     it("should create context with needsSync true", () => {

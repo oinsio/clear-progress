@@ -84,11 +84,11 @@ describe("TaskService", () => {
 
     it("should copy checklist items with preserved name and sort_order", async () => {
       const { task, taskService, mockChecklistRepository } =
-        setupRecurringTaskWithItem({ name: "Buy milk", sort_order: 3 });
+        setupRecurringTaskWithItem({ name: "Buy milk", sort_order: "a2" });
       await taskService.complete(task.id);
       const copiedItem = getCreatedItem(mockChecklistRepository);
       expect(copiedItem.name).toBe("Buy milk");
-      expect(copiedItem.sort_order).toBe(3);
+      expect(copiedItem.sort_order).toBe("a2");
     });
 
     it("should copy checklist items with needsSync true", async () => {

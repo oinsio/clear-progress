@@ -26,8 +26,8 @@ export async function setupHookWithOneTask(
 }
 
 export async function setupHookWithTwoTasks() {
-  const task1 = buildTask({ box: "today", sort_order: 0 });
-  const task2 = buildTask({ box: "today", sort_order: 1 });
+  const task1 = buildTask({ box: "today", sort_order: "a0" });
+  const task2 = buildTask({ box: "today", sort_order: "a1" });
   await db.tasks.bulkAdd([task1, task2]);
   const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
   await waitFor(() => expect(result.current.tasks).toHaveLength(2));

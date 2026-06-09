@@ -22,18 +22,21 @@ describe("CategoryService", () => {
 
     it("should return categories sorted by sort_order ascending", async () => {
       const unsortedCategories = [
-        buildCategory({ sort_order: 3 }),
-        buildCategory({ sort_order: 1 }),
-        buildCategory({ sort_order: 2 }),
+        buildCategory({ sort_order: "a2" }),
+        buildCategory({ sort_order: "a0" }),
+        buildCategory({ sort_order: "a1" }),
       ];
       mockCategoryRepository = createMockCategoryRepository({
         getActive: vi.fn().mockResolvedValue(unsortedCategories),
       });
       const categoryService = new CategoryService(mockCategoryRepository);
       const categories = await categoryService.getAll();
-      expect(categories[0].sort_order).toBe(1);
-      expect(categories[1].sort_order).toBe(2);
-      expect(categories[2].sort_order).toBe(3);
+      expect(
+        String(categories[0].sort_order) < String(categories[1].sort_order),
+      ).toBe(true);
+      expect(
+        String(categories[1].sort_order) < String(categories[2].sort_order),
+      ).toBe(true);
     });
 
     it("should call repository.getActive", async () => {

@@ -2,6 +2,12 @@ import type { AttachmentRepository } from "@/db/repositories/AttachmentRepositor
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { type Clock, systemClock, Temporal } from "@/lib/temporal";
+import {
+  compareSortKeys,
+  generateTopKey,
+  needsRebalancing,
+  rebalanceKeys,
+} from "@/services/SortOrderService";
 import type { Box } from "@/types/common";
 import type { ChecklistItem, Task } from "@/types/entities";
 import {
@@ -25,7 +31,9 @@ export class TaskService {
   ) {}
 
   private sortBySortOrder(tasks: Task[]): Task[] {
-    return tasks.sort((taskA, taskB) => taskA.sort_order - taskB.sort_order);
+    return tasks.sort((taskA, taskB) =>
+      compareSortKeys(String(taskB.sort_order), String(taskA.sort_order)),
+    );
   }
 
   async getByBox(box: Box): Promise<Task[]> {
@@ -41,6 +49,8 @@ export class TaskService {
     partialTask: Pick<Task, "name" | "box"> & Partial<Task>,
   ): Promise<Task> {
     const existingTasks = await this.taskRepository.getByBox(partialTask.box);
+    const existingKeys = existingTasks.map((task) => String(task.sort_order));
+    const sortOrder = generateTopKey(existingKeys);
     const now = toISOTimestamp();
     const task: Task = {
       description: "",
@@ -54,7 +64,7 @@ export class TaskService {
       next_date: "",
       appear_date: "",
       original_task_id: "",
-      sort_order: existingTasks.length,
+      sort_order: sortOrder,
       ...partialTask,
       id: crypto.randomUUID(),
       is_deleted: false,
@@ -245,9 +255,15 @@ export class TaskService {
     if (!existingTask) {
       throw new Error(`Task not found: ${id}`);
     }
+
+    const boxTasks = await this.taskRepository.getByBox(existingTask.box);
+    const existingKeys = boxTasks.map((task) => String(task.sort_order));
+    const sortOrder = generateTopKey(existingKeys);
+
     return this.update(id, {
       is_completed: false,
       completed_at: "",
+      sort_order: sortOrder,
     });
   }
 
@@ -318,7 +334,17 @@ export class TaskService {
   }
 
   async moveToBox(id: string, box: Box): Promise<Task> {
-    return this.update(id, { box });
+    const existingTask = await this.taskRepository.getById(id);
+    if (!existingTask) throw new Error(`Task not found: ${id}`);
+    if (existingTask.box === box) return this.update(id, { box });
+
+    const destinationTasks = await this.taskRepository.getByBox(box);
+    const existingKeys = destinationTasks.map((task) =>
+      String(task.sort_order),
+    );
+    const sortOrder = generateTopKey(existingKeys);
+
+    return this.update(id, { box, sort_order: sortOrder });
   }
 
   async getCompleted(): Promise<Task[]> {
@@ -330,32 +356,42 @@ export class TaskService {
           Temporal.Instant.from(taskA.completed_at),
         );
       }
-      return taskB.sort_order - taskA.sort_order;
+      return compareSortKeys(
+        String(taskB.sort_order),
+        String(taskA.sort_order),
+      );
     });
   }
 
-  async reorderTasks(orderedTasks: Task[]): Promise<void> {
-    if (orderedTasks.length === 0) return;
-
-    // Check whether at least one sort_order has changed
-    const hasAnyOrderChanged = orderedTasks.some(
-      (task, index) => task.sort_order !== index,
-    );
-    if (!hasAnyOrderChanged) {
-      return; // Nothing changed, skip sync
-    }
+  async reorderTasks(taskId: string, newSortOrder: string): Promise<void> {
+    const task = await this.taskRepository.getById(taskId);
+    if (!task) throw new Error(`Task not found: ${taskId}`);
 
     const now = toISOTimestamp();
-    const updatedTasks = orderedTasks.map((task, index) => {
-      const orderChanged = task.sort_order !== index;
-      return {
-        ...task,
-        sort_order: index,
-        updated_at: orderChanged ? now : task.updated_at,
-        needsSync: orderChanged,
-      };
+    await this.taskRepository.update({
+      ...task,
+      sort_order: newSortOrder,
+      updated_at: now,
+      needsSync: true,
     });
-    await this.taskRepository.bulkUpsert(updatedTasks);
+
+    if (needsRebalancing(newSortOrder)) {
+      await this.rebalanceBox(task.box);
+    }
+  }
+
+  private async rebalanceBox(box: Box): Promise<void> {
+    const tasks = await this.taskRepository.getByBox(box);
+    const sorted = this.sortBySortOrder(tasks);
+    const newKeys = rebalanceKeys(sorted.length);
+    const now = toISOTimestamp();
+    const rebalancedTasks = sorted.map((task, index) => ({
+      ...task,
+      sort_order: newKeys[index],
+      updated_at: now,
+      needsSync: true,
+    }));
+    await this.taskRepository.bulkUpsert(rebalancedTasks);
   }
 
   /** Implements FR9 of hide-tasks */

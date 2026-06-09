@@ -43,15 +43,6 @@ export async function getCategory(
   return (await db.categories.get(getIdOrThrow(categoryIds, name))) as Category;
 }
 
-export async function expectCategorySortOrder(
-  categoryIds: Map<string, string>,
-  name: string,
-  expectedSortOrder: number,
-) {
-  const category = await getCategory(categoryIds, name);
-  expect(category.sort_order).toBe(expectedSortOrder);
-}
-
 export async function expectCategoryNeedsSync(
   categoryIds: Map<string, string>,
   name: string,
@@ -65,9 +56,11 @@ export async function seedCategoriesWithOrder(
   categoryIds: Map<string, string>,
   names: string[],
 ) {
+  const { rebalanceKeys } = await import("@/services/SortOrderService");
+  const keys = rebalanceKeys(names.length);
   for (let i = 0; i < names.length; i++) {
     await seedCategory(categoryIds, names[i], {
-      sort_order: i,
+      sort_order: keys[i],
       needsSync: false,
     });
   }

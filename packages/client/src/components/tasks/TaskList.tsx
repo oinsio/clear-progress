@@ -1,27 +1,16 @@
+import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
-  closestCenter,
-  DndContext,
-  type DragEndEvent,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useDndSensors } from "@/hooks/useDndSensors";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import type { Box } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
 import { TaskItem } from "./TaskItem";
-
-const DRAG_ACTIVATION_DISTANCE_PX = 8;
-const TOUCH_ACTIVATION_DELAY_MS = 250;
-const TOUCH_ACTIVATION_TOLERANCE_PX = 5;
 
 interface SortableTaskItemProps {
   task: Task;
@@ -108,7 +97,7 @@ interface TaskListProps {
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
   onMove: (id: string, box: Box) => Promise<void>;
   onDelete: (id: string) => void;
-  onReorder?: (tasks: Task[]) => Promise<void>;
+  onReorder?: (taskId: string, newSortOrder: string) => Promise<void>;
   emptyMessage?: string;
   onEmptyClick?: () => void;
   onSelect?: (id: string) => void;
@@ -161,16 +150,7 @@ export function TaskList({
   const hasFocusedTask =
     isFocusMode && (selectedTaskId != null || expandedTaskId != null);
 
-  const pointerSensor = useSensor(PointerSensor, {
-    activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE_PX },
-  });
-  const touchSensor = useSensor(TouchSensor, {
-    activationConstraint: {
-      delay: TOUCH_ACTIVATION_DELAY_MS,
-      tolerance: TOUCH_ACTIVATION_TOLERANCE_PX,
-    },
-  });
-  const sensors = useSensors(pointerSensor, touchSensor);
+  const sensors = useDndSensors();
 
   if (tasks.length === 0) {
     if (onEmptyClick) {
@@ -200,8 +180,25 @@ export function TaskList({
     if (!over || active.id === over.id || !onReorder) return;
     const oldIndex = tasks.findIndex((task) => task.id === active.id);
     const newIndex = tasks.findIndex((task) => task.id === over.id);
-    const reorderedTasks = arrayMove(tasks, oldIndex, newIndex);
-    void onReorder(reorderedTasks);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // List is sorted DESC: index 0 = highest key, last index = lowest key
+    // upper = higher key (lower index), lower = lower key (higher index)
+    const upperNeighbor =
+      newIndex > 0 ? String(tasks[newIndex - 1].sort_order) : null;
+    const lowerNeighbor =
+      newIndex < tasks.length - 1
+        ? String(tasks[newIndex + 1].sort_order)
+        : null;
+
+    // If moving down, the displaced item moves up, so neighbors shift
+    const upperKey =
+      oldIndex < newIndex ? String(tasks[newIndex].sort_order) : upperNeighbor;
+    const lowerKey =
+      oldIndex > newIndex ? String(tasks[newIndex].sort_order) : lowerNeighbor;
+
+    const newSortOrder = generateKeyBetween(lowerKey, upperKey);
+    void onReorder(String(active.id), newSortOrder);
   };
 
   if (!onReorder) {

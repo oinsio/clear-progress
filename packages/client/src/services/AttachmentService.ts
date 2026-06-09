@@ -2,6 +2,7 @@
 import type { EntityType } from "@clear-progress/contract";
 import { MAX_ATTACHMENT_SIZE_BYTES } from "@/constants";
 import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
+import { generateAppendKey } from "@/services/SortOrderService";
 import type { Attachment } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import type { FileService } from "./FileService";
@@ -29,7 +30,10 @@ export class AttachmentService {
         entityType,
         entityId,
       );
-    const sortOrder = existingAttachments.length;
+    const existingKeys = existingAttachments.map((attachment) =>
+      String(attachment.sort_order),
+    );
+    const sortOrder = generateAppendKey(existingKeys);
 
     const now = toISOTimestamp();
     const attachment: Attachment = {

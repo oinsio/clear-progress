@@ -44,20 +44,32 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         'goal "Learn Rust" has 3 active tasks and 2 completed tasks',
         async (_ctx: TestContext) => {
           await db.tasks.bulkAdd([
-            buildTask({ goal_id: goalId, is_completed: false, sort_order: 0 }),
-            buildTask({ goal_id: goalId, is_completed: false, sort_order: 1 }),
-            buildTask({ goal_id: goalId, is_completed: false, sort_order: 2 }),
+            buildTask({
+              goal_id: goalId,
+              is_completed: false,
+              sort_order: "a0",
+            }),
+            buildTask({
+              goal_id: goalId,
+              is_completed: false,
+              sort_order: "a1",
+            }),
+            buildTask({
+              goal_id: goalId,
+              is_completed: false,
+              sort_order: "a2",
+            }),
             buildTask({
               goal_id: goalId,
               is_completed: true,
               completed_at: "2026-01-01T10:00:00.000Z",
-              sort_order: 3,
+              sort_order: "a3",
             }),
             buildTask({
               goal_id: goalId,
               is_completed: true,
               completed_at: "2026-01-01T11:00:00.000Z",
-              sort_order: 4,
+              sort_order: "a4",
             }),
           ]);
         },
@@ -94,14 +106,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
               goal_id: goalId,
               is_completed: true,
               completed_at: "2026-01-01T10:00:00.000Z",
-              sort_order: 0,
+              sort_order: "a0",
             }),
             buildTask({
               name: "Task B",
               goal_id: goalId,
               is_completed: true,
               completed_at: "2026-01-01T11:00:00.000Z",
-              sort_order: 1,
+              sort_order: "a1",
             }),
           ]);
         },
@@ -125,7 +137,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       let sortedCompleted: Task[];
 
       Given(
-        "goal has completed task A with sort_order 1 and task B with sort_order 3 without completed_at",
+        'goal has completed task A with sort_order "a1" and task B with sort_order "a3" without completed_at',
         async (_ctx: TestContext) => {
           await db.tasks.bulkAdd([
             buildTask({
@@ -133,14 +145,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
               goal_id: goalId,
               is_completed: true,
               completed_at: "",
-              sort_order: 1,
+              sort_order: "a1",
             }),
             buildTask({
               name: "Task B",
               goal_id: goalId,
               is_completed: true,
               completed_at: "",
-              sort_order: 3,
+              sort_order: "a3",
             }),
           ]);
         },
@@ -188,13 +200,21 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         'goal "Learn Rust" has 2 active tasks and 1 completed task',
         async (_ctx: TestContext) => {
           await db.tasks.bulkAdd([
-            buildTask({ goal_id: goalId, is_completed: false, sort_order: 0 }),
-            buildTask({ goal_id: goalId, is_completed: false, sort_order: 1 }),
+            buildTask({
+              goal_id: goalId,
+              is_completed: false,
+              sort_order: "a0",
+            }),
+            buildTask({
+              goal_id: goalId,
+              is_completed: false,
+              sort_order: "a1",
+            }),
             buildTask({
               goal_id: goalId,
               is_completed: true,
               completed_at: "2026-01-01T10:00:00.000Z",
-              sort_order: 2,
+              sort_order: "a2",
             }),
           ]);
         },

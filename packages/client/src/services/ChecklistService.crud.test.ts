@@ -22,17 +22,20 @@ describe("ChecklistService", () => {
     it("should return items sorted by sort_order ascending", async () => {
       const taskId = "task-1";
       const unsortedItems = [
-        buildChecklistItem({ task_id: taskId, sort_order: 3 }),
-        buildChecklistItem({ task_id: taskId, sort_order: 1 }),
-        buildChecklistItem({ task_id: taskId, sort_order: 2 }),
+        buildChecklistItem({ task_id: taskId, sort_order: "a2" }),
+        buildChecklistItem({ task_id: taskId, sort_order: "a0" }),
+        buildChecklistItem({ task_id: taskId, sort_order: "a1" }),
       ];
       const { service } = createService({
         getActiveByTaskId: vi.fn().mockResolvedValue(unsortedItems),
       });
       const items = await service.getByTaskId(taskId);
-      expect(items[0].sort_order).toBe(1);
-      expect(items[1].sort_order).toBe(2);
-      expect(items[2].sort_order).toBe(3);
+      expect(String(items[0].sort_order) < String(items[1].sort_order)).toBe(
+        true,
+      );
+      expect(String(items[1].sort_order) < String(items[2].sort_order)).toBe(
+        true,
+      );
     });
 
     it("should call repository.getByTaskId with the taskId", async () => {
@@ -79,23 +82,24 @@ describe("ChecklistService", () => {
       expect(item.is_deleted).toBe(false);
     });
 
-    it("should create item with sort_order 0 when task has no existing items", async () => {
+    it("should create item with string sort_order when task has no existing items", async () => {
       const { service } = createService();
       const item = await service.create("task-1", "Do something");
-      expect(item.sort_order).toBe(0);
+      expect(typeof item.sort_order).toBe("string");
     });
 
-    it("should create item with sort_order equal to existing items count", async () => {
+    it("should create item with sort_order above existing items", async () => {
       const taskId = "task-1";
       const existingItems = [
-        buildChecklistItem({ task_id: taskId, sort_order: 0 }),
-        buildChecklistItem({ task_id: taskId, sort_order: 1 }),
+        buildChecklistItem({ task_id: taskId, sort_order: "a0" }),
+        buildChecklistItem({ task_id: taskId, sort_order: "a1" }),
       ];
       const { service } = createService({
         getActiveByTaskId: vi.fn().mockResolvedValue(existingItems),
       });
       const item = await service.create(taskId, "Third item");
-      expect(item.sort_order).toBe(2);
+      expect(typeof item.sort_order).toBe("string");
+      expect(String(item.sort_order) > "a1").toBe(true);
     });
 
     it("should create item with a UUID id", async () => {

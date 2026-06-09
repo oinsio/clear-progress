@@ -22,18 +22,21 @@ describe("GoalService", () => {
 
     it("should return goals sorted by sort_order ascending", async () => {
       const unsortedGoals = [
-        buildGoal({ sort_order: 3 }),
-        buildGoal({ sort_order: 1 }),
-        buildGoal({ sort_order: 2 }),
+        buildGoal({ sort_order: "a2" }),
+        buildGoal({ sort_order: "a0" }),
+        buildGoal({ sort_order: "a1" }),
       ];
       mockGoalRepository = createMockGoalRepository({
         getActive: vi.fn().mockResolvedValue(unsortedGoals),
       });
       const goalService = new GoalService(mockGoalRepository);
       const goals = await goalService.getAll();
-      expect(goals[0].sort_order).toBe(1);
-      expect(goals[1].sort_order).toBe(2);
-      expect(goals[2].sort_order).toBe(3);
+      expect(String(goals[0].sort_order) < String(goals[1].sort_order)).toBe(
+        true,
+      );
+      expect(String(goals[1].sort_order) < String(goals[2].sort_order)).toBe(
+        true,
+      );
     });
 
     it("should call repository.getActive", async () => {

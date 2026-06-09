@@ -4,7 +4,6 @@
  */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
@@ -24,6 +23,7 @@ import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
 import type { Context } from "@/types/entities";
@@ -119,16 +119,33 @@ export default function ContextsPage() {
     void defaultTaskService.getContextTaskCounts().then(setContextTaskCounts);
   }, []);
 
-  const handlePanelToggle = togglePanelOpen;
-
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
       const oldIndex = activeContexts.findIndex((c) => c.id === active.id);
       const newIndex = activeContexts.findIndex((c) => c.id === over.id);
-      const reordered = arrayMove(activeContexts, oldIndex, newIndex);
-      void reorderContexts(reordered);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      // List is sorted ASC: index 0 = lowest key, last index = highest key
+      const lowerNeighbor =
+        newIndex > 0 ? String(activeContexts[newIndex - 1].sort_order) : null;
+      const upperNeighbor =
+        newIndex < activeContexts.length - 1
+          ? String(activeContexts[newIndex + 1].sort_order)
+          : null;
+
+      const lowerKey =
+        oldIndex < newIndex
+          ? String(activeContexts[newIndex].sort_order)
+          : lowerNeighbor;
+      const upperKey =
+        oldIndex > newIndex
+          ? String(activeContexts[newIndex].sort_order)
+          : upperNeighbor;
+
+      const newSortOrder = generateKeyBetween(lowerKey, upperKey);
+      void reorderContexts(String(active.id), newSortOrder);
     },
     [activeContexts, reorderContexts],
   );
@@ -204,7 +221,7 @@ export default function ContextsPage() {
         mode="contexts"
         isOpen={isPanelOpen}
         side={panelSide}
-        onToggle={handlePanelToggle}
+        onToggle={togglePanelOpen}
         onModeChange={handleModeChange}
       />
     </div>

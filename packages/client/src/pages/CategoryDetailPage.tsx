@@ -8,6 +8,7 @@ import { useCategoryTasks } from "@/hooks/useCategoryTasks";
 import { useContexts } from "@/hooks/useContexts";
 import { useGoals } from "@/hooks/useGoals";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import type { Box } from "@/types/common";
 
 const CATEGORY_I18N_KEYS = {
   back: "category.back",
@@ -34,6 +35,7 @@ export default function CategoryDetailPage() {
     moveTask,
     deleteTask,
     duplicateTask,
+    reorderTasks,
   } = useCategoryTasks(id ?? "");
 
   const category = useMemo(
@@ -54,6 +56,13 @@ export default function CategoryDetailPage() {
     await deleteCategory(id);
     navigate(ROUTES.CATEGORIES);
   }, [id, deleteCategory, navigate]);
+
+  const handleReorderTasks = useCallback(
+    async (_box: Box, taskId: string, newSortOrder: string) => {
+      await reorderTasks(taskId, newSortOrder);
+    },
+    [reorderTasks],
+  );
 
   const handleModeChange = useSidebarNavigation();
 
@@ -78,6 +87,7 @@ export default function CategoryDetailPage() {
       onMoveTask={moveTask}
       onDeleteTask={deleteTask}
       onDuplicateTask={duplicateTask}
+      onReorder={handleReorderTasks}
       onModeChange={handleModeChange}
     />
   );

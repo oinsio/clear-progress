@@ -120,18 +120,30 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let createdGoal: Goal;
 
     Given("3 active goals exist", async (_ctx: TestContext) => {
-      await seedGoal(ctx.goalIds, "Goal A", { sort_order: 0 });
-      await seedGoal(ctx.goalIds, "Goal B", { sort_order: 1 });
-      await seedGoal(ctx.goalIds, "Goal C", { sort_order: 2 });
+      await seedGoal(ctx.goalIds, "Goal A", { sort_order: "a0" });
+      await seedGoal(ctx.goalIds, "Goal B", { sort_order: "a1" });
+      await seedGoal(ctx.goalIds, "Goal C", { sort_order: "a2" });
     });
 
     When('user creates goal "New Goal"', async (_ctx: TestContext) => {
       createdGoal = await ctx.goalService.create({ name: "New Goal" });
     });
 
-    Then("goal has sort_order 3", async (_ctx: TestContext) => {
-      expect(createdGoal.sort_order).toBe(3);
-    });
+    Then(
+      "goal has sort_order above existing maximum",
+      async (_ctx: TestContext) => {
+        expect(typeof createdGoal.sort_order).toBe("string");
+        const allGoals = await ctx.goalService.getAll();
+        const others = allGoals.filter(
+          (entity) => entity.id !== createdGoal.id,
+        );
+        for (const other of others) {
+          expect(
+            String(createdGoal.sort_order) > String(other.sort_order),
+          ).toBe(true);
+        }
+      },
+    );
   });
 
   // @add-goals-specs @FR1

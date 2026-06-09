@@ -267,17 +267,17 @@ describeFeature(
               buildAttachment({
                 entity_type: "task",
                 entity_id: entityId,
-                sort_order: 2,
+                sort_order: "a2",
               }),
               buildAttachment({
                 entity_type: "task",
                 entity_id: entityId,
-                sort_order: 0,
+                sort_order: "a0",
               }),
               buildAttachment({
                 entity_type: "task",
                 entity_id: entityId,
-                sort_order: 1,
+                sort_order: "a1",
               }),
             ]);
           },
@@ -294,9 +294,12 @@ describeFeature(
           "attachments are returned in sort_order 0, 1, 2",
           async (_ctx: TestContext) => {
             expect(result).toHaveLength(3);
-            expect(result[0].sort_order).toBe(0);
-            expect(result[1].sort_order).toBe(1);
-            expect(result[2].sort_order).toBe(2);
+            expect(
+              String(result[0].sort_order) < String(result[1].sort_order),
+            ).toBe(true);
+            expect(
+              String(result[1].sort_order) < String(result[2].sort_order),
+            ).toBe(true);
           },
         );
       },

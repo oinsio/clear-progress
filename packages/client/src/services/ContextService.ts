@@ -1,4 +1,10 @@
 import type { ContextRepository } from "@/db/repositories/ContextRepository";
+import {
+  compareSortKeys,
+  generateAppendKey,
+  needsRebalancing,
+  rebalanceKeys,
+} from "@/services/SortOrderService";
 import type { Context } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { hasEntityChanged } from "@/utils/deepEqual";
@@ -8,8 +14,8 @@ export class ContextService {
 
   async getAll(): Promise<Context[]> {
     const contexts = await this.contextRepository.getActive();
-    return contexts.sort(
-      (contextA, contextB) => contextA.sort_order - contextB.sort_order,
+    return contexts.sort((contextA, contextB) =>
+      compareSortKeys(String(contextA.sort_order), String(contextB.sort_order)),
     );
   }
 
@@ -19,11 +25,14 @@ export class ContextService {
 
   async create(name: string): Promise<Context> {
     const existingContexts = await this.contextRepository.getActive();
+    const existingKeys = existingContexts.map((context) =>
+      String(context.sort_order),
+    );
     const now = toISOTimestamp();
     const context: Context = {
       id: crypto.randomUUID(),
       name,
-      sort_order: existingContexts.length,
+      sort_order: generateAppendKey(existingKeys),
       is_deleted: false,
       created_at: now,
       updated_at: now,
@@ -46,28 +55,40 @@ export class ContextService {
     return this.applyChanges(id, { is_deleted: false });
   }
 
-  async reorderContexts(orderedContexts: Context[]): Promise<void> {
-    if (orderedContexts.length === 0) return;
-
-    // Check if at least one sort_order has changed
-    const hasAnyOrderChanged = orderedContexts.some(
-      (context, index) => context.sort_order !== index,
-    );
-    if (!hasAnyOrderChanged) {
-      return; // Nothing changed, skip sync
-    }
+  async reorderContexts(
+    contextId: string,
+    newSortOrder: string,
+  ): Promise<void> {
+    const context = await this.contextRepository.getById(contextId);
+    if (!context) throw new Error(`Context not found: ${contextId}`);
 
     const now = toISOTimestamp();
-    const updated = orderedContexts.map((context, index) => {
-      const orderChanged = context.sort_order !== index;
-      return {
-        ...context,
-        sort_order: index,
-        updated_at: orderChanged ? now : context.updated_at,
-        needsSync: orderChanged,
-      };
+    await this.contextRepository.update({
+      ...context,
+      sort_order: newSortOrder,
+      updated_at: now,
+      needsSync: true,
     });
-    await this.contextRepository.bulkUpsert(updated);
+
+    if (needsRebalancing(newSortOrder)) {
+      await this.rebalanceAllContexts();
+    }
+  }
+
+  private async rebalanceAllContexts(): Promise<void> {
+    const contexts = await this.contextRepository.getActive();
+    const sorted = contexts.sort((contextA, contextB) =>
+      compareSortKeys(String(contextA.sort_order), String(contextB.sort_order)),
+    );
+    const newKeys = rebalanceKeys(sorted.length);
+    const now = toISOTimestamp();
+    const rebalancedContexts = sorted.map((context, index) => ({
+      ...context,
+      sort_order: newKeys[index],
+      updated_at: now,
+      needsSync: true,
+    }));
+    await this.contextRepository.bulkUpsert(rebalancedContexts);
   }
 
   private async applyChanges(

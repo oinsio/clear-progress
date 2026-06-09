@@ -1,6 +1,5 @@
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -9,6 +8,7 @@ import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useChecklistItemEditing } from "@/hooks/useChecklistItemEditing";
 import { useDndSensors } from "@/hooks/useDndSensors";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import type { ChecklistItem } from "@/types/entities";
 import { SortableChecklistItem } from "./SortableChecklistItem";
 import {
@@ -96,7 +96,7 @@ interface TaskChecklistTabProps {
   toggleItem: (id: string) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   updateItem: (id: string, name: string) => Promise<void>;
-  reorderItems: (items: ChecklistItem[]) => Promise<void>;
+  reorderItems: (itemId: string, newSortOrder: string) => Promise<void>;
 }
 
 export function TaskChecklistTab({
@@ -129,8 +129,27 @@ export function TaskChecklistTab({
       if (!over || active.id === over.id) return;
       const oldIndex = sectionItems.findIndex((item) => item.id === active.id);
       const newIndex = sectionItems.findIndex((item) => item.id === over.id);
-      const reordered = arrayMove(sectionItems, oldIndex, newIndex);
-      void reorderItems(reordered);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      // List is sorted ASC: index 0 = lowest key, last index = highest key
+      const lowerNeighbor =
+        newIndex > 0 ? String(sectionItems[newIndex - 1].sort_order) : null;
+      const upperNeighbor =
+        newIndex < sectionItems.length - 1
+          ? String(sectionItems[newIndex + 1].sort_order)
+          : null;
+
+      const lowerKey =
+        oldIndex < newIndex
+          ? String(sectionItems[newIndex].sort_order)
+          : lowerNeighbor;
+      const upperKey =
+        oldIndex > newIndex
+          ? String(sectionItems[newIndex].sort_order)
+          : upperNeighbor;
+
+      const newSortOrder = generateKeyBetween(lowerKey, upperKey);
+      void reorderItems(String(active.id), newSortOrder);
     },
     [reorderItems],
   );

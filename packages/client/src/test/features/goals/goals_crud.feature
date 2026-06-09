@@ -27,7 +27,7 @@ Feature: Goals CRUD
   Scenario: Sort order defaults to end of list
     Given 3 active goals exist
     When user creates goal "New Goal"
-    Then goal has sort_order 3
+    Then goal has sort_order above existing maximum
 
   @add-goals-specs @FR1
   Scenario: UUID generated client-side

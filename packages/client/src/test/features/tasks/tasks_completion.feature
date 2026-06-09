@@ -27,6 +27,13 @@ Feature: Task Completion
     When user uncompletes nonexistent task
     Then error "Task not found" is thrown
 
+  @fractional-sort-order @FR5
+  Scenario: Uncompleted task appears at top of its box
+    Given inbox has tasks with sort_order "a0", "a1"
+    And completed task "Buy groceries" exists in box "inbox"
+    When user uncompletes the task
+    Then task has sort_order above "a1"
+
   @task-core-specs @FR4
   Scenario: Completed tasks sorted by completed_at descending
     Given tasks completed at "2026-01-01T10:00:00.000Z" and "2026-01-02T10:00:00.000Z"

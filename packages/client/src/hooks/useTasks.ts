@@ -19,7 +19,7 @@ export interface UseTasksReturn {
   deleteTask: (id: string) => Promise<void>;
   moveTask: (id: string, box: Box) => Promise<void>;
   updateTask: (id: string, changes: Partial<Task>) => Promise<void>;
-  reorderTasks: (orderedTasks: Task[]) => Promise<void>;
+  reorderTasks: (taskId: string, newSortOrder: string) => Promise<void>;
   duplicateTask: (id: string) => Promise<Task>;
   reload: () => Promise<void>;
 }
@@ -99,9 +99,8 @@ export function useTasks(
   );
 
   const reorderTasks = useCallback(
-    async (orderedTasks: Task[]) => {
-      setTasks(orderedTasks);
-      await taskService.reorderTasks(orderedTasks);
+    async (taskId: string, newSortOrder: string) => {
+      await taskService.reorderTasks(taskId, newSortOrder);
       schedulePush();
     },
     [taskService, schedulePush],

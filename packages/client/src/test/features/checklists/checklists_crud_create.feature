@@ -16,7 +16,7 @@ Feature: Checklists CRUD — Create
     Given a task exists
     And 3 active checklist items exist for the task
     When user creates checklist item "New Item" for the task
-    Then checklist item has sort_order 3
+    Then checklist item has sort_order above existing maximum
 
   @add-checklist-specs @FR1
   Scenario: UUID generated client-side

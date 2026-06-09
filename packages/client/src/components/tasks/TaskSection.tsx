@@ -24,7 +24,7 @@ export interface TaskSectionProps {
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
   onMove: (id: string, box: Box) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onReorder?: (tasks: Task[]) => Promise<void>;
+  onReorder?: (taskId: string, newSortOrder: string) => Promise<void>;
   emptyMessage?: string;
   hideEmptyState?: boolean;
   onEmptyClick?: () => void;

@@ -15,6 +15,7 @@ import type {
 } from "@/types/entities";
 import { DB_SCHEMA } from "./schema";
 import { DB_SCHEMA_V1 } from "./schemaV1";
+import { upgradeSortOrderToFractional } from "./sortOrderMigration";
 
 export class ClearProgressDatabase extends Dexie {
   tasks!: EntityTable<Task, "id">;
@@ -41,6 +42,9 @@ export class ClearProgressDatabase extends Dexie {
         await tx.table("files").bulkAdd(coverRecords);
         await tx.table("pending_files").bulkAdd(pendingCoverRecords);
       });
+    this.version(3)
+      .stores(DB_SCHEMA)
+      .upgrade((transaction) => upgradeSortOrderToFractional(transaction));
   }
 }
 

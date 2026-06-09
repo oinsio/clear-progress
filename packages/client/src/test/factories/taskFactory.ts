@@ -1,10 +1,13 @@
+import { generateKeyBetween } from "fractional-indexing";
 import type { Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 
 let taskCounter = 0;
+let lastTaskKey: string | null = null;
 
 export function buildTask(overrides: Partial<Task> = {}): Task {
   taskCounter += 1;
+  lastTaskKey = generateKeyBetween(lastTaskKey, null);
   const now = toISOTimestamp();
   return {
     id: crypto.randomUUID(),
@@ -21,7 +24,7 @@ export function buildTask(overrides: Partial<Task> = {}): Task {
     next_date: "",
     appear_date: "",
     original_task_id: "",
-    sort_order: taskCounter,
+    sort_order: lastTaskKey,
     is_deleted: false,
     created_at: now,
     updated_at: now,

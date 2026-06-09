@@ -18,7 +18,7 @@ export interface UseIdeasReturn {
   createIdea: (data: Pick<Idea, "name"> & Partial<Idea>) => Promise<void>;
   updateIdea: (id: string, changes: Partial<Idea>) => Promise<void>;
   deleteIdea: (id: string) => Promise<void>;
-  reorderIdeas: (orderedIdeas: Idea[]) => Promise<void>;
+  reorderIdeas: (ideaId: string, newSortOrder: string) => Promise<void>;
 }
 
 export function useIdeas(
@@ -64,8 +64,8 @@ export function useIdeas(
   );
 
   const reorderIdeas = useCallback(
-    async (orderedIdeas: Idea[]) => {
-      await ideaService.reorderIdeas(orderedIdeas);
+    async (ideaId: string, newSortOrder: string) => {
+      await ideaService.reorderIdeas(ideaId, newSortOrder);
       schedulePush();
     },
     [ideaService, schedulePush],

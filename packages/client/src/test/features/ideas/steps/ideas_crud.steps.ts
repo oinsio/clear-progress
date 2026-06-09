@@ -84,8 +84,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     );
   });
 
-  // @add-ideas-specs @FR1 @FR8
-  f.Scenario("Sort order defaults to end of list", ({ Given, When, Then }) => {
+  // @fractional-sort-order @FR8
+  f.Scenario("New idea appended to end of list", ({ Given, When, Then }) => {
     let createdIdea: Idea;
 
     Given("3 active ideas exist", async (_ctx: TestContext) => {
@@ -98,9 +98,21 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       createdIdea = await ctx.ideaService.create({ name: "New Idea" });
     });
 
-    Then("idea has sort_order 3", async (_ctx: TestContext) => {
-      expect(createdIdea.sort_order).toBe(3);
-    });
+    Then(
+      "idea has sort_order above existing maximum",
+      async (_ctx: TestContext) => {
+        expect(typeof createdIdea.sort_order).toBe("string");
+        const allIdeas = await ctx.ideaService.getAll();
+        const otherIdeas = allIdeas.filter(
+          (idea) => idea.id !== createdIdea.id,
+        );
+        for (const idea of otherIdeas) {
+          expect(String(createdIdea.sort_order) > String(idea.sort_order)).toBe(
+            true,
+          );
+        }
+      },
+    );
   });
 
   // @add-ideas-specs @FR1 @FR8

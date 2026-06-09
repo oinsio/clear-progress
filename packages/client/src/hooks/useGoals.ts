@@ -20,7 +20,7 @@ export interface UseGoalsReturn {
   updateGoal: (id: string, changes: Partial<Goal>) => Promise<void>;
   updateGoalStatus: (id: string, status: GoalStatus) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
-  reorderGoals: (orderedGoals: Goal[]) => Promise<void>;
+  reorderGoals: (goalId: string, newSortOrder: string) => Promise<void>;
 }
 
 export function useGoals(
@@ -74,8 +74,8 @@ export function useGoals(
   );
 
   const reorderGoals = useCallback(
-    async (orderedGoals: Goal[]) => {
-      await goalService.reorderGoals(orderedGoals);
+    async (goalId: string, newSortOrder: string) => {
+      await goalService.reorderGoals(goalId, newSortOrder);
       schedulePush();
     },
     [goalService, schedulePush],

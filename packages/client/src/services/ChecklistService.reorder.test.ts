@@ -1,99 +1,130 @@
-import { describe, expect, it, type vi } from "vitest";
-import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
-import { Temporal } from "@/lib/temporal";
+import { describe, expect, it, vi } from "vitest";
+import { SORT_ORDER_REBALANCE_THRESHOLD } from "@/constants";
 import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { createMockChecklistRepository } from "@/test/factories/checklistRepositoryFactory";
-import type { ChecklistItem } from "@/types/entities";
-import { toISOTimestamp } from "@/utils/dateHelpers";
 import { ChecklistService } from "./ChecklistService";
-
-function createService(
-  overrides: Partial<Record<keyof ChecklistRepository, unknown>> = {},
-): { service: ChecklistService; repository: ChecklistRepository } {
-  const repository = createMockChecklistRepository(overrides);
-  return { service: new ChecklistService(repository), repository };
-}
 
 describe("ChecklistService", () => {
   describe("reorderItems", () => {
-    it("should do nothing when items array is empty", async () => {
-      const { service, repository } = createService();
-      await service.reorderItems([]);
+    it("should update item with new sort_order", async () => {
+      const item = buildChecklistItem({
+        sort_order: "a0",
+        task_id: "task-1",
+      });
+      const { service, repository } = createServiceWithItem(item);
+
+      await service.reorderItems(item.id, "a1");
+
+      expect(repository.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: item.id,
+          sort_order: "a1",
+          needsSync: true,
+        }),
+      );
+    });
+
+    it("should update updated_at when reordering", async () => {
+      const item = buildChecklistItem({
+        sort_order: "a0",
+        task_id: "task-1",
+        updated_at: "2025-01-01T00:00:00.000Z",
+      });
+      const { service, repository } = createServiceWithItem(item);
+
+      await service.reorderItems(item.id, "a1");
+
+      const updatedItem = (repository.update as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
+      expect(updatedItem.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
+    });
+
+    it("should throw when item not found", async () => {
+      const repository = createMockChecklistRepository();
+      const service = new ChecklistService(repository);
+      await expect(service.reorderItems("nonexistent", "a1")).rejects.toThrow(
+        "ChecklistItem not found: nonexistent",
+      );
+    });
+
+    it("should not trigger rebalancing when key is short", async () => {
+      const item = buildChecklistItem({
+        sort_order: "a0",
+        task_id: "task-1",
+      });
+      const { service, repository } = createServiceWithItem(item);
+
+      await service.reorderItems(item.id, "a1");
+
       expect(repository.bulkUpsert).not.toHaveBeenCalled();
     });
 
-    it("should assign sort_order based on index position in given order", async () => {
-      const items = [
-        buildChecklistItem({ sort_order: 2 }),
-        buildChecklistItem({ sort_order: 0 }),
-        buildChecklistItem({ sort_order: 1 }),
+    it("should trigger rebalancing when key exceeds threshold", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const taskId = "task-1";
+      const item = buildChecklistItem({ sort_order: "a0", task_id: taskId });
+      const taskItems = [
+        buildChecklistItem({ sort_order: "a0", task_id: taskId }),
+        buildChecklistItem({ sort_order: "a1", task_id: taskId }),
       ];
-      const { service, repository } = createService();
-      await service.reorderItems(items);
-      const updatedItems = (repository.bulkUpsert as ReturnType<typeof vi.fn>)
-        .mock.calls[0][0] as ChecklistItem[];
-      expect(updatedItems[0].sort_order).toBe(0);
-      expect(updatedItems[1].sort_order).toBe(1);
-      expect(updatedItems[2].sort_order).toBe(2);
+      const repository = createMockChecklistRepository({
+        getById: vi.fn().mockResolvedValue(item),
+        getActiveByTaskId: vi.fn().mockResolvedValue(taskItems),
+      });
+      const service = new ChecklistService(repository);
+
+      await service.reorderItems(item.id, longKey);
+
+      expect(repository.bulkUpsert).toHaveBeenCalled();
     });
 
-    it("should update updated_at for each item", async () => {
-      const oldTimestamp = toISOTimestamp(
-        Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
-      );
-      const items = [
-        buildChecklistItem({ updated_at: oldTimestamp }),
-        buildChecklistItem({ updated_at: oldTimestamp }),
+    it("should rebalance items of the same task with fresh keys", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const taskId = "task-1";
+      const item = buildChecklistItem({ sort_order: "a0", task_id: taskId });
+      const taskItems = [
+        buildChecklistItem({ sort_order: "b0", task_id: taskId }),
+        buildChecklistItem({ sort_order: "a0", task_id: taskId }),
       ];
-      const { service, repository } = createService();
-      await service.reorderItems(items);
-      const updatedItems = (repository.bulkUpsert as ReturnType<typeof vi.fn>)
-        .mock.calls[0][0] as ChecklistItem[];
-      expect(updatedItems[0].updated_at).not.toBe(oldTimestamp);
-      expect(updatedItems[1].updated_at).not.toBe(oldTimestamp);
+      const repository = createMockChecklistRepository({
+        getById: vi.fn().mockResolvedValue(item),
+        getActiveByTaskId: vi.fn().mockResolvedValue(taskItems),
+      });
+      const service = new ChecklistService(repository);
+
+      await service.reorderItems(item.id, longKey);
+
+      const rebalancedItems = (
+        repository.bulkUpsert as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0];
+      expect(rebalancedItems).toHaveLength(2);
+      for (const rebalancedItem of rebalancedItems) {
+        expect(typeof rebalancedItem.sort_order).toBe("string");
+        expect(rebalancedItem.needsSync).toBe(true);
+      }
     });
 
-    it("should call repository.bulkUpsert once with all updated items", async () => {
-      const items = [
-        buildChecklistItem(),
-        buildChecklistItem(),
-        buildChecklistItem(),
-      ];
-      const { service, repository } = createService();
-      await service.reorderItems(items);
-      expect(repository.bulkUpsert).toHaveBeenCalledTimes(1);
-      expect(
-        (repository.bulkUpsert as ReturnType<typeof vi.fn>).mock.calls[0][0],
-      ).toHaveLength(3);
-    });
+    it("should rebalance by task_id scope, not globally", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const taskId = "task-1";
+      const item = buildChecklistItem({ sort_order: "a0", task_id: taskId });
+      const repository = createMockChecklistRepository({
+        getById: vi.fn().mockResolvedValue(item),
+        getActiveByTaskId: vi.fn().mockResolvedValue([item]),
+      });
+      const service = new ChecklistService(repository);
 
-    it("should not call bulkUpsert when items are already in correct order", async () => {
-      const items = [
-        buildChecklistItem({ sort_order: 0 }),
-        buildChecklistItem({ sort_order: 1 }),
-        buildChecklistItem({ sort_order: 2 }),
-      ];
-      const { service, repository } = createService();
-      await service.reorderItems(items);
-      expect(repository.bulkUpsert).not.toHaveBeenCalled();
-    });
+      await service.reorderItems(item.id, longKey);
 
-    it("should update updated_at only for items whose sort_order actually changed", async () => {
-      const oldTimestamp = toISOTimestamp(
-        Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
-      );
-      const items = [
-        buildChecklistItem({ sort_order: 0, updated_at: oldTimestamp }),
-        buildChecklistItem({ sort_order: 2, updated_at: oldTimestamp }),
-        buildChecklistItem({ sort_order: 1, updated_at: oldTimestamp }),
-      ];
-      const { service, repository } = createService();
-      await service.reorderItems(items);
-      const updatedItems = (repository.bulkUpsert as ReturnType<typeof vi.fn>)
-        .mock.calls[0][0] as ChecklistItem[];
-      expect(updatedItems[0].updated_at).toBe(oldTimestamp);
-      expect(updatedItems[1].updated_at).not.toBe(oldTimestamp);
-      expect(updatedItems[2].updated_at).not.toBe(oldTimestamp);
+      expect(repository.getActiveByTaskId).toHaveBeenCalledWith(taskId);
     });
   });
 });
+
+function createServiceWithItem(item: ReturnType<typeof buildChecklistItem>) {
+  const repository = createMockChecklistRepository({
+    getById: vi.fn().mockResolvedValue(item),
+  });
+  const service = new ChecklistService(repository);
+  return { service, repository };
+}

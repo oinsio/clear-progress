@@ -20,7 +20,7 @@ export interface UseChecklistReturn {
   toggleItem: (id: string) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   updateItem: (id: string, name: string) => Promise<void>;
-  reorderItems: (items: ChecklistItem[]) => Promise<void>;
+  reorderItems: (itemId: string, newSortOrder: string) => Promise<void>;
 }
 
 export function useChecklist(
@@ -86,8 +86,8 @@ export function useChecklist(
   );
 
   const reorderItems = useCallback(
-    async (reorderedItems: ChecklistItem[]) => {
-      await checklistService.reorderItems(reorderedItems);
+    async (itemId: string, newSortOrder: string) => {
+      await checklistService.reorderItems(itemId, newSortOrder);
       schedulePush();
     },
     [checklistService, schedulePush],

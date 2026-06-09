@@ -1,84 +1,108 @@
-import { beforeEach, describe, expect, it, type vi } from "vitest";
-import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
-import { Temporal } from "@/lib/temporal";
+import { describe, expect, it, vi } from "vitest";
+import { SORT_ORDER_REBALANCE_THRESHOLD } from "@/constants";
 import { buildCategory } from "@/test/factories/categoryFactory";
 import { createMockCategoryRepository } from "@/test/mocks/categoryRepositoryMock";
-import { toISOTimestamp } from "@/utils/dateHelpers";
 import { CategoryService } from "./CategoryService";
 
 describe("CategoryService", () => {
-  let mockCategoryRepository: CategoryRepository;
-
-  beforeEach(() => {
-    mockCategoryRepository = createMockCategoryRepository();
-  });
-
   describe("reorderCategories", () => {
-    const getUpsertedCategories = () =>
-      (mockCategoryRepository.bulkUpsert as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
-
-    it("should call bulkUpsert with categories assigned sort_order by position", async () => {
-      const categoryA = buildCategory({ sort_order: 2 });
-      const categoryB = buildCategory({ sort_order: 0 });
-      const categoryC = buildCategory({ sort_order: 1 });
-      const categoryService = new CategoryService(mockCategoryRepository);
-      await categoryService.reorderCategories([
-        categoryA,
-        categoryB,
-        categoryC,
-      ]);
-      const upserted = getUpsertedCategories();
-      expect(upserted[0].sort_order).toBe(0);
-      expect(upserted[1].sort_order).toBe(1);
-      expect(upserted[2].sort_order).toBe(2);
-    });
-
-    it("should update updated_at for each reordered category", async () => {
-      const categoryA = buildCategory({
-        updated_at: toISOTimestamp(
-          Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
-        ),
+    it("should update category with new sort_order", async () => {
+      const category = buildCategory({ sort_order: "a0" });
+      const mockCategoryRepository = createMockCategoryRepository({
+        getById: vi.fn().mockResolvedValue(category),
       });
       const categoryService = new CategoryService(mockCategoryRepository);
-      await categoryService.reorderCategories([categoryA]);
-      const upserted = getUpsertedCategories();
-      expect(upserted[0].updated_at).not.toBe(
-        toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+
+      await categoryService.reorderCategories(category.id, "a1");
+
+      expect(mockCategoryRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: category.id,
+          sort_order: "a1",
+          needsSync: true,
+        }),
       );
     });
 
-    it("should set needsSync to true for each reordered category", async () => {
-      const categoryA = buildCategory({ needsSync: false });
+    it("should update updated_at when reordering", async () => {
+      const category = buildCategory({
+        sort_order: "a0",
+        updated_at: "2025-01-01T00:00:00.000Z",
+      });
+      const mockCategoryRepository = createMockCategoryRepository({
+        getById: vi.fn().mockResolvedValue(category),
+      });
       const categoryService = new CategoryService(mockCategoryRepository);
-      await categoryService.reorderCategories([categoryA]);
-      const upserted = getUpsertedCategories();
-      expect(upserted[0].needsSync).toBe(true);
+
+      await categoryService.reorderCategories(category.id, "a1");
+
+      const updatedCategory = (
+        mockCategoryRepository.update as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0];
+      expect(updatedCategory.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should preserve category ids after reorder", async () => {
-      const categoryA = buildCategory();
-      const categoryB = buildCategory();
+    it("should throw when category not found", async () => {
+      const mockCategoryRepository = createMockCategoryRepository();
       const categoryService = new CategoryService(mockCategoryRepository);
-      await categoryService.reorderCategories([categoryA, categoryB]);
-      const upserted = getUpsertedCategories();
-      expect(upserted[0].id).toBe(categoryA.id);
-      expect(upserted[1].id).toBe(categoryB.id);
+      await expect(
+        categoryService.reorderCategories("nonexistent", "a1"),
+      ).rejects.toThrow("Category not found: nonexistent");
     });
 
-    it("should not call bulkUpsert when given empty array", async () => {
+    it("should not trigger rebalancing when key is short", async () => {
+      const category = buildCategory({ sort_order: "a0" });
+      const mockCategoryRepository = createMockCategoryRepository({
+        getById: vi.fn().mockResolvedValue(category),
+      });
       const categoryService = new CategoryService(mockCategoryRepository);
-      await categoryService.reorderCategories([]);
+
+      await categoryService.reorderCategories(category.id, "a1");
+
       expect(mockCategoryRepository.bulkUpsert).not.toHaveBeenCalled();
     });
 
-    it("should use same timestamp for all categories in batch", async () => {
-      const categoryA = buildCategory();
-      const categoryB = buildCategory();
+    it("should trigger rebalancing when key exceeds threshold", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const category = buildCategory({ sort_order: "a0" });
+      const allCategories = [
+        buildCategory({ sort_order: "a0" }),
+        buildCategory({ sort_order: "a1" }),
+      ];
+      const mockCategoryRepository = createMockCategoryRepository({
+        getById: vi.fn().mockResolvedValue(category),
+        getActive: vi.fn().mockResolvedValue(allCategories),
+      });
       const categoryService = new CategoryService(mockCategoryRepository);
-      await categoryService.reorderCategories([categoryA, categoryB]);
-      const upserted = getUpsertedCategories();
-      expect(upserted[0].updated_at).toBe(upserted[1].updated_at);
+
+      await categoryService.reorderCategories(category.id, longKey);
+
+      expect(mockCategoryRepository.bulkUpsert).toHaveBeenCalled();
+    });
+
+    it("should rebalance all categories with fresh keys", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const category = buildCategory({ sort_order: "a0" });
+      const allCategories = [
+        buildCategory({ sort_order: "b0" }),
+        buildCategory({ sort_order: "a0" }),
+      ];
+      const mockCategoryRepository = createMockCategoryRepository({
+        getById: vi.fn().mockResolvedValue(category),
+        getActive: vi.fn().mockResolvedValue(allCategories),
+      });
+      const categoryService = new CategoryService(mockCategoryRepository);
+
+      await categoryService.reorderCategories(category.id, longKey);
+
+      const rebalancedCategories = (
+        mockCategoryRepository.bulkUpsert as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0];
+      expect(rebalancedCategories).toHaveLength(2);
+      for (const rebalancedCategory of rebalancedCategories) {
+        expect(typeof rebalancedCategory.sort_order).toBe("string");
+        expect(rebalancedCategory.needsSync).toBe(true);
+      }
     });
   });
 });

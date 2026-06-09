@@ -1,6 +1,12 @@
 import { GOAL_STATUS_SORT_ORDER } from "@/constants";
 import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { GoalRepository } from "@/db/repositories/GoalRepository";
+import {
+  compareSortKeys,
+  generateAppendKey,
+  needsRebalancing,
+  rebalanceKeys,
+} from "@/services/SortOrderService";
 import type { GoalStatus } from "@/types/common";
 import type { Goal } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
@@ -14,7 +20,9 @@ export class GoalService {
 
   async getAll(): Promise<Goal[]> {
     const goals = await this.goalRepository.getActive();
-    return goals.sort((goalA, goalB) => goalA.sort_order - goalB.sort_order);
+    return goals.sort((goalA, goalB) =>
+      compareSortKeys(String(goalA.sort_order), String(goalB.sort_order)),
+    );
   }
 
   async getById(id: string): Promise<Goal | undefined> {
@@ -23,12 +31,13 @@ export class GoalService {
 
   async create(partialGoal: Pick<Goal, "name"> & Partial<Goal>): Promise<Goal> {
     const existingGoals = await this.goalRepository.getActive();
+    const existingKeys = existingGoals.map((goal) => String(goal.sort_order));
     const now = toISOTimestamp();
     const goal: Goal = {
       description: "",
       cover_hash: "",
       status: "planning",
-      sort_order: existingGoals.length,
+      sort_order: generateAppendKey(existingKeys),
       ...partialGoal,
       id: crypto.randomUUID(),
       is_deleted: false,
@@ -108,27 +117,36 @@ export class GoalService {
     });
   }
 
-  async reorderGoals(orderedGoals: Goal[]): Promise<void> {
-    if (orderedGoals.length === 0) return;
-
-    // Check if at least one sort_order has changed
-    const hasAnyOrderChanged = orderedGoals.some(
-      (goal, index) => goal.sort_order !== index,
-    );
-    if (!hasAnyOrderChanged) {
-      return; // Nothing changed, skip sync
-    }
+  async reorderGoals(goalId: string, newSortOrder: string): Promise<void> {
+    const goal = await this.goalRepository.getById(goalId);
+    if (!goal) throw new Error(`Goal not found: ${goalId}`);
 
     const now = toISOTimestamp();
-    const updatedGoals = orderedGoals.map((goal, index) => {
-      const orderChanged = goal.sort_order !== index;
-      return {
-        ...goal,
-        sort_order: index,
-        updated_at: orderChanged ? now : goal.updated_at,
-        needsSync: orderChanged,
-      };
+    await this.goalRepository.update({
+      ...goal,
+      sort_order: newSortOrder,
+      updated_at: now,
+      needsSync: true,
     });
-    await this.goalRepository.bulkUpsert(updatedGoals);
+
+    if (needsRebalancing(newSortOrder)) {
+      await this.rebalanceAllGoals();
+    }
+  }
+
+  private async rebalanceAllGoals(): Promise<void> {
+    const goals = await this.goalRepository.getActive();
+    const sorted = goals.sort((goalA, goalB) =>
+      compareSortKeys(String(goalA.sort_order), String(goalB.sort_order)),
+    );
+    const newKeys = rebalanceKeys(sorted.length);
+    const now = toISOTimestamp();
+    const rebalancedGoals = sorted.map((goal, index) => ({
+      ...goal,
+      sort_order: newKeys[index],
+      updated_at: now,
+      needsSync: true,
+    }));
+    await this.goalRepository.bulkUpsert(rebalancedGoals);
   }
 }

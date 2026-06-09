@@ -2,32 +2,21 @@ Feature: Categories Ordering
   Implements FR6 of add-context-category-specs.
 
   @add-context-category-specs @FR6
-  Scenario: Reorder assigns sequential sort_order
-    Given categories A with sort_order 0, B with sort_order 1, C with sort_order 2
-    When user reorders categories to B, C, A
-    Then category B has sort_order 0
-    And category C has sort_order 1
-    And category A has sort_order 2
+  Scenario: Reorder places category at new position via fractional key
+    Given categories A, B, C with ascending sort_order
+    When user moves category C before category A
+    Then categories are ordered C, A, B
 
   @add-context-category-specs @FR6
-  Scenario: Only changed categories marked for sync
-    Given categories A with sort_order 0, B with sort_order 1, C with sort_order 2
-    When user reorders categories to A, C, B
-    Then category A has needsSync false
-    And category C has needsSync true
-    And category B has needsSync true
-
-  @add-context-category-specs @FR6
-  Scenario: Empty reorder is no-op
-    Given categories A with sort_order 0, B with sort_order 1, C with sort_order 2
-    When user reorders with empty array
-    Then category A has needsSync false
+  Scenario: Reorder marks moved category for sync
+    Given categories A, B, C with ascending sort_order
+    When user moves category C before category A
+    Then category C has needsSync true
+    And category A has needsSync false
     And category B has needsSync false
-    And category C has needsSync false
 
   @add-context-category-specs @FR6
-  Scenario: Same order is no-op
-    Given categories A with sort_order 0, B with sort_order 1
-    When user reorders categories to A, B
-    Then category A has needsSync false
-    And category B has needsSync false
+  Scenario: Reorder throws for non-existent category
+    Given categories A, B with ascending sort_order
+    When user reorders non-existent category
+    Then an error is thrown

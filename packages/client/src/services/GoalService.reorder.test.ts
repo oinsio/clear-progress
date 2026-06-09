@@ -1,113 +1,108 @@
-import { beforeEach, describe, expect, it, type vi } from "vitest";
-import type { GoalRepository } from "@/db/repositories/GoalRepository";
-import { Temporal } from "@/lib/temporal";
+import { describe, expect, it, vi } from "vitest";
+import { SORT_ORDER_REBALANCE_THRESHOLD } from "@/constants";
 import { buildGoal } from "@/test/factories/goalFactory";
 import { createMockGoalRepository } from "@/test/mocks/goalRepositoryMock";
-import { toISOTimestamp } from "@/utils/dateHelpers";
 import { GoalService } from "./GoalService";
 
 describe("GoalService", () => {
-  let mockGoalRepository: GoalRepository;
-
-  beforeEach(() => {
-    mockGoalRepository = createMockGoalRepository();
-  });
-
   describe("reorderGoals", () => {
-    const getUpsertedGoals = () =>
-      (mockGoalRepository.bulkUpsert as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
-
-    it("should call bulkUpsert with goals assigned sort_order by position", async () => {
-      const goalA = buildGoal({ sort_order: 2 });
-      const goalB = buildGoal({ sort_order: 0 });
-      const goalC = buildGoal({ sort_order: 1 });
-      const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA, goalB, goalC]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].sort_order).toBe(0);
-      expect(upserted[1].sort_order).toBe(1);
-      expect(upserted[2].sort_order).toBe(2);
-    });
-
-    it("should update updated_at for each reordered goal", async () => {
-      const goalA = buildGoal({
-        updated_at: toISOTimestamp(
-          Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
-        ),
+    it("should update goal with new sort_order", async () => {
+      const goal = buildGoal({ sort_order: "a0" });
+      const mockGoalRepository = createMockGoalRepository({
+        getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].updated_at).not.toBe(
-        toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+
+      await goalService.reorderGoals(goal.id, "a1");
+
+      expect(mockGoalRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: goal.id,
+          sort_order: "a1",
+          needsSync: true,
+        }),
       );
     });
 
-    it("should set needsSync to true for each reordered goal", async () => {
-      const goalA = buildGoal({ needsSync: false });
+    it("should update updated_at when reordering", async () => {
+      const goal = buildGoal({
+        sort_order: "a0",
+        updated_at: "2025-01-01T00:00:00.000Z",
+      });
+      const mockGoalRepository = createMockGoalRepository({
+        getById: vi.fn().mockResolvedValue(goal),
+      });
       const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].needsSync).toBe(true);
+
+      await goalService.reorderGoals(goal.id, "a1");
+
+      const updatedGoal = (
+        mockGoalRepository.update as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0];
+      expect(updatedGoal.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should preserve goal ids after reorder", async () => {
-      const goalA = buildGoal();
-      const goalB = buildGoal();
+    it("should throw when goal not found", async () => {
+      const mockGoalRepository = createMockGoalRepository();
       const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA, goalB]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].id).toBe(goalA.id);
-      expect(upserted[1].id).toBe(goalB.id);
+      await expect(
+        goalService.reorderGoals("nonexistent", "a1"),
+      ).rejects.toThrow("Goal not found: nonexistent");
     });
 
-    it("should not call bulkUpsert when given empty array", async () => {
+    it("should not trigger rebalancing when key is short", async () => {
+      const goal = buildGoal({ sort_order: "a0" });
+      const mockGoalRepository = createMockGoalRepository({
+        getById: vi.fn().mockResolvedValue(goal),
+      });
       const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([]);
+
+      await goalService.reorderGoals(goal.id, "a1");
+
       expect(mockGoalRepository.bulkUpsert).not.toHaveBeenCalled();
     });
 
-    it("should use same timestamp for all goals in batch", async () => {
-      const goalA = buildGoal();
-      const goalB = buildGoal();
+    it("should trigger rebalancing when key exceeds threshold", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const goal = buildGoal({ sort_order: "a0" });
+      const allGoals = [
+        buildGoal({ sort_order: "a0" }),
+        buildGoal({ sort_order: "a1" }),
+      ];
+      const mockGoalRepository = createMockGoalRepository({
+        getById: vi.fn().mockResolvedValue(goal),
+        getActive: vi.fn().mockResolvedValue(allGoals),
+      });
       const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA, goalB]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].updated_at).toBe(upserted[1].updated_at);
+
+      await goalService.reorderGoals(goal.id, longKey);
+
+      expect(mockGoalRepository.bulkUpsert).toHaveBeenCalled();
     });
 
-    // FR18: Reorder optimization — needsSync only for changed records
-    it("should not call bulkUpsert when order has not changed", async () => {
-      const goalA = buildGoal({ sort_order: 0 });
-      const goalB = buildGoal({ sort_order: 1 });
-      const goalC = buildGoal({ sort_order: 2 });
+    it("should rebalance all goals with fresh keys", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const goal = buildGoal({ sort_order: "a0" });
+      const allGoals = [
+        buildGoal({ sort_order: "b0" }),
+        buildGoal({ sort_order: "a0" }),
+      ];
+      const mockGoalRepository = createMockGoalRepository({
+        getById: vi.fn().mockResolvedValue(goal),
+        getActive: vi.fn().mockResolvedValue(allGoals),
+      });
       const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA, goalB, goalC]);
-      expect(mockGoalRepository.bulkUpsert).not.toHaveBeenCalled();
-    });
 
-    it("should set needsSync to false for goals that did not change position", async () => {
-      const goalA = buildGoal({ sort_order: 0, needsSync: true });
-      const goalB = buildGoal({ sort_order: 2, needsSync: true });
-      const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA, goalB]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].needsSync).toBe(false); // did not change
-      expect(upserted[1].needsSync).toBe(true); // changed from 2 to 1
-    });
+      await goalService.reorderGoals(goal.id, longKey);
 
-    it("should not update updated_at for goals that did not change position", async () => {
-      const oldTimestamp = toISOTimestamp(
-        Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
-      );
-      const goalA = buildGoal({ sort_order: 0, updated_at: oldTimestamp });
-      const goalB = buildGoal({ sort_order: 2, updated_at: oldTimestamp });
-      const goalService = new GoalService(mockGoalRepository);
-      await goalService.reorderGoals([goalA, goalB]);
-      const upserted = getUpsertedGoals();
-      expect(upserted[0].updated_at).toBe(oldTimestamp); // did not change
-      expect(upserted[1].updated_at).not.toBe(oldTimestamp); // changed
+      const rebalancedGoals = (
+        mockGoalRepository.bulkUpsert as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0];
+      expect(rebalancedGoals).toHaveLength(2);
+      for (const rebalancedGoal of rebalancedGoals) {
+        expect(typeof rebalancedGoal.sort_order).toBe("string");
+        expect(rebalancedGoal.needsSync).toBe(true);
+      }
     });
   });
 });

@@ -1,80 +1,108 @@
-import { beforeEach, describe, expect, it, type vi } from "vitest";
-import type { ContextRepository } from "@/db/repositories/ContextRepository";
-import { Temporal } from "@/lib/temporal";
+import { describe, expect, it, vi } from "vitest";
+import { SORT_ORDER_REBALANCE_THRESHOLD } from "@/constants";
 import { buildContext } from "@/test/factories/contextFactory";
 import { createMockContextRepository } from "@/test/mocks/contextRepositoryMock";
-import { toISOTimestamp } from "@/utils/dateHelpers";
 import { ContextService } from "./ContextService";
 
 describe("ContextService", () => {
-  let mockContextRepository: ContextRepository;
-
-  beforeEach(() => {
-    mockContextRepository = createMockContextRepository();
-  });
-
   describe("reorderContexts", () => {
-    const getUpsertedContexts = () =>
-      (mockContextRepository.bulkUpsert as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
-
-    it("should call bulkUpsert with contexts assigned sort_order by position", async () => {
-      const contextA = buildContext({ sort_order: 2 });
-      const contextB = buildContext({ sort_order: 0 });
-      const contextC = buildContext({ sort_order: 1 });
-      const contextService = new ContextService(mockContextRepository);
-      await contextService.reorderContexts([contextA, contextB, contextC]);
-      const upserted = getUpsertedContexts();
-      expect(upserted[0].sort_order).toBe(0);
-      expect(upserted[1].sort_order).toBe(1);
-      expect(upserted[2].sort_order).toBe(2);
-    });
-
-    it("should update updated_at for each reordered context", async () => {
-      const contextA = buildContext({
-        updated_at: toISOTimestamp(
-          Temporal.Instant.from("2025-01-01T00:00:00.000Z"),
-        ),
+    it("should update context with new sort_order", async () => {
+      const context = buildContext({ sort_order: "a0" });
+      const mockContextRepository = createMockContextRepository({
+        getById: vi.fn().mockResolvedValue(context),
       });
       const contextService = new ContextService(mockContextRepository);
-      await contextService.reorderContexts([contextA]);
-      const upserted = getUpsertedContexts();
-      expect(upserted[0].updated_at).not.toBe(
-        toISOTimestamp(Temporal.Instant.from("2025-01-01T00:00:00.000Z")),
+
+      await contextService.reorderContexts(context.id, "a1");
+
+      expect(mockContextRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: context.id,
+          sort_order: "a1",
+          needsSync: true,
+        }),
       );
     });
 
-    it("should set needsSync to true for each reordered context", async () => {
-      const contextA = buildContext({ needsSync: false });
+    it("should update updated_at when reordering", async () => {
+      const context = buildContext({
+        sort_order: "a0",
+        updated_at: "2025-01-01T00:00:00.000Z",
+      });
+      const mockContextRepository = createMockContextRepository({
+        getById: vi.fn().mockResolvedValue(context),
+      });
       const contextService = new ContextService(mockContextRepository);
-      await contextService.reorderContexts([contextA]);
-      const upserted = getUpsertedContexts();
-      expect(upserted[0].needsSync).toBe(true);
+
+      await contextService.reorderContexts(context.id, "a1");
+
+      const updatedContext = (
+        mockContextRepository.update as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0];
+      expect(updatedContext.updated_at).not.toBe("2025-01-01T00:00:00.000Z");
     });
 
-    it("should preserve context ids after reorder", async () => {
-      const contextA = buildContext();
-      const contextB = buildContext();
+    it("should throw when context not found", async () => {
+      const mockContextRepository = createMockContextRepository();
       const contextService = new ContextService(mockContextRepository);
-      await contextService.reorderContexts([contextA, contextB]);
-      const upserted = getUpsertedContexts();
-      expect(upserted[0].id).toBe(contextA.id);
-      expect(upserted[1].id).toBe(contextB.id);
+      await expect(
+        contextService.reorderContexts("nonexistent", "a1"),
+      ).rejects.toThrow("Context not found: nonexistent");
     });
 
-    it("should not call bulkUpsert when given empty array", async () => {
+    it("should not trigger rebalancing when key is short", async () => {
+      const context = buildContext({ sort_order: "a0" });
+      const mockContextRepository = createMockContextRepository({
+        getById: vi.fn().mockResolvedValue(context),
+      });
       const contextService = new ContextService(mockContextRepository);
-      await contextService.reorderContexts([]);
+
+      await contextService.reorderContexts(context.id, "a1");
+
       expect(mockContextRepository.bulkUpsert).not.toHaveBeenCalled();
     });
 
-    it("should use same timestamp for all contexts in batch", async () => {
-      const contextA = buildContext();
-      const contextB = buildContext();
+    it("should trigger rebalancing when key exceeds threshold", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const context = buildContext({ sort_order: "a0" });
+      const allContexts = [
+        buildContext({ sort_order: "a0" }),
+        buildContext({ sort_order: "a1" }),
+      ];
+      const mockContextRepository = createMockContextRepository({
+        getById: vi.fn().mockResolvedValue(context),
+        getActive: vi.fn().mockResolvedValue(allContexts),
+      });
       const contextService = new ContextService(mockContextRepository);
-      await contextService.reorderContexts([contextA, contextB]);
-      const upserted = getUpsertedContexts();
-      expect(upserted[0].updated_at).toBe(upserted[1].updated_at);
+
+      await contextService.reorderContexts(context.id, longKey);
+
+      expect(mockContextRepository.bulkUpsert).toHaveBeenCalled();
+    });
+
+    it("should rebalance all contexts with fresh keys", async () => {
+      const longKey = "a".repeat(SORT_ORDER_REBALANCE_THRESHOLD + 1);
+      const context = buildContext({ sort_order: "a0" });
+      const allContexts = [
+        buildContext({ sort_order: "b0" }),
+        buildContext({ sort_order: "a0" }),
+      ];
+      const mockContextRepository = createMockContextRepository({
+        getById: vi.fn().mockResolvedValue(context),
+        getActive: vi.fn().mockResolvedValue(allContexts),
+      });
+      const contextService = new ContextService(mockContextRepository);
+
+      await contextService.reorderContexts(context.id, longKey);
+
+      const rebalancedContexts = (
+        mockContextRepository.bulkUpsert as ReturnType<typeof vi.fn>
+      ).mock.calls[0][0];
+      expect(rebalancedContexts).toHaveLength(2);
+      for (const rebalancedContext of rebalancedContexts) {
+        expect(typeof rebalancedContext.sort_order).toBe("string");
+        expect(rebalancedContext.needsSync).toBe(true);
+      }
     });
   });
 });

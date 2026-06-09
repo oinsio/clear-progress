@@ -8,6 +8,7 @@ import { useContexts } from "@/hooks/useContexts";
 import { useContextTasks } from "@/hooks/useContextTasks";
 import { useGoals } from "@/hooks/useGoals";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import type { Box } from "@/types/common";
 
 const CONTEXT_I18N_KEYS = {
   back: "context.back",
@@ -34,6 +35,7 @@ export default function ContextDetailPage() {
     moveTask,
     deleteTask,
     duplicateTask,
+    reorderTasks,
   } = useContextTasks(id ?? "");
 
   const context = useMemo(
@@ -54,6 +56,13 @@ export default function ContextDetailPage() {
     await deleteContext(id);
     navigate(ROUTES.CONTEXTS);
   }, [id, deleteContext, navigate]);
+
+  const handleReorderTasks = useCallback(
+    async (_box: Box, taskId: string, newSortOrder: string) => {
+      await reorderTasks(taskId, newSortOrder);
+    },
+    [reorderTasks],
+  );
 
   const handleModeChange = useSidebarNavigation();
 
@@ -78,6 +87,7 @@ export default function ContextDetailPage() {
       onMoveTask={moveTask}
       onDeleteTask={deleteTask}
       onDuplicateTask={duplicateTask}
+      onReorder={handleReorderTasks}
       onModeChange={handleModeChange}
     />
   );

@@ -4,7 +4,6 @@
  */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
@@ -24,6 +23,7 @@ import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
 import type { Category } from "@/types/entities";
@@ -122,16 +122,33 @@ export default function CategoriesPage() {
     void defaultTaskService.getCategoryTaskCounts().then(setCategoryTaskCounts);
   }, []);
 
-  const handlePanelToggle = togglePanelOpen;
-
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
       const oldIndex = activeCategories.findIndex((c) => c.id === active.id);
       const newIndex = activeCategories.findIndex((c) => c.id === over.id);
-      const reordered = arrayMove(activeCategories, oldIndex, newIndex);
-      void reorderCategories(reordered);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      // List is sorted ASC: index 0 = lowest key, last index = highest key
+      const lowerNeighbor =
+        newIndex > 0 ? String(activeCategories[newIndex - 1].sort_order) : null;
+      const upperNeighbor =
+        newIndex < activeCategories.length - 1
+          ? String(activeCategories[newIndex + 1].sort_order)
+          : null;
+
+      const lowerKey =
+        oldIndex < newIndex
+          ? String(activeCategories[newIndex].sort_order)
+          : lowerNeighbor;
+      const upperKey =
+        oldIndex > newIndex
+          ? String(activeCategories[newIndex].sort_order)
+          : upperNeighbor;
+
+      const newSortOrder = generateKeyBetween(lowerKey, upperKey);
+      void reorderCategories(String(active.id), newSortOrder);
     },
     [activeCategories, reorderCategories],
   );
@@ -207,7 +224,7 @@ export default function CategoriesPage() {
         mode="categories"
         isOpen={isPanelOpen}
         side={panelSide}
-        onToggle={handlePanelToggle}
+        onToggle={togglePanelOpen}
         onModeChange={handleModeChange}
       />
     </div>

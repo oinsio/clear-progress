@@ -41,8 +41,8 @@ describe("GoalService", () => {
       expect(createdGoal.status).toBe("planning");
     });
 
-    it("should create goal with sort_order 0 by default", () => {
-      expect(createdGoal.sort_order).toBe(0);
+    it("should create goal with string sort_order by default", () => {
+      expect(typeof createdGoal.sort_order).toBe("string");
     });
 
     it("should create goal with needsSync true", () => {

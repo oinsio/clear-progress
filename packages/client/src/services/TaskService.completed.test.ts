@@ -38,17 +38,20 @@ describe("TaskService", () => {
 
     it("should sort by sort_order descending when completed_at is empty", async () => {
       const completedTasks = [
-        buildTask({ is_completed: true, completed_at: "", sort_order: 1 }),
-        buildTask({ is_completed: true, completed_at: "", sort_order: 3 }),
-        buildTask({ is_completed: true, completed_at: "", sort_order: 2 }),
+        buildTask({ is_completed: true, completed_at: "", sort_order: "a0" }),
+        buildTask({ is_completed: true, completed_at: "", sort_order: "a2" }),
+        buildTask({ is_completed: true, completed_at: "", sort_order: "a1" }),
       ];
       const { taskService } = createTestContext({
         getCompleted: vi.fn().mockResolvedValue(completedTasks),
       });
       const tasks = await taskService.getCompleted();
-      expect(tasks[0].sort_order).toBe(3);
-      expect(tasks[1].sort_order).toBe(2);
-      expect(tasks[2].sort_order).toBe(1);
+      expect(String(tasks[0].sort_order) > String(tasks[1].sort_order)).toBe(
+        true,
+      );
+      expect(String(tasks[1].sort_order) > String(tasks[2].sort_order)).toBe(
+        true,
+      );
     });
 
     it("should sort by sort_order when only one task has completed_at", async () => {
@@ -57,12 +60,12 @@ describe("TaskService", () => {
         completed_at: toISOTimestamp(
           Temporal.Instant.from("2025-01-01T10:00:00.000Z"),
         ),
-        sort_order: 1,
+        sort_order: "a0",
       });
       const taskWithoutDate = buildTask({
         is_completed: true,
         completed_at: "",
-        sort_order: 10,
+        sort_order: "a5",
       });
       const { taskService } = createTestContext({
         getCompleted: vi
@@ -70,8 +73,9 @@ describe("TaskService", () => {
           .mockResolvedValue([taskWithDate, taskWithoutDate]),
       });
       const tasks = await taskService.getCompleted();
-      expect(tasks[0].sort_order).toBe(10);
-      expect(tasks[1].sort_order).toBe(1);
+      expect(String(tasks[0].sort_order) > String(tasks[1].sort_order)).toBe(
+        true,
+      );
     });
   });
 });

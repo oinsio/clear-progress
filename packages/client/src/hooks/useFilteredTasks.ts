@@ -1,5 +1,6 @@
 import { liveQuery } from "dexie";
 import { useCallback, useEffect, useState } from "react";
+import { useSync } from "@/app/providers/SyncProvider";
 import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
 import type { Task } from "@/types/entities";
@@ -14,6 +15,7 @@ export interface UseFilteredTasksReturn {
   moveTask: (id: string, box: Box) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   duplicateTask: (id: string) => Promise<Task>;
+  reorderTasks: (taskId: string, newSortOrder: string) => Promise<void>;
 }
 
 interface FilterConfig {
@@ -51,8 +53,18 @@ export function useFilteredTasks(
     [taskService, config.createTaskData],
   );
 
+  const { schedulePush } = useSync();
+
+  const reorderTasks = useCallback(
+    async (taskId: string, newSortOrder: string) => {
+      await taskService.reorderTasks(taskId, newSortOrder);
+      schedulePush();
+    },
+    [taskService, schedulePush],
+  );
+
   const noopReload = useCallback(async () => {}, []);
   const mutations = useTaskMutations(taskService, noopReload);
 
-  return { tasks, isLoading, createTask, ...mutations };
+  return { tasks, isLoading, createTask, reorderTasks, ...mutations };
 }

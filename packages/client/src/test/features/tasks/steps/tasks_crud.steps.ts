@@ -68,15 +68,27 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     });
   });
 
-  // @task-core-specs @FR1
-  f.Scenario("Sort order defaults to end of box", ({ Given, When, Then }) => {
+  // @fractional-sort-order @FR3
+  f.Scenario("New task created at top of box", ({ Given, When, Then }) => {
     let createdTask: Task;
 
-    Given("inbox has 3 tasks", async (_ctx: TestContext) => {
-      await seedTask(ctx.taskIds, "Task A", { box: "inbox", sort_order: 0 });
-      await seedTask(ctx.taskIds, "Task B", { box: "inbox", sort_order: 1 });
-      await seedTask(ctx.taskIds, "Task C", { box: "inbox", sort_order: 2 });
-    });
+    Given(
+      'inbox has tasks with sort_order "a0", "a1", "a2"',
+      async (_ctx: TestContext) => {
+        await seedTask(ctx.taskIds, "Task A", {
+          box: "inbox",
+          sort_order: "a0",
+        });
+        await seedTask(ctx.taskIds, "Task B", {
+          box: "inbox",
+          sort_order: "a1",
+        });
+        await seedTask(ctx.taskIds, "Task C", {
+          box: "inbox",
+          sort_order: "a2",
+        });
+      },
+    );
 
     When(
       'user creates task "New task" in box "inbox"',
@@ -88,8 +100,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    Then("task has sort_order 3", async (_ctx: TestContext) => {
-      expect(createdTask.sort_order).toBe(3);
+    Then('task has sort_order above "a2"', async (_ctx: TestContext) => {
+      const sortOrder = String(createdTask.sort_order);
+      expect(sortOrder > "a2").toBe(true);
     });
   });
 
