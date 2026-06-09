@@ -30,6 +30,8 @@ The detection MUST complete in under 100ms (NFR-P1 of onboarding-goal).
 
 The system SHALL display a modal dialog over the app shell offering the user to start onboarding. The dialog MUST have two actions: accept and decline.
 
+The accept button MUST use the app's accent color (`bg-accent`) from the design system, not a hardcoded blue. The hover state MUST use `bg-accent/80`.
+
 The dialog MUST be accessible: focus trap, Escape to close, screen reader labels (NFR-A1, NFR-A2 of onboarding-goal). The dialog MUST render correctly from 320px to 2560px viewport width (NFR-R1 of onboarding-goal).
 
 #### Scenario: User accepts onboarding
@@ -43,6 +45,10 @@ The dialog MUST be accessible: focus trap, Escape to close, screen reader labels
 #### Scenario: User presses Escape
 - **WHEN** user presses Escape while the onboarding dialog is open
 - **THEN** system treats it as decline — sets the flag and closes the dialog
+
+#### Scenario: Accept button uses accent color
+- **WHEN** the onboarding dialog is displayed
+- **THEN** the accept button uses the accent color from the design system
 
 ### Requirement: Onboarding entity creation
 
