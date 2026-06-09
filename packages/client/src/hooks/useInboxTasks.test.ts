@@ -50,8 +50,8 @@ describe("useInboxTasks", () => {
 
   it("should return inbox tasks after loading", async () => {
     const inboxTasks = [
-      buildTask({ box: "inbox", sort_order: 1 }),
-      buildTask({ box: "inbox", sort_order: 2 }),
+      buildTask({ box: "inbox", sort_order: "1" }),
+      buildTask({ box: "inbox", sort_order: "2" }),
     ];
     mockTaskService = createMockTaskService({
       getByBox: vi.fn().mockResolvedValue(inboxTasks),

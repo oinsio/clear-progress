@@ -44,7 +44,11 @@ describe("SyncService — push chunks — overflow and ordering", () => {
     ctx.contextRepository = withNeedingSync(
       ctx.contextRepository,
       Array.from({ length: 49 }, (_, i) =>
-        makeContext({ id: `ctx-${i}`, name: `Context ${i}`, sort_order: i }),
+        makeContext({
+          id: `ctx-${i}`,
+          name: `Context ${i}`,
+          sort_order: String(i),
+        }),
       ),
     );
   }
@@ -95,7 +99,11 @@ describe("SyncService — push chunks — overflow and ordering", () => {
       makeGoal({ id: `goal-${i}` }),
     );
     const contexts = Array.from({ length: 60 }, (_, i) =>
-      makeContext({ id: `ctx-${i}`, name: `Context ${i}`, sort_order: i }),
+      makeContext({
+        id: `ctx-${i}`,
+        name: `Context ${i}`,
+        sort_order: String(i),
+      }),
     );
     ctx.taskRepository = withNeedingSync(ctx.taskRepository, tasks);
     ctx.goalRepository = withNeedingSync(ctx.goalRepository, goals);
@@ -129,7 +137,7 @@ describe("SyncService — push chunks — overflow and ordering", () => {
             makeContext({
               id: `ctx-${i}`,
               name: `Context ${i}`,
-              sort_order: i,
+              sort_order: String(i),
             }),
           ),
         );
@@ -144,7 +152,7 @@ describe("SyncService — push chunks — overflow and ordering", () => {
             makeContext({
               id: `ctx-${i}`,
               name: `Context ${i}`,
-              sort_order: i,
+              sort_order: String(i),
             }),
           ),
         );
@@ -162,7 +170,7 @@ describe("SyncService — push chunks — overflow and ordering", () => {
             makeCategory({
               id: `cat-${i}`,
               name: `Category ${i}`,
-              sort_order: i,
+              sort_order: String(i),
             }),
           ),
         );
@@ -188,7 +196,7 @@ describe("SyncService — push chunks — overflow and ordering", () => {
             makeChecklistItem({
               id: `ci-${i}`,
               name: `Item ${i}`,
-              sort_order: i,
+              sort_order: String(i),
             }),
           ),
         );

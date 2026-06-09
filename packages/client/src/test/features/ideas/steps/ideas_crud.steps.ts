@@ -89,9 +89,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let createdIdea: Idea;
 
     Given("3 active ideas exist", async (_ctx: TestContext) => {
-      await seedIdea(ctx.ideaIds, "Idea A", { sort_order: 0 });
-      await seedIdea(ctx.ideaIds, "Idea B", { sort_order: 1 });
-      await seedIdea(ctx.ideaIds, "Idea C", { sort_order: 2 });
+      await seedIdea(ctx.ideaIds, "Idea A", { sort_order: "0" });
+      await seedIdea(ctx.ideaIds, "Idea B", { sort_order: "1" });
+      await seedIdea(ctx.ideaIds, "Idea C", { sort_order: "2" });
     });
 
     When('user creates idea "New Idea"', async (_ctx: TestContext) => {
@@ -157,9 +157,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let returnedIdeas: Idea[];
 
     Given("ideas with sort_order 2, 0, 1", async (_ctx: TestContext) => {
-      await seedIdea(ctx.ideaIds, "Idea A", { sort_order: 2 });
-      await seedIdea(ctx.ideaIds, "Idea B", { sort_order: 0 });
-      await seedIdea(ctx.ideaIds, "Idea C", { sort_order: 1 });
+      await seedIdea(ctx.ideaIds, "Idea A", { sort_order: "2" });
+      await seedIdea(ctx.ideaIds, "Idea B", { sort_order: "0" });
+      await seedIdea(ctx.ideaIds, "Idea C", { sort_order: "1" });
     });
 
     When("user requests all ideas", async (_ctx: TestContext) => {

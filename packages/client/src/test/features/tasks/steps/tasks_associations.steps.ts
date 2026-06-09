@@ -135,15 +135,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       async (_ctx: TestContext) => {
         await seedTask(ctx.taskIds, "G1 Task A", {
           goal_id: "g1",
-          sort_order: 0,
+          sort_order: "0",
         });
         await seedTask(ctx.taskIds, "G1 Task B", {
           goal_id: "g1",
-          sort_order: 1,
+          sort_order: "1",
         });
         await seedTask(ctx.taskIds, "G2 Task A", {
           goal_id: "g2",
-          sort_order: 0,
+          sort_order: "0",
         });
       },
     );
@@ -168,7 +168,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await seedTask(ctx.taskIds, "No Goal Task", {
             goal_id: "",
-            sort_order: 0,
+            sort_order: "0",
           });
         },
       );

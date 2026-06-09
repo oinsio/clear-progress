@@ -203,7 +203,7 @@ describe("SyncService — pull", () => {
   it("should normalize numeric sort_order to string when pulling tasks", async () => {
     const serverTask = makeTask({
       id: "t-num",
-      sort_order: 7 as unknown as number,
+      sort_order: 7 as unknown as string,
       needsSync: false,
     });
     ctx.mockSyncAdapter = createMockSyncAdapter({
@@ -227,7 +227,7 @@ describe("SyncService — pull", () => {
   it("should leave string sort_order unchanged when pulling tasks", async () => {
     const serverTask = makeTask({
       id: "t-str",
-      sort_order: "a0" as unknown as number,
+      sort_order: "a0" as unknown as string,
       needsSync: false,
     });
     ctx.mockSyncAdapter = createMockSyncAdapter({

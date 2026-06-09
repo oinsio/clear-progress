@@ -84,15 +84,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await seedTask(ctx.taskIds, "Active 1", {
             box: "inbox",
-            sort_order: 0,
+            sort_order: "0",
           });
           await seedTask(ctx.taskIds, "Active 2", {
             box: "inbox",
-            sort_order: 1,
+            sort_order: "1",
           });
           await seedTask(ctx.taskIds, "Deleted", {
             box: "inbox",
-            sort_order: 2,
+            sort_order: "2",
             is_deleted: true,
           });
         },

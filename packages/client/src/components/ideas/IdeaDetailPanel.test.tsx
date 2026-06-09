@@ -34,7 +34,7 @@ const mockIdea: Idea = {
   id: "idea-1",
   name: "Test Idea",
   description: "Test Description",
-  sort_order: 0,
+  sort_order: "0",
   is_deleted: false,
   created_at: toISOTimestamp(),
   updated_at: toISOTimestamp(),

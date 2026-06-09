@@ -1,5 +1,8 @@
 // implements FR5 of add-checklist-specs
-import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
+import type {
+  FeatureDescriibeCallbackParams,
+  StepTest,
+} from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
 import { generateKeyBetween } from "@/services/SortOrderService";
@@ -24,7 +27,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     caughtError = undefined;
   });
 
-  function givenItemsABCExist(Given: Function) {
+  function givenItemsABCExist(Given: StepTest["Given"]) {
     Given(
       'checklist items "A", "B", "C" exist with ascending sort_order',
       async (_ctx: TestContext) => {
@@ -37,7 +40,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     );
   }
 
-  function whenMoveCBeforeA(When: Function) {
+  function whenMoveCBeforeA(When: StepTest["When"]) {
     When('user moves item "C" before item "A"', async (_ctx: TestContext) => {
       const itemA = await getChecklistItem(ctx.checklistItemIds, "A");
       const itemC = await getChecklistItem(ctx.checklistItemIds, "C");

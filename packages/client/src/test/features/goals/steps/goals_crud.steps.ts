@@ -188,9 +188,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let returnedGoals: Goal[];
 
     Given("goals with sort_order 2, 0, 1", async (_ctx: TestContext) => {
-      await seedGoal(ctx.goalIds, "Goal A", { sort_order: 2 });
-      await seedGoal(ctx.goalIds, "Goal B", { sort_order: 0 });
-      await seedGoal(ctx.goalIds, "Goal C", { sort_order: 1 });
+      await seedGoal(ctx.goalIds, "Goal A", { sort_order: "2" });
+      await seedGoal(ctx.goalIds, "Goal B", { sort_order: "0" });
+      await seedGoal(ctx.goalIds, "Goal C", { sort_order: "1" });
     });
 
     When("user requests all goals", async (_ctx: TestContext) => {

@@ -310,7 +310,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             description: "",
             cover_hash: "",
             status: "planning",
-            sort_order: 0,
+            sort_order: "0",
             is_deleted: true,
             revision: 1,
             created_at: "2025-01-01T00:00:00.000Z",
@@ -320,7 +320,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           await db.contexts.put({
             id: contextId,
             name: "Deleted context",
-            sort_order: 0,
+            sort_order: "0",
             is_deleted: true,
             revision: 1,
             created_at: "2025-01-01T00:00:00.000Z",

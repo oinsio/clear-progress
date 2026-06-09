@@ -7,7 +7,7 @@
 
 ## 2. Schema and Type Migration
 
-- [x] 2.1 Change `sort_order` from `z.number()` to `z.union([z.number(), z.string()])` in `packages/contract/src/schemas/entities.ts` for all Wire schemas (FR1, D6)
+- [x] 2.1 Change `sort_order` from `z.number()` to `z.string()` in `packages/contract/src/schemas/entities.ts` for all Wire schemas; update Supabase columns from `INTEGER` to `TEXT` in `001_create_tables.sql`, remove `::INTEGER` casts in `003_create_push_rpc.sql`, update serializers to `as string` (FR1, D6)
 - [x] 2.2 Add Dexie version bump with `upgrade()` handler in DB schema: convert integer sort_order to fractional indexing strings — tasks in reverse order (DESC), non-task entities in natural order (ASC) (FR10, D5)
 - [x] 2.3 TDD: Unit tests for migration — existing integer orders correctly converted to string keys preserving display order (FR10)
 
@@ -55,7 +55,7 @@
 
 ## 7. Sync Compatibility
 
-- [x] 7.1 Add sort_order normalization in sync pull: convert incoming number to string if needed (D6)
+- [x] 7.1 Add sort_order normalization in sync pull: convert incoming number to string if needed — safety net for legacy local IndexedDB data (D6)
 - [x] 7.2 TDD: Unit test for sync normalization — number→string conversion (D6)
 
 ## 8. BDD Specs

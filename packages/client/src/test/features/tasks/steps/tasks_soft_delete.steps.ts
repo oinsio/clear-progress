@@ -36,7 +36,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         task_id: taskId,
         name: `Item ${i + 1}`,
         is_completed: false,
-        sort_order: i,
+        sort_order: String(i),
         is_deleted: isDeleted,
         created_at: now,
         updated_at: now,
