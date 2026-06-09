@@ -61,12 +61,36 @@ describe("localPreferencesService", () => {
     });
 
     it("should return default when key is missing", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
       expect(getPreference(enumConfig)).toBe("right");
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it("should not remove key from localStorage when value is valid", () => {
+      localStorage.setItem("panel_side", "left");
+      const removeSpy = vi.spyOn(Storage.prototype, "removeItem");
+
+      getPreference(enumConfig);
+
+      expect(removeSpy).not.toHaveBeenCalled();
     });
 
     // FR4: self-healing for invalid enum
     it("should self-heal and return default for invalid enum value", () => {
       expectSelfHealing(enumConfig, "center", "right");
+    });
+
+    it("should include invalid value and valid options in self-heal warning", () => {
+      localStorage.setItem("panel_side", "center");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      getPreference(enumConfig);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('"center" is not in [left, right]'),
+      );
     });
   });
 
@@ -90,6 +114,15 @@ describe("localPreferencesService", () => {
       expect(getPreference(booleanConfig)).toBe(false);
     });
 
+    it("should not remove key when stored boolean value is valid", () => {
+      localStorage.setItem("panel_open", "false");
+      const removeSpy = vi.spyOn(Storage.prototype, "removeItem");
+
+      getPreference(booleanConfig);
+
+      expect(removeSpy).not.toHaveBeenCalled();
+    });
+
     it("should return default when key is missing", () => {
       expect(getPreference(booleanConfig)).toBe(false);
     });
@@ -97,6 +130,17 @@ describe("localPreferencesService", () => {
     // FR4: self-healing for invalid boolean
     it("should self-heal and return default for invalid boolean value", () => {
       expectSelfHealing(booleanConfig, "yes", false);
+    });
+
+    it("should include invalid value in self-heal warning for boolean", () => {
+      localStorage.setItem("panel_open", "yes");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      getPreference(booleanConfig);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('"yes" is not a valid boolean'),
+      );
     });
   });
 
@@ -127,6 +171,17 @@ describe("localPreferencesService", () => {
     // FR4: self-healing for NaN
     it("should self-heal and return default when stored value is NaN", () => {
       expectSelfHealing(numberConfig, "not-a-number", 30);
+    });
+
+    it("should include invalid value in self-heal warning for number", () => {
+      localStorage.setItem("focus_opacity", "abc");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      getPreference(numberConfig);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('"abc" is not a valid number'),
+      );
     });
   });
 
@@ -160,6 +215,17 @@ describe("localPreferencesService", () => {
       );
     });
 
+    it("should include 'invalid JSON' in self-heal warning for broken JSON", () => {
+      localStorage.setItem("menu_order", "{broken json");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      getPreference(jsonConfig);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("invalid JSON"),
+      );
+    });
+
     // FR4: self-healing for Zod validation failure
     it("should self-heal and return default when Zod validation fails", () => {
       expectSelfHealing(
@@ -167,6 +233,17 @@ describe("localPreferencesService", () => {
         JSON.stringify({ not: "an array" }),
         ["inbox", "tasks"],
         "toEqual",
+      );
+    });
+
+    it("should include 'Zod validation failed' in self-heal warning for schema mismatch", () => {
+      localStorage.setItem("menu_order", JSON.stringify({ not: "an array" }));
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      getPreference(jsonConfig);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Zod validation failed"),
       );
     });
   });
@@ -229,6 +306,23 @@ describe("localPreferencesService", () => {
       };
 
       expect(getPreference(enumConfig)).toBe("right");
+    });
+
+    it("should not trigger self-healing when getItem throws", () => {
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new Error("localStorage unavailable");
+      });
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const enumConfig: EnumConfig<"left" | "right"> = {
+        type: "enum",
+        key: "panel_side",
+        values: ["left", "right"] as const,
+        defaultValue: "right",
+      };
+
+      getPreference(enumConfig);
+
+      expect(warnSpy).not.toHaveBeenCalled();
     });
 
     it("should no-op when setItem throws", () => {

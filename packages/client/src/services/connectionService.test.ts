@@ -25,7 +25,7 @@ function writeStore(store: ConnectionStore): void {
 describe("connectionService", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("connect", () => {
@@ -71,6 +71,27 @@ describe("connectionService", () => {
         url: "https://supabase.example.com",
         anonKey: "anon-key-123",
       });
+    });
+  });
+
+  describe("connect — error handling", () => {
+    it("should log error and re-throw when dispatchEvent throws", () => {
+      vi.spyOn(window, "dispatchEvent").mockImplementation(() => {
+        throw new Error("dispatch failed");
+      });
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const config: GasConnectionConfig = {
+        type: "gas",
+        url: "https://example.com",
+        clientId: "test-id",
+      };
+
+      expect(() => connect(config)).toThrow("dispatch failed");
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Failed to save connection config:",
+        expect.any(Error),
+      );
     });
   });
 
@@ -123,6 +144,19 @@ describe("connectionService", () => {
       expect(() => disconnect()).not.toThrow();
       expect(localStorage.getItem(STORAGE_KEYS.CONNECTION_CONFIG)).toBeNull();
     });
+
+    it("should log error and re-throw when dispatchEvent throws during disconnect", () => {
+      vi.spyOn(window, "dispatchEvent").mockImplementation(() => {
+        throw new Error("dispatch failed");
+      });
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      expect(() => disconnect()).toThrow("dispatch failed");
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Failed to disconnect:",
+        expect.any(Error),
+      );
+    });
   });
 
   describe("getConnectionConfig", () => {
@@ -156,6 +190,17 @@ describe("connectionService", () => {
       const result = getConnectionConfig();
       expect(result).toBeNull();
     });
+
+    it("should return null when activeType is set but config for that type is missing", () => {
+      writeStore({
+        activeType: "supabase",
+        configs: { gas: { url: "https://gas.example.com" } },
+      });
+
+      const result = getConnectionConfig();
+
+      expect(result).toBeNull();
+    });
   });
 
   describe("getSavedConnectionConfig", () => {
@@ -174,18 +219,36 @@ describe("connectionService", () => {
       });
     });
 
-    it("should return active config when activeType is set", () => {
+    it("should return active type config when both gas and supabase configs exist", () => {
       writeStore({
-        activeType: "gas",
-        configs: { gas: { url: "https://example.com" } },
+        activeType: "supabase",
+        configs: {
+          gas: { url: "https://gas.example.com", clientId: "gas-id" },
+          supabase: {
+            url: "https://supabase.example.com",
+            anonKey: "key-123",
+          },
+        },
       });
 
       const result = getSavedConnectionConfig();
 
       expect(result).toEqual({
-        type: "gas",
-        url: "https://example.com",
+        type: "supabase",
+        url: "https://supabase.example.com",
+        anonKey: "key-123",
       });
+    });
+
+    it("should return null when activeType is set but config for that type is missing", () => {
+      writeStore({
+        activeType: "supabase",
+        configs: { gas: { url: "https://gas.example.com" } },
+      });
+
+      const result = getSavedConnectionConfig();
+
+      expect(result).toBeNull();
     });
 
     it("should return null when no config exists", () => {

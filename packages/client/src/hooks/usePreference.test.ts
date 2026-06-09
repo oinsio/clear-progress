@@ -185,4 +185,36 @@ describe("usePreference", () => {
       expect(firstSetter).toBe(secondSetter);
     });
   });
+
+  // FR6: setter updates when config key changes
+  describe("setter updates on config change", () => {
+    it("should use updated config key when config changes between renders", () => {
+      const configA: EnumConfig<"left" | "right"> = {
+        type: "enum",
+        key: "test_key_a",
+        values: ["left", "right"] as const,
+        defaultValue: "right",
+      };
+      const configB: EnumConfig<"left" | "right"> = {
+        type: "enum",
+        key: "test_key_b",
+        values: ["left", "right"] as const,
+        defaultValue: "right",
+      };
+
+      const { result, rerender } = renderHook(
+        ({ config }) => usePreference(config),
+        { initialProps: { config: configA } },
+      );
+
+      rerender({ config: configB });
+
+      act(() => {
+        result.current[1]("left");
+      });
+
+      expect(localStorage.getItem("test_key_b")).toBe("left");
+      expect(localStorage.getItem("test_key_a")).toBeNull();
+    });
+  });
 });

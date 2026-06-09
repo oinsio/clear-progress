@@ -2,12 +2,12 @@
 
 - [x] 1.1 Create `localPreferencesService.ts` with `getPreference()`, `setPreference()`, `removePreference()` — enum, boolean, number, json types with self-healing (FR1-FR5, FR7). TDD: write failing tests first, then implement.
 - [x] 1.2 Add `readCached()` and `syncCache()` helpers for synced settings cache (FR18, FR19)
-- [ ] 1.3 Mutation testing on `localPreferencesService.ts` — target >=95% (M4)
+- [x] 1.3 Mutation testing on `localPreferencesService.ts` — target >=95% (M4)
 
 ## 2. usePreference React hook (TDD)
 
 - [x] 2.1 Create `usePreference.ts` hook — `[value, setter]` pattern using `getPreference`/`setPreference` internally (FR6, FR7). TDD.
-- [ ] 2.2 Mutation testing on `usePreference.ts` — target >=95%
+- [x] 2.2 Mutation testing on `usePreference.ts` — target >=95%
 
 ## 3. Contract tests for STORAGE_KEYS
 
@@ -26,7 +26,7 @@
 - [x] 5.3 Remove `SAVED_SUPABASE_CONFIG` and `SAVED_GAS_CONFIG` from `STORAGE_KEYS`
 - [x] 5.4 Update `supabaseClientManager.ts` boot-path to work with new `getConnectionConfig()` return type (no `isActive` field)
 - [x] 5.5 Update `ServerGasForm.tsx`, `ServerSupabaseForm.tsx` to use `getSavedConfigForType()` with new schema
-- [ ] 5.6 Mutation testing on `connectionService.ts` — target >=95% (M4)
+- [x] 5.6 Mutation testing on `connectionService.ts` — target >=95% (M4)
 
 ## 6. Migrate existing hooks/providers to usePreference
 
@@ -51,7 +51,7 @@
 ## 7. Self-healing for tokenPersistence
 
 - [x] 7.1 Add self-healing to `tokenPersistence.localStoragePersistence.load()` — corrupted/invalid token data SHALL be cleaned up and `null` returned (FR17). TDD.
-- [ ] 7.2 Mutation testing on `tokenPersistence.ts` — target >=95%
+- [x] 7.2 Mutation testing on `tokenPersistence.ts` — target >=95% (94% — 3 equivalent mutants)
 
 ## 8. Fix flash of wrong theme
 
