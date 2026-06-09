@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { STORAGE_KEYS } from "@/constants";
+import { setPreference } from "@/services/localPreferencesService";
 import type { OnboardingService } from "@/services/OnboardingService";
 
 /** Implements FR1, FR3, FR7 of onboarding-goal */
@@ -34,7 +35,7 @@ export function useOnboarding(onboardingService: OnboardingService) {
   }, [onboardingService, t]);
 
   const decline = useCallback(() => {
-    localStorage.setItem(STORAGE_KEYS.ONBOARDING_SHOWN, "true");
+    setPreference(STORAGE_KEYS.ONBOARDING_SHOWN, true);
     setState("dismissed");
   }, []);
 

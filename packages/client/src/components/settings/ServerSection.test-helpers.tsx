@@ -6,7 +6,6 @@ export const SUPABASE_CONFIG = {
   type: "supabase" as const,
   url: "https://test.supabase.co",
   anonKey: "key",
-  isActive: true,
 };
 
 export function fillAndSubmitSupabase(

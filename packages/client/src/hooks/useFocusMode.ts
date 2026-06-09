@@ -1,34 +1,8 @@
-import { useCallback, useState } from "react";
+// implements FR6, FR7 of localstorage-refactor
 import { DEFAULT_FOCUS_OPACITY, STORAGE_KEYS } from "@/constants";
+import { usePreference } from "@/hooks/usePreference";
 
 const DEFAULT_FOCUS_MODE = true;
-
-function getCachedFocusMode(): boolean {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.FOCUS_MODE);
-    if (cached !== null) {
-      return cached === "true";
-    }
-  } catch {
-    // localStorage is unavailable
-  }
-  return DEFAULT_FOCUS_MODE;
-}
-
-function getCachedFocusOpacity(): number {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.FOCUS_OPACITY);
-    if (cached !== null) {
-      const parsed = Number(cached);
-      if (!Number.isNaN(parsed)) {
-        return parsed;
-      }
-    }
-  } catch {
-    // localStorage is unavailable
-  }
-  return DEFAULT_FOCUS_OPACITY;
-}
 
 export interface UseFocusModeReturn {
   isFocusMode: boolean;
@@ -38,29 +12,17 @@ export interface UseFocusModeReturn {
 }
 
 export function useFocusMode(): UseFocusModeReturn {
-  const [isFocusMode, setFocusModeState] =
-    useState<boolean>(getCachedFocusMode);
-  const [focusOpacity, setFocusOpacityState] = useState<number>(
-    getCachedFocusOpacity,
-  );
+  const [isFocusMode, setFocusMode] = usePreference<boolean>({
+    type: "boolean",
+    key: STORAGE_KEYS.FOCUS_MODE,
+    defaultValue: DEFAULT_FOCUS_MODE,
+  });
 
-  const setFocusMode = useCallback((enabled: boolean) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.FOCUS_MODE, String(enabled));
-    } catch {
-      // localStorage is unavailable
-    }
-    setFocusModeState(enabled);
-  }, []);
-
-  const setFocusOpacity = useCallback((value: number) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.FOCUS_OPACITY, String(value));
-    } catch {
-      // localStorage is unavailable
-    }
-    setFocusOpacityState(value);
-  }, []);
+  const [focusOpacity, setFocusOpacity] = usePreference<number>({
+    type: "number",
+    key: STORAGE_KEYS.FOCUS_OPACITY,
+    defaultValue: DEFAULT_FOCUS_OPACITY,
+  });
 
   return { isFocusMode, setFocusMode, focusOpacity, setFocusOpacity };
 }

@@ -109,7 +109,6 @@ describe("ServerSection — Supabase flow", () => {
       type: "supabase",
       url: "https://test.supabase.co",
       anonKey: "test-key",
-      isActive: true,
     });
     expect(mockCreateSupabaseClient).toHaveBeenCalledWith(
       "https://test.supabase.co",

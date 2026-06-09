@@ -38,9 +38,8 @@ export function setupBeforeEach() {
   localStorage.setItem(
     "connection_config",
     JSON.stringify({
-      type: "gas",
-      url: "https://test.example.com",
-      isActive: true,
+      activeType: "gas",
+      configs: { gas: { url: "https://test.example.com" } },
     }),
   );
 

@@ -1,15 +1,7 @@
-import { useCallback, useState } from "react";
+// implements FR6, FR7 of localstorage-refactor
+import { useCallback } from "react";
 import { STORAGE_KEYS } from "@/constants";
-
-function getCachedPanelOpen(): boolean {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.PANEL_OPEN);
-    return cached === "true";
-  } catch {
-    // localStorage is not available
-  }
-  return false;
-}
+import { usePreference } from "@/hooks/usePreference";
 
 export interface UsePanelOpenReturn {
   isPanelOpen: boolean;
@@ -17,19 +9,15 @@ export interface UsePanelOpenReturn {
 }
 
 export function usePanelOpen(): UsePanelOpenReturn {
-  const [isPanelOpen, setIsPanelOpen] = useState<boolean>(getCachedPanelOpen);
+  const [isPanelOpen, setIsPanelOpen] = usePreference<boolean>({
+    type: "boolean",
+    key: STORAGE_KEYS.PANEL_OPEN,
+    defaultValue: false,
+  });
 
   const togglePanelOpen = useCallback(() => {
-    setIsPanelOpen((previous) => {
-      const next = !previous;
-      try {
-        localStorage.setItem(STORAGE_KEYS.PANEL_OPEN, String(next));
-      } catch {
-        // localStorage is not available
-      }
-      return next;
-    });
-  }, []);
+    setIsPanelOpen(!isPanelOpen);
+  }, [isPanelOpen, setIsPanelOpen]);
 
   return { isPanelOpen, togglePanelOpen };
 }

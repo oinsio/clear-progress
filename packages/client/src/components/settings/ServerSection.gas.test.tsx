@@ -112,7 +112,6 @@ describe("ServerSection — GAS flow", () => {
       type: "gas",
       url: "https://script.google.com/macros/s/ABC/exec",
       clientId: "client-123",
-      isActive: true,
     });
   });
 

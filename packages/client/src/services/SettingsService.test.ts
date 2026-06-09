@@ -3,7 +3,7 @@ import {
   BOX,
   DEFAULT_ACCENT_COLOR,
   DEFAULT_DAY_BOUNDARY,
-  SETTING_KEYS,
+  STORAGE_KEYS,
 } from "@/constants";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SettingsService } from "./SettingsService";
@@ -34,21 +34,21 @@ describe("SettingsService", () => {
         getValue: vi.fn().mockResolvedValue("inbox"),
       });
       const settingsService = new SettingsService(mockSettingsRepository);
-      const value = await settingsService.get(SETTING_KEYS.DEFAULT_BOX);
+      const value = await settingsService.get(STORAGE_KEYS.DEFAULT_BOX);
       expect(value).toBe("inbox");
     });
 
     it("should return undefined when setting not found", async () => {
       const settingsService = new SettingsService(mockSettingsRepository);
-      const value = await settingsService.get(SETTING_KEYS.DEFAULT_BOX);
+      const value = await settingsService.get(STORAGE_KEYS.DEFAULT_BOX);
       expect(value).toBeUndefined();
     });
 
     it("should call repository.getValue with the given key", async () => {
       const settingsService = new SettingsService(mockSettingsRepository);
-      await settingsService.get(SETTING_KEYS.ACCENT_COLOR);
+      await settingsService.get(STORAGE_KEYS.ACCENT_COLOR);
       expect(mockSettingsRepository.getValue).toHaveBeenCalledWith(
-        SETTING_KEYS.ACCENT_COLOR,
+        STORAGE_KEYS.ACCENT_COLOR,
       );
     });
   });
@@ -56,9 +56,9 @@ describe("SettingsService", () => {
   describe("set", () => {
     it("should call repository.set with key and value", async () => {
       const settingsService = new SettingsService(mockSettingsRepository);
-      await settingsService.set(SETTING_KEYS.ACCENT_COLOR, "green");
+      await settingsService.set(STORAGE_KEYS.ACCENT_COLOR, "green");
       expect(mockSettingsRepository.set).toHaveBeenCalledWith(
-        SETTING_KEYS.ACCENT_COLOR,
+        STORAGE_KEYS.ACCENT_COLOR,
         "green",
       );
     });
@@ -131,7 +131,7 @@ describe("SettingsService", () => {
       const settingsService = new SettingsService(mockSettingsRepository);
       await settingsService.getDayBoundary();
       expect(mockSettingsRepository.set).toHaveBeenCalledWith(
-        SETTING_KEYS.DAY_BOUNDARY,
+        STORAGE_KEYS.DAY_BOUNDARY,
         DEFAULT_DAY_BOUNDARY,
       );
     });

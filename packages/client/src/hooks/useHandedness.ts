@@ -1,22 +1,11 @@
-import { useCallback, useState } from "react";
+// implements FR6, FR7 of localstorage-refactor
 import {
   DEFAULT_HANDEDNESS,
   HANDEDNESS_OPTIONS,
   STORAGE_KEYS,
 } from "@/constants";
+import { usePreference } from "@/hooks/usePreference";
 import type { Handedness } from "@/types/common";
-
-function getCachedHandedness(): Handedness {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.HANDEDNESS);
-    if (cached && HANDEDNESS_OPTIONS.includes(cached as Handedness)) {
-      return cached as Handedness;
-    }
-  } catch {
-    // localStorage unavailable
-  }
-  return DEFAULT_HANDEDNESS;
-}
 
 export interface UseHandednessReturn {
   handedness: Handedness;
@@ -27,17 +16,12 @@ export interface UseHandednessReturn {
  * Implements FR13 of command-bar.
  */
 export function useHandedness(): UseHandednessReturn {
-  const [handedness, setHandednessState] =
-    useState<Handedness>(getCachedHandedness);
-
-  const setHandedness = useCallback((value: Handedness) => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.HANDEDNESS, value);
-    } catch {
-      // localStorage unavailable
-    }
-    setHandednessState(value);
-  }, []);
+  const [handedness, setHandedness] = usePreference<Handedness>({
+    type: "enum",
+    key: STORAGE_KEYS.HANDEDNESS,
+    values: HANDEDNESS_OPTIONS,
+    defaultValue: DEFAULT_HANDEDNESS,
+  });
 
   return { handedness, setHandedness };
 }

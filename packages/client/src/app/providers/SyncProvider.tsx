@@ -1,3 +1,4 @@
+// implements FR6, FR7 of localstorage-refactor
 import type React from "react";
 import {
   createContext,
@@ -32,6 +33,7 @@ import {
   defaultFileSyncService,
   defaultSyncAdapter,
 } from "@/services/defaultServices";
+import { setPreference } from "@/services/localPreferencesService";
 import { SyncService } from "@/services/SyncService";
 import type { FullSyncStep, SyncStatus } from "@/types/common";
 import { toISOTimestamp } from "@/utils/dateHelpers";
@@ -62,14 +64,7 @@ const syncService = new SyncService(
 );
 
 function persistLastSync(timestamp: string): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.LAST_SYNC, timestamp);
-  } catch (storageError) {
-    console.error(
-      "[SyncProvider] Failed to persist last sync timestamp:",
-      storageError,
-    );
-  }
+  setPreference(STORAGE_KEYS.LAST_SYNC, timestamp);
 }
 
 export function SyncProvider({ children }: { children: React.ReactNode }) {
@@ -78,9 +73,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const { accessToken, signOut, silentRefresh } = useAuth();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncVersion, setSyncVersion] = useState(0);
-  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(() =>
-    localStorage.getItem(STORAGE_KEYS.LAST_SYNC),
-  );
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+    } catch {
+      return null;
+    }
+  });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

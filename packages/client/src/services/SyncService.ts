@@ -1,3 +1,4 @@
+// implements FR6, FR7 of localstorage-refactor
 import type { PushResponse, SyncAdapter } from "@clear-progress/contract";
 import {
   PUSH_CHUNK_SIZE,
@@ -16,6 +17,10 @@ import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import type { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { Temporal } from "@/lib/temporal";
+import {
+  removePreference,
+  setPreference,
+} from "@/services/localPreferencesService";
 import type { PurgeResponse } from "@/types/api";
 import type {
   Attachment,
@@ -71,8 +76,13 @@ export class SyncService {
     const sinceRevision = await this.syncMetaRepository.getValue(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
     );
-    const settingsUpdatedAt =
-      localStorage.getItem(STORAGE_KEYS.SETTINGS_UPDATED_AT) ?? undefined;
+    let settingsUpdatedAt: string | undefined;
+    try {
+      settingsUpdatedAt =
+        localStorage.getItem(STORAGE_KEYS.SETTINGS_UPDATED_AT) ?? undefined;
+    } catch {
+      settingsUpdatedAt = undefined;
+    }
 
     const pullResponse = await this.syncAdapter.pull({
       since_revision: sinceRevision,
@@ -182,7 +192,7 @@ export class SyncService {
             ? setting.updated_at
             : max;
         }, settingsUpdatedAt ?? "");
-        localStorage.setItem(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
+        setPreference(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
       } catch (temporalError) {
         console.error(
           "[SyncService] Temporal.Instant.from failed in settings_updated_at:",
@@ -647,7 +657,7 @@ export class SyncService {
     );
 
     // Reset settings_updated_at for a full settings pull
-    localStorage.removeItem(STORAGE_KEYS.SETTINGS_UPDATED_AT);
+    removePreference(STORAGE_KEYS.SETTINGS_UPDATED_AT);
 
     // 2. Mark all records as not-needsSync (so pull overwrites them)
     await db.tasks.toCollection().modify({ needsSync: false });

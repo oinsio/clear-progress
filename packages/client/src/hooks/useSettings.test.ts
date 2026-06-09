@@ -20,7 +20,6 @@ import {
   DAY_BOUNDARY_CHANGED_EVENT,
   DEFAULT_ACCENT_COLOR,
   DEFAULT_DAY_BOUNDARY,
-  SETTING_KEYS,
   STORAGE_KEYS,
 } from "@/constants";
 import type { SettingsService } from "@/services/SettingsService";
@@ -79,7 +78,7 @@ describe("useSettings", () => {
     expect(result.current.defaultBox).toBe(BOX.TODAY);
   });
 
-  it("should call set with SETTING_KEYS.DEFAULT_BOX when setDefaultBox is called", async () => {
+  it("should call set with STORAGE_KEYS.DEFAULT_BOX when setDefaultBox is called", async () => {
     const { result } = renderHook(() => useSettings(mockSettingsService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -88,13 +87,13 @@ describe("useSettings", () => {
     });
 
     expect(mockSettingsService.set).toHaveBeenCalledWith(
-      SETTING_KEYS.DEFAULT_BOX,
+      STORAGE_KEYS.DEFAULT_BOX,
       BOX.WEEK,
     );
     expect(mockSettingsService.getDefaultBox).toHaveBeenCalledTimes(2);
   });
 
-  it("should call set with SETTING_KEYS.ACCENT_COLOR when setAccentColor is called", async () => {
+  it("should call set with STORAGE_KEYS.ACCENT_COLOR when setAccentColor is called", async () => {
     const { result } = renderHook(() => useSettings(mockSettingsService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -103,7 +102,7 @@ describe("useSettings", () => {
     });
 
     expect(mockSettingsService.set).toHaveBeenCalledWith(
-      SETTING_KEYS.ACCENT_COLOR,
+      STORAGE_KEYS.ACCENT_COLOR,
       "orange",
     );
     expect(mockSettingsService.getAccentColor).toHaveBeenCalledTimes(2);
@@ -209,7 +208,7 @@ describe("useSettings", () => {
     expect(result.current.dayBoundary).toBe("04:00");
   });
 
-  it("should call set with SETTING_KEYS.DAY_BOUNDARY when setDayBoundary is called", async () => {
+  it("should call set with STORAGE_KEYS.DAY_BOUNDARY when setDayBoundary is called", async () => {
     const { result } = renderHook(() => useSettings(mockSettingsService));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -218,7 +217,7 @@ describe("useSettings", () => {
     });
 
     expect(mockSettingsService.set).toHaveBeenCalledWith(
-      SETTING_KEYS.DAY_BOUNDARY,
+      STORAGE_KEYS.DAY_BOUNDARY,
       "05:00",
     );
     expect(mockSettingsService.getDayBoundary).toHaveBeenCalledTimes(2);

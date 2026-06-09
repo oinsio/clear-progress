@@ -1,33 +1,10 @@
+// implements FR6, FR7 of localstorage-refactor
 import { CollapsedSectionsSchema } from "@clear-progress/contract";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { STORAGE_KEYS } from "@/constants";
+import { usePreference } from "@/hooks/usePreference";
 
-function readCollapsedSections(): Record<string, boolean> {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.SECTION_COLLAPSE);
-    if (stored !== null) {
-      const parseResult = CollapsedSectionsSchema.safeParse(JSON.parse(stored));
-      if (parseResult.success) {
-        return parseResult.data;
-      }
-      console.error("Invalid collapsed sections:", parseResult.error);
-    }
-  } catch {
-    // localStorage is not available or data is corrupted
-  }
-  return {};
-}
-
-function writeCollapsedSections(sections: Record<string, boolean>): void {
-  try {
-    localStorage.setItem(
-      STORAGE_KEYS.SECTION_COLLAPSE,
-      JSON.stringify(sections),
-    );
-  } catch {
-    // localStorage is not available
-  }
-}
+const DEFAULT_COLLAPSED_SECTIONS: Record<string, boolean> = {};
 
 export interface UseSectionCollapseReturn {
   isCollapsed: boolean;
@@ -37,20 +14,18 @@ export interface UseSectionCollapseReturn {
 export function useSectionCollapse(
   sectionKey: string,
 ): UseSectionCollapseReturn {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
-    const sections = readCollapsedSections();
-    return sections[sectionKey] ?? false;
+  const [sections, setSections] = usePreference<Record<string, boolean>>({
+    type: "json",
+    key: STORAGE_KEYS.SECTION_COLLAPSE,
+    schema: CollapsedSectionsSchema,
+    defaultValue: DEFAULT_COLLAPSED_SECTIONS,
   });
 
+  const isCollapsed = sections[sectionKey] ?? false;
+
   const toggleCollapse = useCallback(() => {
-    setIsCollapsed((previous) => {
-      const next = !previous;
-      const sections = readCollapsedSections();
-      sections[sectionKey] = next;
-      writeCollapsedSections(sections);
-      return next;
-    });
-  }, [sectionKey]);
+    setSections({ ...sections, [sectionKey]: !isCollapsed });
+  }, [sections, setSections, sectionKey, isCollapsed]);
 
   return { isCollapsed, toggleCollapse };
 }

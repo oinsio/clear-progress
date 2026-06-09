@@ -1,3 +1,4 @@
+// implements FR6, FR7, FR20 of localstorage-refactor
 import { useCallback, useEffect, useState } from "react";
 import { useSync } from "@/app/providers/SyncProvider";
 import {
@@ -6,10 +7,10 @@ import {
   DAY_BOUNDARY_CHANGED_EVENT,
   DEFAULT_ACCENT_COLOR,
   DEFAULT_DAY_BOUNDARY,
-  SETTING_KEYS,
   STORAGE_KEYS,
 } from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import { getPreference, syncCache } from "@/services/localPreferencesService";
 import { SettingsService } from "@/services/SettingsService";
 import type { AccentColor, Box } from "@/types/common";
 
@@ -18,27 +19,21 @@ const defaultSettingsService = new SettingsService(new SettingsRepository());
 const BOX_VALUES = Object.values(BOX) as Box[];
 
 function getCachedBox(): Box {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.DEFAULT_BOX);
-    if (cached && BOX_VALUES.includes(cached as Box)) {
-      return cached as Box;
-    }
-  } catch {
-    // localStorage is not available
-  }
-  return BOX.INBOX;
+  return getPreference<Box>({
+    type: "enum",
+    key: STORAGE_KEYS.DEFAULT_BOX,
+    values: BOX_VALUES,
+    defaultValue: BOX.INBOX,
+  });
 }
 
 function getCachedAccentColor(): AccentColor {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.ACCENT_COLOR);
-    if (cached && ACCENT_COLORS.includes(cached as AccentColor)) {
-      return cached as AccentColor;
-    }
-  } catch {
-    // localStorage is not available
-  }
-  return DEFAULT_ACCENT_COLOR;
+  return getPreference<AccentColor>({
+    type: "enum",
+    key: STORAGE_KEYS.ACCENT_COLOR,
+    values: ACCENT_COLORS,
+    defaultValue: DEFAULT_ACCENT_COLOR,
+  });
 }
 
 export function getCachedDayBoundary(): string {
@@ -80,13 +75,9 @@ export function useSettings(
       settingsService.getAccentColor(),
       settingsService.getDayBoundary(),
     ]);
-    try {
-      localStorage.setItem(STORAGE_KEYS.DEFAULT_BOX, box);
-      localStorage.setItem(STORAGE_KEYS.ACCENT_COLOR, color);
-      localStorage.setItem(STORAGE_KEYS.DAY_BOUNDARY, boundary);
-    } catch {
-      // localStorage is not available
-    }
+    syncCache(STORAGE_KEYS.DEFAULT_BOX, box);
+    // FR20: accent color cache is managed by ThemeProvider only
+    syncCache(STORAGE_KEYS.DAY_BOUNDARY, boundary);
     setDefaultBoxState(box);
     setAccentColorState(color);
     setDayBoundaryState(boundary);
@@ -99,7 +90,7 @@ export function useSettings(
 
   const setDefaultBox = useCallback(
     async (box: Box) => {
-      await settingsService.set(SETTING_KEYS.DEFAULT_BOX, box);
+      await settingsService.set(STORAGE_KEYS.DEFAULT_BOX, box);
       await loadSettings();
       schedulePush();
     },
@@ -108,7 +99,7 @@ export function useSettings(
 
   const setAccentColor = useCallback(
     async (color: AccentColor) => {
-      await settingsService.set(SETTING_KEYS.ACCENT_COLOR, color);
+      await settingsService.set(STORAGE_KEYS.ACCENT_COLOR, color);
       await loadSettings();
       schedulePush();
     },
@@ -117,7 +108,7 @@ export function useSettings(
 
   const setDayBoundary = useCallback(
     async (value: string) => {
-      await settingsService.set(SETTING_KEYS.DAY_BOUNDARY, value);
+      await settingsService.set(STORAGE_KEYS.DAY_BOUNDARY, value);
       await loadSettings();
       schedulePush();
       window.dispatchEvent(new CustomEvent(DAY_BOUNDARY_CHANGED_EVENT));
