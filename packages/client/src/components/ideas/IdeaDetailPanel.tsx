@@ -1,5 +1,5 @@
 /** Implements UX4 of add-file-attachments */
-import { Trash2, X } from "lucide-react";
+import { FileText, Trash2, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -116,7 +116,8 @@ export function IdeaDetailPanel({
 
           {/* Description */}
           <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label className="text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">
+              <FileText className="w-4 h-4" aria-hidden="true" />
               {t("idea.descriptionLabel")}
             </label>
             <EditableDescription

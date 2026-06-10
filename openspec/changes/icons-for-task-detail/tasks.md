@@ -19,22 +19,22 @@
 
 ## 5. GoalCardEditMode tab icons
 
-- [ ] 5.1 Add AlignLeft icon to Goal Details tab button — FR12
-- [ ] 5.2 Add Paperclip icon to Goal Attachments tab button — FR13
+- [x] 5.1 Add AlignLeft icon to Goal Details tab button — FR12
+- [x] 5.2 Add Paperclip icon to Goal Attachments tab button — FR13
 
 ## 6. GoalEditDetailsTab icons
 
-- [ ] 6.1 Add FileText icon to Goal description field label — FR14
-- [ ] 6.2 Add Activity icon to Goal status field label — FR15
+- [x] 6.1 Add FileText icon to Goal description field label — FR14
+- [x] 6.2 Add Activity icon to Goal status field label — FR15
 
 ## 7. IdeaDetailPanel icons
 
-- [ ] 7.1 Add FileText icon to Idea description field label — FR16
+- [x] 7.1 Add FileText icon to Idea description field label — FR16
 
 ## 8. Verification
 
 - [x] 8.1 Run `pnpm run build` — verify no build errors
 - [x] 8.2 Verify icons render correctly at 320px viewport — NFR-R1
 - [x] 8.3 Run existing DrillDownRow and TaskDetailPanel tests — no regressions
-- [ ] 8.4 Verify Goal and Idea icons render correctly — FR12-FR16
-- [ ] 8.5 Verify same icon (FileText) used for description across all entities — M3
+- [x] 8.4 Verify Goal and Idea icons render correctly — FR12-FR16
+- [x] 8.5 Verify same icon (FileText) used for description across all entities — M3

@@ -4,7 +4,15 @@
  * Implements FR2 of goal-detail-card-refactor.
  */
 import type { LucideIcon } from "lucide-react";
-import { Check, CircleMinus, Pause, Play, Square } from "lucide-react";
+import {
+  Activity,
+  Check,
+  CircleMinus,
+  FileText,
+  Pause,
+  Play,
+  Square,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { EditableDescription } from "@/components/ui/EditableDescription";
 import { cn } from "@/shared/lib/cn";
@@ -44,8 +52,9 @@ export function GoalEditDetailsTab({
       <div>
         <label
           htmlFor="goal-edit-description"
-          className="text-xs font-medium text-gray-500 mb-1 block"
+          className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-1"
         >
+          <FileText className="w-4 h-4" aria-hidden="true" />
           {t("goal.descriptionLabel")}
         </label>
         <EditableDescription
@@ -58,7 +67,8 @@ export function GoalEditDetailsTab({
 
       {/* Status segmented control */}
       <div>
-        <label className="text-xs font-medium text-gray-500 mb-2 block">
+        <label className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-2">
+          <Activity className="w-4 h-4" aria-hidden="true" />
           {t("goal.statusLabel")}
         </label>
         <div className="flex rounded-full border border-accent overflow-hidden">

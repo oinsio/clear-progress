@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { GoalAttachmentsTab } from "@/components/goals/GoalAttachmentsTab";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
+import { TAB_ICONS } from "@/components/tasks/taskEditShared";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { cn } from "@/shared/lib/cn";
 import type { GoalStatus } from "@/types/common";
@@ -102,12 +103,13 @@ export function GoalCardEditMode({
           data-testid="goal-tab-details"
           onClick={() => setActiveTab(GOAL_EDIT_TAB.DETAILS)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors",
+            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === GOAL_EDIT_TAB.DETAILS
               ? "bg-accent text-white border-accent"
               : "text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
+          <TAB_ICONS.details className="w-4 h-4" aria-hidden="true" />
           {t("goal.tabs.details")}
         </button>
         <button
@@ -115,12 +117,13 @@ export function GoalCardEditMode({
           data-testid="goal-tab-attachments"
           onClick={() => setActiveTab(GOAL_EDIT_TAB.ATTACHMENTS)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors",
+            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === GOAL_EDIT_TAB.ATTACHMENTS
               ? "bg-accent text-white border-accent"
               : "text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
+          <TAB_ICONS.attachments className="w-4 h-4" aria-hidden="true" />
           {t("goal.tabs.attachments")}
         </button>
       </div>
