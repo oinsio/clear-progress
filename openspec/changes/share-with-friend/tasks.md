@@ -61,7 +61,7 @@
 
 - [x] 10.1 Run Stryker on `useShare.ts`
 - [x] 10.2 Run Stryker on `ShareAppSection.tsx`
-- [ ] 10.3 Re-run Stryker on updated files after simplification
+- [x] 10.3 Re-run Stryker on updated files after simplification
 
 ## 11. Build and Type Check
 

@@ -1,10 +1,16 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock react-i18next
+// Mock react-i18next — each call returns a new `t` reference so useCallback [t] dep works
+let currentTranslate: (key: string) => string = (key) => key;
+const makeTranslate = () => {
+  const impl = currentTranslate;
+  return (key: string) => impl(key);
+};
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: makeTranslate(),
     i18n: { language: "en" },
   }),
 }));
@@ -18,6 +24,7 @@ describe("useShare", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal("location", { origin: TEST_ORIGIN });
+    currentTranslate = (key: string) => key;
   });
 
   describe("initial state", () => {
@@ -74,6 +81,28 @@ describe("useShare", () => {
       await act(() => result.current.copyLink());
 
       expect(result.current.copyResult).toBe("error");
+    });
+
+    it("should use updated translation when t function changes", async () => {
+      const writeTextMock = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal("navigator", {
+        clipboard: { writeText: writeTextMock },
+      });
+
+      const { result, rerender } = renderHook(() => useShare());
+
+      await act(() => result.current.copyLink());
+      expect(writeTextMock).toHaveBeenCalledWith(
+        `share.inviteMessage\n${TEST_ORIGIN}`,
+      );
+
+      currentTranslate = (key: string) => `translated:${key}`;
+      rerender();
+
+      await act(() => result.current.copyLink());
+      expect(writeTextMock).toHaveBeenLastCalledWith(
+        `translated:share.inviteMessage\n${TEST_ORIGIN}`,
+      );
     });
   });
 

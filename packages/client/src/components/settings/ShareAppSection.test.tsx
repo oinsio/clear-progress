@@ -124,6 +124,34 @@ describe("ShareAppSection dialog interactions", () => {
     fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
     expect(mockReturn.resetCopyResult).toHaveBeenCalledOnce();
   });
+
+  it("should call resetCopyResult when Escape key is pressed", () => {
+    const mockReturn = renderSection({ copyResult: "copied" });
+    fireEvent.keyDown(screen.getByTestId("confirm-dialog"), {
+      key: "Escape",
+    });
+    expect(mockReturn.resetCopyResult).toHaveBeenCalledOnce();
+  });
+
+  it("should not call resetCopyResult when non-Escape key is pressed", () => {
+    const mockReturn = renderSection({ copyResult: "copied" });
+    fireEvent.keyDown(screen.getByTestId("confirm-dialog"), {
+      key: "Enter",
+    });
+    expect(mockReturn.resetCopyResult).not.toHaveBeenCalled();
+  });
+
+  it("should call resetCopyResult when backdrop is clicked", () => {
+    const mockReturn = renderSection({ copyResult: "copied" });
+    fireEvent.click(screen.getByTestId("confirm-dialog"));
+    expect(mockReturn.resetCopyResult).toHaveBeenCalledOnce();
+  });
+
+  it("should not call resetCopyResult when inner dialog content is clicked", () => {
+    const mockReturn = renderSection({ copyResult: "copied" });
+    fireEvent.click(screen.getByTestId("confirm-dialog-message"));
+    expect(mockReturn.resetCopyResult).not.toHaveBeenCalled();
+  });
 });
 
 // NFR-A1, NFR-A2, NFR-A3: Accessibility
@@ -137,5 +165,11 @@ describe("ShareAppSection accessibility", () => {
   it("should render alertdialog role when dialog is visible", () => {
     renderSection({ copyResult: "copied" });
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+  });
+
+  it("should focus OK button when dialog appears", () => {
+    renderSection({ copyResult: "copied" });
+    const okButton = screen.getByTestId("confirm-dialog-confirm");
+    expect(okButton).toHaveFocus();
   });
 });
