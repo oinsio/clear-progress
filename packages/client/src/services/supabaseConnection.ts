@@ -55,7 +55,7 @@ export async function fetchSupabaseProviders(
     )
     .map(([provider]) => provider);
 
-  const isEmailEnabled = settings.external.email;
+  const isEmailEnabled = settings.external.email === true;
 
   return { oauthProviders, isEmailEnabled };
 }
