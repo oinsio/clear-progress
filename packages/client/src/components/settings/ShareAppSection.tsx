@@ -1,5 +1,6 @@
 import { Copy } from "lucide-react";
-import React, { useCallback, useEffect, useId, useRef } from "react";
+import type React from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useShare } from "@/hooks/useShare";
 
