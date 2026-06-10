@@ -70,13 +70,10 @@ vi.mock("@/utils/clientId", () => ({
 }));
 vi.mock("@/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/constants")>()),
-  ROUTES: { SETTINGS: "/settings" },
+  ROUTES: { SETTINGS: "/settings", TASKS: "/tasks" },
 }));
 vi.mock("@/shared/lib/cn", () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
-}));
-vi.mock("react-router-dom", () => ({
-  useNavigate: () => vi.fn(),
 }));
 
 import {

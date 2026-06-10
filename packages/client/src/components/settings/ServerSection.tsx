@@ -1,7 +1,6 @@
 import { createGasAdapter } from "@clear-progress/adapter-gas";
 import { type ReactNode, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { useSync } from "@/app/providers/SyncProvider";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
@@ -45,7 +44,6 @@ interface ServerSectionProps {
 /** Implements FR1, FR2, FR3 of simplify-backend-connection. */
 export function ServerSection({ oauthError = "" }: ServerSectionProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const config = useConnectionConfig();
   const { triggerFullSync } = useSync();
 
@@ -177,14 +175,16 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
     [emailOtp],
   );
 
-  const handleVerifyOtpAndNavigate = useCallback(
+  const handleVerifyOtpAndReload = useCallback(
     async (code: string): Promise<void> => {
       const isSuccess = await emailOtp.handleVerifyOtp(code);
       if (isSuccess) {
-        navigate(ROUTES.TASKS);
+        // Full reload so module-level singletons (defaultSyncAdapter, syncService)
+        // re-initialize with the now-available Supabase session — same as OAuth redirect flow.
+        window.location.href = `${window.location.origin}${import.meta.env.BASE_URL}${ROUTES.TASKS.slice(1)}`;
       }
     },
-    [emailOtp, navigate],
+    [emailOtp],
   );
 
   const handleBackFromOtp = useCallback((): void => {
@@ -246,7 +246,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
         return (
           <ServerEmailVerify
             email={emailOtp.pendingEmail}
-            onVerify={(code) => void handleVerifyOtpAndNavigate(code)}
+            onVerify={(code) => void handleVerifyOtpAndReload(code)}
             onResend={() => void emailOtp.handleResendOtp()}
             onBack={handleBackFromOtp}
             isVerifying={emailOtp.otpVerifying}
