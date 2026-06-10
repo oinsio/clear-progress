@@ -7,9 +7,9 @@ Users who enjoy Clear Progress want an easy way to recommend it to friends. Curr
 ## What Changes
 
 **ADDED**:
-- Share button in Settings page (after "Interface Scale", before "Language")
-- Web Share API integration with fallback to clipboard copy
-- Confirmation dialog for fallback scenario (desktop browsers without Web Share API)
+- Share section in Settings page (after "Interface Scale", before "Language") with "Copy link" button
+- Clipboard copy of invite message + app URL
+- Confirmation dialog with single OK button in accent color
 - i18n keys for share messages in Russian and English
 
 ## Capabilities
@@ -33,8 +33,8 @@ Users who enjoy Clear Progress want an easy way to recommend it to friends. Curr
 
 ## Goals
 
-- **G1**: Enable users to share the app with one tap on mobile devices
-- **G2**: Provide a seamless fallback experience on desktop (copy to clipboard)
+- **G1**: Enable users to copy invite message + app link with one click
+- **G2**: Provide clear feedback after copying (confirmation dialog)
 - **G3**: Support multilingual share messages (Russian and English)
 
 ## Non-Goals
@@ -47,20 +47,18 @@ Users who enjoy Clear Progress want an easy way to recommend it to friends. Curr
 
 ## Users & Scenarios
 
-- **U1**: Mobile user (iOS Safari, Android Chrome) — taps "Share" → native share sheet appears → selects messenger/email → sends link
-- **U2**: Desktop user (Chrome/Firefox) — clicks "Share" → dialog shows "Link copied to clipboard" → pastes link manually
-- **U3**: User on Safari macOS — clicks "Share" → native share menu appears (macOS share sheet)
+- **U1**: Any user (mobile or desktop) — clicks "Copy link" → invite message + URL copied to clipboard → dialog confirms "Link copied" → user pastes link in messenger/email
 
 ## Requirements
 
 ### Functional
 
 - **FR1**: Settings page displays a "Share app" section after "Interface Scale" and before "Language"
-- **FR2**: Section contains a button labeled per i18n (ru: "Поделиться", en: "Share")
-- **FR3**: Button triggers Web Share API if available, with data: `title`, `text`, `url: window.location.origin`
-- **FR4**: If Web Share API unavailable, copy `window.location.origin` to clipboard
+- **FR2**: Section contains a "Copy link" button labeled per i18n (ru: "Скопировать ссылку", en: "Copy link")
+- **FR3**: ~~Removed — Web Share API dropped due to cross-browser inconsistencies~~
+- **FR4**: Button copies invite message + `window.location.origin` to clipboard
 - **FR5**: Show confirmation dialog after clipboard copy with message from i18n
-- **FR6**: Dialog has single "OK" button to dismiss
+- **FR6**: Dialog has single "OK" button in accent color to dismiss
 - **FR7**: Share message text is localized (ru/en) and describes the app purpose
 
 ### Non-Functional
@@ -79,20 +77,17 @@ Users who enjoy Clear Progress want an easy way to recommend it to friends. Curr
 ## UX Acceptance Criteria
 
 - **UX1**: Share button is visually consistent with other settings sections (same typography, spacing, borders)
-- **UX2**: Share section has icon (Share icon from lucide-react) and descriptive text
-- **UX3**: On mobile, user sees native share sheet with familiar apps (WhatsApp, Telegram, etc.)
-- **UX4**: On desktop, user sees clear feedback that link was copied (dialog, not toast)
+- **UX2**: Share section has icon (Copy icon from lucide-react) and descriptive text
+- **UX3**: ~~Removed — no native share sheet~~
+- **UX4**: User sees clear feedback that link was copied (dialog with single OK button in accent color)
 - **UX5**: User can dismiss confirmation dialog by clicking backdrop, Escape, or "OK" button
 
 ## UI States Matrix
 
-| Scenario               | Share API | Clipboard API | UI State                         |
-|------------------------|-----------|---------------|----------------------------------|
-| Mobile (iOS/Android)   | ✅         | ✅             | Native share sheet               |
-| Desktop Safari (macOS) | ✅         | ✅             | macOS share menu                 |
-| Desktop Chrome/Firefox | ❌         | ✅             | Dialog: "Link copied"            |
-| Clipboard blocked      | ❌         | ❌             | Dialog: "Copy failed" (error)    |
-| User cancels share     | ✅         | N/A           | No feedback (AbortError ignored) |
+| Scenario               | Clipboard API | UI State                      |
+|------------------------|---------------|-------------------------------|
+| Any browser            | ✅             | Dialog: "Link copied"         |
+| Clipboard blocked      | ❌             | Dialog: "Copy failed" (error) |
 
 ## Behavior
 
@@ -112,8 +107,8 @@ No IA changes required. Share section is an additive feature within existing Set
 ## Success Metrics
 
 - **M1**: Share button is discoverable (placed in Settings after Interface Scale)
-- **M2**: Web Share API works on iOS Safari 12+, Android Chrome 89+, macOS Safari 12.1+
-- **M3**: Clipboard fallback works on desktop Chrome/Firefox
+- **M2**: Clipboard copy works on all modern browsers (Chrome, Firefox, Safari, mobile)
+- **M3**: Confirmation dialog uses app accent color, not hardcoded blue
 - **M4**: i18n keys are present in both ru.json and en.json
 - **M5**: Confirmation dialog meets WCAG 2.1 AA (keyboard navigation, ARIA attributes)
 

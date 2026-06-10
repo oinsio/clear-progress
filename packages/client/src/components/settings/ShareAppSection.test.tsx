@@ -17,9 +17,9 @@ function createMockShareReturn(
   overrides: Partial<UseShareReturn> = {},
 ): UseShareReturn {
   return {
-    shareApp: vi.fn(),
-    shareResult: "idle",
-    resetShareResult: vi.fn(),
+    copyLink: vi.fn(),
+    copyResult: "idle",
+    resetCopyResult: vi.fn(),
     ...overrides,
   };
 }
@@ -43,30 +43,30 @@ describe("ShareAppSection i18n", () => {
     expect(screen.getByText("share.description")).toBeInTheDocument();
   });
 
-  it("should render button label from i18n key", () => {
+  it("should render copy link button label from i18n key", () => {
     renderSection();
-    expect(screen.getByText("share.button")).toBeInTheDocument();
+    expect(screen.getByText("share.copyLinkButton")).toBeInTheDocument();
   });
 });
 
-// FR3: Web Share API path
-describe("ShareAppSection share button", () => {
+// FR4: Copy link button
+describe("ShareAppSection copy link button", () => {
   it("should render the section container", () => {
     renderSection();
     expect(screen.getByTestId("settings-share-app")).toBeInTheDocument();
   });
 
-  it("should call shareApp when share button is clicked", () => {
+  it("should call copyLink when copy link button is clicked", () => {
     const mockReturn = renderSection();
-    fireEvent.click(screen.getByTestId("share-app-button"));
-    expect(mockReturn.shareApp).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByTestId("copy-link-button"));
+    expect(mockReturn.copyLink).toHaveBeenCalledOnce();
   });
 });
 
-// FR4: Clipboard fallback — dialog with copied message
-describe("ShareAppSection clipboard fallback dialog", () => {
-  it("should show dialog with copied message when shareResult is copied", () => {
-    renderSection({ shareResult: "copied" });
+// FR5: Dialog with copied message
+describe("ShareAppSection clipboard dialog", () => {
+  it("should show dialog with copied message when copyResult is copied", () => {
+    renderSection({ copyResult: "copied" });
     expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
     expect(screen.getByTestId("confirm-dialog-message")).toHaveTextContent(
       "share.linkCopied",
@@ -74,74 +74,68 @@ describe("ShareAppSection clipboard fallback dialog", () => {
   });
 
   it("should render dialog title from i18n key", () => {
-    renderSection({ shareResult: "copied" });
+    renderSection({ copyResult: "copied" });
     expect(screen.getByTestId("confirm-dialog-title")).toHaveTextContent(
       "share.title",
     );
   });
 
-  it("should render confirm button label from i18n key", () => {
-    renderSection({ shareResult: "copied" });
+  it("should render single OK button from i18n key", () => {
+    renderSection({ copyResult: "copied" });
     expect(screen.getByTestId("confirm-dialog-confirm")).toHaveTextContent(
       "share.ok",
     );
   });
 
-  it("should render cancel button label from i18n key", () => {
-    renderSection({ shareResult: "copied" });
-    expect(screen.getByTestId("confirm-dialog-cancel")).toHaveTextContent(
-      "share.ok",
-    );
+  it("should not render a cancel button", () => {
+    renderSection({ copyResult: "copied" });
+    expect(
+      screen.queryByTestId("confirm-dialog-cancel"),
+    ).not.toBeInTheDocument();
   });
 });
 
 // FR6, UX5: Dialog interactions
 describe("ShareAppSection dialog interactions", () => {
-  it("should not show dialog when shareResult is idle", () => {
-    renderSection({ shareResult: "idle" });
+  it("should not show dialog when copyResult is idle", () => {
+    renderSection({ copyResult: "idle" });
     expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
   });
 
-  it("should show dialog when shareResult is copied", () => {
-    renderSection({ shareResult: "copied" });
+  it("should show dialog when copyResult is copied", () => {
+    renderSection({ copyResult: "copied" });
     expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
   });
 
-  it("should show dialog when shareResult is error", () => {
-    renderSection({ shareResult: "error" });
+  it("should show dialog when copyResult is error", () => {
+    renderSection({ copyResult: "error" });
     expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
   });
 
-  it("should show error message when shareResult is error", () => {
-    renderSection({ shareResult: "error" });
+  it("should show error message when copyResult is error", () => {
+    renderSection({ copyResult: "error" });
     expect(screen.getByTestId("confirm-dialog-message")).toHaveTextContent(
       "share.copyFailed",
     );
   });
 
-  it("should call resetShareResult when confirm button is clicked", () => {
-    const mockReturn = renderSection({ shareResult: "copied" });
+  it("should call resetCopyResult when OK button is clicked", () => {
+    const mockReturn = renderSection({ copyResult: "copied" });
     fireEvent.click(screen.getByTestId("confirm-dialog-confirm"));
-    expect(mockReturn.resetShareResult).toHaveBeenCalledOnce();
-  });
-
-  it("should call resetShareResult when cancel button is clicked", () => {
-    const mockReturn = renderSection({ shareResult: "copied" });
-    fireEvent.click(screen.getByTestId("confirm-dialog-cancel"));
-    expect(mockReturn.resetShareResult).toHaveBeenCalledOnce();
+    expect(mockReturn.resetCopyResult).toHaveBeenCalledOnce();
   });
 });
 
 // NFR-A1, NFR-A2, NFR-A3: Accessibility
 describe("ShareAppSection accessibility", () => {
-  it("should have aria-label on share button", () => {
+  it("should have aria-label on copy link button", () => {
     renderSection();
-    const shareButton = screen.getByTestId("share-app-button");
-    expect(shareButton).toHaveAttribute("aria-label", "share.button");
+    const copyButton = screen.getByTestId("copy-link-button");
+    expect(copyButton).toHaveAttribute("aria-label", "share.copyLinkButton");
   });
 
   it("should render alertdialog role when dialog is visible", () => {
-    renderSection({ shareResult: "copied" });
+    renderSection({ copyResult: "copied" });
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
   });
 });

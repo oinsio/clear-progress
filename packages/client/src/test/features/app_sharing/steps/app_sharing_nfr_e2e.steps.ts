@@ -31,20 +31,20 @@ Given(
 );
 
 // ============================================================================
-// NFR-A1: Share button has proper aria-label
+// NFR-A1: Copy link button has proper aria-label
 // ============================================================================
 
-Then("share button has a non-empty aria-label", async ({ page }) => {
-  const shareButton = page.getByTestId("share-app-button");
-  await expect(shareButton).toHaveAttribute("aria-label", /.+/);
+Then("copy link button has a non-empty aria-label", async ({ page }) => {
+  const copyButton = page.getByTestId("copy-link-button");
+  await expect(copyButton).toHaveAttribute("aria-label", /.+/);
 });
 
 // ============================================================================
 // NFR-A3 / FR4: Confirmation dialog role and aria attributes
 // ============================================================================
 
-When("user clicks the share button", async ({ page }) => {
-  await page.getByTestId("share-app-button").click();
+When("user clicks the copy link button", async ({ page }) => {
+  await page.getByTestId("copy-link-button").click();
   await page
     .getByTestId("confirm-dialog")
     .waitFor({ state: "visible", timeout: SHARE_SECTION_TIMEOUT_MS });
@@ -94,24 +94,6 @@ Then("confirmation dialog is visible", async ({ page }) => {
   await expect(page.getByTestId("confirm-dialog")).toBeVisible();
 });
 
-When("user presses Tab inside share dialog", async ({ page }) => {
-  await page.keyboard.press("Tab");
-});
-
-Then("focus moves to the next share dialog button", async ({ page }) => {
-  const confirmButton = page.getByTestId("confirm-dialog-confirm");
-  await expect(confirmButton).toBeFocused();
-});
-
-When("user presses Tab inside share dialog again", async ({ page }) => {
-  await page.keyboard.press("Tab");
-});
-
-Then("focus cycles back to the first share dialog button", async ({ page }) => {
-  const cancelButton = page.getByTestId("confirm-dialog-cancel");
-  await expect(cancelButton).toBeFocused();
-});
-
 When("user presses Escape on share dialog", async ({ page }) => {
   await page.keyboard.press("Escape");
 });
@@ -148,8 +130,8 @@ Then("share section is visible", async ({ page }) => {
   await expect(page.getByTestId("settings-share-app")).toBeVisible();
 });
 
-Then("share button is visible", async ({ page }) => {
-  await expect(page.getByTestId("share-app-button")).toBeVisible();
+Then("copy link button is visible", async ({ page }) => {
+  await expect(page.getByTestId("copy-link-button")).toBeVisible();
 });
 
 // ============================================================================

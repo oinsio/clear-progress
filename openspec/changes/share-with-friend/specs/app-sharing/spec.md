@@ -13,49 +13,30 @@ The Settings page SHALL display a "Share app" section after "Interface Scale" se
 - **WHEN** user views the "Share app" section
 - **THEN** section matches typography, spacing, and borders of other settings sections
 
-### Requirement: Share button trigger
-The "Share app" section SHALL contain a button that triggers the share action.
+### Requirement: Copy link button
+The "Share app" section SHALL contain a "Copy link" button that copies invite message with app URL to clipboard.
 
 #### Scenario: Button is labeled correctly
-- **WHEN** user views the share button in Russian locale
-- **THEN** button displays "Поделиться"
+- **WHEN** user views the copy link button in Russian locale
+- **THEN** button displays "Скопировать ссылку"
 
 #### Scenario: Button is labeled correctly in English
-- **WHEN** user views the share button in English locale
-- **THEN** button displays "Share"
+- **WHEN** user views the copy link button in English locale
+- **THEN** button displays "Copy link"
 
 #### Scenario: Button has proper accessibility
-- **WHEN** screen reader user focuses the share button
+- **WHEN** screen reader user focuses the copy link button
 - **THEN** button announces its label via `aria-label` from i18n
 
-### Requirement: Web Share API integration
-The system SHALL attempt to use Web Share API when share button is clicked, if available.
+### Requirement: Clipboard copy with invite message
+The system SHALL copy invite message and app URL to clipboard when copy link button is clicked.
 
-#### Scenario: Share via Web Share API on mobile
-- **WHEN** user clicks share button on device supporting Web Share API
-- **THEN** native share sheet appears with app title, message, and URL
-
-#### Scenario: Share data contains correct information
-- **WHEN** Web Share API is invoked
-- **THEN** shared data includes `title: "Clear Progress"`, `text` from i18n, and `url: window.location.origin`
-
-#### Scenario: User cancels native share sheet
-- **WHEN** user opens share sheet and then cancels (AbortError)
-- **THEN** no error feedback is shown to user
-
-#### Scenario: Web Share API fails with real error
-- **WHEN** Web Share API throws error other than AbortError
-- **THEN** system falls back to clipboard copy
-
-### Requirement: Clipboard fallback
-The system SHALL copy app URL to clipboard when Web Share API is unavailable or fails.
-
-#### Scenario: Fallback on desktop without Web Share API
-- **WHEN** user clicks share button on browser without Web Share API support
-- **THEN** `window.location.origin` is copied to clipboard
+#### Scenario: Copy invite message with link
+- **WHEN** user clicks copy link button
+- **THEN** clipboard contains invite message text followed by `window.location.origin`
 
 #### Scenario: Confirmation dialog after clipboard copy
-- **WHEN** URL is successfully copied to clipboard
+- **WHEN** text is successfully copied to clipboard
 - **THEN** confirmation dialog appears with message from i18n
 
 #### Scenario: Clipboard copy failure
@@ -63,15 +44,15 @@ The system SHALL copy app URL to clipboard when Web Share API is unavailable or 
 - **THEN** error dialog appears with error message from i18n
 
 ### Requirement: Confirmation dialog behavior
-The system SHALL display a confirmation dialog after clipboard operations.
+The system SHALL display a single-button confirmation dialog after clipboard operations.
 
 #### Scenario: Dialog has single dismiss button
 - **WHEN** confirmation dialog is shown
-- **THEN** dialog contains single "OK" button that closes the dialog
+- **THEN** dialog contains single "OK" button in accent color that closes the dialog
 
 #### Scenario: Dialog is keyboard navigable
 - **WHEN** confirmation dialog is open
-- **THEN** user can dismiss with Tab → Enter or Escape key
+- **THEN** user can dismiss with Enter or Escape key
 
 #### Scenario: Dialog backdrop dismisses dialog
 - **WHEN** user clicks backdrop behind confirmation dialog
@@ -85,27 +66,27 @@ The system SHALL display a confirmation dialog after clipboard operations.
 The system SHALL provide localized share messages for Russian and English.
 
 #### Scenario: Russian share message
-- **WHEN** user shares app with Russian locale active
-- **THEN** share text is "Попробуй Clear Progress — приложение для работы с задачами, целями и идеями!"
+- **WHEN** user copies app link with Russian locale active
+- **THEN** copied text contains "Попробуй Clear Progress — приложение для работы с задачами, целями и идеями!"
 
 #### Scenario: English share message
-- **WHEN** user shares app with English locale active
-- **THEN** share text is "Try Clear Progress — an app for managing tasks, goals, and ideas!"
+- **WHEN** user copies app link with English locale active
+- **THEN** copied text contains "Try Clear Progress — an app for managing tasks, goals, and ideas!"
 
 #### Scenario: Russian confirmation message
-- **WHEN** URL is copied to clipboard with Russian locale
+- **WHEN** link is copied with Russian locale
 - **THEN** confirmation dialog shows "Ссылка скопирована в буфер обмена"
 
 #### Scenario: English confirmation message
-- **WHEN** URL is copied to clipboard with English locale
+- **WHEN** link is copied with English locale
 - **THEN** confirmation dialog shows "Link copied to clipboard"
 
-### Requirement: Share action performance
-The share action SHALL complete within 100ms, excluding native OS dialogs.
+### Requirement: Copy action performance
+The copy action SHALL complete within 100ms.
 
-#### Scenario: Share button responds quickly
-- **WHEN** user clicks share button
-- **THEN** either Web Share API opens or clipboard copy completes within 100ms
+#### Scenario: Copy link button responds quickly
+- **WHEN** user clicks copy link button
+- **THEN** clipboard copy completes within 100ms
 
 ### Requirement: Responsive layout
 The share section SHALL render correctly on all screen sizes from 320px to 2560px.
