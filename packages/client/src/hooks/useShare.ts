@@ -22,7 +22,7 @@ export function useShare(): UseShareReturn {
   const [copyResult, setCopyResult] = useState<CopyResult>("idle");
 
   const copyLink = useCallback(async () => {
-    const appUrl = window.location.origin;
+    const appUrl = window.location.origin + import.meta.env.BASE_URL;
     const textToCopy = `${t("share.inviteMessage")}\n${appUrl}`;
     try {
       await navigator.clipboard.writeText(textToCopy);
