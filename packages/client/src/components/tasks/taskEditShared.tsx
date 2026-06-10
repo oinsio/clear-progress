@@ -1,4 +1,16 @@
-import { Inbox } from "lucide-react";
+import {
+  AlignLeft,
+  Copy,
+  EyeOff,
+  FileText,
+  Inbox,
+  ListChecks,
+  MapPin,
+  Paperclip,
+  Repeat,
+  Tag,
+  Target,
+} from "lucide-react";
 import type * as React from "react";
 import { BOX } from "@/constants";
 import type { Box } from "@/types/common";
@@ -22,6 +34,24 @@ export const BOX_ICONS: Record<Box, React.FC<{ className?: string }>> = {
   [BOX.WEEK]: WeekBoxIcon,
   [BOX.LATER]: LaterBoxIcon,
 };
+
+/** Implements FR1-FR8 of icons-for-task-detail */
+export const TASK_DETAIL_ICONS = {
+  description: FileText,
+  goal: Target,
+  context: MapPin,
+  category: Tag,
+  repeat: Repeat,
+  hide: EyeOff,
+  duplicate: Copy,
+} as const;
+
+/** Implements FR9-FR11 of icons-for-task-detail */
+export const TAB_ICONS = {
+  details: AlignLeft,
+  checklist: ListChecks,
+  attachments: Paperclip,
+} as const;
 
 export const SELECTOR_TYPE = {
   GOAL: "goal",

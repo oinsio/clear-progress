@@ -1,11 +1,14 @@
+import type { LucideIcon } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 
+/** Implements FR1, NFR-A1 of icons-for-task-detail */
 interface DrillDownRowProps {
   label: string;
   value: string;
   hasValue: boolean;
   onClick: () => void;
+  icon?: LucideIcon;
 }
 
 export function DrillDownRow({
@@ -13,6 +16,7 @@ export function DrillDownRow({
   value,
   hasValue,
   onClick,
+  icon: Icon,
 }: DrillDownRowProps) {
   return (
     <button
@@ -20,7 +24,10 @@ export function DrillDownRow({
       onClick={onClick}
       className="flex items-center justify-between w-full py-2.5 text-sm border-b border-gray-100"
     >
-      <span className="text-gray-500 font-medium">{label}</span>
+      <div className="flex items-center gap-1.5">
+        {Icon && <Icon className="w-4 h-4 text-gray-500" aria-hidden="true" />}
+        <span className="text-gray-500 font-medium">{label}</span>
+      </div>
       <div className="flex items-center gap-1">
         <span className={cn(hasValue ? "text-gray-800" : "text-gray-400")}>
           {value}

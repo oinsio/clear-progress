@@ -17,6 +17,7 @@ import {
   ACTIVE_TAB,
   type ActiveTab,
   type SelectorType,
+  TAB_ICONS,
 } from "./taskEditShared";
 
 const ENTITY_TYPE_TASK = "task" as const;
@@ -81,6 +82,10 @@ export function TaskDetailPanel({
 
   const { attachments } = useAttachments(ENTITY_TYPE_TASK, task.id);
   const attachmentCount = attachments.length;
+
+  const DetailsTabIcon = TAB_ICONS.details;
+  const ChecklistTabIcon = TAB_ICONS.checklist;
+  const AttachmentsTabIcon = TAB_ICONS.attachments;
 
   // Reset state when selected task changes
   useEffect(() => {
@@ -186,12 +191,13 @@ export function TaskDetailPanel({
           data-testid="tab-details"
           onClick={() => setActiveTab(ACTIVE_TAB.DETAILS)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors",
+            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === ACTIVE_TAB.DETAILS
               ? "bg-accent text-white border-accent"
               : "text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
+          <DetailsTabIcon className="w-4 h-4" aria-hidden="true" />
           {t("taskEdit.tabDetails")}
         </button>
         <button
@@ -199,12 +205,13 @@ export function TaskDetailPanel({
           data-testid="tab-checklist"
           onClick={() => setActiveTab(ACTIVE_TAB.CHECKLIST)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors",
+            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === ACTIVE_TAB.CHECKLIST
               ? "bg-accent text-white border-accent"
               : "text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
+          <ChecklistTabIcon className="w-4 h-4" aria-hidden="true" />
           {checklistTabLabel}
         </button>
         <button
@@ -212,12 +219,13 @@ export function TaskDetailPanel({
           data-testid="tab-attachments"
           onClick={() => setActiveTab(ACTIVE_TAB.ATTACHMENTS)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors",
+            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === ACTIVE_TAB.ATTACHMENTS
               ? "bg-accent text-white border-accent"
               : "text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
+          <AttachmentsTabIcon className="w-4 h-4" aria-hidden="true" />
           {t("task.tabs.attachments")}
           {attachmentCount > 0 && (
             <span className="ml-1 text-xs">({attachmentCount})</span>
