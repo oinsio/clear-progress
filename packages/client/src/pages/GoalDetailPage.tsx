@@ -2,8 +2,9 @@
  * Goal detail page — layout component.
  * Delegates state to useGoalDetailState, card rendering to GoalCardViewMode/GoalCardEditMode.
  * Implements FR1-FR5 of goal-detail-card-refactor.
+ * Implements FR4, FR5, FR6 of extend-pin-to-entity-pages.
  */
-import { ArrowLeft, CheckSquare } from "lucide-react";
+import { ArrowLeft, CheckSquare, Pin } from "lucide-react";
 import { CommandBar } from "@/components/command-bar";
 import { FocusGoalReplacementDialog } from "@/components/goals/FocusGoalReplacementDialog";
 import { GoalCardEditMode } from "@/components/goals/GoalCardEditMode";
@@ -13,12 +14,17 @@ import { Sidebar } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
 import { FULL_BOX_FILTER_ORDER, ROUTES } from "@/constants";
+import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useGoalDetailState } from "@/hooks/useGoalDetailState";
 import { cn } from "@/shared/lib/cn";
 import type { Goal } from "@/types/entities";
 
 export default function GoalDetailPage() {
   const state = useGoalDetailState();
+  const { isDetailPanelPinned } = useDetailPanelPinned();
+
+  const showDetailColumn =
+    state.isDesktop && (isDetailPanelPinned || state.selectedTask);
 
   if (!state.isLoading && !state.goal) {
     return (
@@ -44,7 +50,7 @@ export default function GoalDetailPage() {
             !state.isDesktop && state.selectedTask && "hidden",
           )}
           style={
-            state.isDesktop && state.selectedTask
+            showDetailColumn
               ? { width: `${state.ratio * 100}%`, flexShrink: 0 }
               : { flex: "1 1 0" }
           }
@@ -181,7 +187,7 @@ export default function GoalDetailPage() {
         </div>
 
         {/* Resize handle between task list and detail panel */}
-        {state.isDesktop && state.selectedTask && (
+        {showDetailColumn && (
           <div
             className="w-1 flex-shrink-0 cursor-col-resize bg-gray-100 hover:bg-accent/30 active:bg-accent/50 transition-colors"
             onMouseDown={state.handleResizeMouseDown}
@@ -205,6 +211,21 @@ export default function GoalDetailPage() {
                 : { flex: "1 1 0" }
             }
           />
+        )}
+
+        {showDetailColumn && !state.selectedTask && (
+          <div
+            data-testid="detail-panel-empty-state"
+            className="flex flex-col items-center justify-center text-gray-400"
+            style={
+              state.isDesktop
+                ? { width: `${(1 - state.ratio) * 100}%`, flexShrink: 0 }
+                : { flex: "1 1 0" }
+            }
+          >
+            <Pin className="mb-2 h-8 w-8" />
+            <p className="text-sm">{state.t("taskDetail.emptyState")}</p>
+          </div>
         )}
       </div>
 

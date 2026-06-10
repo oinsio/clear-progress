@@ -290,6 +290,7 @@
     "dayBoundaryHours": "Hours",
     "dayBoundaryMinutes": "Minutes",
     "dayBoundaryDescription": "Time when your day starts. Tasks deferred to tomorrow will appear at this time.",
+    "detailPanelPinned": "Pin detail panel",
     "server": {
       "account": "Account",
       "anonKey": "Anon Key",
@@ -487,6 +488,9 @@
   "taskDetail": {
     "empty": "Select a task",
     "emptyHint": "Click on a task to view its details",
+    "emptyState": "Select a task to see its details",
+    "pin": "Pin detail panel",
+    "unpin": "Unpin detail panel",
     "delete": "Delete task",
     "close": "Close"
   },

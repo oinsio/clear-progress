@@ -43,6 +43,7 @@ describe("STORAGE_KEYS", () => {
     ["HANDEDNESS", "handedness"],
     ["DAY_BOUNDARY", "day_boundary"],
     ["ONBOARDING_SHOWN", "onboarding_shown"],
+    ["DETAIL_PANEL_PINNED", "detail_panel_pinned"],
   ];
 
   it.each(

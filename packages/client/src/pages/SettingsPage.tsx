@@ -34,6 +34,7 @@ import {
   ROUTES,
 } from "@/constants";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
+import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useHandedness } from "@/hooks/useHandedness";
@@ -149,6 +150,7 @@ export default function SettingsPage() {
     useFocusMode();
   const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
   const { handedness, setHandedness } = useHandedness();
+  const { isDetailPanelPinned, setDetailPanelPinned } = useDetailPanelPinned();
   const { interfaceScale, setInterfaceScale } = useInterfaceScale();
 
   const [customLightInput, setCustomLightInput] = useState(customAccentLight);
@@ -596,6 +598,35 @@ export default function SettingsPage() {
                 </span>
                 <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                   {t("settings.panelAlwaysOpen")}
+                </span>
+              </button>
+            </section>
+
+            {/* Detail panel pinned section — implements FR7 of pin-task-detail-panel */}
+            <section data-testid="settings-detail-panel-pinned">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isDetailPanelPinned}
+                data-testid="settings-detail-panel-pinned-toggle"
+                onClick={() => setDetailPanelPinned(!isDetailPanelPinned)}
+                className="flex items-center gap-3"
+              >
+                <span
+                  className={cn(
+                    "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
+                    isDetailPanelPinned ? "bg-accent" : "bg-gray-200",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200",
+                      isDetailPanelPinned ? "translate-x-5" : "translate-x-0",
+                    )}
+                  />
+                </span>
+                <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                  {t("settings.detailPanelPinned")}
                 </span>
               </button>
             </section>
