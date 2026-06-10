@@ -1,6 +1,6 @@
 // implements FR1, FR2, FR8 of pin-task-detail-panel
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 
@@ -28,9 +28,7 @@ describe("useDetailPanelPinned", () => {
     act(() => {
       result.current.setDetailPanelPinned(true);
     });
-    expect(localStorage.getItem(STORAGE_KEYS.DETAIL_PANEL_PINNED)).toBe(
-      "true",
-    );
+    expect(localStorage.getItem(STORAGE_KEYS.DETAIL_PANEL_PINNED)).toBe("true");
     expect(result.current.isDetailPanelPinned).toBe(true);
   });
 
