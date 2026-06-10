@@ -15,6 +15,7 @@ import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { cn } from "@/shared/lib/cn";
+import type { Box } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
 import { Sidebar, type SidebarMode } from "./Sidebar";
 import { TaskDetailPanel } from "./TaskDetailPanel";
@@ -28,6 +29,7 @@ export interface TaskPageLayoutProps {
   contexts: Context[];
   categories: Category[];
   onUpdateTask: (id: string, changes: Partial<Task>) => Promise<void>;
+  onMoveTask: (id: string, box: Box) => Promise<void>;
   onDeleteTask: (id: string) => void;
   onDuplicateTask: (id: string) => Promise<void>;
   onCloseDetailPanel: () => void;
@@ -43,6 +45,7 @@ export function TaskPageLayout({
   contexts,
   categories,
   onUpdateTask,
+  onMoveTask,
   onDeleteTask,
   onDuplicateTask,
   onCloseDetailPanel,
@@ -105,6 +108,7 @@ export function TaskPageLayout({
             contexts={contexts}
             categories={categories}
             onUpdate={onUpdateTask}
+            onMove={onMoveTask}
             onDelete={onDeleteTask}
             onDuplicate={onDuplicateTask}
             onClose={onCloseDetailPanel}

@@ -13,10 +13,11 @@ import { BoxSectionList } from "@/components/tasks/BoxSectionList";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
-import { FULL_BOX_FILTER_ORDER, ROUTES } from "@/constants";
+import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER, ROUTES } from "@/constants";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useGoalDetailState } from "@/hooks/useGoalDetailState";
 import { cn } from "@/shared/lib/cn";
+import type { Box } from "@/types/common";
 import type { Goal } from "@/types/entities";
 
 export default function GoalDetailPage() {
@@ -137,24 +138,50 @@ export default function GoalDetailPage() {
               )}
 
               {/* Active tasks by box */}
-              <BoxSectionList
-                isLoading={state.isLoading}
-                tasksByBox={state.tasksByBox}
-                goals={state.goals}
-                contexts={state.contexts}
-                categories={state.categories}
-                onComplete={state.handleCompleteTask}
-                onUpdate={state.updateTask}
-                onMove={state.moveTask}
-                onDelete={state.handleDeletePanelTask}
-                onReorder={state.handleReorderTasks}
-                onSelect={state.handleTaskSelect}
-                selectedTaskId={state.selectedTaskId}
-                isFocusMode={state.isFocusMode}
-                focusDimmedOpacity={state.focusOpacity}
-                expandedTaskId={state.expandedTaskId}
-                onExpand={state.handleTaskExpand}
-              />
+              {state.activeBox === BOX_FILTER_ALL ? (
+                <BoxSectionList
+                  isLoading={state.isLoading}
+                  tasksByBox={state.tasksByBox}
+                  goals={state.goals}
+                  contexts={state.contexts}
+                  categories={state.categories}
+                  onComplete={state.handleCompleteTask}
+                  onUpdate={state.updateTask}
+                  onMove={state.moveTask}
+                  onDelete={state.handleDeletePanelTask}
+                  onReorder={state.handleReorderTasks}
+                  onSelect={state.handleTaskSelect}
+                  selectedTaskId={state.selectedTaskId}
+                  isFocusMode={state.isFocusMode}
+                  focusDimmedOpacity={state.focusOpacity}
+                  expandedTaskId={state.expandedTaskId}
+                  onExpand={state.handleTaskExpand}
+                />
+              ) : (
+                <TaskList
+                  tasks={state.tasksByBox[state.activeBox as Box]}
+                  goals={state.goals}
+                  contexts={state.contexts}
+                  categories={state.categories}
+                  onComplete={state.handleCompleteTask}
+                  onUpdate={state.updateTask}
+                  onMove={state.moveTask}
+                  onDelete={state.handleDeletePanelTask}
+                  onReorder={(taskId, newSortOrder) =>
+                    state.handleReorderTasks(
+                      state.activeBox as Box,
+                      taskId,
+                      newSortOrder,
+                    )
+                  }
+                  onSelect={state.handleTaskSelect}
+                  selectedTaskId={state.selectedTaskId}
+                  isFocusMode={state.isFocusMode}
+                  focusDimmedOpacity={state.focusOpacity}
+                  expandedTaskId={state.expandedTaskId}
+                  onExpand={state.handleTaskExpand}
+                />
+              )}
 
               {/* Completed tasks section */}
               {state.showCompleted && state.completedTasks.length > 0 && (
@@ -202,6 +229,7 @@ export default function GoalDetailPage() {
             contexts={state.contexts}
             categories={state.categories}
             onUpdate={state.updateTask}
+            onMove={state.moveTask}
             onDelete={state.handleDeletePanelTask}
             onDuplicate={state.handleDuplicatePanelTask}
             onClose={state.handleDetailPanelClose}

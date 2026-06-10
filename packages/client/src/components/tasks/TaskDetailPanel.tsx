@@ -10,6 +10,7 @@ import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useTaskEditLabels } from "@/hooks/useTaskEditLabels";
 import { useTaskFormState } from "@/hooks/useTaskFormState";
 import { cn } from "@/shared/lib/cn";
+import type { Box } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
 import { parseRepeatRule } from "@/utils/repeatRule";
 import { TaskAttachmentsTab } from "./TaskAttachmentsTab";
@@ -30,6 +31,7 @@ interface TaskDetailPanelProps {
   contexts: Context[];
   categories: Category[];
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
+  onMove: (id: string, box: Box) => Promise<void>;
   onDelete: (id: string) => void;
   onClose: () => void;
   onDuplicate: (id: string) => Promise<void>;
@@ -43,6 +45,7 @@ export function TaskDetailPanel({
   contexts,
   categories,
   onUpdate,
+  onMove,
   onDelete,
   onClose,
   onDuplicate,
@@ -265,6 +268,7 @@ export function TaskDetailPanel({
           <TaskDetailsTab
             task={task}
             onUpdate={onUpdate}
+            onMove={onMove}
             onDuplicate={onDuplicate}
             description={description}
             setDescription={setDescription}

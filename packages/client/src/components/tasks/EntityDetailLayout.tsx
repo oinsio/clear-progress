@@ -14,6 +14,7 @@ import { CommandBar } from "@/components/command-bar";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
 import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
+import { TaskList } from "@/components/tasks/TaskList";
 import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER } from "@/constants";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useFocusMode } from "@/hooks/useFocusMode";
@@ -304,24 +305,49 @@ export function EntityDetailLayout({
               )}
 
               {/* Task content */}
-              <BoxSectionList
-                isLoading={isLoading}
-                tasksByBox={tasksByBox}
-                goals={goals}
-                contexts={contexts}
-                categories={categories}
-                onComplete={onCompleteTask}
-                onUpdate={onUpdateTask}
-                onMove={onMoveTask}
-                onDelete={onDeleteTask}
-                onReorder={onReorder}
-                onSelect={handleTaskSelect}
-                selectedTaskId={selectedTaskId}
-                isFocusMode={isFocusMode}
-                focusDimmedOpacity={focusOpacity}
-                expandedTaskId={expandedTaskId}
-                onExpand={handleTaskExpand}
-              />
+              {activeBox === BOX_FILTER_ALL ? (
+                <BoxSectionList
+                  isLoading={isLoading}
+                  tasksByBox={tasksByBox}
+                  goals={goals}
+                  contexts={contexts}
+                  categories={categories}
+                  onComplete={onCompleteTask}
+                  onUpdate={onUpdateTask}
+                  onMove={onMoveTask}
+                  onDelete={onDeleteTask}
+                  onReorder={onReorder}
+                  onSelect={handleTaskSelect}
+                  selectedTaskId={selectedTaskId}
+                  isFocusMode={isFocusMode}
+                  focusDimmedOpacity={focusOpacity}
+                  expandedTaskId={expandedTaskId}
+                  onExpand={handleTaskExpand}
+                />
+              ) : (
+                <TaskList
+                  tasks={tasksByBox[activeBox]}
+                  goals={goals}
+                  contexts={contexts}
+                  categories={categories}
+                  onComplete={onCompleteTask}
+                  onUpdate={onUpdateTask}
+                  onMove={onMoveTask}
+                  onDelete={onDeleteTask}
+                  onReorder={
+                    onReorder
+                      ? (taskId, newSortOrder) =>
+                          onReorder(activeBox, taskId, newSortOrder)
+                      : undefined
+                  }
+                  onSelect={handleTaskSelect}
+                  selectedTaskId={selectedTaskId}
+                  isFocusMode={isFocusMode}
+                  focusDimmedOpacity={focusOpacity}
+                  expandedTaskId={expandedTaskId}
+                  onExpand={handleTaskExpand}
+                />
+              )}
             </div>
           </main>
 
@@ -376,6 +402,7 @@ export function EntityDetailLayout({
             contexts={contexts}
             categories={categories}
             onUpdate={onUpdateTask}
+            onMove={onMoveTask}
             onDelete={(taskId) => {
               setSelectedTaskId(null);
               void onDeleteTask(taskId);

@@ -115,6 +115,7 @@ export default function CompletedPage() {
         contexts={contexts}
         categories={categories}
         onUpdateTask={handleUpdateTask}
+        onMoveTask={handleMoveTask}
         onDeleteTask={handleDeleteTask}
         onDuplicateTask={handleDuplicateTask}
         onCloseDetailPanel={handleDetailPanelClose}

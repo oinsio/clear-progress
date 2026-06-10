@@ -276,6 +276,7 @@ export default function SearchPage() {
               contexts={contexts}
               categories={categories}
               onUpdate={handleUpdateTask}
+              onMove={handleMoveTask}
               onDelete={handleTaskDelete}
               onDuplicate={handleTaskDuplicate}
               onClose={handleTaskDetailClose}

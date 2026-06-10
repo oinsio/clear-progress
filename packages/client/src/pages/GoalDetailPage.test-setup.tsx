@@ -1,6 +1,61 @@
 import { render } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { vi } from "vitest";
+
+vi.mock("@/app/providers/AuthProvider", () => ({
+  useAuth: () => ({
+    accessToken: null,
+    userEmail: null,
+    userPicture: null,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    silentRefresh: vi.fn(),
+  }),
+}));
+vi.mock("@/hooks/useGoal");
+vi.mock("@/hooks/useGoalTasks");
+vi.mock("@/hooks/useGoals");
+vi.mock("@/hooks/useContexts");
+vi.mock("@/hooks/useCategories");
+vi.mock("@/hooks/usePanelSide");
+vi.mock("@/hooks/usePanelOpen");
+vi.mock("@/hooks/useSidebarNavigation");
+vi.mock("@/hooks/useIsDesktop");
+vi.mock("@/hooks/usePanelSplit");
+vi.mock("@/hooks/useFileUrl");
+vi.mock("@/hooks/useFilePreview");
+vi.mock("@/hooks/useAttachments", () => ({
+  useAttachments: () => ({ attachments: [], isLoading: false }),
+}));
+vi.mock("@/hooks/useShowHidden", () => ({
+  useShowHidden: () => ({
+    showHidden: false,
+    toggleShowHidden: vi.fn(),
+  }),
+}));
+vi.mock("@/hooks/useSettings", () => ({
+  useSettings: () => ({
+    defaultBox: "today",
+    accentColor: "green",
+    isLoading: false,
+    setDefaultBox: vi.fn(),
+    setAccentColor: vi.fn(),
+  }),
+  getCachedDayBoundary: () => "00:00",
+}));
+vi.mock("@/hooks/useFilterBarPosition", () => ({
+  useFilterBarPosition: () => ({
+    filterBarPosition: "bottom",
+    setFilterBarPosition: vi.fn(),
+  }),
+}));
+vi.mock("@/hooks/useHandedness", () => ({
+  useHandedness: () => ({
+    handedness: "right",
+    setHandedness: vi.fn(),
+  }),
+}));
+
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
 import { useFilePreview } from "@/hooks/useFilePreview";

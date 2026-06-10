@@ -53,6 +53,7 @@ const baseProps = {
   contexts: [],
   categories: [],
   onUpdateTask: vi.fn(),
+  onMoveTask: vi.fn(),
   onDeleteTask: vi.fn(),
   onDuplicateTask: vi.fn(),
   onCloseDetailPanel: vi.fn(),
