@@ -21,6 +21,7 @@ import {
 interface TaskDetailsTabProps {
   task: Task;
   onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
+  onMove: (id: string, box: Box) => Promise<void>;
   onDuplicate: (id: string) => Promise<void>;
   description: string;
   setDescription: (value: string) => void;
@@ -48,6 +49,7 @@ interface TaskDetailsTabProps {
 export function TaskDetailsTab({
   task,
   onUpdate,
+  onMove,
   onDuplicate,
   description,
   setDescription,
@@ -98,9 +100,9 @@ export function TaskDetailsTab({
   const handleBoxChange = useCallback(
     async (box: Box) => {
       setSelectedBox(box);
-      await onUpdate(task.id, { box });
+      await onMove(task.id, box);
     },
-    [task.id, onUpdate, setSelectedBox],
+    [task.id, onMove, setSelectedBox],
   );
 
   const handleGoalChange = useCallback(

@@ -120,6 +120,7 @@ export default function InboxPage() {
         contexts={contexts}
         categories={categories}
         onUpdateTask={handleUpdateTask}
+        onMoveTask={moveInbox}
         onDeleteTask={handleDeleteTask}
         onDuplicateTask={handleDuplicateTask}
         onCloseDetailPanel={handleDetailPanelClose}

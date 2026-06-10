@@ -98,6 +98,7 @@ const defaultTaskProps = {
   contexts: [],
   categories: [],
   onUpdate: vi.fn().mockResolvedValue(undefined),
+  onMove: vi.fn().mockResolvedValue(undefined),
   onDelete: vi.fn(),
   onDuplicate: vi.fn().mockResolvedValue(undefined),
   onClose: vi.fn(),

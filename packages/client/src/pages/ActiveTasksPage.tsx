@@ -182,6 +182,7 @@ export default function ActiveTasksPage() {
         contexts={contexts}
         categories={categories}
         onUpdateTask={handleUpdateTask}
+        onMoveTask={handleMoveTask}
         onDeleteTask={handleDeleteTask}
         onDuplicateTask={handleDuplicateTask}
         onCloseDetailPanel={selection.handleDetailPanelClose}
