@@ -15,6 +15,7 @@ import {
   BOX_OPTIONS,
   SELECTOR_TYPE,
   type SelectorType,
+  TASK_DETAIL_ICONS,
 } from "./taskEditShared";
 
 interface TaskDetailsTabProps {
@@ -72,6 +73,8 @@ export function TaskDetailsTab({
 }: TaskDetailsTabProps) {
   const { t } = useTranslation();
   const { defaultBox } = useSettings();
+  const DescriptionIcon = TASK_DETAIL_ICONS.description;
+  const DuplicateIcon = TASK_DETAIL_ICONS.duplicate;
 
   // Implements FR6, UX1, UX2 of repeating-task-rule-change
   const {
@@ -198,7 +201,8 @@ export function TaskDetailsTab({
     <div className="px-4 py-4 flex flex-col gap-4">
       {/* Description */}
       <div>
-        <label className="text-xs font-medium text-gray-500 mb-1 block">
+        <label className="text-xs font-medium text-gray-500 mb-1 flex items-center gap-1.5">
+          <DescriptionIcon className="w-4 h-4" aria-hidden="true" />
           {t("taskEdit.fieldDescription")}
         </label>
         <EditableDescription
@@ -242,6 +246,7 @@ export function TaskDetailsTab({
 
       {goals.length > 0 && (
         <DrillDownRow
+          icon={TASK_DETAIL_ICONS.goal}
           label={t("selector.goal")}
           value={selectedGoalName}
           hasValue={!!selectedGoalId}
@@ -251,6 +256,7 @@ export function TaskDetailsTab({
 
       {contexts.length > 0 && (
         <DrillDownRow
+          icon={TASK_DETAIL_ICONS.context}
           label={t("selector.context")}
           value={selectedContextName}
           hasValue={!!selectedContextId}
@@ -260,6 +266,7 @@ export function TaskDetailsTab({
 
       {categories.length > 0 && (
         <DrillDownRow
+          icon={TASK_DETAIL_ICONS.category}
           label={t("selector.category")}
           value={selectedCategoryName}
           hasValue={!!selectedCategoryId}
@@ -268,6 +275,7 @@ export function TaskDetailsTab({
       )}
 
       <DrillDownRow
+        icon={TASK_DETAIL_ICONS.repeat}
         label={t("taskEdit.fieldRepeat")}
         value={
           selectedRepeatRule
@@ -280,6 +288,7 @@ export function TaskDetailsTab({
 
       {!task.repeat_rule && (
         <DrillDownRow
+          icon={TASK_DETAIL_ICONS.hide}
           label={t("task.hideUntil")}
           value={task.is_hidden ? task.appear_date : ""}
           hasValue={task.is_hidden}
@@ -291,8 +300,9 @@ export function TaskDetailsTab({
       <button
         type="button"
         onClick={() => void handleDuplicateTask()}
-        className="w-full py-2.5 text-sm text-accent border border-accent/40 rounded-lg hover:bg-accent/5 transition-colors mt-2"
+        className="flex items-center justify-center gap-1.5 w-full py-2.5 text-sm text-accent border border-accent/40 rounded-lg hover:bg-accent/5 transition-colors mt-2"
       >
+        <DuplicateIcon className="w-4 h-4" aria-hidden="true" />
         {t("taskEdit.duplicateButton")}
       </button>
     </div>
