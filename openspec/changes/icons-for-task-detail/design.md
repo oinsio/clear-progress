@@ -1,21 +1,28 @@
 ## Context
 
-Task detail panel (TaskDetailPanel.tsx) has three tabs and several DrillDownRow fields, all text-only. Icons for the same entities are already used in TaskItem.tsx, TaskQuickActions.tsx, and entity pages (GoalsPage, ContextsPage, CategoriesPage). All icons come from lucide-react.
+Entity detail panels (Task, Goal, Idea) have fields and tabs without visual icons, making them text-heavy. Icons for
+the same entities are already used in TaskItem.tsx, TaskQuickActions.tsx, and entity pages (GoalsPage, ContextsPage,
+CategoriesPage). All icons come from lucide-react.
 
 Affected files:
 - `packages/client/src/components/tasks/DrillDownRow.tsx` — generic row component
 - `packages/client/src/components/tasks/TaskDetailsTab.tsx` — details tab with fields
 - `packages/client/src/components/tasks/TaskDetailPanel.tsx` — panel with tab switcher
+- `packages/client/src/components/goals/GoalCardEditMode.tsx` — goal edit card with tab switcher
+- `packages/client/src/components/goals/GoalEditDetailsTab.tsx` — goal details tab with description and status
+- `packages/client/src/components/ideas/IdeaDetailPanel.tsx` — idea detail panel with description
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Add decorative icons to fields, tabs, and buttons in task detail panel (FR1-FR11)
+- Add decorative icons to fields, tabs, and buttons across entity detail panels (FR1-FR16)
 - Reuse icon conventions already established in the codebase (G2)
+- Maintain visual consistency across Task, Goal, and Idea detail views (G3)
 
 **Non-Goals:**
 - No new icon library or custom SVG components (NG1)
 - No layout/spacing redesign (NG2)
+- No icons on Name fields (NG3)
 
 ## Decisions
 
