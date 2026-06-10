@@ -1,4 +1,5 @@
 // implements FR4, FR5, FR6 of share-with-friend
+// implements FR1, FR2 of fix-share-link
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { RenderHookResult } from "@testing-library/react";
@@ -14,6 +15,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 const TEST_ORIGIN = "https://clear-progress.app";
+const TEST_BASE_URL = "/clear-progress/";
 
 const feature = await loadFeature("../app_sharing.feature");
 
@@ -29,6 +31,7 @@ describeFeature(
       vi.clearAllMocks();
       mockWriteText = vi.fn();
       vi.stubGlobal("location", { origin: TEST_ORIGIN });
+      import.meta.env.BASE_URL = TEST_BASE_URL;
     });
 
     f.AfterEachScenario(() => {
@@ -46,9 +49,9 @@ describeFeature(
       await act(() => hookRender.result.current.copyLink());
     };
 
-    // @share-with-friend @FR4
+    // @fix-share-link @FR1
     f.Scenario(
-      "Copy invite message with link to clipboard",
+      "Copy invite message with full app URL including base path",
       ({ Given, When, Then }) => {
         Given("clipboard write will succeed", (_ctx: TestContext) => {
           mockWriteText.mockResolvedValue(undefined);
@@ -60,10 +63,38 @@ describeFeature(
         });
 
         Then(
-          "clipboard contains invite message with app URL",
+          "clipboard contains invite message with full app URL",
           (_ctx: TestContext) => {
             expect(mockWriteText).toHaveBeenCalledWith(
-              `share.inviteMessage\n${TEST_ORIGIN}`,
+              `share.inviteMessage\n${TEST_ORIGIN}${TEST_BASE_URL}`,
+            );
+          },
+        );
+      },
+    );
+
+    // @fix-share-link @FR2
+    f.Scenario(
+      "Copy invite message with root base URL",
+      ({ Given, When, Then }) => {
+        Given(
+          "clipboard write will succeed with root BASE_URL",
+          (_ctx: TestContext) => {
+            import.meta.env.BASE_URL = "/";
+            mockWriteText.mockResolvedValue(undefined);
+            stubNavigator();
+          },
+        );
+
+        When("user copies the app link", async (_ctx: TestContext) => {
+          await whenUserCopiesLink();
+        });
+
+        Then(
+          "clipboard contains invite message with origin and trailing slash",
+          (_ctx: TestContext) => {
+            expect(mockWriteText).toHaveBeenCalledWith(
+              `share.inviteMessage\n${TEST_ORIGIN}/`,
             );
           },
         );

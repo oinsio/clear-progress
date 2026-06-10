@@ -18,12 +18,14 @@ vi.mock("react-i18next", () => ({
 import { useShare } from "./useShare";
 
 const TEST_ORIGIN = "https://clear-progress.app";
+const TEST_BASE_URL = "/clear-progress/";
 const COPY_ACTION_TIMEOUT_MS = 100;
 
 describe("useShare", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal("location", { origin: TEST_ORIGIN });
+    import.meta.env.BASE_URL = TEST_BASE_URL;
     currentTranslate = (key: string) => key;
   });
 
@@ -51,7 +53,7 @@ describe("useShare", () => {
       await act(() => result.current.copyLink());
 
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        `share.inviteMessage\n${TEST_ORIGIN}`,
+        `share.inviteMessage\n${TEST_ORIGIN}${TEST_BASE_URL}`,
       );
     });
 
@@ -83,6 +85,22 @@ describe("useShare", () => {
       expect(result.current.copyResult).toBe("error");
     });
 
+    // FR2: no double slash when BASE_URL = "/"
+    it("should produce correct URL when BASE_URL is root slash", async () => {
+      import.meta.env.BASE_URL = "/";
+      vi.stubGlobal("navigator", {
+        clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+      });
+
+      const { result } = renderHook(() => useShare());
+
+      await act(() => result.current.copyLink());
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        `share.inviteMessage\n${TEST_ORIGIN}/`,
+      );
+    });
+
     it("should use updated translation when t function changes", async () => {
       const writeTextMock = vi.fn().mockResolvedValue(undefined);
       vi.stubGlobal("navigator", {
@@ -93,7 +111,7 @@ describe("useShare", () => {
 
       await act(() => result.current.copyLink());
       expect(writeTextMock).toHaveBeenCalledWith(
-        `share.inviteMessage\n${TEST_ORIGIN}`,
+        `share.inviteMessage\n${TEST_ORIGIN}${TEST_BASE_URL}`,
       );
 
       currentTranslate = (key: string) => `translated:${key}`;
@@ -101,7 +119,7 @@ describe("useShare", () => {
 
       await act(() => result.current.copyLink());
       expect(writeTextMock).toHaveBeenLastCalledWith(
-        `translated:share.inviteMessage\n${TEST_ORIGIN}`,
+        `translated:share.inviteMessage\n${TEST_ORIGIN}${TEST_BASE_URL}`,
       );
     });
   });
