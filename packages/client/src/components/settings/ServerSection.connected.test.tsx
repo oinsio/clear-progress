@@ -75,6 +75,9 @@ vi.mock("@/constants", async (importOriginal) => ({
 vi.mock("@/shared/lib/cn", () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
 }));
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => vi.fn(),
+}));
 
 import { cleanup, fireEvent, screen } from "@testing-library/react/pure";
 import { renderWithConnection } from "./ServerSection.test-helpers";

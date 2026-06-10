@@ -166,7 +166,7 @@ describe("useEmailOtp", () => {
         await result.current.handleSendOtp("user@example.com");
       });
 
-      let verifyPromise: Promise<void>;
+      let verifyPromise: Promise<boolean>;
       act(() => {
         verifyPromise = result.current.handleVerifyOtp("123456");
       });

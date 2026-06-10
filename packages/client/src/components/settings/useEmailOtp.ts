@@ -16,7 +16,7 @@ export interface EmailOtpState {
 
 export interface EmailOtpHandlers {
   handleSendOtp: (email: string) => Promise<void>;
-  handleVerifyOtp: (code: string) => Promise<void>;
+  handleVerifyOtp: (code: string) => Promise<boolean>;
   handleResendOtp: () => Promise<void>;
   resetOtpState: () => void;
 }
@@ -80,7 +80,7 @@ export function useEmailOtp(): EmailOtpState & EmailOtpHandlers {
   );
 
   const handleVerifyOtp = useCallback(
-    async (code: string): Promise<void> => {
+    async (code: string): Promise<boolean> => {
       setOtpVerifying(true);
       setOtpError("");
       try {
@@ -92,7 +92,9 @@ export function useEmailOtp(): EmailOtpState & EmailOtpHandlers {
         });
         if (error) {
           setOtpError(t("settings.server.otpErrorInvalid"));
+          return false;
         }
+        return true;
       } finally {
         setOtpVerifying(false);
       }

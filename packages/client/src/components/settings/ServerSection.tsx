@@ -1,6 +1,7 @@
 import { createGasAdapter } from "@clear-progress/adapter-gas";
 import { type ReactNode, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useSync } from "@/app/providers/SyncProvider";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
@@ -44,6 +45,7 @@ interface ServerSectionProps {
 /** Implements FR1, FR2, FR3 of simplify-backend-connection. */
 export function ServerSection({ oauthError = "" }: ServerSectionProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const config = useConnectionConfig();
   const { triggerFullSync } = useSync();
 
@@ -175,6 +177,16 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
     [emailOtp],
   );
 
+  const handleVerifyOtpAndNavigate = useCallback(
+    async (code: string): Promise<void> => {
+      const isSuccess = await emailOtp.handleVerifyOtp(code);
+      if (isSuccess) {
+        navigate(ROUTES.TASKS);
+      }
+    },
+    [emailOtp, navigate],
+  );
+
   const handleBackFromOtp = useCallback((): void => {
     emailOtp.resetOtpState();
     setPhase("supabase_providers");
@@ -234,7 +246,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
         return (
           <ServerEmailVerify
             email={emailOtp.pendingEmail}
-            onVerify={(code) => void emailOtp.handleVerifyOtp(code)}
+            onVerify={(code) => void handleVerifyOtpAndNavigate(code)}
             onResend={() => void emailOtp.handleResendOtp()}
             onBack={handleBackFromOtp}
             isVerifying={emailOtp.otpVerifying}
