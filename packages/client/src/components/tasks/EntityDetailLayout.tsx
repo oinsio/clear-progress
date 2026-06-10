@@ -1,4 +1,11 @@
-import { ArrowLeft, Check, CheckSquare, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  CheckSquare,
+  Pencil,
+  Pin,
+  Trash2,
+} from "lucide-react";
 import type { ComponentType } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,6 +15,7 @@ import { BoxSectionList } from "@/components/tasks/BoxSectionList";
 import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER } from "@/constants";
+import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
@@ -85,6 +93,7 @@ export function EntityDetailLayout({
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const isDesktop = useIsDesktop();
+  const { isDetailPanelPinned } = useDetailPanelPinned();
   const {
     ratio,
     containerRef: splitContainerRef,
@@ -104,6 +113,9 @@ export function EntityDetailLayout({
   const tasksByBox = useTasksByBox(tasks);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  const isTaskSelected = selectedTask !== null;
+  const showDetailColumn = isDesktop && (isDetailPanelPinned || isTaskSelected);
 
   useEffect(() => {
     if (!selectedTaskId) {
@@ -184,7 +196,7 @@ export function EntityDetailLayout({
             !isDesktop && selectedTask && "hidden",
           )}
           style={
-            isDesktop && selectedTask
+            showDetailColumn
               ? { width: `${ratio * 100}%`, flexShrink: 0 }
               : { flex: "1 1 0" }
           }
@@ -349,7 +361,7 @@ export function EntityDetailLayout({
         </div>
 
         {/* Resize handle between task list and detail panel */}
-        {isDesktop && selectedTask && (
+        {showDetailColumn && (
           <div
             className="w-1 flex-shrink-0 cursor-col-resize bg-gray-100 hover:bg-accent/30 active:bg-accent/50 transition-colors"
             onMouseDown={handleResizeMouseDown}
@@ -380,6 +392,21 @@ export function EntityDetailLayout({
                 : { flex: "1 1 0" }
             }
           />
+        )}
+
+        {showDetailColumn && !selectedTask && (
+          <div
+            data-testid="detail-panel-empty-state"
+            className="flex flex-col items-center justify-center text-gray-400"
+            style={
+              isDesktop
+                ? { width: `${(1 - ratio) * 100}%`, flexShrink: 0 }
+                : { flex: "1 1 0" }
+            }
+          >
+            <Pin className="mb-2 h-8 w-8" />
+            <p className="text-sm">{t("taskDetail.emptyState")}</p>
+          </div>
         )}
       </div>
       {/* end splitContainerRef */}
