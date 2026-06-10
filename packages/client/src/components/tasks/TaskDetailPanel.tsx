@@ -1,4 +1,4 @@
-import { Pin, PinOff, Trash2, X } from "lucide-react";
+import { Pin, Trash2, X } from "lucide-react";
 import type * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -174,11 +174,12 @@ export function TaskDetailPanel({
               }
               className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             >
-              {isDetailPanelPinned ? (
-                <PinOff className="w-4 h-4" />
-              ) : (
-                <Pin className="w-4 h-4" />
-              )}
+              <Pin
+                className={cn(
+                  "w-4 h-4 transition-transform",
+                  isDetailPanelPinned ? "fill-current" : "rotate-45",
+                )}
+              />
             </button>
           )}
           <button
