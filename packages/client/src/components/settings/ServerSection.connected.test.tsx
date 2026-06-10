@@ -70,7 +70,7 @@ vi.mock("@/utils/clientId", () => ({
 }));
 vi.mock("@/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/constants")>()),
-  ROUTES: { SETTINGS: "/settings" },
+  ROUTES: { SETTINGS: "/settings", TASKS: "/tasks" },
 }));
 vi.mock("@/shared/lib/cn", () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
@@ -84,7 +84,10 @@ describe("ServerSection — connected state", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+    mockFetchSupabaseProviders.mockResolvedValue({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
   });
 
   it("renders connected status when config exists", () => {

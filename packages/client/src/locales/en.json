@@ -323,7 +323,20 @@
       "timeoutError": "Connection timed out.",
       "title": "Server",
       "typeGas": "Google Apps Script",
-      "typeSupabase": "Supabase"
+      "typeSupabase": "Supabase",
+      "emailLabel": "Email address",
+      "sendCode": "Send code",
+      "otpTitle": "Enter verification code",
+      "otpHint": "We also sent a magic link to your email",
+      "verify": "Verify",
+      "resend": "Resend",
+      "resendCountdown": "Resend ({{time}})",
+      "back": "Back",
+      "otpErrorInvalid": "Invalid or expired code",
+      "otpErrorNetwork": "Network error. Please try again.",
+      "otpErrorRateLimit": "Too many attempts. Please wait.",
+      "emailOrDivider": "or",
+      "codeSentTo": "Code sent to {{email}}"
     }
   },
   "selector": {

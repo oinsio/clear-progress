@@ -107,4 +107,271 @@ describe("ServerOAuthProviders", () => {
     expect(screen.getByTestId("server-oauth-google")).toBeDefined();
     expect(screen.getByTestId("server-oauth-github")).toBeDefined();
   });
+
+  describe("email auth section", () => {
+    // FR1, FR11 of supabase-email-auth
+    it("shows divider when isEmailEnabled and providers exist", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const divider = screen.getByTestId("server-email-divider");
+      expect(divider.textContent).toBe("settings.server.emailOrDivider");
+    });
+
+    it("shows email input when isEmailEnabled", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      expect(screen.getByTestId("server-email-input")).toBeDefined();
+    });
+
+    it("shows send button when isEmailEnabled", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      expect(screen.getByTestId("server-email-send")).toBeDefined();
+    });
+
+    it("does not show divider when isEmailEnabled is false", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={false}
+        />,
+      );
+      expect(screen.queryByTestId("server-email-divider")).toBeNull();
+    });
+
+    it("does not show email input when isEmailEnabled is false", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={false}
+        />,
+      );
+      expect(screen.queryByTestId("server-email-input")).toBeNull();
+    });
+
+    it("send button is disabled when email input is empty", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
+    it("send button is enabled when email is valid", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, { target: { value: "user@example.com" } });
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", false);
+    });
+
+    it("send button is disabled when email is invalid", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, { target: { value: "not-an-email" } });
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
+    it("send button is disabled when TLD is single character", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, { target: { value: "user@example.c" } });
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
+    it("send button is disabled when email has no domain", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, { target: { value: "user@" } });
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
+    it("calls onSendOtp with email value on send click", () => {
+      const onSendOtp = vi.fn();
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+          onSendOtp={onSendOtp}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, { target: { value: "test@test.com" } });
+      fireEvent.click(screen.getByTestId("server-email-send"));
+      expect(onSendOtp).toHaveBeenCalledWith("test@test.com");
+    });
+
+    it("send button is disabled when emailLoading is true", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+          emailLoading={true}
+        />,
+      );
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
+    it("hides no-providers message when isEmailEnabled and providers empty", () => {
+      render(
+        <ServerOAuthProviders
+          providers={[]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      expect(screen.queryByTestId("server-no-providers")).toBeNull();
+    });
+
+    it("shows email form without divider when isEmailEnabled and providers empty", () => {
+      render(
+        <ServerOAuthProviders
+          providers={[]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      expect(screen.getByTestId("server-email-input")).toBeDefined();
+      expect(screen.queryByTestId("server-email-divider")).toBeNull();
+    });
+
+    it("email input has type email", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      expect(emailInput.getAttribute("type")).toBe("email");
+    });
+
+    it("send button displays sendCode i18n key", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      expect(screen.getByTestId("server-email-send").textContent).toBe(
+        "settings.server.sendCode",
+      );
+    });
+
+    it("email input starts with empty value", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId(
+        "server-email-input",
+      ) as HTMLInputElement;
+      expect(emailInput.value).toBe("");
+    });
+
+    it("send button is disabled when email has prefix text", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, {
+        target: { value: "prefix user@example.com" },
+      });
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
+    it("send button is disabled when email has trailing text", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, {
+        target: { value: "user@example.com extra" },
+      });
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
+    // NFR-A1 of supabase-email-auth
+    it("email input has associated label", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      const inputId = emailInput.getAttribute("id");
+      expect(inputId).toBeTruthy();
+      const label = document.querySelector(`label[for="${inputId}"]`);
+      expect(label).not.toBeNull();
+      expect(label?.textContent).toBe("settings.server.emailLabel");
+    });
+  });
 });

@@ -48,11 +48,11 @@ export function ServerConnectedStatus({
     const loadProviders = async (): Promise<void> => {
       try {
         createSupabaseClient(config.url, config.anonKey);
-        const loadedProviders = await fetchSupabaseProviders(
+        const authMethods = await fetchSupabaseProviders(
           config.url,
           config.anonKey,
         );
-        setProviders(loadedProviders);
+        setProviders(authMethods.oauthProviders);
       } catch {
         setProviders([]);
       }

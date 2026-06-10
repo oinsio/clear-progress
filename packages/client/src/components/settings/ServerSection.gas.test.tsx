@@ -70,7 +70,7 @@ vi.mock("@/utils/clientId", () => ({
 }));
 vi.mock("@/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/constants")>()),
-  ROUTES: { SETTINGS: "/settings" },
+  ROUTES: { SETTINGS: "/settings", TASKS: "/tasks" },
 }));
 vi.mock("@/shared/lib/cn", () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
@@ -92,7 +92,10 @@ describe("ServerSection — GAS flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseConnectionConfig.mockReturnValue(null);
-    mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+    mockFetchSupabaseProviders.mockResolvedValue({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
   });
 
   // ── Connect: success ─────────────────────────────────────────

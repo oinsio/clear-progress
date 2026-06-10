@@ -12,6 +12,8 @@ export const mockPing = vi.fn();
 export const mockInit = vi.fn();
 export const mockFetchSupabaseProviders = vi.fn().mockResolvedValue([]);
 export const mockSignInWithOAuth = vi.fn();
+export const mockSignInWithOtp = vi.fn();
+export const mockVerifyOtp = vi.fn();
 export const mockTriggerFullSync = vi.fn();
 export const mockUseAuth = vi.fn();
 export const mockUseSync = vi.fn();
@@ -34,7 +36,12 @@ vi.mock("@/services/supabaseConnection", () => ({
 vi.mock("@/services/supabaseClientManager", () => ({
   createSupabaseClient: vi.fn(),
   getSupabaseClient: vi.fn(() => ({
-    auth: { signInWithOAuth: mockSignInWithOAuth, onAuthStateChange: vi.fn() },
+    auth: {
+      signInWithOAuth: mockSignInWithOAuth,
+      signInWithOtp: mockSignInWithOtp,
+      verifyOtp: mockVerifyOtp,
+      onAuthStateChange: vi.fn(),
+    },
   })),
   destroySupabaseClient: vi.fn(),
 }));

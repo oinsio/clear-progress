@@ -5,19 +5,23 @@ import {
   SUPABASE_SETTINGS_TIMEOUT_MS,
 } from "@/constants";
 import { server } from "@/test/mocks/server";
-import { fetchSupabaseProviders } from "./supabaseConnection";
+import {
+  fetchSupabaseProviders,
+  type SupabaseAuthMethods,
+} from "./supabaseConnection";
 
 const SUPABASE_URL = "https://test-project.supabase.co";
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-anon-key";
 
 describe("fetchSupabaseProviders", () => {
   // implements FR4, FR5, NFR-P1 of add-supabase-ui
+  // implements FR8, D1 of supabase-email-auth
 
   beforeEach(() => {
     server.resetHandlers();
   });
 
-  it("should return enabled OAuth providers on success", async () => {
+  it("should return OAuth providers and isEmailEnabled when email and OAuth are enabled", async () => {
     server.use(
       http.get(
         `${SUPABASE_URL}${SUPABASE_SETTINGS_ENDPOINT}`,
@@ -29,22 +33,50 @@ describe("fetchSupabaseProviders", () => {
               github: true,
               gitlab: false,
               apple: false,
+              email: true,
             },
           });
         },
       ),
     );
 
-    const providers = await fetchSupabaseProviders(SUPABASE_URL, ANON_KEY);
+    const authMethods: SupabaseAuthMethods = await fetchSupabaseProviders(
+      SUPABASE_URL,
+      ANON_KEY,
+    );
 
-    expect(providers).toEqual(["google", "github"]);
+    expect(authMethods).toEqual({
+      oauthProviders: ["google", "github"],
+      isEmailEnabled: true,
+    });
   });
 
-  it("should return empty array when no providers are enabled", async () => {
+  it("should return isEmailEnabled false when email is disabled", async () => {
     server.use(
       http.get(`${SUPABASE_URL}${SUPABASE_SETTINGS_ENDPOINT}`, () => {
         return HttpResponse.json({
           external: {
+            google: true,
+            email: false,
+          },
+        });
+      }),
+    );
+
+    const authMethods = await fetchSupabaseProviders(SUPABASE_URL, ANON_KEY);
+
+    expect(authMethods).toEqual({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
+  });
+
+  it("should return only email enabled when no OAuth providers exist", async () => {
+    server.use(
+      http.get(`${SUPABASE_URL}${SUPABASE_SETTINGS_ENDPOINT}`, () => {
+        return HttpResponse.json({
+          external: {
+            email: true,
             google: false,
             github: false,
           },
@@ -52,9 +84,52 @@ describe("fetchSupabaseProviders", () => {
       }),
     );
 
-    const providers = await fetchSupabaseProviders(SUPABASE_URL, ANON_KEY);
+    const authMethods = await fetchSupabaseProviders(SUPABASE_URL, ANON_KEY);
 
-    expect(providers).toEqual([]);
+    expect(authMethods).toEqual({
+      oauthProviders: [],
+      isEmailEnabled: true,
+    });
+  });
+
+  it("should return empty providers and email disabled when nothing is enabled", async () => {
+    server.use(
+      http.get(`${SUPABASE_URL}${SUPABASE_SETTINGS_ENDPOINT}`, () => {
+        return HttpResponse.json({
+          external: {
+            google: false,
+            github: false,
+            email: false,
+          },
+        });
+      }),
+    );
+
+    const authMethods = await fetchSupabaseProviders(SUPABASE_URL, ANON_KEY);
+
+    expect(authMethods).toEqual({
+      oauthProviders: [],
+      isEmailEnabled: false,
+    });
+  });
+
+  it("should return isEmailEnabled false when email key is absent", async () => {
+    server.use(
+      http.get(`${SUPABASE_URL}${SUPABASE_SETTINGS_ENDPOINT}`, () => {
+        return HttpResponse.json({
+          external: {
+            google: true,
+          },
+        });
+      }),
+    );
+
+    const authMethods = await fetchSupabaseProviders(SUPABASE_URL, ANON_KEY);
+
+    expect(authMethods).toEqual({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
   });
 
   it("should throw on network error", async () => {
@@ -121,13 +196,12 @@ describe("fetchSupabaseProviders", () => {
     expect(capturedApiKey).toBe(ANON_KEY);
   });
 
-  it("should filter out non-boolean and falsy provider entries", async () => {
+  it("should exclude phone from OAuth providers", async () => {
     server.use(
       http.get(`${SUPABASE_URL}${SUPABASE_SETTINGS_ENDPOINT}`, () => {
         return HttpResponse.json({
           external: {
             google: true,
-            email: true,
             phone: true,
             github: false,
           },
@@ -135,9 +209,11 @@ describe("fetchSupabaseProviders", () => {
       }),
     );
 
-    const providers = await fetchSupabaseProviders(SUPABASE_URL, ANON_KEY);
+    const authMethods = await fetchSupabaseProviders(SUPABASE_URL, ANON_KEY);
 
-    // email and phone are not OAuth providers — should be filtered out
-    expect(providers).toEqual(["google"]);
+    expect(authMethods).toEqual({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
   });
 });

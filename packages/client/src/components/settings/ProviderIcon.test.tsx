@@ -60,6 +60,11 @@ describe("ProviderIcon", () => {
     expect(container.querySelector("svg")).not.toBeNull();
   });
 
+  it("should render Mail icon for 'email' provider", () => {
+    const { container } = render(<ProviderIcon provider="email" />);
+    expect(container.querySelector("svg")).not.toBeNull();
+  });
+
   it("should return null for unknown provider 'keycloak'", () => {
     const { container } = render(<ProviderIcon provider="keycloak" />);
     expect(container.innerHTML).toBe("");
@@ -82,6 +87,7 @@ describe("ProviderIcon", () => {
     "linkedin",
     "supabase",
     "gas",
+    "email",
   ];
 
   it.each(

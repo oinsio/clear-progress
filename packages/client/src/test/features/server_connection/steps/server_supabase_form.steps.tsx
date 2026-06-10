@@ -76,7 +76,10 @@ describeFeature(feature, (f) => {
       });
 
       When("user connects", () => {
-        mockFetchSupabaseProviders.mockResolvedValue(["google", "github"]);
+        mockFetchSupabaseProviders.mockResolvedValue({
+          oauthProviders: ["google", "github"],
+          isEmailEnabled: false,
+        });
         fireEvent.click(screen.getByTestId("server-supabase-connect"));
       });
 
@@ -173,7 +176,10 @@ describeFeature(feature, (f) => {
     Given(
       'connection check succeeds with providers "google,github"',
       async () => {
-        mockFetchSupabaseProviders.mockResolvedValue(["google", "github"]);
+        mockFetchSupabaseProviders.mockResolvedValue({
+          oauthProviders: ["google", "github"],
+          isEmailEnabled: false,
+        });
         fillSupabaseForm("myproject", "test-key");
         fireEvent.click(screen.getByTestId("server-supabase-connect"));
         await waitFor(() => {
@@ -198,7 +204,10 @@ describeFeature(feature, (f) => {
     "OAuth sign-in initiated on button click",
     ({ Given, When, Then }) => {
       Given('OAuth providers are loaded with "google"', async () => {
-        mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+        mockFetchSupabaseProviders.mockResolvedValue({
+          oauthProviders: ["google"],
+          isEmailEnabled: false,
+        });
         fillSupabaseForm("myproject", "test-key");
         fireEvent.click(screen.getByTestId("server-supabase-connect"));
         await waitFor(() => {
@@ -228,7 +237,10 @@ describeFeature(feature, (f) => {
     "No providers shows informational message",
     ({ Given, Then, And }) => {
       Given("connection check succeeds with no providers", async () => {
-        mockFetchSupabaseProviders.mockResolvedValue([]);
+        mockFetchSupabaseProviders.mockResolvedValue({
+          oauthProviders: [],
+          isEmailEnabled: false,
+        });
         fillSupabaseForm("myproject", "test-key");
         fireEvent.click(screen.getByTestId("server-supabase-connect"));
         await waitFor(() => {
@@ -255,7 +267,10 @@ describeFeature(feature, (f) => {
     "Cancel from OAuth providers disconnects and returns to form",
     ({ Given, When, Then, And }) => {
       Given('connection check succeeds with providers "google"', async () => {
-        mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+        mockFetchSupabaseProviders.mockResolvedValue({
+          oauthProviders: ["google"],
+          isEmailEnabled: false,
+        });
         fillSupabaseForm("myproject", "test-key");
         fireEvent.click(screen.getByTestId("server-supabase-connect"));
         await waitFor(() => {
@@ -284,7 +299,10 @@ describeFeature(feature, (f) => {
     "Cancel from no-providers message returns to form",
     ({ Given, When, Then, And }) => {
       Given("connection check succeeds with no providers", async () => {
-        mockFetchSupabaseProviders.mockResolvedValue([]);
+        mockFetchSupabaseProviders.mockResolvedValue({
+          oauthProviders: [],
+          isEmailEnabled: false,
+        });
         fillSupabaseForm("myproject", "test-key");
         fireEvent.click(screen.getByTestId("server-supabase-connect"));
         await waitFor(() => {

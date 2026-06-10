@@ -1,16 +1,17 @@
 import { createGasAdapter } from "@clear-progress/adapter-gas";
-import type React from "react";
-import { useCallback, useState } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSync } from "@/app/providers/SyncProvider";
 import { ConfirmDisconnectDialog } from "@/components/settings/ConfirmDisconnectDialog";
 import { ConfirmFullSyncDialog } from "@/components/settings/ConfirmFullSyncDialog";
 import { ServerBackendSelection } from "@/components/settings/ServerBackendSelection";
 import { ServerConnectedStatus } from "@/components/settings/ServerConnectedStatus";
+import { ServerEmailVerify } from "@/components/settings/ServerEmailVerify";
 import { ServerGasForm } from "@/components/settings/ServerGasForm";
 import { ServerGasSignIn } from "@/components/settings/ServerGasSignIn";
 import { ServerOAuthProviders } from "@/components/settings/ServerOAuthProviders";
 import { ServerSupabaseForm } from "@/components/settings/ServerSupabaseForm";
+import { useEmailOtp } from "@/components/settings/useEmailOtp";
 import { ROUTES } from "@/constants";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
 import { connect, disconnect } from "@/services/connectionService";
@@ -31,6 +32,7 @@ type ServerPhase =
   | "supabase_connecting"
   | "gas_connecting"
   | "supabase_providers"
+  | "supabase_email_otp"
   | "gas_awaiting_signin"
   | "connected";
 
@@ -39,10 +41,7 @@ interface ServerSectionProps {
   oauthError?: string;
 }
 
-/**
- * Implements FR1, FR2, FR3 of simplify-backend-connection.
- * Orchestrator component managing all server connection subcomponents.
- */
+/** Implements FR1, FR2, FR3 of simplify-backend-connection. */
 export function ServerSection({ oauthError = "" }: ServerSectionProps) {
   const { t } = useTranslation();
   const config = useConnectionConfig();
@@ -54,19 +53,19 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(oauthError);
   const [providers, setProviders] = useState<string[]>([]);
+  const [isEmailEnabled, setIsEmailEnabled] = useState(false);
+  const emailOtp = useEmailOtp();
   const [needsGasInit, setNeedsGasInit] = useState(false);
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
   const [isFullSyncDialogOpen, setIsFullSyncDialogOpen] = useState(false);
 
-  const handleSelectSupabase = useCallback((): void => {
-    setPhase("supabase_form");
-    setErrorMessage("");
-  }, []);
-
-  const handleSelectGas = useCallback((): void => {
-    setPhase("gas_form");
-    setErrorMessage("");
-  }, []);
+  const handleSelectBackend = useCallback(
+    (backend: "supabase_form" | "gas_form"): void => {
+      setPhase(backend);
+      setErrorMessage("");
+    },
+    [],
+  );
 
   const handleCancel = useCallback((): void => {
     setPhase("selection");
@@ -82,10 +81,7 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
       setPhase("supabase_connecting");
 
       try {
-        const loadedProviders = await fetchSupabaseProviders(
-          resolvedUrl,
-          anonKey,
-        );
+        const authMethods = await fetchSupabaseProviders(resolvedUrl, anonKey);
 
         connect({
           type: "supabase",
@@ -94,7 +90,8 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
         });
 
         createSupabaseClient(resolvedUrl, anonKey);
-        setProviders(loadedProviders);
+        setProviders(authMethods.oauthProviders);
+        setIsEmailEnabled(authMethods.isEmailEnabled);
         setPhase("supabase_providers");
       } catch {
         setErrorMessage(t("settings.server.connectionError"));
@@ -142,19 +139,16 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
     [t],
   );
 
-  const handleCancelFromProviders = useCallback((): void => {
-    disconnect();
-    setPhase("supabase_form");
-    setErrorMessage("");
-    setProviders([]);
-  }, []);
-
-  const handleCancelFromGasSignIn = useCallback((): void => {
-    disconnect();
-    setPhase("gas_form");
-    setErrorMessage("");
-    setNeedsGasInit(false);
-  }, []);
+  const handleCancelAuth = useCallback(
+    (returnPhase: "supabase_form" | "gas_form"): void => {
+      disconnect();
+      setPhase(returnPhase);
+      setErrorMessage("");
+      setProviders([]);
+      setNeedsGasInit(false);
+    },
+    [],
+  );
 
   const handleOAuthSignIn = useCallback(
     async (provider: string): Promise<void> => {
@@ -173,13 +167,30 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
     [t],
   );
 
-  const handleGasInitComplete = useCallback((): void => {
-    setPhase("connected");
-  }, []);
+  const handleSendOtpAndTransition = useCallback(
+    async (email: string): Promise<void> => {
+      await emailOtp.handleSendOtp(email);
+      setPhase("supabase_email_otp");
+    },
+    [emailOtp],
+  );
 
-  const handleGasInitError = useCallback((message: string): void => {
-    setErrorMessage(message);
-  }, []);
+  const handleVerifyOtpAndReload = useCallback(
+    async (code: string): Promise<void> => {
+      const isSuccess = await emailOtp.handleVerifyOtp(code);
+      if (isSuccess) {
+        // Full reload so module-level singletons (defaultSyncAdapter, syncService)
+        // re-initialize with the now-available Supabase session — same as OAuth redirect flow.
+        window.location.href = `${window.location.origin}${import.meta.env.BASE_URL}${ROUTES.TASKS.slice(1)}`;
+      }
+    },
+    [emailOtp],
+  );
+
+  const handleBackFromOtp = useCallback((): void => {
+    emailOtp.resetOtpState();
+    setPhase("supabase_providers");
+  }, [emailOtp]);
 
   const handleDisconnect = useCallback((): void => {
     disconnect();
@@ -189,91 +200,78 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
     setProviders([]);
   }, []);
 
-  const handleFullSyncOpen = useCallback((): void => {
-    setIsFullSyncDialogOpen(true);
-  }, []);
-
-  const handleFullSyncClose = useCallback((): void => {
-    setIsFullSyncDialogOpen(false);
-  }, []);
-
-  const handleDisconnectOpen = useCallback((): void => {
-    setIsDisconnectDialogOpen(true);
-  }, []);
-
-  const handleDisconnectClose = useCallback((): void => {
-    setIsDisconnectDialogOpen(false);
-  }, []);
-
-  const renderPhaseContent = (): React.ReactNode => {
-    if (phase === "selection") {
-      return (
-        <ServerBackendSelection
-          onSelectSupabase={handleSelectSupabase}
-          onSelectGas={handleSelectGas}
-        />
-      );
+  const renderPhaseContent = (): ReactNode => {
+    switch (phase) {
+      case "selection":
+        return (
+          <ServerBackendSelection
+            onSelectSupabase={() => handleSelectBackend("supabase_form")}
+            onSelectGas={() => handleSelectBackend("gas_form")}
+          />
+        );
+      case "supabase_form":
+      case "supabase_connecting":
+        return (
+          <ServerSupabaseForm
+            onConnect={(url, anonKey) =>
+              void handleSupabaseConnect(url, anonKey)
+            }
+            onCancel={handleCancel}
+            isLoading={isLoading}
+            error={errorMessage}
+          />
+        );
+      case "gas_form":
+      case "gas_connecting":
+        return (
+          <ServerGasForm
+            onConnect={(url, clientId) => void handleGasConnect(url, clientId)}
+            onCancel={handleCancel}
+            isLoading={isLoading}
+            error={errorMessage}
+          />
+        );
+      case "supabase_providers":
+        return (
+          <ServerOAuthProviders
+            providers={providers}
+            onSignIn={(provider) => void handleOAuthSignIn(provider)}
+            onCancel={() => handleCancelAuth("supabase_form")}
+            isEmailEnabled={isEmailEnabled}
+            onSendOtp={(email) => void handleSendOtpAndTransition(email)}
+            emailLoading={emailOtp.emailLoading}
+          />
+        );
+      case "supabase_email_otp":
+        return (
+          <ServerEmailVerify
+            email={emailOtp.pendingEmail}
+            onVerify={(code) => void handleVerifyOtpAndReload(code)}
+            onResend={() => void emailOtp.handleResendOtp()}
+            onBack={handleBackFromOtp}
+            isVerifying={emailOtp.otpVerifying}
+            error={emailOtp.otpError}
+            resendCooldown={emailOtp.resendCooldown}
+          />
+        );
+      case "gas_awaiting_signin":
+        return (
+          <ServerGasSignIn
+            needsInit={needsGasInit}
+            onInitComplete={() => setPhase("connected")}
+            onInitError={setErrorMessage}
+            onCancel={() => handleCancelAuth("gas_form")}
+          />
+        );
+      case "connected":
+        return config ? (
+          <ServerConnectedStatus
+            config={config}
+            onFullSync={() => setIsFullSyncDialogOpen(true)}
+            onDisconnect={() => setIsDisconnectDialogOpen(true)}
+          />
+        ) : null;
     }
-
-    if (phase === "supabase_form" || phase === "supabase_connecting") {
-      return (
-        <ServerSupabaseForm
-          onConnect={(url, anonKey) => void handleSupabaseConnect(url, anonKey)}
-          onCancel={handleCancel}
-          isLoading={isLoading}
-          error={errorMessage}
-        />
-      );
-    }
-
-    if (phase === "gas_form" || phase === "gas_connecting") {
-      return (
-        <ServerGasForm
-          onConnect={(url, clientId) => void handleGasConnect(url, clientId)}
-          onCancel={handleCancel}
-          isLoading={isLoading}
-          error={errorMessage}
-        />
-      );
-    }
-
-    if (phase === "supabase_providers") {
-      return (
-        <ServerOAuthProviders
-          providers={providers}
-          onSignIn={(provider) => void handleOAuthSignIn(provider)}
-          onCancel={handleCancelFromProviders}
-        />
-      );
-    }
-
-    if (phase === "gas_awaiting_signin") {
-      return (
-        <ServerGasSignIn
-          needsInit={needsGasInit}
-          onInitComplete={handleGasInitComplete}
-          onInitError={handleGasInitError}
-          onCancel={handleCancelFromGasSignIn}
-        />
-      );
-    }
-
-    if (phase === "connected" && config) {
-      return (
-        <ServerConnectedStatus
-          config={config}
-          onFullSync={handleFullSyncOpen}
-          onDisconnect={handleDisconnectOpen}
-        />
-      );
-    }
-
-    return (
-      <ServerBackendSelection
-        onSelectSupabase={handleSelectSupabase}
-        onSelectGas={handleSelectGas}
-      />
-    );
   };
 
   return (
@@ -298,13 +296,13 @@ export function ServerSection({ oauthError = "" }: ServerSectionProps) {
 
       <ConfirmFullSyncDialog
         isOpen={isFullSyncDialogOpen}
-        onClose={handleFullSyncClose}
+        onClose={() => setIsFullSyncDialogOpen(false)}
         onSync={triggerFullSync}
       />
 
       <ConfirmDisconnectDialog
         isOpen={isDisconnectDialogOpen}
-        onClose={handleDisconnectClose}
+        onClose={() => setIsDisconnectDialogOpen(false)}
         onConfirm={handleDisconnect}
       />
     </section>
