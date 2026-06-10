@@ -577,6 +577,15 @@
   "confirmDialog": {
     "cancel": "Cancel"
   },
+  "share": {
+    "title": "Share app",
+    "description": "Tell your friends about Clear Progress",
+    "button": "Share",
+    "inviteMessage": "Try Clear Progress — an app for managing tasks, goals, and ideas!",
+    "linkCopied": "Link copied to clipboard",
+    "copyFailed": "Failed to copy link",
+    "ok": "OK"
+  },
   "pwa": {
     "appUpdated": "App updated",
     "newVersionAvailable": "New version available",

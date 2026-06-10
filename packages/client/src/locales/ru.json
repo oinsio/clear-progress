@@ -574,6 +574,15 @@
   "confirmDialog": {
     "cancel": "Отмена"
   },
+  "share": {
+    "title": "Поделиться приложением",
+    "description": "Расскажите друзьям о Clear Progress",
+    "button": "Поделиться",
+    "inviteMessage": "Попробуй Clear Progress — приложение для работы с задачами, целями и идеями!",
+    "linkCopied": "Ссылка скопирована в буфер обмена",
+    "copyFailed": "Не удалось скопировать ссылку",
+    "ok": "ОК"
+  },
   "pwa": {
     "appUpdated": "Приложение обновлено",
     "newVersionAvailable": "Доступна новая версия",

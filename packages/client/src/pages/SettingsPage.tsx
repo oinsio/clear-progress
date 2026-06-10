@@ -16,6 +16,7 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 import { DayBoundarySection } from "@/components/settings/DayBoundarySection";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
 import { ServerSection } from "@/components/settings/ServerSection";
+import { ShareAppSection } from "@/components/settings/ShareAppSection";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { BOX_ICONS } from "@/components/tasks/taskEditShared";
 import { OpacityBars } from "@/components/ui/OpacityBars";
@@ -468,6 +469,9 @@ export default function SettingsPage() {
                 })}
               </div>
             </section>
+
+            {/* Share app section — implements FR1 of share-with-friend */}
+            <ShareAppSection />
 
             {/* Language section */}
             <section data-testid="settings-language" className="space-y-3">
