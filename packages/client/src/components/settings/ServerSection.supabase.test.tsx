@@ -84,7 +84,10 @@ import {
   waitFor,
 } from "@testing-library/react/pure";
 import { ServerSection } from "./ServerSection";
-import { fillAndSubmitSupabase } from "./ServerSection.test-helpers";
+import {
+  fillAndSubmitSupabase,
+  navigateToOtpPhase,
+} from "./ServerSection.test-helpers";
 
 describe("ServerSection — Supabase flow", () => {
   afterEach(cleanup);
@@ -263,6 +266,57 @@ describe("ServerSection — Supabase flow", () => {
     );
   });
 
+  // ── Loading cleared after connect ──────────────────────────────
+  it("clears loading state after successful connect", async () => {
+    render(<ServerSection />);
+    fillAndSubmitSupabase();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("server-oauth-hint")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByTestId("server-supabase-loading"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears loading state after failed connect", async () => {
+    mockFetchSupabaseProviders.mockRejectedValue(new Error("fail"));
+    render(<ServerSection />);
+    fillAndSubmitSupabase();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("server-supabase-error")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByTestId("server-supabase-loading"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears previous error when starting a new connect attempt", async () => {
+    mockFetchSupabaseProviders.mockRejectedValueOnce(new Error("fail"));
+    render(<ServerSection />);
+    fillAndSubmitSupabase();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("server-supabase-error")).toBeInTheDocument();
+    });
+
+    mockFetchSupabaseProviders.mockResolvedValue({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
+    // Already on supabase_form, just click connect again
+    fireEvent.click(screen.getByTestId("server-supabase-connect"));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("server-supabase-error"),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   // ── Email OTP: providers phase shows email form (FR1) ─────────
   it("shows email form when isEmailEnabled is true", async () => {
     mockFetchSupabaseProviders.mockResolvedValue({
@@ -296,25 +350,10 @@ describe("ServerSection — Supabase flow", () => {
 
   // ── Email OTP: send transitions to OTP phase (FR2, FR3) ──────
   it("transitions to supabase_email_otp phase after sending OTP", async () => {
-    const mockSignInWithOtp = vi.fn().mockResolvedValue({ error: null });
-    mockGetSupabaseClient.mockReturnValue({
-      auth: { signInWithOtp: mockSignInWithOtp },
+    await navigateToOtpPhase({
+      mockGetSupabaseClient,
+      mockFetchSupabaseProviders,
     });
-    mockFetchSupabaseProviders.mockResolvedValue({
-      oauthProviders: ["google"],
-      isEmailEnabled: true,
-    });
-    render(<ServerSection />);
-    fillAndSubmitSupabase();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("server-email-input")).toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByTestId("server-email-input"), {
-      target: { value: "user@example.com" },
-    });
-    fireEvent.click(screen.getByTestId("server-email-send"));
 
     await waitFor(() => {
       expect(screen.getByTestId("server-otp-title")).toBeInTheDocument();
@@ -327,25 +366,10 @@ describe("ServerSection — Supabase flow", () => {
 
   // ── Email OTP: back returns to providers (FR9) ────────────────
   it("returns to providers phase when clicking back from OTP", async () => {
-    const mockSignInWithOtp = vi.fn().mockResolvedValue({ error: null });
-    mockGetSupabaseClient.mockReturnValue({
-      auth: { signInWithOtp: mockSignInWithOtp },
+    await navigateToOtpPhase({
+      mockGetSupabaseClient,
+      mockFetchSupabaseProviders,
     });
-    mockFetchSupabaseProviders.mockResolvedValue({
-      oauthProviders: ["google"],
-      isEmailEnabled: true,
-    });
-    render(<ServerSection />);
-    fillAndSubmitSupabase();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("server-email-input")).toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByTestId("server-email-input"), {
-      target: { value: "user@example.com" },
-    });
-    fireEvent.click(screen.getByTestId("server-email-send"));
 
     await waitFor(() => {
       expect(screen.getByTestId("server-otp-title")).toBeInTheDocument();
@@ -359,29 +383,12 @@ describe("ServerSection — Supabase flow", () => {
 
   // ── Email OTP: verify calls verifyOtp (FR4) ──────────────────
   it("calls verifyOtp when submitting OTP code", async () => {
-    const mockSignInWithOtp = vi.fn().mockResolvedValue({ error: null });
     const mockVerifyOtp = vi.fn().mockResolvedValue({ error: null });
-    mockGetSupabaseClient.mockReturnValue({
-      auth: {
-        signInWithOtp: mockSignInWithOtp,
-        verifyOtp: mockVerifyOtp,
-      },
+    await navigateToOtpPhase({
+      mockGetSupabaseClient,
+      mockFetchSupabaseProviders,
+      extraAuthMethods: { verifyOtp: mockVerifyOtp },
     });
-    mockFetchSupabaseProviders.mockResolvedValue({
-      oauthProviders: ["google"],
-      isEmailEnabled: true,
-    });
-    render(<ServerSection />);
-    fillAndSubmitSupabase();
-
-    await waitFor(() => {
-      expect(screen.getByTestId("server-email-input")).toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByTestId("server-email-input"), {
-      target: { value: "user@example.com" },
-    });
-    fireEvent.click(screen.getByTestId("server-email-send"));
 
     await waitFor(() => {
       expect(screen.getByTestId("server-otp-input")).toBeInTheDocument();

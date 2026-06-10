@@ -298,6 +298,65 @@ describe("ServerOAuthProviders", () => {
       expect(emailInput.getAttribute("type")).toBe("email");
     });
 
+    it("send button displays sendCode i18n key", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      expect(screen.getByTestId("server-email-send").textContent).toBe(
+        "settings.server.sendCode",
+      );
+    });
+
+    it("email input starts with empty value", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId(
+        "server-email-input",
+      ) as HTMLInputElement;
+      expect(emailInput.value).toBe("");
+    });
+
+    it("send button is disabled when email has prefix text", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, {
+        target: { value: "prefix user@example.com" },
+      });
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
+    it("send button is disabled when email has trailing text", () => {
+      render(
+        <ServerOAuthProviders
+          providers={["google"]}
+          onSignIn={vi.fn()}
+          isEmailEnabled={true}
+        />,
+      );
+      const emailInput = screen.getByTestId("server-email-input");
+      fireEvent.change(emailInput, {
+        target: { value: "user@example.com extra" },
+      });
+      const sendButton = screen.getByTestId("server-email-send");
+      expect(sendButton).toHaveProperty("disabled", true);
+    });
+
     // NFR-A1 of supabase-email-auth
     it("email input has associated label", () => {
       render(

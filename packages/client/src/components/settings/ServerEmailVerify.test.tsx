@@ -211,4 +211,17 @@ describe("ServerEmailVerify", () => {
       'settings.server.resendCountdown::{"time":"0:05"}',
     );
   });
+
+  // --- CSS class assertions to kill style mutants ---
+
+  it("verify button has accent style when enabled", () => {
+    renderComponent();
+    fillOtp("123456");
+    expect(getVerifyButton().className).toContain("bg-accent");
+  });
+
+  it("resend button has hover style when cooldown is 0", () => {
+    renderComponent({ resendCooldown: 0 });
+    expect(getResendButton().className).toContain("hover:bg-gray-200");
+  });
 });

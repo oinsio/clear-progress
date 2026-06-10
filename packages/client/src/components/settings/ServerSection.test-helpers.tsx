@@ -1,5 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react/pure";
-import type { Mock } from "vitest";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react/pure";
+import { vi, type Mock } from "vitest";
 import { ServerSection } from "./ServerSection";
 
 export const SUPABASE_CONFIG = {
@@ -42,4 +47,42 @@ export function renderWithConnection(
 ) {
   mockUseConnectionConfig.mockReturnValue(config);
   return render(<ServerSection />);
+}
+
+/**
+ * Sets up mocks and navigates through the Supabase flow to the OTP phase:
+ * configure mocks → render → fill supabase form → wait for email → fill email → send OTP.
+ */
+export async function navigateToOtpPhase(options: {
+  mockGetSupabaseClient: Mock;
+  mockFetchSupabaseProviders: Mock;
+  extraAuthMethods?: Record<string, Mock>;
+  email?: string;
+}) {
+  const {
+    mockGetSupabaseClient,
+    mockFetchSupabaseProviders,
+    extraAuthMethods = {},
+    email = "user@example.com",
+  } = options;
+  const mockSignInWithOtp = vi.fn().mockResolvedValue({ error: null });
+  mockGetSupabaseClient.mockReturnValue({
+    auth: { signInWithOtp: mockSignInWithOtp, ...extraAuthMethods },
+  });
+  mockFetchSupabaseProviders.mockResolvedValue({
+    oauthProviders: ["google"],
+    isEmailEnabled: true,
+  });
+
+  render(<ServerSection />);
+  fillAndSubmitSupabase();
+
+  await waitFor(() => {
+    expect(screen.getByTestId("server-email-input")).toBeInTheDocument();
+  });
+
+  fireEvent.change(screen.getByTestId("server-email-input"), {
+    target: { value: email },
+  });
+  fireEvent.click(screen.getByTestId("server-email-send"));
 }
