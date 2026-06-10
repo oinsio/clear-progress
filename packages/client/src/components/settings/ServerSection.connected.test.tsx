@@ -84,7 +84,10 @@ describe("ServerSection — connected state", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+    mockFetchSupabaseProviders.mockResolvedValue({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
   });
 
   it("renders connected status when config exists", () => {

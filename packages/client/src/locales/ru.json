@@ -323,7 +323,20 @@
       "timeoutError": "Время подключения истекло.",
       "title": "Сервер",
       "typeGas": "Google Apps Script",
-      "typeSupabase": "Supabase"
+      "typeSupabase": "Supabase",
+      "emailLabel": "Адрес электронной почты",
+      "sendCode": "Отправить код",
+      "otpTitle": "Введите код подтверждения",
+      "otpHint": "Мы также отправили ссылку для входа на вашу почту",
+      "verify": "Подтвердить",
+      "resend": "Отправить повторно",
+      "resendCountdown": "Повторно ({{time}})",
+      "back": "Назад",
+      "otpErrorInvalid": "Неверный или просроченный код",
+      "otpErrorNetwork": "Ошибка сети. Попробуйте снова.",
+      "otpErrorRateLimit": "Слишком много попыток. Подождите.",
+      "emailOrDivider": "или",
+      "codeSentTo": "Код отправлен на {{email}}"
     }
   },
   "selector": {

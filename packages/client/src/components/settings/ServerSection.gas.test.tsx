@@ -92,7 +92,10 @@ describe("ServerSection — GAS flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseConnectionConfig.mockReturnValue(null);
-    mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+    mockFetchSupabaseProviders.mockResolvedValue({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
   });
 
   // ── Connect: success ─────────────────────────────────────────

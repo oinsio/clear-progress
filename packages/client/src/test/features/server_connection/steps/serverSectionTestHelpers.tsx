@@ -10,9 +10,10 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react/pure";
 import { MemoryRouter } from "react-router-dom";
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 import { ServerSection } from "@/components/settings/ServerSection";
 import {
   mockConnect,
@@ -22,11 +23,13 @@ import {
   mockInit,
   mockPing,
   mockSignInWithOAuth,
+  mockSignInWithOtp,
   mockTriggerFullSync,
   mockUseAuth,
   mockUseConnectionConfig,
   mockUseConnectionStatus,
   mockUseSync,
+  mockVerifyOtp,
 } from "./serverSectionMocks";
 
 export function resetMocks(): void {
@@ -39,6 +42,8 @@ export function resetMocks(): void {
   mockGetSavedConnectionConfig.mockReset();
   mockFetchSupabaseProviders.mockReset();
   mockSignInWithOAuth.mockReset();
+  mockSignInWithOtp.mockReset();
+  mockVerifyOtp.mockReset();
   mockTriggerFullSync.mockReset();
   mockUseAuth.mockReset();
   mockUseSync.mockReset();
@@ -51,7 +56,10 @@ function setDefaultMockValues(): void {
   mockUseConnectionConfig.mockReturnValue(null);
   mockUseConnectionStatus.mockReturnValue("not_configured");
   mockGetSavedConnectionConfig.mockReturnValue(null);
-  mockFetchSupabaseProviders.mockResolvedValue([]);
+  mockFetchSupabaseProviders.mockResolvedValue({
+    oauthProviders: [],
+    isEmailEnabled: false,
+  });
   mockUseAuth.mockReturnValue({
     accessToken: null,
     userEmail: null,
@@ -103,5 +111,26 @@ export function fillGasForm(url: string, clientId: string): void {
   });
   fireEvent.change(screen.getByTestId("server-gas-client-id"), {
     target: { value: clientId },
+  });
+}
+
+export async function navigateToOtpScreen(): Promise<void> {
+  mockFetchSupabaseProviders.mockResolvedValue({
+    oauthProviders: ["google"],
+    isEmailEnabled: true,
+  });
+  fillSupabaseForm("myproject", "test-key");
+  fireEvent.click(screen.getByTestId("server-supabase-connect"));
+  await waitFor(() => {
+    expect(screen.getByTestId("server-email-input")).toBeInTheDocument();
+  });
+
+  mockSignInWithOtp.mockResolvedValue({ data: {}, error: null });
+  fireEvent.change(screen.getByTestId("server-email-input"), {
+    target: { value: "user@example.com" },
+  });
+  fireEvent.click(screen.getByTestId("server-email-send"));
+  await waitFor(() => {
+    expect(screen.getByTestId("server-otp-input")).toBeInTheDocument();
   });
 }

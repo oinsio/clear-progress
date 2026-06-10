@@ -7,16 +7,26 @@ interface SupabaseSettingsResponse {
   external: Record<string, boolean>;
 }
 
+/**
+ * Implements FR8, D1 of supabase-email-auth.
+ * Describes available authentication methods for a Supabase project.
+ */
+export interface SupabaseAuthMethods {
+  oauthProviders: string[];
+  isEmailEnabled: boolean;
+}
+
 const NON_OAUTH_PROVIDERS = new Set(["email", "phone"]);
 
 /**
  * Implements FR4, FR5 of add-supabase-ui.
- * Fetches enabled OAuth providers from Supabase /auth/v1/settings endpoint.
+ * Implements FR8, D1 of supabase-email-auth.
+ * Fetches enabled auth methods from Supabase /auth/v1/settings endpoint.
  */
 export async function fetchSupabaseProviders(
   url: string,
   anonKey: string,
-): Promise<string[]> {
+): Promise<SupabaseAuthMethods> {
   const fetchPromise = fetch(`${url}${SUPABASE_SETTINGS_ENDPOINT}`, {
     headers: { apikey: anonKey },
   });
@@ -38,10 +48,14 @@ export async function fetchSupabaseProviders(
 
   const settings = (await response.json()) as SupabaseSettingsResponse;
 
-  return Object.entries(settings.external)
+  const oauthProviders = Object.entries(settings.external)
     .filter(
       ([provider, isEnabled]) =>
         isEnabled === true && !NON_OAUTH_PROVIDERS.has(provider),
     )
     .map(([provider]) => provider);
+
+  const isEmailEnabled = settings.external.email;
+
+  return { oauthProviders, isEmailEnabled };
 }

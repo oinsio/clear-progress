@@ -100,7 +100,10 @@ describe("ServerConnectedStatus", () => {
     vi.clearAllMocks();
     mockUseConnectionStatus.mockReturnValue("synced");
     setupAuth("test-token", "user@example.com");
-    mockFetchSupabaseProviders.mockResolvedValue([]);
+    mockFetchSupabaseProviders.mockResolvedValue({
+      oauthProviders: [],
+      isEmailEnabled: false,
+    });
   });
 
   it("renders Supabase type label", () => {
@@ -200,7 +203,10 @@ describe("ServerConnectedStatus", () => {
   it("loads providers for Supabase re-auth", async () => {
     mockUseConnectionStatus.mockReturnValue("no_auth");
     setupAuth(null, null);
-    mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+    mockFetchSupabaseProviders.mockResolvedValue({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
     renderConnected(supabaseConfig);
     await waitFor(() => {
       expect(mockFetchSupabaseProviders).toHaveBeenCalledWith(

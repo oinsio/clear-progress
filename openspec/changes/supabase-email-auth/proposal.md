@@ -7,7 +7,7 @@ Google OAuth for Supabase requires complex setup (Google Cloud Console, verified
 ## What Changes
 
 - **ADDED**: Email input field on the OAuth providers screen (alongside existing OAuth buttons)
-- **ADDED**: OTP verification screen with single text input for 6-digit code
+- **ADDED**: OTP verification screen with single text input for 8-digit code
 - **ADDED**: Resend cooldown timer (60 seconds) on OTP screen
 - **MODIFIED**: `fetchSupabaseProviders` returns `isEmailEnabled` flag separately from OAuth providers
 - **MODIFIED**: `ServerSection` state machine gains `supabase_email_otp` phase
@@ -49,7 +49,7 @@ Google OAuth for Supabase requires complex setup (Google Cloud Console, verified
 
 - FR1: When email auth is enabled on Supabase project, an email input field SHALL appear below OAuth buttons on the providers screen, separated by a divider
 - FR2: Submitting email SHALL call `supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo } })` and transition to OTP verification screen
-- FR3: OTP verification screen SHALL display the email address, a single text input (`inputMode="numeric"`, `maxLength={6}`), a Verify button, and a Back button
+- FR3: OTP verification screen SHALL display the email address, a single text input (`inputMode="numeric"`, no `maxLength` — OTP length is configured server-side), a Verify button, and a Back button
 - FR4: Submitting OTP code SHALL call `supabase.auth.verifyOtp({ email, token, type: "email" })` and on success the existing `onAuthStateChange` handler transitions to connected state
 - FR5: Magic link click SHALL redirect to the app's settings page where `SupabaseAuthSync` handles the `SIGNED_IN` event automatically (no new code needed)
 - FR6: Resend button SHALL be disabled for 60 seconds after sending OTP, showing a countdown timer
@@ -57,7 +57,7 @@ Google OAuth for Supabase requires complex setup (Google Cloud Console, verified
 - FR8: `fetchSupabaseProviders` SHALL return `{ oauthProviders: string[], isEmailEnabled: boolean }` instead of `string[]`
 - FR9: Back button on OTP screen SHALL return to providers screen without disconnecting
 - FR10: OTP verification errors SHALL be displayed inline on the verification screen
-- FR11: Email input SHALL validate format before sending (HTML5 `type="email"` validation)
+- FR11: Email input SHALL validate format before sending — the "Send code" button SHALL be disabled until the entered value matches a valid email pattern (`local@domain.tld` with TLD >= 2 characters)
 
 ### Non-Functional
 
@@ -111,6 +111,25 @@ No IA changes — email auth is integrated into existing Settings > Server secti
 - M2: Magic link flow works without additional code (verified by existing SupabaseAuthSync tests)
 - M3: Mutation testing score >= 95% on new code
 - M4: All new components pass axe-core accessibility checks
+
+## Prerequisites
+
+### Supabase Email Template Configuration
+
+By default, Supabase Magic Link email template only includes `{{ .ConfirmationURL }}` (the magic link). To receive OTP codes in the email, the template must be modified to include the `{{ .Token }}` variable.
+
+**Steps:**
+1. Open Supabase Dashboard → Authentication → Email Templates
+2. Edit the **Magic Link** template
+3. Add `{{ .Token }}` to the template body, e.g.:
+   ```html
+   <h2>Your sign-in link</h2>
+   <p>Enter this code: {{ .Token }}</p>
+   <p>Or follow the link below to sign in. This link expires shortly and can only be used once.</p>
+   <p><a href="{{ .ConfirmationURL }}">Sign in</a></p>
+   ```
+
+OTP code length is configured server-side via `GOTRUE_MAILER_OTP_LENGTH` (default: 8). The client does not restrict input length — any code entered is validated by Supabase.
 
 ## Open Questions
 

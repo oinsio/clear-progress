@@ -1,3 +1,4 @@
+import { Mail } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
 function GoogleIcon(props: SVGProps<SVGSVGElement>) {
@@ -201,6 +202,7 @@ const PROVIDER_ICONS: Record<
   linkedin: LinkedInIcon,
   supabase: SupabaseIcon,
   gas: GasIcon,
+  email: Mail,
 };
 
 interface ProviderIconProps {

@@ -183,6 +183,9 @@ export const SUPABASE_URL_SUFFIX = ".supabase.co";
 export const SUPABASE_SETTINGS_ENDPOINT = "/auth/v1/settings";
 export const SUPABASE_SETTINGS_TIMEOUT_MS = 5000;
 
+// implements FR6 of supabase-email-auth
+export const OTP_RESEND_COOLDOWN_MS = 60000;
+
 export const PANEL_SPLIT_DEFAULT_RATIO = 0.5;
 export const PANEL_SPLIT_MIN_RATIO = 0.2;
 export const PANEL_SPLIT_MAX_RATIO = 0.8;

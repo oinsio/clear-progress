@@ -36,11 +36,11 @@ Driven by FR1–FR11 from proposal.
 
 ### D3: Single text input for OTP verification
 
-**Decision**: Use one `<input>` with `inputMode="numeric"` and `maxLength={6}` instead of 6 separate digit fields.
+**Decision**: Use one `<input>` with `inputMode="numeric"` and no `maxLength` restriction instead of separate digit fields. Verify button is enabled when any characters are entered.
 
-**Why**: Simpler implementation, better auto-paste support on mobile (single field receives full OTP from clipboard), fewer accessibility concerns. Matches mobile OS auto-fill behavior.
+**Why**: Simpler implementation, better auto-paste support on mobile (single field receives full OTP from clipboard), fewer accessibility concerns. Matches mobile OS autofill behavior. OTP code length is configured server-side (`GOTRUE_MAILER_OTP_LENGTH`, default 6, range 6–10) and is not exposed via public API, so the client does not restrict input length.
 
-**Alternative considered**: 6 individual inputs with auto-advance — rejected due to complexity and worse mobile auto-paste UX.
+**Alternative considered**: Separate digit inputs with auto-advance — rejected due to complexity and worse mobile auto-paste UX. Hardcoded `maxLength` — rejected because OTP length varies per Supabase project configuration.
 
 ### D4: `supabase_email_otp` as a new phase in `ServerSection`
 

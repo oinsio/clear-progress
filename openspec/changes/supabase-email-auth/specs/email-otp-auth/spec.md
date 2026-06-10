@@ -2,7 +2,7 @@
 
 ### Requirement: Email input on providers screen when email auth is enabled
 
-When `isEmailEnabled` is `true` in the auth methods response, an email input field SHALL appear below the OAuth provider buttons, separated by an "or" divider. The email input SHALL have `type="email"` for HTML5 validation. A "Send code" button SHALL be displayed next to or below the email input. The button SHALL be disabled when the email field is empty.
+When `isEmailEnabled` is `true` in the auth methods response, an email input field SHALL appear below the OAuth provider buttons, separated by an "or" divider. The email input SHALL have `type="email"` for HTML5 validation and a client-side pattern check (`local@domain.tld` with TLD >= 2 characters). A "Send code" button SHALL be displayed next to or below the email input. The button SHALL be disabled when the email field is empty or contains an invalid email address.
 
 #### Scenario: Email input visible when email auth enabled
 - **WHEN** Supabase project has email auth enabled
@@ -21,8 +21,12 @@ When `isEmailEnabled` is `true` in the auth methods response, an email input fie
 - **WHEN** email input is empty
 - **THEN** "Send code" button is disabled
 
-#### Scenario: Send button enabled when email entered
-- **WHEN** user enters a valid email address
+#### Scenario: Send button disabled when email is invalid
+- **WHEN** user enters text that is not a valid email (e.g., "not-an-email", "user@", "user@example.c")
+- **THEN** "Send code" button is disabled
+
+#### Scenario: Send button enabled when email is valid
+- **WHEN** user enters a valid email address (e.g., "user@example.com")
 - **THEN** "Send code" button is enabled
 
 ### Requirement: Send OTP via signInWithOtp
@@ -49,21 +53,21 @@ Clicking "Send code" SHALL call `supabase.auth.signInWithOtp({ email, options: {
 
 ### Requirement: OTP verification screen
 
-The OTP verification screen SHALL display: the email address the code was sent to, a single text input with `inputMode="numeric"` and `maxLength={6}`, a "Verify" button, a hint about the magic link alternative, and a "Back" button.
+The OTP verification screen SHALL display: the email address the code was sent to, a single text input with `inputMode="numeric"` (no `maxLength` — OTP length is configured server-side), a "Verify" button, a hint about the magic link alternative, and a "Back" button.
 
 #### Scenario: OTP screen displays email and input
 - **WHEN** OTP verification screen is shown
 - **THEN** the email address is displayed as confirmation text
-- **AND** a single text input for the 6-digit code is displayed with `inputMode="numeric"`
+- **AND** a single text input for the OTP code is displayed with `inputMode="numeric"`
 - **AND** a "Verify" button is displayed
 - **AND** a hint "We also sent a magic link to your email" is displayed
 
 #### Scenario: Verify button disabled when code incomplete
-- **WHEN** OTP input contains fewer than 6 characters
+- **WHEN** OTP input is empty
 - **THEN** "Verify" button is disabled
 
-#### Scenario: Verify button enabled when code complete
-- **WHEN** OTP input contains exactly 6 characters
+#### Scenario: Verify button enabled when code entered
+- **WHEN** OTP input contains any characters
 - **THEN** "Verify" button is enabled
 
 ### Requirement: Verify OTP code
@@ -71,7 +75,7 @@ The OTP verification screen SHALL display: the email address the code was sent t
 Clicking "Verify" SHALL call `supabase.auth.verifyOtp({ email, token, type: "email" })`. On success, `onAuthStateChange` fires `SIGNED_IN` which is handled by existing `SupabaseAuthSync`. On failure, an error message SHALL be displayed and the input SHALL be cleared for retry.
 
 #### Scenario: OTP verification succeeds
-- **WHEN** user enters correct 6-digit code and clicks "Verify"
+- **WHEN** user enters correct OTP code and clicks "Verify"
 - **THEN** `verifyOtp` is called with the email, token, and `type: "email"`
 - **AND** Supabase SDK fires `SIGNED_IN` event
 - **AND** `SupabaseAuthSync` handles the event (existing behavior)

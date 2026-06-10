@@ -90,7 +90,10 @@ describe("ServerSection — navigation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseConnectionConfig.mockReturnValue(null);
-    mockFetchSupabaseProviders.mockResolvedValue(["google"]);
+    mockFetchSupabaseProviders.mockResolvedValue({
+      oauthProviders: ["google"],
+      isEmailEnabled: false,
+    });
   });
 
   // ── Phase: selection (initial) ─────────────────────────────
