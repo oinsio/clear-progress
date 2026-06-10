@@ -4,7 +4,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react/pure";
-import { vi, type Mock } from "vitest";
+import { type Mock, vi } from "vitest";
 import { ServerSection } from "./ServerSection";
 
 export const SUPABASE_CONFIG = {
