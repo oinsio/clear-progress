@@ -72,28 +72,13 @@ const feature = await loadFeature("../pin_detail_panel_layout.feature");
 
 const { TaskPageLayout } = await import("@/components/tasks/TaskPageLayout");
 
+import type { Task } from "@/types/entities";
+
 type FeatureContext = Record<string, never>;
 
-let mockSelectedTask: null | {
-  id: string;
-  name: string;
-  description: string;
-  box: string;
-  goal_id: string;
-  context_id: string;
-  category_id: string;
-  repeat_rule: string;
-  next_date: string;
-  appear_date: string;
-  sort_order: number;
-  version: number;
-  is_deleted: boolean;
-  completed_at: string;
-  created_at: string;
-  updated_at: string;
-} = null;
+let mockSelectedTask: Task | null = null;
 
-const sampleTask = {
+const sampleTask: Task = {
   id: "test-id",
   name: "Test Task",
   description: "",
@@ -104,12 +89,16 @@ const sampleTask = {
   repeat_rule: "",
   next_date: "",
   appear_date: "",
-  sort_order: 0,
-  version: 1,
+  sort_order: "0",
   is_deleted: false,
+  is_completed: false,
+  is_hidden: false,
   completed_at: "",
   created_at: "2025-01-01T00:00:00.000Z",
   updated_at: "2025-01-01T00:00:00.000Z",
+  original_task_id: "",
+  revision: 0,
+  needsSync: false,
 };
 
 const defaultProps = {
@@ -152,7 +141,10 @@ const whenTaskPageLayoutIsRendered = (_ctx: TestContext) => {
   render(
     React.createElement(
       TaskPageLayout,
-      { ...defaultProps, selectedTask: mockSelectedTask } as any,
+      {
+        ...defaultProps,
+        selectedTask: mockSelectedTask,
+      } as unknown as React.ComponentProps<typeof TaskPageLayout>,
       React.createElement("div", null, "Content"),
     ),
   );
