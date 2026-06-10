@@ -1,10 +1,12 @@
-import { Trash2, X } from "lucide-react";
+import { Pin, PinOff, Trash2, X } from "lucide-react";
 import type * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAttachments } from "@/hooks/useAttachments";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useChecklist } from "@/hooks/useChecklist";
+import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useTaskEditLabels } from "@/hooks/useTaskEditLabels";
 import { useTaskFormState } from "@/hooks/useTaskFormState";
 import { cn } from "@/shared/lib/cn";
@@ -48,6 +50,8 @@ export function TaskDetailPanel({
   style,
 }: TaskDetailPanelProps) {
   const { t } = useTranslation();
+  const isDesktop = useIsDesktop();
+  const { isDetailPanelPinned, setDetailPanelPinned } = useDetailPanelPinned();
   const {
     name,
     setName,
@@ -157,14 +161,35 @@ export function TaskDetailPanel({
         >
           <Trash2 className="w-4 h-4" />
         </button>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t("taskDetail.close")}
-          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-        >
-          <X className="w-[1.125rem] h-[1.125rem]" />
-        </button>
+        <div className="flex items-center gap-1">
+          {isDesktop && (
+            <button
+              type="button"
+              data-testid="pin-detail-panel-button"
+              onClick={() => setDetailPanelPinned(!isDetailPanelPinned)}
+              aria-label={
+                isDetailPanelPinned
+                  ? t("taskDetail.unpin")
+                  : t("taskDetail.pin")
+              }
+              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              {isDetailPanelPinned ? (
+                <PinOff className="w-4 h-4" />
+              ) : (
+                <Pin className="w-4 h-4" />
+              )}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("taskDetail.close")}
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-[1.125rem] h-[1.125rem]" />
+          </button>
+        </div>
       </div>
 
       {/* Name field */}

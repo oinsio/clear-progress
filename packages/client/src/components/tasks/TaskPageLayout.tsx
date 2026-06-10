@@ -4,7 +4,11 @@
  * Shared layout component providing split-pane + Sidebar + TaskDetailPanel
  * for all task pages.
  */
+
+import { Pin } from "lucide-react";
 import type * as React from "react";
+import { useTranslation } from "react-i18next";
+import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
@@ -48,17 +52,19 @@ export function TaskPageLayout({
   const { panelSide } = usePanelSide();
   const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const isDesktop = useIsDesktop();
+  const { t } = useTranslation();
+  const { isDetailPanelPinned } = useDetailPanelPinned();
   const defaultModeChange = useSidebarNavigation();
   const handleModeChange = externalModeChange ?? defaultModeChange;
 
   const isTaskSelected = selectedTask !== null;
-  const showResizeHandle = isDesktop && isTaskSelected;
+  const showDetailColumn = isDesktop && (isDetailPanelPinned || isTaskSelected);
+  const showResizeHandle = showDetailColumn;
   const hideMainOnMobile = !isDesktop && isTaskSelected;
 
-  const mainColumnStyle: React.CSSProperties =
-    isDesktop && isTaskSelected
-      ? { width: `${ratio * 100}%`, flexShrink: 0 }
-      : { flex: "1 1 0" };
+  const mainColumnStyle: React.CSSProperties = showDetailColumn
+    ? { width: `${ratio * 100}%`, flexShrink: 0 }
+    : { flex: "1 1 0" };
 
   const detailPanelStyle: React.CSSProperties = isDesktop
     ? { width: `${(1 - ratio) * 100}%`, flexShrink: 0 }
@@ -104,6 +110,17 @@ export function TaskPageLayout({
             onClose={onCloseDetailPanel}
             style={detailPanelStyle}
           />
+        )}
+
+        {showDetailColumn && !isTaskSelected && (
+          <div
+            data-testid="detail-panel-empty-state"
+            className="flex flex-col items-center justify-center text-gray-400"
+            style={detailPanelStyle}
+          >
+            <Pin className="mb-2 h-8 w-8" />
+            <p className="text-sm">{t("taskDetail.emptyState")}</p>
+          </div>
         )}
       </div>
 

@@ -171,6 +171,7 @@ export const STORAGE_KEYS = {
   HANDEDNESS: "handedness",
   DAY_BOUNDARY: "day_boundary",
   ONBOARDING_SHOWN: "onboarding_shown",
+  DETAIL_PANEL_PINNED: "detail_panel_pinned",
 } as const;
 
 export const DEFAULT_FOCUS_OPACITY = 30;
