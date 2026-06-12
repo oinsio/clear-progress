@@ -30,6 +30,7 @@ vi.mock("@/hooks/useHasTouchPointer", () => ({
 vi.mock("@/hooks/useAttachmentCount", () => ({
   useAttachmentCount: vi.fn().mockReturnValue({
     attachmentCount: 0,
+    hasUnsyncedAttachments: false,
     isLoading: false,
   }),
 }));
@@ -136,6 +137,7 @@ describe("TaskItem — indicators", () => {
     const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
     vi.mocked(useAttachmentCount).mockReturnValue({
       attachmentCount: 3,
+      hasUnsyncedAttachments: false,
       isLoading: false,
     });
     renderTaskItem();
@@ -194,6 +196,7 @@ describe("TaskItem — indicators", () => {
     });
     vi.mocked(useAttachmentCount).mockReturnValue({
       attachmentCount: 3,
+      hasUnsyncedAttachments: false,
       isLoading: false,
     });
     renderTaskItem({
@@ -280,6 +283,31 @@ describe("TaskItem — indicators", () => {
     ).not.toBeInTheDocument();
   });
 
+  // Unsync indicator for attachments
+  it("should show amber stripe when hasUnsyncedAttachments is true", async () => {
+    const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
+    vi.mocked(useAttachmentCount).mockReturnValue({
+      attachmentCount: 1,
+      hasUnsyncedAttachments: true,
+      isLoading: false,
+    });
+    renderTaskItem();
+    expect(screen.getByTestId("task-item")).toHaveClass("border-l-amber-400");
+  });
+
+  it("should not show amber stripe when hasUnsyncedAttachments is false and task is synced", async () => {
+    const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
+    vi.mocked(useAttachmentCount).mockReturnValue({
+      attachmentCount: 0,
+      hasUnsyncedAttachments: false,
+      isLoading: false,
+    });
+    renderTaskItem();
+    expect(screen.getByTestId("task-item")).not.toHaveClass(
+      "border-l-amber-400",
+    );
+  });
+
   // Indicator row visibility
   it("should not show indicator row when task has no indicators", async () => {
     const { useChecklist } = await import("@/hooks/useChecklist");
@@ -298,6 +326,7 @@ describe("TaskItem — indicators", () => {
     });
     vi.mocked(useAttachmentCount).mockReturnValue({
       attachmentCount: 0,
+      hasUnsyncedAttachments: false,
       isLoading: false,
     });
     renderTaskItem({

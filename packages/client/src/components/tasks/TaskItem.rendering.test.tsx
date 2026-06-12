@@ -29,6 +29,7 @@ vi.mock("@/hooks/useHasTouchPointer", () => ({
 vi.mock("@/hooks/useAttachmentCount", () => ({
   useAttachmentCount: vi.fn().mockReturnValue({
     attachmentCount: 0,
+    hasUnsyncedAttachments: false,
     isLoading: false,
   }),
 }));

@@ -1,10 +1,16 @@
+/**
+ * Implements FR3 of fix-nonsync-indication-for-attachments
+ */
 import { Pencil } from "lucide-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
+import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
+
+const ENTITY_TYPE_IDEA = "idea" as const;
 
 interface IdeaItemProps {
   idea: Idea;
@@ -21,7 +27,12 @@ export function IdeaItem({
   dragHandle,
   onEdit,
 }: IdeaItemProps) {
-  const isUnsynced = useIsUnsynced(idea);
+  const isIdeaUnsynced = useIsUnsynced(idea);
+  const { hasUnsyncedAttachments } = useAttachmentCount(
+    ENTITY_TYPE_IDEA,
+    idea.id,
+  );
+  const isUnsynced = isIdeaUnsynced || hasUnsyncedAttachments;
   const { panelSide } = usePanelSide();
   const { t } = useTranslation();
 

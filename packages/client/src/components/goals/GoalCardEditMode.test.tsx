@@ -38,6 +38,7 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/hooks/useAttachmentCount", () => ({
   useAttachmentCount: () => ({
     attachmentCount: mockAttachmentCount,
+    hasUnsyncedAttachments: false,
     isLoading: false,
   }),
 }));

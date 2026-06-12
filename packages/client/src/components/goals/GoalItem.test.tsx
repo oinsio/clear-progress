@@ -1,9 +1,36 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildGoal } from "@/test/factories/goalFactory";
+
+vi.mock("@/hooks/useIsUnsynced", () => ({
+  useIsUnsynced: vi.fn().mockReturnValue(false),
+}));
+vi.mock("@/hooks/useAttachmentCount", () => ({
+  useAttachmentCount: vi.fn().mockReturnValue({
+    attachmentCount: 0,
+    hasUnsyncedAttachments: false,
+    isLoading: false,
+  }),
+}));
+vi.mock("@/hooks/usePanelSide", () => ({
+  usePanelSide: vi
+    .fn()
+    .mockReturnValue({ panelSide: "right", setPanelSide: vi.fn() }),
+}));
+vi.mock("@/hooks/useFileUrl", () => ({
+  useFileUrl: vi.fn().mockReturnValue({ url: null }),
+}));
+
+import { useAttachmentCount } from "@/hooks/useAttachmentCount";
+import { useIsUnsynced } from "@/hooks/useIsUnsynced";
+import { usePanelSide } from "@/hooks/usePanelSide";
 import { GoalItem } from "./GoalItem";
+
+const mockUseIsUnsynced = vi.mocked(useIsUnsynced);
+const mockUsePanelSide = vi.mocked(usePanelSide);
+const mockUseAttachmentCount = vi.mocked(useAttachmentCount);
 
 function renderGoalItem(overrides = {}) {
   const goal = buildGoal();
@@ -22,6 +49,19 @@ function renderGoalItem(overrides = {}) {
 }
 
 describe("GoalItem", () => {
+  beforeEach(() => {
+    mockUseIsUnsynced.mockReturnValue(false);
+    mockUsePanelSide.mockReturnValue({
+      panelSide: "right",
+      setPanelSide: vi.fn(),
+    });
+    mockUseAttachmentCount.mockReturnValue({
+      attachmentCount: 0,
+      hasUnsyncedAttachments: false,
+      isLoading: false,
+    });
+  });
+
   it("should render goal name", () => {
     const goal = buildGoal({ name: "Learn guitar" });
     renderGoalItem({ goal });
@@ -84,5 +124,19 @@ describe("GoalItem", () => {
 
     expect(statusIndex).toBeGreaterThan(nameIndex);
     expect(countIndex).toBeGreaterThan(statusIndex);
+  });
+
+  /** Implements FR4 of fix-nonsync-indication-for-attachments */
+  it("should show amber stripe when hasUnsyncedAttachments is true", () => {
+    mockUseAttachmentCount.mockReturnValue({
+      attachmentCount: 1,
+      hasUnsyncedAttachments: true,
+      isLoading: false,
+    });
+    const goal = buildGoal();
+    renderGoalItem({ goal });
+
+    const goalItem = screen.getByTestId("goal-item");
+    expect(goalItem).toHaveClass("border-l-amber-400");
   });
 });

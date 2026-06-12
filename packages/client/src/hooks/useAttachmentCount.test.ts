@@ -1,4 +1,7 @@
-/** Implements FR11, NFR-P1 of task-detail-page-ui-improvements */
+/**
+ * Implements FR11, NFR-P1 of task-detail-page-ui-improvements
+ * Implements FR1, NFR-P1 of fix-nonsync-indication-for-attachments
+ */
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import "fake-indexeddb/auto";
@@ -175,10 +178,11 @@ describe("useAttachmentCount", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
+    const countBeforeUnmount = result.current.attachmentCount;
+
     unmount();
 
-    // Adding data after unmount should not cause errors
-    // (subscription should be cleaned up)
+    // Add data after unmount
     await db.attachments.put(
       buildAttachment({
         entity_type: TEST_ENTITY_TYPE,
@@ -187,15 +191,99 @@ describe("useAttachmentCount", () => {
       }),
     );
 
-    // Small delay to ensure no state updates happen on unmounted component
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Wait for potential subscription callback
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // After unmount, the result should still reflect the old count
+    // (subscription was cleaned up, no state updates)
+    expect(result.current.attachmentCount).toBe(countBeforeUnmount);
   });
 
-  it("should start in loading state", () => {
+  it("should start in loading state with default values", () => {
     const { result } = renderHook(() =>
       useAttachmentCount(TEST_ENTITY_TYPE, TEST_ENTITY_ID),
     );
 
     expect(result.current.isLoading).toBe(true);
+    expect(result.current.hasUnsyncedAttachments).toBe(false);
+    expect(result.current.attachmentCount).toBe(0);
+  });
+
+  it("should return hasUnsyncedAttachments true when unsynced attachments exist", async () => {
+    await db.attachments.bulkPut([
+      buildAttachment({
+        entity_type: TEST_ENTITY_TYPE,
+        entity_id: TEST_ENTITY_ID,
+        is_deleted: false,
+        needsSync: true,
+      }),
+      buildAttachment({
+        entity_type: TEST_ENTITY_TYPE,
+        entity_id: TEST_ENTITY_ID,
+        is_deleted: false,
+        needsSync: false,
+      }),
+    ]);
+
+    const { result } = renderHook(() =>
+      useAttachmentCount(TEST_ENTITY_TYPE, TEST_ENTITY_ID),
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.hasUnsyncedAttachments).toBe(true);
+  });
+
+  it("should return hasUnsyncedAttachments false when all attachments are synced", async () => {
+    await db.attachments.bulkPut([
+      buildAttachment({
+        entity_type: TEST_ENTITY_TYPE,
+        entity_id: TEST_ENTITY_ID,
+        is_deleted: false,
+        needsSync: false,
+      }),
+      buildAttachment({
+        entity_type: TEST_ENTITY_TYPE,
+        entity_id: TEST_ENTITY_ID,
+        is_deleted: false,
+        needsSync: false,
+      }),
+    ]);
+
+    const { result } = renderHook(() =>
+      useAttachmentCount(TEST_ENTITY_TYPE, TEST_ENTITY_ID),
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.hasUnsyncedAttachments).toBe(false);
+  });
+
+  it("should return hasUnsyncedAttachments false when no attachments exist", async () => {
+    const { result } = renderHook(() =>
+      useAttachmentCount(TEST_ENTITY_TYPE, TEST_ENTITY_ID),
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.hasUnsyncedAttachments).toBe(false);
+  });
+
+  it("should return hasUnsyncedAttachments false when entityId is empty", async () => {
+    const { result } = renderHook(() =>
+      useAttachmentCount(TEST_ENTITY_TYPE, ""),
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.hasUnsyncedAttachments).toBe(false);
   });
 });
