@@ -75,6 +75,14 @@ Entry points:
 
 **Alternative**: Keep `LinkedText` for potential future use — rejected because YAGNI; `LinkChip` + `DescriptionMarkdown` cover all current needs.
 
+### D8: Fix `useAutoResizeTextarea` to recalculate on value change
+
+**Decision**: Add `value` to the `useEffect` dependency array in `useAutoResizeTextarea`. Rename `_value` to `value` to reflect it is actively used.
+
+**Rationale**: The hook only recalculated textarea height on mount (`[]` dependencies). With markdown descriptions, users type multi-line content and the textarea must grow dynamically. Without this fix, long text is clipped by `overflow-hidden` (FR6, FR11).
+
+**Alternative**: Use CSS `field-sizing: content` — rejected because browser support is insufficient (no Firefox/Safari as of 2025).
+
 ## Risks / Trade-offs
 
 - **[Risk] Prose styles may conflict with current card styles** -> Mitigation: prose-sm is minimal; can be customized via prose overrides if needed

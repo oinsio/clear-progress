@@ -26,6 +26,8 @@ export function EditableDescription({
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [isEditing, textareaRef]);
 
@@ -50,7 +52,7 @@ export function EditableDescription({
         onChange={handleChange}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px] ${className}`}
+        className={`w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-y-auto min-h-[80px] max-h-[50vh] ${className}`}
         data-testid={dataTestId}
       />
     );

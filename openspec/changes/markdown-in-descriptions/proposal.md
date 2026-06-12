@@ -63,6 +63,7 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 - **FR8**: Linkify spec is updated — `LinkedText` removed, `LinkChip` documented
 - **FR9**: All links in markdown (autolinks and markdown links) render in linkify style — link emoji + display text, background highlight, truncation
 - **FR10**: `LinkedText` component and its tests are removed from codebase
+- **FR11**: Textarea fields (name, description) auto-resize vertically as content grows — `useAutoResizeTextarea` recalculates height on every value change, not only on mount
 
 ### Non-Functional
 
@@ -98,6 +99,7 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 | With markdown links | `"[text](url)"`               | Linkify-style link: emoji + "text"        |
 | With XSS attempt    | `"<script>alert(1)</script>"` | Sanitized text, script does not execute   |
 | Editing             | any                           | Textarea with raw markdown text           |
+| Editing long text   | multiline markdown            | Textarea auto-resizes to fit all content  |
 
 ## Behavior
 

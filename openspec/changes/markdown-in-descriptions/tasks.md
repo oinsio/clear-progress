@@ -53,3 +53,11 @@
 - [x] 8.1 Run `pnpm run build` — verify no build errors
 - [x] 8.2 Run full test suite for changed files — verify no regressions
 - [x] 8.3 Re-run build and tests after LinkChip/LinkedText changes
+
+## 9. Fix textarea auto-resize (TDD)
+
+- [x] 9.1 Write tests for `useAutoResizeTextarea` — verify resize on mount, on value change, reset to auto, null ref safety (FR11)
+- [x] 9.2 Fix `useAutoResizeTextarea` — add `value` to `useEffect` dependency array (FR11)
+- [x] 9.3 Verify no regressions in `EditableDescription` tests (FR6, FR11)
+- [x] 9.4 Run `pnpm run build` — verify no build errors
+- [ ] 9.5 Mutation testing on `useAutoResizeTextarea` — target >=95% (M2)
