@@ -265,6 +265,8 @@
     "tabDetails": "Детали",
     "tabChecklist": "Чек-лист",
     "tabChecklistProgress": "Чек-лист ({{completed}}/{{total}})",
+    "checklistBadgeAriaLabel": "{{completed}} из {{total}} выполнено",
+    "attachmentsBadgeAriaLabel": "{{count}} вложений",
     "fieldName": "Название",
     "fieldDescription": "Заметки",
     "fieldBox": "Палата",

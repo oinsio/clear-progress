@@ -5,8 +5,12 @@ import {
   FileText,
   GripVertical,
   ListChecks,
+  MapPin,
+  Paperclip,
   Repeat,
   RotateCcw,
+  Tag,
+  Target,
 } from "lucide-react";
 import type * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,6 +21,7 @@ import {
   SWIPE_SNAP_BACK_DURATION_MS,
   TASK_COMPLETE_ANIMATION_DELAY_MS,
 } from "@/constants";
+import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useHasTouchPointer } from "@/hooks/useHasTouchPointer";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
@@ -56,6 +61,8 @@ interface TaskItemProps {
   focusDimmedOpacity?: number;
 }
 
+const ENTITY_TYPE_TASK = "task" as const;
+
 export function TaskItem({
   task,
   goals,
@@ -76,6 +83,7 @@ export function TaskItem({
   const { progress: checklistProgress, hasUnsyncedItems } = useChecklist(
     task.id,
   );
+  const { attachmentCount } = useAttachmentCount(ENTITY_TYPE_TASK, task.id);
   const isTaskUnsynced = useIsUnsynced(task);
   const isUnsynced = isTaskUnsynced || hasUnsyncedItems;
   const isDesktop = useIsDesktop();
@@ -294,8 +302,13 @@ export function TaskItem({
                 })}
               </span>
             )}
+            {/* Implements FR6-FR10, UX3, UX4, NFR-A2 of task-detail-page-ui-improvements */}
             {((task.description && !task.is_completed) ||
               checklistProgress.total > 0 ||
+              attachmentCount > 0 ||
+              task.goal_id ||
+              task.context_id ||
+              task.category_id ||
               task.repeat_rule ||
               task.is_hidden) && (
               <span className="flex items-center gap-2 mt-0.5">
@@ -312,6 +325,36 @@ export function TaskItem({
                       {checklistProgress.completed}/{checklistProgress.total}
                     </span>
                   </span>
+                )}
+                {attachmentCount > 0 && (
+                  <span
+                    data-testid="attachment-badge"
+                    className="flex items-center gap-0.5 text-gray-400"
+                  >
+                    <Paperclip className="w-2.5 h-2.5" aria-hidden="true" />
+                    <span className="text-[0.625rem]">{attachmentCount}</span>
+                  </span>
+                )}
+                {task.goal_id && (
+                  <Target
+                    data-testid="goal-indicator"
+                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                )}
+                {task.context_id && (
+                  <MapPin
+                    data-testid="context-indicator"
+                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                )}
+                {task.category_id && (
+                  <Tag
+                    data-testid="category-indicator"
+                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
+                    aria-hidden="true"
+                  />
                 )}
                 {task.repeat_rule && (
                   <Repeat

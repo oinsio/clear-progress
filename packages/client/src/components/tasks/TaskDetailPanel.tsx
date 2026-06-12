@@ -2,7 +2,7 @@ import { Pin, Trash2, X } from "lucide-react";
 import type * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAttachments } from "@/hooks/useAttachments";
+import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
@@ -87,8 +87,7 @@ export function TaskDetailPanel({
     reorderItems,
   } = useChecklist(task.id);
 
-  const { attachments } = useAttachments(ENTITY_TYPE_TASK, task.id);
-  const attachmentCount = attachments.length;
+  const { attachmentCount } = useAttachmentCount(ENTITY_TYPE_TASK, task.id);
 
   const DetailsTabIcon = TAB_ICONS.details;
   const ChecklistTabIcon = TAB_ICONS.checklist;
@@ -213,51 +212,69 @@ export function TaskDetailPanel({
         />
       </div>
 
-      {/* Tab switcher */}
+      {/* Tab switcher — Implements FR1-FR4, NFR-A1 of task-detail-page-ui-improvements */}
       <div className="flex px-4 pt-3 pb-1 gap-2 flex-shrink-0">
         <button
           type="button"
           data-testid="tab-details"
           onClick={() => setActiveTab(ACTIVE_TAB.DETAILS)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
+            "py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === ACTIVE_TAB.DETAILS
-              ? "bg-accent text-white border-accent"
-              : "text-accent border-accent/40 hover:bg-accent/5",
+              ? "flex-1 bg-accent text-white border-accent"
+              : "flex-shrink-0 px-3 text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
           <DetailsTabIcon className="w-4 h-4" aria-hidden="true" />
-          {t("taskEdit.tabDetails")}
+          {activeTab === ACTIVE_TAB.DETAILS && t("taskEdit.tabDetails")}
         </button>
         <button
           type="button"
           data-testid="tab-checklist"
           onClick={() => setActiveTab(ACTIVE_TAB.CHECKLIST)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
+            "py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === ACTIVE_TAB.CHECKLIST
-              ? "bg-accent text-white border-accent"
-              : "text-accent border-accent/40 hover:bg-accent/5",
+              ? "flex-1 bg-accent text-white border-accent"
+              : "flex-shrink-0 px-3 text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
           <ChecklistTabIcon className="w-4 h-4" aria-hidden="true" />
-          {checklistTabLabel}
+          {activeTab === ACTIVE_TAB.CHECKLIST && checklistTabLabel}
+          {activeTab !== ACTIVE_TAB.CHECKLIST && progress.total > 0 && (
+            <span
+              className="text-xs"
+              aria-label={t("taskEdit.checklistBadgeAriaLabel", {
+                completed: progress.completed,
+                total: progress.total,
+              })}
+            >
+              {progress.completed}/{progress.total}
+            </span>
+          )}
         </button>
         <button
           type="button"
           data-testid="tab-attachments"
           onClick={() => setActiveTab(ACTIVE_TAB.ATTACHMENTS)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
+            "py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === ACTIVE_TAB.ATTACHMENTS
-              ? "bg-accent text-white border-accent"
-              : "text-accent border-accent/40 hover:bg-accent/5",
+              ? "flex-1 bg-accent text-white border-accent"
+              : "flex-shrink-0 px-3 text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
           <AttachmentsTabIcon className="w-4 h-4" aria-hidden="true" />
-          {t("task.tabs.attachments")}
-          {attachmentCount > 0 && (
-            <span className="ml-1 text-xs">({attachmentCount})</span>
+          {activeTab === ACTIVE_TAB.ATTACHMENTS && t("task.tabs.attachments")}
+          {activeTab !== ACTIVE_TAB.ATTACHMENTS && attachmentCount > 0 && (
+            <span
+              className="text-xs"
+              aria-label={t("taskEdit.attachmentsBadgeAriaLabel", {
+                count: attachmentCount,
+              })}
+            >
+              {attachmentCount}
+            </span>
           )}
         </button>
       </div>

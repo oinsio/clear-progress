@@ -446,6 +446,8 @@
     "tabDetails": "Details",
     "tabChecklist": "Checklist",
     "tabChecklistProgress": "Checklist ({{completed}}/{{total}})",
+    "checklistBadgeAriaLabel": "{{completed}} of {{total}} completed",
+    "attachmentsBadgeAriaLabel": "{{count}} attachments",
     "fieldName": "Name",
     "fieldDescription": "Description",
     "fieldBox": "Box",

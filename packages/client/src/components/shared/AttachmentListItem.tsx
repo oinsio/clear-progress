@@ -3,6 +3,8 @@ import type React from "react";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileUrl } from "@/hooks/useFileUrl";
+import { useIsUnsynced } from "@/hooks/useIsUnsynced";
+import { cn } from "@/shared/lib/cn";
 import type { Attachment } from "@/types/entities";
 
 const BYTES_IN_KB = 1024;
@@ -19,6 +21,7 @@ interface AttachmentListItemProps {
 }
 
 /** Implements FR11, FR12 of add-file-attachments */
+/** Implements FR12, FR13, UX5 of task-detail-page-ui-improvements */
 export function AttachmentListItem({
   attachment,
   onDelete,
@@ -27,6 +30,7 @@ export function AttachmentListItem({
 }: AttachmentListItemProps) {
   const { t } = useTranslation();
   const { url } = useFileUrl(attachment.data_hash);
+  const isUnsynced = useIsUnsynced(attachment);
   const previewButtonRef = useRef<HTMLButtonElement>(null);
 
   const handlePreview = useCallback(() => {
@@ -52,7 +56,11 @@ export function AttachmentListItem({
 
   return (
     <li
-      className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+      className={cn(
+        "flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800",
+        "border-l-2",
+        isUnsynced ? "border-l-amber-400" : "border-l-transparent",
+      )}
       data-testid={`attachment-item-${attachment.id}`}
     >
       <FileTypeIcon mimeType={attachment.mime_type} />
