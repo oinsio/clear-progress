@@ -10,6 +10,8 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 - **ADDED**: XSS protection via `rehype-sanitize` when rendering markdown
 - **ADDED**: `LinkChip` — shared component for linkify-style link display (emoji + shortened/custom text)
 - **ADDED**: Links in markdown render in linkify style: autolinks show `shortenUrl`, markdown links show custom text, both with link emoji
+- **ADDED**: Plain text line breaks preserved via `remark-breaks` — single newlines render as `<br>`
+- **ADDED**: Scroll in description view mode — long rendered descriptions are scrollable within `50vh` container
 - **MODIFIED**: `EditableDescription` — view mode switches from `LinkedText` to markdown renderer
 - **MODIFIED**: `GoalCardViewMode` — goal description renders via markdown instead of `LinkedText`
 - **MODIFIED**: `IdeaItem` — idea description renders via markdown instead of plain text
@@ -65,6 +67,8 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 - **FR10**: `LinkedText` component and its tests are removed from codebase
 - **FR11**: Textarea fields (name, description) auto-resize vertically as content grows — `useAutoResizeTextarea` recalculates height on every value change, not only on mount
 - **FR12**: Description textarea in edit mode has a maximum height (`50vh`) with vertical scroll — prevents the textarea from pushing other UI elements off-screen when content is long
+- **FR13**: Plain text line breaks (single `\n`) are preserved in view mode via `remark-breaks` — typing Enter in textarea produces a visible line break in rendered output, not a collapsed space
+- **FR14**: Description view mode container has a maximum height (`50vh`) with vertical scroll — prevents long rendered descriptions from pushing other UI elements off-screen
 
 ### Non-Functional
 
@@ -100,6 +104,8 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 | With markdown links | `"[text](url)"`               | Linkify-style link: emoji + "text"                |
 | With XSS attempt    | `"<script>alert(1)</script>"` | Sanitized text, script does not execute           |
 | Editing             | any                           | Textarea with raw markdown text                   |
+| Plain text newlines | `"Line1\nLine2\nLine3"`       | Each line on its own row (br between lines)       |
+| Long description    | 50+ lines rendered            | View container scrolls at `50vh`, UI stays intact |
 | Editing long text   | multiline markdown            | Textarea grows up to `max-h-[50vh]`, then scrolls |
 
 ## Behavior

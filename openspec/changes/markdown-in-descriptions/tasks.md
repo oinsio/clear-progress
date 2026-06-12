@@ -69,3 +69,11 @@
 - [x] 10.3 Verify via Playwright: textarea scrolls when content exceeds max-height, other panel elements remain accessible
 - [x] 10.4 Existing `EditableDescription` and `useAutoResizeTextarea` tests pass (12 + 5 tests)
 - [x] 10.5 `pnpm run build` succeeds
+
+## 11. Plain text line breaks & view mode scroll
+
+- [x] 11.1 Install `remark-breaks` in `packages/client` (FR13)
+- [x] 11.2 Add `remark-breaks` to `DescriptionMarkdown` remarkPlugins — single `\n` renders as `<br>` (FR13, FR7)
+- [x] 11.3 Add `max-h-[50vh] overflow-y-auto` to view mode container in `EditableDescription` (FR14)
+- [x] 11.4 Verify via Playwright: line breaks display correctly, long descriptions scroll in view mode
+- [x] 11.5 `pnpm run build` succeeds

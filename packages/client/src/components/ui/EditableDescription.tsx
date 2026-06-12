@@ -61,7 +61,7 @@ export function EditableDescription({
   return (
     <div
       onClick={handleClick}
-      className={`w-full text-sm text-gray-700 border border-transparent rounded-lg px-3 py-2 cursor-text hover:border-gray-200 hover:bg-gray-50/50 min-h-[80px] ${className}`}
+      className={`w-full text-sm text-gray-700 border border-transparent rounded-lg px-3 py-2 cursor-text hover:border-gray-200 hover:bg-gray-50/50 min-h-[80px] max-h-[50vh] overflow-y-auto ${className}`}
       data-testid={dataTestId}
     >
       {value ? (

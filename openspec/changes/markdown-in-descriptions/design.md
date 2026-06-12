@@ -91,6 +91,22 @@ Entry points:
 
 **Alternative**: Remove auto-resize entirely and use a fixed-height textarea with scroll — rejected because short descriptions would waste space with an oversized field.
 
+### D10: remark-breaks for plain text line breaks
+
+**Decision**: Install `remark-breaks` and add it to `DescriptionMarkdown` alongside `remark-gfm`.
+
+**Rationale**: Standard Markdown ignores single `\n` — two newlines are required for a paragraph break. Users entering plain text with Enter expect visible line breaks, not collapsed spaces. `remark-breaks` converts single `\n` to `<br>`, matching textarea behavior (FR13, FR7).
+
+**Alternative**: Use CSS `white-space: pre-line` on the markdown container — rejected because it conflicts with `prose` styles and breaks proper markdown paragraph spacing.
+
+### D11: Scroll in description view mode container
+
+**Decision**: Add `max-h-[50vh] overflow-y-auto` to the view mode wrapper in `EditableDescription` (the `<div>` that renders `DescriptionMarkdown`).
+
+**Rationale**: FR12 added scroll to the textarea (edit mode), but the view mode container had no height limit. Long rendered descriptions pushed "Статус", "Коробочка", and action buttons off-screen. Matching the `50vh` cap from edit mode ensures consistent behavior in both modes (FR14).
+
+**Alternative**: Make the entire edit panel scrollable — rejected because it would scroll the title and other fields too, which should remain visible.
+
 ## Risks / Trade-offs
 
 - **[Risk] Prose styles may conflict with current card styles** -> Mitigation: prose-sm is minimal; can be customized via prose overrides if needed

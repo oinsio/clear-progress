@@ -1,6 +1,7 @@
 import type { AnchorHTMLAttributes } from "react";
 import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 
 import { cn } from "@/shared/lib/cn";
@@ -25,7 +26,7 @@ export function DescriptionMarkdown({
     <div className={cn("prose prose-sm", className)}>
       {text && (
         <Markdown
-          remarkPlugins={[remarkGfm]}
+          remarkPlugins={[remarkGfm, remarkBreaks]}
           rehypePlugins={[rehypeSanitize]}
           components={{ a: MarkdownLink }}
         >
