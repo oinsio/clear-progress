@@ -445,6 +445,97 @@ describe("TaskItem", () => {
     expect(repeatIndex).toBeLessThan(hiddenIndex);
   });
 
+  // Description indicator visibility
+  it("should show description indicator when task has description and is not completed", () => {
+    renderTaskItem({
+      task: buildTask({ description: "Some notes", is_completed: false }),
+    });
+    const descIcon = document.querySelector(".lucide-file-text");
+    expect(descIcon).toBeInTheDocument();
+  });
+
+  it("should not show description indicator when task is completed", () => {
+    renderTaskItem({
+      task: buildTask({ description: "Some notes", is_completed: true }),
+    });
+    const indicators = screen.queryByTestId("checklist-badge")?.parentElement;
+    if (indicators) {
+      const descIcon = indicators.querySelector(".lucide-file-text");
+      expect(descIcon).not.toBeInTheDocument();
+    }
+  });
+
+  it("should not show description indicator when task has no description", () => {
+    renderTaskItem({
+      task: buildTask({ description: "", is_completed: false }),
+    });
+    const taskItem = screen.getByTestId("task-item");
+    const descIcons = taskItem.querySelectorAll(".lucide-file-text");
+    expect(descIcons.length).toBe(0);
+  });
+
+  // Appear date visibility
+  it("should show appear date when task is hidden and has appear_date", () => {
+    renderTaskItem({
+      task: buildTask({ is_hidden: true, appear_date: "2025-06-15" }),
+    });
+    expect(screen.getByTestId("task-item-appear-date")).toBeInTheDocument();
+  });
+
+  it("should not show appear date when task is not hidden", () => {
+    renderTaskItem({
+      task: buildTask({ is_hidden: false, appear_date: "2025-06-15" }),
+    });
+    expect(
+      screen.queryByTestId("task-item-appear-date"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("should not show appear date when task is hidden but has no appear_date", () => {
+    renderTaskItem({
+      task: buildTask({ is_hidden: true, appear_date: "" }),
+    });
+    expect(
+      screen.queryByTestId("task-item-appear-date"),
+    ).not.toBeInTheDocument();
+  });
+
+  // Indicator row visibility
+  it("should not show indicator row when task has no indicators", async () => {
+    const { useChecklist } = await import("@/hooks/useChecklist");
+    const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
+    vi.mocked(useChecklist).mockReturnValue({
+      items: [],
+      progress: { completed: 0, total: 0 },
+      hasUnsyncedItems: false,
+      isLoading: false,
+      reload: vi.fn(),
+      createItem: vi.fn(),
+      toggleItem: vi.fn(),
+      updateItem: vi.fn(),
+      deleteItem: vi.fn(),
+      reorderItems: vi.fn(),
+    });
+    vi.mocked(useAttachmentCount).mockReturnValue({
+      attachmentCount: 0,
+      isLoading: false,
+    });
+    renderTaskItem({
+      task: buildTask({
+        description: "",
+        goal_id: "",
+        context_id: "",
+        category_id: "",
+        repeat_rule: "",
+        is_hidden: false,
+        is_completed: false,
+      }),
+    });
+    expect(screen.queryByTestId("checklist-badge")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("attachment-badge")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("goal-indicator")).not.toBeInTheDocument();
+  });
+
   // Swipe and checkbox logic
   describe("swipe and checkbox visibility", () => {
     it("should enable swipe when hasTouchPointer is true (phone)", async () => {

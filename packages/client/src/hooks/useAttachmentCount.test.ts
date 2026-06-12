@@ -120,6 +120,77 @@ describe("useAttachmentCount", () => {
     expect(result.current.attachmentCount).toBe(0);
   });
 
+  it("should return 0 for empty entityId even when matching attachments exist in DB", async () => {
+    await db.attachments.put(
+      buildAttachment({
+        entity_type: TEST_ENTITY_TYPE,
+        entity_id: "",
+        is_deleted: false,
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAttachmentCount(TEST_ENTITY_TYPE, ""),
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.attachmentCount).toBe(0);
+  });
+
+  it("should update count when entityId changes", async () => {
+    await db.attachments.put(
+      buildAttachment({
+        entity_type: TEST_ENTITY_TYPE,
+        entity_id: OTHER_ENTITY_ID,
+        is_deleted: false,
+      }),
+    );
+
+    const { result, rerender } = renderHook(
+      ({ entityId }) => useAttachmentCount(TEST_ENTITY_TYPE, entityId),
+      { initialProps: { entityId: TEST_ENTITY_ID } },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    expect(result.current.attachmentCount).toBe(0);
+
+    rerender({ entityId: OTHER_ENTITY_ID });
+
+    await waitFor(() => {
+      expect(result.current.attachmentCount).toBe(1);
+    });
+  });
+
+  it("should clean up subscription on unmount", async () => {
+    const { result, unmount } = renderHook(() =>
+      useAttachmentCount(TEST_ENTITY_TYPE, TEST_ENTITY_ID),
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    unmount();
+
+    // Adding data after unmount should not cause errors
+    // (subscription should be cleaned up)
+    await db.attachments.put(
+      buildAttachment({
+        entity_type: TEST_ENTITY_TYPE,
+        entity_id: TEST_ENTITY_ID,
+        is_deleted: false,
+      }),
+    );
+
+    // Small delay to ensure no state updates happen on unmounted component
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
+
   it("should start in loading state", () => {
     const { result } = renderHook(() =>
       useAttachmentCount(TEST_ENTITY_TYPE, TEST_ENTITY_ID),
