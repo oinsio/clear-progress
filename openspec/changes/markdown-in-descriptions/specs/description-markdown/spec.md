@@ -174,6 +174,20 @@ The `GoalCardViewMode` component SHALL use `DescriptionMarkdown` instead of `Lin
 - **WHEN** GoalCardViewMode is rendered with a goal that has markdown in description
 - **THEN** the description is rendered with markdown formatting
 
+### Requirement: IdeaItem uses markdown for description
+
+The `IdeaItem` component SHALL use `DescriptionMarkdown` instead of plain text for rendering idea description. Implements FR1 of markdown-in-descriptions.
+
+#### Scenario: Idea card shows formatted description
+
+- **WHEN** IdeaItem is rendered with an idea that has markdown in description
+- **THEN** the description is rendered with markdown formatting via DescriptionMarkdown
+
+#### Scenario: Idea card hides description when empty
+
+- **WHEN** IdeaItem is rendered with an idea that has empty description
+- **THEN** no DescriptionMarkdown is rendered
+
 ### Requirement: LinkChip shared component
 
 The `LinkChip` component SHALL render a styled link with emoji icon, display text, stopPropagation, and target="_blank". Implements FR9, FR4, FR5 of markdown-in-descriptions.

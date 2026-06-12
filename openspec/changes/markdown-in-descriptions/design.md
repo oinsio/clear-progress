@@ -9,6 +9,7 @@ The project already has `react-markdown` (^10.1.0) and `remark-gfm` (^4.0.1) ins
 Entry points:
 - `EditableDescription` — used in `TaskDetailsTab`, `GoalEditDetailsTab`, `IdeaDetailPanel`
 - `GoalCardViewMode` — directly uses `LinkedText` for goal description
+- `IdeaItem` — directly renders idea description as plain text
 
 ## Goals / Non-Goals
 

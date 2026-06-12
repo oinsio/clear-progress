@@ -9,6 +9,19 @@ vi.mock("react-i18next", () => ({
 }));
 vi.mock("@/hooks/useIsUnsynced");
 vi.mock("@/hooks/usePanelSide");
+vi.mock("@/components/ui/DescriptionMarkdown", () => ({
+  DescriptionMarkdown: ({
+    text,
+    className,
+  }: {
+    text: string;
+    className?: string;
+  }) => (
+    <div data-testid="description-markdown" data-classname={className}>
+      {text}
+    </div>
+  ),
+}));
 vi.mock("@/hooks/useAttachmentCount", () => ({
   useAttachmentCount: vi.fn().mockReturnValue({
     attachmentCount: 0,
@@ -62,14 +75,23 @@ describe("IdeaItem", () => {
     expect(ideaItem).toHaveClass("border-l-amber-400");
   });
 
-  // implements FR3 of fix-newline-display
-  it("should have whitespace-pre-line class on description to preserve newlines", () => {
-    const idea = createIdea({ description: "Line 1\nLine 2" });
+  // implements FR1 of markdown-in-descriptions
+  it("should render description via DescriptionMarkdown", () => {
+    const idea = createIdea({ description: "**bold text**" });
     render(<IdeaItem idea={idea} />);
 
-    const description = screen.getByText("Line 1\nLine 2", {
-      normalizer: (text) => text,
-    });
-    expect(description).toHaveClass("whitespace-pre-line");
+    const markdownElement = screen.getByTestId("description-markdown");
+    expect(markdownElement).toBeInTheDocument();
+    expect(markdownElement).toHaveTextContent("**bold text**");
+  });
+
+  // implements FR1 of markdown-in-descriptions
+  it("should not render DescriptionMarkdown when description is empty", () => {
+    const idea = createIdea({ description: "" });
+    render(<IdeaItem idea={idea} />);
+
+    expect(
+      screen.queryByTestId("description-markdown"),
+    ).not.toBeInTheDocument();
   });
 });

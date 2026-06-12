@@ -24,6 +24,11 @@
 - [x] 4.1 Replace `LinkedText` with `DescriptionMarkdown` in `GoalCardViewMode` description (FR1)
 - [x] 4.2 Update `GoalCardViewMode` tests for markdown rendering (FR1)
 
+## 4b. Integration into IdeaItem
+
+- [x] 4b.1 Replace plain text description with `DescriptionMarkdown` in `IdeaItem` (FR1)
+- [x] 4b.2 Update `IdeaItem` tests for markdown rendering (FR1)
+
 ## 5. LinkChip Component (TDD)
 
 - [x] 5.1 Create `LinkChip` component — link emoji, text, blue background, truncation, stopPropagation, target="_blank" (FR9, FR4, FR5)

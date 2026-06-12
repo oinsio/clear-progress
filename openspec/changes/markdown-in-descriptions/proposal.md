@@ -12,6 +12,7 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 - **ADDED**: Links in markdown render in linkify style: autolinks show `shortenUrl`, markdown links show custom text, both with link emoji
 - **MODIFIED**: `EditableDescription` — view mode switches from `LinkedText` to markdown renderer
 - **MODIFIED**: `GoalCardViewMode` — goal description renders via markdown instead of `LinkedText`
+- **MODIFIED**: `IdeaItem` — idea description renders via markdown instead of plain text
 - **REMOVED**: `LinkedText` component and its tests — no longer used after migration to `DescriptionMarkdown`
 - **MODIFIED**: Linkify spec — `LinkedText` removed, `LinkChip` added as shared link display component
 

@@ -4,6 +4,7 @@
 import { Pencil } from "lucide-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
+import { DescriptionMarkdown } from "@/components/ui/DescriptionMarkdown";
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
@@ -68,9 +69,10 @@ export function IdeaItem({
             {idea.name}
           </p>
           {idea.description && (
-            <p className="text-xs text-gray-500 mt-1 leading-snug break-words whitespace-pre-line">
-              {idea.description}
-            </p>
+            <DescriptionMarkdown
+              text={idea.description}
+              className="text-xs text-gray-500 mt-1 leading-snug"
+            />
           )}
         </div>
       </div>
