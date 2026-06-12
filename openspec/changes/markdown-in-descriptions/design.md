@@ -83,6 +83,14 @@ Entry points:
 
 **Alternative**: Use CSS `field-sizing: content` — rejected because browser support is insufficient (no Firefox/Safari as of 2025).
 
+### D9: Scroll in description textarea with max-height cap
+
+**Decision**: Replace `overflow-hidden` with `overflow-y-auto` and add `max-h-[50vh]` on description textarea. Trigger auto-resize explicitly when textarea first appears (in the `isEditing` effect), not only on `value` change.
+
+**Rationale**: With `useAutoResizeTextarea`, the textarea grows infinitely to fit content. For long descriptions this pushes "Коробочка", "Повтор", and other controls off-screen. Capping at 50vh keeps the textarea large enough for comfortable editing while preserving access to other panel elements. The `useAutoResizeTextarea` effect depends on `[value]`, but when switching from view to edit mode `value` doesn't change — so the effect doesn't fire and `style.height` stays empty. Adding resize logic to the `isEditing` focus effect fixes the initial render (FR11, FR12).
+
+**Alternative**: Remove auto-resize entirely and use a fixed-height textarea with scroll — rejected because short descriptions would waste space with an oversized field.
+
 ## Risks / Trade-offs
 
 - **[Risk] Prose styles may conflict with current card styles** -> Mitigation: prose-sm is minimal; can be customized via prose overrides if needed

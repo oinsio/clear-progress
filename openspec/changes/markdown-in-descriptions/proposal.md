@@ -64,6 +64,7 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 - **FR9**: All links in markdown (autolinks and markdown links) render in linkify style — link emoji + display text, background highlight, truncation
 - **FR10**: `LinkedText` component and its tests are removed from codebase
 - **FR11**: Textarea fields (name, description) auto-resize vertically as content grows — `useAutoResizeTextarea` recalculates height on every value change, not only on mount
+- **FR12**: Description textarea in edit mode has a maximum height (`50vh`) with vertical scroll — prevents the textarea from pushing other UI elements off-screen when content is long
 
 ### Non-Functional
 
@@ -90,16 +91,16 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 
 ## UI States Matrix
 
-| State               | Data                          | UI                                        |
-|---------------------|-------------------------------|-------------------------------------------|
-| Empty description   | `""`                          | Placeholder text, clickable area          |
-| Plain text (legacy) | `"Simple text"`               | Text as paragraph, no artifacts           |
-| Markdown formatted  | `"# Title\n- item"`           | Rendered markdown with heading and list   |
-| With URLs           | `"See https://example.com"`   | Linkify-style link: emoji + `example.com` |
-| With markdown links | `"[text](url)"`               | Linkify-style link: emoji + "text"        |
-| With XSS attempt    | `"<script>alert(1)</script>"` | Sanitized text, script does not execute   |
-| Editing             | any                           | Textarea with raw markdown text           |
-| Editing long text   | multiline markdown            | Textarea auto-resizes to fit all content  |
+| State               | Data                          | UI                                                |
+|---------------------|-------------------------------|---------------------------------------------------|
+| Empty description   | `""`                          | Placeholder text, clickable area                  |
+| Plain text (legacy) | `"Simple text"`               | Text as paragraph, no artifacts                   |
+| Markdown formatted  | `"# Title\n- item"`           | Rendered markdown with heading and list           |
+| With URLs           | `"See https://example.com"`   | Linkify-style link: emoji + `example.com`         |
+| With markdown links | `"[text](url)"`               | Linkify-style link: emoji + "text"                |
+| With XSS attempt    | `"<script>alert(1)</script>"` | Sanitized text, script does not execute           |
+| Editing             | any                           | Textarea with raw markdown text                   |
+| Editing long text   | multiline markdown            | Textarea grows up to `max-h-[50vh]`, then scrolls |
 
 ## Behavior
 

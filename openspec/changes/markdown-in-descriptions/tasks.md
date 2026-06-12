@@ -61,3 +61,11 @@
 - [x] 9.3 Verify no regressions in `EditableDescription` tests (FR6, FR11)
 - [x] 9.4 Run `pnpm run build` — verify no build errors
 - [ ] 9.5 Mutation testing on `useAutoResizeTextarea` — target >=95% (M2)
+
+## 10. Scroll in description textarea (FR12)
+
+- [x] 10.1 Replace `overflow-hidden` with `overflow-y-auto` and add `max-h-[50vh]` on description textarea in `EditableDescription` (FR12)
+- [x] 10.2 Fix initial auto-resize when switching to edit mode — add resize in `isEditing` focus effect (FR11, FR12)
+- [x] 10.3 Verify via Playwright: textarea scrolls when content exceeds max-height, other panel elements remain accessible
+- [x] 10.4 Existing `EditableDescription` and `useAutoResizeTextarea` tests pass (12 + 5 tests)
+- [x] 10.5 `pnpm run build` succeeds
