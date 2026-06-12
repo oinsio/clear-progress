@@ -1,6 +1,6 @@
 # Linkify
 
-URL detection, parsing, shortening, and rendering as clickable links. The `extractLinks` function detects http/https URLs in text and returns typed segments. The `shortenUrl` function produces a human-readable abbreviated display. The `LinkedText` component renders text with detected URLs as anchor elements.
+URL detection, parsing, and shortening. The `extractLinks` function detects http/https URLs in text and returns typed segments. The `shortenUrl` function produces a human-readable abbreviated display.
 
 ## Requirements
 
@@ -182,80 +182,6 @@ shortenUrl SHALL fallback to removing the protocol prefix when URL parsing fails
 - **WHEN** shortenUrl is called with "not-a-valid-url"
 - **THEN** the result is "not-a-valid-url"
 
-### Requirement: Plain text rendering
+---
 
-LinkedText SHALL render plain text without links when no URLs are present in the input. Implements FR16 of linkify-spec.
-
-#### Scenario: Text without URLs renders as plain text
-
-- **WHEN** LinkedText is rendered with text "Just plain text"
-- **THEN** the text "Just plain text" is visible and no link elements are present
-
-### Requirement: URL anchor rendering
-
-LinkedText SHALL render detected URLs as anchor elements that open in a new tab with security attributes. Implements FR17 of linkify-spec.
-
-#### Scenario: URL renders as anchor with correct attributes
-
-- **WHEN** LinkedText is rendered with text containing a URL
-- **THEN** the URL is rendered as a link with target="_blank" and rel="noopener noreferrer"
-
-### Requirement: Shortened URL display
-
-LinkedText SHALL display the shortened form of detected URLs using shortenUrl. Implements FR18 of linkify-spec.
-
-#### Scenario: Long URL is displayed shortened
-
-- **WHEN** LinkedText is rendered with text containing "https://www.example.com/very/long/path"
-- **THEN** the link text content includes "example.com/very/…/path"
-
-### Requirement: Full URL tooltip
-
-LinkedText SHALL show the full original URL in the title attribute of the anchor element. Implements FR19 of linkify-spec.
-
-#### Scenario: Full URL in title attribute
-
-- **WHEN** LinkedText is rendered with text containing "https://example.com/path"
-- **THEN** the link has title attribute "https://example.com/path"
-
-### Requirement: Click propagation prevention
-
-LinkedText SHALL stop click event propagation when a link is clicked, preventing parent handlers from firing. Implements FR20 of linkify-spec.
-
-#### Scenario: Link click does not propagate to parent
-
-- **WHEN** a link inside LinkedText is clicked
-- **THEN** the parent onClick handler is not called
-
-### Requirement: Empty text rendering
-
-LinkedText SHALL render an empty span when given empty text input. Implements FR21 of linkify-spec.
-
-#### Scenario: Empty text renders empty span
-
-- **WHEN** LinkedText is rendered with empty text
-- **THEN** the rendered element is an empty DOM element
-
-### Requirement: Custom className support
-
-LinkedText SHALL apply a custom className to the root span element when provided. Implements FR22 of linkify-spec.
-
-#### Scenario: Custom className is applied
-
-- **WHEN** LinkedText is rendered with className "custom-class"
-- **THEN** the root element has the class "custom-class"
-
-### Requirement: Newline preservation in LinkedText
-
-LinkedText SHALL preserve newline characters (`\n`) in rendered text by applying `white-space: pre-line` CSS property to its root element. This ensures user-entered line breaks are visible in view mode. Implements FR1, FR2, FR3 of fix-newline-display.
-
-#### Scenario: Text with newlines displays line breaks
-
-- **WHEN** LinkedText is rendered with text "Line one\nLine two"
-- **THEN** the root element has CSS class `whitespace-pre-line`
-
-#### Scenario: Newlines preserved alongside URL detection
-
-- **WHEN** LinkedText is rendered with text "Before\nhttps://example.com\nAfter"
-- **THEN** the root element has CSS class `whitespace-pre-line`
-- **THEN** the URL is still rendered as a clickable link
+**Note:** The `LinkedText` component (FR16–FR22) and its newline preservation behavior have been removed. URL rendering in descriptions is now handled by `DescriptionMarkdown` with `LinkChip`. See `description-markdown/spec.md` for details.

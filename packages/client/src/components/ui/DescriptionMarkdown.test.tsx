@@ -94,6 +94,7 @@ describe("DescriptionMarkdown", () => {
     render(<DescriptionMarkdown text="Visit https://example.com for info" />);
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "https://example.com");
+    expect(link).toHaveTextContent("example.com");
   });
 
   // FR3: autolink — http
@@ -101,6 +102,31 @@ describe("DescriptionMarkdown", () => {
     render(<DescriptionMarkdown text="See http://example.com" />);
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", "http://example.com");
+  });
+
+  // FR9: autolink displays shortened URL via LinkChip
+  it("should display shortened URL for autolinked URL with path", () => {
+    render(
+      <DescriptionMarkdown text="Visit https://example.com/path for info" />,
+    );
+    const link = screen.getByRole("link");
+    expect(link).toHaveTextContent("example.com/path");
+  });
+
+  // FR9: markdown link displays custom text via LinkChip
+  it("should display custom text for markdown link", () => {
+    render(<DescriptionMarkdown text="[My Link](https://example.com)" />);
+    const link = screen.getByRole("link");
+    expect(link).toHaveTextContent("My Link");
+  });
+
+  // FR9: autolink with long path shows abbreviated URL
+  it("should display abbreviated URL for autolink with long path", () => {
+    render(
+      <DescriptionMarkdown text="Visit https://example.com/very/long/path" />,
+    );
+    const link = screen.getByRole("link");
+    expect(link).toHaveTextContent("example.com/very/…/path");
   });
 
   // FR4: link click stopPropagation
@@ -176,5 +202,16 @@ describe("DescriptionMarkdown", () => {
     const link = screen.getByRole("link");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  // FR2: XSS sanitization — javascript protocol
+  it("should sanitize javascript protocol in markdown links", () => {
+    const { container } = render(
+      <DescriptionMarkdown text="[click](javascript:alert(1))" />,
+    );
+    const link = container.querySelector("a");
+    if (link) {
+      expect(link.getAttribute("href")).not.toContain("javascript:");
+    }
   });
 });
