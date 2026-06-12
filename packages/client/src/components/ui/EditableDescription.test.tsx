@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { EditableDescription } from "./EditableDescription";
 
 describe("EditableDescription", () => {
-  it("should display LinkedText in view mode when value is not empty", () => {
+  it("should render markdown in view mode when value is not empty", () => {
     render(
       <EditableDescription
         value="Check https://example.com"

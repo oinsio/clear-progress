@@ -18,7 +18,7 @@ import defaultCoverSvg from "@/assets/default-goal-cover.svg";
 import { CoverLightbox } from "@/components/goals/CoverLightbox";
 import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
 import { AttachmentList } from "@/components/shared/AttachmentList";
-import { LinkedText } from "@/components/ui/LinkedText";
+import { DescriptionMarkdown } from "@/components/ui/DescriptionMarkdown";
 import { useAttachments } from "@/hooks/useAttachments";
 import { cn } from "@/shared/lib/cn";
 import type { Goal } from "@/types/entities";
@@ -187,9 +187,9 @@ export function GoalCardViewMode({
                   !isDetailsExpanded && "line-clamp-2",
                 )}
               >
-                <LinkedText
+                <DescriptionMarkdown
                   text={goal.description}
-                  className="text-xs text-gray-500 leading-snug whitespace-pre-wrap"
+                  className="text-xs text-gray-500 leading-snug"
                 />
               </div>
             )}

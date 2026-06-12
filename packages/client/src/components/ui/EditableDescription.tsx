@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
-import { LinkedText } from "./LinkedText";
+import { DescriptionMarkdown } from "./DescriptionMarkdown";
 
 interface EditableDescriptionProps {
   value: string;
@@ -63,7 +63,7 @@ export function EditableDescription({
       data-testid={dataTestId}
     >
       {value ? (
-        <LinkedText text={value} />
+        <DescriptionMarkdown text={value} />
       ) : (
         <span className="text-gray-400">{placeholder}</span>
       )}
