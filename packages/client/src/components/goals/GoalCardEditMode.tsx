@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { GoalAttachmentsTab } from "@/components/goals/GoalAttachmentsTab";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
 import { TAB_ICONS } from "@/components/tasks/taskEditShared";
+import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { cn } from "@/shared/lib/cn";
 import type { GoalStatus } from "@/types/common";
@@ -65,6 +66,8 @@ export function GoalCardEditMode({
   onDeleteCancel,
 }: GoalCardEditModeProps) {
   const { t } = useTranslation();
+  const ENTITY_TYPE_GOAL = "goal" as const;
+  const { attachmentCount } = useAttachmentCount(ENTITY_TYPE_GOAL, goalId);
   const editNameTextareaRef = useAutoResizeTextarea(editName);
   const [activeTab, setActiveTab] = useState<GoalEditTab>(
     GOAL_EDIT_TAB.DETAILS,
@@ -96,35 +99,46 @@ export function GoalCardEditMode({
         </div>
       </div>
 
-      {/* Tab switcher */}
+      {/* Tab switcher — Implements FR5 of task-detail-page-ui-improvements */}
       <div className="flex gap-2">
         <button
           type="button"
           data-testid="goal-tab-details"
           onClick={() => setActiveTab(GOAL_EDIT_TAB.DETAILS)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
+            "py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === GOAL_EDIT_TAB.DETAILS
-              ? "bg-accent text-white border-accent"
-              : "text-accent border-accent/40 hover:bg-accent/5",
+              ? "flex-1 bg-accent text-white border-accent"
+              : "flex-shrink-0 px-3 text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
           <TAB_ICONS.details className="w-4 h-4" aria-hidden="true" />
-          {t("goal.tabs.details")}
+          {activeTab === GOAL_EDIT_TAB.DETAILS && t("goal.tabs.details")}
         </button>
         <button
           type="button"
           data-testid="goal-tab-attachments"
           onClick={() => setActiveTab(GOAL_EDIT_TAB.ATTACHMENTS)}
           className={cn(
-            "flex-1 py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
+            "py-1.5 text-sm rounded-full border transition-colors flex items-center justify-center gap-1.5",
             activeTab === GOAL_EDIT_TAB.ATTACHMENTS
-              ? "bg-accent text-white border-accent"
-              : "text-accent border-accent/40 hover:bg-accent/5",
+              ? "flex-1 bg-accent text-white border-accent"
+              : "flex-shrink-0 px-3 text-accent border-accent/40 hover:bg-accent/5",
           )}
         >
           <TAB_ICONS.attachments className="w-4 h-4" aria-hidden="true" />
-          {t("goal.tabs.attachments")}
+          {activeTab === GOAL_EDIT_TAB.ATTACHMENTS &&
+            t("goal.tabs.attachments")}
+          {attachmentCount > 0 && (
+            <span
+              className="text-xs"
+              aria-label={t("taskEdit.attachmentsBadgeAriaLabel", {
+                count: attachmentCount,
+              })}
+            >
+              {attachmentCount}
+            </span>
+          )}
         </button>
       </div>
 
