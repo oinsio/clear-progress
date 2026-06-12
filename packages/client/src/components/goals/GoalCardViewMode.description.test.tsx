@@ -24,12 +24,6 @@ vi.mock("@/components/goals/GoalStatusBadge", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/LinkedText", () => ({
-  LinkedText: ({ text, className }: { text: string; className?: string }) => (
-    <span className={className}>{text}</span>
-  ),
-}));
-
 vi.mock("@/components/goals/CoverLightbox", () => ({
   CoverLightbox: ({
     onClose,

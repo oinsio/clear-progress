@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
-import { LinkedText } from "./LinkedText";
+import { DescriptionMarkdown } from "./DescriptionMarkdown";
 
 interface EditableDescriptionProps {
   value: string;
@@ -26,6 +26,8 @@ export function EditableDescription({
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [isEditing, textareaRef]);
 
@@ -50,7 +52,7 @@ export function EditableDescription({
         onChange={handleChange}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className={`w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-hidden min-h-[80px] ${className}`}
+        className={`w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-accent overflow-y-auto min-h-[80px] max-h-[50vh] ${className}`}
         data-testid={dataTestId}
       />
     );
@@ -59,11 +61,11 @@ export function EditableDescription({
   return (
     <div
       onClick={handleClick}
-      className={`w-full text-sm text-gray-700 border border-transparent rounded-lg px-3 py-2 cursor-text hover:border-gray-200 hover:bg-gray-50/50 min-h-[80px] ${className}`}
+      className={`w-full text-sm text-gray-700 border border-transparent rounded-lg px-3 py-2 cursor-text hover:border-gray-200 hover:bg-gray-50/50 min-h-[80px] max-h-[50vh] overflow-y-auto ${className}`}
       data-testid={dataTestId}
     >
       {value ? (
-        <LinkedText text={value} />
+        <DescriptionMarkdown text={value} />
       ) : (
         <span className="text-gray-400">{placeholder}</span>
       )}
