@@ -83,9 +83,13 @@ export function TaskItem({
   const { progress: checklistProgress, hasUnsyncedItems } = useChecklist(
     task.id,
   );
-  const { attachmentCount } = useAttachmentCount(ENTITY_TYPE_TASK, task.id);
+  const { attachmentCount, hasUnsyncedAttachments } = useAttachmentCount(
+    ENTITY_TYPE_TASK,
+    task.id,
+  );
   const isTaskUnsynced = useIsUnsynced(task);
-  const isUnsynced = isTaskUnsynced || hasUnsyncedItems;
+  const isUnsynced =
+    isTaskUnsynced || hasUnsyncedItems || hasUnsyncedAttachments;
   const isDesktop = useIsDesktop();
   const showCheckbox = useShowCheckbox();
   const hasTouchPointer = useHasTouchPointer();

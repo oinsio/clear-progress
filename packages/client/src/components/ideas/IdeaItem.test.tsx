@@ -9,12 +9,21 @@ vi.mock("react-i18next", () => ({
 }));
 vi.mock("@/hooks/useIsUnsynced");
 vi.mock("@/hooks/usePanelSide");
+vi.mock("@/hooks/useAttachmentCount", () => ({
+  useAttachmentCount: vi.fn().mockReturnValue({
+    attachmentCount: 0,
+    hasUnsyncedAttachments: false,
+    isLoading: false,
+  }),
+}));
 
+import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 
 const mockUseIsUnsynced = vi.mocked(useIsUnsynced);
 const mockUsePanelSide = vi.mocked(usePanelSide);
+const mockUseAttachmentCount = vi.mocked(useAttachmentCount);
 
 const createIdea = (overrides = {}) => ({
   id: "test-id",
@@ -37,6 +46,20 @@ describe("IdeaItem", () => {
       panelSide: "right",
       setPanelSide: vi.fn(),
     });
+  });
+
+  // implements FR3 of fix-nonsync-indication-for-attachments
+  it("should show amber stripe when hasUnsyncedAttachments is true", () => {
+    mockUseAttachmentCount.mockReturnValue({
+      attachmentCount: 1,
+      hasUnsyncedAttachments: true,
+      isLoading: false,
+    });
+    const idea = createIdea();
+    render(<IdeaItem idea={idea} />);
+
+    const ideaItem = screen.getByTestId("idea-item");
+    expect(ideaItem).toHaveClass("border-l-amber-400");
   });
 
   // implements FR3 of fix-newline-display

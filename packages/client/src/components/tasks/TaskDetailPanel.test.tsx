@@ -39,6 +39,7 @@ vi.mock("@/hooks/useChecklist", () => ({
 vi.mock("@/hooks/useAttachmentCount", () => ({
   useAttachmentCount: () => ({
     attachmentCount: mockAttachmentCount,
+    hasUnsyncedAttachments: false,
     isLoading: false,
   }),
 }));
