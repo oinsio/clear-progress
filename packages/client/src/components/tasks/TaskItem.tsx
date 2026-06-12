@@ -313,15 +313,15 @@ export function TaskItem({
               task.is_hidden) && (
               <span className="flex items-center gap-2 mt-0.5">
                 {task.description && !task.is_completed && (
-                  <FileText className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                  <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 )}
                 {checklistProgress.total > 0 && (
                   <span
                     data-testid="checklist-badge"
                     className="flex items-center gap-0.5 text-gray-400"
                   >
-                    <ListChecks className="w-2.5 h-2.5" />
-                    <span className="text-[0.625rem]">
+                    <ListChecks className="w-3.5 h-3.5" />
+                    <span className="text-xs">
                       {checklistProgress.completed}/{checklistProgress.total}
                     </span>
                   </span>
@@ -331,41 +331,41 @@ export function TaskItem({
                     data-testid="attachment-badge"
                     className="flex items-center gap-0.5 text-gray-400"
                   >
-                    <Paperclip className="w-2.5 h-2.5" aria-hidden="true" />
-                    <span className="text-[0.625rem]">{attachmentCount}</span>
+                    <Paperclip className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span className="text-xs">{attachmentCount}</span>
                   </span>
                 )}
                 {task.goal_id && (
                   <Target
                     data-testid="goal-indicator"
-                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
+                    className="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
                     aria-hidden="true"
                   />
                 )}
                 {task.context_id && (
                   <MapPin
                     data-testid="context-indicator"
-                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
+                    className="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
                     aria-hidden="true"
                   />
                 )}
                 {task.category_id && (
                   <Tag
                     data-testid="category-indicator"
-                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
+                    className="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
                     aria-hidden="true"
                   />
                 )}
                 {task.repeat_rule && (
                   <Repeat
                     data-testid="repeat-rule-indicator"
-                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
+                    className="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
                   />
                 )}
                 {task.is_hidden && (
                   <EyeOff
                     data-testid="hidden-task-indicator"
-                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0"
+                    className="w-3.5 h-3.5 text-gray-400 flex-shrink-0"
                   />
                 )}
               </span>

@@ -18,7 +18,7 @@ Goal Details tab button SHALL display the `AlignLeft` icon. When the tab is **ac
 
 ### Requirement: Goal Attachments tab icon
 
-Goal Attachments tab button SHALL display the `Paperclip` icon. When the tab is **active**, the icon SHALL be followed by the translated "Attachments" label text and count if > 0. When the tab is **inactive**, only the icon and count badge (if > 0) SHALL be shown. Implements FR4, FR5 of task-detail-page-ui-improvements.
+Goal Attachments tab button SHALL display the `Paperclip` icon. When the tab is **active**, the icon SHALL be followed by the translated "Attachments" label text and count badge (if > 0). When the tab is **inactive**, only the icon and count badge (if > 0) SHALL be shown. Implements FR4, FR5 of task-detail-page-ui-improvements.
 
 #### Scenario: Active attachments tab shows icon and label
 

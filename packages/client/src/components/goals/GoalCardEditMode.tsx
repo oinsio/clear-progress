@@ -129,7 +129,7 @@ export function GoalCardEditMode({
           <TAB_ICONS.attachments className="w-4 h-4" aria-hidden="true" />
           {activeTab === GOAL_EDIT_TAB.ATTACHMENTS &&
             t("goal.tabs.attachments")}
-          {activeTab !== GOAL_EDIT_TAB.ATTACHMENTS && attachmentCount > 0 && (
+          {attachmentCount > 0 && (
             <span
               className="text-xs"
               aria-label={t("taskEdit.attachmentsBadgeAriaLabel", {

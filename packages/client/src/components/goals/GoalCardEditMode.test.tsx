@@ -122,7 +122,7 @@ describe("GoalCardEditMode compact tabs", () => {
     expect(attachmentsTab).not.toHaveTextContent("goal.tabs.attachments");
   });
 
-  // FR4: Inactive attachments tab shows count badge when count > 0
+  // FR4: Attachments tab shows count badge when count > 0 (both active and inactive)
   it("should show count badge on inactive attachments tab when count > 0", () => {
     mockAttachmentCount = 3;
     render(<GoalCardEditMode {...DEFAULT_PROPS} />);
@@ -130,7 +130,7 @@ describe("GoalCardEditMode compact tabs", () => {
     expect(attachmentsTab).toHaveTextContent("3");
   });
 
-  // FR4: Inactive attachments tab hides badge when count = 0
+  // FR4: Attachments tab hides badge when count = 0
   it("should not show badge on inactive attachments tab when count is 0", () => {
     mockAttachmentCount = 0;
     render(<GoalCardEditMode {...DEFAULT_PROPS} />);
@@ -165,14 +165,15 @@ describe("GoalCardEditMode compact tabs", () => {
     );
   });
 
-  // FR4: Active attachments tab shows label, not badge
-  it("should show label instead of badge on active attachments tab", () => {
+  // FR4: Active attachments tab shows both label and count badge
+  it("should show label and count badge on active attachments tab", () => {
     mockAttachmentCount = 5;
     render(<GoalCardEditMode {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByTestId("goal-tab-attachments"));
     const attachmentsTab = screen.getByTestId("goal-tab-attachments");
     expect(attachmentsTab).toHaveTextContent("goal.tabs.attachments");
+    expect(attachmentsTab).toHaveTextContent("5");
     const badge = attachmentsTab.querySelector("[aria-label]");
-    expect(badge).toBeNull();
+    expect(badge).not.toBeNull();
   });
 });

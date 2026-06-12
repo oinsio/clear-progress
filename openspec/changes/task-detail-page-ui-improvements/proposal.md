@@ -50,7 +50,7 @@ On narrow screens, the task detail panel wastes horizontal space: all three tabs
 - FR1: Active tab renders with icon + translated label text, gets `flex-1` width
 - FR2: Inactive tab renders with icon only (no label text), gets auto width with padding
 - FR3: Inactive checklist tab shows progress badge (e.g. "0/9") when total > 0
-- FR4: Inactive attachments tab shows count badge (e.g. "2") when count > 0
+- FR4: Attachments tab shows count badge (e.g. "2") when count > 0, in both active and inactive states
 - FR5: Goal edit mode tabs follow the same compact pattern for consistency
 - FR6: Task card shows attachment count indicator (Paperclip icon + count) when attachments exist
 - FR7: Task card shows Target icon when task has a goal assigned
@@ -82,7 +82,7 @@ On narrow screens, the task detail panel wastes horizontal space: all three tabs
 - UX1: Tab transition between active/inactive states is smooth (existing `transition-colors` class)
 - UX2: Inactive tab badges use same text size and color as active state count
 - UX3: Goal/context/category indicators on task card use `text-gray-400` (matching existing indicator style)
-- UX4: Attachment count on task card uses same style as checklist count (`text-[0.625rem]`)
+- UX4: Attachment count on task card uses same style as checklist count (`text-xs`)
 - UX5: Amber stripe on attachment items is visually identical to entity amber stripes
 
 ## Behavior

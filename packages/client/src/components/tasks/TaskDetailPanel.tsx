@@ -266,7 +266,7 @@ export function TaskDetailPanel({
         >
           <AttachmentsTabIcon className="w-4 h-4" aria-hidden="true" />
           {activeTab === ACTIVE_TAB.ATTACHMENTS && t("task.tabs.attachments")}
-          {activeTab !== ACTIVE_TAB.ATTACHMENTS && attachmentCount > 0 && (
+          {attachmentCount > 0 && (
             <span
               className="text-xs"
               aria-label={t("taskEdit.attachmentsBadgeAriaLabel", {

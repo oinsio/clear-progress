@@ -73,7 +73,7 @@ Task card indicators SHALL follow this order: description, checklist (with count
 
 ### Requirement: Indicator styling matches existing pattern
 
-All new indicators SHALL use `text-gray-400` color and icon sizes matching existing indicators (`w-2.5 h-2.5` for icons, `text-[0.625rem]` for count text). New icons SHALL have `aria-hidden="true"`. Implements UX3, UX4, NFR-A2 of task-detail-page-ui-improvements.
+All new indicators SHALL use `text-gray-400` color and enlarged icon sizes (`w-3.5 h-3.5` for icons, `text-xs` for count text) for improved visibility. New icons SHALL have `aria-hidden="true"`. Implements UX3, UX4, NFR-A2 of task-detail-page-ui-improvements.
 
 #### Scenario: New indicators use gray-400 color
 

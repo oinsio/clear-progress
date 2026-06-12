@@ -52,15 +52,21 @@ When the checklist has items (total > 0), the inactive checklist tab SHALL displ
 - **AND** the checklist has 0 total items
 - **THEN** the tab button displays only the ListChecks icon without a badge
 
-### Requirement: Inactive attachments tab shows count badge
+### Requirement: Attachments tab shows count badge in both states
 
-When attachments exist (count > 0), the inactive attachments tab SHALL display a count badge next to the icon. When no attachments exist, no badge SHALL be shown. Implements FR4 of task-detail-page-ui-improvements.
+When attachments exist (count > 0), the attachments tab SHALL display a count badge next to the icon in both active and inactive states. When no attachments exist, no badge SHALL be shown. Implements FR4 of task-detail-page-ui-improvements.
 
 #### Scenario: Inactive attachments tab with files shows count
 
 - **WHEN** the Attachments tab is inactive
 - **AND** there are 2 attachments
 - **THEN** the tab button displays the Paperclip icon and "2" badge
+
+#### Scenario: Active attachments tab with files shows count
+
+- **WHEN** the Attachments tab is active
+- **AND** there are 2 attachments
+- **THEN** the tab button displays the Paperclip icon, the "Attachments" label, and "2" badge
 
 #### Scenario: Inactive attachments tab with no files shows only icon
 

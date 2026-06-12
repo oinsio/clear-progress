@@ -260,15 +260,16 @@ describe("TaskDetailPanel compact tabs", () => {
     expect(attachmentsTab.textContent).toBe("");
   });
 
-  // FR4: Active attachments tab shows label, not badge
-  it("should show label instead of badge on active attachments tab", () => {
+  // FR4: Active attachments tab shows both label and count badge
+  it("should show label and count badge on active attachments tab", () => {
     mockAttachmentCount = 5;
     render(<TaskDetailPanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByTestId("tab-attachments"));
     const attachmentsTab = screen.getByTestId("tab-attachments");
     expect(attachmentsTab).toHaveTextContent("task.tabs.attachments");
+    expect(attachmentsTab).toHaveTextContent("5");
     const badge = attachmentsTab.querySelector("[aria-label]");
-    expect(badge).toBeNull();
+    expect(badge).not.toBeNull();
   });
 
   // NFR-A1: Checklist badge has aria-label
