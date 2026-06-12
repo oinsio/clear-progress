@@ -19,7 +19,6 @@ Entry points:
 - Update linkify spec (FR8)
 
 **Non-Goals:**
-- Modify the `LinkedText` component — it remains for use in other places
 - Change edit mode — textarea with raw markdown (FR6)
 - Server-side markdown processing
 
@@ -41,11 +40,11 @@ Entry points:
 
 **Alternative**: Rely on react-markdown's default behavior — rejected because it creates an implicit dependency on the library's internal implementation.
 
-### D3: Custom renderer for `<a>` tags in react-markdown
+### D3: Custom renderer for `<a>` tags via `LinkChip`
 
-**Decision**: Pass `components={{ a: CustomLink }}` to react-markdown, where `CustomLink` adds `target="_blank"`, `rel="noopener noreferrer"`, and `onClick stopPropagation`.
+**Decision**: Pass `components={{ a: MarkdownLink }}` to react-markdown, where `MarkdownLink` renders links via the shared `LinkChip` component. For autolinks (`children === href`), display `shortenUrl(href)`. For markdown links (`[text](url)`), display the custom text as-is.
 
-**Rationale**: react-markdown allows overriding HTML element rendering. This is the standard customization approach without monkey-patching (FR4, FR5).
+**Rationale**: react-markdown allows overriding HTML element rendering. Extracting link display into `LinkChip` ensures consistent linkify-style appearance across the app (FR4, FR5, FR9).
 
 ### D4: Styling via Tailwind Typography (prose prose-sm)
 
@@ -58,6 +57,22 @@ Entry points:
 **Decision**: `remark-gfm` includes autolink — bare URLs automatically become clickable. This replaces the `extractLinks` functionality for descriptions.
 
 **Rationale**: Duplicating URL detection logic (extractLinks + remark-gfm autolink) creates conflicts. remark-gfm autolink is the standard solution in the markdown ecosystem (FR3).
+
+### D6: `LinkChip` — shared component for linkify-style links
+
+**Decision**: Extract link display (emoji + text + styling + stopPropagation + target="_blank") into a `LinkChip` component in `components/ui/`. Used by `DescriptionMarkdown` for all links in markdown.
+
+**Rationale**: Link display style (blue background, emoji, truncation, stopPropagation) was previously embedded in `LinkedText`. Since `LinkedText` is being removed, the visual style needs a new home. `LinkChip` is a focused, single-responsibility component (FR9).
+
+**Alternative**: Inline the styles directly in `MarkdownLink` — rejected because it creates duplication if link chips are needed elsewhere in the future.
+
+### D7: Remove `LinkedText` component
+
+**Decision**: Delete `LinkedText.tsx`, `LinkedText.test.tsx`, and BDD steps `linkify_linked_text.steps.ts`. Update the linkify spec to remove `LinkedText` requirements.
+
+**Rationale**: After migrating descriptions to `DescriptionMarkdown`, `LinkedText` has zero production imports. Keeping dead code increases maintenance burden and confuses future contributors (FR10).
+
+**Alternative**: Keep `LinkedText` for potential future use — rejected because YAGNI; `LinkChip` + `DescriptionMarkdown` cover all current needs.
 
 ## Risks / Trade-offs
 

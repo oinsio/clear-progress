@@ -8,20 +8,27 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 
 - **ADDED**: Markdown rendering in view mode for `description` fields of Task, Goal, Idea
 - **ADDED**: XSS protection via `rehype-sanitize` when rendering markdown
-- **ADDED**: `stopPropagation` on links inside markdown (matching `LinkedText` behavior)
+- **ADDED**: `LinkChip` — shared component for linkify-style link display (emoji + shortened/custom text)
+- **ADDED**: Links in markdown render in linkify style: autolinks show `shortenUrl`, markdown links show custom text, both with link emoji
 - **MODIFIED**: `EditableDescription` — view mode switches from `LinkedText` to markdown renderer
 - **MODIFIED**: `GoalCardViewMode` — goal description renders via markdown instead of `LinkedText`
-- **MODIFIED**: Linkify spec — documents that descriptions now use markdown autolink instead of `extractLinks`
+- **REMOVED**: `LinkedText` component and its tests — no longer used after migration to `DescriptionMarkdown`
+- **MODIFIED**: Linkify spec — `LinkedText` removed, `LinkChip` added as shared link display component
 
 ## Capabilities
 
 ### New Capabilities
 
-- `description-markdown`: Markdown rendering for description fields of entities (Task, Goal, Idea) in view mode. Includes XSS sanitization, autolink for bare URLs, stopPropagation on links, styling via Tailwind Typography.
+- `description-markdown`: Markdown rendering for description fields of entities (Task, Goal, Idea) in view mode. Includes XSS sanitization, autolink for bare URLs, linkify-style link display, styling via Tailwind Typography.
+- `link-chip`: Shared link display component — renders links with emoji icon, shortened URL (for autolinks) or custom text (for markdown links), stopPropagation, target="_blank".
 
 ### Modified Capabilities
 
-- `linkify`: Documents that `LinkedText` is no longer used for descriptions — replaced by markdown autolink via `remark-gfm`. `LinkedText` remains available for other contexts (e.g., entity names).
+- `linkify`: `LinkedText` component removed — no longer used in production code. Link display logic extracted into `LinkChip`. Utility functions `extractLinks` and `shortenUrl` remain available.
+
+### Removed Capabilities
+
+- `linked-text`: `LinkedText` component and its unit/BDD tests removed. Replaced by `DescriptionMarkdown` + `LinkChip` for descriptions.
 
 ## Goals
 
@@ -52,7 +59,9 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 - **FR5**: Links in markdown open in a new tab (`target="_blank"`, `rel="noopener noreferrer"`)
 - **FR6**: Edit mode remains a textarea with raw markdown text
 - **FR7**: Plain text descriptions (without markdown syntax) display correctly — no visual artifacts
-- **FR8**: Linkify spec is updated — documents that descriptions use markdown autolink
+- **FR8**: Linkify spec is updated — `LinkedText` removed, `LinkChip` documented
+- **FR9**: All links in markdown (autolinks and markdown links) render in linkify style — link emoji + display text, background highlight, truncation
+- **FR10**: `LinkedText` component and its tests are removed from codebase
 
 ### Non-Functional
 
@@ -74,20 +83,20 @@ Task, goal, and idea descriptions are displayed as plain text without formatting
 - **UX1**: Clicking on a description opens a textarea with raw markdown
 - **UX2**: On textarea blur, the description renders as formatted markdown
 - **UX3**: Markdown styling uses `prose prose-sm` (Tailwind Typography) — compact appearance suitable for cards
-- **UX4**: Links are visually distinguishable from regular text
+- **UX4**: Links display in linkify style — link emoji, blue text on light blue background, shortened URL for autolinks, custom text for markdown links
 - **UX5**: Empty description shows a placeholder (current behavior preserved)
 
 ## UI States Matrix
 
-| State               | Data                          | UI                                      |
-|---------------------|-------------------------------|-----------------------------------------|
-| Empty description   | `""`                          | Placeholder text, clickable area        |
-| Plain text (legacy) | `"Simple text"`               | Text as paragraph, no artifacts         |
-| Markdown formatted  | `"# Title\n- item"`           | Rendered markdown with heading and list |
-| With URLs           | `"See https://example.com"`   | Autolink — clickable link               |
-| With markdown links | `"[text](url)"`               | Clickable link with text                |
-| With XSS attempt    | `"<script>alert(1)</script>"` | Sanitized text, script does not execute |
-| Editing             | any                           | Textarea with raw markdown text         |
+| State               | Data                          | UI                                        |
+|---------------------|-------------------------------|-------------------------------------------|
+| Empty description   | `""`                          | Placeholder text, clickable area          |
+| Plain text (legacy) | `"Simple text"`               | Text as paragraph, no artifacts           |
+| Markdown formatted  | `"# Title\n- item"`           | Rendered markdown with heading and list   |
+| With URLs           | `"See https://example.com"`   | Linkify-style link: emoji + `example.com` |
+| With markdown links | `"[text](url)"`               | Linkify-style link: emoji + "text"        |
+| With XSS attempt    | `"<script>alert(1)</script>"` | Sanitized text, script does not execute   |
+| Editing             | any                           | Textarea with raw markdown text           |
 
 ## Behavior
 

@@ -72,9 +72,28 @@ The `DescriptionMarkdown` component SHALL automatically convert bare http/https 
 - **WHEN** DescriptionMarkdown is rendered with text "See http://example.com"
 - **THEN** an anchor element with href "http://example.com" is present
 
+### Requirement: Linkify-style link display
+
+All links rendered by `DescriptionMarkdown` SHALL display in linkify style via `LinkChip` — with link emoji, styled background, and appropriate display text. Implements FR9 of markdown-in-descriptions.
+
+#### Scenario: Autolink displays shortened URL with emoji
+
+- **WHEN** DescriptionMarkdown is rendered with text "Visit https://example.com/path for info"
+- **THEN** the link displays with link emoji and shortened URL "example.com/path"
+
+#### Scenario: Markdown link displays custom text with emoji
+
+- **WHEN** DescriptionMarkdown is rendered with text "[My Link](https://example.com)"
+- **THEN** the link displays with link emoji and text "My Link"
+
+#### Scenario: Link has linkify background styling
+
+- **WHEN** DescriptionMarkdown is rendered with text containing a link
+- **THEN** the link has blue background highlight styling
+
 ### Requirement: Link click propagation prevention
 
-All links rendered by `DescriptionMarkdown` SHALL stop click event propagation, preventing parent handlers from firing. Implements FR4 of markdown-in-descriptions.
+All links rendered by `DescriptionMarkdown` SHALL stop click event propagation via `LinkChip`, preventing parent handlers from firing. Implements FR4 of markdown-in-descriptions.
 
 #### Scenario: Link click does not propagate to parent
 
@@ -83,7 +102,7 @@ All links rendered by `DescriptionMarkdown` SHALL stop click event propagation, 
 
 ### Requirement: Links open in new tab
 
-All links rendered by `DescriptionMarkdown` SHALL open in a new tab with security attributes. Implements FR5 of markdown-in-descriptions.
+All links rendered by `DescriptionMarkdown` SHALL open in a new tab with security attributes via `LinkChip`. Implements FR5 of markdown-in-descriptions.
 
 #### Scenario: Link has correct target and rel attributes
 
@@ -154,3 +173,33 @@ The `GoalCardViewMode` component SHALL use `DescriptionMarkdown` instead of `Lin
 
 - **WHEN** GoalCardViewMode is rendered with a goal that has markdown in description
 - **THEN** the description is rendered with markdown formatting
+
+### Requirement: LinkChip shared component
+
+The `LinkChip` component SHALL render a styled link with emoji icon, display text, stopPropagation, and target="_blank". Implements FR9, FR4, FR5 of markdown-in-descriptions.
+
+#### Scenario: LinkChip renders emoji and text
+
+- **WHEN** LinkChip is rendered with href "https://example.com" and children "Example"
+- **THEN** a link emoji icon is displayed
+- **THEN** the text "Example" is displayed
+
+#### Scenario: LinkChip has correct link attributes
+
+- **WHEN** LinkChip is rendered with href "https://example.com"
+- **THEN** the anchor has target="_blank" and rel="noopener noreferrer"
+
+#### Scenario: LinkChip stops click propagation
+
+- **WHEN** a LinkChip is clicked inside a clickable parent
+- **THEN** the parent onClick handler is not called
+
+#### Scenario: LinkChip applies styling
+
+- **WHEN** LinkChip is rendered
+- **THEN** the link has blue background highlight and rounded styling
+
+#### Scenario: LinkChip truncates long text
+
+- **WHEN** LinkChip is rendered with long display text
+- **THEN** the text is truncated with max-width constraint
