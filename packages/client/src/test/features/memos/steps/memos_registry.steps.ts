@@ -66,8 +66,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         'a glob result with valid memo files for "ru" and "en"',
         (_ctx: TestContext) => {
           globResult = {
-            "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
-            "./en/task-review.md": VALID_MEMO_EN_REVIEW,
+            "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
+            "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
           };
         },
       );
@@ -99,8 +99,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         'a glob result with memos having order 2 and order 1 for "ru"',
         (_ctx: TestContext) => {
           globResult = {
-            "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
-            "./ru/natural-planning.md": VALID_MEMO_RU_PLANNING,
+            "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
+            "../../locales/memos/ru/natural-planning.md":
+              VALID_MEMO_RU_PLANNING,
           };
         },
       );
@@ -137,8 +138,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
       When('memos are requested for "ru"', async (_ctx: TestContext) => {
         getMemosFn = await setupRegistry({
-          "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
-          "./en/task-review.md": VALID_MEMO_EN_REVIEW,
+          "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
+          "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
         });
         resultMemos = getMemosFn("ru");
       });
@@ -163,8 +164,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
       When('memos are requested for "fr"', async (_ctx: TestContext) => {
         getMemosFn = await setupRegistry({
-          "./en/task-review.md": VALID_MEMO_EN_REVIEW,
-          "./en/natural-planning.md": VALID_MEMO_EN_PLANNING,
+          "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
+          "../../locales/memos/en/natural-planning.md": VALID_MEMO_EN_PLANNING,
         });
         resultMemos = getMemosFn("fr");
       });

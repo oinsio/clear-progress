@@ -3,7 +3,7 @@
  * Separated for testability — tests mock this module.
  */
 export const memoGlobImport: Record<string, string> = import.meta.glob(
-  "./*/*.md",
+  "../../locales/memos/*/*.md",
   {
     query: "?raw",
     import: "default",

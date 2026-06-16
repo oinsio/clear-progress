@@ -15,7 +15,8 @@ export interface MemoEntry {
   body: string;
 }
 
-const PATH_LANG_SLUG_PATTERN = /^\.\/([^/]+)\/([^/]+)\.md$/;
+const PATH_LANG_SLUG_PATTERN =
+  /^\.\.\/\.\.\/locales\/memos\/([^/]+)\/([^/]+)\.md$/;
 
 interface MemosByLanguage {
   [language: string]: MemoEntry[];

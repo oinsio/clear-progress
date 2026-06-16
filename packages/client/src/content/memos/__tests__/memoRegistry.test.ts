@@ -81,8 +81,8 @@ describe("memoRegistry", () => {
   it("should return memos sorted by order ascending", async () => {
     await setupRegistry(
       createGlobResult({
-        "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
-        "./ru/natural-planning.md": VALID_MEMO_RU_PLANNING,
+        "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
+        "../../locales/memos/ru/natural-planning.md": VALID_MEMO_RU_PLANNING,
       }),
     );
 
@@ -99,8 +99,8 @@ describe("memoRegistry", () => {
   it("should return memos for the requested language", async () => {
     await setupRegistry(
       createGlobResult({
-        "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
-        "./en/task-review.md": VALID_MEMO_EN_REVIEW,
+        "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
+        "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
       }),
     );
 
@@ -117,8 +117,8 @@ describe("memoRegistry", () => {
   it("should fall back to default language when requested language has no memos", async () => {
     await setupRegistry(
       createGlobResult({
-        "./en/task-review.md": VALID_MEMO_EN_REVIEW,
-        "./en/natural-planning.md": VALID_MEMO_EN_PLANNING,
+        "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
+        "../../locales/memos/en/natural-planning.md": VALID_MEMO_EN_PLANNING,
       }),
     );
 
@@ -145,8 +145,8 @@ describe("memoRegistry", () => {
 
     await setupRegistry(
       createGlobResult({
-        "./ru/invalid.md": INVALID_MEMO_NO_FRONTMATTER,
-        "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
+        "../../locales/memos/ru/invalid.md": INVALID_MEMO_NO_FRONTMATTER,
+        "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
       }),
     );
 
@@ -165,8 +165,8 @@ describe("memoRegistry", () => {
 
     await setupRegistry(
       createGlobResult({
-        "./ru/bad-order.md": INVALID_MEMO_BAD_ORDER,
-        "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
+        "../../locales/memos/ru/bad-order.md": INVALID_MEMO_BAD_ORDER,
+        "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
       }),
     );
 
@@ -180,8 +180,8 @@ describe("memoRegistry", () => {
   it("should return a specific memo by slug", async () => {
     await setupRegistry(
       createGlobResult({
-        "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
-        "./ru/natural-planning.md": VALID_MEMO_RU_PLANNING,
+        "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
+        "../../locales/memos/ru/natural-planning.md": VALID_MEMO_RU_PLANNING,
       }),
     );
 
@@ -196,7 +196,7 @@ describe("memoRegistry", () => {
   it("should return undefined for non-existent slug", async () => {
     await setupRegistry(
       createGlobResult({
-        "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
+        "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
       }),
     );
 
@@ -209,7 +209,7 @@ describe("memoRegistry", () => {
   it("should fall back to default language in getMemo when language missing", async () => {
     await setupRegistry(
       createGlobResult({
-        "./en/task-review.md": VALID_MEMO_EN_REVIEW,
+        "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
       }),
     );
 
@@ -223,7 +223,7 @@ describe("memoRegistry", () => {
   it("should derive slug from filename without extension", async () => {
     await setupRegistry(
       createGlobResult({
-        "./en/natural-planning.md": VALID_MEMO_EN_PLANNING,
+        "../../locales/memos/en/natural-planning.md": VALID_MEMO_EN_PLANNING,
       }),
     );
 
@@ -236,7 +236,7 @@ describe("memoRegistry", () => {
   it("should populate all MemoEntry fields correctly", async () => {
     await setupRegistry(
       createGlobResult({
-        "./en/task-review.md": VALID_MEMO_EN_REVIEW,
+        "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
       }),
     );
 
@@ -259,7 +259,7 @@ describe("memoRegistry", () => {
     await setupRegistry(
       createGlobResult({
         "invalid-path.md": VALID_MEMO_EN_REVIEW,
-        "./en/task-review.md": VALID_MEMO_EN_REVIEW,
+        "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
       }),
     );
 
@@ -279,12 +279,12 @@ describe("memoRegistry", () => {
 
     await setupRegistry(
       createGlobResult({
-        "./ru/broken.md": INVALID_MEMO_NO_FRONTMATTER,
+        "../../locales/memos/ru/broken.md": INVALID_MEMO_NO_FRONTMATTER,
       }),
     );
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("./ru/broken.md"),
+      expect.stringContaining("../../locales/memos/ru/broken.md"),
     );
   });
 
@@ -292,8 +292,8 @@ describe("memoRegistry", () => {
   it("should not return memos from other languages", async () => {
     await setupRegistry(
       createGlobResult({
-        "./ru/task-review.md": VALID_MEMO_RU_REVIEW,
-        "./en/task-review.md": VALID_MEMO_EN_REVIEW,
+        "../../locales/memos/ru/task-review.md": VALID_MEMO_RU_REVIEW,
+        "../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
       }),
     );
 
@@ -314,7 +314,7 @@ describe("memoRegistry", () => {
 
     await setupRegistry(
       createGlobResult({
-        "./en/task-review.md.bak": VALID_MEMO_EN_REVIEW,
+        "../../locales/memos/en/task-review.md.bak": VALID_MEMO_EN_REVIEW,
       }),
     );
 
@@ -332,7 +332,7 @@ describe("memoRegistry", () => {
 
     await setupRegistry(
       createGlobResult({
-        "prefix./en/task-review.md": VALID_MEMO_EN_REVIEW,
+        "prefix../../locales/memos/en/task-review.md": VALID_MEMO_EN_REVIEW,
       }),
     );
 
