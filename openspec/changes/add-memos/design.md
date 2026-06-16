@@ -101,17 +101,23 @@ function parseFrontmatter(raw: string): { attributes: Record<string, string>; bo
 
 Parses YAML between `---` delimiters. Only needs to handle flat key-value pairs (title, description, icon, order). No nested YAML, no arrays.
 
-### D8: Page structure — follow IdeasPage pattern
+### D8: Page structure — follow IdeasPage/GoalDetailPage patterns
 
 **Decision**: `MemosPage` follows the same layout as `IdeasPage`:
 - Sidebar on configured side
 - Header with page title
 - Scrollable content area with cards
 - No CommandBar (read-only content)
-- No detail panel split — memo detail is a separate route (full page)
+- No detail panel split — memo detail is a separate route
 
-Mobile: list → navigate to `/memos/:slug` (full screen). Back button returns to list.
-Desktop: same pattern (no split view — memos are long-form content, better full-width).
+`MemoDetailPage` follows `GoalDetailPage` pattern:
+- Sidebar on configured side (consistent navigation across all pages)
+- Header with round back-arrow icon button + page title ("Memos"/"Памятки")
+- Scrollable content area with markdown rendering
+- No CommandBar, no split view — memos are long-form content, better full-width
+
+Mobile: list → navigate to `/memos/:slug`. Back button returns to list.
+Desktop: same pattern with sidebar visible for quick navigation.
 
 ## Risks / Trade-offs
 

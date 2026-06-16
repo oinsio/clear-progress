@@ -20,6 +20,8 @@ export const ROUTES = {
   CATEGORY: "/categories/:id",
   CONTEXTS: "/contexts",
   CONTEXT: "/contexts/:id",
+  MEMOS: "/memos",
+  MEMO: "/memos/:slug",
   SEARCH: "/search",
   SETTINGS: "/settings",
   DELETED: "/deleted",

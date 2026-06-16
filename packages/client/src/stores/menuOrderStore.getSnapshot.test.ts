@@ -22,6 +22,7 @@ describe("menuOrderStore", () => {
         "tasks",
         "completed",
         "focused_goals",
+        "memos",
         "deleted",
       ]);
     });
@@ -61,7 +62,7 @@ describe("menuOrderStore", () => {
 
       const snapshot = getSnapshot();
       expect(snapshot[0].mode).toBe("inbox");
-      expect(snapshot).toHaveLength(9);
+      expect(snapshot).toHaveLength(10);
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Corrupted"),
       );
@@ -75,7 +76,7 @@ describe("menuOrderStore", () => {
 
       const snapshot = getSnapshot();
       expect(snapshot[0].mode).toBe("inbox");
-      expect(snapshot).toHaveLength(9);
+      expect(snapshot).toHaveLength(10);
     });
 
     it("should set deleted as not visible by default", () => {
