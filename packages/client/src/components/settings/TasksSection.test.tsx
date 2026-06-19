@@ -1,8 +1,8 @@
 // implements FR4 of settings-page-reordering
 import { fireEvent, render, screen } from "@testing-library/react";
+import type React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TasksSection } from "./TasksSection";
-import React from "react";
 
 const {
   mockSetDefaultBox,

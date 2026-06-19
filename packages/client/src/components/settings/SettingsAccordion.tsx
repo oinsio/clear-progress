@@ -1,8 +1,8 @@
 /** Implements FR1, FR6, FR7, FR11, NFR-A1, NFR-A3, UX1, UX2 of settings-page-reordering */
 
 import { ChevronDown, ChevronRight } from "lucide-react";
-import React, { ReactNode } from "react";
-import { useCallback, useMemo, useState } from "react";
+import type React from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { STORAGE_KEYS } from "@/constants";
 
