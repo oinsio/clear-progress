@@ -12,6 +12,17 @@ async function fillAndSubmitConnectionForm(
   url: string,
   key: string,
 ): Promise<void> {
+  // Expand Account & Sync accordion section to reveal server connection form (only if collapsed)
+  const accountSyncHeader = targetPage.getByTestId(
+    "accordion-header-settings-accordion-account-sync",
+  );
+  await accountSyncHeader.waitFor();
+  const isExpanded =
+    (await accountSyncHeader.getAttribute("aria-expanded")) === "true";
+  if (!isExpanded) {
+    await accountSyncHeader.click();
+  }
+
   await targetPage.getByTestId("server-connect-supabase").click();
   await targetPage.getByTestId("server-supabase-url").fill(url);
   await targetPage.getByTestId("server-supabase-anon-key").fill(key);

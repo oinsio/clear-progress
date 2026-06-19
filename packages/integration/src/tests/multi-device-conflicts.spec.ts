@@ -271,12 +271,18 @@ test("Both modify same setting → last writer wins", async () => {
   // App A changes accent color to indigo → pushes FIRST
   await pageA.goto("/settings");
   await pageA.waitForSelector('[data-testid="settings-page"]');
+  await pageA
+    .getByTestId("accordion-header-settings-accordion-look-and-feel")
+    .click();
   await pageA.getByTestId("settings-color-option-indigo").click();
   await triggerSyncAndWait(pageA);
 
   // App B changes accent color to purple → pushes SECOND (newer updated_at)
   await pageB.goto("/settings");
   await pageB.waitForSelector('[data-testid="settings-page"]');
+  await pageB
+    .getByTestId("accordion-header-settings-accordion-look-and-feel")
+    .click();
   await pageB.getByTestId("settings-color-option-purple").click();
   await triggerSyncAndWait(pageB);
 

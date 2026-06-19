@@ -1,6 +1,7 @@
 import {
   type ChangeEvent,
   type KeyboardEvent,
+  type ReactNode,
   useEffect,
   useRef,
   useState,
@@ -18,6 +19,7 @@ const TWO_DIGIT_LENGTH = 2;
 interface DayBoundarySectionProps {
   dayBoundary: string;
   onDayBoundaryChange: (value: string) => void;
+  syncIndicator?: ReactNode;
 }
 
 function padToTwoDigits(value: string): string {
@@ -34,13 +36,14 @@ function parseTimeSegments(time: string): { hours: string; minutes: string } {
  * Uses two separate numeric inputs for hours and minutes for comfortable typing.
  *
  * Refs track the latest input values to avoid stale state reads during
- * synchronous focus/blur transitions (e.g. auto-focus from hours to minutes).
+ * synchronous focus/blur transitions (e.g. autofocus from hours to minutes).
  *
  * Implements FR10, FR11, NFR-A1, NFR-R1 of day-boundary.
  */
 export function DayBoundarySection({
   dayBoundary,
   onDayBoundaryChange,
+  syncIndicator,
 }: DayBoundarySectionProps) {
   const { t } = useTranslation();
   const { hours: initialHours, minutes: initialMinutes } =
@@ -129,9 +132,10 @@ export function DayBoundarySection({
     <section data-testid="settings-day-boundary" className="space-y-3">
       <label
         htmlFor={HOURS_INPUT_ID}
-        className="text-sm font-medium text-gray-500 uppercase tracking-wide"
+        className="text-sm font-medium text-gray-500 uppercase tracking-wide flex items-center gap-2"
       >
         {t("settings.dayBoundary")}
+        {syncIndicator}
       </label>
       <div className="flex items-center gap-1 max-w-xs">
         <input
