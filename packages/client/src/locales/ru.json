@@ -291,6 +291,14 @@
     "dayBoundaryMinutes": "Минуты",
     "dayBoundaryDescription": "Время начала Вашего дня. Отложенные на завтра задачи появятся в это время.",
     "detailPanelPinned": "Закрепить панель задачи",
+    "sections": {
+      "lookAndFeel": "Внешний вид",
+      "workspace": "Рабочее пространство",
+      "tasks": "Задачи",
+      "accountSync": "Аккаунт и синхронизация"
+    },
+    "syncIndicator": "Синхронизируется между устройствами",
+    "syncLegend": "Синхронизируется между устройствами",
     "server": {
       "account": "Аккаунт",
       "anonKey": "Anon Key",

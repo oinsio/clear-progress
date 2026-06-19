@@ -291,6 +291,14 @@
     "dayBoundaryMinutes": "Minutes",
     "dayBoundaryDescription": "Time when your day starts. Tasks deferred to tomorrow will appear at this time.",
     "detailPanelPinned": "Pin detail panel",
+    "sections": {
+      "lookAndFeel": "Look & Feel",
+      "workspace": "Workspace",
+      "tasks": "Tasks",
+      "accountSync": "Account & Sync"
+    },
+    "syncIndicator": "Syncs across devices",
+    "syncLegend": "Syncs across devices",
     "server": {
       "account": "Account",
       "anonKey": "Anon Key",

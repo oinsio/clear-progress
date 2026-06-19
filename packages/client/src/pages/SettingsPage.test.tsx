@@ -1,105 +1,62 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { UseSettingsReturn } from "@/hooks/useSettings";
-import type { AccentColor } from "@/types/common";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import SettingsPage from "./SettingsPage";
 
-vi.mock("@/hooks/useSettings");
-vi.mock("@/app/providers/ThemeProvider");
-vi.mock("@/hooks/useLanguage");
-vi.mock("@/hooks/usePanelSide");
 vi.mock("@/hooks/usePanelOpen");
-vi.mock("@/hooks/usePanelAlwaysOpen");
-vi.mock("@/hooks/useFocusMode");
-vi.mock("@/hooks/useFilterBarPosition");
-vi.mock("@/hooks/useHandedness");
-vi.mock("@/app/providers/InterfaceScaleProvider");
-vi.mock("@/components/tasks/Sidebar");
-vi.mock("@/components/settings/MenuOrderSection");
+vi.mock("@/hooks/useSidebarNavigation");
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: vi.fn(),
 }));
 vi.mock("@/hooks/useConnectionConfig", () => ({
   useConnectionConfig: vi.fn(),
 }));
-vi.mock("@/components/settings/ServerSection", () => ({
-  ServerSection: () => <div data-testid="server-section" />,
-}));
 vi.mock("@/i18n", () => ({ default: {} }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
+vi.mock("@/components/settings/SettingsAccordion", () => ({
+  SettingsAccordion: ({ sections }: { sections: { id: string }[] }) => (
+    <div data-testid="settings-accordion">
+      {sections.map((section) => (
+        <div key={section.id} data-testid={`accordion-section-${section.id}`} />
+      ))}
+    </div>
+  ),
+}));
+vi.mock("@/components/settings/LookAndFeelSection", () => ({
+  LookAndFeelSection: () => <div data-testid="look-and-feel-section" />,
+}));
+vi.mock("@/components/settings/WorkspaceSection", () => ({
+  WorkspaceSection: () => <div data-testid="workspace-section" />,
+}));
+vi.mock("@/components/settings/TasksSection", () => ({
+  TasksSection: () => <div data-testid="tasks-section" />,
+}));
+vi.mock("@/components/settings/AccountSyncSection", () => ({
+  AccountSyncSection: () => <div data-testid="account-sync-section" />,
+}));
+vi.mock("@/components/settings/ShareAppSection", () => ({
+  ShareAppSection: () => <div data-testid="share-app-section" />,
+}));
+vi.mock("@/components/tasks/Sidebar", () => ({
+  Sidebar: () => <div data-testid="sidebar" />,
+}));
+vi.mock("@/services/supabaseClientManager", () => ({
+  isOauthReturn: () => false,
+  clearOauthReturnFlag: vi.fn(),
+}));
 
 import { useAuth } from "@/app/providers/AuthProvider";
-import { useInterfaceScale } from "@/app/providers/InterfaceScaleProvider";
-import { useTheme } from "@/app/providers/ThemeProvider";
+import { SETTINGS_SECTION_IDS } from "@/constants";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
-import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { useFocusMode } from "@/hooks/useFocusMode";
-import { useHandedness } from "@/hooks/useHandedness";
-import { useLanguage } from "@/hooks/useLanguage";
-import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSettings } from "@/hooks/useSettings";
+import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { localStorageMock } from "@/test/mocks/localStorageMock";
 
 const mockUseAuth = vi.mocked(useAuth);
 const mockUseConnectionConfig = vi.mocked(useConnectionConfig);
-const mockUseSettings = vi.mocked(useSettings);
-const mockUseTheme = vi.mocked(useTheme);
-const mockUseLanguage = vi.mocked(useLanguage);
 const mockUsePanelOpen = vi.mocked(usePanelOpen);
-const mockUsePanelSide = vi.mocked(usePanelSide);
-const mockUsePanelAlwaysOpen = vi.mocked(usePanelAlwaysOpen);
-const mockUseFocusMode = vi.mocked(useFocusMode);
-const mockUseFilterBarPosition = vi.mocked(useFilterBarPosition);
-const mockUseHandedness = vi.mocked(useHandedness);
-const mockUseInterfaceScale = vi.mocked(useInterfaceScale);
-
-function buildSettingsHook(
-  overrides: Partial<UseSettingsReturn> = {},
-): UseSettingsReturn {
-  return {
-    defaultBox: "today",
-    accentColor: "green",
-    dayBoundary: "00:00",
-    isLoading: false,
-    setDefaultBox: vi.fn().mockResolvedValue(undefined),
-    setAccentColor: vi.fn().mockResolvedValue(undefined),
-    setDayBoundary: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
-
-function buildThemeHook(
-  overrides: {
-    accentColor?: AccentColor;
-    setAccentColor?: ReturnType<typeof vi.fn>;
-  } = {},
-): ReturnType<typeof useTheme> {
-  return {
-    accentColor: "green",
-    setAccentColor: vi.fn().mockResolvedValue(undefined),
-    colorScheme: "system",
-    setColorScheme: vi.fn(),
-    customAccentLight: "#fcd34d",
-    customAccentDark: "#14b8a6",
-    setCustomAccentColors: vi.fn().mockResolvedValue(undefined),
-    ...overrides,
-  };
-}
-
-function buildLanguageHook(
-  overrides: { language?: string; setLanguage?: ReturnType<typeof vi.fn> } = {},
-): ReturnType<typeof useLanguage> {
-  return {
-    language: "ru",
-    setLanguage: vi.fn(),
-    ...overrides,
-  };
-}
 
 function renderPage() {
   return render(
@@ -122,43 +79,11 @@ describe("SettingsPage", () => {
       silentRefresh: vi.fn(),
     });
     mockUseConnectionConfig.mockReturnValue(null);
-    mockUseSettings.mockReturnValue(buildSettingsHook());
-    mockUseTheme.mockReturnValue(buildThemeHook());
-    mockUseLanguage.mockReturnValue(buildLanguageHook());
     mockUsePanelOpen.mockReturnValue({
       isPanelOpen: false,
       togglePanelOpen: vi.fn(),
     });
-    mockUsePanelSide.mockReturnValue({
-      panelSide: "right",
-      setPanelSide: vi.fn(),
-    });
-    mockUsePanelAlwaysOpen.mockReturnValue({
-      isPanelAlwaysOpen: false,
-      setPanelAlwaysOpen: vi.fn(),
-    });
-    mockUseFocusMode.mockReturnValue({
-      isFocusMode: false,
-      setFocusMode: vi.fn(),
-      focusOpacity: 30,
-      setFocusOpacity: vi.fn(),
-    });
-    mockUseFilterBarPosition.mockReturnValue({
-      filterBarPosition: "bottom",
-      setFilterBarPosition: vi.fn(),
-    });
-    mockUseHandedness.mockReturnValue({
-      handedness: "right",
-      setHandedness: vi.fn(),
-    });
-    mockUseInterfaceScale.mockReturnValue({
-      interfaceScale: "normal",
-      setInterfaceScale: vi.fn(),
-    });
-  });
-
-  afterEach(() => {
-    localStorageMock.clear();
+    vi.mocked(useSidebarNavigation).mockReturnValue(vi.fn());
   });
 
   it("should render the settings page container", () => {
@@ -166,262 +91,48 @@ describe("SettingsPage", () => {
     expect(screen.getByTestId("settings-page")).toBeInTheDocument();
   });
 
-  it("should render the default box section", () => {
+  it("should render the page title", () => {
     renderPage();
-    expect(screen.getByTestId("settings-default-box")).toBeInTheDocument();
+    expect(screen.getByText("settings.name")).toBeInTheDocument();
   });
 
-  it("should render all four box options", () => {
+  it("should render the settings accordion", () => {
     renderPage();
-    expect(screen.getByTestId("settings-box-option-inbox")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-box-option-today")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-box-option-week")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-box-option-later")).toBeInTheDocument();
+    expect(screen.getByTestId("settings-accordion")).toBeInTheDocument();
   });
 
-  it("should mark the current default box as active", () => {
-    mockUseSettings.mockReturnValue(buildSettingsHook({ defaultBox: "week" }));
-    renderPage();
-    expect(screen.getByTestId("settings-box-option-week")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(screen.getByTestId("settings-box-option-inbox")).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
-  });
-
-  it("should call setDefaultBox when a box option is clicked", async () => {
-    const setDefaultBox = vi.fn().mockResolvedValue(undefined);
-    mockUseSettings.mockReturnValue(
-      buildSettingsHook({ defaultBox: "today", setDefaultBox }),
-    );
-    renderPage();
-    fireEvent.click(screen.getByTestId("settings-box-option-inbox"));
-    expect(setDefaultBox).toHaveBeenCalledWith("inbox");
-  });
-
-  it("should render the accent color section", () => {
-    renderPage();
-    expect(screen.getByTestId("settings-accent-color")).toBeInTheDocument();
-  });
-
-  it("should render all eight color options", () => {
+  it("should pass four sections to the accordion", () => {
     renderPage();
     expect(
-      screen.getByTestId("settings-color-option-coral"),
+      screen.getByTestId(
+        `accordion-section-${SETTINGS_SECTION_IDS.LOOK_AND_FEEL}`,
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId("settings-color-option-orange"),
+      screen.getByTestId(`accordion-section-${SETTINGS_SECTION_IDS.WORKSPACE}`),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId("settings-color-option-yellow"),
+      screen.getByTestId(`accordion-section-${SETTINGS_SECTION_IDS.TASKS}`),
     ).toBeInTheDocument();
     expect(
-      screen.getByTestId("settings-color-option-green"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId("settings-color-option-blue"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId("settings-color-option-indigo"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId("settings-color-option-purple"),
+      screen.getByTestId(
+        `accordion-section-${SETTINGS_SECTION_IDS.ACCOUNT_SYNC}`,
+      ),
     ).toBeInTheDocument();
   });
 
-  it("should mark the current accent color as active", () => {
-    mockUseTheme.mockReturnValue(buildThemeHook({ accentColor: "orange" }));
+  it("should render ShareAppSection outside the accordion", () => {
     renderPage();
-    expect(screen.getByTestId("settings-color-option-orange")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(screen.getByTestId("settings-color-option-green")).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
+    expect(screen.getByTestId("share-app-section")).toBeInTheDocument();
   });
 
-  it("should call setAccentColor when a color option is clicked", () => {
-    const setAccentColor = vi.fn().mockResolvedValue(undefined);
-    mockUseTheme.mockReturnValue(buildThemeHook({ setAccentColor }));
+  it("should render sync legend", () => {
     renderPage();
-    fireEvent.click(screen.getByTestId("settings-color-option-indigo"));
-    expect(setAccentColor).toHaveBeenCalledWith("indigo");
+    expect(screen.getByText("settings.syncLegend")).toBeInTheDocument();
   });
 
-  it("should render the language section with trigger button", () => {
+  it("should render the sidebar", () => {
     renderPage();
-    expect(screen.getByTestId("settings-language")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-language-trigger")).toBeInTheDocument();
-  });
-
-  it("should show current language in trigger button", () => {
-    mockUseLanguage.mockReturnValue(buildLanguageHook({ language: "en" }));
-    renderPage();
-    const trigger = screen.getByTestId("settings-language-trigger");
-    expect(trigger).toHaveTextContent("English");
-  });
-
-  it("should open language panel when trigger is clicked", () => {
-    renderPage();
-    const trigger = screen.getByTestId("settings-language-trigger");
-
-    // Panel is closed initially
-    expect(
-      screen.queryByTestId("settings-language-option-ru"),
-    ).not.toBeInTheDocument();
-
-    // Open the panel
-    fireEvent.click(trigger);
-
-    // Panel is open, languages are visible
-    expect(
-      screen.getByTestId("settings-language-option-ru"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId("settings-language-option-en"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByTestId("settings-language-option-house"),
-    ).toBeInTheDocument();
-  });
-
-  it("should call setLanguage and close panel when a language option is clicked", () => {
-    const setLanguage = vi.fn();
-    mockUseLanguage.mockReturnValue(buildLanguageHook({ setLanguage }));
-    renderPage();
-
-    // Open the panel
-    fireEvent.click(screen.getByTestId("settings-language-trigger"));
-
-    // Click a language
-    fireEvent.click(screen.getByTestId("settings-language-option-en"));
-
-    // Verify setLanguage was called
-    expect(setLanguage).toHaveBeenCalledWith("en");
-
-    // Panel is closed
-    expect(
-      screen.queryByTestId("settings-language-option-ru"),
-    ).not.toBeInTheDocument();
-  });
-
-  describe("focus mode section", () => {
-    it("should render focus mode toggle", () => {
-      renderPage();
-      expect(screen.getByTestId("settings-focus-mode")).toBeInTheDocument();
-      expect(
-        screen.getByTestId("settings-focus-mode-toggle"),
-      ).toBeInTheDocument();
-    });
-
-    it("should not show opacity bars when focus mode is disabled", () => {
-      mockUseFocusMode.mockReturnValue({
-        isFocusMode: false,
-        setFocusMode: vi.fn(),
-        focusOpacity: 30,
-        setFocusOpacity: vi.fn(),
-      });
-      renderPage();
-      expect(
-        screen.queryByTestId("settings-focus-opacity"),
-      ).not.toBeInTheDocument();
-    });
-
-    it("should show opacity bars when focus mode is enabled", () => {
-      mockUseFocusMode.mockReturnValue({
-        isFocusMode: true,
-        setFocusMode: vi.fn(),
-        focusOpacity: 30,
-        setFocusOpacity: vi.fn(),
-      });
-      renderPage();
-      expect(screen.getByTestId("settings-focus-opacity")).toBeInTheDocument();
-    });
-
-    it("should call setFocusMode when toggle is clicked", () => {
-      const setFocusMode = vi.fn();
-      mockUseFocusMode.mockReturnValue({
-        isFocusMode: false,
-        setFocusMode,
-        focusOpacity: 30,
-        setFocusOpacity: vi.fn(),
-      });
-      renderPage();
-      fireEvent.click(screen.getByTestId("settings-focus-mode-toggle"));
-      expect(setFocusMode).toHaveBeenCalledWith(true);
-    });
-
-    it("should render opacity bars with correct selected value", () => {
-      mockUseFocusMode.mockReturnValue({
-        isFocusMode: true,
-        setFocusMode: vi.fn(),
-        focusOpacity: 20,
-        setFocusOpacity: vi.fn(),
-      });
-      renderPage();
-      const selectedBar = screen.getByTestId("opacity-bar-20");
-      expect(selectedBar).toHaveAttribute("aria-pressed", "true");
-    });
-
-    it("should call setFocusOpacity when opacity bar is clicked", () => {
-      const setFocusOpacity = vi.fn();
-      mockUseFocusMode.mockReturnValue({
-        isFocusMode: true,
-        setFocusMode: vi.fn(),
-        focusOpacity: 30,
-        setFocusOpacity,
-      });
-      renderPage();
-      const bar50 = screen.getByTestId("opacity-bar-50");
-      fireEvent.click(bar50);
-      expect(setFocusOpacity).toHaveBeenCalledWith(50);
-    });
-  });
-
-  describe("handedness section", () => {
-    it("should render handedness section", () => {
-      renderPage();
-      expect(screen.getByTestId("settings-handedness")).toBeInTheDocument();
-    });
-
-    it("should render right and left options", () => {
-      renderPage();
-      expect(
-        screen.getByTestId("settings-handedness-option-right"),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByTestId("settings-handedness-option-left"),
-      ).toBeInTheDocument();
-    });
-
-    it("should mark the current handedness as active", () => {
-      mockUseHandedness.mockReturnValue({
-        handedness: "left",
-        setHandedness: vi.fn(),
-      });
-      renderPage();
-      expect(
-        screen.getByTestId("settings-handedness-option-left"),
-      ).toHaveAttribute("aria-pressed", "true");
-      expect(
-        screen.getByTestId("settings-handedness-option-right"),
-      ).toHaveAttribute("aria-pressed", "false");
-    });
-
-    it("should call setHandedness when an option is clicked", () => {
-      const setHandedness = vi.fn();
-      mockUseHandedness.mockReturnValue({
-        handedness: "right",
-        setHandedness,
-      });
-      renderPage();
-      fireEvent.click(screen.getByTestId("settings-handedness-option-left"));
-      expect(setHandedness).toHaveBeenCalledWith("left");
-    });
+    expect(screen.getByTestId("sidebar")).toBeInTheDocument();
   });
 });

@@ -29,6 +29,11 @@ setup(
       await onboardingDialog.click();
     }
 
+    // Expand Account & Sync accordion section to reveal server connection form
+    await page
+      .getByTestId("accordion-header-settings-accordion-account-sync")
+      .click();
+
     await page.getByTestId("server-connect-supabase").click();
     await page.getByTestId("server-supabase-url").fill(config.supabaseUrl);
     await page.getByTestId("server-supabase-anon-key").fill(config.anonKey);

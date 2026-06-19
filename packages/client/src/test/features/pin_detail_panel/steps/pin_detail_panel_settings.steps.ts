@@ -27,43 +27,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// Mock react-router-dom
-vi.mock("react-router-dom", () => ({
-  useLocation: () => ({ search: "", pathname: "/settings" }),
-  useNavigate: () => vi.fn(),
-}));
-
-// Mock AuthProvider
-vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({ accessToken: null }),
-}));
-
-// Mock InterfaceScaleProvider
-vi.mock("@/app/providers/InterfaceScaleProvider", () => ({
-  useInterfaceScale: () => ({
-    interfaceScale: "normal",
-    setInterfaceScale: vi.fn(),
-  }),
-}));
-
-// Mock ThemeProvider
-vi.mock("@/app/providers/ThemeProvider", () => ({
-  useTheme: () => ({
-    accentColor: "green",
-    setAccentColor: vi.fn(),
-    colorScheme: "system",
-    setColorScheme: vi.fn(),
-    customAccentLight: "#000000",
-    customAccentDark: "#000000",
-    setCustomAccentColors: vi.fn(),
-  }),
-}));
-
-// Mock hooks used in SettingsPage
-vi.mock("@/hooks/useConnectionConfig", () => ({
-  useConnectionConfig: () => null,
-}));
-
+// Mock hooks used in WorkspaceSection
 vi.mock("@/hooks/useFilterBarPosition", () => ({
   useFilterBarPosition: () => ({
     filterBarPosition: "bottom",
@@ -71,21 +35,8 @@ vi.mock("@/hooks/useFilterBarPosition", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useFocusMode", () => ({
-  useFocusMode: () => ({
-    isFocusMode: false,
-    setFocusMode: vi.fn(),
-    focusOpacity: 30,
-    setFocusOpacity: vi.fn(),
-  }),
-}));
-
 vi.mock("@/hooks/useHandedness", () => ({
   useHandedness: () => ({ handedness: "right", setHandedness: vi.fn() }),
-}));
-
-vi.mock("@/hooks/useLanguage", () => ({
-  useLanguage: () => ({ language: "en", setLanguage: vi.fn() }),
 }));
 
 vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
@@ -95,64 +46,20 @@ vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
   }),
 }));
 
-vi.mock("@/hooks/usePanelOpen", () => ({
-  usePanelOpen: () => ({ isPanelOpen: false, togglePanelOpen: vi.fn() }),
-}));
-
 vi.mock("@/hooks/usePanelSide", () => ({
   usePanelSide: () => ({ panelSide: "right", setPanelSide: vi.fn() }),
 }));
 
-vi.mock("@/hooks/useSettings", () => ({
-  useSettings: () => ({
-    defaultBox: "inbox",
-    setDefaultBox: vi.fn(),
-    dayBoundary: "00:00",
-    setDayBoundary: vi.fn(),
-  }),
-}));
-
-vi.mock("@/hooks/useSidebarNavigation", () => ({
-  useSidebarNavigation: () => vi.fn(),
-}));
-
 // Mock child components
-vi.mock("@/components/settings/DayBoundarySection", () => ({
-  DayBoundarySection: () => null,
-}));
-
 vi.mock("@/components/settings/MenuOrderSection", () => ({
   MenuOrderSection: () => null,
 }));
 
-vi.mock("@/components/settings/ServerSection", () => ({
-  ServerSection: () => null,
-}));
-
-vi.mock("@/components/tasks/Sidebar", () => ({
-  Sidebar: () => null,
-}));
-
-vi.mock("@/services/localeRegistry", () => ({
-  getLocaleByCode: () => ({
-    code: "en",
-    nativeName: "English",
-    emoji: "🇺🇸",
-  }),
-  locales: [
-    { code: "en", nativeName: "English", name: "English", emoji: "🇺🇸" },
-  ],
-}));
-
-vi.mock("@/services/supabaseClientManager", () => ({
-  isOauthReturn: () => false,
-  clearOauthReturnFlag: vi.fn(),
-}));
-
 const feature = await loadFeature("../pin_detail_panel_settings.feature");
 
-const SettingsPageModule = await import("@/pages/SettingsPage");
-const SettingsPage = SettingsPageModule.default;
+const { WorkspaceSection } = await import(
+  "@/components/settings/WorkspaceSection"
+);
 
 type FeatureContext = Record<string, never>;
 
@@ -174,7 +81,7 @@ describeFeature(
         });
 
         When("SettingsPage is rendered", (_ctx: TestContext) => {
-          render(React.createElement(SettingsPage));
+          render(React.createElement(WorkspaceSection));
         });
 
         Then("the detail panel pinned toggle is on", (_ctx: TestContext) => {
@@ -195,7 +102,7 @@ describeFeature(
         });
 
         When("SettingsPage is rendered", (_ctx: TestContext) => {
-          render(React.createElement(SettingsPage));
+          render(React.createElement(WorkspaceSection));
         });
 
         Then("the detail panel pinned toggle is off", (_ctx: TestContext) => {
@@ -218,7 +125,7 @@ describeFeature(
         When(
           "user toggles the detail panel pinned switch",
           (_ctx: TestContext) => {
-            render(React.createElement(SettingsPage));
+            render(React.createElement(WorkspaceSection));
             const toggle = screen.getByTestId(
               "settings-detail-panel-pinned-toggle",
             );

@@ -28,6 +28,11 @@ test("change setting value → push → pull → verify persisted", async () => 
   await page.goto("/settings");
   await page.waitForSelector('[data-testid="settings-page"]');
 
+  // Expand Look & Feel accordion section to reveal accent color options
+  await page
+    .getByTestId("accordion-header-settings-accordion-look-and-feel")
+    .click();
+
   // Change accent color to "green" — this is stored via settingsRepository.set()
   // and synced to the server (unlike colorScheme which is localStorage-only)
   await page.getByTestId("settings-color-option-green").click();

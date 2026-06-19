@@ -246,3 +246,19 @@ export const COMMAND_BAR_CSS_VAR = "--command-bar-height";
 export const COMMAND_BAR_STACKED_CLASS = "command-bar-stacked";
 
 export const SORT_ORDER_REBALANCE_THRESHOLD = 10;
+
+// implements FR1, FR8 of settings-page-reordering
+
+export const SETTINGS_SECTION_IDS = {
+  LOOK_AND_FEEL: "settings-accordion-look-and-feel",
+  WORKSPACE: "settings-accordion-workspace",
+  TASKS: "settings-accordion-tasks",
+  ACCOUNT_SYNC: "settings-accordion-account-sync",
+} as const;
+
+export const SYNCED_SETTING_KEYS = new Set([
+  "accent_color",
+  "custom_accent_colors",
+  "default_box",
+  "day_boundary",
+]);
