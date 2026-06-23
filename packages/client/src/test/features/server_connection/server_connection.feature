@@ -5,21 +5,10 @@ Feature: Server Connection — Backend Selection
   Background:
     Given no backend is connected
 
-  @simplify-backend-connection @FR2 @UX1
-  Scenario: Backend selection shows Supabase first
-    When Server section is rendered
-    Then "Connect Supabase" button is displayed before "Connect Google Apps Script" button
-
   @simplify-backend-connection @FR3
   Scenario: Selecting Supabase shows connection form
     When user selects "Connect Supabase"
     Then Supabase connection form is displayed
-    And "Connect" and "Cancel" buttons are shown
-
-  @simplify-backend-connection @FR4
-  Scenario: Selecting GAS shows connection form
-    When user selects "Connect Google Apps Script"
-    Then GAS connection form is displayed
     And "Connect" and "Cancel" buttons are shown
 
   @simplify-backend-connection @FR5

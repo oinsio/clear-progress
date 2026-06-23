@@ -9,10 +9,7 @@ const mockFetchSupabaseProviders = vi.fn();
 const mockCreateSupabaseClient = vi.fn();
 const mockGetSupabaseClient = vi.fn();
 const mockGetAccessToken = vi.fn();
-const mockCreateGasAdapter = vi.fn();
 const mockParseSupabaseInput = vi.fn((url: string) => url);
-const mockParseGasInput = vi.fn((url: string) => url);
-const mockParseClientId = vi.fn((id: string) => id);
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -56,17 +53,8 @@ vi.mock("@/services/supabaseClientManager", () => ({
 vi.mock("@/services/tokenManager", () => ({
   getAccessToken: () => mockGetAccessToken(),
 }));
-vi.mock("@clear-progress/adapter-gas", () => ({
-  createGasAdapter: (...args: unknown[]) => mockCreateGasAdapter(...args),
-}));
 vi.mock("@/utils/supabaseUrl", () => ({
   parseSupabaseInput: (url: string) => mockParseSupabaseInput(url),
-}));
-vi.mock("@/utils/gasUrl", () => ({
-  parseGasInput: (url: string) => mockParseGasInput(url),
-}));
-vi.mock("@/utils/clientId", () => ({
-  parseClientId: (id: string) => mockParseClientId(id),
 }));
 vi.mock("@/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/constants")>()),
@@ -100,7 +88,6 @@ describe("ServerSection — navigation", () => {
   it("renders selection phase when no config", () => {
     render(<ServerSection />);
     expect(screen.getByTestId("server-connect-supabase")).toBeInTheDocument();
-    expect(screen.getByTestId("server-connect-gas")).toBeInTheDocument();
   });
 
   it("renders title", () => {
@@ -118,28 +105,11 @@ describe("ServerSection — navigation", () => {
     ).not.toBeInTheDocument();
   });
 
-  // ── Phase: gas_form ────────────────────────────────────────
-  it("shows gas form after selecting GAS", () => {
-    render(<ServerSection />);
-    fireEvent.click(screen.getByTestId("server-connect-gas"));
-    expect(screen.getByTestId("server-gas-url")).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("server-connect-supabase"),
-    ).not.toBeInTheDocument();
-  });
-
   // ── Cancel from forms ──────────────────────────────────────
   it("returns to selection when cancelling from supabase form", () => {
     render(<ServerSection />);
     fireEvent.click(screen.getByTestId("server-connect-supabase"));
     fireEvent.click(screen.getByTestId("server-supabase-cancel"));
-    expect(screen.getByTestId("server-connect-supabase")).toBeInTheDocument();
-  });
-
-  it("returns to selection when cancelling from gas form", () => {
-    render(<ServerSection />);
-    fireEvent.click(screen.getByTestId("server-connect-gas"));
-    fireEvent.click(screen.getByTestId("server-gas-cancel"));
     expect(screen.getByTestId("server-connect-supabase")).toBeInTheDocument();
   });
 

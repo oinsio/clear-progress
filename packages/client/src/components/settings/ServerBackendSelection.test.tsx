@@ -17,7 +17,6 @@ describe("ServerBackendSelection", () => {
 
   const defaultProps = {
     onSelectSupabase: vi.fn(),
-    onSelectGas: vi.fn(),
   };
 
   it("renders hint text with chooseBackendHint i18n key", () => {
@@ -31,34 +30,11 @@ describe("ServerBackendSelection", () => {
     expect(supabaseButton.textContent).toBe("settings.server.connectSupabase");
   });
 
-  it("renders GAS button with connectGas i18n key", () => {
-    render(<ServerBackendSelection {...defaultProps} />);
-    const gasButton = screen.getByTestId("server-connect-gas");
-    expect(gasButton.textContent).toBe("settings.server.connectGas");
-  });
-
   it("calls onSelectSupabase when Supabase button is clicked", () => {
     const onSelectSupabase = vi.fn();
-    render(
-      <ServerBackendSelection
-        onSelectSupabase={onSelectSupabase}
-        onSelectGas={vi.fn()}
-      />,
-    );
+    render(<ServerBackendSelection onSelectSupabase={onSelectSupabase} />);
     fireEvent.click(screen.getByTestId("server-connect-supabase"));
     expect(onSelectSupabase).toHaveBeenCalledOnce();
-  });
-
-  it("calls onSelectGas when GAS button is clicked", () => {
-    const onSelectGas = vi.fn();
-    render(
-      <ServerBackendSelection
-        onSelectSupabase={vi.fn()}
-        onSelectGas={onSelectGas}
-      />,
-    );
-    fireEvent.click(screen.getByTestId("server-connect-gas"));
-    expect(onSelectGas).toHaveBeenCalledOnce();
   });
 
   // implements FR13, NFR-A3 of supabase-provider-info
@@ -68,14 +44,5 @@ describe("ServerBackendSelection", () => {
     const supabaseIcon = supabaseButton.querySelector("svg");
     expect(supabaseIcon).not.toBeNull();
     expect(supabaseIcon?.getAttribute("aria-hidden")).toBe("true");
-  });
-
-  // implements FR13, NFR-A3 of supabase-provider-info
-  it("renders GAS icon with aria-hidden on GAS button", () => {
-    render(<ServerBackendSelection {...defaultProps} />);
-    const gasButton = screen.getByTestId("server-connect-gas");
-    const gasIcon = gasButton.querySelector("svg");
-    expect(gasIcon).not.toBeNull();
-    expect(gasIcon?.getAttribute("aria-hidden")).toBe("true");
   });
 });

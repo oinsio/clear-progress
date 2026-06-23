@@ -87,12 +87,6 @@ const supabaseConfig: ConnectionConfig = {
   anonKey: "test-anon-key",
 };
 
-const gasConfig: ConnectionConfig = {
-  type: "gas",
-  url: "https://script.google.com/macros/s/ABC/exec",
-  clientId: "123456789",
-};
-
 describe("ServerConnectedStatus", () => {
   afterEach(cleanup);
 
@@ -110,13 +104,6 @@ describe("ServerConnectedStatus", () => {
     renderConnected(supabaseConfig);
     expect(screen.getByTestId("server-connected-type")).toHaveTextContent(
       "settings.server.typeSupabase",
-    );
-  });
-
-  it("renders GAS type label", () => {
-    renderConnected(gasConfig);
-    expect(screen.getByTestId("server-connected-type")).toHaveTextContent(
-      "settings.server.typeGas",
     );
   });
 
@@ -170,29 +157,6 @@ describe("ServerConnectedStatus", () => {
     );
   });
 
-  it("shows sign-in required for GAS when no accessToken", () => {
-    setupAuth(null, null);
-    renderConnected(gasConfig);
-    expect(screen.getByTestId("server-signin-required")).toBeInTheDocument();
-    expect(screen.getByTestId("server-signin-button")).toHaveTextContent(
-      "settings.server.signInWithGoogle",
-    );
-  });
-
-  it("calls signIn when GAS sign-in button clicked", () => {
-    setupAuth(null, null);
-    renderConnected(gasConfig);
-    fireEvent.click(screen.getByTestId("server-signin-button"));
-    expect(mockSignIn).toHaveBeenCalledOnce();
-  });
-
-  it("hides sign-in when GAS has accessToken", () => {
-    renderConnected(gasConfig);
-    expect(
-      screen.queryByTestId("server-signin-required"),
-    ).not.toBeInTheDocument();
-  });
-
   it("shows sign-in for Supabase when session expired", () => {
     mockUseConnectionStatus.mockReturnValue("no_auth");
     setupAuth(null, null);
@@ -241,14 +205,6 @@ describe("ServerConnectedStatus", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders signInRequired i18n key for GAS no token", () => {
-    setupAuth(null, null);
-    renderConnected(gasConfig);
-    expect(
-      screen.getByText("settings.server.signInRequired"),
-    ).toBeInTheDocument();
-  });
-
   it("shows sign-in for Supabase unauthorized status", () => {
     mockUseConnectionStatus.mockReturnValue("unauthorized");
     setupAuth(null, null);
@@ -275,14 +231,6 @@ describe("ServerConnectedStatus", () => {
   it("should hide provider row when authProvider is null", () => {
     setupAuth("test-token", "user@example.com");
     renderConnected(supabaseConfig);
-    expect(
-      screen.queryByTestId("server-connected-provider"),
-    ).not.toBeInTheDocument();
-  });
-
-  it("should hide provider row for GAS even with authProvider", () => {
-    setupAuth("test-token", "user@example.com", "google");
-    renderConnected(gasConfig);
     expect(
       screen.queryByTestId("server-connected-provider"),
     ).not.toBeInTheDocument();

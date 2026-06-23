@@ -70,17 +70,6 @@ The `deploy.sh` and `reset-db.sh` scripts SHALL require an explicit environment 
 - **WHEN** operator runs `deploy.sh qa` but `.env.qa` does not exist
 - **THEN** script exits with an error message indicating the missing `.env.qa` file
 
-### Requirement: GAS multi-environment deployments
-The GAS `deploy.sh` SHALL support three environments (`dev`, `qa`, `prod`) via `DEPLOY_ID_{DEV,QA,PROD}` variables in a single `.env` file. GAS uses one Apps Script project with multiple deployment IDs (unlike Supabase which uses separate projects per environment).
-
-#### Scenario: Deploy GAS to QA
-- **WHEN** operator runs `./deploy.sh deploy qa`
-- **THEN** script uses `DEPLOY_ID_QA` from `.env` to update the QA deployment
-
-#### Scenario: GAS status shows all environments
-- **WHEN** operator runs `./deploy.sh status`
-- **THEN** output lists deployment IDs for dev, qa, and prod
-
 ### Requirement: QA CI pipeline performance
 The QA GitHub Actions workflow SHALL complete (preflight + build + deploy) within 5 minutes for typical runs.
 

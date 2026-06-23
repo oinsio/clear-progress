@@ -5,15 +5,15 @@ Feature: Connection service disconnect
 
   @localstorage-refactor @FR10
   Scenario: Disconnect sets activeType to null and preserves configs
-    Given an active GAS connection with url "https://example.com" and clientId "client-123"
+    Given an active Supabase connection with url "https://example.supabase.co" and anonKey "test-key"
     When disconnect is called
     Then the store has activeType null
-    And the store has gas config with url "https://example.com"
-    And the store has gas config with clientId "client-123"
+    And the store has supabase config with url "https://example.supabase.co"
+    And the store has supabase config with anonKey "test-key"
 
   @localstorage-refactor @FR10
   Scenario: Disconnect removes auth and sync keys
-    Given an active GAS connection with url "https://example.com"
+    Given an active Supabase connection with url "https://example.supabase.co" and anonKey "test-key"
     And auth keys exist in localStorage
     And sync keys exist in localStorage
     When disconnect is called
@@ -28,7 +28,6 @@ Feature: Connection service disconnect
 
   @localstorage-refactor @FR10
   Scenario: Disconnect dispatches events
-    Given an active GAS connection with url "https://example.com"
+    Given an active Supabase connection with url "https://example.supabase.co" and anonKey "test-key"
     When disconnect is called
     Then a backend connection event was dispatched
-    And a Google client ID event was dispatched

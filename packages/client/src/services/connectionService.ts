@@ -5,11 +5,7 @@ import {
   type ConnectionStore,
   ConnectionStoreSchema,
 } from "@clear-progress/contract";
-import {
-  BACKEND_CONNECTION_EVENT,
-  GOOGLE_CLIENT_ID_CHANGED_EVENT,
-  STORAGE_KEYS,
-} from "@/constants";
+import { BACKEND_CONNECTION_EVENT, STORAGE_KEYS } from "@/constants";
 import type { BackendType } from "@/types/connection";
 import {
   getPreference,
@@ -45,19 +41,12 @@ export function connect(config: ConnectionConfig): void {
       activeType: config.type,
       configs: {
         ...store.configs,
-        [config.type]:
-          config.type === "gas"
-            ? { url: config.url, clientId: config.clientId }
-            : { url: config.url, anonKey: config.anonKey },
+        [config.type]: { url: config.url, anonKey: config.anonKey },
       },
     };
     writeStore(updatedStore);
 
     window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
-
-    if (config.type === "gas" && config.clientId) {
-      window.dispatchEvent(new Event(GOOGLE_CLIENT_ID_CHANGED_EVENT));
-    }
   } catch (error) {
     console.error("Failed to save connection config:", error);
     throw error;
@@ -86,9 +75,7 @@ export function disconnect(): void {
     removePreference(STORAGE_KEYS.LAST_SYNC);
     removePreference(STORAGE_KEYS.SETTINGS_UPDATED_AT);
 
-    // Dispatch events
     window.dispatchEvent(new Event(BACKEND_CONNECTION_EVENT));
-    window.dispatchEvent(new Event(GOOGLE_CLIENT_ID_CHANGED_EVENT));
   } catch (error) {
     console.error("Failed to disconnect:", error);
     throw error;
@@ -111,7 +98,7 @@ export function getSavedConnectionConfig(): ConnectionConfig | null {
   const store = readStore();
   if (store.activeType === null) {
     // Return any config that exists, preferring last active
-    for (const backendType of ["gas", "supabase"] as const) {
+    for (const backendType of ["supabase"] as const) {
       const savedConfig = store.configs[backendType];
       if (savedConfig) {
         return { ...savedConfig, type: backendType } as ConnectionConfig;

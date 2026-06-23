@@ -91,26 +91,12 @@ export function selectSupabase(): void {
   fireEvent.click(screen.getByTestId("server-connect-supabase"));
 }
 
-export function selectGas(): void {
-  renderServerSection();
-  fireEvent.click(screen.getByTestId("server-connect-gas"));
-}
-
 export function fillSupabaseForm(url: string, anonKey: string): void {
   fireEvent.change(screen.getByTestId("server-supabase-url"), {
     target: { value: url },
   });
   fireEvent.change(screen.getByTestId("server-supabase-anon-key"), {
     target: { value: anonKey },
-  });
-}
-
-export function fillGasForm(url: string, clientId: string): void {
-  fireEvent.change(screen.getByTestId("server-gas-url"), {
-    target: { value: url },
-  });
-  fireEvent.change(screen.getByTestId("server-gas-client-id"), {
-    target: { value: clientId },
   });
 }
 

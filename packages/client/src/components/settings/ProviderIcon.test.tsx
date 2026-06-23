@@ -55,11 +55,6 @@ describe("ProviderIcon", () => {
     expect(container.querySelector("svg")).not.toBeNull();
   });
 
-  it("should render Google Apps Script icon for 'gas' provider", () => {
-    const { container } = render(<ProviderIcon provider="gas" />);
-    expect(container.querySelector("svg")).not.toBeNull();
-  });
-
   it("should render Mail icon for 'email' provider", () => {
     const { container } = render(<ProviderIcon provider="email" />);
     expect(container.querySelector("svg")).not.toBeNull();
@@ -86,7 +81,6 @@ describe("ProviderIcon", () => {
     "slack",
     "linkedin",
     "supabase",
-    "gas",
     "email",
   ];
 

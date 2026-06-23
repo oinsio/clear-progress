@@ -205,28 +205,6 @@
     "menuOrderDragHandle": "Переместить: {{label}}",
     "menuOrderToggle": "Показать/скрыть: {{label}}"
   },
-  "setup": {
-    "name": "Подключение к облаку",
-    "gasSection": "Google Apps Script",
-    "description": "Введите URL или Deployment ID вашего Google Apps Script",
-    "urlLabel": "Google Apps Script URL или Deployment ID",
-    "urlPlaceholder": "AKfycbx... или https://script.google.com/...",
-    "connect": "Проверить доступность Google Apps Script",
-    "connecting": "Проверяю...",
-    "disconnect": "Отключить от кислорода",
-    "skip": "Работать без синхронизации",
-    "notInitializedHint": "Соединение есть, но Google Sheets ещё не созданы",
-    "initialize": "Инициализировать",
-    "initializing": "Инициализирую...",
-    "goToApp": "К страданиям",
-    "errorConnection": "Не удалось подключиться. Проверьте URL.",
-    "errorInit": "Ошибка инициализации. Не удивительно.",
-    "connectedUrl": "Текущий адрес:",
-    "awaitingSignin": "Подключение есть. Войдите в Google для начала мучений.",
-    "clientIdLabel": "Google OAuth 2.0 Client ID",
-    "clientIdPlaceholder": "1234567890-xxx",
-    "clientIdDescription": "Создайте OAuth 2.0 Client ID в Google Cloud Console. Короткая форма тоже принимается. Должно быть несложно."
-  },
   "selector": {
     "goal": "Иллюзия",
     "context": "Контекст",

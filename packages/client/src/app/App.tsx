@@ -11,8 +11,6 @@ import { SyncProvider } from "./providers/SyncProvider";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { router } from "./router";
 
-// GoogleOAuthProvider is now managed inside AuthProvider (see AuthProvider.tsx).
-// App.tsx no longer needs to conditionally wrap children — they never remount.
 export default function App() {
   useHiddenTasksReveal();
 

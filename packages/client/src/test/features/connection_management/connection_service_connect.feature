@@ -5,32 +5,20 @@ Feature: Connection service connect
 
   @localstorage-refactor @FR9
   Scenario: Connect saves config with activeType set
-    Given a GAS config with url "https://example.com" and clientId "client-123"
+    Given a Supabase config with url "https://example.supabase.co" and anonKey "test-key"
     When connect is called with the config
-    Then the store has activeType "gas"
-    And the store has gas config with url "https://example.com"
-    And the store has gas config with clientId "client-123"
+    Then the store has activeType "supabase"
+    And the store has supabase config with url "https://example.supabase.co"
+    And the store has supabase config with anonKey "test-key"
 
   @localstorage-refactor @FR9
   Scenario: Connect sets activeType to the config type
-    Given a GAS config with url "https://example.com"
+    Given a Supabase config with url "https://example.supabase.co" and anonKey "anon-key"
     When connect is called with the config
-    Then the store has activeType "gas"
+    Then the store has activeType "supabase"
 
   @localstorage-refactor @FR9
   Scenario: Connect dispatches backend connection event
-    Given a GAS config with url "https://example.com"
+    Given a Supabase config with url "https://example.supabase.co" and anonKey "anon-key"
     When connect is called with the config
     Then a backend connection event was dispatched
-
-  @localstorage-refactor @FR9
-  Scenario: Connect dispatches Google client ID event for GAS with clientId
-    Given a GAS config with url "https://example.com" and clientId "client-123"
-    When connect is called with the config
-    Then a Google client ID event was dispatched
-
-  @localstorage-refactor @FR9
-  Scenario: Connect does not dispatch Google client ID event for GAS without clientId
-    Given a GAS config with url "https://example.com" and no clientId
-    When connect is called with the config
-    Then a Google client ID event was not dispatched

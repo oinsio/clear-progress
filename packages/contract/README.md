@@ -91,7 +91,7 @@ When adding new methods to `SyncAdapter`:
 1. Define request/response types in `src/protocol/`
 2. Add method to `SyncAdapter` interface in `src/ports/sync-adapter.ts`
 3. Add contract tests in `tests/contracts/sync-adapter.contract.ts`
-4. Update all existing adapters (`adapter-gas`, `adapter-inmemory`)
+4. Update all existing adapters (`adapter-supabase`, `adapter-inmemory`)
 5. Update this documentation
 
 ## Building

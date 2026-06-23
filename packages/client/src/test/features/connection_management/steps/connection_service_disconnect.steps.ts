@@ -25,7 +25,6 @@ describeFeature(
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
     const eventState: EventDispatchState = {
       backendEventDispatched: false,
-      googleClientIdEventDispatched: false,
     };
 
     f.BeforeEachScenario(() => {
@@ -39,12 +38,12 @@ describeFeature(
       "Disconnect sets activeType to null and preserves configs",
       ({ Given, When, Then, And }) => {
         Given(
-          'an active GAS connection with url "https://example.com" and clientId "client-123"',
+          'an active Supabase connection with url "https://example.supabase.co" and anonKey "test-key"',
           (_ctx: TestContext) => {
             connect({
-              type: "gas",
-              url: "https://example.com",
-              clientId: "client-123",
+              type: "supabase",
+              url: "https://example.supabase.co",
+              anonKey: "test-key",
             });
           },
         );
@@ -59,18 +58,20 @@ describeFeature(
         });
 
         And(
-          'the store has gas config with url "https://example.com"',
+          'the store has supabase config with url "https://example.supabase.co"',
           (_ctx: TestContext) => {
             const store = readStore();
-            expect(store?.configs.gas?.url).toBe("https://example.com");
+            expect(store?.configs.supabase?.url).toBe(
+              "https://example.supabase.co",
+            );
           },
         );
 
         And(
-          'the store has gas config with clientId "client-123"',
+          'the store has supabase config with anonKey "test-key"',
           (_ctx: TestContext) => {
             const store = readStore();
-            expect(store?.configs.gas?.clientId).toBe("client-123");
+            expect(store?.configs.supabase?.anonKey).toBe("test-key");
           },
         );
       },
@@ -81,11 +82,12 @@ describeFeature(
       "Disconnect removes auth and sync keys",
       ({ Given, And, When, Then }) => {
         Given(
-          'an active GAS connection with url "https://example.com"',
+          'an active Supabase connection with url "https://example.supabase.co" and anonKey "test-key"',
           (_ctx: TestContext) => {
             connect({
-              type: "gas",
-              url: "https://example.com",
+              type: "supabase",
+              url: "https://example.supabase.co",
+              anonKey: "test-key",
             });
           },
         );
@@ -152,13 +154,14 @@ describeFeature(
     );
 
     // @localstorage-refactor @FR10
-    f.Scenario("Disconnect dispatches events", ({ Given, When, Then, And }) => {
+    f.Scenario("Disconnect dispatches events", ({ Given, When, Then }) => {
       Given(
-        'an active GAS connection with url "https://example.com"',
+        'an active Supabase connection with url "https://example.supabase.co" and anonKey "test-key"',
         (_ctx: TestContext) => {
           connect({
-            type: "gas",
-            url: "https://example.com",
+            type: "supabase",
+            url: "https://example.supabase.co",
+            anonKey: "test-key",
           });
         },
       );
@@ -169,10 +172,6 @@ describeFeature(
 
       Then("a backend connection event was dispatched", (_ctx: TestContext) => {
         expect(eventState.backendEventDispatched).toBe(true);
-      });
-
-      And("a Google client ID event was dispatched", (_ctx: TestContext) => {
-        expect(eventState.googleClientIdEventDispatched).toBe(true);
       });
     });
   },

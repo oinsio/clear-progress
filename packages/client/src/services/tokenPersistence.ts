@@ -36,7 +36,7 @@ function selfHealTokenData(reason: string): void {
 
 /**
  * Implements FR-2 of refactor-token-persistence.
- * Persists access token to localStorage — used for GAS backend.
+ * Persists access token to localStorage.
  */
 export const localStoragePersistence: TokenPersistence = {
   save(token: string, expiresAt: number) {

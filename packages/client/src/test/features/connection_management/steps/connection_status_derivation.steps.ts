@@ -36,8 +36,9 @@ describeFeature(
 
     f.BeforeEachScenario(() => {
       mockUseConnectionConfig.mockReturnValue({
-        type: "gas",
-        clientId: "default-client",
+        type: "supabase",
+        url: "https://test.supabase.co",
+        anonKey: "test-key",
       });
       mockUseAuth.mockReturnValue({ accessToken: "valid-token" });
       mockUseSync.mockReturnValue({ syncStatus: "idle" });
@@ -58,56 +59,6 @@ describeFeature(
         expect(derivedStatus).toBe("not_configured");
       });
     });
-
-    // @connection-management-spec @FR7
-    f.Scenario(
-      "GAS with clientId but no token returns no_auth",
-      ({ Given, And, When, Then }) => {
-        Given(
-          'a GAS config with clientId "client-123" exists',
-          (_ctx: TestContext) => {
-            mockUseConnectionConfig.mockReturnValue({
-              type: "gas",
-              clientId: "client-123",
-            });
-          },
-        );
-
-        And("no access token is present", (_ctx: TestContext) => {
-          mockUseAuth.mockReturnValue({ accessToken: null });
-        });
-
-        When("connection status is derived", (_ctx: TestContext) => {
-          derivedStatus = deriveStatus();
-        });
-
-        Then('the connection status is "no_auth"', (_ctx: TestContext) => {
-          expect(derivedStatus).toBe("no_auth");
-        });
-      },
-    );
-
-    // @connection-management-spec @FR7
-    f.Scenario(
-      "GAS without clientId and no token returns synced",
-      ({ Given, And, When, Then }) => {
-        Given("a GAS config without clientId exists", (_ctx: TestContext) => {
-          mockUseConnectionConfig.mockReturnValue({ type: "gas" });
-        });
-
-        And("no access token is present", (_ctx: TestContext) => {
-          mockUseAuth.mockReturnValue({ accessToken: null });
-        });
-
-        When("connection status is derived", (_ctx: TestContext) => {
-          derivedStatus = deriveStatus();
-        });
-
-        Then('the connection status is "synced"', (_ctx: TestContext) => {
-          expect(derivedStatus).toBe("synced");
-        });
-      },
-    );
 
     // @connection-management-spec @FR7
     f.Scenario(
@@ -248,38 +199,6 @@ describeFeature(
             expect(derivedStatus).toBe("not_configured");
           },
         );
-      },
-    );
-
-    // @connection-management-spec @FR7
-    f.Scenario(
-      "no_auth takes precedence over sync error",
-      ({ Given, And, When, Then }) => {
-        Given(
-          'a GAS config with clientId "client-123" exists',
-          (_ctx: TestContext) => {
-            mockUseConnectionConfig.mockReturnValue({
-              type: "gas",
-              clientId: "client-123",
-            });
-          },
-        );
-
-        And("no access token is present", (_ctx: TestContext) => {
-          mockUseAuth.mockReturnValue({ accessToken: null });
-        });
-
-        And('sync status is "error"', (_ctx: TestContext) => {
-          mockUseSync.mockReturnValue({ syncStatus: "error" });
-        });
-
-        When("connection status is derived", (_ctx: TestContext) => {
-          derivedStatus = deriveStatus();
-        });
-
-        Then('the connection status is "no_auth"', (_ctx: TestContext) => {
-          expect(derivedStatus).toBe("no_auth");
-        });
       },
     );
   },

@@ -3,7 +3,7 @@
 import type { ConnectionStore } from "@clear-progress/contract";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
-import type { ConnectionConfig, GasConnectionConfig } from "@/types/connection";
+import type { SupabaseConnectionConfig } from "@/types/connection";
 import {
   connect,
   disconnect,
@@ -30,46 +30,42 @@ describe("connectionService", () => {
 
   describe("connect", () => {
     it("should store activeType and config in nested configs object", () => {
-      const config: GasConnectionConfig = {
-        type: "gas",
-        url: "https://example.com",
-        clientId: "test-client-id",
+      const config: SupabaseConnectionConfig = {
+        type: "supabase",
+        url: "https://example.supabase.co",
+        anonKey: "test-anon-key",
       };
 
       connect(config);
 
       const store = readStore();
-      expect(store.activeType).toBe("gas");
-      expect(store.configs.gas).toEqual({
-        url: "https://example.com",
-        clientId: "test-client-id",
+      expect(store.activeType).toBe("supabase");
+      expect(store.configs.supabase).toEqual({
+        url: "https://example.supabase.co",
+        anonKey: "test-anon-key",
       });
     });
 
-    it("should preserve existing configs when connecting with a different type", () => {
-      const gasConfig: GasConnectionConfig = {
-        type: "gas",
-        url: "https://gas.example.com",
-        clientId: "gas-id",
-      };
-      connect(gasConfig);
-
-      const supabaseConfig: ConnectionConfig = {
+    it("should overwrite existing config when connecting again", () => {
+      const firstConfig: SupabaseConnectionConfig = {
         type: "supabase",
-        url: "https://supabase.example.com",
-        anonKey: "anon-key-123",
+        url: "https://first.supabase.co",
+        anonKey: "first-key",
       };
-      connect(supabaseConfig);
+      connect(firstConfig);
+
+      const secondConfig: SupabaseConnectionConfig = {
+        type: "supabase",
+        url: "https://second.supabase.co",
+        anonKey: "second-key",
+      };
+      connect(secondConfig);
 
       const store = readStore();
       expect(store.activeType).toBe("supabase");
-      expect(store.configs.gas).toEqual({
-        url: "https://gas.example.com",
-        clientId: "gas-id",
-      });
       expect(store.configs.supabase).toEqual({
-        url: "https://supabase.example.com",
-        anonKey: "anon-key-123",
+        url: "https://second.supabase.co",
+        anonKey: "second-key",
       });
     });
   });
@@ -81,10 +77,10 @@ describe("connectionService", () => {
       });
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      const config: GasConnectionConfig = {
-        type: "gas",
-        url: "https://example.com",
-        clientId: "test-id",
+      const config: SupabaseConnectionConfig = {
+        type: "supabase",
+        url: "https://example.supabase.co",
+        anonKey: "test-key",
       };
 
       expect(() => connect(config)).toThrow("dispatch failed");
@@ -97,10 +93,10 @@ describe("connectionService", () => {
 
   describe("disconnect", () => {
     it("should set activeType to null but preserve configs", () => {
-      const config: GasConnectionConfig = {
-        type: "gas",
-        url: "https://example.com",
-        clientId: "test-client-id",
+      const config: SupabaseConnectionConfig = {
+        type: "supabase",
+        url: "https://example.supabase.co",
+        anonKey: "test-anon-key",
       };
       connect(config);
 
@@ -108,16 +104,17 @@ describe("connectionService", () => {
 
       const store = readStore();
       expect(store.activeType).toBeNull();
-      expect(store.configs.gas).toEqual({
-        url: "https://example.com",
-        clientId: "test-client-id",
+      expect(store.configs.supabase).toEqual({
+        url: "https://example.supabase.co",
+        anonKey: "test-anon-key",
       });
     });
 
     it("should remove auth and sync keys", () => {
-      const config: GasConnectionConfig = {
-        type: "gas",
-        url: "https://example.com",
+      const config: SupabaseConnectionConfig = {
+        type: "supabase",
+        url: "https://example.supabase.co",
+        anonKey: "test-key",
       };
       connect(config);
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, "token");
@@ -163,7 +160,9 @@ describe("connectionService", () => {
     it("should return null when activeType is null", () => {
       writeStore({
         activeType: null,
-        configs: { gas: { url: "https://example.com" } },
+        configs: {
+          supabase: { url: "https://example.supabase.co", anonKey: "key" },
+        },
       });
 
       const result = getConnectionConfig();
@@ -173,16 +172,18 @@ describe("connectionService", () => {
 
     it("should return config with type field when activeType is set", () => {
       writeStore({
-        activeType: "gas",
-        configs: { gas: { url: "https://example.com", clientId: "test-id" } },
+        activeType: "supabase",
+        configs: {
+          supabase: { url: "https://example.supabase.co", anonKey: "test-key" },
+        },
       });
 
       const result = getConnectionConfig();
 
       expect(result).toEqual({
-        type: "gas",
-        url: "https://example.com",
-        clientId: "test-id",
+        type: "supabase",
+        url: "https://example.supabase.co",
+        anonKey: "test-key",
       });
     });
 
@@ -194,7 +195,7 @@ describe("connectionService", () => {
     it("should return null when activeType is set but config for that type is missing", () => {
       writeStore({
         activeType: "supabase",
-        configs: { gas: { url: "https://gas.example.com" } },
+        configs: {},
       });
 
       const result = getConnectionConfig();
@@ -207,23 +208,24 @@ describe("connectionService", () => {
     it("should return config even when activeType is null", () => {
       writeStore({
         activeType: null,
-        configs: { gas: { url: "https://example.com", clientId: "test-id" } },
+        configs: {
+          supabase: { url: "https://example.supabase.co", anonKey: "test-key" },
+        },
       });
 
       const result = getSavedConnectionConfig();
 
       expect(result).toEqual({
-        type: "gas",
-        url: "https://example.com",
-        clientId: "test-id",
+        type: "supabase",
+        url: "https://example.supabase.co",
+        anonKey: "test-key",
       });
     });
 
-    it("should return active type config when both gas and supabase configs exist", () => {
+    it("should return active type config when activeType is set", () => {
       writeStore({
         activeType: "supabase",
         configs: {
-          gas: { url: "https://gas.example.com", clientId: "gas-id" },
           supabase: {
             url: "https://supabase.example.com",
             anonKey: "key-123",
@@ -243,7 +245,7 @@ describe("connectionService", () => {
     it("should return null when activeType is set but config for that type is missing", () => {
       writeStore({
         activeType: "supabase",
-        configs: { gas: { url: "https://gas.example.com" } },
+        configs: {},
       });
 
       const result = getSavedConnectionConfig();
@@ -260,18 +262,10 @@ describe("connectionService", () => {
   describe("getSavedConfigForType", () => {
     it("should return config for specific type from nested configs", () => {
       writeStore({
-        activeType: "gas",
+        activeType: "supabase",
         configs: {
-          gas: { url: "https://gas.example.com", clientId: "gas-id" },
           supabase: { url: "https://supabase.example.com", anonKey: "key-123" },
         },
-      });
-
-      const gasResult = getSavedConfigForType("gas");
-      expect(gasResult).toEqual({
-        type: "gas",
-        url: "https://gas.example.com",
-        clientId: "gas-id",
       });
 
       const supabaseResult = getSavedConfigForType("supabase");
@@ -284,8 +278,8 @@ describe("connectionService", () => {
 
     it("should return null when type config does not exist", () => {
       writeStore({
-        activeType: "gas",
-        configs: { gas: { url: "https://example.com" } },
+        activeType: "supabase",
+        configs: {},
       });
 
       const result = getSavedConfigForType("supabase");

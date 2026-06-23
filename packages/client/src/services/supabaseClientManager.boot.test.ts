@@ -60,20 +60,6 @@ describe("supabaseClientManager boot initialization", () => {
     );
   });
 
-  it("should not create client when boot config is gas type", async () => {
-    mockGetConnectionConfig.mockReturnValue({
-      type: "gas",
-      url: "https://script.google.com/test",
-    });
-
-    const { getSupabaseClient } = await import("./supabaseClientManager");
-
-    expect(mockCreateClient).not.toHaveBeenCalled();
-    expect(() => getSupabaseClient()).toThrow(
-      "Supabase client not initialized",
-    );
-  });
-
   it("should create client when boot config is supabase type without hash", async () => {
     mockGetConnectionConfig.mockReturnValue({
       type: "supabase",

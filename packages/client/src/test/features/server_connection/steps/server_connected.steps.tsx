@@ -15,13 +15,12 @@ import {
 
 const feature = await loadFeature("../server_connected.feature");
 
-function setupConnectedState(type: "supabase" | "gas", url: string): void {
-  const config =
-    type === "supabase"
-      ? { type, url, anonKey: "test-anon-key" }
-      : { type, url, clientId: "123456789" };
-
-  mockUseConnectionConfig.mockReturnValue(config);
+function setupConnectedSupabase(url: string): void {
+  mockUseConnectionConfig.mockReturnValue({
+    type: "supabase",
+    url,
+    anonKey: "test-anon-key",
+  });
   mockUseConnectionStatus.mockReturnValue("synced");
   mockUseAuth.mockReturnValue({
     accessToken: "test-token",
@@ -49,7 +48,7 @@ describeFeature(feature, (f) => {
       Given(
         'user is connected to Supabase at "https://myproject.supabase.co"',
         () => {
-          setupConnectedState("supabase", "https://myproject.supabase.co");
+          setupConnectedSupabase("https://myproject.supabase.co");
         },
       );
 
@@ -73,47 +72,12 @@ describeFeature(feature, (f) => {
     },
   );
 
-  // @simplify-backend-connection @FR1 @UX2
-  f.Scenario(
-    "Connected GAS shows type and URL",
-    ({ Given, When, Then, And }) => {
-      Given(
-        'user is connected to GAS at "https://script.google.com/macros/s/ABC/exec"',
-        () => {
-          setupConnectedState(
-            "gas",
-            "https://script.google.com/macros/s/ABC/exec",
-          );
-        },
-      );
-
-      When("Server section is rendered", () => {
-        renderServerSection();
-      });
-
-      Then('"Google Apps Script" label is displayed', () => {
-        const typeElement = screen.getByTestId("server-connected-type");
-        expect(typeElement).toHaveTextContent("settings.server.typeGas");
-      });
-
-      And(
-        'URL "https://script.google.com/macros/s/ABC/exec" is displayed',
-        () => {
-          const urlElement = screen.getByTestId("server-connected-url");
-          expect(urlElement).toHaveTextContent(
-            "https://script.google.com/macros/s/ABC/exec",
-          );
-        },
-      );
-    },
-  );
-
   // @simplify-backend-connection @FR10 @UX6
   f.Scenario("Full sync triggers synchronization", ({ Given, When, Then }) => {
     Given(
       'user is connected to Supabase at "https://myproject.supabase.co"',
       () => {
-        setupConnectedState("supabase", "https://myproject.supabase.co");
+        setupConnectedSupabase("https://myproject.supabase.co");
       },
     );
 
@@ -133,79 +97,6 @@ describeFeature(feature, (f) => {
     });
   });
 
-  // @simplify-backend-connection @FR10
-  f.Scenario(
-    "Sign-in prompt shown when GAS unauthenticated",
-    ({ Given, And, When, Then }) => {
-      Given(
-        'user is connected to GAS at "https://script.google.com/macros/s/ABC/exec"',
-        () => {
-          setupConnectedState(
-            "gas",
-            "https://script.google.com/macros/s/ABC/exec",
-          );
-          mockUseAuth.mockReturnValue({
-            accessToken: null,
-            userEmail: null,
-            userPicture: null,
-            signIn: vi.fn(),
-            signOut: vi.fn(),
-            silentRefresh: vi.fn(),
-          });
-          mockUseConnectionStatus.mockReturnValue("no_auth");
-        },
-      );
-
-      And("no access token is present", () => {
-        // Already configured in Given
-      });
-
-      When("Server section is rendered", () => {
-        renderServerSection();
-      });
-
-      Then("sign-in required message is displayed", () => {
-        expect(
-          screen.getByTestId("server-signin-required"),
-        ).toBeInTheDocument();
-      });
-
-      And("Sign In with Google button is available", () => {
-        expect(screen.getByTestId("server-signin-button")).toBeInTheDocument();
-      });
-    },
-  );
-
-  // @simplify-backend-connection @FR10
-  f.Scenario(
-    "Sign-in prompt hidden when GAS authenticated",
-    ({ Given, And, When, Then }) => {
-      Given(
-        'user is connected to GAS at "https://script.google.com/macros/s/ABC/exec"',
-        () => {
-          setupConnectedState(
-            "gas",
-            "https://script.google.com/macros/s/ABC/exec",
-          );
-        },
-      );
-
-      And("access token is present", () => {
-        // Already configured by setupConnectedState with accessToken: "test-token"
-      });
-
-      When("Server section is rendered", () => {
-        renderServerSection();
-      });
-
-      Then("sign-in prompt is not displayed", () => {
-        expect(
-          screen.queryByTestId("server-signin-required"),
-        ).not.toBeInTheDocument();
-      });
-    },
-  );
-
   // @simplify-backend-connection @FR3
   f.Scenario(
     "Expired Supabase session shows sign-in prompt",
@@ -213,7 +104,7 @@ describeFeature(feature, (f) => {
       Given(
         'user is connected to Supabase at "https://myproject.supabase.co"',
         () => {
-          setupConnectedState("supabase", "https://myproject.supabase.co");
+          setupConnectedSupabase("https://myproject.supabase.co");
           mockUseConnectionStatus.mockReturnValue("no_auth");
           mockUseAuth.mockReturnValue({
             accessToken: null,
@@ -253,7 +144,7 @@ describeFeature(feature, (f) => {
       Given(
         'user is connected to Supabase at "https://myproject.supabase.co"',
         () => {
-          setupConnectedState("supabase", "https://myproject.supabase.co");
+          setupConnectedSupabase("https://myproject.supabase.co");
           mockUseConnectionStatus.mockReturnValue("no_auth");
           mockUseAuth.mockReturnValue({
             accessToken: null,
@@ -296,7 +187,7 @@ describeFeature(feature, (f) => {
     Given(
       'user is connected to Supabase at "https://myproject.supabase.co"',
       () => {
-        setupConnectedState("supabase", "https://myproject.supabase.co");
+        setupConnectedSupabase("https://myproject.supabase.co");
       },
     );
 
@@ -316,7 +207,6 @@ describeFeature(feature, (f) => {
 
     And("backend selection is displayed", () => {
       expect(screen.getByTestId("server-connect-supabase")).toBeInTheDocument();
-      expect(screen.getByTestId("server-connect-gas")).toBeInTheDocument();
     });
   });
 });

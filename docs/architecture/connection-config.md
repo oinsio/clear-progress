@@ -2,12 +2,12 @@
 
 ## Problem
 
-Previously, backend connection was stored in several separate localStorage keys (`GAS_URL`, `GOOGLE_CLIENT_ID`, `BACKEND_CONNECTED`). This led to:
+Previously, backend connection was stored in several separate localStorage keys. This led to:
 
 - Key desynchronization (ghost config after disconnect)
 - Two "Disconnect" buttons with different behavior (SetupPage vs SettingsPage)
-- Dead end in `not_initialized` state without Client ID (no "Back" button)
-- SetupPage showing "connected" after disconnect (checking `GAS_URL` instead of `BACKEND_CONNECTED`)
+- Dead end in `not_initialized` state without credentials (no "Back" button)
+- SetupPage showing "connected" after disconnect (checking wrong key)
 
 ## Solution: Single `ConnectionConfig` Object
 
@@ -15,15 +15,15 @@ One serialized object in localStorage instead of separate keys:
 
 ```ts
 // src/types/connection.ts
-type GasConnectionConfig = {
-  type: "gas";
+type SupabaseConnectionConfig = {
+  type: "supabase";
   url: string;
-  clientId?: string;
+  anonKey: string;
   isActive: boolean;  // true = connected, false = disconnected (but preserved)
 };
 
-type ConnectionConfig = GasConnectionConfig;
-// Future: | SupabaseConnectionConfig | CustomConnectionConfig
+type ConnectionConfig = SupabaseConnectionConfig;
+// Future: | FirebaseConnectionConfig | PocketBaseConnectionConfig
 ```
 
 **Single key:** `STORAGE_KEYS.CONNECTION_CONFIG` -> `JSON.stringify(ConnectionConfig)` or absent.
@@ -32,7 +32,7 @@ type ConnectionConfig = GasConnectionConfig;
 
 Mandatory `isActive: boolean` field:
 - `true` — active connection (user is connected)
-- `false` — inactive connection (user disconnected, but URL and clientId are preserved for reconnection)
+- `false` — inactive connection (user disconnected, but credentials are preserved for reconnection)
 
 On disconnect (`disconnect()`), config is not deleted but updated with `isActive: false`. This allows pre-filling fields on SetupPage when reconnecting to the same server.
 
@@ -63,18 +63,13 @@ On disconnect (`disconnect()`), config is not deleted but updated with `isActive
 
 Uses `useConnectionConfig()` instead of separate checks:
 - `!config` -> `"not_configured"`
-- GAS + clientId + no token -> `"no_auth"`
 - Then maps to sync statuses
 
 ## Adding a New Backend
 
-1. Add new type to union `ConnectionConfig` (e.g., `SupabaseConnectionConfig`)
+1. Add new type to union `ConnectionConfig` (e.g., `FirebaseConnectionConfig`)
 2. Add connection form on SetupPage
 3. Add sync strategy in SyncProvider (`switch` on `config.type`)
 4. Add API client or adapter
 
 No changes needed in `connectionService`, `useConnectionConfig`, `useConnectionStatus`, disconnect flow.
-
----
-
-*Full implementation plan: [connection-flow-plan.md](../connection-flow-plan.md)*

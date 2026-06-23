@@ -110,7 +110,7 @@ export async function createAuthenticatedPage(
         }
       }
     }
-    // Fallback: GAS backend stores token directly
+    // Fallback: read token from localStorage directly
     return localStorage.getItem("access_token") ?? "";
   });
 

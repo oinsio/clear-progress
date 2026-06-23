@@ -20,9 +20,6 @@ export const mockUseSync = vi.fn();
 export const mockUseConnectionConfig = vi.fn();
 export const mockUseConnectionStatus = vi.fn();
 
-vi.mock("@clear-progress/adapter-gas", () => ({
-  createGasAdapter: vi.fn(() => ({ ping: mockPing, init: mockInit })),
-}));
 vi.mock("@/services/connectionService", () => ({
   connect: mockConnect,
   disconnect: mockDisconnect,
