@@ -115,7 +115,7 @@ Requires IA update: new top-level section "Memos" added to main navigation betwe
 
 ## Success Metrics
 
-- **M1**: All 3 initial memos render correctly in both ru and en languages
+- **M1**: All 4 initial memos render correctly in both ru and en languages
 - **M2**: Mermaid diagrams render in both light and dark themes without visual artifacts
 - **M3**: Adding a new memo file (without code changes) results in it appearing in the list after rebuild
 - **M4**: Bundle size increase from mermaid is under 400 KB gzipped
@@ -129,8 +129,9 @@ Requires IA update: new top-level section "Memos" added to main navigation betwe
 
 ## Initial Memo Content
 
-Three memos will be created for the initial release:
+Four memos will be created for the initial release:
 
-1. **task-review** (order: 1) — Task review overview: daily and weekly review flowcharts
+1. **inbox-processing** (order: 1) — Inbox processing: decision flowchart for sorting incoming items
 2. **natural-planning** (order: 2) — Natural Planning Model: 5-step planning process diagram
-3. **contexts** (order: 3) — About contexts/places: how to use @context tags effectively
+3. **tasks** (order: 3) — Tasks: criteria for proper task formulation
+4. **procrastination** (order: 4) — Procrastination: techniques to overcome it

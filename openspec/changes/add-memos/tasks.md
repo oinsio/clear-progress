@@ -37,10 +37,11 @@
 
 ## 6. Memo Content
 
-- [x] 6.1 Create `src/content/memos/ru/task-review.md` with frontmatter and mermaid diagrams (order: 1)
-- [x] 6.2 Create `src/content/memos/ru/natural-planning.md` with frontmatter and mermaid diagrams (order: 2)
-- [x] 6.3 Create `src/content/memos/ru/contexts.md` with frontmatter and mermaid diagrams (order: 3)
-- [x] 6.4 Create English versions: `src/content/memos/en/task-review.md`, `natural-planning.md`, `contexts.md`
+- [x] 6.1 Create `src/locales/memos/ru/inbox-processing.md` with frontmatter and mermaid diagrams (order: 1)
+- [x] 6.2 Create `src/locales/memos/ru/natural-planning.md` with frontmatter and mermaid diagrams (order: 2)
+- [x] 6.3 Create `src/locales/memos/ru/tasks.md` with frontmatter (order: 3)
+- [x] 6.4 Create `src/locales/memos/ru/procrastination.md` with frontmatter (order: 4)
+- [x] 6.5 Create English versions for all 4 memos
 
 ## 7. Verification
 
@@ -48,5 +49,5 @@
 - [x] 7.2 BDD unit tests: frontmatter validation scenarios (@add-memos @FR10)
 - [x] 7.3 Run mutation testing on all new files — target >=95%
 - [x] 7.4 Verify build: `pnpm run build` — check mermaid bundle size increase < 400 KB gzipped (M4)
-- [ ] 7.5 Manual verification: all 3 memos render in ru and en, mermaid diagrams in light/dark, offline access after cache (M1, M2, M5)
-- [ ] 7.6 Verify adding a new `.md` file (without code changes) results in it appearing after rebuild (M3)
+- [x] 7.5 Manual verification: all 4 memos render in ru and en, mermaid diagrams in light/dark, offline access after cache (M1, M2, M5)
+- [x] 7.6 Verify adding a new `.md` file (without code changes) results in it appearing after rebuild (M3)

@@ -5,8 +5,8 @@
 The system SHALL auto-discover all `.md` files in `src/content/memos/*/` via `import.meta.glob` with eager loading. Each file SHALL be parsed for YAML frontmatter (between `---` delimiters) and markdown body. The slug SHALL be derived from the filename without extension. The language SHALL be derived from the parent folder name.
 
 #### Scenario: Memo file discovered and parsed
-- **WHEN** file `src/content/memos/ru/task-review.md` exists with valid frontmatter
-- **THEN** registry contains a memo with slug `task-review`, lang `ru`, and parsed title/description/icon/order
+- **WHEN** file `src/content/memos/ru/inbox-processing.md` exists with valid frontmatter
+- **THEN** registry contains a memo with slug `inbox-processing`, lang `ru`, and parsed title/description/icon/order
 
 #### Scenario: New memo file added to project
 - **WHEN** a new `.md` file is added to `src/content/memos/en/`
@@ -47,8 +47,8 @@ The memos list page at `/memos` SHALL display all available memos as cards. Each
 
 #### Scenario: All memos displayed as cards
 - **WHEN** user navigates to `/memos`
-- **AND** 3 memos exist for the current language
-- **THEN** 3 memo cards are displayed with title, description, and icon
+- **AND** 4 memos exist for the current language
+- **THEN** 4 memo cards are displayed with title, description, and icon
 
 #### Scenario: Cards ordered by frontmatter order field
 - **WHEN** memos have order values 3, 1, 2
@@ -64,7 +64,7 @@ The memos list page at `/memos` SHALL display all available memos as cards. Each
 The memo detail page at `/memos/:slug` SHALL render the full markdown content of the selected memo. Code blocks with language `mermaid` SHALL be rendered as SVG diagrams via the mermaid library. The page SHALL display the memo title as a header and provide back navigation to the memos list.
 
 #### Scenario: Memo content rendered as formatted markdown
-- **WHEN** user navigates to `/memos/task-review`
+- **WHEN** user navigates to `/memos/inbox-processing`
 - **THEN** the page displays the memo title as header
 - **AND** markdown content is rendered with headings, lists, and formatted text
 
@@ -74,7 +74,7 @@ The memo detail page at `/memos/:slug` SHALL render the full markdown content of
 - **AND** the SVG has `role="img"`
 
 #### Scenario: Back navigation returns to list
-- **WHEN** user is on `/memos/task-review`
+- **WHEN** user is on `/memos/inbox-processing`
 - **AND** user activates the back button
 - **THEN** user navigates to `/memos`
 
