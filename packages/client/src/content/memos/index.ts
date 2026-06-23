@@ -3,6 +3,7 @@
  * Memo registry with auto-discovery via import.meta.glob (D3).
  */
 import { DEFAULT_LANGUAGE } from "@/constants";
+import { getLocaleByCode } from "@/services/localeRegistry";
 import { memoGlobImport } from "./memoGlobImport";
 import { parseFrontmatter } from "./parseFrontmatter";
 
@@ -69,8 +70,13 @@ function buildRegistry(globResult: Record<string, string>): MemosByLanguage {
 
 const memosByLanguage = buildRegistry(memoGlobImport);
 
+function resolveBaseLanguage(localeCode: string): string {
+  return getLocaleByCode(localeCode)?.baseLanguage ?? localeCode;
+}
+
 /** Implements FR4, FR9, FR13 of add-memos */
-export function getMemos(baseLanguage: string): MemoEntry[] {
+export function getMemos(localeCode: string): MemoEntry[] {
+  const baseLanguage = resolveBaseLanguage(localeCode);
   return (
     memosByLanguage[baseLanguage] ?? memosByLanguage[DEFAULT_LANGUAGE] ?? []
   );
@@ -78,9 +84,9 @@ export function getMemos(baseLanguage: string): MemoEntry[] {
 
 /** Implements FR8 of add-memos */
 export function getMemo(
-  baseLanguage: string,
+  localeCode: string,
   slug: string,
 ): MemoEntry | undefined {
-  const memos = getMemos(baseLanguage);
+  const memos = getMemos(localeCode);
   return memos.find((memo) => memo.slug === slug);
 }

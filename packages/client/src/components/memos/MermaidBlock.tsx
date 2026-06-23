@@ -6,6 +6,7 @@ import type { ColorScheme } from "@/types/common";
 
 const MERMAID_THEME_LIGHT = "default" as const;
 const MERMAID_THEME_DARK = "dark" as const;
+const DARK_SCHEME_MEDIA_QUERY = "(prefers-color-scheme: dark)";
 
 let mermaidIdCounter = 0;
 
@@ -14,16 +15,20 @@ function generateMermaidId(): string {
   return `mermaid-${mermaidIdCounter}`;
 }
 
-function isDarkModeActive(colorScheme: ColorScheme): boolean {
+function isDarkModeActive(
+  colorScheme: ColorScheme,
+  systemIsDark: boolean,
+): boolean {
   if (colorScheme === "dark") return true;
   if (colorScheme === "light") return false;
-  return document.documentElement.classList.contains("dark");
+  return systemIsDark;
 }
 
 function getMermaidTheme(
   colorScheme: ColorScheme,
+  systemIsDark: boolean,
 ): typeof MERMAID_THEME_DARK | typeof MERMAID_THEME_LIGHT {
-  return isDarkModeActive(colorScheme)
+  return isDarkModeActive(colorScheme, systemIsDark)
     ? MERMAID_THEME_DARK
     : MERMAID_THEME_LIGHT;
 }
@@ -42,12 +47,23 @@ export function MermaidBlock({ code }: MermaidBlockProps) {
   const [renderedSvg, setRenderedSvg] = useState<string>("");
   const [renderError, setRenderError] = useState<string>("");
   const { colorScheme } = useTheme();
+  const [systemIsDark, setSystemIsDark] = useState(
+    () => window.matchMedia(DARK_SCHEME_MEDIA_QUERY).matches,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DARK_SCHEME_MEDIA_QUERY);
+    const handleChange = (event: MediaQueryListEvent) =>
+      setSystemIsDark(event.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
 
     const renderDiagram = async () => {
-      const mermaidTheme = getMermaidTheme(colorScheme);
+      const mermaidTheme = getMermaidTheme(colorScheme, systemIsDark);
 
       mermaid.initialize({
         startOnLoad: false,
@@ -78,7 +94,7 @@ export function MermaidBlock({ code }: MermaidBlockProps) {
     return () => {
       isCancelled = true;
     };
-  }, [code, colorScheme]);
+  }, [code, colorScheme, systemIsDark]);
 
   if (renderError) {
     return (
