@@ -8,7 +8,7 @@ Display the OAuth provider name and icon in ServerConnectedStatus for Supabase c
 
 ### Requirement: Provider row displayed in ServerConnectedStatus
 
-`ServerConnectedStatus` SHALL display an OAuth provider row between the URL row and the account email row when `authProvider` is a non-empty string and `config.type` is `"supabase"`. The row SHALL show the localized label ("OAuth провайдер" / "OAuth provider"), a colon, and the capitalized provider name. If `authProvider` is empty or null, the row SHALL NOT be rendered.
+`ServerConnectedStatus` SHALL display an OAuth provider row between the URL row and the account email row when `authProvider` is a non-empty string and `config.type` is `"supabase"`. The row SHALL show the localized label ("OAuth провайдер" / "OAuth provider"), a colon, and the capitalized provider name. If `authProvider` is empty or null, the row SHALL NOT be rendered.  # implements FR3 of gas-remove
 
 #### Scenario: Provider row visible for authenticated Supabase session
 - **WHEN** user is connected to Supabase backend
@@ -20,10 +20,6 @@ Display the OAuth provider name and icon in ServerConnectedStatus for Supabase c
 - **WHEN** user is connected to Supabase backend
 - **AND** `authProvider` is `null` or empty
 - **THEN** no provider row is displayed
-
-#### Scenario: Provider row hidden for GAS connections
-- **WHEN** user is connected to GAS backend
-- **THEN** no provider row is displayed regardless of auth state
 
 ### Requirement: Provider icon displayed next to provider name
 
@@ -40,7 +36,7 @@ The provider row SHALL display an icon before the provider name when a matching 
 
 ### Requirement: ProviderIcon component maps providers to icons
 
-`ProviderIcon` component SHALL accept a `provider` string prop and render the corresponding icon. The mapping SHALL be:
+`ProviderIcon` component SHALL accept a `provider` string prop and render the corresponding icon. The mapping SHALL be:  # implements FR3 of gas-remove
 
 | Provider   | Icon source                                     |
 |------------|-------------------------------------------------|
@@ -54,7 +50,7 @@ The provider row SHALL display an icon before the provider name when a matching 
 | `slack`    | `Slack` from lucide-react                       |
 | `linkedin` | `Linkedin` from lucide-react                    |
 | `supabase` | Inline SVG (Supabase green lightning bolt logo) |
-| `gas`      | Inline SVG (Google Apps Script 4-color logo)    |
+| `email`    | `Mail` from lucide-react                        |
 
 For any provider not in the table, `ProviderIcon` SHALL return `null`.
 
@@ -69,10 +65,6 @@ For any provider not in the table, `ProviderIcon` SHALL return `null`.
 #### Scenario: Supabase provider renders inline SVG
 - **WHEN** `provider` is `"supabase"`
 - **THEN** an inline SVG with the Supabase lightning bolt logo is rendered with `aria-hidden="true"`
-
-#### Scenario: GAS provider renders inline SVG
-- **WHEN** `provider` is `"gas"`
-- **THEN** an inline SVG with the Google Apps Script 4-color logo is rendered with `aria-hidden="true"`
 
 #### Scenario: Unknown provider renders nothing
 - **WHEN** `provider` is `"saml"`
@@ -117,12 +109,8 @@ The label SHALL use i18n key `settings.server.oauthProvider`. Russian value: `"O
 
 ### Requirement: Backend selection buttons display logos
 
-`ServerBackendSelection` SHALL display a `ProviderIcon` with `provider="supabase"` on the Supabase button and `ProviderIcon` with `provider="gas"` on the GAS button. Icons SHALL be positioned before the button text using inline-flex layout with gap. Icons SHALL have `aria-hidden="true"` (inherited from `ProviderIcon`).
+`ServerBackendSelection` SHALL display a `ProviderIcon` with `provider="supabase"` on the Supabase button. Icons SHALL be positioned before the button text using inline-flex layout with gap. Icons SHALL have `aria-hidden="true"` (inherited from `ProviderIcon`).  # implements FR3 of gas-remove
 
 #### Scenario: Supabase button shows Supabase logo
 - **WHEN** backend selection is displayed
 - **THEN** Supabase button contains the Supabase lightning bolt icon before the text
-
-#### Scenario: GAS button shows Google Apps Script logo
-- **WHEN** backend selection is displayed
-- **THEN** GAS button contains the Google Apps Script icon before the text

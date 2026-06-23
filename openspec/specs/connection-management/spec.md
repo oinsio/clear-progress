@@ -2,7 +2,7 @@
 
 ### Requirement: Connection config storage schema
 
-The system SHALL store all connection configurations in a single localStorage key `connection_config` as a JSON object with schema: `{ activeType: "supabase" | "gas" | null, configs: { supabase?: SupabaseConfig, gas?: GasConfig } }`. The entire structure SHALL be validated by `ConnectionStoreSchema` (Zod). Self-healing SHALL remove the corrupted key and return `null` when validation fails.  # implements FR8 of localstorage-refactor
+The system SHALL store all connection configurations in a single localStorage key `connection_config` as a JSON object with schema: `{ activeType: "supabase" | null, configs: { supabase?: SupabaseConfig } }`. The entire structure SHALL be validated by `ConnectionStoreSchema` (Zod). Self-healing SHALL remove the corrupted key and return `null` when validation fails.  # implements FR8 of localstorage-refactor, FR6 of gas-remove
 
 #### Scenario: Valid connection store passes validation
 - **WHEN** localStorage contains a valid JSON with `activeType: "supabase"` and `configs.supabase` with url and anonKey
@@ -20,27 +20,19 @@ The system SHALL store all connection configurations in a single localStorage ke
 
 ### Requirement: Connect to a backend
 
-The system SHALL set `activeType` to the config type and upsert the type-specific config in `configs` when the user connects to a backend. Existing configs for other types SHALL be preserved. The system SHALL dispatch `BACKEND_CONNECTION_EVENT`. If the backend type is "gas" and a `clientId` is provided, the system SHALL additionally dispatch `GOOGLE_CLIENT_ID_CHANGED_EVENT`.  # implements FR9 of localstorage-refactor
+The system SHALL set `activeType` to the config type and upsert the type-specific config in `configs` when the user connects to a backend. Existing configs for other types SHALL be preserved. The system SHALL dispatch `BACKEND_CONNECTION_EVENT`.  # implements FR9 of localstorage-refactor, FR4 of gas-remove
 
 #### Scenario: Connect saves supabase config with activeType
 - **WHEN** `connect()` is called with a Supabase config (url, anonKey)
 - **THEN** `activeType` is `"supabase"` and `configs.supabase` contains the url and anonKey
 
-#### Scenario: Connect preserves other backend configs
-- **WHEN** a GAS config exists in `configs.gas` and `connect()` is called with a Supabase config
-- **THEN** `configs.gas` is still present alongside `configs.supabase`
-
 #### Scenario: Connect dispatches backend connection event
 - **WHEN** `connect()` is called with any valid config
 - **THEN** a `BACKEND_CONNECTION_EVENT` is dispatched on window
 
-#### Scenario: Connect dispatches Google client ID event for GAS with clientId
-- **WHEN** `connect()` is called with a GAS config that includes a clientId
-- **THEN** a `GOOGLE_CLIENT_ID_CHANGED_EVENT` is dispatched on window
-
 ### Requirement: Disconnect from a backend
 
-The system SHALL set `activeType` to `null`, preserving all `configs` entries for form pre-fill. The system SHALL remove auth keys (`ACCESS_TOKEN`, `ACCESS_TOKEN_EXPIRES_AT`, `USER_PICTURE`) and sync keys (`LAST_SYNC`, `SETTINGS_UPDATED_AT`) from localStorage. The system SHALL dispatch both `BACKEND_CONNECTION_EVENT` and `GOOGLE_CLIENT_ID_CHANGED_EVENT`.  # implements FR10 of localstorage-refactor
+The system SHALL set `activeType` to `null`, preserving all `configs` entries for form pre-fill. The system SHALL remove auth keys (`ACCESS_TOKEN`, `ACCESS_TOKEN_EXPIRES_AT`, `USER_PICTURE`) and sync keys (`LAST_SYNC`, `SETTINGS_UPDATED_AT`) from localStorage. The system SHALL dispatch `BACKEND_CONNECTION_EVENT`.  # implements FR10 of localstorage-refactor, FR4 of gas-remove
 
 #### Scenario: Disconnect sets activeType to null
 - **WHEN** `activeType` is `"supabase"` and `disconnect()` is called
@@ -54,9 +46,9 @@ The system SHALL set `activeType` to `null`, preserving all `configs` entries fo
 - **WHEN** no connection store exists in localStorage and `disconnect()` is called
 - **THEN** no error is thrown
 
-#### Scenario: Disconnect dispatches events
+#### Scenario: Disconnect dispatches event
 - **WHEN** `disconnect()` is called
-- **THEN** both `BACKEND_CONNECTION_EVENT` and `GOOGLE_CLIENT_ID_CHANGED_EVENT` are dispatched
+- **THEN** `BACKEND_CONNECTION_EVENT` is dispatched
 
 ### Requirement: Get active connection config
 
@@ -83,8 +75,8 @@ The system SHALL read the connection store, check `activeType`, and return `conf
 
 The system SHALL read from `configs[type]` within the single connection store JSON. If the type has no saved config, the system SHALL return `null`.  # implements FR11 of localstorage-refactor
 
-#### Scenario: Return saved supabase config when active is gas
-- **WHEN** `activeType` is `"gas"` but `configs.supabase` exists
+#### Scenario: Return saved supabase config when inactive
+- **WHEN** `activeType` is `null` but `configs.supabase` exists
 - **THEN** `getSavedConfigForType("supabase")` returns the supabase config
 
 #### Scenario: Return null for unsaved type
@@ -117,49 +109,35 @@ The system SHALL derive the backend type from `activeType`. If `activeType` is `
 
 ### Requirement: Connection status derivation with priority
 
-The `useConnectionStatus` hook SHALL derive a connection status from config, auth state, and sync status using strict priority: (1) `not_configured` if no config, (2) `no_auth` if GAS backend has clientId but no access token, (3) sync status mapping (`offline`, `error`, `unauthorized`, `syncing`), (4) `synced` as default.
+The `useConnectionStatus` hook SHALL derive a connection status from config, auth state, and sync status using strict priority: (1) `not_configured` if no config, (2) sync status mapping (`offline`, `error`, `unauthorized`, `syncing`), (3) `synced` as default.  # implements FR7 of connection-management-spec, FR11 of gas-remove
 
-Note: For GAS, `no_auth` is always possible because Client ID is now required. The scenario "GAS without clientId" no longer occurs in normal flow but the hook still handles it defensively.
-
-#### Scenario: No config returns not_configured  # implements FR7 of connection-management-spec
+#### Scenario: No config returns not_configured
 - **WHEN** no connection config exists
 - **THEN** the connection status is `"not_configured"`
 
-#### Scenario: GAS with clientId but no token returns no_auth  # implements FR7 of connection-management-spec
-- **WHEN** a GAS config with clientId exists but no access token is present
-- **THEN** the connection status is `"no_auth"`
-
-#### Scenario: GAS without clientId and no token returns synced  # implements FR7 of connection-management-spec
-- **WHEN** a GAS config without clientId exists and no access token is present
-- **THEN** the connection status is `"synced"`
-
-#### Scenario: Sync status offline maps to offline  # implements FR7 of connection-management-spec
+#### Scenario: Sync status offline maps to offline
 - **WHEN** an authenticated backend connection exists and sync status is `"offline"`
 - **THEN** the connection status is `"offline"`
 
-#### Scenario: Sync status error maps to error  # implements FR7 of connection-management-spec
+#### Scenario: Sync status error maps to error
 - **WHEN** an authenticated backend connection exists and sync status is `"error"`
 - **THEN** the connection status is `"error"`
 
-#### Scenario: Sync status unauthorized maps to unauthorized  # implements FR7 of connection-management-spec
+#### Scenario: Sync status unauthorized maps to unauthorized
 - **WHEN** an authenticated backend connection exists and sync status is `"unauthorized"`
 - **THEN** the connection status is `"unauthorized"`
 
-#### Scenario: Sync status syncing maps to syncing  # implements FR7 of connection-management-spec
+#### Scenario: Sync status syncing maps to syncing
 - **WHEN** an authenticated backend connection exists and sync status is `"syncing"`
 - **THEN** the connection status is `"syncing"`
 
-#### Scenario: Default sync status maps to synced  # implements FR7 of connection-management-spec
+#### Scenario: Default sync status maps to synced
 - **WHEN** an authenticated backend connection exists and sync status is `"idle"`
 - **THEN** the connection status is `"synced"`
 
-#### Scenario: not_configured takes precedence over no_auth  # implements FR7 of connection-management-spec
-- **WHEN** no config exists and no access token is present
-- **THEN** the connection status is `"not_configured"` (not `"no_auth"`)
-
-#### Scenario: no_auth takes precedence over sync error  # implements FR7 of connection-management-spec
-- **WHEN** a GAS config with clientId exists, no access token, and sync status is `"error"`
-- **THEN** the connection status is `"no_auth"` (not `"error"`)
+#### Scenario: not_configured takes precedence over sync error
+- **WHEN** no config exists and sync status is `"error"`
+- **THEN** the connection status is `"not_configured"` (not `"error"`)
 
 ### Requirement: Error status displays dedicated UI text
 When connection status is `error`, the UI SHALL display the `sync.serverError` i18n key. This distinguishes server errors from network unavailability (`offline`).

@@ -87,35 +87,20 @@ When the user returns from OAuth redirect to `/setup?code=xxx`, the Supabase SDK
 - **AND** `supabase.auth.signOut()` is called
 
 ### Requirement: AuthProvider detects backend type
-`AuthProvider` SHALL read `connectionConfig.type` to determine which auth mechanism to render. For `"gas"` it SHALL render `GoogleOAuthProvider` + `GoogleAuthSync`. For `"supabase"` it SHALL render `SupabaseAuthSync` with the Supabase client instance.
 
-`AuthProvider` SHALL call `configureTokenPersistence(localStoragePersistence)` for GAS backend during state initialization, before first render. For Supabase backend (or no backend), the default `noopPersistence` SHALL remain active.
+`AuthProvider` SHALL read `connectionConfig.type` to determine which auth mechanism to render. For `"supabase"` it SHALL render `SupabaseAuthSync` with the Supabase client instance.  # implements FR5 of gas-remove
 
-`AuthProvider` SHALL initialize `accessToken` state via `getAccessToken()` (which returns the token restored by the configured persistence strategy, or null if noopPersistence is active).
+`AuthProvider` SHALL initialize `accessToken` state via `getAccessToken()` (which returns null since `noopPersistence` is always active).
 
 `AuthProvider` SHALL pass `handleUserEmailUpdate`, `handleUserPictureUpdate`, and `handleAuthProviderUpdate` callbacks to `SupabaseAuthSync`.
 
-`AuthProvider` SHALL expose `authProvider: string | null` in its context value. The value SHALL be `null` when no provider info is available (GAS backend, no backend, or signed out).
-
-#### Scenario: GAS backend uses Google auth
-- **WHEN** connection config has `type: "gas"` with a clientId
-- **THEN** `GoogleOAuthProvider` and `GoogleAuthSync` are rendered
-
-#### Scenario: GAS backend restores token from localStorage
-- **WHEN** connection config has `type: "gas"`
-- **THEN** `AuthProvider` calls `configureTokenPersistence(localStoragePersistence)`
-- **AND** tokenManager restores token from localStorage if not expired
-- **AND** initial `accessToken` state reflects the restored token
+`AuthProvider` SHALL expose `authProvider: string | null` in its context value. The value SHALL be `null` when no backend is configured or user is signed out.
 
 #### Scenario: Supabase backend uses Supabase auth with provider
 - **WHEN** connection config has `type: "supabase"`
 - **THEN** `SupabaseAuthSync` is rendered with the Supabase client instance
 - **AND** `onUserEmailUpdate`, `onUserPictureUpdate`, and `onAuthProviderUpdate` callbacks are passed to `SupabaseAuthSync`
 - **AND** `authProvider` is exposed in context
-
-#### Scenario: GAS backend has null authProvider
-- **WHEN** connection config has `type: "gas"`
-- **THEN** `authProvider` in context is `null`
 
 #### Scenario: No backend has null authProvider
 - **WHEN** no connection config exists

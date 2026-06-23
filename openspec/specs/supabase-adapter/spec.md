@@ -45,12 +45,8 @@ All responses SHALL be validated against the corresponding Zod schema from `@cle
 - **THEN** `ApiValidationError` is thrown with the action name and validation error
 
 ### Requirement: Adapter registration replaced with per-type factory
-The generic adapter registry (`adapterRegistry.ts`) SHALL be replaced with per-type factory functions. `adapter-supabase` SHALL export `createSupabaseAdapter(supabaseClient)`. `adapter-gas` SHALL export `createGasAdapter(url, getAccessToken)`.
+`adapter-supabase` SHALL export `createSupabaseAdapter(supabaseClient)` as the factory function for creating Supabase sync adapters.  # implements FR4 of gas-remove
 
 #### Scenario: Supabase adapter created via factory
 - **WHEN** `createSupabaseAdapter(supabaseClient)` is called
 - **THEN** a `SupabaseSyncAdapter` instance is returned
-
-#### Scenario: GAS adapter created via factory
-- **WHEN** `createGasAdapter(url, getAccessToken)` is called
-- **THEN** a `GasSyncAdapter` instance is returned
