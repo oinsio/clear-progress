@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
         registerType: "prompt",
         manifest: false,
         workbox: {
-          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB — main chunk includes mermaid (~3.2 MB)
+          maximumFileSizeToCacheInBytes: 6 * 1024 * 1024, // 6 MiB — main chunk includes inlined mermaid diagram renderers (~5.5 MB)
           globPatterns: ["**/*.{js,mjs,css,html,ico,png,svg}"],
           runtimeCaching: [
             {
@@ -35,6 +35,13 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": resolve(__dirname, "./src"),
+      },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          inlineDynamicImports: true,
+        },
       },
     },
     test: {

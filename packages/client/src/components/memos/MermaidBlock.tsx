@@ -105,7 +105,11 @@ export function MermaidBlock({ code }: MermaidBlockProps) {
   }
 
   if (!renderedSvg) {
-    return null;
+    return (
+      <div className="rounded-md bg-gray-100 p-3 text-sm dark:bg-gray-800">
+        <pre className="whitespace-pre-wrap">{code}</pre>
+      </div>
+    );
   }
 
   return (
