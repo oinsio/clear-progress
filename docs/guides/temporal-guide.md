@@ -303,7 +303,7 @@ if (lastSync) {
 
 ### Token expiry checks
 
-`Date.now()` remains in `ApiClient.ts` and `AuthProvider.tsx` for token expiry checks:
+`Date.now()` remains in `supabaseClientManager.ts` and `tokenPersistence.ts` for token expiry checks:
 
 ```ts
 // Correct — Date.now() for token expiry
@@ -372,26 +372,6 @@ const today = clock.plainDateISO();
 // -> date in America/New_York timezone
 ```
 
-## Migration from Date
-
-### Before (Date)
-
-```ts
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-const tomorrow = new Date(today);
-tomorrow.setDate(today.getDate() + 1);
-const dateStr = tomorrow.toISOString().split("T")[0];
-```
-
-### After (Temporal)
-
-```ts
-const tomorrow = Temporal.Now.plainDateISO()
-  .add({ days: 1 })
-  .toString();
-```
-
 ## Bundle Size
 
 `temporal-polyfill` adds ~30-40 KB gzipped. When Safari gets full Temporal support (expected 2026-2027), switching to native:
@@ -405,4 +385,3 @@ export const { Temporal } = globalThis;
 
 - [Temporal API Proposal](https://tc39.es/proposal-temporal/docs/)
 - [temporal-polyfill on npm](https://www.npmjs.com/package/temporal-polyfill)
-- [TEMPORAL_MIGRATION_AUDIT.md](../TEMPORAL_MIGRATION_AUDIT.md) — full project migration audit
