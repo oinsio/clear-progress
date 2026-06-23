@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GoalCoverPicker } from "./GoalCoverPicker";
@@ -107,6 +107,78 @@ describe("GoalCoverPicker", () => {
     );
     const input = screen.getByTestId("cover-file-input");
     await userEvent.upload(input, []);
+    expect(onFileSelect).not.toHaveBeenCalled();
+  });
+
+  it("should have aria-label with goal.cover.choose translation on picker button", () => {
+    render(
+      <GoalCoverPicker
+        previewSrc={null}
+        onFileSelect={vi.fn()}
+        onRemove={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("cover-picker-button")).toHaveAttribute(
+      "aria-label",
+      "Выбрать обложку",
+    );
+  });
+
+  it("should have aria-label with goal.cover.remove translation on remove button", () => {
+    render(
+      <GoalCoverPicker
+        previewSrc="https://example.com/cover.jpg"
+        onFileSelect={vi.fn()}
+        onRemove={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("cover-remove-button")).toHaveAttribute(
+      "aria-label",
+      "Убрать обложку",
+    );
+  });
+
+  it("should have alt text with goal.cover.choose translation on preview image", () => {
+    render(
+      <GoalCoverPicker
+        previewSrc="https://example.com/cover.jpg"
+        onFileSelect={vi.fn()}
+        onRemove={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("cover-preview-img")).toHaveAttribute(
+      "alt",
+      "Выбрать обложку",
+    );
+  });
+
+  it("should not call onFileSelect when onChange fires with empty file list", () => {
+    const onFileSelect = vi.fn();
+    render(
+      <GoalCoverPicker
+        previewSrc={null}
+        onFileSelect={onFileSelect}
+        onRemove={vi.fn()}
+      />,
+    );
+    const input = screen.getByTestId("cover-file-input");
+    Object.defineProperty(input, "files", { value: [], writable: true });
+    fireEvent.change(input);
+    expect(onFileSelect).not.toHaveBeenCalled();
+  });
+
+  it("should not call onFileSelect when onChange fires with null files", () => {
+    const onFileSelect = vi.fn();
+    render(
+      <GoalCoverPicker
+        previewSrc={null}
+        onFileSelect={onFileSelect}
+        onRemove={vi.fn()}
+      />,
+    );
+    const input = screen.getByTestId("cover-file-input");
+    Object.defineProperty(input, "files", { value: null, writable: true });
+    fireEvent.change(input);
     expect(onFileSelect).not.toHaveBeenCalled();
   });
 });
