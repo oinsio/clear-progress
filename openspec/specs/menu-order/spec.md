@@ -24,7 +24,7 @@ When `setMenuOrder` is called in one instance of the `useMenuOrder` hook, all ot
 
 ### Requirement: Store persistence and validation
 
-The external store MUST persist data to localStorage and validate on load via Zod schema. For invalid data, it MUST return the default order. New menu modes MUST be added automatically during migration.
+The external store MUST persist data to localStorage and validate on load via Zod schema. For invalid data, it MUST return the default order. New menu modes MUST be added automatically during migration. The `MenuModeSchema` SHALL include the `"memos"` value. Implements FR12 of add-memos.
 
 #### Scenario: Store persists to localStorage
 - **WHEN** `setMenuOrder` is called with a new order
@@ -39,8 +39,12 @@ The external store MUST persist data to localStorage and validate on load via Zo
 - **THEN** `getSnapshot()` returns `DEFAULT_MENU_ORDER`
 
 #### Scenario: Missing modes added during migration
-- **WHEN** localStorage is missing the `focused_goals` mode
-- **THEN** `getSnapshot()` returns an order with `focused_goals` appended at the end
+- **WHEN** localStorage is missing the `memos` mode
+- **THEN** `getSnapshot()` returns an order with `memos` appended at the end
+
+#### Scenario: Default menu order includes memos before deleted
+- **WHEN** app initializes with no saved menu order
+- **THEN** `DEFAULT_MENU_ORDER` includes `{ mode: "memos", visible: true }` positioned before `{ mode: "deleted", visible: true }`
 
 ### Requirement: Store subscriber management
 

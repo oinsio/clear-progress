@@ -56,7 +56,7 @@ The sidebar SHALL render on the left or right side of the screen based on the `s
 
 ### Requirement: Mode selection changes active filter
 
-Clicking a filter item SHALL navigate to its route if one is defined. For items without a route (focused_goals only), clicking SHALL toggle the active mode. The active mode SHALL be visually distinguished with `bg-white/20`. All task-related modes (inbox, tasks, completed) MUST have routes defined. Implements FR5 of refactor-task-pages.
+Clicking a filter item SHALL navigate to its route if one is defined. For items without a route (focused_goals only), clicking SHALL toggle the active mode. The active mode SHALL be visually distinguished with `bg-white/20`. All task-related modes (inbox, tasks, completed) and content modes (goals, ideas, contexts, categories, deleted, memos) MUST have routes defined. Implements FR5 of refactor-task-pages, FR1, FR2 of add-memos.
 
 #### Scenario: Clicking inbox navigates to inbox page
 - **WHEN** user clicks the "inbox" filter item
@@ -74,9 +74,17 @@ Clicking a filter item SHALL navigate to its route if one is defined. For items 
 - **WHEN** user is on "/inbox"
 - **THEN** the "inbox" filter item has `aria-pressed="true"`
 
+#### Scenario: Clicking memos navigates to memos page
+- **WHEN** user clicks the "memos" filter item
+- **THEN** app navigates to "/memos"
+
+#### Scenario: Memos mode highlighted when on memos route
+- **WHEN** user is on "/memos"
+- **THEN** the "memos" filter item has `aria-pressed="true"`
+
 ### Requirement: Filter items with routes navigate instead of toggling
 
-Filter items that have a `route` property (inbox, tasks, completed, goals, ideas, contexts, categories, deleted) SHALL navigate to that route when clicked, instead of toggling the mode. Only focused_goals remains without a route. Implements FR5 of refactor-task-pages.
+Filter items that have a `route` property (inbox, tasks, completed, goals, ideas, contexts, categories, deleted, memos) SHALL navigate to that route when clicked, instead of toggling the mode. Only focused_goals remains without a route. Implements FR5 of refactor-task-pages, FR1, FR2 of add-memos.
 
 #### Scenario: Clicking inbox navigates to inbox page
 - **WHEN** user clicks the "inbox" filter item
@@ -89,6 +97,10 @@ Filter items that have a `route` property (inbox, tasks, completed, goals, ideas
 #### Scenario: Clicking contexts navigates to contexts page
 - **WHEN** user clicks the "contexts" filter item
 - **THEN** app navigates to the contexts route
+
+#### Scenario: Clicking memos navigates to memos page
+- **WHEN** user clicks the "memos" filter item
+- **THEN** app navigates to the memos route "/memos"
 
 ### Requirement: Filter items respect menu order configuration
 
