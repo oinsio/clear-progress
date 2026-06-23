@@ -10,17 +10,14 @@ context: |
   - Monorepo (pnpm workspaces)
   - TypeScript, React, Vite, TailwindCSS
   - IndexedDB (Dexie) for local storage
-  - Google Apps Script as backend (Google Sheets as DB)
   - Supabase as backend (PostgreSQL + Edge Functions + Auth)
   - Hexagonal architecture: domain → application (ports) → infrastructure (adapters)
 
   ## Packages
   - `packages/client` — React PWA (main app)
   - `packages/contract` — shared types and port interfaces
-  - `packages/adapter-gas` — Google Apps Script adapter
   - `packages/adapter-inmemory` — in-memory adapter (tests)
   - `packages/adapter-supabase` — Supabase adapter (Edge Functions, PostgreSQL)
-  - `packages/adapter-loader` — adapter loading/switching
   - `packages/integration` — integration tests (Playwright + Testcontainers)
 
   ## Key Patterns

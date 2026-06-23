@@ -135,7 +135,6 @@ export const MAX_PING_ATTEMPTS = 20; // 10 minutes (20 × 30s)
 export const PUSH_CHUNK_SIZE = 200;
 
 export const BACKEND_CONNECTION_EVENT = "backend_connection_changed";
-export const GOOGLE_CLIENT_ID_CHANGED_EVENT = "google_client_id_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
 export const DAY_BOUNDARY_CHANGED_EVENT = "day_boundary_changed";
 
@@ -178,9 +177,6 @@ export const STORAGE_KEYS = {
 
 export const DEFAULT_FOCUS_OPACITY = 30;
 export const FOCUS_OPACITY_LEVELS = [50, 40, 30, 20, 10] as const;
-
-export const GOOGLE_USERINFO_URL =
-  "https://www.googleapis.com/oauth2/v3/userinfo";
 
 export const SUPABASE_URL_SUFFIX = ".supabase.co";
 export const SUPABASE_SETTINGS_ENDPOINT = "/auth/v1/settings";

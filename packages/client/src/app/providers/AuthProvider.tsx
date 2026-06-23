@@ -1,4 +1,3 @@
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import type * as React from "react";
 import {
   createContext,
@@ -9,20 +8,10 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  BACKEND_CONNECTION_EVENT,
-  GOOGLE_CLIENT_ID_CHANGED_EVENT,
-  STORAGE_KEYS,
-} from "@/constants";
+import { BACKEND_CONNECTION_EVENT, STORAGE_KEYS } from "@/constants";
 import { getConnectionConfig } from "@/services/connectionService";
 import { getSupabaseClient } from "@/services/supabaseClientManager";
-import {
-  configureTokenPersistence,
-  getAccessToken,
-  setAccessToken,
-} from "@/services/tokenManager";
-import { localStoragePersistence } from "@/services/tokenPersistence";
-import { GoogleAuthSync } from "./GoogleAuthSync";
+import { getAccessToken, setAccessToken } from "@/services/tokenManager";
 import { SupabaseAuthSync } from "./SupabaseAuthSync";
 
 interface AuthContextValue {
@@ -40,21 +29,11 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const noop = () => {};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [googleClientId, setGoogleClientId] = useState<string | null>(() => {
-    const config = getConnectionConfig();
-    return config?.type === "gas" ? (config.clientId ?? null) : null;
-  });
   const [isSupabaseBackend, setIsSupabaseBackend] = useState<boolean>(() => {
     const config = getConnectionConfig();
     return config?.type === "supabase";
   });
   const [accessToken, setAccessTokenState] = useState<string | null>(() => {
-    const config = getConnectionConfig();
-    // FR-7: Configure localStorage persistence for GAS backend before reading token.
-    // For Supabase (or no backend), noopPersistence remains active — getAccessToken() returns null.
-    if (config?.type === "gas") {
-      configureTokenPersistence(localStoragePersistence);
-    }
     return getAccessToken();
   });
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -63,25 +42,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.getItem(STORAGE_KEYS.USER_PICTURE),
   );
 
-  // Stable action refs — populated by GoogleAuthSync, called by stable context functions
+  // Stable action refs — populated by SupabaseAuthSync, called by stable context functions
   const signInRef = useRef<() => void>(noop);
   const signOutRef = useRef<() => void>(noop);
   const silentRefreshRef = useRef<() => void>(noop);
-
-  // Track previous googleClientId to detect real disconnection vs initial mount
-  const prevGoogleClientIdRef = useRef<string | null>(googleClientId);
-
-  useEffect(() => {
-    const handleChange = () => {
-      const config = getConnectionConfig();
-      const newClientId =
-        config?.type === "gas" ? (config.clientId ?? null) : null;
-      setGoogleClientId(newClientId);
-    };
-    window.addEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
-    return () =>
-      window.removeEventListener(GOOGLE_CLIENT_ID_CHANGED_EVENT, handleChange);
-  }, []);
 
   useEffect(() => {
     const handleBackendChange = () => {
@@ -121,25 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(null);
   }, []);
 
-  // When Google Client ID is removed, reset auth refs to no-ops and clear auth state
-  useEffect(() => {
-    const prevClientId = prevGoogleClientIdRef.current;
-    prevGoogleClientIdRef.current = googleClientId;
-
-    // Clear auth state only when transitioning from clientId to null (real disconnect)
-    if (prevClientId && !googleClientId) {
-      signInRef.current = noop;
-      signOutRef.current = noop;
-      silentRefreshRef.current = noop;
-      handleClear();
-    } else if (!googleClientId) {
-      // Initial mount without Client ID — only reset refs, don't clear cached data
-      signInRef.current = noop;
-      signOutRef.current = noop;
-      silentRefreshRef.current = noop;
-    }
-  }, [googleClientId, handleClear]);
-
   // Stable context functions — always call through the ref so they never change identity
   const signIn = useCallback(() => signInRef.current(), []);
   const signOut = useCallback(() => signOutRef.current(), []);
@@ -168,24 +113,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={contextValue}>
-      {googleClientId && (
-        <GoogleOAuthProvider clientId={googleClientId}>
-          {/*
-           * GoogleAuthSync is a render-less component (returns null).
-           * It lives inside GoogleOAuthProvider (needs the context for useGoogleLogin),
-           * but is NOT wrapping children — so children never remount when clientId changes.
-           */}
-          <GoogleAuthSync
-            onTokenUpdate={handleTokenUpdate}
-            onUserEmailUpdate={handleUserEmailUpdate}
-            onUserPictureUpdate={handleUserPictureUpdate}
-            onClear={handleClear}
-            signInRef={signInRef}
-            signOutRef={signOutRef}
-            silentRefreshRef={silentRefreshRef}
-          />
-        </GoogleOAuthProvider>
-      )}
       {isSupabaseBackend && (
         <SupabaseAuthSync
           supabaseClient={getSupabaseClient()}

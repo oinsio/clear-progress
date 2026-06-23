@@ -42,8 +42,9 @@ const {
     mockSignOut: signOut,
     mockSilentRefresh: silentRefresh,
     STABLE_CONNECTION_CONFIG: {
-      type: "gas" as const,
-      url: "https://test.example.com",
+      type: "supabase" as const,
+      url: "https://test.supabase.co",
+      anonKey: "test-anon-key",
     },
     STABLE_AUTH_VALUE: {
       accessToken: "mock-token",

@@ -36,8 +36,9 @@ describeFeature(
 
     f.BeforeEachScenario(() => {
       mockUseConnectionConfig.mockReturnValue({
-        type: "gas",
-        clientId: "default-client",
+        type: "supabase",
+        url: "https://test.supabase.co",
+        anonKey: "test-key",
       });
       mockUseAuth.mockReturnValue({ accessToken: "valid-token" });
       mockUseSync.mockReturnValue({ syncStatus: "idle" });
@@ -56,50 +57,6 @@ describeFeature(
         expect(derivedStatus).toBe("not_configured");
       });
     });
-
-    // @add-offline-mode-specs @FR4
-    f.Scenario(
-      "Backend configured with clientId but no access token",
-      ({ Given, And, When, Then }) => {
-        Given(
-          'a backend config with clientId "client-123"',
-          (_ctx: TestContext) => {
-            mockUseConnectionConfig.mockReturnValue({
-              type: "gas",
-              clientId: "client-123",
-            });
-          },
-        );
-        And("no access token is present", (_ctx: TestContext) => {
-          mockUseAuth.mockReturnValue({ accessToken: null });
-        });
-        When("connection status is derived", (_ctx: TestContext) => {
-          derivedStatus = deriveStatus();
-        });
-        Then('the connection status is "no_auth"', (_ctx: TestContext) => {
-          expect(derivedStatus).toBe("no_auth");
-        });
-      },
-    );
-
-    // @add-offline-mode-specs @FR4
-    f.Scenario(
-      "Backend configured without clientId and no access token",
-      ({ Given, And, When, Then }) => {
-        Given("a backend config without clientId", (_ctx: TestContext) => {
-          mockUseConnectionConfig.mockReturnValue({ type: "gas" });
-        });
-        And("no access token is present", (_ctx: TestContext) => {
-          mockUseAuth.mockReturnValue({ accessToken: null });
-        });
-        When("connection status is derived", (_ctx: TestContext) => {
-          derivedStatus = deriveStatus();
-        });
-        Then('the connection status is "synced"', (_ctx: TestContext) => {
-          expect(derivedStatus).toBe("synced");
-        });
-      },
-    );
 
     // @add-offline-mode-specs @FR4
     f.Scenario(
@@ -171,28 +128,17 @@ describeFeature(
 
     // @add-offline-mode-specs @FR4
     f.Scenario(
-      "Priority — no_auth takes precedence over sync error",
+      "Idle sync status produces synced connection",
       ({ Given, And, When, Then }) => {
-        Given(
-          'a backend config with clientId "client-123"',
-          (_ctx: TestContext) => {
-            mockUseConnectionConfig.mockReturnValue({
-              type: "gas",
-              clientId: "client-123",
-            });
-          },
-        );
-        And("no access token is present", (_ctx: TestContext) => {
-          mockUseAuth.mockReturnValue({ accessToken: null });
-        });
-        And('sync status is "error"', (_ctx: TestContext) => {
-          mockUseSync.mockReturnValue({ syncStatus: "error" });
+        Given("an authenticated backend connection", (_ctx: TestContext) => {});
+        And('sync status is "idle"', (_ctx: TestContext) => {
+          mockUseSync.mockReturnValue({ syncStatus: "idle" });
         });
         When("connection status is derived", (_ctx: TestContext) => {
           derivedStatus = deriveStatus();
         });
-        Then('the connection status is "no_auth"', (_ctx: TestContext) => {
-          expect(derivedStatus).toBe("no_auth");
+        Then('the connection status is "synced"', (_ctx: TestContext) => {
+          expect(derivedStatus).toBe("synced");
         });
       },
     );

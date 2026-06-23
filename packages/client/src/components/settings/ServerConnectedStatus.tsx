@@ -23,7 +23,6 @@ interface ServerConnectedStatusProps {
  * Implements FR1, FR2, FR3, NFR-A2 of simplify-backend-connection.
  * Shows connection type, URL, Full Sync and Disconnect buttons.
  * For Supabase without session: shows OAuth re-auth.
- * For GAS without token: shows sign-in prompt.
  */
 export function ServerConnectedStatus({
   config,
@@ -32,15 +31,12 @@ export function ServerConnectedStatus({
 }: ServerConnectedStatusProps) {
   const { t } = useTranslation();
   const connectionStatus = useConnectionStatus();
-  const { accessToken, userEmail, authProvider, signIn } = useAuth();
+  const { userEmail, authProvider } = useAuth();
   const [providers, setProviders] = useState<string[]>([]);
 
   const isSupabaseNeedsAuth =
     config.type === "supabase" &&
     (connectionStatus === "no_auth" || connectionStatus === "unauthorized");
-
-  const isGasNeedsAuth =
-    config.type === "gas" && config.clientId && !accessToken;
 
   useEffect(() => {
     if (!isSupabaseNeedsAuth || config.type !== "supabase") return;
@@ -78,11 +74,7 @@ export function ServerConnectedStatus({
     [],
   );
 
-  const typeLabel =
-    config.type === "supabase"
-      ? t("settings.server.typeSupabase")
-      : t("settings.server.typeGas");
-
+  const typeLabel = t("settings.server.typeSupabase");
   const displayUrl = config.url;
 
   return (
@@ -145,21 +137,6 @@ export function ServerConnectedStatus({
             providers={providers}
             onSignIn={(provider) => void handleOAuthSignIn(provider)}
           />
-        </div>
-      )}
-
-      {isGasNeedsAuth && (
-        <div data-testid="server-signin-required" className="space-y-2">
-          <p className="text-sm font-medium text-blue-900">
-            {t("settings.server.signInRequired")}
-          </p>
-          <button
-            data-testid="server-signin-button"
-            onClick={signIn}
-            className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors"
-          >
-            {t("settings.server.signInWithGoogle")}
-          </button>
         </div>
       )}
 

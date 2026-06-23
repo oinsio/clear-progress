@@ -22,7 +22,6 @@ export type {
   ConnectionConfig,
   ConnectionStore,
   EntityType,
-  GasConnectionConfig,
   GoalStatus,
   MenuItemConfig,
   MenuMode,
@@ -74,7 +73,6 @@ export {
   // API response schemas
   DeleteFileResponseSchema,
   EntityTypeSchema,
-  GasConnectionConfigSchema,
   GetFileResponseSchema,
   GetFileResultSchema,
   GoalStatusSchema,

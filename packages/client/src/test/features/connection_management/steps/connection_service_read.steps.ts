@@ -36,11 +36,16 @@ describeFeature(
       "getConnectionConfig returns config when activeType is set",
       ({ Given, When, Then }) => {
         Given(
-          'a connection store with activeType "gas" and gas config url "https://example.com"',
+          'a connection store with activeType "supabase" and supabase config url "https://example.supabase.co"',
           (_ctx: TestContext) => {
             writeStore({
-              activeType: "gas",
-              configs: { gas: { url: "https://example.com" } },
+              activeType: "supabase",
+              configs: {
+                supabase: {
+                  url: "https://example.supabase.co",
+                  anonKey: "test-key",
+                },
+              },
             });
           },
         );
@@ -49,9 +54,9 @@ describeFeature(
           returnedConfig = getConnectionConfig();
         });
 
-        Then('the returned config has type "gas"', (_ctx: TestContext) => {
+        Then('the returned config has type "supabase"', (_ctx: TestContext) => {
           expect(returnedConfig).not.toBeNull();
-          expect(returnedConfig?.type).toBe("gas");
+          expect(returnedConfig?.type).toBe("supabase");
         });
       },
     );
@@ -61,11 +66,16 @@ describeFeature(
       "getConnectionConfig returns null when activeType is null",
       ({ Given, When, Then }) => {
         Given(
-          'a connection store with activeType null and gas config url "https://example.com"',
+          'a connection store with activeType null and supabase config url "https://example.supabase.co"',
           (_ctx: TestContext) => {
             writeStore({
               activeType: null,
-              configs: { gas: { url: "https://example.com" } },
+              configs: {
+                supabase: {
+                  url: "https://example.supabase.co",
+                  anonKey: "test-key",
+                },
+              },
             });
           },
         );
@@ -130,11 +140,16 @@ describeFeature(
       "getSavedConnectionConfig returns config when activeType is null",
       ({ Given, When, Then }) => {
         Given(
-          'a connection store with activeType null and gas config url "https://example.com"',
+          'a connection store with activeType null and supabase config url "https://example.supabase.co"',
           (_ctx: TestContext) => {
             writeStore({
               activeType: null,
-              configs: { gas: { url: "https://example.com" } },
+              configs: {
+                supabase: {
+                  url: "https://example.supabase.co",
+                  anonKey: "test-key",
+                },
+              },
             });
           },
         );
@@ -143,9 +158,9 @@ describeFeature(
           returnedConfig = getSavedConnectionConfig();
         });
 
-        Then('the returned config has type "gas"', (_ctx: TestContext) => {
+        Then('the returned config has type "supabase"', (_ctx: TestContext) => {
           expect(returnedConfig).not.toBeNull();
-          expect(returnedConfig?.type).toBe("gas");
+          expect(returnedConfig?.type).toBe("supabase");
         });
       },
     );
@@ -155,11 +170,16 @@ describeFeature(
       "getSavedConnectionConfig returns config when activeType is set",
       ({ Given, When, Then }) => {
         Given(
-          'a connection store with activeType "gas" and gas config url "https://example.com"',
+          'a connection store with activeType "supabase" and supabase config url "https://example.supabase.co"',
           (_ctx: TestContext) => {
             writeStore({
-              activeType: "gas",
-              configs: { gas: { url: "https://example.com" } },
+              activeType: "supabase",
+              configs: {
+                supabase: {
+                  url: "https://example.supabase.co",
+                  anonKey: "test-key",
+                },
+              },
             });
           },
         );
@@ -168,9 +188,9 @@ describeFeature(
           returnedConfig = getSavedConnectionConfig();
         });
 
-        Then('the returned config has type "gas"', (_ctx: TestContext) => {
+        Then('the returned config has type "supabase"', (_ctx: TestContext) => {
           expect(returnedConfig).not.toBeNull();
-          expect(returnedConfig?.type).toBe("gas");
+          expect(returnedConfig?.type).toBe("supabase");
         });
       },
     );
@@ -195,27 +215,6 @@ describeFeature(
         });
       },
     );
-
-    // @localstorage-refactor @FR12
-    f.Scenario("getBackendType returns gas", ({ Given, When, Then }) => {
-      Given(
-        'a connection store with activeType "gas" and gas config url "https://example.com"',
-        (_ctx: TestContext) => {
-          writeStore({
-            activeType: "gas",
-            configs: { gas: { url: "https://example.com" } },
-          });
-        },
-      );
-
-      When("getBackendType is called", (_ctx: TestContext) => {
-        returnedBackendType = getBackendType();
-      });
-
-      Then('the backend type is "gas"', (_ctx: TestContext) => {
-        expect(returnedBackendType).toBe("gas");
-      });
-    });
 
     // @localstorage-refactor @FR12
     f.Scenario("getBackendType returns supabase", ({ Given, When, Then }) => {

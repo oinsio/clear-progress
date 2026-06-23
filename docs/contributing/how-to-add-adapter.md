@@ -183,7 +183,7 @@ pnpm test
 Update `/packages/client/src/types/connection.ts`:
 
 ```typescript
-export type BackendType = "gas" | "yourname";
+export type BackendType = "supabase" | "yourname";
 
 export interface YournameConnectionConfig {
   type: "yourname";
@@ -192,7 +192,7 @@ export interface YournameConnectionConfig {
   isActive: boolean;
 }
 
-export type ConnectionConfig = GasConnectionConfig | YournameConnectionConfig;
+export type ConnectionConfig = SupabaseConnectionConfig | YournameConnectionConfig;
 ```
 
 ### 5. Integrate with Client
@@ -200,12 +200,13 @@ export type ConnectionConfig = GasConnectionConfig | YournameConnectionConfig;
 Update `/packages/client/src/services/defaultServices.ts`:
 
 ```typescript
+import { SupabaseSyncAdapter } from "@clear-progress/adapter-supabase";
 import { YournameSyncAdapter } from "@clear-progress/adapter-yourname";
 
 function createSyncAdapter(): SyncAdapter {
   const config = getConnectionConfig();
-  if (config?.type === "gas") {
-    return new GasSyncAdapter(config.url, getAccessToken);
+  if (config?.type === "supabase") {
+    return new SupabaseSyncAdapter(config.url, config.anonKey);
   }
   if (config?.type === "yourname") {
     return new YournameSyncAdapter(config.apiUrl, config.apiKey);

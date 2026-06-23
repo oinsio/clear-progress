@@ -1,12 +1,5 @@
 import { type Mock, vi } from "vitest";
-import { clearGoogleLoginOptions } from "@/test/mocks/googleOAuthMock";
 import { useAuth } from "./AuthProvider";
-
-export const GAS_CONNECTION_CONFIG = {
-  type: "gas" as const,
-  url: "https://script.google.com/macros/s/test/exec",
-  clientId: "test-client-id",
-};
 
 export const SUPABASE_CONNECTION_CONFIG = {
   type: "supabase" as const,
@@ -24,9 +17,8 @@ export function resetAuthMocks({
   mockGetAccessToken,
 }: AuthMocks) {
   vi.clearAllMocks();
-  mockGetConnectionConfig.mockReturnValue(GAS_CONNECTION_CONFIG);
+  mockGetConnectionConfig.mockReturnValue(null);
   mockGetAccessToken.mockReturnValue(null);
-  clearGoogleLoginOptions();
 }
 
 export function TestConsumer() {

@@ -261,12 +261,12 @@ export function syncAdapterContract(
         // the lock within timeout, it returns { ok: false, error: "SYNC_LOCK_TIMEOUT" }
         // Implementation note: adapters should provide a way to simulate lock contention
         // For in-memory adapter, this might be a no-op (always succeeds)
-        // For GAS adapter, this tests actual lock timeout behavior
+        // For real adapters, this tests actual lock timeout behavior
 
         const task = createWireTask({ name: "Test task" });
 
         // Attempt to trigger lock timeout (implementation-specific)
-        // In real GAS, this would happen when another push holds the lock
+        // In a real backend, this would happen when another push holds the lock
         // For testing, adapters may expose a method to simulate this condition
 
         // For now, this test documents the expected contract behavior

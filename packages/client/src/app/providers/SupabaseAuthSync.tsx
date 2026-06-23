@@ -7,8 +7,7 @@ import { setAccessToken } from "@/services/tokenManager";
 /**
  * Implements FR10 of add-supabase-ui.
  * Render-less component that syncs Supabase auth state with AuthProvider.
- * Mirrors GoogleAuthSync pattern: listens to onAuthStateChange,
- * populates signInRef/signOutRef/silentRefreshRef.
+ * Listens to onAuthStateChange, populates signInRef/signOutRef/silentRefreshRef.
  */
 export interface SupabaseAuthSyncProps {
   supabaseClient: SupabaseClient;
@@ -44,7 +43,7 @@ export function SupabaseAuthSync({
         onTokenUpdate(session.access_token, session.expires_in);
         setAccessToken(session.access_token, session.expires_in);
 
-        // Extract profile data — skip on TOKEN_REFRESHED (like GoogleAuthSync skips on silent refresh)
+        // Extract profile data — skip on TOKEN_REFRESHED (no new user data expected)
         if (event !== "TOKEN_REFRESHED") {
           const userEmail = session.user.email;
           if (userEmail) {

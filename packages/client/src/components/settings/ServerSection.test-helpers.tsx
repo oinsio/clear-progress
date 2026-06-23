@@ -27,20 +27,6 @@ export function fillAndSubmitSupabase(
   fireEvent.click(screen.getByTestId("server-supabase-connect"));
 }
 
-export function fillAndSubmitGas(
-  url = "https://script.google.com/macros/s/ABC/exec",
-  clientId = "client-123",
-) {
-  fireEvent.click(screen.getByTestId("server-connect-gas"));
-  fireEvent.change(screen.getByTestId("server-gas-url"), {
-    target: { value: url },
-  });
-  fireEvent.change(screen.getByTestId("server-gas-client-id"), {
-    target: { value: clientId },
-  });
-  fireEvent.click(screen.getByTestId("server-gas-connect"));
-}
-
 export function renderWithConnection(
   mockUseConnectionConfig: Mock,
   config = SUPABASE_CONFIG,

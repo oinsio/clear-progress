@@ -9,10 +9,7 @@ const mockFetchSupabaseProviders = vi.fn();
 const mockCreateSupabaseClient = vi.fn();
 const mockGetSupabaseClient = vi.fn();
 const mockGetAccessToken = vi.fn();
-const mockCreateGasAdapter = vi.fn();
 const mockParseSupabaseInput = vi.fn((url: string) => url);
-const mockParseGasInput = vi.fn((url: string) => url);
-const mockParseClientId = vi.fn((id: string) => id);
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -56,17 +53,8 @@ vi.mock("@/services/supabaseClientManager", () => ({
 vi.mock("@/services/tokenManager", () => ({
   getAccessToken: () => mockGetAccessToken(),
 }));
-vi.mock("@clear-progress/adapter-gas", () => ({
-  createGasAdapter: (...args: unknown[]) => mockCreateGasAdapter(...args),
-}));
 vi.mock("@/utils/supabaseUrl", () => ({
   parseSupabaseInput: (url: string) => mockParseSupabaseInput(url),
-}));
-vi.mock("@/utils/gasUrl", () => ({
-  parseGasInput: (url: string) => mockParseGasInput(url),
-}));
-vi.mock("@/utils/clientId", () => ({
-  parseClientId: (id: string) => mockParseClientId(id),
 }));
 vi.mock("@/constants", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/constants")>()),

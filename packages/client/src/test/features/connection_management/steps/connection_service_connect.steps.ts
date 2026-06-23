@@ -26,7 +26,6 @@ describeFeature(
     let inputConfig: ConnectionConfig;
     const eventState: EventDispatchState = {
       backendEventDispatched: false,
-      googleClientIdEventDispatched: false,
     };
 
     f.BeforeEachScenario(() => {
@@ -40,12 +39,12 @@ describeFeature(
       "Connect saves config with activeType set",
       ({ Given, When, Then, And }) => {
         Given(
-          'a GAS config with url "https://example.com" and clientId "client-123"',
+          'a Supabase config with url "https://example.supabase.co" and anonKey "test-key"',
           (_ctx: TestContext) => {
             inputConfig = {
-              type: "gas",
-              url: "https://example.com",
-              clientId: "client-123",
+              type: "supabase",
+              url: "https://example.supabase.co",
+              anonKey: "test-key",
             };
           },
         );
@@ -54,21 +53,23 @@ describeFeature(
           connect(inputConfig);
         });
 
-        Then('the store has activeType "gas"', (_ctx: TestContext) => {
-          expect(readStore().activeType).toBe("gas");
+        Then('the store has activeType "supabase"', (_ctx: TestContext) => {
+          expect(readStore().activeType).toBe("supabase");
         });
 
         And(
-          'the store has gas config with url "https://example.com"',
+          'the store has supabase config with url "https://example.supabase.co"',
           (_ctx: TestContext) => {
-            expect(readStore().configs.gas?.url).toBe("https://example.com");
+            expect(readStore().configs.supabase?.url).toBe(
+              "https://example.supabase.co",
+            );
           },
         );
 
         And(
-          'the store has gas config with clientId "client-123"',
+          'the store has supabase config with anonKey "test-key"',
           (_ctx: TestContext) => {
-            expect(readStore().configs.gas?.clientId).toBe("client-123");
+            expect(readStore().configs.supabase?.anonKey).toBe("test-key");
           },
         );
       },
@@ -79,11 +80,12 @@ describeFeature(
       "Connect sets activeType to the config type",
       ({ Given, When, Then }) => {
         Given(
-          'a GAS config with url "https://example.com"',
+          'a Supabase config with url "https://example.supabase.co" and anonKey "anon-key"',
           (_ctx: TestContext) => {
             inputConfig = {
-              type: "gas",
-              url: "https://example.com",
+              type: "supabase",
+              url: "https://example.supabase.co",
+              anonKey: "anon-key",
             };
           },
         );
@@ -92,8 +94,8 @@ describeFeature(
           connect(inputConfig);
         });
 
-        Then('the store has activeType "gas"', (_ctx: TestContext) => {
-          expect(readStore().activeType).toBe("gas");
+        Then('the store has activeType "supabase"', (_ctx: TestContext) => {
+          expect(readStore().activeType).toBe("supabase");
         });
       },
     );
@@ -103,11 +105,12 @@ describeFeature(
       "Connect dispatches backend connection event",
       ({ Given, When, Then }) => {
         Given(
-          'a GAS config with url "https://example.com"',
+          'a Supabase config with url "https://example.supabase.co" and anonKey "anon-key"',
           (_ctx: TestContext) => {
             inputConfig = {
-              type: "gas",
-              url: "https://example.com",
+              type: "supabase",
+              url: "https://example.supabase.co",
+              anonKey: "anon-key",
             };
           },
         );
@@ -120,58 +123,6 @@ describeFeature(
           "a backend connection event was dispatched",
           (_ctx: TestContext) => {
             expect(eventState.backendEventDispatched).toBe(true);
-          },
-        );
-      },
-    );
-
-    // @localstorage-refactor @FR9
-    f.Scenario(
-      "Connect dispatches Google client ID event for GAS with clientId",
-      ({ Given, When, Then }) => {
-        Given(
-          'a GAS config with url "https://example.com" and clientId "client-123"',
-          (_ctx: TestContext) => {
-            inputConfig = {
-              type: "gas",
-              url: "https://example.com",
-              clientId: "client-123",
-            };
-          },
-        );
-
-        When("connect is called with the config", (_ctx: TestContext) => {
-          connect(inputConfig);
-        });
-
-        Then("a Google client ID event was dispatched", (_ctx: TestContext) => {
-          expect(eventState.googleClientIdEventDispatched).toBe(true);
-        });
-      },
-    );
-
-    // @localstorage-refactor @FR9
-    f.Scenario(
-      "Connect does not dispatch Google client ID event for GAS without clientId",
-      ({ Given, When, Then }) => {
-        Given(
-          'a GAS config with url "https://example.com" and no clientId',
-          (_ctx: TestContext) => {
-            inputConfig = {
-              type: "gas",
-              url: "https://example.com",
-            };
-          },
-        );
-
-        When("connect is called with the config", (_ctx: TestContext) => {
-          connect(inputConfig);
-        });
-
-        Then(
-          "a Google client ID event was not dispatched",
-          (_ctx: TestContext) => {
-            expect(eventState.googleClientIdEventDispatched).toBe(false);
           },
         );
       },

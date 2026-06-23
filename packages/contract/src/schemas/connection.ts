@@ -15,20 +15,9 @@ const HttpUrlSchema = z.string().refine(
 /**
  * BackendType
  */
-export const BackendTypeSchema = z.enum(["gas", "supabase"]);
+export const BackendTypeSchema = z.enum(["supabase"]);
 
 export type BackendType = z.infer<typeof BackendTypeSchema>;
-
-/**
- * GasConnectionConfig — connection configuration for Google Apps Script
- */
-export const GasConnectionConfigSchema = z.object({
-  type: z.literal("gas"),
-  url: HttpUrlSchema,
-  clientId: z.string().optional(),
-});
-
-export type GasConnectionConfig = z.infer<typeof GasConnectionConfigSchema>;
 
 /**
  * SupabaseConnectionConfig — connection configuration for Supabase
@@ -47,7 +36,6 @@ export type SupabaseConnectionConfig = z.infer<
  * ConnectionConfig — discriminated union on the type field
  */
 export const ConnectionConfigSchema = z.discriminatedUnion("type", [
-  GasConnectionConfigSchema,
   SupabaseConnectionConfigSchema,
 ]);
 
@@ -58,18 +46,12 @@ export type ConnectionConfig = z.infer<typeof ConnectionConfigSchema>;
  * implements FR8 of localstorage-refactor
  */
 export const ConnectionStoreSchema = z.object({
-  activeType: z.enum(["supabase", "gas"]).nullable(),
+  activeType: z.enum(["supabase"]).nullable(),
   configs: z.object({
     supabase: z
       .object({
         url: z.string(),
         anonKey: z.string(),
-      })
-      .optional(),
-    gas: z
-      .object({
-        url: z.string(),
-        clientId: z.string().optional(),
       })
       .optional(),
   }),

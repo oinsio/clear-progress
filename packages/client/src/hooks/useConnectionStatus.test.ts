@@ -28,8 +28,9 @@ describe("useConnectionStatus", () => {
     vi.clearAllMocks();
     // Default: connected, authenticated, synced
     mockUseConnectionConfig.mockReturnValue({
-      type: "gas",
-      url: "https://test.example.com",
+      type: "supabase",
+      url: "https://test.supabase.co",
+      anonKey: "test-key",
     });
     mockUseAuth.mockReturnValue({ accessToken: "token-123" });
     mockUseSync.mockReturnValue({ syncStatus: "idle" });
@@ -41,23 +42,7 @@ describe("useConnectionStatus", () => {
     expect(result.current).toBe("not_configured");
   });
 
-  it("should return no_auth when backend is connected with clientId but no accessToken", () => {
-    mockUseConnectionConfig.mockReturnValue({
-      type: "gas",
-      url: "https://test.example.com",
-      clientId: "test-client-id",
-    });
-    mockUseAuth.mockReturnValue({ accessToken: null });
-    const { result } = renderHook(() => useConnectionStatus());
-    expect(result.current).toBe("no_auth");
-  });
-
-  it("should return synced when connected without clientId", () => {
-    mockUseConnectionConfig.mockReturnValue({
-      type: "gas",
-      url: "https://test.example.com",
-    });
-    mockUseAuth.mockReturnValue({ accessToken: null });
+  it("should return synced when connected and idle", () => {
     const { result } = renderHook(() => useConnectionStatus());
     expect(result.current).toBe("synced");
   });
@@ -86,22 +71,11 @@ describe("useConnectionStatus", () => {
     expect(result.current).toBe("unauthorized");
   });
 
-  it("should prioritize not_configured over no_auth", () => {
+  it("should prioritize not_configured over sync status", () => {
     mockUseConnectionConfig.mockReturnValue(null);
-    mockUseAuth.mockReturnValue({ accessToken: null });
-    const { result } = renderHook(() => useConnectionStatus());
-    expect(result.current).toBe("not_configured");
-  });
-
-  it("should prioritize no_auth over syncStatus when clientId is present", () => {
-    mockUseConnectionConfig.mockReturnValue({
-      type: "gas",
-      url: "https://test.example.com",
-      clientId: "test-client-id",
-    });
     mockUseAuth.mockReturnValue({ accessToken: null });
     mockUseSync.mockReturnValue({ syncStatus: "error" });
     const { result } = renderHook(() => useConnectionStatus());
-    expect(result.current).toBe("no_auth");
+    expect(result.current).toBe("not_configured");
   });
 });

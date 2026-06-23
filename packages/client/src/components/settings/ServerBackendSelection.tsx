@@ -3,17 +3,15 @@ import { ProviderIcon } from "./ProviderIcon";
 
 interface ServerBackendSelectionProps {
   onSelectSupabase: () => void;
-  onSelectGas: () => void;
 }
 
 /**
  * Implements FR1, UX1 of simplify-backend-connection.
  * Implements FR13 of supabase-provider-info.
- * Two buttons for selecting backend type.
+ * Button for selecting Supabase backend.
  */
 export function ServerBackendSelection({
   onSelectSupabase,
-  onSelectGas,
 }: ServerBackendSelectionProps) {
   const { t } = useTranslation();
 
@@ -29,14 +27,6 @@ export function ServerBackendSelection({
       >
         <ProviderIcon provider="supabase" className="h-4 w-4" />
         {t("settings.server.connectSupabase")}
-      </button>
-      <button
-        data-testid="server-connect-gas"
-        onClick={onSelectGas}
-        className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300 inline-flex items-center justify-center gap-2"
-      >
-        <ProviderIcon provider="gas" className="h-4 w-4" />
-        {t("settings.server.connectGas")}
       </button>
     </div>
   );

@@ -10,33 +10,11 @@ Feature: Server Connection — Connected State
     And URL "https://myproject.supabase.co" is displayed
     And Anon Key is not shown
 
-  @simplify-backend-connection @FR1 @UX2
-  Scenario: Connected GAS shows type and URL
-    Given user is connected to GAS at "https://script.google.com/macros/s/ABC/exec"
-    When Server section is rendered
-    Then "Google Apps Script" label is displayed
-    And URL "https://script.google.com/macros/s/ABC/exec" is displayed
-
   @simplify-backend-connection @FR10 @UX6
   Scenario: Full sync triggers synchronization
     Given user is connected to Supabase at "https://myproject.supabase.co"
     When user requests full sync and confirms
     Then full synchronization is triggered
-
-  @simplify-backend-connection @FR10
-  Scenario: Sign-in prompt shown when GAS unauthenticated
-    Given user is connected to GAS at "https://script.google.com/macros/s/ABC/exec"
-    And no access token is present
-    When Server section is rendered
-    Then sign-in required message is displayed
-    And Sign In with Google button is available
-
-  @simplify-backend-connection @FR10
-  Scenario: Sign-in prompt hidden when GAS authenticated
-    Given user is connected to GAS at "https://script.google.com/macros/s/ABC/exec"
-    And access token is present
-    When Server section is rendered
-    Then sign-in prompt is not displayed
 
   @simplify-backend-connection @FR3
   Scenario: Expired Supabase session shows sign-in prompt

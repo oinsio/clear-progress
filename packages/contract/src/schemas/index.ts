@@ -17,14 +17,12 @@ export type {
   BackendType,
   ConnectionConfig,
   ConnectionStore,
-  GasConnectionConfig,
   SupabaseConnectionConfig,
 } from "./connection";
 export {
   BackendTypeSchema,
   ConnectionConfigSchema,
   ConnectionStoreSchema,
-  GasConnectionConfigSchema,
   SupabaseConnectionConfigSchema,
 } from "./connection";
 export type {

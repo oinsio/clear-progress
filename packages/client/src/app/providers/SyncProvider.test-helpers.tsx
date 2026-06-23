@@ -38,8 +38,13 @@ export function setupBeforeEach() {
   localStorage.setItem(
     "connection_config",
     JSON.stringify({
-      activeType: "gas",
-      configs: { gas: { url: "https://test.example.com" } },
+      activeType: "supabase",
+      configs: {
+        supabase: {
+          url: "https://test.supabase.co",
+          anonKey: "test-anon-key",
+        },
+      },
     }),
   );
 
