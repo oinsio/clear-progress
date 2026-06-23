@@ -21,6 +21,7 @@ describe("useMenuOrder", () => {
         "tasks",
         "completed",
         "focused_goals",
+        "memos",
         "deleted",
       ]);
     });

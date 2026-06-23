@@ -225,6 +225,7 @@
     "close": "Close panel",
     "open": "Open panel",
     "search": "Search",
+    "memos": "Memos",
     "deleted": "Deleted",
     "showHidden": "Show hidden tasks"
   },
@@ -503,6 +504,12 @@
     "unpin": "Unpin detail panel",
     "delete": "Delete task",
     "close": "Close"
+  },
+  "memo": {
+    "pageName": "Memos",
+    "empty": "No memos",
+    "notFound": "Memo not found",
+    "back": "Back"
   },
   "deleted": {
     "pageName": "Deleted",

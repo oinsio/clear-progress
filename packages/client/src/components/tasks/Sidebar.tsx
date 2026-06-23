@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   CheckCheck,
   CheckSquare,
   Crosshair,
@@ -28,6 +29,7 @@ export type SidebarMode =
   | "ideas"
   | "contexts"
   | "categories"
+  | "memos"
   | "deleted"
   | "search"
   | null;
@@ -81,6 +83,12 @@ export const FILTER_ITEMS: FilterItem[] = [
     labelKey: "filter.completed",
     Icon: CheckCheck,
     route: ROUTES.COMPLETED,
+  },
+  {
+    mode: "memos",
+    labelKey: "filter.memos",
+    Icon: BookOpen,
+    route: ROUTES.MEMOS,
   },
   {
     mode: "deleted",

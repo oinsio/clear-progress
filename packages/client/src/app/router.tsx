@@ -13,6 +13,8 @@ import GoalDetailPage from "@/pages/GoalDetailPage";
 import GoalsPage from "@/pages/GoalsPage";
 import IdeasPage from "@/pages/IdeasPage";
 import InboxPage from "@/pages/InboxPage";
+import MemoDetailPage from "@/pages/MemoDetailPage";
+import MemosPage from "@/pages/MemosPage";
 import SearchPage from "@/pages/SearchPage";
 import SettingsPage from "@/pages/SettingsPage";
 
@@ -47,6 +49,8 @@ export const router = createBrowserRouter(
         { path: ROUTES.GOAL, element: <GoalDetailPage /> },
         { path: ROUTES.IDEAS, element: <IdeasPage /> },
         { path: ROUTES.SEARCH, element: <SearchPage /> },
+        { path: ROUTES.MEMOS, element: <MemosPage /> },
+        { path: ROUTES.MEMO, element: <MemoDetailPage /> },
         { path: ROUTES.DELETED, element: <DeletedPage /> },
       ],
     },

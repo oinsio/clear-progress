@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
         registerType: "prompt",
         manifest: false,
         workbox: {
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB — main chunk includes mermaid (~3.2 MB)
           globPatterns: ["**/*.{js,mjs,css,html,ico,png,svg}"],
           runtimeCaching: [
             {
