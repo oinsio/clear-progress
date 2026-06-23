@@ -7,11 +7,10 @@ This guide explains how to create a new backend adapter for Clear Progress.
 Clear Progress uses a **ports and adapters** architecture. The client depends on the `SyncAdapter` interface from `@clear-progress/contract`, and backend adapters implement this interface.
 
 **Existing adapters:**
-- `@clear-progress/adapter-gas` — Google Apps Script + Google Sheets
+- `@clear-progress/adapter-supabase` — Supabase backend
 - `@clear-progress/adapter-inmemory` — In-memory storage (for testing)
 
 **Potential future adapters:**
-- `@clear-progress/adapter-supabase` — Supabase backend
 - `@clear-progress/adapter-firebase` — Firebase backend
 - `@clear-progress/adapter-pocketbase` — PocketBase backend
 

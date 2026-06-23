@@ -3,9 +3,9 @@
 ## Setup
 
 - Library: `i18next` + `react-i18next`; initialized in `src/i18n.ts`, imported in `main.tsx`
-- Languages: `ru` (default), `en`; files in `src/locales/ru.json` and `src/locales/en.json`
+- Locale registry: `src/services/localeRegistry.ts` — auto-discovers all `src/locales/*.json` files via `import.meta.glob`
 - Language state: `LanguageProvider` (Context) in `src/app/providers/LanguageProvider.tsx`
-- Language switch: `useLanguage()` hook from `src/hooks/useLanguage.ts`
+- Language switch: `useLanguage()` hook from `src/app/providers/LanguageProvider.tsx`
 - Persistence: localStorage key `STORAGE_KEYS.LANGUAGE`
 
 ## Usage in components
@@ -55,6 +55,31 @@ Structure: `domain.specificKey` — flat two-level namespacing.
 | `pwa.*`        | PWA update notifications                               |
 | `theme.*`      | Theme selection (system/light/dark)                    |
 | `color.*`      | Color name translations                                |
+
+## Adding a new language
+
+1. Create `src/locales/xx.json` (where `xx` is the language code)
+2. Add a `_meta` block at the top:
+
+```json
+{
+  "_meta": {
+    "code": "xx",
+    "name": "Language Name (English)",
+    "nativeName": "Name in native script",
+    "baseLanguage": "xx",
+    "emoji": "🏳️"
+  },
+  "nav": { "..." : "..." },
+  "box": { "..." : "..." }
+}
+```
+
+3. Copy the key structure from `ru.json` or `en.json` and translate all strings
+
+The language will automatically appear in settings. No other files need to be changed.
+
+**`_meta` fields:** `code` must match the filename. `baseLanguage` is the ISO 639-1 code used for i18next fallback and pluralization rules (for novelty locales like `house.json`, set it to the language the translation is written in). `name` is the English name (used for sorting).
 
 ## Adding new strings
 
