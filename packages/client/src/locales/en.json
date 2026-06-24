@@ -111,6 +111,8 @@
       "uploading": "Uploading...",
       "errorSize": "File is too large (max 2 MB)",
       "errorType": "Please select an image",
+      "errorUnrecognized": "Could not determine file format. The file may be corrupted.",
+      "errorNetwork": "Upload failed. The file is saved locally and will be uploaded when connection is restored.",
       "uploadError": "Failed to upload cover. Please try again.",
       "viewFull": "View cover image",
       "closeLightbox": "Close cover preview"
@@ -579,7 +581,8 @@
     "attach": {
       "button": "Attach file",
       "errorSize": "File is too large (max 5 MB)",
-      "errorType": "This file type is not supported"
+      "errorType": "This file type is not supported",
+      "errorUnrecognized": "Could not determine file format"
     }
   },
   "confirmDialog": {

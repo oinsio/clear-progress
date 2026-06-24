@@ -60,7 +60,10 @@ describeFeature(
         getByEntityTypeAndId: vi.fn().mockResolvedValue([]),
       };
       mockFileService = {
-        uploadFile: vi.fn().mockResolvedValue({ data_hash: "default-hash" }),
+        uploadFile: vi.fn().mockResolvedValue({
+          data_hash: "default-hash",
+          mime_type: "application/octet-stream",
+        }),
         deleteFile: vi.fn().mockResolvedValue(undefined),
       };
       service = new AttachmentService(
@@ -76,6 +79,7 @@ describeFeature(
         async (_ctx: TestContext) => {
           mockFileService.uploadFile.mockResolvedValue({
             data_hash: "abc123",
+            mime_type: "application/pdf",
           });
         },
       );
@@ -124,6 +128,7 @@ describeFeature(
           async (_ctx: TestContext) => {
             mockFileService.uploadFile.mockResolvedValue({
               data_hash: "def456",
+              mime_type: "image/jpeg",
             });
           },
         );
@@ -167,6 +172,7 @@ describeFeature(
           async (_ctx: TestContext) => {
             mockFileService.uploadFile.mockResolvedValue({
               data_hash: "tracked-hash",
+              mime_type: "application/pdf",
             });
           },
         );

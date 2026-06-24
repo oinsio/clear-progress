@@ -1,8 +1,9 @@
 /** Implements FR4, FR7 of add-file-attachments */
+/** Implements FR2, FR4, FR5 of fix-file-mime-detection */
 import type { SyncAdapter } from "@clear-progress/contract";
 import {
   ALLOWED_FILE_MIME_TYPES,
-  validateMagicBytes,
+  detectMimeType,
 } from "@clear-progress/contract";
 import { DEFAULT_FILE_EXTENSION, FILE_HASH_PREFIX_LENGTH } from "@/constants";
 import type { FileRepository } from "@/db/repositories/FileRepository";
@@ -18,7 +19,21 @@ const FILE_ERROR = {
   INVALID_TYPE: "INVALID_TYPE",
   FILE_TOO_LARGE: "FILE_TOO_LARGE",
   INVALID_MAGIC_BYTES: "INVALID_MAGIC_BYTES",
+  UNRECOGNIZED_FORMAT: "UNRECOGNIZED_FORMAT",
 } as const;
+
+/** Implements FR2, FR5 of fix-file-mime-detection */
+const TEXT_MIME_TYPES = ["text/plain", "text/markdown"] as const;
+
+function resolveEffectiveMimeType(
+  detectedType: string | null,
+  browserType: string,
+): string {
+  if (detectedType !== null) return detectedType;
+  if ((TEXT_MIME_TYPES as readonly string[]).includes(browserType))
+    return browserType;
+  throw new Error(FILE_ERROR.UNRECOGNIZED_FORMAT);
+}
 
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -62,23 +77,26 @@ export class FileService {
     private readonly localRefCounter?: LocalFileRefCounter,
   ) {}
 
+  /** Implements FR2, FR4, FR5 of fix-file-mime-detection */
   async uploadFile(
     file: File,
     goalId: string,
     sizeLimit: number,
-  ): Promise<{ data_hash: string }> {
-    const allowedTypes: readonly string[] = ALLOWED_FILE_MIME_TYPES;
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error(FILE_ERROR.INVALID_TYPE);
-    }
+  ): Promise<{ data_hash: string; mime_type: string }> {
     if (file.size > sizeLimit) {
       throw new Error(FILE_ERROR.FILE_TOO_LARGE);
     }
 
     const buffer = await file.arrayBuffer();
+    const detectedMimeType = detectMimeType(buffer);
+    const effectiveMimeType = resolveEffectiveMimeType(
+      detectedMimeType,
+      file.type,
+    );
 
-    if (!validateMagicBytes(buffer, file.type)) {
-      throw new Error(FILE_ERROR.INVALID_MAGIC_BYTES);
+    const allowedTypes: readonly string[] = ALLOWED_FILE_MIME_TYPES;
+    if (!allowedTypes.includes(effectiveMimeType)) {
+      throw new Error(FILE_ERROR.INVALID_TYPE);
     }
 
     const dataHash = await computeSha256Hex(buffer);
@@ -86,12 +104,12 @@ export class FileService {
     const existingPending =
       await this.pendingFileRepository.getByHash(dataHash);
     if (existingPending) {
-      return { data_hash: dataHash };
+      return { data_hash: dataHash, mime_type: effectiveMimeType };
     }
 
     const existingRemote = await this.fileRepository.getByHash(dataHash);
     if (existingRemote) {
-      return { data_hash: dataHash };
+      return { data_hash: dataHash, mime_type: effectiveMimeType };
     }
 
     try {
@@ -99,12 +117,12 @@ export class FileService {
       await this.syncAdapter.uploadFile({
         goal_id: goalId,
         filename: file.name,
-        mime_type: file.type,
+        mime_type: effectiveMimeType,
         data: base64Data,
         data_hash: dataHash,
       });
 
-      const blob = new Blob([buffer], { type: file.type });
+      const blob = new Blob([buffer], { type: effectiveMimeType });
       await this.fileRepository.save({
         data_hash: dataHash,
         data: blob,
@@ -112,7 +130,7 @@ export class FileService {
       const blobUrl = URL.createObjectURL(blob);
       localFileCache.set(dataHash, blobUrl);
 
-      return { data_hash: dataHash };
+      return { data_hash: dataHash, mime_type: effectiveMimeType };
     } catch (error) {
       if (
         error instanceof Error &&
@@ -123,12 +141,12 @@ export class FileService {
         throw error;
       }
 
-      const blob = new Blob([buffer], { type: file.type });
+      const blob = new Blob([buffer], { type: effectiveMimeType });
       await this.pendingFileRepository.save({
         goal_id: goalId,
         data: blob,
         filename: file.name,
-        mime_type: file.type,
+        mime_type: effectiveMimeType,
         data_hash: dataHash,
         created_at: toISOTimestamp(),
       });
@@ -136,7 +154,7 @@ export class FileService {
       const objectUrl = URL.createObjectURL(blob);
       localFileCache.set(dataHash, objectUrl);
 
-      return { data_hash: dataHash };
+      return { data_hash: dataHash, mime_type: effectiveMimeType };
     }
   }
 

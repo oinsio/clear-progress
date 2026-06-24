@@ -1,5 +1,6 @@
 // implements FR4 of add-file-attachments
-// POST /upload-files — batch upload files (max 10), MIME + magic bytes validation
+// implements FR8 of fix-file-mime-detection
+// POST /upload-files — batch upload files (max 10), server-side MIME detection
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
 import {
@@ -12,12 +13,15 @@ import {
   ErrorCode,
   FILES_BUCKET,
 } from "../_shared/constants.ts";
+import { detectMimeType } from "../_shared/detectMimeType.ts";
 import {
   getExtensionFromMimeType,
   isAllowedMimeType,
   validateMagicBytes,
 } from "../_shared/files.ts";
 import { createAuthHandler, parseJsonBody } from "../_shared/handler.ts";
+
+const TEXT_MIME_TYPES: readonly string[] = ["text/plain", "text/markdown"];
 
 interface FileItem {
   local_id: string;
@@ -55,16 +59,7 @@ async function processSingleFile(
   userId: string,
   accessToken: string,
 ): Promise<FileResult> {
-  // Validate MIME type (FR2 of add-file-attachments)
-  if (!isAllowedMimeType(item.mime_type)) {
-    return {
-      local_id: item.local_id,
-      goal_id: item.goal_id,
-      ok: false,
-      error: `MIME type not allowed: ${item.mime_type}`,
-    };
-  }
-
+  // Decode base64 data first — needed for content-based detection (FR8 of fix-file-mime-detection)
   let fileBytes: Uint8Array;
   try {
     fileBytes = Uint8Array.from(atob(item.data), (char) => char.charCodeAt(0));
@@ -77,13 +72,39 @@ async function processSingleFile(
     };
   }
 
-  // Validate magic bytes (FR2 of add-file-attachments)
-  if (!validateMagicBytes(fileBytes, item.mime_type)) {
+  // Detect MIME type from file content (FR8 of fix-file-mime-detection)
+  const detectedMimeType = detectMimeType(fileBytes);
+
+  let effectiveMimeType: string;
+  if (detectedMimeType !== null) {
+    effectiveMimeType = detectedMimeType;
+  } else if ((TEXT_MIME_TYPES as readonly string[]).includes(item.mime_type)) {
+    // Text files have no magic bytes — fall back to declared type, validate content
+    if (!validateMagicBytes(fileBytes, item.mime_type)) {
+      return {
+        local_id: item.local_id,
+        goal_id: item.goal_id,
+        ok: false,
+        error: "File content does not match declared MIME type",
+      };
+    }
+    effectiveMimeType = item.mime_type;
+  } else {
     return {
       local_id: item.local_id,
       goal_id: item.goal_id,
       ok: false,
       error: "File content does not match declared MIME type",
+    };
+  }
+
+  // Validate effective MIME type against allowlist (FR2 of add-file-attachments)
+  if (!isAllowedMimeType(effectiveMimeType)) {
+    return {
+      local_id: item.local_id,
+      goal_id: item.goal_id,
+      ok: false,
+      error: `MIME type not allowed: ${effectiveMimeType}`,
     };
   }
 
@@ -115,16 +136,16 @@ async function processSingleFile(
     };
   }
 
-  // New file — upload to Storage
+  // New file — upload to Storage using detected MIME type (FR8 of fix-file-mime-detection)
   const fileId = crypto.randomUUID();
-  const ext = getExtensionFromMimeType(item.mime_type);
+  const ext = getExtensionFromMimeType(effectiveMimeType);
   const storagePath = buildStoragePath(userId, item.data_hash, fileId, ext);
 
   const userClient = createUserClient(accessToken);
   const { error: uploadError } = await userClient.storage
     .from(FILES_BUCKET)
     .upload(storagePath, fileBytes, {
-      contentType: item.mime_type,
+      contentType: effectiveMimeType,
       upsert: false,
     });
 
@@ -141,7 +162,7 @@ async function processSingleFile(
     file_id: fileId,
     user_id: userId,
     filename: item.filename,
-    mime_type: item.mime_type,
+    mime_type: effectiveMimeType,
     data_hash: item.data_hash,
     storage_path: storagePath,
   });

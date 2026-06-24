@@ -10,6 +10,29 @@ import { defaultFileService } from "@/services/defaultServices";
 import type { GoalStatus } from "@/types/common";
 import type { Goal } from "@/types/entities";
 
+const UPLOAD_ERROR_CODE = {
+  INVALID_TYPE: "INVALID_TYPE",
+  UNRECOGNIZED_FORMAT: "UNRECOGNIZED_FORMAT",
+  FILE_TOO_LARGE: "FILE_TOO_LARGE",
+} as const;
+
+/** Implements FR6 of fix-file-mime-detection */
+function mapUploadErrorToMessage(
+  errorCode: string,
+  t: (key: string) => string,
+): string {
+  switch (errorCode) {
+    case UPLOAD_ERROR_CODE.INVALID_TYPE:
+      return t("goal.cover.errorType");
+    case UPLOAD_ERROR_CODE.UNRECOGNIZED_FORMAT:
+      return t("goal.cover.errorUnrecognized");
+    case UPLOAD_ERROR_CODE.FILE_TOO_LARGE:
+      return t("goal.cover.errorSize");
+    default:
+      return t("goal.cover.errorNetwork");
+  }
+}
+
 interface UseGoalEditFormParams {
   goalId: string | undefined;
   goal: Goal | undefined;
@@ -109,8 +132,9 @@ export function useGoalEditForm({
       });
       void reloadGoal();
       setIsEditing(false);
-    } catch {
-      setSaveError(t("goal.cover.uploadError"));
+    } catch (error) {
+      const errorCode = error instanceof Error ? error.message : "";
+      setSaveError(mapUploadErrorToMessage(errorCode, t));
     } finally {
       setIsSaving(false);
     }

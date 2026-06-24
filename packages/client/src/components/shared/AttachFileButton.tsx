@@ -1,5 +1,6 @@
 import {
   ALLOWED_FILE_MIME_TYPES,
+  detectMimeType,
   MAX_ATTACHMENT_SIZE_BYTES,
 } from "@clear-progress/contract";
 import { Paperclip } from "lucide-react";
@@ -16,6 +17,8 @@ interface AttachFileButtonProps {
   isDisabled?: boolean;
   className?: string;
 }
+
+const TEXT_MIME_TYPES = ["text/plain", "text/markdown"] as const;
 
 /** Implements FR1, FR2, FR3 of add-file-attachments */
 export function AttachFileButton({
@@ -43,8 +46,9 @@ export function AttachFileButton({
     inputRef.current?.click();
   }, []);
 
+  /** Implements FR7 of fix-file-mime-detection */
   const handleFileChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
 
       // Reset input so re-selecting the same file triggers onChange
@@ -52,8 +56,21 @@ export function AttachFileButton({
 
       if (!file) return;
 
+      const buffer = await file.arrayBuffer();
+      const detectedType = detectMimeType(buffer);
+
+      let effectiveType: string;
+      if (detectedType !== null) {
+        effectiveType = detectedType;
+      } else if ((TEXT_MIME_TYPES as readonly string[]).includes(file.type)) {
+        effectiveType = file.type;
+      } else {
+        showError(t("attachment.attach.errorUnrecognized"));
+        return;
+      }
+
       const allowedTypes: readonly string[] = ALLOWED_FILE_MIME_TYPES;
-      if (!allowedTypes.includes(file.type)) {
+      if (!allowedTypes.includes(effectiveType)) {
         showError(t("attachment.attach.errorType"));
         return;
       }

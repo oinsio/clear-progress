@@ -365,6 +365,7 @@ export interface RefCountPullResponse {
     entity_id: string;
     data_hash: string;
     filename: string;
+    mime_type: string;
     is_deleted: boolean;
   }>;
 }
@@ -478,6 +479,42 @@ export async function purgeOnServer(
     purged: Record<string, number>;
     purge_revision: number;
   };
+}
+
+/**
+ * Pulls data from server and finds the first non-deleted attachment
+ * belonging to a task identified by name.
+ * Returns the task and attachment records for further assertions.
+ */
+export async function findServerAttachmentForTask(
+  credentials: ServerCallCredentials,
+  taskName: string,
+): Promise<{
+  pullResponse: RefCountPullResponse;
+  serverTask: RefCountPullResponse["tasks"][number];
+  serverAttachment: RefCountPullResponse["attachments"][number];
+}> {
+  const pullResponse = await pullFromServer<RefCountPullResponse>(credentials);
+  if (!pullResponse.ok) {
+    throw new Error("pull response not ok");
+  }
+
+  const serverTask = pullResponse.tasks.find(
+    (task) => task.name === taskName && !task.is_deleted,
+  );
+  if (!serverTask) {
+    throw new Error(`Task "${taskName}" not found on server`);
+  }
+
+  const serverAttachment = pullResponse.attachments.find(
+    (attachment) =>
+      attachment.entity_id === serverTask.id && !attachment.is_deleted,
+  );
+  if (!serverAttachment) {
+    throw new Error(`No attachment found for task "${taskName}" on server`);
+  }
+
+  return { pullResponse, serverTask, serverAttachment };
 }
 
 /**
