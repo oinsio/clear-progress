@@ -1,8 +1,12 @@
 # Clear Progress
 
+[![en](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
+[![ru](https://img.shields.io/badge/lang-ru-red.svg)](README.ru.md)
+
 Personal task, goal, and idea manager. Built for GTD and Jedi Empty Inbox techniques. Client-first PWA that works offline — your data stays on your device, with optional sync via your own Supabase server.
 
-**[Open the App](https://oinsio.github.io/clear-progress/)** | [Читать на русском](README.ru.md)
+**[Open the App](https://oinsio.github.io/clear-progress/)**  
+
 
 ## Features
 
