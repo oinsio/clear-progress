@@ -76,4 +76,32 @@ describe("detectMimeType", () => {
 
     expect(detectMimeType(buffer)).toBeNull();
   });
+
+  it("should return 'image/jpeg' for buffer exactly matching signature length", () => {
+    const buffer = createBuffer(0xff, 0xd8, 0xff);
+
+    expect(detectMimeType(buffer)).toBe("image/jpeg");
+  });
+
+  it("should return null for RIFF header with buffer too short for WEBP marker", () => {
+    const buffer = createBuffer(
+      ...RIFF_HEADER,
+      ...FILE_SIZE_PLACEHOLDER,
+      0x57,
+      0x45,
+      0x42,
+    );
+
+    expect(detectMimeType(buffer)).toBeNull();
+  });
+
+  it("should return 'image/webp' for RIFF buffer with exactly 12 bytes", () => {
+    const buffer = createBuffer(
+      ...RIFF_HEADER,
+      ...FILE_SIZE_PLACEHOLDER,
+      ...WEBP_MARKER,
+    );
+
+    expect(detectMimeType(buffer)).toBe("image/webp");
+  });
 });

@@ -4,7 +4,7 @@
 - [x] 1.2 Implement `detectMimeType` in `packages/contract/src/validation/detectMimeType.ts` — iterate `FILE_MAGIC_BYTES` with extended WebP check (D6)
 - [x] 1.3 Update `FILE_MAGIC_BYTES` for WebP: change signature to check bytes 0-3 (`RIFF`) + bytes 8-11 (`WEBP`) — design decision D6
 - [x] 1.4 Export `detectMimeType` from `packages/contract/src/index.ts`
-- [ ] 1.5 Mutation testing on `detectMimeType` — target >= 95% (skipped: Stryker not configured in contract package)
+- [x] 1.5 Mutation testing on `detectMimeType` — 82.98% total (39/39 killable killed, 8 equivalent mutants: defensive guards + single-signature `some`/`every`)
 
 ## 2. Client: FileService — use detected MIME type (FR2, FR4, FR5)
 
