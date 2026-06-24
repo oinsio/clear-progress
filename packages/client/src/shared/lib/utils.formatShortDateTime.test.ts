@@ -47,6 +47,34 @@ describe("formatShortDateTime", () => {
     expect(result).toMatch(/^Сегодня \d{2}:\d{2}$/);
   });
 
+  it("should show 'Сегодня' for timestamp exactly at day boundary", () => {
+    const atBoundary = buildISOForTodayAt(0, 0, REFERENCE_DATE);
+    const result = formatShortDateTime(atBoundary, clock);
+    expect(result).toMatch(/^Сегодня \d{2}:\d{2}$/);
+  });
+
+  it("should show 'Вчера' for timestamp exactly at yesterday boundary", () => {
+    const atBoundary = buildISOForYesterdayAt(0, 0, REFERENCE_DATE);
+    const result = formatShortDateTime(atBoundary, clock);
+    expect(result).toMatch(/^Вчера \d{2}:\d{2}$/);
+  });
+
+  it("should include abbreviated month in older timestamp formatting", () => {
+    // 5 days ago from 2026-04-16 = 2026-04-11
+    const olderISO = buildISOForDaysAgoAt(5, 9, 0, REFERENCE_DATE);
+    const result = formatShortDateTime(olderISO, clock);
+    // Must contain day number and abbreviated month name
+    expect(result).toContain("11");
+    expect(result).toMatch(/апр/i);
+  });
+
+  it("should use i18next.language for locale formatting", () => {
+    i18next.changeLanguage("en");
+    const olderISO = buildISOForDaysAgoAt(5, 9, 0, REFERENCE_DATE);
+    const result = formatShortDateTime(olderISO, clock);
+    expect(result).toMatch(/Apr/);
+  });
+
   // @day-boundary @FR8 @FR9
   describe("with dayBoundary parameter", () => {
     it("should show 'Сегодня' for task after boundary in same logical day", () => {

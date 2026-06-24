@@ -54,6 +54,36 @@ describe("formatCompletedAt", () => {
     expect(result).toMatch(/^Завершено: Сегодня \d{2}:\d{2}$/);
   });
 
+  it("should show 'Сегодня' for task completed exactly at day boundary", () => {
+    // Task completed exactly at midnight (start of today) — should be "today"
+    const atBoundary = buildISOForTodayAt(0, 0, REFERENCE_DATE);
+    const result = formatCompletedAt(atBoundary, clock);
+    expect(result).toMatch(/^Завершено: Сегодня \d{2}:\d{2}$/);
+  });
+
+  it("should show 'Вчера' for task completed exactly at yesterday boundary", () => {
+    // Task completed exactly at start of yesterday — should be "yesterday"
+    const atBoundary = buildISOForYesterdayAt(0, 0, REFERENCE_DATE);
+    const result = formatCompletedAt(atBoundary, clock);
+    expect(result).toMatch(/^Завершено: Вчера \d{2}:\d{2}$/);
+  });
+
+  it("should include abbreviated month in older completion formatting", () => {
+    // 5 days ago from 2026-04-16 = 2026-04-11
+    const olderISO = buildISOForDaysAgoAt(5, 9, 0, REFERENCE_DATE);
+    const result = formatCompletedAt(olderISO, clock);
+    // Must contain day number and abbreviated month name, not just time
+    expect(result).toContain("11");
+    expect(result).toMatch(/апр/i);
+  });
+
+  it("should use i18next.language for locale formatting", () => {
+    i18next.changeLanguage("en");
+    const olderISO = buildISOForDaysAgoAt(5, 9, 0, REFERENCE_DATE);
+    const result = formatCompletedAt(olderISO, clock);
+    expect(result).toMatch(/Apr/);
+  });
+
   // @day-boundary @FR8 @FR9
   describe("with dayBoundary parameter", () => {
     it("should show 'Сегодня' for task completed before boundary in same logical day", () => {
