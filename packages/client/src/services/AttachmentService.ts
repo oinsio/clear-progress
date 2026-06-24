@@ -19,11 +19,8 @@ export class AttachmentService {
     entityType: EntityType,
     entityId: string,
   ): Promise<Attachment> {
-    const { data_hash: dataHash } = await this.fileService.uploadFile(
-      file,
-      "",
-      MAX_ATTACHMENT_SIZE_BYTES,
-    );
+    const { data_hash: dataHash, mime_type: detectedMimeType } =
+      await this.fileService.uploadFile(file, "", MAX_ATTACHMENT_SIZE_BYTES);
 
     const existingAttachments =
       await this.attachmentRepository.getByEntityTypeAndId(
@@ -42,7 +39,7 @@ export class AttachmentService {
       entity_id: entityId,
       data_hash: dataHash,
       filename: file.name,
-      mime_type: file.type,
+      mime_type: detectedMimeType,
       file_size: file.size,
       sort_order: sortOrder,
       is_deleted: false,

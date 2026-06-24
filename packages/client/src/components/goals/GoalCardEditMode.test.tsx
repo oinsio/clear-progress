@@ -166,6 +166,15 @@ describe("GoalCardEditMode compact tabs", () => {
     );
   });
 
+  // NFR-A1 of fix-file-mime-detection: Save error has role="alert"
+  it("should render save error with role alert", () => {
+    render(
+      <GoalCardEditMode {...DEFAULT_PROPS} saveError="goal.cover.errorType" />,
+    );
+    const errorElement = screen.getByTestId("goal-save-error");
+    expect(errorElement).toHaveAttribute("role", "alert");
+  });
+
   // FR4: Active attachments tab shows both label and count badge
   it("should show label and count badge on active attachments tab", () => {
     mockAttachmentCount = 5;

@@ -1,4 +1,5 @@
-import { validateMagicBytes } from "@clear-progress/contract";
+/** Implements FR2, FR4, FR5 of fix-file-mime-detection */
+import { detectMimeType } from "@clear-progress/contract";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MAX_COVER_SIZE_BYTES } from "@/constants";
 import { toISOTimestamp } from "@/utils/dateHelpers";
@@ -16,7 +17,7 @@ import { localFileCache } from "./LocalFileCache";
 vi.mock("@clear-progress/contract", async (importOriginal) => {
   const original =
     await importOriginal<typeof import("@clear-progress/contract")>();
-  return { ...original, validateMagicBytes: vi.fn(() => true) };
+  return { ...original, detectMimeType: vi.fn(() => "image/jpeg") };
 });
 
 describe("FileService — uploadCover", () => {
@@ -42,9 +43,10 @@ describe("FileService — uploadCover", () => {
     );
   }
 
-  it("should throw INVALID_TYPE if file is not an image", async () => {
+  it("should throw INVALID_TYPE when detected mime type is not allowed", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("application/octet-stream");
     const service = createService();
-    const file = createImageFile({ type: "application/octet-stream" });
+    const file = createImageFile({ type: "image/jpeg" });
     await expect(
       service.uploadFile(file, "goal-1", MAX_COVER_SIZE_BYTES),
     ).rejects.toThrow("INVALID_TYPE");
@@ -186,8 +188,9 @@ describe("FileService — uploadCover", () => {
   });
 
   it("should not save locally for INVALID_TYPE error", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("application/octet-stream");
     const service = createService();
-    const file = createImageFile({ type: "application/octet-stream" });
+    const file = createImageFile({ type: "image/jpeg" });
 
     await expect(
       service.uploadFile(file, "goal-1", MAX_COVER_SIZE_BYTES),
@@ -221,24 +224,24 @@ describe("FileService — uploadCover", () => {
     expect(result.data_hash).toBeDefined();
   });
 
-  it("should throw INVALID_MAGIC_BYTES when validateMagicBytes returns false", async () => {
-    vi.mocked(validateMagicBytes).mockReturnValueOnce(false);
+  it("should throw UNRECOGNIZED_FORMAT when detectMimeType returns null and browser type is not text", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce(null);
     const service = createService();
-    const file = createImageFile();
+    const file = createImageFile({ type: "application/octet-stream" });
 
     await expect(
       service.uploadFile(file, "goal-1", MAX_COVER_SIZE_BYTES),
-    ).rejects.toThrow("INVALID_MAGIC_BYTES");
+    ).rejects.toThrow("UNRECOGNIZED_FORMAT");
   });
 
-  it("should not save locally when INVALID_MAGIC_BYTES error occurs", async () => {
-    vi.mocked(validateMagicBytes).mockReturnValueOnce(false);
+  it("should not save locally when UNRECOGNIZED_FORMAT error occurs", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce(null);
     const service = createService();
-    const file = createImageFile();
+    const file = createImageFile({ type: "application/octet-stream" });
 
     await expect(
       service.uploadFile(file, "goal-1", MAX_COVER_SIZE_BYTES),
-    ).rejects.toThrow("INVALID_MAGIC_BYTES");
+    ).rejects.toThrow("UNRECOGNIZED_FORMAT");
 
     expect(mocks.mockPendingFileRepository.save).not.toHaveBeenCalled();
   });
@@ -255,18 +258,19 @@ describe("FileService — uploadCover", () => {
     expect(savedBlob.size).toBeGreaterThan(0);
   });
 
-  it("should create Blob with correct mime type when uploading successfully", async () => {
+  it("should create Blob with detected mime type when uploading successfully", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("image/webp");
     const service = createService();
 
     await service.uploadFile(
-      createImageFile({ type: "image/jpeg" }),
+      createImageFile({ type: "image/png" }),
       "goal-1",
       MAX_COVER_SIZE_BYTES,
     );
 
     const savedCall = vi.mocked(mocks.mockFileRepository.save).mock.calls[0];
     const savedBlob = savedCall?.[0]?.data as Blob;
-    expect(savedBlob.type).toBe("image/jpeg");
+    expect(savedBlob.type).toBe("image/webp");
   });
 
   it("should create pending Blob with non-zero size from file buffer on network error", async () => {
@@ -285,14 +289,15 @@ describe("FileService — uploadCover", () => {
     expect(pendingBlob.size).toBeGreaterThan(0);
   });
 
-  it("should create pending Blob with correct mime type on network error", async () => {
+  it("should create pending Blob with detected mime type on network error", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("image/webp");
     const mockSyncAdapter = createMockSyncAdapter({
       uploadFile: vi.fn().mockRejectedValue(new Error("Network error")),
     });
     const service = createService({ mockSyncAdapter });
 
     await service.uploadFile(
-      createImageFile({ type: "image/jpeg" }),
+      createImageFile({ type: "image/png" }),
       "goal-1",
       MAX_COVER_SIZE_BYTES,
     );
@@ -300,7 +305,7 @@ describe("FileService — uploadCover", () => {
     const pendingCall = vi.mocked(mocks.mockPendingFileRepository.save).mock
       .calls[0];
     const pendingBlob = pendingCall?.[0]?.data as Blob;
-    expect(pendingBlob.type).toBe("image/jpeg");
+    expect(pendingBlob.type).toBe("image/webp");
   });
 
   it("should re-throw error when API throws with FILE_ERROR message instead of saving locally", async () => {
@@ -340,5 +345,79 @@ describe("FileService — uploadCover", () => {
 
     expect(result.data_hash).toBeDefined();
     expect(mocks.mockSyncAdapter.uploadFile).not.toHaveBeenCalled();
+  });
+
+  it("should succeed with detected type when WebP file has .png extension", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("image/webp");
+    const service = createService();
+    const file = createImageFile({ name: "photo.png", type: "image/png" });
+
+    const result = await service.uploadFile(
+      file,
+      "goal-1",
+      MAX_COVER_SIZE_BYTES,
+    );
+
+    expect(result.data_hash).toBeDefined();
+    expect(mocks.mockSyncAdapter.uploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({ mime_type: "image/webp" }),
+    );
+  });
+
+  it("should throw UNRECOGNIZED_FORMAT for unknown binary file", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce(null);
+    const service = createService();
+    const file = createImageFile({
+      name: "data.bin",
+      type: "application/octet-stream",
+    });
+
+    await expect(
+      service.uploadFile(file, "goal-1", MAX_COVER_SIZE_BYTES),
+    ).rejects.toThrow("UNRECOGNIZED_FORMAT");
+  });
+
+  it("should fall back to browser type for text/plain when detectMimeType returns null", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce(null);
+    const service = createService();
+    const file = createImageFile({ name: "notes.txt", type: "text/plain" });
+
+    const result = await service.uploadFile(
+      file,
+      "goal-1",
+      MAX_COVER_SIZE_BYTES,
+    );
+
+    expect(result.data_hash).toBeDefined();
+    expect(mocks.mockSyncAdapter.uploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({ mime_type: "text/plain" }),
+    );
+  });
+
+  it("should use detected mime type in upload payload instead of browser type", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("image/webp");
+    const service = createService();
+    const file = createImageFile({ type: "image/png" });
+
+    await service.uploadFile(file, "goal-1", MAX_COVER_SIZE_BYTES);
+
+    expect(mocks.mockSyncAdapter.uploadFile).toHaveBeenCalledWith(
+      expect.objectContaining({ mime_type: "image/webp" }),
+    );
+  });
+
+  it("should use detected mime type in pending file record on network error", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("image/webp");
+    const mockSyncAdapter = createMockSyncAdapter({
+      uploadFile: vi.fn().mockRejectedValue(new Error("Network error")),
+    });
+    const service = createService({ mockSyncAdapter });
+    const file = createImageFile({ type: "image/png" });
+
+    await service.uploadFile(file, "goal-1", MAX_COVER_SIZE_BYTES);
+
+    expect(mocks.mockPendingFileRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ mime_type: "image/webp" }),
+    );
   });
 });

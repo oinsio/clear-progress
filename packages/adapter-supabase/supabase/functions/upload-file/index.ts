@@ -1,5 +1,6 @@
 // implements FR4 of add-file-attachments
-// POST /upload-file — upload a single file with hash deduplication, MIME + magic bytes validation
+// implements FR8 of fix-file-mime-detection
+// POST /upload-file — upload a single file with hash deduplication, server-side MIME detection
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
 import { createUserClient } from "../_shared/client.ts";
@@ -8,12 +9,15 @@ import {
   ErrorCode,
   FILES_BUCKET,
 } from "../_shared/constants.ts";
+import { detectMimeType } from "../_shared/detectMimeType.ts";
 import {
   getExtensionFromMimeType,
   isAllowedMimeType,
   validateMagicBytes,
 } from "../_shared/files.ts";
 import { createAuthHandler, parseJsonBody } from "../_shared/handler.ts";
+
+const TEXT_MIME_TYPES: readonly string[] = ["text/plain", "text/markdown"];
 
 interface UploadFilePayload {
   goal_id: string;
@@ -50,15 +54,7 @@ Deno.serve(
         );
       }
 
-      // Validate MIME type against allowlist (FR2 of add-file-attachments)
-      if (!isAllowedMimeType(body.mime_type)) {
-        return errorResponse(
-          ErrorCode.INVALID_MIME_TYPE,
-          `MIME type not allowed: ${body.mime_type}`,
-        );
-      }
-
-      // Decode base64 data
+      // Decode base64 data first — needed for content-based detection (FR8 of fix-file-mime-detection)
       let fileBytes: Uint8Array;
       try {
         fileBytes = Uint8Array.from(atob(body.data), (char) =>
@@ -68,11 +64,35 @@ Deno.serve(
         return errorResponse(ErrorCode.INVALID_PAYLOAD, "Invalid base64 data");
       }
 
-      // Validate magic bytes (FR2 of add-file-attachments)
-      if (!validateMagicBytes(fileBytes, body.mime_type)) {
+      // Detect MIME type from file content (FR8 of fix-file-mime-detection)
+      const detectedMimeType = detectMimeType(fileBytes);
+
+      let effectiveMimeType: string;
+      if (detectedMimeType !== null) {
+        effectiveMimeType = detectedMimeType;
+      } else if (
+        (TEXT_MIME_TYPES as readonly string[]).includes(body.mime_type)
+      ) {
+        // Text files have no magic bytes — fall back to declared type, validate content
+        if (!validateMagicBytes(fileBytes, body.mime_type)) {
+          return errorResponse(
+            ErrorCode.INVALID_FILE_CONTENT,
+            "File content does not match declared MIME type",
+          );
+        }
+        effectiveMimeType = body.mime_type;
+      } else {
         return errorResponse(
           ErrorCode.INVALID_FILE_CONTENT,
           "File content does not match declared MIME type",
+        );
+      }
+
+      // Validate effective MIME type against allowlist (FR2 of add-file-attachments)
+      if (!isAllowedMimeType(effectiveMimeType)) {
+        return errorResponse(
+          ErrorCode.INVALID_MIME_TYPE,
+          `MIME type not allowed: ${effectiveMimeType}`,
         );
       }
 
@@ -105,16 +125,16 @@ Deno.serve(
         });
       }
 
-      // New file — upload to Storage
+      // New file — upload to Storage using detected MIME type (FR8 of fix-file-mime-detection)
       const fileId = crypto.randomUUID();
-      const ext = getExtensionFromMimeType(body.mime_type);
+      const ext = getExtensionFromMimeType(effectiveMimeType);
       const storagePath = buildStoragePath(userId, body.data_hash, fileId, ext);
 
       const userClient = createUserClient(accessToken);
       const { error: uploadError } = await userClient.storage
         .from(FILES_BUCKET)
         .upload(storagePath, fileBytes, {
-          contentType: body.mime_type,
+          contentType: effectiveMimeType,
           upsert: false,
         });
 
@@ -130,7 +150,7 @@ Deno.serve(
         file_id: fileId,
         user_id: userId,
         filename: body.filename,
-        mime_type: body.mime_type,
+        mime_type: effectiveMimeType,
         data_hash: body.data_hash,
         storage_path: storagePath,
       });

@@ -158,7 +158,11 @@ export function GoalCardEditMode({
 
       {/* Save error */}
       {saveError && (
-        <p data-testid="goal-save-error" className="text-sm text-red-500">
+        <p
+          data-testid="goal-save-error"
+          className="text-sm text-red-500"
+          role="alert"
+        >
           {saveError}
         </p>
       )}

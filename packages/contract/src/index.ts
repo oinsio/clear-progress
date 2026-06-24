@@ -108,4 +108,4 @@ export {
   WireTaskSchema,
 } from "./schemas";
 // Validation
-export { validateMagicBytes } from "./validation";
+export { detectMimeType, validateMagicBytes } from "./validation";

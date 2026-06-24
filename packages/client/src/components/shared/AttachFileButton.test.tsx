@@ -1,5 +1,13 @@
 // Verifies NFR-A1 of add-file-attachments
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+// implements FR7 of fix-file-mime-detection
+import { detectMimeType } from "@clear-progress/contract";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import type React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AttachFileButton } from "./AttachFileButton";
@@ -9,6 +17,24 @@ vi.mock("react-i18next", () => ({
     t: (key: string) => key,
   }),
 }));
+
+vi.mock("@clear-progress/contract", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("@clear-progress/contract")>();
+  return { ...original, detectMimeType: vi.fn(() => "image/jpeg") };
+});
+
+// jsdom does not implement File.prototype.arrayBuffer — add polyfill for tests
+const EMPTY_BUFFER = new ArrayBuffer(0);
+if (!File.prototype.arrayBuffer) {
+  Object.defineProperty(File.prototype, "arrayBuffer", {
+    value() {
+      return Promise.resolve(EMPTY_BUFFER);
+    },
+    configurable: true,
+    writable: true,
+  });
+}
 
 function renderButton(
   overrides: Partial<React.ComponentProps<typeof AttachFileButton>> = {},
@@ -25,6 +51,7 @@ function renderButton(
 describe("AttachFileButton a11y", () => {
   afterEach(() => {
     cleanup();
+    vi.mocked(detectMimeType).mockReturnValue("image/jpeg");
   });
 
   it("should render button with accessible text content", () => {
@@ -51,7 +78,8 @@ describe("AttachFileButton a11y", () => {
     expect(acceptValue!.length).toBeGreaterThan(0);
   });
 
-  it("should show error message with role alert for invalid file type", () => {
+  it("should show error message with role alert for invalid file type", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("application/x-msdownload");
     renderButton();
 
     const fileInput = screen.getByTestId("attach-file-input");
@@ -61,12 +89,15 @@ describe("AttachFileButton a11y", () => {
 
     fireEvent.change(fileInput, { target: { files: [invalidFile] } });
 
-    const errorElement = screen.getByTestId("attach-file-error");
-    expect(errorElement).toHaveAttribute("role", "alert");
-    expect(errorElement).toHaveTextContent("attachment.attach.errorType");
+    await waitFor(() => {
+      const errorElement = screen.getByTestId("attach-file-error");
+      expect(errorElement).toHaveAttribute("role", "alert");
+      expect(errorElement).toHaveTextContent("attachment.attach.errorType");
+    });
   });
 
-  it("should show error message with role alert for oversized file", () => {
+  it("should show error message with role alert for oversized file", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("image/png");
     renderButton();
 
     const fileInput = screen.getByTestId("attach-file-input");
@@ -78,9 +109,11 @@ describe("AttachFileButton a11y", () => {
 
     fireEvent.change(fileInput, { target: { files: [oversizedFile] } });
 
-    const errorElement = screen.getByTestId("attach-file-error");
-    expect(errorElement).toHaveAttribute("role", "alert");
-    expect(errorElement).toHaveTextContent("attachment.attach.errorSize");
+    await waitFor(() => {
+      const errorElement = screen.getByTestId("attach-file-error");
+      expect(errorElement).toHaveAttribute("role", "alert");
+      expect(errorElement).toHaveTextContent("attachment.attach.errorSize");
+    });
   });
 
   it("should disable button when isDisabled is true", () => {
@@ -88,5 +121,57 @@ describe("AttachFileButton a11y", () => {
 
     const button = screen.getByTestId("attach-file-button");
     expect(button).toBeDisabled();
+  });
+
+  it("should accept file with mismatched extension when content detection succeeds", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce("image/webp");
+    const { onFileSelected } = renderButton();
+
+    const fileInput = screen.getByTestId("attach-file-input");
+    const mismatchedFile = new File(["webp-content"], "photo.png", {
+      type: "image/png",
+    });
+
+    fireEvent.change(fileInput, { target: { files: [mismatchedFile] } });
+
+    await waitFor(() => {
+      expect(onFileSelected).toHaveBeenCalledWith(mismatchedFile);
+    });
+  });
+
+  it("should show errorUnrecognized for unrecognized non-text format", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce(null);
+    renderButton();
+
+    const fileInput = screen.getByTestId("attach-file-input");
+    const unknownFile = new File(["binary-data"], "data.bin", {
+      type: "application/octet-stream",
+    });
+
+    fireEvent.change(fileInput, { target: { files: [unknownFile] } });
+
+    await waitFor(() => {
+      const errorElement = screen.getByTestId("attach-file-error");
+      expect(errorElement).toHaveTextContent(
+        "attachment.attach.errorUnrecognized",
+      );
+    });
+  });
+
+  it("should show role alert for unrecognized non-text format", async () => {
+    vi.mocked(detectMimeType).mockReturnValueOnce(null);
+    renderButton();
+
+    const fileInput = screen.getByTestId("attach-file-input");
+    const unknownFile = new File(["binary-data"], "data.bin", {
+      type: "application/octet-stream",
+    });
+
+    fireEvent.change(fileInput, { target: { files: [unknownFile] } });
+
+    await waitFor(() => {
+      const errorElement = screen.getByTestId("attach-file-error");
+      expect(errorElement).toHaveAttribute("role", "alert");
+    });
   });
 });

@@ -15,7 +15,10 @@ const TEST_DATA_HASH = "abc123hash";
 
 function createMockFileService(): FileService {
   return {
-    uploadFile: vi.fn().mockResolvedValue({ data_hash: TEST_DATA_HASH }),
+    uploadFile: vi.fn().mockResolvedValue({
+      data_hash: TEST_DATA_HASH,
+      mime_type: "application/pdf",
+    }),
     deleteFile: vi.fn(),
     getFileDisplayUrl: vi.fn(),
   } as unknown as FileService;
