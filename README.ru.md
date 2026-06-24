@@ -1,8 +1,11 @@
 # Clear Progress
 
+[![en](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
+[![ru](https://img.shields.io/badge/lang-ru-red.svg)](README.ru.md)
+
 Персональное приложение для управления задачами, целями и идеями. Создано для GTD и Джедайских техник пустого инбокса. Client-first PWA, работающее офлайн — данные хранятся на устройстве, с опциональной синхронизацией через собственный сервер Supabase.
 
-**[Открыть приложение](https://oinsio.github.io/clear-progress/)** | [Read in English](README.md)
+**[Открыть приложение](https://oinsio.github.io/clear-progress/)**
 
 ## Возможности
 
