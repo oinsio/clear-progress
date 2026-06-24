@@ -17,13 +17,13 @@ describe("menuOrderStore", () => {
         "inbox",
         "contexts",
         "categories",
-        "goals",
         "ideas",
+        "goals",
         "tasks",
         "completed",
-        "focused_goals",
         "memos",
         "deleted",
+        "focused_goals",
       ]);
     });
 

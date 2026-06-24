@@ -11,24 +11,23 @@ const DEFAULT_MENU_MODE_ORDER: MenuMode[] = [
   "inbox",
   "contexts",
   "categories",
-  "goals",
   "ideas",
+  "goals",
   "tasks",
   "completed",
-  "focused_goals",
   "memos",
   "deleted",
+  "focused_goals",
 ];
 
-const DEFAULT_MENU_ORDER: MenuItemConfig[] = [
-  ...DEFAULT_MENU_MODE_ORDER.filter((mode) => mode !== "deleted").map(
-    (mode) => ({
-      mode,
-      visible: true,
-    }),
-  ),
-  { mode: "deleted", visible: false },
-];
+const HIDDEN_MODES: ReadonlySet<MenuMode> = new Set(["deleted"]);
+
+const DEFAULT_MENU_ORDER: MenuItemConfig[] = DEFAULT_MENU_MODE_ORDER.map(
+  (mode) => ({
+    mode,
+    visible: !HIDDEN_MODES.has(mode),
+  }),
+);
 
 function loadMenuOrder(): MenuItemConfig[] {
   const parsed = getPreference<MenuItemConfig[]>({
