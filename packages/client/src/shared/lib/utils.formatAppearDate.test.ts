@@ -11,6 +11,14 @@ describe("formatAppearDate", () => {
     expect(formatAppearDate("")).toBe("");
   });
 
+  it("should return empty string for invalid date string", () => {
+    expect(formatAppearDate("not-a-date")).toBe("");
+  });
+
+  it("should return empty string for partial date string", () => {
+    expect(formatAppearDate("2026-13-01")).toBe("");
+  });
+
   it("should format date with full month name in Russian", () => {
     const result = formatAppearDate("2026-04-15");
     expect(result).toBe("15 апреля 2026");

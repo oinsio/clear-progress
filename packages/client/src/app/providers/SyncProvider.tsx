@@ -1,4 +1,5 @@
-// implements FR6, FR7 of localstorage-refactor
+// implements sync-orchestration spec (triggers T1-T7, preconditions, error handling, cleanup)
+// + localstorage-refactor FR6, FR7 (usePreference for lastSyncedAt)
 import type React from "react";
 import {
   createContext,
