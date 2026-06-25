@@ -1,27 +1,60 @@
 // implements FR2, FR8 of deleted-entities-spec
+// implements FR20 of swipeable-item
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
+import type { EntityTable } from "dexie";
 import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
+import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { CategoryService } from "@/services/CategoryService";
 import { ChecklistService } from "@/services/ChecklistService";
 import { ContextService } from "@/services/ContextService";
 import { GoalService } from "@/services/GoalService";
+import { IdeaService } from "@/services/IdeaService";
 import { TaskService } from "@/services/TaskService";
 import { buildCategory } from "@/test/factories/categoryFactory";
 import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { buildContext } from "@/test/factories/contextFactory";
 import { buildGoal } from "@/test/factories/goalFactory";
+import { buildIdea } from "@/test/factories/ideaFactory";
 import { buildTask } from "@/test/factories/taskFactory";
+import { clearAllEntityTables } from "./deleted_entities_steps.helpers";
 
 const feature = await loadFeature("../deleted_entities_restore.feature");
 
 type FeatureContext = Record<string, never>;
+
+type SoftDeletable = { id: string; is_deleted: boolean; needsSync: boolean };
+
+async function addDeletedEntity<T extends SoftDeletable>(
+  table: EntityTable<T, "id">,
+  factory: (overrides: Partial<T>) => T,
+  name: string,
+): Promise<string> {
+  const entity = factory({
+    name,
+    is_deleted: true,
+    needsSync: false,
+  } as unknown as Partial<T>);
+  await table.add(entity);
+  return entity.id;
+}
+
+async function assertRestoredEntity<T extends SoftDeletable>(
+  table: EntityTable<T, "id">,
+  entityId: string,
+): Promise<void> {
+  const restored = await table.get(
+    entityId as unknown as Parameters<typeof table.get>[0],
+  );
+  expect(restored?.is_deleted).toBe(false);
+  expect(restored?.needsSync).toBe(true);
+}
 
 describeFeature(
   feature,
@@ -35,13 +68,10 @@ describeFeature(
     const contextService = new ContextService(new ContextRepository());
     const categoryService = new CategoryService(new CategoryRepository());
     const checklistService = new ChecklistService(checklistRepository);
+    const ideaService = new IdeaService(new IdeaRepository());
 
     f.BeforeEachScenario(async () => {
-      await db.tasks.clear();
-      await db.goals.clear();
-      await db.contexts.clear();
-      await db.categories.clear();
-      await db.checklist_items.clear();
+      await clearAllEntityTables();
     });
 
     // @deleted-entities-spec @FR2 @FR8
@@ -51,13 +81,7 @@ describeFeature(
       Given(
         'a deleted task "Buy groceries" exists',
         async (_ctx: TestContext) => {
-          const task = buildTask({
-            name: "Buy groceries",
-            is_deleted: true,
-            needsSync: false,
-          });
-          taskId = task.id;
-          await db.tasks.add(task);
+          taskId = await addDeletedEntity(db.tasks, buildTask, "Buy groceries");
         },
       );
 
@@ -68,9 +92,7 @@ describeFeature(
       Then(
         "the task has is_deleted false and needsSync true",
         async (_ctx: TestContext) => {
-          const restored = await db.tasks.get(taskId);
-          expect(restored?.is_deleted).toBe(false);
-          expect(restored?.needsSync).toBe(true);
+          await assertRestoredEntity(db.tasks, taskId);
         },
       );
     });
@@ -84,13 +106,11 @@ describeFeature(
         Given(
           'a deleted task "Morning routine" with deleted checklist items exists',
           async (_ctx: TestContext) => {
-            const task = buildTask({
-              name: "Morning routine",
-              is_deleted: true,
-              needsSync: false,
-            });
-            taskId = task.id;
-            await db.tasks.add(task);
+            taskId = await addDeletedEntity(
+              db.tasks,
+              buildTask,
+              "Morning routine",
+            );
             await db.checklist_items.bulkAdd([
               buildChecklistItem({
                 task_id: taskId,
@@ -140,13 +160,11 @@ describeFeature(
       Given(
         'a deleted goal "Learn TypeScript" exists',
         async (_ctx: TestContext) => {
-          const goal = buildGoal({
-            name: "Learn TypeScript",
-            is_deleted: true,
-            needsSync: false,
-          });
-          goalId = goal.id;
-          await db.goals.add(goal);
+          goalId = await addDeletedEntity(
+            db.goals,
+            buildGoal,
+            "Learn TypeScript",
+          );
         },
       );
 
@@ -157,9 +175,7 @@ describeFeature(
       Then(
         "the goal has is_deleted false and needsSync true",
         async (_ctx: TestContext) => {
-          const restored = await db.goals.get(goalId);
-          expect(restored?.is_deleted).toBe(false);
-          expect(restored?.needsSync).toBe(true);
+          await assertRestoredEntity(db.goals, goalId);
         },
       );
     });
@@ -169,13 +185,7 @@ describeFeature(
       let contextId: string;
 
       Given('a deleted context "@home" exists', async (_ctx: TestContext) => {
-        const context = buildContext({
-          name: "@home",
-          is_deleted: true,
-          needsSync: false,
-        });
-        contextId = context.id;
-        await db.contexts.add(context);
+        contextId = await addDeletedEntity(db.contexts, buildContext, "@home");
       });
 
       When("the context is restored", async (_ctx: TestContext) => {
@@ -185,9 +195,7 @@ describeFeature(
       Then(
         "the context has is_deleted false and needsSync true",
         async (_ctx: TestContext) => {
-          const restored = await db.contexts.get(contextId);
-          expect(restored?.is_deleted).toBe(false);
-          expect(restored?.needsSync).toBe(true);
+          await assertRestoredEntity(db.contexts, contextId);
         },
       );
     });
@@ -197,13 +205,11 @@ describeFeature(
       let categoryId: string;
 
       Given('a deleted category "Work" exists', async (_ctx: TestContext) => {
-        const category = buildCategory({
-          name: "Work",
-          is_deleted: true,
-          needsSync: false,
-        });
-        categoryId = category.id;
-        await db.categories.add(category);
+        categoryId = await addDeletedEntity(
+          db.categories,
+          buildCategory,
+          "Work",
+        );
       });
 
       When("the category is restored", async (_ctx: TestContext) => {
@@ -213,9 +219,34 @@ describeFeature(
       Then(
         "the category has is_deleted false and needsSync true",
         async (_ctx: TestContext) => {
-          const restored = await db.categories.get(categoryId);
-          expect(restored?.is_deleted).toBe(false);
-          expect(restored?.needsSync).toBe(true);
+          await assertRestoredEntity(db.categories, categoryId);
+        },
+      );
+    });
+
+    // @swipeable-item @FR20
+    f.Scenario("Restore a deleted idea", ({ Given, When, Then }) => {
+      let ideaId: string;
+
+      Given(
+        'a deleted idea "Research topic" exists',
+        async (_ctx: TestContext) => {
+          ideaId = await addDeletedEntity(
+            db.ideas,
+            buildIdea,
+            "Research topic",
+          );
+        },
+      );
+
+      When("the idea is restored", async (_ctx: TestContext) => {
+        await ideaService.restore(ideaId);
+      });
+
+      Then(
+        "the idea has is_deleted false and needsSync true",
+        async (_ctx: TestContext) => {
+          await assertRestoredEntity(db.ideas, ideaId);
         },
       );
     });
@@ -247,9 +278,7 @@ describeFeature(
       Then(
         "the checklist item has is_deleted false and needsSync true",
         async (_ctx: TestContext) => {
-          const restored = await db.checklist_items.get(checklistItemId);
-          expect(restored?.is_deleted).toBe(false);
-          expect(restored?.needsSync).toBe(true);
+          await assertRestoredEntity(db.checklist_items, checklistItemId);
         },
       );
     });

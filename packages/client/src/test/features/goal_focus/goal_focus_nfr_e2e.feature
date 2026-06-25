@@ -16,7 +16,7 @@ Feature: Goal Focus — Non-Functional Requirements (E2E)
     When user presses Tab to focus icon
     Then icon receives keyboard focus
     And icon aria-label = "Add to focus"
-    When user presses Enter
+    When user activates the focus icon
     Then goal is added to focus
     And icon aria-label changed to "Remove from focus"
 

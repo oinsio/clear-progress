@@ -35,13 +35,6 @@ vi.mock("@/hooks/useAttachmentCount", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useSwipeAction", () => ({
-  useSwipeAction: vi.fn().mockReturnValue({
-    translateX: 0,
-    isThresholdReached: false,
-  }),
-}));
-
 describe("TaskItem — quick actions", () => {
   it("should not show quick actions initially", () => {
     renderTaskItem();

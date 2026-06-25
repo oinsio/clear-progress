@@ -514,6 +514,7 @@
     "contexts": "Contexts",
     "categories": "Categories",
     "checklists": "Checklists",
+    "ideas": "Ideas",
     "checklistParent": "Task: {{task}}",
     "restore": "Restore",
     "restoreAriaLabel": "Restore {{name}}",

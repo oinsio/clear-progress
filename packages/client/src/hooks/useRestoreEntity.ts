@@ -5,11 +5,13 @@ import { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { ContextRepository } from "@/db/repositories/ContextRepository";
 import { GoalRepository } from "@/db/repositories/GoalRepository";
+import { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { CategoryService } from "@/services/CategoryService";
 import { ChecklistService } from "@/services/ChecklistService";
 import { ContextService } from "@/services/ContextService";
 import { GoalService } from "@/services/GoalService";
+import { IdeaService } from "@/services/IdeaService";
 import { TaskService } from "@/services/TaskService";
 
 const defaultAttachmentRepository = new AttachmentRepository();
@@ -26,10 +28,16 @@ const defaultGoalService = new GoalService(
 const defaultContextService = new ContextService(new ContextRepository());
 const defaultCategoryService = new CategoryService(new CategoryRepository());
 const defaultChecklistService = new ChecklistService(new ChecklistRepository());
+const defaultIdeaService = new IdeaService(
+  new IdeaRepository(),
+  defaultAttachmentRepository,
+);
 
+/** Implements FR20 of swipeable-item */
 export interface UseRestoreEntityReturn {
   restoreTask: (id: string) => Promise<void>;
   restoreGoal: (id: string) => Promise<void>;
+  restoreIdea: (id: string) => Promise<void>;
   restoreContext: (id: string) => Promise<void>;
   restoreCategory: (id: string) => Promise<void>;
   restoreChecklistItem: (id: string) => Promise<void>;
@@ -49,6 +57,14 @@ export function useRestoreEntity(): UseRestoreEntityReturn {
   const restoreGoal = useCallback(
     async (id: string) => {
       await defaultGoalService.restore(id);
+      schedulePush();
+    },
+    [schedulePush],
+  );
+
+  const restoreIdea = useCallback(
+    async (id: string) => {
+      await defaultIdeaService.restore(id);
       schedulePush();
     },
     [schedulePush],
@@ -81,6 +97,7 @@ export function useRestoreEntity(): UseRestoreEntityReturn {
   return {
     restoreTask,
     restoreGoal,
+    restoreIdea,
     restoreContext,
     restoreCategory,
     restoreChecklistItem,

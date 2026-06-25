@@ -217,7 +217,16 @@ export const API_AUTH_ERROR_NAME = "ApiAuthError";
 
 export const SWIPE_COMPLETE_THRESHOLD_PERCENT = 0.4;
 export const SWIPE_SNAP_BACK_DURATION_MS = 300;
+// implements FR13 of swipeable-item — background opacity levels
+export const SWIPE_BACKGROUND_OPACITY_REST = 0;
+export const SWIPE_BACKGROUND_OPACITY_SWIPING = 0.7;
+export const SWIPE_BACKGROUND_OPACITY_THRESHOLD = 1.0;
 export const TASK_COMPLETE_ANIMATION_DELAY_MS = 300;
+// implements FR4, FR6, FR7, FR8 of swipeable-item
+export const SWIPE_VELOCITY_THRESHOLD_PX_PER_MS = 0.5;
+export const SWIPE_DRAG_START_PX = 5;
+export const SWIPE_RUBBER_BAND_FACTOR = 1.5;
+export const SWIPE_VERTICAL_CANCEL_PX = 10;
 
 export const LONG_PRESS_THRESHOLD_MS = 500;
 export const LONG_PRESS_MOVE_THRESHOLD_PX = 10;

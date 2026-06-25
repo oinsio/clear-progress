@@ -34,13 +34,6 @@ vi.mock("@/hooks/useAttachmentCount", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useSwipeAction", () => ({
-  useSwipeAction: vi.fn().mockReturnValue({
-    translateX: 0,
-    isThresholdReached: false,
-  }),
-}));
-
 describe("TaskItem — rendering", () => {
   it("should render the task name", () => {
     renderTaskItem({ task: buildTask({ name: "Buy groceries" }) });
@@ -67,5 +60,12 @@ describe("TaskItem — rendering", () => {
   it("should apply base text-sm styling to name regardless of completion state", () => {
     renderTaskItem({ task: buildTask({ is_completed: false }) });
     expect(screen.getByTestId("task-item-name")).toHaveClass("text-sm");
+  });
+
+  it("should apply relative and overflow-hidden classes to container", () => {
+    renderTaskItem();
+    const taskItem = screen.getByTestId("task-item");
+    expect(taskItem).toHaveClass("relative");
+    expect(taskItem).toHaveClass("overflow-hidden");
   });
 });

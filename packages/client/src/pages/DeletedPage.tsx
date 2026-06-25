@@ -2,11 +2,13 @@ import {
   AlertTriangle,
   ArchiveRestore,
   ChevronDown,
+  Lightbulb,
   Trash2,
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { useDeletedEntities } from "@/hooks/useDeletedEntities";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
@@ -19,6 +21,7 @@ import { cn } from "@/shared/lib/cn";
 
 const SECTION_KEY_TASKS = "deleted-tasks";
 const SECTION_KEY_GOALS = "deleted-goals";
+const SECTION_KEY_IDEAS = "deleted-ideas";
 const SECTION_KEY_CONTEXTS = "deleted-contexts";
 const SECTION_KEY_CATEGORIES = "deleted-categories";
 const SECTION_KEY_CHECKLISTS = "deleted-checklists";
@@ -111,6 +114,7 @@ export default function DeletedPage() {
   const {
     tasks,
     goals,
+    ideas,
     contexts,
     categories,
     checklistItems,
@@ -120,6 +124,7 @@ export default function DeletedPage() {
   const {
     restoreTask,
     restoreGoal,
+    restoreIdea,
     restoreContext,
     restoreCategory,
     restoreChecklistItem,
@@ -132,6 +137,7 @@ export default function DeletedPage() {
   const isEmpty =
     tasks.length === 0 &&
     goals.length === 0 &&
+    ideas.length === 0 &&
     contexts.length === 0 &&
     categories.length === 0 &&
     checklistItems.length === 0;
@@ -201,24 +207,32 @@ export default function DeletedPage() {
                   name={t("deleted.tasks")}
                   items={tasks}
                   renderItem={(task) => (
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-400 line-through">
-                        {task.name}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => void restoreTask(task.id)}
-                        aria-label={t("deleted.restoreAriaLabel", {
-                          name: task.name,
-                        })}
-                        className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
-                      >
-                        <ArchiveRestore
-                          className="w-4 h-4"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
+                    <SwipeableItem
+                      swipeRight={{
+                        onAction: () => void restoreTask(task.id),
+                        color: "bg-blue-500",
+                        icon: ArchiveRestore,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-gray-400 line-through">
+                          {task.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void restoreTask(task.id)}
+                          aria-label={t("deleted.restoreAriaLabel", {
+                            name: task.name,
+                          })}
+                          className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
+                        >
+                          <ArchiveRestore
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
+                    </SwipeableItem>
                   )}
                 />
 
@@ -229,33 +243,41 @@ export default function DeletedPage() {
                   renderItem={(item) => {
                     const parentTaskName = taskNameMap.get(item.task_id);
                     return (
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="text-sm text-gray-400 line-through">
-                            {item.name}
-                          </span>
-                          {parentTaskName !== undefined && (
-                            <p className="text-xs text-gray-300 mt-0.5">
-                              {t("deleted.checklistParent", {
-                                task: parentTaskName,
-                              })}
-                            </p>
-                          )}
+                      <SwipeableItem
+                        swipeRight={{
+                          onAction: () => void restoreChecklistItem(item.id),
+                          color: "bg-blue-500",
+                          icon: ArchiveRestore,
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-sm text-gray-400 line-through">
+                              {item.name}
+                            </span>
+                            {parentTaskName !== undefined && (
+                              <p className="text-xs text-gray-300 mt-0.5">
+                                {t("deleted.checklistParent", {
+                                  task: parentTaskName,
+                                })}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => void restoreChecklistItem(item.id)}
+                            aria-label={t("deleted.restoreAriaLabel", {
+                              name: item.name,
+                            })}
+                            className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
+                          >
+                            <ArchiveRestore
+                              className="w-4 h-4"
+                              aria-hidden="true"
+                            />
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => void restoreChecklistItem(item.id)}
-                          aria-label={t("deleted.restoreAriaLabel", {
-                            name: item.name,
-                          })}
-                          className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
-                        >
-                          <ArchiveRestore
-                            className="w-4 h-4"
-                            aria-hidden="true"
-                          />
-                        </button>
-                      </div>
+                      </SwipeableItem>
                     );
                   }}
                 />
@@ -265,24 +287,72 @@ export default function DeletedPage() {
                   name={t("deleted.goals")}
                   items={goals}
                   renderItem={(goal) => (
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-400 line-through">
-                        {goal.name}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => void restoreGoal(goal.id)}
-                        aria-label={t("deleted.restoreAriaLabel", {
-                          name: goal.name,
-                        })}
-                        className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
-                      >
-                        <ArchiveRestore
-                          className="w-4 h-4"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
+                    <SwipeableItem
+                      swipeRight={{
+                        onAction: () => void restoreGoal(goal.id),
+                        color: "bg-blue-500",
+                        icon: ArchiveRestore,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-gray-400 line-through">
+                          {goal.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void restoreGoal(goal.id)}
+                          aria-label={t("deleted.restoreAriaLabel", {
+                            name: goal.name,
+                          })}
+                          className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
+                        >
+                          <ArchiveRestore
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
+                    </SwipeableItem>
+                  )}
+                />
+
+                <DeletedSection
+                  sectionKey={SECTION_KEY_IDEAS}
+                  name={t("deleted.ideas")}
+                  items={ideas}
+                  renderItem={(idea) => (
+                    <SwipeableItem
+                      swipeRight={{
+                        onAction: () => void restoreIdea(idea.id),
+                        color: "bg-blue-500",
+                        icon: ArchiveRestore,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Lightbulb
+                            className="w-4 h-4 text-gray-300 flex-shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span className="text-sm text-gray-400 line-through">
+                            {idea.name}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void restoreIdea(idea.id)}
+                          aria-label={t("deleted.restoreAriaLabel", {
+                            name: idea.name,
+                          })}
+                          className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
+                        >
+                          <ArchiveRestore
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
+                    </SwipeableItem>
                   )}
                 />
 
@@ -291,24 +361,32 @@ export default function DeletedPage() {
                   name={t("deleted.contexts")}
                   items={contexts}
                   renderItem={(context) => (
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-400 line-through">
-                        {context.name}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => void restoreContext(context.id)}
-                        aria-label={t("deleted.restoreAriaLabel", {
-                          name: context.name,
-                        })}
-                        className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
-                      >
-                        <ArchiveRestore
-                          className="w-4 h-4"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
+                    <SwipeableItem
+                      swipeRight={{
+                        onAction: () => void restoreContext(context.id),
+                        color: "bg-blue-500",
+                        icon: ArchiveRestore,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-gray-400 line-through">
+                          {context.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void restoreContext(context.id)}
+                          aria-label={t("deleted.restoreAriaLabel", {
+                            name: context.name,
+                          })}
+                          className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
+                        >
+                          <ArchiveRestore
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
+                    </SwipeableItem>
                   )}
                 />
 
@@ -317,24 +395,32 @@ export default function DeletedPage() {
                   name={t("deleted.categories")}
                   items={categories}
                   renderItem={(category) => (
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-gray-400 line-through">
-                        {category.name}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => void restoreCategory(category.id)}
-                        aria-label={t("deleted.restoreAriaLabel", {
-                          name: category.name,
-                        })}
-                        className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
-                      >
-                        <ArchiveRestore
-                          className="w-4 h-4"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
+                    <SwipeableItem
+                      swipeRight={{
+                        onAction: () => void restoreCategory(category.id),
+                        color: "bg-blue-500",
+                        icon: ArchiveRestore,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-gray-400 line-through">
+                          {category.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void restoreCategory(category.id)}
+                          aria-label={t("deleted.restoreAriaLabel", {
+                            name: category.name,
+                          })}
+                          className="flex-shrink-0 p-1.5 text-gray-300 hover:text-gray-500 transition-colors"
+                        >
+                          <ArchiveRestore
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
+                    </SwipeableItem>
                   )}
                 />
               </>
@@ -367,7 +453,7 @@ export default function DeletedPage() {
                 contexts: contexts.length,
                 categories: categories.length,
                 checklist_items: checklistItems.length,
-                ideas: 0,
+                ideas: ideas.length,
               })}
             </div>
             {purgeError && (

@@ -92,7 +92,7 @@ test("delete second attachment -> file stays until purge removes it", async () =
   const page = getPage();
 
   // Close current panel and open task A
-  await page.getByRole("button", { name: /close/i }).click();
+  await page.getByTestId("detail-panel-close").click();
   await openTaskDetail(page, taskNameA);
   await page.getByTestId("tab-attachments").click();
 

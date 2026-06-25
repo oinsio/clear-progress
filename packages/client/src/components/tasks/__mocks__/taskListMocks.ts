@@ -17,11 +17,6 @@ export const mockUseIsDesktop = vi.fn().mockReturnValue(false);
 
 export const mockUseHasTouchPointer = vi.fn().mockReturnValue(false);
 
-export const mockUseSwipeAction = vi.fn().mockReturnValue({
-  translateX: 0,
-  isThresholdReached: false,
-});
-
 vi.mock("@/hooks/useChecklist", () => ({
   useChecklist: mockUseChecklist,
 }));
@@ -34,6 +29,18 @@ vi.mock("@/hooks/useHasTouchPointer", () => ({
   useHasTouchPointer: mockUseHasTouchPointer,
 }));
 
-vi.mock("@/hooks/useSwipeAction", () => ({
-  useSwipeAction: mockUseSwipeAction,
+vi.mock("@/hooks/useAttachmentCount", () => ({
+  useAttachmentCount: vi.fn().mockReturnValue({
+    attachmentCount: 0,
+    hasUnsyncedAttachments: false,
+    isLoading: false,
+  }),
+}));
+
+vi.mock("@/hooks/useSwipeGesture", () => ({
+  useSwipeGesture: vi.fn().mockReturnValue({
+    translateX: 0,
+    isThresholdReached: false,
+    isSwiping: false,
+  }),
 }));

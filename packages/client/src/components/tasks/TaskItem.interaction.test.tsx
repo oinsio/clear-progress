@@ -35,13 +35,6 @@ vi.mock("@/hooks/useAttachmentCount", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useSwipeAction", () => ({
-  useSwipeAction: vi.fn().mockReturnValue({
-    translateX: 0,
-    isThresholdReached: false,
-  }),
-}));
-
 describe("TaskItem — desktop behavior", () => {
   it("should call onSelect on click when on desktop", async () => {
     const { useIsDesktop } = await import("@/hooks/useIsDesktop");
@@ -57,59 +50,7 @@ describe("TaskItem — desktop behavior", () => {
   });
 });
 
-describe("TaskItem — swipe and checkbox visibility", () => {
-  it("should enable swipe when hasTouchPointer is true (phone)", async () => {
-    const { useHasTouchPointer } = await import("@/hooks/useHasTouchPointer");
-    const { useSwipeAction } = await import("@/hooks/useSwipeAction");
-    const { useIsDesktop } = await import("@/hooks/useIsDesktop");
-
-    vi.mocked(useHasTouchPointer).mockReturnValue(true);
-    vi.mocked(useIsDesktop).mockReturnValue(false);
-    const mockUseSwipeAction = vi.mocked(useSwipeAction);
-
-    renderTaskItem();
-
-    expect(mockUseSwipeAction).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      true,
-    );
-  });
-
-  it("should enable swipe when hasTouchPointer is true even on desktop (tablet)", async () => {
-    const { useHasTouchPointer } = await import("@/hooks/useHasTouchPointer");
-    const { useSwipeAction } = await import("@/hooks/useSwipeAction");
-    const { useIsDesktop } = await import("@/hooks/useIsDesktop");
-
-    vi.mocked(useHasTouchPointer).mockReturnValue(true);
-    vi.mocked(useIsDesktop).mockReturnValue(true);
-    const mockUseSwipeAction = vi.mocked(useSwipeAction);
-
-    renderTaskItem();
-
-    expect(mockUseSwipeAction).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      true,
-    );
-  });
-
-  it("should disable swipe when hasTouchPointer is false", async () => {
-    const { useHasTouchPointer } = await import("@/hooks/useHasTouchPointer");
-    const { useSwipeAction } = await import("@/hooks/useSwipeAction");
-
-    vi.mocked(useHasTouchPointer).mockReturnValue(false);
-    const mockUseSwipeAction = vi.mocked(useSwipeAction);
-
-    renderTaskItem();
-
-    expect(mockUseSwipeAction).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      false,
-    );
-  });
-
+describe("TaskItem — checkbox visibility", () => {
   it("should show checkbox when isDesktop is true (tablet/desktop)", async () => {
     const { useIsDesktop } = await import("@/hooks/useIsDesktop");
     const { useHasTouchPointer } = await import("@/hooks/useHasTouchPointer");

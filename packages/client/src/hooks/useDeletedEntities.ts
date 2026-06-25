@@ -6,12 +6,15 @@ import type {
   ChecklistItem,
   Context,
   Goal,
+  Idea,
   Task,
 } from "@/types/entities";
 
+/** Implements FR19 of swipeable-item */
 export interface DeletedEntities {
   tasks: Task[];
   goals: Goal[];
+  ideas: Idea[];
   contexts: Context[];
   categories: Category[];
   checklistItems: ChecklistItem[];
@@ -23,6 +26,7 @@ export interface DeletedEntities {
 export function useDeletedEntities(): DeletedEntities {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [contexts, setContexts] = useState<Context[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
@@ -34,7 +38,7 @@ export function useDeletedEntities(): DeletedEntities {
   useEffect(() => {
     setIsLoading(true);
     let loadedCount = 0;
-    const totalSubscriptions = 6;
+    const totalSubscriptions = 7;
 
     const checkAllLoaded = () => {
       loadedCount++;
@@ -57,6 +61,15 @@ export function useDeletedEntities(): DeletedEntities {
     ).subscribe({
       next: (deletedGoals) => {
         setGoals(deletedGoals);
+        checkAllLoaded();
+      },
+    });
+
+    const ideasSubscription = liveQuery(() =>
+      db.ideas.filter((idea) => idea.is_deleted).toArray(),
+    ).subscribe({
+      next: (deletedIdeas) => {
+        setIdeas(deletedIdeas);
         checkAllLoaded();
       },
     });
@@ -101,6 +114,7 @@ export function useDeletedEntities(): DeletedEntities {
     return () => {
       tasksSubscription.unsubscribe();
       goalsSubscription.unsubscribe();
+      ideasSubscription.unsubscribe();
       contextsSubscription.unsubscribe();
       categoriesSubscription.unsubscribe();
       checklistItemsSubscription.unsubscribe();
@@ -115,6 +129,7 @@ export function useDeletedEntities(): DeletedEntities {
   return {
     tasks,
     goals,
+    ideas,
     contexts,
     categories,
     checklistItems,
