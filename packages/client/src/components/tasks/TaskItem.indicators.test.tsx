@@ -35,6 +35,50 @@ vi.mock("@/hooks/useAttachmentCount", () => ({
   }),
 }));
 
+async function mockEmptyChecklist() {
+  const { useChecklist } = await import("@/hooks/useChecklist");
+  vi.mocked(useChecklist).mockReturnValue({
+    items: [],
+    progress: { completed: 0, total: 0 },
+    hasUnsyncedItems: false,
+    isLoading: false,
+    reload: vi.fn(),
+    createItem: vi.fn(),
+    toggleItem: vi.fn(),
+    updateItem: vi.fn(),
+    deleteItem: vi.fn(),
+    reorderItems: vi.fn(),
+  });
+}
+
+async function mockChecklistProgress(completed: number, total: number) {
+  const { useChecklist } = await import("@/hooks/useChecklist");
+  vi.mocked(useChecklist).mockReturnValue({
+    items: [],
+    progress: { completed, total },
+    hasUnsyncedItems: false,
+    isLoading: false,
+    reload: vi.fn(),
+    createItem: vi.fn(),
+    toggleItem: vi.fn(),
+    updateItem: vi.fn(),
+    deleteItem: vi.fn(),
+    reorderItems: vi.fn(),
+  });
+}
+
+async function mockAttachmentCount(
+  attachmentCount: number,
+  hasUnsyncedAttachments = false,
+) {
+  const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
+  vi.mocked(useAttachmentCount).mockReturnValue({
+    attachmentCount,
+    hasUnsyncedAttachments,
+    isLoading: false,
+  });
+}
+
 describe("TaskItem — indicators", () => {
   // completed_at
   it("should show completed_at label when task is completed and has completed_at", () => {
@@ -67,55 +111,19 @@ describe("TaskItem — indicators", () => {
 
   // Checklist badge
   it("should not show checklist badge when task has no checklist items", async () => {
-    const { useChecklist } = await import("@/hooks/useChecklist");
-    vi.mocked(useChecklist).mockReturnValue({
-      items: [],
-      progress: { completed: 0, total: 0 },
-      hasUnsyncedItems: false,
-      isLoading: false,
-      reload: vi.fn(),
-      createItem: vi.fn(),
-      toggleItem: vi.fn(),
-      updateItem: vi.fn(),
-      deleteItem: vi.fn(),
-      reorderItems: vi.fn(),
-    });
+    await mockEmptyChecklist();
     renderTaskItem();
     expect(screen.queryByTestId("checklist-badge")).not.toBeInTheDocument();
   });
 
   it("should show checklist badge when task has checklist items", async () => {
-    const { useChecklist } = await import("@/hooks/useChecklist");
-    vi.mocked(useChecklist).mockReturnValue({
-      items: [],
-      progress: { completed: 1, total: 3 },
-      hasUnsyncedItems: false,
-      isLoading: false,
-      reload: vi.fn(),
-      createItem: vi.fn(),
-      toggleItem: vi.fn(),
-      updateItem: vi.fn(),
-      deleteItem: vi.fn(),
-      reorderItems: vi.fn(),
-    });
+    await mockChecklistProgress(1, 3);
     renderTaskItem();
     expect(screen.getByTestId("checklist-badge")).toBeInTheDocument();
   });
 
   it("should display checklist progress as 'completed/total' in badge", async () => {
-    const { useChecklist } = await import("@/hooks/useChecklist");
-    vi.mocked(useChecklist).mockReturnValue({
-      items: [],
-      progress: { completed: 2, total: 5 },
-      hasUnsyncedItems: false,
-      isLoading: false,
-      reload: vi.fn(),
-      createItem: vi.fn(),
-      toggleItem: vi.fn(),
-      updateItem: vi.fn(),
-      deleteItem: vi.fn(),
-      reorderItems: vi.fn(),
-    });
+    await mockChecklistProgress(2, 5);
     renderTaskItem();
     expect(screen.getByTestId("checklist-badge")).toHaveTextContent("2/5");
   });
@@ -127,12 +135,7 @@ describe("TaskItem — indicators", () => {
   });
 
   it("should show attachment badge with count when task has attachments", async () => {
-    const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
-    vi.mocked(useAttachmentCount).mockReturnValue({
-      attachmentCount: 3,
-      hasUnsyncedAttachments: false,
-      isLoading: false,
-    });
+    await mockAttachmentCount(3);
     renderTaskItem();
     expect(screen.getByTestId("attachment-badge")).toBeInTheDocument();
     expect(screen.getByTestId("attachment-badge")).toHaveTextContent("3");
@@ -173,25 +176,8 @@ describe("TaskItem — indicators", () => {
 
   // Indicator order
   it("should display indicators in correct order: description, checklist, attachments, goal, context, category, repeat, hidden", async () => {
-    const { useChecklist } = await import("@/hooks/useChecklist");
-    const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
-    vi.mocked(useChecklist).mockReturnValue({
-      items: [],
-      progress: { completed: 2, total: 5 },
-      hasUnsyncedItems: false,
-      isLoading: false,
-      reload: vi.fn(),
-      createItem: vi.fn(),
-      toggleItem: vi.fn(),
-      updateItem: vi.fn(),
-      deleteItem: vi.fn(),
-      reorderItems: vi.fn(),
-    });
-    vi.mocked(useAttachmentCount).mockReturnValue({
-      attachmentCount: 3,
-      hasUnsyncedAttachments: false,
-      isLoading: false,
-    });
+    await mockChecklistProgress(2, 5);
+    await mockAttachmentCount(3);
     renderTaskItem({
       task: buildTask({
         description: "Some desc",
@@ -278,23 +264,13 @@ describe("TaskItem — indicators", () => {
 
   // Unsync indicator for attachments
   it("should show amber stripe when hasUnsyncedAttachments is true", async () => {
-    const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
-    vi.mocked(useAttachmentCount).mockReturnValue({
-      attachmentCount: 1,
-      hasUnsyncedAttachments: true,
-      isLoading: false,
-    });
+    await mockAttachmentCount(1, true);
     renderTaskItem();
     expect(screen.getByTestId("task-item")).toHaveClass("border-l-amber-400");
   });
 
   it("should not show amber stripe when hasUnsyncedAttachments is false and task is synced", async () => {
-    const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
-    vi.mocked(useAttachmentCount).mockReturnValue({
-      attachmentCount: 0,
-      hasUnsyncedAttachments: false,
-      isLoading: false,
-    });
+    await mockAttachmentCount(0);
     renderTaskItem();
     expect(screen.getByTestId("task-item")).not.toHaveClass(
       "border-l-amber-400",
@@ -303,25 +279,8 @@ describe("TaskItem — indicators", () => {
 
   // Indicator row visibility
   it("should not show indicator row when task has no indicators", async () => {
-    const { useChecklist } = await import("@/hooks/useChecklist");
-    const { useAttachmentCount } = await import("@/hooks/useAttachmentCount");
-    vi.mocked(useChecklist).mockReturnValue({
-      items: [],
-      progress: { completed: 0, total: 0 },
-      hasUnsyncedItems: false,
-      isLoading: false,
-      reload: vi.fn(),
-      createItem: vi.fn(),
-      toggleItem: vi.fn(),
-      updateItem: vi.fn(),
-      deleteItem: vi.fn(),
-      reorderItems: vi.fn(),
-    });
-    vi.mocked(useAttachmentCount).mockReturnValue({
-      attachmentCount: 0,
-      hasUnsyncedAttachments: false,
-      isLoading: false,
-    });
+    await mockEmptyChecklist();
+    await mockAttachmentCount(0);
     renderTaskItem({
       task: buildTask({
         description: "",
