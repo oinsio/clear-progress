@@ -35,6 +35,19 @@ Feature: Deleted entities aggregation
     When the deleted entities are queried
     Then tasks array is not empty
 
+  @swipeable-item @FR19
+  Scenario: Deleted ideas are included in aggregation
+    Given a deleted idea "Research topic" exists
+    When deleted entities are loaded
+    Then the ideas array contains "Research topic"
+
+  @swipeable-item @FR19
+  Scenario: Non-empty state with at least one deleted idea
+    Given a deleted idea "Research topic" exists
+    And no other entities are deleted
+    When deleted entities are loaded
+    Then isEmpty is false
+
   @deleted-entities-spec @FR5
   Scenario: Newly deleted entity appears after query
     Given no deleted tasks exist

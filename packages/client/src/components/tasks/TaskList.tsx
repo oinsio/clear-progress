@@ -1,92 +1,20 @@
+// implements FR15, FR16, FR17 of swipeable-item
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useEffect, useState } from "react";
+import { Check, RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SortableItem } from "@/components/shared/SortableItem";
+import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import type { Box } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
+import type { SwipeActionConfig } from "@/types/swipe";
 import { TaskItem } from "./TaskItem";
-
-interface SortableTaskItemProps {
-  task: Task;
-  goals: Goal[];
-  contexts: Context[];
-  categories: Category[];
-  onComplete: (id: string) => void;
-  onUpdate: (id: string, changes: Partial<Task>) => Promise<void>;
-  onMove: (id: string, box: Box) => Promise<void>;
-  onDelete: (id: string) => void;
-  onSelect?: (id: string) => void;
-  selectedTaskId?: string | null;
-  expandedTaskId?: string | null;
-  onExpand?: (id: string | null) => void;
-  isFocusDimmed?: boolean;
-  focusDimmedOpacity?: number;
-}
-
-function SortableTaskItem({
-  task,
-  goals,
-  contexts,
-  categories,
-  onComplete,
-  onUpdate,
-  onMove,
-  onDelete,
-  onSelect,
-  selectedTaskId,
-  expandedTaskId,
-  onExpand,
-  isFocusDimmed = false,
-  focusDimmedOpacity,
-}: SortableTaskItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
-
-  const style = {
-    transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <li ref={setNodeRef} style={style}>
-      <TaskItem
-        task={task}
-        goals={goals}
-        contexts={contexts}
-        categories={categories}
-        onComplete={onComplete}
-        onUpdate={onUpdate}
-        onMove={onMove}
-        onDelete={onDelete}
-        dragHandleProps={{
-          ref: setActivatorNodeRef,
-          attributes,
-          listeners,
-        }}
-        onSelect={onSelect}
-        isSelected={selectedTaskId === task.id}
-        isExpanded={expandedTaskId === task.id}
-        onExpand={onExpand}
-        isFocusDimmed={isFocusDimmed}
-        focusDimmedOpacity={focusDimmedOpacity}
-      />
-    </li>
-  );
-}
 
 interface TaskListProps {
   tasks: Task[];
@@ -106,6 +34,25 @@ interface TaskListProps {
   focusDimmedOpacity?: number;
   expandedTaskId?: string | null;
   onExpand?: (id: string | null) => void;
+}
+
+/** Implements FR17 of swipeable-item */
+function buildSwipeRightConfig(
+  task: Task,
+  onComplete: (id: string) => void,
+): SwipeActionConfig {
+  if (task.is_completed) {
+    return {
+      onAction: () => onComplete(task.id),
+      color: "bg-amber-500",
+      icon: RotateCcw,
+    };
+  }
+  return {
+    onAction: () => onComplete(task.id),
+    color: "bg-green-500",
+    icon: Check,
+  };
 }
 
 export function TaskList({
@@ -151,6 +98,12 @@ export function TaskList({
     isFocusMode && (selectedTaskId != null || expandedTaskId != null);
 
   const sensors = useDndSensors();
+
+  const buildIsFocusDimmed = useCallback(
+    (taskId: string) =>
+      hasFocusedTask && selectedTaskId !== taskId && expandedTaskId !== taskId,
+    [hasFocusedTask, selectedTaskId, expandedTaskId],
+  );
 
   if (tasks.length === 0) {
     if (onEmptyClick) {
@@ -206,26 +159,24 @@ export function TaskList({
       <ul data-testid="task-list">
         {tasks.map((task) => (
           <li key={task.id}>
-            <TaskItem
-              task={task}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={onComplete}
-              onUpdate={onUpdate}
-              onMove={onMove}
-              onDelete={onDelete}
-              onSelect={onSelect}
-              isSelected={selectedTaskId === task.id}
-              isExpanded={expandedTaskId === task.id}
-              onExpand={setExpandedTaskId}
-              isFocusDimmed={
-                hasFocusedTask &&
-                selectedTaskId !== task.id &&
-                expandedTaskId !== task.id
-              }
-              focusDimmedOpacity={focusDimmedOpacity}
-            />
+            <SwipeableItem swipeRight={buildSwipeRightConfig(task, onComplete)}>
+              <TaskItem
+                task={task}
+                goals={goals}
+                contexts={contexts}
+                categories={categories}
+                onComplete={onComplete}
+                onUpdate={onUpdate}
+                onMove={onMove}
+                onDelete={onDelete}
+                onSelect={onSelect}
+                isSelected={selectedTaskId === task.id}
+                isExpanded={expandedTaskId === task.id}
+                onExpand={setExpandedTaskId}
+                isFocusDimmed={buildIsFocusDimmed(task.id)}
+                focusDimmedOpacity={focusDimmedOpacity}
+              />
+            </SwipeableItem>
           </li>
         ))}
       </ul>
@@ -244,27 +195,32 @@ export function TaskList({
       >
         <ul data-testid="task-list">
           {tasks.map((task) => (
-            <SortableTaskItem
-              key={task.id}
-              task={task}
-              goals={goals}
-              contexts={contexts}
-              categories={categories}
-              onComplete={onComplete}
-              onUpdate={onUpdate}
-              onMove={onMove}
-              onDelete={onDelete}
-              onSelect={onSelect}
-              selectedTaskId={selectedTaskId}
-              expandedTaskId={expandedTaskId}
-              onExpand={setExpandedTaskId}
-              isFocusDimmed={
-                hasFocusedTask &&
-                selectedTaskId !== task.id &&
-                expandedTaskId !== task.id
-              }
-              focusDimmedOpacity={focusDimmedOpacity}
-            />
+            <SortableItem key={task.id} id={task.id}>
+              {({ isDragging, dragHandleProps }) => (
+                <SwipeableItem
+                  swipeRight={buildSwipeRightConfig(task, onComplete)}
+                  isSuspended={isDragging}
+                >
+                  <TaskItem
+                    task={task}
+                    goals={goals}
+                    contexts={contexts}
+                    categories={categories}
+                    onComplete={onComplete}
+                    onUpdate={onUpdate}
+                    onMove={onMove}
+                    onDelete={onDelete}
+                    dragHandleProps={dragHandleProps}
+                    onSelect={onSelect}
+                    isSelected={selectedTaskId === task.id}
+                    isExpanded={expandedTaskId === task.id}
+                    onExpand={setExpandedTaskId}
+                    isFocusDimmed={buildIsFocusDimmed(task.id)}
+                    focusDimmedOpacity={focusDimmedOpacity}
+                  />
+                </SwipeableItem>
+              )}
+            </SortableItem>
           ))}
         </ul>
       </SortableContext>

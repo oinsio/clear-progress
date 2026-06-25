@@ -133,7 +133,7 @@ Then("icon aria-label = {string}", async ({ page }, expectedLabel: string) => {
   await expect(focusIcon).toHaveAttribute("aria-label", expectedLabel);
 });
 
-When("user presses Enter", async ({ page }) => {
+When("user activates the focus icon", async ({ page }) => {
   // Use click instead of Enter because button doesn't have onKeyDown handler
   await page.getByTestId("focus-icon").click();
 });
@@ -171,9 +171,7 @@ Given("replacement dialog is displayed", async ({ page }) => {
   await expect(page.getByRole("dialog")).toBeVisible();
 });
 
-When("user presses Tab", async ({ page }) => {
-  await page.keyboard.press("Tab");
-});
+// "user presses Tab" step defined in onboarding_e2e.steps.ts (global)
 
 Then("focus moves between dialog buttons", async ({ page }) => {
   const dialog = page.getByRole("dialog");

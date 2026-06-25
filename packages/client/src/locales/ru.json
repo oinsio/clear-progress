@@ -511,6 +511,7 @@
     "contexts": "Контексты",
     "categories": "Категории",
     "checklists": "Чек-листы",
+    "ideas": "Идеи",
     "checklistParent": "Задача: {{task}}",
     "restore": "Восстановить",
     "restoreAriaLabel": "Восстановить {{name}}",

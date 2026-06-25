@@ -32,6 +32,12 @@ Feature: Deleted entities restore
     When the category is restored
     Then the category has is_deleted false and needsSync true
 
+  @swipeable-item @FR20
+  Scenario: Restore a deleted idea
+    Given a deleted idea "Research topic" exists
+    When the idea is restored
+    Then the idea has is_deleted false and needsSync true
+
   @deleted-entities-spec @FR2 @FR8
   Scenario: Restore a deleted checklist item
     Given a deleted checklist item "Step 1" exists
