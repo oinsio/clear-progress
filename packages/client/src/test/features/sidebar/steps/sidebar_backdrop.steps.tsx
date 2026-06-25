@@ -7,83 +7,38 @@ import {
   render,
   screen,
 } from "@testing-library/react/pure";
+import { MemoryRouter } from "react-router-dom";
 import type { TestContext } from "vitest";
 import { expect, vi } from "vitest";
 
-const mockTogglePanelOpen = vi.fn();
-const mockCloseTemporary = vi.fn();
-const mockOpenTemporarily = vi.fn();
-let mockEffectiveIsOpen = false;
-let mockIsTemporarilyOpen = false;
-let mockIsDesktop = true;
+import "./sidebarTestSetup";
 
-vi.mock("@/hooks/usePanelSplit", () => ({
-  usePanelSplit: () => ({
-    ratio: 0.6,
-    containerRef: { current: null },
-    handleResizeMouseDown: vi.fn(),
-  }),
+vi.mock("@/hooks/useConnectionStatus", () => ({
+  useConnectionStatus: () => "not_configured",
 }));
 
-vi.mock("@/hooks/usePanelSide", () => ({
-  usePanelSide: () => ({ panelSide: "right" as const }),
+vi.mock("@/hooks/useMenuOrder", () => ({
+  useMenuOrder: () => ({ menuOrder: [] }),
 }));
 
-vi.mock("@/hooks/usePanelOpen", () => ({
-  usePanelOpen: () => ({
-    isPanelOpen: false,
-    isTemporarilyOpen: mockIsTemporarilyOpen,
-    effectiveIsOpen: mockEffectiveIsOpen,
-    togglePanelOpen: mockTogglePanelOpen,
-    openTemporarily: mockOpenTemporarily,
-    closeTemporary: mockCloseTemporary,
-  }),
-}));
+import { Sidebar } from "@/components/tasks/Sidebar";
 
-vi.mock("@/hooks/useIsDesktop", () => ({
-  useIsDesktop: () => mockIsDesktop,
-}));
+const mockOnToggle = vi.fn();
 
-vi.mock("@/hooks/useSidebarNavigation", () => ({
-  useSidebarNavigation: () => vi.fn(),
-}));
-
-vi.mock("@/hooks/useDetailPanelPinned", () => ({
-  useDetailPanelPinned: () => ({ isDetailPanelPinned: false }),
-}));
-
-vi.mock("@/components/tasks/Sidebar", () => ({
-  Sidebar: () => <div data-testid="sidebar" />,
-}));
-
-vi.mock("@/components/tasks/TaskDetailPanel", () => ({
-  TaskDetailPanel: () => <div data-testid="task-detail-panel" />,
-}));
-
-import { TaskPageLayout } from "@/components/tasks/TaskPageLayout";
-
-const feature = await loadFeature("../sidebar_backdrop.feature");
-
-const baseProps = {
-  sidebarMode: "inbox" as const,
-  selectedTask: null,
-  goals: [],
-  contexts: [],
-  categories: [],
-  onUpdateTask: vi.fn(),
-  onMoveTask: vi.fn(),
-  onDeleteTask: vi.fn(),
-  onDuplicateTask: vi.fn(),
-  onCloseDetailPanel: vi.fn(),
-};
-
-function renderLayout() {
+function renderSidebar(isOpen: boolean) {
   return render(
-    <TaskPageLayout {...baseProps}>
-      <div>Content</div>
-    </TaskPageLayout>,
+    <MemoryRouter>
+      <Sidebar
+        mode={null}
+        isOpen={isOpen}
+        onToggle={mockOnToggle}
+        onModeChange={vi.fn()}
+      />
+    </MemoryRouter>,
   );
 }
+
+const feature = await loadFeature("../sidebar_backdrop.feature");
 
 type FeatureContext = Record<string, never>;
 
@@ -93,27 +48,25 @@ describeFeature(
     f.BeforeEachScenario(() => {
       cleanup();
       vi.clearAllMocks();
-      mockEffectiveIsOpen = false;
-      mockIsTemporarilyOpen = false;
-      mockIsDesktop = true;
     });
 
     // @improve-sidebar-ux @FR3
+    // Backdrop is rendered with md:hidden — always in DOM when open, CSS hides on desktop
     f.Scenario(
       "Backdrop visible on mobile when sidebar expanded",
       ({ Given, And, Then }) => {
         Given("user is on mobile", (_ctx: TestContext) => {
-          mockIsDesktop = false;
+          // Backdrop uses md:hidden CSS class; mobile visibility verified by element existence
         });
 
         And("sidebar is open", (_ctx: TestContext) => {
-          mockEffectiveIsOpen = true;
-          mockIsTemporarilyOpen = true;
-          renderLayout();
+          renderSidebar(true);
         });
 
         Then("a backdrop overlay is visible", (_ctx: TestContext) => {
-          expect(screen.getByTestId("sidebar-backdrop")).toBeInTheDocument();
+          const backdrop = screen.getByTestId("sidebar-backdrop");
+          expect(backdrop).toBeInTheDocument();
+          expect(backdrop).toHaveClass("md:hidden");
         });
       },
     );
@@ -121,18 +74,16 @@ describeFeature(
     // @improve-sidebar-ux @FR3
     f.Scenario("Backdrop not visible on desktop", ({ Given, And, Then }) => {
       Given("user is on desktop", (_ctx: TestContext) => {
-        mockIsDesktop = true;
+        // Backdrop has md:hidden class — hidden on desktop via CSS
       });
 
       And("sidebar is open", (_ctx: TestContext) => {
-        mockEffectiveIsOpen = true;
-        renderLayout();
+        renderSidebar(true);
       });
 
       Then("no backdrop overlay is visible", (_ctx: TestContext) => {
-        expect(
-          screen.queryByTestId("sidebar-backdrop"),
-        ).not.toBeInTheDocument();
+        const backdrop = screen.getByTestId("sidebar-backdrop");
+        expect(backdrop).toHaveClass("md:hidden");
       });
     });
 
@@ -141,13 +92,11 @@ describeFeature(
       "Tap on backdrop closes sidebar",
       ({ Given, And, When, Then }) => {
         Given("user is on mobile", (_ctx: TestContext) => {
-          mockIsDesktop = false;
+          // Mobile context
         });
 
         And("sidebar is open", (_ctx: TestContext) => {
-          mockEffectiveIsOpen = true;
-          mockIsTemporarilyOpen = true;
-          renderLayout();
+          renderSidebar(true);
         });
 
         When("user taps the backdrop", (_ctx: TestContext) => {
@@ -156,7 +105,7 @@ describeFeature(
         });
 
         Then("sidebar closes", (_ctx: TestContext) => {
-          expect(mockCloseTemporary).toHaveBeenCalledTimes(1);
+          expect(mockOnToggle).toHaveBeenCalledTimes(1);
         });
       },
     );
