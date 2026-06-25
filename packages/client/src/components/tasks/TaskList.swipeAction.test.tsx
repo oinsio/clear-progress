@@ -1,9 +1,9 @@
 import { render } from "@testing-library/react";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTask } from "@/test/factories/taskFactory";
 import type { SwipeActionConfig } from "@/types/swipe";
 import { TaskList } from "./TaskList";
-import React from "react";
 
 // Capture swipeRight configs passed to SwipeableItem
 const capturedSwipeConfigs: SwipeActionConfig[] = [];

@@ -5,7 +5,7 @@ import { generateKeyBetween } from "@/services/SortOrderService";
 import { buildTask } from "@/test/factories/taskFactory";
 import { TaskList } from "./TaskList";
 import "./__mocks__/taskListMocks";
-import React from "react";
+import type React from "react";
 
 // Capture the onDragEnd callback passed to DndContext
 let capturedOnDragEnd: ((event: DragEndEvent) => void) | undefined;

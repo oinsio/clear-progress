@@ -1,5 +1,6 @@
 // implements FR13, FR14, NFR-A2, NFR-P3 of swipeable-item
-import React, { useRef } from "react";
+import type React from "react";
+import { useRef } from "react";
 import {
   SWIPE_BACKGROUND_OPACITY_REST,
   SWIPE_BACKGROUND_OPACITY_SWIPING,
