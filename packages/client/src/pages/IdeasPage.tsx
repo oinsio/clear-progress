@@ -79,7 +79,13 @@ export default function IdeasPage() {
   const { ideas, isLoading, createIdea, updateIdea, deleteIdea, reorderIdeas } =
     useIdeas();
   const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    effectiveIsOpen,
+    isTemporarilyOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
   const sensors = useDndSensors();
   const isDesktop = useIsDesktop();
   const {
@@ -93,6 +99,8 @@ export default function IdeasPage() {
   const activeIdeas = ideas.filter((idea) => !idea.is_deleted);
 
   const handleModeChange = useSidebarNavigation();
+  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -257,9 +265,11 @@ export default function IdeasPage() {
       {/* Right filter panel */}
       <Sidebar
         mode="ideas"
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        onToggle={handleToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
     </div>

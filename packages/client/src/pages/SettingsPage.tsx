@@ -30,7 +30,13 @@ import {
  */
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const { effectiveIsOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    effectiveIsOpen,
+    isTemporarilyOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -85,8 +91,11 @@ export default function SettingsPage() {
   }, [accessToken, navigate]);
 
   const { panelSide } = usePanelSide();
-  const handlePanelToggle = togglePanelOpen;
+  const handlePanelToggle = isTemporarilyOpen
+    ? closeTemporary
+    : togglePanelOpen;
   const handleModeChange = useSidebarNavigation();
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
 
   /** Implements FR13 of improve-sidebar-ux */
   const initialExpandedSection =
@@ -155,6 +164,8 @@ export default function SettingsPage() {
         isOpen={effectiveIsOpen}
         side={panelSide}
         onToggle={handlePanelToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
     </div>

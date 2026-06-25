@@ -89,7 +89,13 @@ export default function GoalsPage() {
   const { t } = useTranslation();
   const { goals, isLoading, createGoal, reorderGoals } = useGoals();
   const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    effectiveIsOpen,
+    isTemporarilyOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
   const navigate = useNavigate();
   const sensors = useDndSensors();
 
@@ -104,6 +110,8 @@ export default function GoalsPage() {
   }, []);
 
   const handleModeChange = useSidebarNavigation();
+  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
 
   const handleGoalNavigate = useCallback(
     (id: string) => {
@@ -211,9 +219,11 @@ export default function GoalsPage() {
       {/* Right filter panel */}
       <Sidebar
         mode="goals"
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        onToggle={handleToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
     </div>

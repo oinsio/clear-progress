@@ -40,10 +40,18 @@ export default function SearchPage() {
   const { contexts } = useContexts();
   const { categories } = useCategories();
   const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    effectiveIsOpen,
+    isTemporarilyOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const navigate = useNavigate();
   const handleModeChange = useSidebarNavigation();
+  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -303,9 +311,11 @@ export default function SearchPage() {
       {/* Right filter panel */}
       <Sidebar
         mode="search"
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        onToggle={handleToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
     </div>

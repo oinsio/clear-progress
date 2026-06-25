@@ -94,7 +94,7 @@ export function SidebarSyncBlock({
     t,
   });
 
-  const ChevronIcon = side === "right" ? ChevronLeft : ChevronRight;
+  const ChevronIcon = side === "right" ? ChevronRight : ChevronLeft;
   const toggleButton = onToggle ? (
     <button
       type="button"

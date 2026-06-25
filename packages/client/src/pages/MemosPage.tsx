@@ -18,8 +18,16 @@ export default function MemosPage() {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    effectiveIsOpen,
+    isTemporarilyOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
   const handleModeChange = useSidebarNavigation();
+  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
 
   const memos = getMemos(language);
 
@@ -65,9 +73,11 @@ export default function MemosPage() {
 
       <Sidebar
         mode="memos"
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        onToggle={handleToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
     </div>

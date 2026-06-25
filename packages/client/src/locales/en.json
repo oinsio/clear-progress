@@ -236,7 +236,7 @@
     "name": "Settings",
     "defaultBox": "Default box",
     "accentColor": "App color",
-    "panelSide": "Panel position",
+    "panelSide": "Sidebar",
     "language": "Language",
     "panelLeft": "Left",
     "panelRight": "Right",

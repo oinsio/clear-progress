@@ -76,10 +76,7 @@ export function WorkspaceSection() {
       </section>
 
       {/* Detail panel pinned section — implements FR7 of pin-task-detail-panel, FR11 of improve-sidebar-ux */}
-      <section data-testid="settings-detail-panel-pinned" className="space-y-3">
-        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-          {t("settings.detailPanelPinned")}
-        </h2>
+      <section data-testid="settings-detail-panel-pinned">
         <button
           type="button"
           aria-label={
@@ -91,7 +88,7 @@ export function WorkspaceSection() {
           data-testid="settings-detail-panel-pinned-toggle"
           onClick={() => setDetailPanelPinned(!isDetailPanelPinned)}
           className={cn(
-            "flex items-center justify-center w-11 h-11 rounded-full transition-colors",
+            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors",
             isDetailPanelPinned
               ? "text-accent"
               : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
@@ -99,10 +96,15 @@ export function WorkspaceSection() {
         >
           <Pin
             className={cn(
-              "w-5 h-5",
+              "w-5 h-5 flex-shrink-0",
               isDetailPanelPinned ? "fill-current" : "rotate-45",
             )}
           />
+          <span className="text-sm font-medium">
+            {isDetailPanelPinned
+              ? t("settings.unpinDetailPanel")
+              : t("settings.pinDetailPanel")}
+          </span>
         </button>
       </section>
 

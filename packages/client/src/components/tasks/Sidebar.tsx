@@ -152,6 +152,15 @@ export function Sidebar({
           isLeft && "order-first flex-row-reverse",
         )}
       >
+        {/* Mobile backdrop overlay — implements FR8 of improve-sidebar-ux */}
+        <div
+          data-testid="sidebar-backdrop"
+          className="md:hidden fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={onToggle}
+        />
         {/* Mobile placeholder: keeps flex layout stable while panel is an overlay */}
         <div
           className={cn("md:hidden w-14 flex-shrink-0 bg-accent", panelBorder)}
@@ -195,6 +204,7 @@ export function Sidebar({
       <div
         className={cn(
           "w-14 flex flex-col items-center bg-accent overflow-hidden cursor-pointer",
+          onCollapsedClick && "[&_button]:pointer-events-none",
           panelBorder,
         )}
         onClick={onCollapsedClick ?? onToggle}

@@ -148,17 +148,6 @@ export function TaskPageLayout({
         )}
       </div>
 
-      {!isDesktop && effectiveIsOpen && (
-        <div
-          data-testid="sidebar-backdrop"
-          className="fixed inset-0 bg-black/40 z-10"
-          aria-label={t("filter.closeSidebar")}
-          role="button"
-          tabIndex={-1}
-          onClick={handleToggle}
-        />
-      )}
-
       <Sidebar
         mode={sidebarMode}
         isOpen={effectiveIsOpen}

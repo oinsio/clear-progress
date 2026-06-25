@@ -112,7 +112,13 @@ export default function CategoriesPage() {
   const [categoryTaskCounts, setCategoryTaskCounts] = useState<
     Record<string, number>
   >({});
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    effectiveIsOpen,
+    isTemporarilyOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
 
   const activeCategories = categories.filter(
     (category) => !category.is_deleted,
@@ -154,6 +160,8 @@ export default function CategoriesPage() {
   );
 
   const handleModeChange = useSidebarNavigation();
+  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
 
   const handleSubmit = useCallback(
     (name: string) => {
@@ -222,9 +230,11 @@ export default function CategoriesPage() {
       {/* Right filter panel — full height */}
       <Sidebar
         mode="categories"
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        onToggle={handleToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
     </div>

@@ -110,7 +110,13 @@ function DeletedSection<T extends { id: string }>({
 export default function DeletedPage() {
   const { t } = useTranslation();
   const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    effectiveIsOpen,
+    isTemporarilyOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
   const {
     tasks,
     goals,
@@ -130,6 +136,8 @@ export default function DeletedPage() {
     restoreChecklistItem,
   } = useRestoreEntity();
   const handleModeChange = useSidebarNavigation();
+  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
   const { purge, isPurging } = usePurge();
   const [showPurgeDialog, setShowPurgeDialog] = useState(false);
   const [purgeError, setPurgeError] = useState<string | null>(null);
@@ -431,9 +439,11 @@ export default function DeletedPage() {
 
       <Sidebar
         mode={null}
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        onToggle={handleToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
 

@@ -111,7 +111,13 @@ export default function ContextsPage() {
   const [contextTaskCounts, setContextTaskCounts] = useState<
     Record<string, number>
   >({});
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    effectiveIsOpen,
+    isTemporarilyOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
 
   const activeContexts = contexts.filter((context) => !context.is_deleted);
 
@@ -151,6 +157,8 @@ export default function ContextsPage() {
   );
 
   const handleModeChange = useSidebarNavigation();
+  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
 
   const handleSubmit = useCallback(
     (name: string) => {
@@ -219,9 +227,11 @@ export default function ContextsPage() {
       {/* Right filter panel */}
       <Sidebar
         mode="contexts"
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        onToggle={handleToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
     </div>

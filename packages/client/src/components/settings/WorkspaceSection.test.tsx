@@ -58,7 +58,6 @@ function renderSection() {
 describe("WorkspaceSection — i18n headings", () => {
   it.each([
     ["settings.panelSide"],
-    ["settings.detailPanelPinned"],
     ["settings.handedness"],
     ["settings.filterBarPosition"],
     ["settings.handednessRight"],
@@ -315,11 +314,11 @@ describe("WorkspaceSection — base CSS classes", () => {
     ).toContain("rounded-full");
   });
 
-  it("should apply rounded-full to pin button", () => {
+  it("should apply rounded-lg to pin button", () => {
     renderSection();
     expect(
       screen.getByTestId("settings-detail-panel-pinned-toggle").classList,
-    ).toContain("rounded-full");
+    ).toContain("rounded-lg");
   });
 
   it("should apply rounded-lg to handedness buttons", () => {
