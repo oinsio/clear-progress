@@ -35,13 +35,6 @@ vi.mock("@/hooks/useAttachmentCount", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useSwipeAction", () => ({
-  useSwipeAction: vi.fn().mockReturnValue({
-    translateX: 0,
-    isThresholdReached: false,
-  }),
-}));
-
 describe("TaskItem — indicators", () => {
   // completed_at
   it("should show completed_at label when task is completed and has completed_at", () => {

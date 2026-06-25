@@ -1,4 +1,5 @@
 // implements FR1, FR3, FR5 of deleted-entities-spec
+// implements FR19 of swipeable-item
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
@@ -7,14 +8,17 @@ import { buildCategory } from "@/test/factories/categoryFactory";
 import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { buildContext } from "@/test/factories/contextFactory";
 import { buildGoal } from "@/test/factories/goalFactory";
+import { buildIdea } from "@/test/factories/ideaFactory";
 import { buildTask } from "@/test/factories/taskFactory";
 import type {
   Category,
   ChecklistItem,
   Context,
   Goal,
+  Idea,
   Task,
 } from "@/types/entities";
+import { clearAllEntityTables } from "./deleted_entities_steps.helpers";
 
 const feature = await loadFeature("../deleted_entities_aggregation.feature");
 
@@ -23,6 +27,7 @@ type FeatureContext = Record<string, never>;
 type DeletedEntitiesResult = {
   tasks: Task[];
   goals: Goal[];
+  ideas: Idea[];
   contexts: Context[];
   categories: Category[];
   checklistItems: ChecklistItem[];
@@ -31,6 +36,7 @@ type DeletedEntitiesResult = {
 function expectAllEntitiesEmpty(result: DeletedEntitiesResult) {
   expect(result.tasks).toHaveLength(0);
   expect(result.goals).toHaveLength(0);
+  expect(result.ideas).toHaveLength(0);
   expect(result.contexts).toHaveLength(0);
   expect(result.categories).toHaveLength(0);
   expect(result.checklistItems).toHaveLength(0);
@@ -39,6 +45,7 @@ function expectAllEntitiesEmpty(result: DeletedEntitiesResult) {
 async function queryDeletedEntities() {
   const tasks = await db.tasks.filter((task) => task.is_deleted).toArray();
   const goals = await db.goals.filter((goal) => goal.is_deleted).toArray();
+  const ideas = await db.ideas.filter((idea) => idea.is_deleted).toArray();
   const contexts = await db.contexts
     .filter((context) => context.is_deleted)
     .toArray();
@@ -48,18 +55,14 @@ async function queryDeletedEntities() {
   const checklistItems = await db.checklist_items
     .filter((item) => item.is_deleted)
     .toArray();
-  return { tasks, goals, contexts, categories, checklistItems };
+  return { tasks, goals, ideas, contexts, categories, checklistItems };
 }
 
 describeFeature(
   feature,
   (f: FeatureDescriibeCallbackParams<FeatureContext>) => {
     f.BeforeEachScenario(async () => {
-      await db.tasks.clear();
-      await db.goals.clear();
-      await db.contexts.clear();
-      await db.categories.clear();
-      await db.checklist_items.clear();
+      await clearAllEntityTables();
     });
 
     // @deleted-entities-spec @FR1
@@ -233,6 +236,71 @@ describeFeature(
 
         Then("tasks array is not empty", async (_ctx: TestContext) => {
           expect(result.tasks.length).toBeGreaterThan(0);
+        });
+      },
+    );
+
+    // @swipeable-item @FR19
+    f.Scenario(
+      "Deleted ideas are included in aggregation",
+      ({ Given, When, Then }) => {
+        let result: DeletedEntitiesResult;
+
+        Given(
+          'a deleted idea "Research topic" exists',
+          async (_ctx: TestContext) => {
+            await db.ideas.add(
+              buildIdea({ name: "Research topic", is_deleted: true }),
+            );
+          },
+        );
+
+        When("deleted entities are loaded", async (_ctx: TestContext) => {
+          result = await queryDeletedEntities();
+        });
+
+        Then(
+          'the ideas array contains "Research topic"',
+          async (_ctx: TestContext) => {
+            expect(result.ideas).toHaveLength(1);
+            expect(result.ideas[0].name).toBe("Research topic");
+          },
+        );
+      },
+    );
+
+    // @swipeable-item @FR19
+    f.Scenario(
+      "Non-empty state with at least one deleted idea",
+      ({ Given, When, Then, And }) => {
+        let result: DeletedEntitiesResult;
+
+        Given(
+          'a deleted idea "Research topic" exists',
+          async (_ctx: TestContext) => {
+            await db.ideas.add(
+              buildIdea({ name: "Research topic", is_deleted: true }),
+            );
+          },
+        );
+
+        And("no other entities are deleted", async (_ctx: TestContext) => {
+          // DB is cleared in BeforeEachScenario, only the idea above exists
+        });
+
+        When("deleted entities are loaded", async (_ctx: TestContext) => {
+          result = await queryDeletedEntities();
+        });
+
+        Then("isEmpty is false", async (_ctx: TestContext) => {
+          const isEmpty =
+            result.tasks.length === 0 &&
+            result.goals.length === 0 &&
+            result.ideas.length === 0 &&
+            result.contexts.length === 0 &&
+            result.categories.length === 0 &&
+            result.checklistItems.length === 0;
+          expect(isEmpty).toBe(false);
         });
       },
     );

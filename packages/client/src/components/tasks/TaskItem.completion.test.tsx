@@ -35,13 +35,6 @@ vi.mock("@/hooks/useAttachmentCount", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useSwipeAction", () => ({
-  useSwipeAction: vi.fn().mockReturnValue({
-    translateX: 0,
-    isThresholdReached: false,
-  }),
-}));
-
 describe("TaskItem — completion", () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -158,5 +151,12 @@ describe("TaskItem — completion", () => {
     renderTaskItem({ task: buildTask({ is_completed: false }) });
     const btn = screen.getByRole("button", { name: /завершить задачу/i });
     expect(btn.querySelector("svg")).not.toBeInTheDocument();
+  });
+
+  it("should show default border style when task is not completed", () => {
+    renderTaskItem({ task: buildTask({ is_completed: false }) });
+    const btn = screen.getByRole("button", { name: /завершить задачу/i });
+    expect(btn).toHaveClass("border-gray-300");
+    expect(btn).not.toHaveClass("bg-accent/20");
   });
 });
