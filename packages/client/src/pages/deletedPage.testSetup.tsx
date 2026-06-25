@@ -6,6 +6,43 @@ import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
 import type { DeletedEntities } from "@/hooks/useDeletedEntities";
+
+vi.mock("@/app/providers/AuthProvider", () => ({
+  useAuth: () => ({
+    accessToken: null,
+    userEmail: null,
+    userPicture: null,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    silentRefresh: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useDeletedEntities");
+vi.mock("@/hooks/useRestoreEntity");
+vi.mock("@/hooks/usePanelSide");
+vi.mock("@/hooks/usePanelOpen");
+vi.mock("@/hooks/usePurge");
+vi.mock("@/hooks/useSidebarNavigation");
+
+vi.mock("@/hooks/useFilterBarPosition", () => ({
+  useFilterBarPosition: () => ({
+    filterBarPosition: "bottom",
+    setFilterBarPosition: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useHandedness", () => ({
+  useHandedness: () => ({
+    handedness: "right",
+    setHandedness: vi.fn(),
+  }),
+}));
+
+vi.mock("@/hooks/useIsDesktop", () => ({
+  useIsDesktop: () => false,
+}));
+
 import { useDeletedEntities } from "@/hooks/useDeletedEntities";
 import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";

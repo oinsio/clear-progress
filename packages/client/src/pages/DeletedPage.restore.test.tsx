@@ -3,50 +3,13 @@
  * Implements FR18, FR21, UX1 of swipeable-item.
  */
 import { fireEvent, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildCategory } from "@/test/factories/categoryFactory";
 import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { buildContext } from "@/test/factories/contextFactory";
 import { buildGoal } from "@/test/factories/goalFactory";
 import { buildIdea } from "@/test/factories/ideaFactory";
 import { buildTask } from "@/test/factories/taskFactory";
-
-vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({
-    accessToken: null,
-    userEmail: null,
-    userPicture: null,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    silentRefresh: vi.fn(),
-  }),
-}));
-
-vi.mock("@/hooks/useDeletedEntities");
-vi.mock("@/hooks/useRestoreEntity");
-vi.mock("@/hooks/usePanelSide");
-vi.mock("@/hooks/usePanelOpen");
-vi.mock("@/hooks/usePurge");
-vi.mock("@/hooks/useSidebarNavigation");
-
-vi.mock("@/hooks/useFilterBarPosition", () => ({
-  useFilterBarPosition: () => ({
-    filterBarPosition: "bottom",
-    setFilterBarPosition: vi.fn(),
-  }),
-}));
-
-vi.mock("@/hooks/useHandedness", () => ({
-  useHandedness: () => ({
-    handedness: "right",
-    setHandedness: vi.fn(),
-  }),
-}));
-
-vi.mock("@/hooks/useIsDesktop", () => ({
-  useIsDesktop: () => false,
-}));
-
 import {
   MOCK_RESTORE_ENTITY,
   renderDeletedPage,
