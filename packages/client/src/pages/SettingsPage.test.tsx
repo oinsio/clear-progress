@@ -16,8 +16,17 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 vi.mock("@/components/settings/SettingsAccordion", () => ({
-  SettingsAccordion: ({ sections }: { sections: { id: string }[] }) => (
-    <div data-testid="settings-accordion">
+  SettingsAccordion: ({
+    sections,
+    initialExpandedSection,
+  }: {
+    sections: { id: string }[];
+    initialExpandedSection?: string | null;
+  }) => (
+    <div
+      data-testid="settings-accordion"
+      data-initial-expanded={initialExpandedSection ?? ""}
+    >
       {sections.map((section) => (
         <div key={section.id} data-testid={`accordion-section-${section.id}`} />
       ))}
@@ -81,7 +90,11 @@ describe("SettingsPage", () => {
     mockUseConnectionConfig.mockReturnValue(null);
     mockUsePanelOpen.mockReturnValue({
       isPanelOpen: false,
+      isTemporarilyOpen: false,
+      effectiveIsOpen: false,
       togglePanelOpen: vi.fn(),
+      openTemporarily: vi.fn(),
+      closeTemporary: vi.fn(),
     });
     vi.mocked(useSidebarNavigation).mockReturnValue(vi.fn());
   });

@@ -1,6 +1,5 @@
 Feature: Sidebar Toggle
   Sidebar panel toggles between expanded and collapsed states.
-  Always-open mode overrides the toggle behavior.
 
   @add-sidebar-specs @FR2
   Scenario: Sidebar opens from collapsed state
@@ -8,11 +7,10 @@ Feature: Sidebar Toggle
     When user clicks the collapsed strip
     Then sidebar expands to show icons and labels
 
-  @add-sidebar-specs @FR2
-  Scenario: Sidebar closes from expanded state
+  @improve-sidebar-ux @FR1
+  Scenario: Sidebar closes via toggle button
     Given sidebar is expanded
-    And always-open mode is disabled
-    When user clicks the panel area
+    When user clicks the toggle button
     Then sidebar collapses to show icons only
 
   @add-sidebar-specs @FR2
@@ -22,25 +20,21 @@ Feature: Sidebar Toggle
     And sidebar toggle has "open" aria-label
     And sidebar toggle has role "button"
 
-  @add-sidebar-specs @FR2
-  Scenario: Expanded sidebar renders full panel
+  @improve-sidebar-ux @FR1
+  Scenario: Expanded sidebar container is not interactive
     Given sidebar is expanded
-    And always-open mode is disabled
-    Then sidebar renders a full panel with icons and labels
-    And sidebar toggle has "close" aria-label
-    And sidebar toggle has role "button"
+    Then expanded sidebar container has no role attribute
+    And expanded sidebar container has no tabIndex
 
-  @add-sidebar-specs @FR2
-  Scenario: Always-open mode prevents collapse
-    Given always-open mode is enabled
-    Then sidebar is expanded
-    And sidebar toggle does not have role "button"
-    And sidebar toggle does not have "close" aria-label
+  @improve-sidebar-ux @FR1
+  Scenario: Clicking empty area in expanded sidebar does nothing
+    Given sidebar is expanded
+    When user clicks the expanded container
+    Then sidebar remains expanded
 
   @add-sidebar-specs @FR2
   Scenario: Sidebar toggle is keyboard accessible
     Given sidebar is collapsed
-    And always-open mode is disabled
     Then sidebar toggle has tabIndex 0
     When user presses Enter on the toggle area
     Then sidebar expands to show icons and labels

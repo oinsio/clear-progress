@@ -226,6 +226,7 @@
     "completed": "Завершённые",
     "close": "Закрыть панель",
     "open": "Открыть панель",
+    "closeSidebar": "Закрыть боковую панель",
     "search": "Поиск",
     "memos": "Памятки",
     "deleted": "Удалённое",
@@ -294,6 +295,8 @@
     "dayBoundaryMinutes": "Минуты",
     "dayBoundaryDescription": "Время начала Вашего дня. Отложенные на завтра задачи появятся в это время.",
     "detailPanelPinned": "Закрепить панель задачи",
+    "pinDetailPanel": "Закрепить панель задачи",
+    "unpinDetailPanel": "Открепить панель задачи",
     "sections": {
       "lookAndFeel": "Внешний вид",
       "workspace": "Рабочее пространство",

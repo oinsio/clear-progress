@@ -7,6 +7,7 @@
 
 import { Pin } from "lucide-react";
 import type * as React from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
@@ -14,6 +15,7 @@ import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarSwipe } from "@/hooks/useSidebarSwipe";
 import { cn } from "@/shared/lib/cn";
 import type { Box } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
@@ -53,12 +55,30 @@ export function TaskPageLayout({
 }: TaskPageLayoutProps) {
   const { ratio, containerRef, handleResizeMouseDown } = usePanelSplit();
   const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const {
+    isTemporarilyOpen,
+    effectiveIsOpen,
+    togglePanelOpen,
+    openTemporarily,
+    closeTemporary,
+  } = usePanelOpen();
   const isDesktop = useIsDesktop();
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const { sidebarTranslateX } = useSidebarSwipe({
+    sidebarRef,
+    side: panelSide,
+    isOpen: effectiveIsOpen,
+    isDesktop,
+    onOpen: openTemporarily,
+    onClose: closeTemporary,
+  });
   const { t } = useTranslation();
   const { isDetailPanelPinned } = useDetailPanelPinned();
   const defaultModeChange = useSidebarNavigation();
   const handleModeChange = externalModeChange ?? defaultModeChange;
+
+  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
+  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
 
   const isTaskSelected = selectedTask !== null;
   const showDetailColumn = isDesktop && (isDetailPanelPinned || isTaskSelected);
@@ -128,11 +148,26 @@ export function TaskPageLayout({
         )}
       </div>
 
+      {!isDesktop && effectiveIsOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={handleToggle}
+        />
+      )}
+
       <Sidebar
         mode={sidebarMode}
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        containerRef={sidebarRef}
+        sidebarTranslateX={sidebarTranslateX}
+        onToggle={handleToggle}
+        onCollapsedClick={openTemporarily}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />
     </div>

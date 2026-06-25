@@ -7,10 +7,6 @@ import { expect, type TestContext, vi } from "vitest";
 
 const mockOnToggle = vi.fn();
 
-const { mockUsePanelAlwaysOpen } = vi.hoisted(() => ({
-  mockUsePanelAlwaysOpen: vi.fn(),
-}));
-
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-router-dom")>();
   return { ...actual, useNavigate: () => vi.fn() };
@@ -32,17 +28,12 @@ vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: () => ({ menuOrder: [] }),
 }));
 
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: mockUsePanelAlwaysOpen,
-}));
-
 import { Sidebar } from "@/components/tasks/Sidebar";
 
 const feature = await loadFeature("../sidebar_toggle.feature");
 
 type FeatureContext = {
   isOpen: boolean;
-  isPanelAlwaysOpen: boolean;
 };
 
 function renderSidebar(isOpen: boolean) {
@@ -65,8 +56,6 @@ describeFeature(
       cleanup();
       vi.clearAllMocks();
       f.context.isOpen = false;
-      f.context.isPanelAlwaysOpen = false;
-      mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: false });
     });
 
     // @add-sidebar-specs @FR2
@@ -93,30 +82,23 @@ describeFeature(
       },
     );
 
-    // @add-sidebar-specs @FR2
-    f.Scenario(
-      "Sidebar closes from expanded state",
-      ({ Given, When, Then, And }) => {
-        Given("sidebar is expanded", (_ctx: TestContext) => {
-          f.context.isOpen = true;
-        });
+    // @improve-sidebar-ux @FR1
+    f.Scenario("Sidebar closes via toggle button", ({ Given, When, Then }) => {
+      Given("sidebar is expanded", (_ctx: TestContext) => {
+        f.context.isOpen = true;
+        renderSidebar(true);
+      });
 
-        And("always-open mode is disabled", (_ctx: TestContext) => {
-          mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: false });
-          renderSidebar(true);
-        });
+      When("user clicks the toggle button", async (_ctx: TestContext) => {
+        const user = userEvent.setup();
+        const toggleButton = screen.getByTestId("sidebar-toggle-button");
+        await user.click(toggleButton);
+      });
 
-        When("user clicks the panel area", async (_ctx: TestContext) => {
-          const user = userEvent.setup();
-          const toggle = screen.getByTestId("sidebar-toggle");
-          await user.click(toggle);
-        });
-
-        Then("sidebar collapses to show icons only", (_ctx: TestContext) => {
-          expect(mockOnToggle).toHaveBeenCalledTimes(1);
-        });
-      },
-    );
+      Then("sidebar collapses to show icons only", (_ctx: TestContext) => {
+        expect(mockOnToggle).toHaveBeenCalledTimes(1);
+      });
+    });
 
     // @add-sidebar-specs @FR2
     f.Scenario(
@@ -153,85 +135,63 @@ describeFeature(
       },
     );
 
-    // @add-sidebar-specs @FR2
+    // @improve-sidebar-ux @FR1
     f.Scenario(
-      "Expanded sidebar renders full panel",
+      "Expanded sidebar container is not interactive",
       ({ Given, Then, And }) => {
         Given("sidebar is expanded", (_ctx: TestContext) => {
           f.context.isOpen = true;
-        });
-
-        And("always-open mode is disabled", (_ctx: TestContext) => {
-          mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: false });
           renderSidebar(true);
         });
 
         Then(
-          "sidebar renders a full panel with icons and labels",
+          "expanded sidebar container has no role attribute",
           (_ctx: TestContext) => {
-            const toggle = screen.getByTestId("sidebar-toggle");
-            expect(toggle.className).toContain("w-52");
+            const container = screen.getByTestId("sidebar-expanded");
+            expect(container.getAttribute("role")).toBeNull();
           },
         );
 
         And(
-          "sidebar toggle has {string} aria-label",
-          (_ctx: TestContext, _label: string) => {
-            const toggle = screen.getByTestId("sidebar-toggle");
-            expect(toggle).toHaveAttribute("aria-label", "Закрыть панель");
-          },
-        );
-
-        And(
-          "sidebar toggle has role {string}",
-          (_ctx: TestContext, _role: string) => {
-            const toggle = screen.getByTestId("sidebar-toggle");
-            expect(toggle).toHaveAttribute("role", "button");
+          "expanded sidebar container has no tabIndex",
+          (_ctx: TestContext) => {
+            const container = screen.getByTestId("sidebar-expanded");
+            expect(container.getAttribute("tabindex")).toBeNull();
           },
         );
       },
     );
 
-    // @add-sidebar-specs @FR2
-    f.Scenario("Always-open mode prevents collapse", ({ Given, Then, And }) => {
-      Given("always-open mode is enabled", (_ctx: TestContext) => {
-        f.context.isPanelAlwaysOpen = true;
-        mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: true });
-        renderSidebar(false);
-      });
+    // @improve-sidebar-ux @FR1
+    f.Scenario(
+      "Clicking empty area in expanded sidebar does nothing",
+      ({ Given, When, Then }) => {
+        Given("sidebar is expanded", (_ctx: TestContext) => {
+          f.context.isOpen = true;
+          renderSidebar(true);
+        });
 
-      Then("sidebar is expanded", (_ctx: TestContext) => {
-        const toggle = screen.getByTestId("sidebar-toggle");
-        expect(toggle.className).toContain("w-52");
-      });
+        When(
+          "user clicks the expanded container",
+          async (_ctx: TestContext) => {
+            const user = userEvent.setup();
+            const container = screen.getByTestId("sidebar-expanded");
+            await user.click(container);
+          },
+        );
 
-      And(
-        "sidebar toggle does not have role {string}",
-        (_ctx: TestContext, _role: string) => {
-          const toggle = screen.getByTestId("sidebar-toggle");
-          expect(toggle).not.toHaveAttribute("role");
-        },
-      );
-
-      And(
-        "sidebar toggle does not have {string} aria-label",
-        (_ctx: TestContext, _label: string) => {
-          const toggle = screen.getByTestId("sidebar-toggle");
-          expect(toggle).not.toHaveAttribute("aria-label");
-        },
-      );
-    });
+        Then("sidebar remains expanded", (_ctx: TestContext) => {
+          expect(mockOnToggle).not.toHaveBeenCalled();
+        });
+      },
+    );
 
     // @add-sidebar-specs @FR2
     f.Scenario(
       "Sidebar toggle is keyboard accessible",
-      ({ Given, Then, When, And }) => {
+      ({ Given, Then, When }) => {
         Given("sidebar is collapsed", (_ctx: TestContext) => {
           f.context.isOpen = false;
-        });
-
-        And("always-open mode is disabled", (_ctx: TestContext) => {
-          mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: false });
           renderSidebar(false);
         });
 

@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { GoalAttachmentsTab } from "@/components/goals/GoalAttachmentsTab";
 import { GoalCoverPicker } from "@/components/goals/GoalCoverPicker";
 import { TAB_ICONS } from "@/components/tasks/taskEditShared";
+import { ENTITY_TYPE } from "@/constants";
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { cn } from "@/shared/lib/cn";
@@ -66,8 +67,7 @@ export function GoalCardEditMode({
   onDeleteCancel,
 }: GoalCardEditModeProps) {
   const { t } = useTranslation();
-  const ENTITY_TYPE_GOAL = "goal" as const;
-  const { attachmentCount } = useAttachmentCount(ENTITY_TYPE_GOAL, goalId);
+  const { attachmentCount } = useAttachmentCount(ENTITY_TYPE.GOAL, goalId);
   const editNameTextareaRef = useAutoResizeTextarea(editName);
   const [activeTab, setActiveTab] = useState<GoalEditTab>(
     GOAL_EDIT_TAB.DETAILS,

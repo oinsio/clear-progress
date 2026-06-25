@@ -1,4 +1,4 @@
-import { PanelLeft, PanelRight } from "lucide-react";
+import { PanelLeft, PanelRight, Pin } from "lucide-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { MenuOrderSection } from "@/components/settings/MenuOrderSection";
@@ -10,7 +10,6 @@ import {
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useHandedness } from "@/hooks/useHandedness";
-import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { cn } from "@/shared/lib/cn";
 import type { FilterBarPosition, Handedness, PanelSide } from "@/types/common";
@@ -24,7 +23,6 @@ const PANEL_SIDE_ICONS: Record<PanelSide, React.FC<{ className?: string }>> = {
 export function WorkspaceSection() {
   const { t } = useTranslation();
   const { panelSide, setPanelSide } = usePanelSide();
-  const { isPanelAlwaysOpen, setPanelAlwaysOpen } = usePanelAlwaysOpen();
   const { isDetailPanelPinned, setDetailPanelPinned } = useDetailPanelPinned();
   const { handedness, setHandedness } = useHandedness();
   const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
@@ -77,61 +75,34 @@ export function WorkspaceSection() {
         </div>
       </section>
 
-      {/* Panel always open section */}
-      <section data-testid="settings-panel-always-open">
+      {/* Detail panel pinned section — implements FR7 of pin-task-detail-panel, FR11 of improve-sidebar-ux */}
+      <section data-testid="settings-detail-panel-pinned" className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          {t("settings.detailPanelPinned")}
+        </h2>
         <button
           type="button"
-          role="switch"
-          aria-checked={isPanelAlwaysOpen}
-          data-testid="settings-panel-always-open-toggle"
-          onClick={() => setPanelAlwaysOpen(!isPanelAlwaysOpen)}
-          className="flex items-center gap-3"
-        >
-          <span
-            className={cn(
-              "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
-              isPanelAlwaysOpen ? "bg-accent" : "bg-gray-200",
-            )}
-          >
-            <span
-              className={cn(
-                "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200",
-                isPanelAlwaysOpen ? "translate-x-5" : "translate-x-0",
-              )}
-            />
-          </span>
-          <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-            {t("settings.panelAlwaysOpen")}
-          </span>
-        </button>
-      </section>
-
-      {/* Detail panel pinned section — implements FR7 of pin-task-detail-panel */}
-      <section data-testid="settings-detail-panel-pinned">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isDetailPanelPinned}
+          aria-label={
+            isDetailPanelPinned
+              ? t("settings.unpinDetailPanel")
+              : t("settings.pinDetailPanel")
+          }
+          aria-pressed={isDetailPanelPinned}
           data-testid="settings-detail-panel-pinned-toggle"
           onClick={() => setDetailPanelPinned(!isDetailPanelPinned)}
-          className="flex items-center gap-3"
+          className={cn(
+            "flex items-center justify-center w-11 h-11 rounded-full transition-colors",
+            isDetailPanelPinned
+              ? "text-accent"
+              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+          )}
         >
-          <span
+          <Pin
             className={cn(
-              "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
-              isDetailPanelPinned ? "bg-accent" : "bg-gray-200",
+              "w-5 h-5",
+              isDetailPanelPinned ? "fill-current" : "rotate-45",
             )}
-          >
-            <span
-              className={cn(
-                "inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200",
-                isDetailPanelPinned ? "translate-x-5" : "translate-x-0",
-              )}
-            />
-          </span>
-          <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-            {t("settings.detailPanelPinned")}
-          </span>
+          />
         </button>
       </section>
 

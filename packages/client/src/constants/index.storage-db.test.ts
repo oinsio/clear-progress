@@ -27,7 +27,6 @@ describe("STORAGE_KEYS", () => {
     ["PANEL_OPEN", "panel_open"],
     ["LANGUAGE", "language"],
     ["PANEL_SPLIT", "panel_split"],
-    ["PANEL_ALWAYS_OPEN", "panel_always_open"],
     ["FILTER_BAR_POSITION", "filter_bar_position"],
     ["INTERFACE_SCALE", "interface_scale"],
     ["MENU_ORDER", "menu_order"],

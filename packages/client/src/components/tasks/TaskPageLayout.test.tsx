@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type * as React from "react";
 import type { Task } from "@/types/entities";
 import { TaskPageLayout } from "./TaskPageLayout";
@@ -16,8 +16,18 @@ vi.mock("@/hooks/usePanelSide", () => ({
   usePanelSide: () => ({ panelSide: "right" as const }),
 }));
 
+const mockTogglePanelOpen = vi.fn();
+const mockCloseTemporary = vi.fn();
+const mockUsePanelOpen = vi.fn(() => ({
+  isPanelOpen: false,
+  isTemporarilyOpen: false,
+  effectiveIsOpen: false,
+  togglePanelOpen: mockTogglePanelOpen,
+  openTemporarily: vi.fn(),
+  closeTemporary: mockCloseTemporary,
+}));
 vi.mock("@/hooks/usePanelOpen", () => ({
-  usePanelOpen: () => ({ isPanelOpen: false, togglePanelOpen: vi.fn() }),
+  usePanelOpen: () => mockUsePanelOpen(),
 }));
 
 const mockUseIsDesktop = vi.fn(() => true);
@@ -64,6 +74,14 @@ const selectedTask = { id: "task-1", name: "Test task" } as unknown as Task;
 describe("TaskPageLayout", () => {
   beforeEach(() => {
     mockUseIsDesktop.mockReturnValue(true);
+    mockUsePanelOpen.mockReturnValue({
+      isPanelOpen: false,
+      isTemporarilyOpen: false,
+      effectiveIsOpen: false,
+      togglePanelOpen: mockTogglePanelOpen,
+      openTemporarily: vi.fn(),
+      closeTemporary: mockCloseTemporary,
+    });
   });
 
   // FR-6: renders children in main content area
@@ -272,5 +290,112 @@ describe("TaskPageLayout", () => {
     );
     const mainColumn = screen.getByTestId("main-column");
     expect(mainColumn.style.flexShrink).toBe("0");
+  });
+
+  // FR3: backdrop renders on mobile when sidebar is open
+  describe("Backdrop (FR3)", () => {
+    it("should render backdrop on mobile when sidebar is open", () => {
+      mockUseIsDesktop.mockReturnValue(false);
+      mockUsePanelOpen.mockReturnValue({
+        isPanelOpen: false,
+        isTemporarilyOpen: true,
+        effectiveIsOpen: true,
+        togglePanelOpen: mockTogglePanelOpen,
+        openTemporarily: vi.fn(),
+        closeTemporary: mockCloseTemporary,
+      });
+      render(
+        <TaskPageLayout {...baseProps}>
+          <div>Content</div>
+        </TaskPageLayout>,
+      );
+      expect(screen.getByTestId("sidebar-backdrop")).toBeInTheDocument();
+    });
+
+    it("should not render backdrop on desktop even when sidebar is open", () => {
+      mockUseIsDesktop.mockReturnValue(true);
+      mockUsePanelOpen.mockReturnValue({
+        isPanelOpen: true,
+        isTemporarilyOpen: false,
+        effectiveIsOpen: true,
+        togglePanelOpen: mockTogglePanelOpen,
+        openTemporarily: vi.fn(),
+        closeTemporary: mockCloseTemporary,
+      });
+      render(
+        <TaskPageLayout {...baseProps}>
+          <div>Content</div>
+        </TaskPageLayout>,
+      );
+      expect(screen.queryByTestId("sidebar-backdrop")).not.toBeInTheDocument();
+    });
+
+    it("should not render backdrop on mobile when sidebar is closed", () => {
+      mockUseIsDesktop.mockReturnValue(false);
+      render(
+        <TaskPageLayout {...baseProps}>
+          <div>Content</div>
+        </TaskPageLayout>,
+      );
+      expect(screen.queryByTestId("sidebar-backdrop")).not.toBeInTheDocument();
+    });
+
+    describe("when visible on mobile", () => {
+      beforeEach(() => {
+        mockUseIsDesktop.mockReturnValue(false);
+        mockUsePanelOpen.mockReturnValue({
+          isPanelOpen: false,
+          isTemporarilyOpen: true,
+          effectiveIsOpen: true,
+          togglePanelOpen: mockTogglePanelOpen,
+          openTemporarily: vi.fn(),
+          closeTemporary: mockCloseTemporary,
+        });
+      });
+
+      it("should call closeTemporary when backdrop is clicked", () => {
+        render(
+          <TaskPageLayout {...baseProps}>
+            <div>Content</div>
+          </TaskPageLayout>,
+        );
+        const backdrop = screen.getByTestId("sidebar-backdrop");
+        fireEvent.click(backdrop);
+        expect(mockCloseTemporary).toHaveBeenCalledTimes(1);
+      });
+
+      it("should have aria-label for accessibility", () => {
+        render(
+          <TaskPageLayout {...baseProps}>
+            <div>Content</div>
+          </TaskPageLayout>,
+        );
+        const backdrop = screen.getByTestId("sidebar-backdrop");
+        expect(backdrop).toHaveAttribute(
+          "aria-label",
+          "Закрыть боковую панель",
+        );
+      });
+
+      it("should have role button on backdrop", () => {
+        render(
+          <TaskPageLayout {...baseProps}>
+            <div>Content</div>
+          </TaskPageLayout>,
+        );
+        const backdrop = screen.getByTestId("sidebar-backdrop");
+        expect(backdrop).toHaveAttribute("role", "button");
+      });
+
+      it("should have correct styling classes on backdrop", () => {
+        render(
+          <TaskPageLayout {...baseProps}>
+            <div>Content</div>
+          </TaskPageLayout>,
+        );
+        const backdrop = screen.getByTestId("sidebar-backdrop");
+        expect(backdrop).toHaveClass("fixed", "inset-0", "z-10");
+      });
+    });
   });
 });

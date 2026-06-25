@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  DEFAULT_PANEL_SIDE,
+  DESKTOP_FILTER_BAR_POSITION,
+  DESKTOP_PANEL_OPEN_DEFAULT,
+  DESKTOP_PANEL_SIDE,
   MAX_COVER_SIZE_BYTES,
+  MOBILE_FILTER_BAR_POSITION,
+  MOBILE_PANEL_OPEN_DEFAULT,
+  MOBILE_PANEL_SIDE,
   PANEL_SIDES,
   PUSH_RESULT_STATUS,
 } from "./index";
@@ -30,9 +35,14 @@ describe("PUSH_RESULT_STATUS", () => {
   });
 });
 
-describe("DEFAULT_PANEL_SIDE", () => {
-  it("should be 'right'", () => {
-    expect(DEFAULT_PANEL_SIDE).toBe("right");
+// implements FR7 of improve-sidebar-ux
+describe("platform-aware panel side constants", () => {
+  it("should default to 'left' on desktop", () => {
+    expect(DESKTOP_PANEL_SIDE).toBe("left");
+  });
+
+  it("should default to 'right' on mobile", () => {
+    expect(MOBILE_PANEL_SIDE).toBe("right");
   });
 });
 
@@ -44,5 +54,27 @@ describe("PANEL_SIDES", () => {
 
   it("should have exactly 2 sides", () => {
     expect(PANEL_SIDES).toHaveLength(2);
+  });
+});
+
+// implements FR7 of improve-sidebar-ux
+describe("platform-aware filter bar position constants", () => {
+  it("should default to 'top' on desktop", () => {
+    expect(DESKTOP_FILTER_BAR_POSITION).toBe("top");
+  });
+
+  it("should default to 'bottom' on mobile", () => {
+    expect(MOBILE_FILTER_BAR_POSITION).toBe("bottom");
+  });
+});
+
+// implements FR7 of improve-sidebar-ux
+describe("platform-aware panel open constants", () => {
+  it("should default to true on desktop", () => {
+    expect(DESKTOP_PANEL_OPEN_DEFAULT).toBe(true);
+  });
+
+  it("should default to false on mobile", () => {
+    expect(MOBILE_PANEL_OPEN_DEFAULT).toBe(false);
   });
 });

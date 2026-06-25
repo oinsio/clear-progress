@@ -102,7 +102,11 @@ export function setupDefaultMocks() {
   });
   mockUsePanelOpen.mockReturnValue({
     isPanelOpen: false,
+    isTemporarilyOpen: false,
+    effectiveIsOpen: false,
     togglePanelOpen: vi.fn(),
+    openTemporarily: vi.fn(),
+    closeTemporary: vi.fn(),
   });
   mockUseSidebarNavigation.mockReturnValue(vi.fn());
   mockUseIsDesktop.mockReturnValue(false);

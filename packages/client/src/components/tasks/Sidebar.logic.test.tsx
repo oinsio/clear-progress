@@ -3,12 +3,10 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FILTER_ITEMS } from "./Sidebar";
 
-const { mockUsePanelAlwaysOpen, mockUseMenuOrder, mockUseConnectionStatus } =
-  vi.hoisted(() => ({
-    mockUsePanelAlwaysOpen: vi.fn(),
-    mockUseMenuOrder: vi.fn(),
-    mockUseConnectionStatus: vi.fn(),
-  }));
+const { mockUseMenuOrder, mockUseConnectionStatus } = vi.hoisted(() => ({
+  mockUseMenuOrder: vi.fn(),
+  mockUseConnectionStatus: vi.fn(),
+}));
 
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-router-dom")>();
@@ -37,18 +35,26 @@ vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: mockUseMenuOrder,
 }));
 
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: mockUsePanelAlwaysOpen,
-}));
-
 vi.mock("./SidebarSyncBlock", () => ({
-  SidebarSyncBlock: (props: Record<string, unknown>) => (
-    <div
-      data-testid="sidebar-sync-block"
-      data-is-expanded={String(props.isExpanded)}
-      data-side={String(props.side)}
-    />
-  ),
+  SidebarSyncBlock: (props: Record<string, unknown>) => {
+    const onToggle = props.onToggle as (() => void) | undefined;
+    return (
+      <div
+        data-testid="sidebar-sync-block"
+        data-is-expanded={String(props.isExpanded)}
+        data-side={String(props.side)}
+        data-has-on-toggle={String(!!onToggle)}
+      >
+        {onToggle && (
+          <button
+            type="button"
+            data-testid="sidebar-toggle-button"
+            onClick={onToggle}
+          />
+        )}
+      </div>
+    );
+  },
 }));
 
 vi.mock("./SidebarFilterNav", () => ({
@@ -90,21 +96,10 @@ describe("Sidebar — conditional logic", () => {
     vi.clearAllMocks();
     mockUseConnectionStatus.mockReturnValue("synced");
     mockUseMenuOrder.mockReturnValue({ menuOrder: [] });
-    mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: false });
   });
 
-  describe("effectiveIsOpen logic", () => {
-    it("should render expanded when isPanelAlwaysOpen is true even if isOpen is false", () => {
-      mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: true });
-      renderSidebar({ isOpen: false });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle.className).toContain("w-52");
-      expect(screen.getByTestId("sidebar-sync-block").dataset.isExpanded).toBe(
-        "true",
-      );
-    });
-
-    it("should render collapsed when isPanelAlwaysOpen is false and isOpen is false", () => {
+  describe("isOpen logic", () => {
+    it("should render collapsed when isOpen is false", () => {
       renderSidebar({ isOpen: false });
       const toggle = screen.getByTestId("sidebar-toggle");
       expect(toggle.className).toContain("w-14");
@@ -113,89 +108,61 @@ describe("Sidebar — conditional logic", () => {
       );
     });
 
-    it("should render expanded when isPanelAlwaysOpen is false and isOpen is true", () => {
+    it("should render expanded when isOpen is true", () => {
       renderSidebar({ isOpen: true });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle.className).toContain("w-52");
+      const container = screen.getByTestId("sidebar-expanded");
+      expect(container.className).toContain("w-52");
       expect(screen.getByTestId("sidebar-sync-block").dataset.isExpanded).toBe(
         "true",
       );
     });
   });
 
-  describe("isPanelAlwaysOpen=true — expanded panel attributes", () => {
-    beforeEach(() => {
-      mockUsePanelAlwaysOpen.mockReturnValue({ isPanelAlwaysOpen: true });
+  describe("expanded panel attributes", () => {
+    it("should NOT have role attribute on the expanded panel", () => {
+      renderSidebar({ isOpen: true });
+      const container = screen.getByTestId("sidebar-expanded");
+      expect(container.getAttribute("role")).toBeNull();
     });
 
-    it("should not call onToggle when clicking the panel", () => {
-      const { onToggle } = renderSidebar({ isOpen: false });
-      fireEvent.click(screen.getByTestId("sidebar-toggle"));
+    it("should NOT have tabIndex on the expanded panel", () => {
+      renderSidebar({ isOpen: true });
+      const container = screen.getByTestId("sidebar-expanded");
+      expect(container.getAttribute("tabindex")).toBeNull();
+    });
+
+    it("should NOT have aria-label on the expanded panel", () => {
+      renderSidebar({ isOpen: true });
+      const container = screen.getByTestId("sidebar-expanded");
+      expect(container.getAttribute("aria-label")).toBeNull();
+    });
+
+    it("should NOT call onToggle when clicking the expanded container", () => {
+      const { onToggle } = renderSidebar({ isOpen: true });
+      fireEvent.click(screen.getByTestId("sidebar-expanded"));
       expect(onToggle).not.toHaveBeenCalled();
     });
 
-    it("should not have aria-label attribute on the panel", () => {
-      renderSidebar({ isOpen: false });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle).not.toHaveAttribute("aria-label");
-    });
-
-    it("should not have role attribute on the panel", () => {
-      renderSidebar({ isOpen: false });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle).not.toHaveAttribute("role");
-    });
-
-    it("should not have tabIndex attribute on the panel", () => {
-      renderSidebar({ isOpen: false });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle).not.toHaveAttribute("tabindex");
-    });
-
-    it("should not call onToggle when pressing Enter on the panel", () => {
-      const { onToggle } = renderSidebar({ isOpen: false });
-      fireEvent.keyDown(screen.getByTestId("sidebar-toggle"), {
-        key: "Enter",
-      });
-      expect(onToggle).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("isPanelAlwaysOpen=false — expanded panel attributes", () => {
-    it("should have role button on the expanded panel", () => {
-      renderSidebar({ isOpen: true });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle).toHaveAttribute("role", "button");
-    });
-
-    it("should have tabIndex 0 on the expanded panel", () => {
-      renderSidebar({ isOpen: true });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle).toHaveAttribute("tabindex", "0");
-    });
-
-    it("should have aria-label with filter.close on the expanded panel", () => {
-      renderSidebar({ isOpen: true });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle).toHaveAttribute("aria-label", "filter.close");
-    });
-
-    it("should call onToggle when clicking the expanded panel", () => {
+    it("should call onToggle when clicking the toggle button in expanded mode", () => {
       const { onToggle } = renderSidebar({ isOpen: true });
-      fireEvent.click(screen.getByTestId("sidebar-toggle"));
+      fireEvent.click(screen.getByTestId("sidebar-toggle-button"));
       expect(onToggle).toHaveBeenCalledTimes(1);
     });
 
-    it("should call onToggle when pressing Enter on the expanded panel", () => {
-      const { onToggle } = renderSidebar({ isOpen: true });
-      fireEvent.keyDown(screen.getByTestId("sidebar-toggle"), {
-        key: "Enter",
-      });
-      expect(onToggle).toHaveBeenCalledTimes(1);
+    it("should pass onToggle to SidebarSyncBlock when expanded", () => {
+      renderSidebar({ isOpen: true });
+      const syncBlock = screen.getByTestId("sidebar-sync-block");
+      expect(syncBlock.dataset.hasOnToggle).toBe("true");
+    });
+
+    it("should NOT pass onToggle to SidebarSyncBlock when collapsed", () => {
+      renderSidebar({ isOpen: false });
+      const syncBlock = screen.getByTestId("sidebar-sync-block");
+      expect(syncBlock.dataset.hasOnToggle).toBe("false");
     });
   });
 
-  describe("isPanelAlwaysOpen=false — collapsed panel keyboard", () => {
+  describe("collapsed panel keyboard", () => {
     it("should call onToggle when pressing Enter on the collapsed panel", () => {
       const { onToggle } = renderSidebar({ isOpen: false });
       fireEvent.keyDown(screen.getByTestId("sidebar-toggle"), {
@@ -213,13 +180,11 @@ describe("Sidebar — conditional logic", () => {
     });
   });
 
-  describe("isPanelAlwaysOpen=false — expanded panel non-Enter key", () => {
-    it("should not call onToggle when pressing a non-Enter key on the expanded panel", () => {
-      const { onToggle } = renderSidebar({ isOpen: true });
-      fireEvent.keyDown(screen.getByTestId("sidebar-toggle"), {
-        key: "Space",
-      });
-      expect(onToggle).not.toHaveBeenCalled();
+  describe("expanded panel non-interactive", () => {
+    it("should not have onClick on the expanded container", () => {
+      renderSidebar({ isOpen: true });
+      const container = screen.getByTestId("sidebar-expanded");
+      expect(container.getAttribute("onclick")).toBeNull();
     });
   });
 
@@ -242,8 +207,8 @@ describe("Sidebar — conditional logic", () => {
   describe("outer wrapper classes", () => {
     it("should have flex class on the expanded outer wrapper", () => {
       renderSidebar({ isOpen: true });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      const outerWrapper = toggle.parentElement;
+      const container = screen.getByTestId("sidebar-expanded");
+      const outerWrapper = container.parentElement;
       expect(outerWrapper?.className).toContain("flex");
       expect(outerWrapper?.className).toContain("flex-shrink-0");
     });

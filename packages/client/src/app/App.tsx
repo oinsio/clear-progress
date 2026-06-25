@@ -5,7 +5,6 @@ import { useHiddenTasksReveal } from "@/hooks/useHiddenTasksReveal";
 import { AuthProvider } from "./providers/AuthProvider";
 import { InterfaceScaleProvider } from "./providers/InterfaceScaleProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
-import { PanelSettingsProvider } from "./providers/PanelSettingsProvider";
 import { ShowHiddenProvider } from "./providers/ShowHiddenProvider";
 import { SyncProvider } from "./providers/SyncProvider";
 import { ThemeProvider } from "./providers/ThemeProvider";
@@ -21,11 +20,9 @@ export default function App() {
           <ShowHiddenProvider>
             <ThemeProvider>
               <InterfaceScaleProvider>
-                <PanelSettingsProvider>
-                  <UpdateNotification />
-                  <OnboardingGate />
-                  <RouterProvider router={router} />
-                </PanelSettingsProvider>
+                <UpdateNotification />
+                <OnboardingGate />
+                <RouterProvider router={router} />
               </InterfaceScaleProvider>
             </ThemeProvider>
           </ShowHiddenProvider>

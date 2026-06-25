@@ -2,6 +2,7 @@ import { Pin, Trash2, X } from "lucide-react";
 import type * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ENTITY_TYPE } from "@/constants";
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { useChecklist } from "@/hooks/useChecklist";
@@ -22,8 +23,6 @@ import {
   type SelectorType,
   TAB_ICONS,
 } from "./taskEditShared";
-
-const ENTITY_TYPE_TASK = "task" as const;
 
 interface TaskDetailPanelProps {
   task: Task;
@@ -87,7 +86,7 @@ export function TaskDetailPanel({
     reorderItems,
   } = useChecklist(task.id);
 
-  const { attachmentCount } = useAttachmentCount(ENTITY_TYPE_TASK, task.id);
+  const { attachmentCount } = useAttachmentCount(ENTITY_TYPE.TASK, task.id);
 
   const DetailsTabIcon = TAB_ICONS.details;
   const ChecklistTabIcon = TAB_ICONS.checklist;
@@ -188,6 +187,7 @@ export function TaskDetailPanel({
             type="button"
             onClick={onClose}
             aria-label={t("taskDetail.close")}
+            data-testid="detail-panel-close"
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <X className="w-[1.125rem] h-[1.125rem]" />

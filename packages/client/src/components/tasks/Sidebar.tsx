@@ -14,7 +14,6 @@ import type * as React from "react";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/constants";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
-import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { cn } from "@/shared/lib/cn";
 import type { MenuMode, PanelSide } from "@/types/common";
 import { SidebarFilterNav } from "./SidebarFilterNav";
@@ -107,7 +106,11 @@ export interface SidebarProps {
   isOpen: boolean;
   side?: PanelSide;
   activeFocusedGoalId?: string;
+  containerRef?: React.Ref<HTMLDivElement>;
+  sidebarTranslateX?: number;
   onToggle: () => void;
+  onCollapsedClick?: () => void;
+  onAutoCollapse?: () => void;
   onModeChange: (mode: SidebarMode) => void;
 }
 
@@ -115,30 +118,33 @@ export interface SidebarProps {
  * Main sidebar component — thin orchestrator composing SidebarSyncBlock and SidebarFilterNav.
  *
  * Implements FR1 of rename-right-panel-to-sidebar.
+ * Implements FR4, FR5 of improve-sidebar-ux.
  */
 export function Sidebar({
   mode,
   isOpen,
   side = "right",
   activeFocusedGoalId,
+  containerRef,
+  sidebarTranslateX = 0,
   onToggle,
+  onCollapsedClick,
+  onAutoCollapse,
   onModeChange,
 }: SidebarProps) {
   const { t } = useTranslation();
   const { menuOrder } = useMenuOrder();
-  const { isPanelAlwaysOpen } = usePanelAlwaysOpen();
 
   const visibleFilterItems = menuOrder
     .filter((config) => config.visible)
     .map((config) => FILTER_ITEMS_MAP[config.mode]);
 
   const isLeft = side === "left";
-  const effectiveIsOpen = isPanelAlwaysOpen ? true : isOpen;
   const panelBorder = isLeft
     ? "border-r border-accent/70"
     : "border-l border-accent/70";
 
-  if (effectiveIsOpen) {
+  if (isOpen) {
     return (
       <div
         className={cn(
@@ -151,31 +157,28 @@ export function Sidebar({
           className={cn("md:hidden w-14 flex-shrink-0 bg-accent", panelBorder)}
         />
         <div
+          ref={containerRef}
           className={cn(
             "w-52 flex flex-col bg-accent overflow-hidden",
-            !isPanelAlwaysOpen && "cursor-pointer",
             "absolute top-0 bottom-0 z-20 md:relative md:z-auto",
             isLeft ? "left-0" : "right-0",
             panelBorder,
           )}
-          onClick={isPanelAlwaysOpen ? undefined : onToggle}
-          data-testid="sidebar-toggle"
-          aria-label={isPanelAlwaysOpen ? undefined : t("filter.close")}
-          role={isPanelAlwaysOpen ? undefined : "button"}
-          tabIndex={isPanelAlwaysOpen ? undefined : 0}
-          onKeyDown={
-            isPanelAlwaysOpen
-              ? undefined
-              : (e) => e.key === "Enter" && onToggle()
+          style={
+            sidebarTranslateX !== 0
+              ? { transform: `translateX(${sidebarTranslateX}px)` }
+              : undefined
           }
+          data-testid="sidebar-expanded"
         >
-          <SidebarSyncBlock isExpanded={true} side={side} />
+          <SidebarSyncBlock isExpanded={true} side={side} onToggle={onToggle} />
           <SidebarFilterNav
             isExpanded={true}
             mode={mode}
             activeFocusedGoalId={activeFocusedGoalId}
             visibleFilterItems={visibleFilterItems}
             onModeChange={onModeChange}
+            onAutoCollapse={onAutoCollapse}
           />
         </div>
       </div>
@@ -194,12 +197,12 @@ export function Sidebar({
           "w-14 flex flex-col items-center bg-accent overflow-hidden cursor-pointer",
           panelBorder,
         )}
-        onClick={onToggle}
+        onClick={onCollapsedClick ?? onToggle}
         data-testid="sidebar-toggle"
         aria-label={t("filter.open")}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && onToggle()}
+        onKeyDown={(e) => e.key === "Enter" && (onCollapsedClick ?? onToggle)()}
       >
         <SidebarSyncBlock isExpanded={false} side={side} />
         <SidebarFilterNav

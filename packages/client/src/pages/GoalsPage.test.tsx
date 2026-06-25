@@ -4,7 +4,7 @@
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildGoalsHook } from "@/test/builders/hookBuilders";
 import { buildGoal } from "@/test/factories/goalFactory";
 import GoalsPage from "./GoalsPage";
@@ -63,7 +63,11 @@ function renderGoalsPage() {
   });
   mockUsePanelOpen.mockReturnValue({
     isPanelOpen: false,
+    isTemporarilyOpen: false,
+    effectiveIsOpen: false,
     togglePanelOpen: vi.fn(),
+    openTemporarily: vi.fn(),
+    closeTemporary: vi.fn(),
   });
 
   render(

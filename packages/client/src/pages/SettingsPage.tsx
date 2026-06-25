@@ -30,7 +30,7 @@ import {
  */
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const { effectiveIsOpen, togglePanelOpen } = usePanelOpen();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,6 +88,10 @@ export default function SettingsPage() {
   const handlePanelToggle = togglePanelOpen;
   const handleModeChange = useSidebarNavigation();
 
+  /** Implements FR13 of improve-sidebar-ux */
+  const initialExpandedSection =
+    (location.state as { expandSection?: string })?.expandSection ?? undefined;
+
   const sections: SettingsAccordionSection[] = [
     {
       id: SETTINGS_SECTION_IDS.LOOK_AND_FEEL,
@@ -128,7 +132,10 @@ export default function SettingsPage() {
               {t("settings.name")}
             </h1>
 
-            <SettingsAccordion sections={sections} />
+            <SettingsAccordion
+              sections={sections}
+              initialExpandedSection={initialExpandedSection}
+            />
 
             {/* Share app section — implements FR1 of share-with-friend */}
             <ShareAppSection />
@@ -145,7 +152,7 @@ export default function SettingsPage() {
       {/* Right panel — same as on main page */}
       <Sidebar
         mode={null}
-        isOpen={isPanelOpen}
+        isOpen={effectiveIsOpen}
         side={panelSide}
         onToggle={handlePanelToggle}
         onModeChange={handleModeChange}

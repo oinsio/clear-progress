@@ -1,10 +1,10 @@
-import { CircleUser, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleUser, RefreshCw } from "lucide-react";
 import type * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useSync } from "@/app/providers/SyncProvider";
-import { ROUTES } from "@/constants";
+import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { cn } from "@/shared/lib/cn";
 import type { PanelSide } from "@/types/common";
@@ -12,6 +12,7 @@ import type { PanelSide } from "@/types/common";
 interface SidebarSyncBlockProps {
   isExpanded: boolean;
   side: PanelSide;
+  onToggle?: () => void;
 }
 
 /**
@@ -20,7 +21,11 @@ interface SidebarSyncBlockProps {
  *
  * Implements FR3 of rename-right-panel-to-sidebar.
  */
-export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
+export function SidebarSyncBlock({
+  isExpanded,
+  side,
+  onToggle,
+}: SidebarSyncBlockProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { pull } = useSync();
@@ -36,16 +41,19 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
   const isConfigured = connectionStatus !== "not_configured";
   const isLeft = side === "left";
 
-  const handleSyncClick = (event: React.MouseEvent): void => {
-    event.stopPropagation();
+  const handleSyncClick = (): void => {
     void pull();
   };
-  const navigateToSettings = (event: React.MouseEvent): void => {
-    event.stopPropagation();
+  const navigateToSettings = (): void => {
     navigate(ROUTES.SETTINGS);
   };
-  const handleSignIn = (event: React.MouseEvent): void => {
-    event.stopPropagation();
+  /** Implements FR13 of improve-sidebar-ux */
+  const navigateToSettingsDeepLink = (): void => {
+    navigate(ROUTES.SETTINGS, {
+      state: { expandSection: SETTINGS_SECTION_IDS.ACCOUNT_SYNC },
+    });
+  };
+  const handleSignIn = (): void => {
     signIn();
   };
 
@@ -82,9 +90,22 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
     syncLabel,
     onSyncClick: handleSyncClick,
     onSignIn: handleSignIn,
-    onSettings: navigateToSettings,
+    onSettings: navigateToSettingsDeepLink,
     t,
   });
+
+  const ChevronIcon = side === "right" ? ChevronLeft : ChevronRight;
+  const toggleButton = onToggle ? (
+    <button
+      type="button"
+      aria-label={t("filter.closeSidebar")}
+      data-testid="sidebar-toggle-button"
+      onClick={onToggle}
+      className="flex-shrink-0 flex items-center justify-center px-2 py-4 text-white hover:bg-black/15 transition-colors"
+    >
+      <ChevronIcon className="w-5 h-5" aria-hidden="true" />
+    </button>
+  ) : null;
 
   return (
     <div className="flex items-center justify-between border-b border-white/20">
@@ -92,9 +113,11 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
         <>
           {accountButton}
           {syncLoginButton}
+          {toggleButton}
         </>
       ) : (
         <>
+          {toggleButton}
           {syncLoginButton}
           {accountButton}
         </>
@@ -105,7 +128,7 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
 
 function renderAccountButton(
   userPicture: string | null,
-  onSettings: (event: React.MouseEvent) => void,
+  onSettings: () => void,
   t: (key: string) => string,
 ): React.JSX.Element {
   return (
@@ -150,9 +173,9 @@ interface SyncActionParams {
   isConfigured: boolean;
   isSyncing: boolean;
   hasSyncError: boolean;
-  onSyncClick: (event: React.MouseEvent) => void;
-  onSignIn: (event: React.MouseEvent) => void;
-  onSettings: (event: React.MouseEvent) => void;
+  onSyncClick: () => void;
+  onSignIn: () => void;
+  onSettings: () => void;
   t: (key: string) => string;
 }
 

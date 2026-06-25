@@ -13,6 +13,7 @@ interface SidebarFilterNavProps {
   activeFocusedGoalId?: string;
   visibleFilterItems: FilterItem[];
   onModeChange: (mode: SidebarMode) => void;
+  onAutoCollapse?: () => void;
 }
 
 /**
@@ -20,6 +21,7 @@ interface SidebarFilterNavProps {
  * Renders expanded (icon + text labels) or collapsed (icon-only) variant.
  *
  * Implements FR5 of rename-right-panel-to-sidebar.
+ * Implements FR6 of improve-sidebar-ux.
  */
 export function SidebarFilterNav({
   isExpanded,
@@ -27,26 +29,27 @@ export function SidebarFilterNav({
   activeFocusedGoalId,
   visibleFilterItems,
   onModeChange,
+  onAutoCollapse,
 }: SidebarFilterNavProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleFilterClick = (
-    event: React.MouseEvent,
+    _event: React.MouseEvent,
     filterItem: FilterItem,
   ): void => {
-    event.stopPropagation();
     if (filterItem.route) {
       navigate(filterItem.route);
     } else {
       const isActive = mode === filterItem.mode;
       onModeChange(isActive ? null : filterItem.mode);
     }
+    onAutoCollapse?.();
   };
 
-  const handleSearchClick = (event: React.MouseEvent): void => {
-    event.stopPropagation();
+  const handleSearchClick = (): void => {
     navigate(ROUTES.SEARCH);
+    onAutoCollapse?.();
   };
 
   if (isExpanded) {

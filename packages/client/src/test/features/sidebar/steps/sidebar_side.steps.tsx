@@ -26,10 +26,6 @@ vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: () => ({ menuOrder: [] }),
 }));
 
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: () => ({ isPanelAlwaysOpen: false }),
-}));
-
 import { Sidebar } from "@/components/tasks/Sidebar";
 
 const feature = await loadFeature("../sidebar_side.feature");
@@ -53,14 +49,20 @@ function renderSidebar(isOpen: boolean, side: PanelSide) {
   );
 }
 
-function expectToggleBorder(borderClass: string) {
-  const toggle = screen.getByTestId("sidebar-toggle");
-  expect(toggle.className).toContain(borderClass);
+function getSidebarPanel(isOpen: boolean) {
+  return isOpen
+    ? screen.getByTestId("sidebar-expanded")
+    : screen.getByTestId("sidebar-toggle");
 }
 
-function expectOrderFirstClass() {
-  const toggle = screen.getByTestId("sidebar-toggle");
-  const outerWrapper = toggle.parentElement as HTMLElement;
+function expectToggleBorder(borderClass: string, isOpen: boolean) {
+  const panel = getSidebarPanel(isOpen);
+  expect(panel.className).toContain(borderClass);
+}
+
+function expectOrderFirstClass(isOpen: boolean) {
+  const panel = getSidebarPanel(isOpen);
+  const outerWrapper = panel.parentElement as HTMLElement;
   expect(outerWrapper.className).toContain("order-first");
 }
 
@@ -96,13 +98,13 @@ describeFeature(
       renderSidebar(f.context.isOpen, side as PanelSide);
     };
     const thenHasOrderFirst = (_ctx: TestContext) => {
-      expectOrderFirstClass();
+      expectOrderFirstClass(f.context.isOpen);
     };
     const thenLeftBorder = (_ctx: TestContext) => {
-      expectToggleBorder("border-l");
+      expectToggleBorder("border-l", f.context.isOpen);
     };
     const thenRightBorder = (_ctx: TestContext) => {
-      expectToggleBorder("border-r");
+      expectToggleBorder("border-r", f.context.isOpen);
     };
 
     // @add-sidebar-specs @FR4

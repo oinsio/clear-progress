@@ -1,6 +1,7 @@
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
+import { ENTITY_TYPE } from "@/constants";
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useFileUrl } from "@/hooks/useFileUrl";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
@@ -13,7 +14,6 @@ import type { Goal } from "@/types/entities";
 import { GoalStatusBadge } from "./GoalStatusBadge";
 
 const FINISHED_GOAL_STATUSES = new Set<GoalStatus>(["completed", "cancelled"]);
-const ENTITY_TYPE_GOAL = "goal" as const;
 
 interface GoalItemProps {
   goal: Goal;
@@ -37,7 +37,7 @@ export function GoalItem({
   const isGoalUnsynced = useIsUnsynced(goal);
   /** Implements FR4 of fix-nonsync-indication-for-attachments */
   const { hasUnsyncedAttachments } = useAttachmentCount(
-    ENTITY_TYPE_GOAL,
+    ENTITY_TYPE.GOAL,
     goal.id,
   );
   const isUnsynced = isGoalUnsynced || hasUnsyncedAttachments;

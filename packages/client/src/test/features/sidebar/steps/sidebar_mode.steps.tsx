@@ -32,10 +32,6 @@ vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: mockUseMenuOrder,
 }));
 
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: () => ({ isPanelAlwaysOpen: false }),
-}));
-
 import { Sidebar } from "@/components/tasks/Sidebar";
 
 const feature = await loadFeature("../sidebar_mode.feature");

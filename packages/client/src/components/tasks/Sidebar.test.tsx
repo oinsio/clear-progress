@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 
 const mockNavigate = vi.fn();
 const { mockSignIn, mockUseConnectionStatus } = vi.hoisted(() => ({
@@ -28,10 +29,6 @@ vi.mock("@/hooks/useConnectionStatus", () => ({
 
 vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: () => ({ menuOrder: [] }),
-}));
-
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: () => ({ isPanelAlwaysOpen: false }),
 }));
 
 import { Sidebar } from "./Sidebar";
@@ -138,6 +135,8 @@ describe("Sidebar — connection status", () => {
     mockUseConnectionStatus.mockReturnValue("not_configured");
     renderPanel();
     await user.click(screen.getAllByTestId("sidebar-login")[0]);
-    expect(mockNavigate).toHaveBeenCalledWith("/settings");
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.SETTINGS, {
+      state: { expandSection: SETTINGS_SECTION_IDS.ACCOUNT_SYNC },
+    });
   });
 });

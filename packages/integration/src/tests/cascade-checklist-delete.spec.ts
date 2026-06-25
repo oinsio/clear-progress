@@ -74,7 +74,7 @@ test("delete task → cascades is_deleted to checklist items on server", async (
 
   // 3. Close detail panel and delete the task
   const detailPanel = page.getByTestId("task-detail-panel");
-  await detailPanel.getByRole("button", { name: "Close" }).click();
+  await page.getByTestId("detail-panel-close").click();
   await detailPanel.waitFor({ state: "detached" });
   await openTaskDetail(page, taskName);
   await deleteTaskFromDetail(page);
