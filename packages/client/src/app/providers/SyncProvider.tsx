@@ -16,6 +16,7 @@ import {
   MAX_PING_ATTEMPTS,
   MAX_SILENT_REFRESH_ATTEMPTS,
   PING_INTERVAL_MS,
+  PROJECT_PAUSED_ERROR_NAME,
   STORAGE_KEYS,
   SYNC_DEBOUNCE_MS,
   SYNC_INTERVAL_MS,
@@ -150,6 +151,12 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         }
         setSyncStatus("unauthorized");
         silentRefresh();
+        return;
+      }
+      // implements FR3 of fix-project-paused
+      if (error instanceof Error && error.name === PROJECT_PAUSED_ERROR_NAME) {
+        console.warn("[SyncProvider] project paused (HTTP 540)");
+        setSyncStatus("project_paused");
         return;
       }
       console.error("[SyncProvider] sync error:", error);

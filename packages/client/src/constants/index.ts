@@ -10,6 +10,17 @@ import type {
   SidebarMode,
 } from "@/types/common";
 
+/** Re-exports from @clear-progress/contract — single source of truth for shared constants */
+export {
+  API_ACTIONS,
+  /** Implements FR3 of add-file-attachments */
+  MAX_ATTACHMENT_SIZE_BYTES,
+  MAX_COVER_SIZE_BYTES,
+  MAX_FILE_BATCH_SIZE,
+  PUSH_RESULT_STATUS,
+  SYNC_META_KEYS,
+} from "@clear-progress/contract";
+
 export const ROUTES = {
   INBOX: "/inbox",
   TASKS: "/tasks",
@@ -120,18 +131,6 @@ export const ACCENT_COLOR_VALUES_DARK: Record<AccentColor, string> = {
   custom: "#14b8a6",
 };
 
-export const API_ACTIONS = {
-  PING: "ping",
-  INIT: "init",
-  PULL: "pull",
-  PUSH: "push",
-  UPLOAD_FILE: "upload_file",
-  UPLOAD_FILES: "upload_files",
-  DELETE_FILE: "delete_file",
-  GET_FILE: "get_file",
-  PURGE: "purge",
-} as const;
-
 export const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 export const SYNC_DEBOUNCE_MS = 15 * 1000;
 export const PING_INTERVAL_MS = 30 * 1000;
@@ -144,11 +143,6 @@ export const AUTH_REQUIRED_EVENT = "auth_required";
 export const DAY_BOUNDARY_CHANGED_EVENT = "day_boundary_changed";
 
 export const DB_NAME = "clear-progress";
-
-export const SYNC_META_KEYS = {
-  LAST_KNOWN_REVISION: "last_known_revision",
-  LAST_KNOWN_PURGE_REVISION: "last_known_purge_revision",
-} as const;
 
 export const STORAGE_KEYS = {
   CONNECTION_CONFIG: "connection_config",
@@ -198,26 +192,15 @@ export const LANGUAGE_SEARCH_THRESHOLD = 10;
 
 // implements FR13 of localstorage-refactor — SETTING_KEYS removed; use STORAGE_KEYS instead
 
-export const MAX_COVER_SIZE_BYTES = 2 * 1024 * 1024;
-export const MAX_FILE_BATCH_SIZE = 10;
 export const FILE_HASH_PREFIX_LENGTH = 12;
 export const DEFAULT_FILE_EXTENSION = "jpg";
 export const FALLBACK_FILE_MIME_TYPE = "image/jpeg";
-
-/** Implements FR3 of add-file-attachments */
-export { MAX_ATTACHMENT_SIZE_BYTES } from "@clear-progress/contract";
-
-export const PUSH_RESULT_STATUS = {
-  CREATED: "created",
-  ACCEPTED: "accepted",
-  CONFLICT: "conflict",
-  REJECTED: "rejected",
-} as const;
 
 export const LG_BREAKPOINT_PX = 1024;
 
 export const TOKEN_EXPIRY_BUFFER_S = 60;
 export const API_AUTH_ERROR_NAME = "ApiAuthError";
+export const PROJECT_PAUSED_ERROR_NAME = "ProjectPausedError";
 
 export const SWIPE_COMPLETE_THRESHOLD_PERCENT = 0.4;
 export const SWIPE_SNAP_BACK_DURATION_MS = 300;

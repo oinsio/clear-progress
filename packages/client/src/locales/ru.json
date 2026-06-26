@@ -540,7 +540,14 @@
     "noConnection": "Нет связи",
     "serverError": "Ошибка сервера",
     "unauthorized": "Нет доступа",
+    "projectPaused": "Проект приостановлен",
     "ariaLabel": "Обновить"
+  },
+  "projectPausedDialog": {
+    "title": "Проект Supabase приостановлен",
+    "message": "Ваш проект Supabase был приостановлен из-за отсутствия активности. Откройте панель управления Supabase и восстановите проект. Синхронизация возобновится автоматически.",
+    "openDashboard": "Открыть панель управления",
+    "close": "Закрыть"
   },
   "auth": {
     "signInButton": "Войти через Google",

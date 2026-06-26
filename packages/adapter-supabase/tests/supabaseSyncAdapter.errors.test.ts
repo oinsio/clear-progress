@@ -1,6 +1,11 @@
 // implements FR8 of add-supabase-ui
 import { describe, expect, it } from "vitest";
-import { ApiAuthError, ApiValidationError, SupabaseSyncAdapter } from "../src";
+import {
+  ApiAuthError,
+  ApiValidationError,
+  ProjectPausedError,
+  SupabaseSyncAdapter,
+} from "../src";
 import { createMockSupabaseClient } from "./supabaseSyncAdapter-test-utils";
 
 describe("SupabaseSyncAdapter with SupabaseClient", () => {
@@ -165,6 +170,49 @@ describe("error message and name verification", () => {
       name: "ApiValidationError",
       message: 'Invalid API response for "ping"',
     });
+  });
+});
+
+// implements FR1 of fix-project-paused
+describe("project paused error handling (FR1 fix-project-paused)", () => {
+  it("should throw ProjectPausedError when error context has status 540", async () => {
+    const client = createMockSupabaseClient({
+      invokeResult: {
+        data: null,
+        error: { message: "Project Paused", context: { status: 540 } },
+      },
+    });
+    const adapter = new SupabaseSyncAdapter(client);
+
+    await expect(adapter.init()).rejects.toThrow(ProjectPausedError);
+  });
+
+  it("should not throw ProjectPausedError for other status codes", async () => {
+    const client = createMockSupabaseClient({
+      invokeResult: {
+        data: null,
+        error: {
+          message: "Internal Server Error",
+          context: { status: 500 },
+        },
+      },
+    });
+    const adapter = new SupabaseSyncAdapter(client);
+
+    await expect(adapter.init()).rejects.toThrow("Internal Server Error");
+    await expect(adapter.init()).rejects.not.toThrow(ProjectPausedError);
+  });
+
+  it("should prioritize auth error over project paused", async () => {
+    const client = createMockSupabaseClient({
+      invokeResult: {
+        data: null,
+        error: { message: "Unauthorized", context: { status: 401 } },
+      },
+    });
+    const adapter = new SupabaseSyncAdapter(client);
+
+    await expect(adapter.init()).rejects.toThrow(ApiAuthError);
   });
 });
 

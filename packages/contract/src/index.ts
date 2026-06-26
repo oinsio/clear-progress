@@ -37,7 +37,7 @@ export type {
   WireSetting,
   WireTask,
 } from "./domain";
-export { ApiAuthError, ApiValidationError } from "./errors";
+export { ApiAuthError, ApiValidationError, ProjectPausedError } from "./errors";
 // Ports
 export type { SyncAdapter } from "./ports";
 // Protocol types

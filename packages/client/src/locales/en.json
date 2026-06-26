@@ -543,7 +543,14 @@
     "noConnection": "No connection",
     "serverError": "Server error",
     "unauthorized": "Not authorized",
+    "projectPaused": "Project paused",
     "ariaLabel": "Sync"
+  },
+  "projectPausedDialog": {
+    "title": "Supabase Project Paused",
+    "message": "Your Supabase project has been paused due to inactivity. Open the Supabase Dashboard and restore the project. Sync will resume automatically.",
+    "openDashboard": "Open Dashboard",
+    "close": "Close"
   },
   "auth": {
     "signInButton": "Sign in with Google",

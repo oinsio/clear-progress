@@ -14,3 +14,11 @@ export class ApiValidationError extends Error {
     this.cause = cause;
   }
 }
+
+// implements FR1 of fix-project-paused
+export class ProjectPausedError extends Error {
+  constructor() {
+    super("Supabase project is paused (HTTP 540)");
+    this.name = "ProjectPausedError";
+  }
+}

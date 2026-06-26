@@ -1,5 +1,9 @@
 // implements D6 of add-supabase-adapter
-export { ApiAuthError, ApiValidationError } from "@clear-progress/contract";
+export {
+  ApiAuthError,
+  ApiValidationError,
+  ProjectPausedError,
+} from "@clear-progress/contract";
 export {
   createSupabaseAdapter,
   SupabaseSyncAdapter,
