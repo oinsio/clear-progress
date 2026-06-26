@@ -2,7 +2,7 @@
 
 ### Requirement: Accordion allows all sections collapsed
 
-The settings accordion SHALL allow all sections to be collapsed simultaneously. Clicking the currently expanded section SHALL collapse it, resulting in no sections expanded. The accordion state type SHALL be `string | null` where `null` means all collapsed. Implements FR12 of improve-sidebar-ux.
+The settings accordion SHALL allow all sections to be collapsed simultaneously. Clicking the currently expanded section SHALL collapse it, resulting in no sections expanded. The accordion state type SHALL be `string | null` where `null` means all collapsed. Retained from previous iteration of improve-sidebar-ux.
 
 #### Scenario: Clicking expanded section collapses it
 - **WHEN** the "Workspace" section is expanded
@@ -23,7 +23,7 @@ The settings accordion SHALL allow all sections to be collapsed simultaneously. 
 
 ### Requirement: Settings page opens with all sections collapsed
 
-When the settings page is opened without a deep-link, all accordion sections SHALL be collapsed by default. The persisted accordion state SHALL default to `null` (all collapsed). Implements FR12 of improve-sidebar-ux.
+When the settings page is opened without a deep-link, all accordion sections SHALL be collapsed by default. The persisted accordion state SHALL default to `null` (all collapsed). Retained from previous iteration of improve-sidebar-ux.
 
 #### Scenario: All sections collapsed on initial open
 - **WHEN** user navigates to settings page
@@ -36,7 +36,7 @@ When the settings page is opened without a deep-link, all accordion sections SHA
 
 ### Requirement: Deep-link opens specific section
 
-The settings accordion SHALL accept an `initialExpandedSection` prop. When provided, the specified section SHALL be expanded on mount, overriding the default all-collapsed state. The deep-link is a one-time effect — subsequent user interactions control the accordion normally. Implements FR13 of improve-sidebar-ux.
+The settings accordion SHALL accept an `initialExpandedSection` prop. When provided, the specified section SHALL be expanded on mount, overriding the default all-collapsed state. The deep-link is a one-time effect — subsequent user interactions control the accordion normally. Retained from previous iteration of improve-sidebar-ux.
 
 #### Scenario: Deep-link expands Account & Sync section
 - **WHEN** user navigates to settings with `expandSection` state set to "account-sync"

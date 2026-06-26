@@ -1,37 +1,42 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
-### Requirement: Backdrop renders on mobile when sidebar is expanded
+### Requirement: Backdrop renders on narrow screen without hover when drawer is open
 
-On mobile (below `LG_BREAKPOINT_PX`), when the sidebar is expanded, a backdrop overlay SHALL render behind the sidebar and in front of the main content. The backdrop SHALL have a semi-transparent dark background. Implements FR3 of improve-sidebar-ux.
+On narrow screen without hover capability (`isNarrow && !hasHover`), when the drawer is open, a backdrop overlay SHALL render behind the sidebar and in front of the main content. The backdrop SHALL have a semi-transparent dark background. On wide screen or with hover capability — no backdrop is rendered. Implements FR12, NFR-R1 of improve-sidebar-ux.
 
-#### Scenario: Backdrop visible on mobile with expanded sidebar
-- **WHEN** viewport is below `LG_BREAKPOINT_PX`
-- **AND** sidebar is expanded
+#### Scenario: Backdrop visible when drawer is open on narrow screen without hover
+- **WHEN** screen is narrow and hover is not available
+- **AND** drawer is open
 - **THEN** a backdrop overlay is rendered
 
-#### Scenario: Backdrop not visible on desktop
-- **WHEN** viewport is above `LG_BREAKPOINT_PX`
+#### Scenario: Backdrop not visible on wide screen
+- **WHEN** screen is wide
 - **AND** sidebar is expanded
 - **THEN** no backdrop overlay is rendered
 
-#### Scenario: Backdrop not visible when sidebar is collapsed
-- **WHEN** viewport is below `LG_BREAKPOINT_PX`
-- **AND** sidebar is collapsed
+#### Scenario: Backdrop not visible on narrow screen with hover
+- **WHEN** screen is narrow and hover IS available
+- **AND** sidebar is hover-expanded
 - **THEN** no backdrop overlay is rendered
 
-### Requirement: Tapping backdrop closes sidebar
+#### Scenario: Backdrop not visible when drawer is closed
+- **WHEN** screen is narrow and hover is not available
+- **AND** drawer is closed (sidebar collapsed)
+- **THEN** no backdrop overlay is rendered
 
-Tapping the backdrop overlay SHALL close the sidebar. Implements FR3 of improve-sidebar-ux.
+### Requirement: Tapping backdrop closes drawer
 
-#### Scenario: Tap on backdrop closes sidebar
+Tapping the backdrop overlay SHALL close the drawer. Implements FR12 of improve-sidebar-ux.
+
+#### Scenario: Tap on backdrop closes drawer
 - **WHEN** backdrop is visible
 - **AND** user taps the backdrop
-- **THEN** sidebar closes
+- **THEN** drawer closes
 - **AND** backdrop is removed
 
 ### Requirement: Backdrop is accessible
 
-The backdrop SHALL have an `aria-label` for screen readers. Implements NFR-A2 of improve-sidebar-ux.
+The backdrop SHALL have an `aria-label` for screen readers. Implements NFR-A3 of improve-sidebar-ux.
 
 #### Scenario: Backdrop has aria-label
 - **WHEN** backdrop is rendered

@@ -1,50 +1,57 @@
 ## MODIFIED Requirements
 
-### Requirement: Sidebar toggles between expanded and collapsed states
+### Requirement: Sidebar renders in three effective states
 
-The sidebar SHALL support two visual states: expanded (showing icons + labels, `w-52`) and collapsed (showing icons only, `w-14`). In expanded state, a toggle button in the header SHALL close the sidebar. Clicking the collapsed strip SHALL open the sidebar. The container of the expanded sidebar SHALL NOT be clickable for toggling. The state SHALL persist in localStorage.
+The sidebar SHALL support three effective visual states: **expanded** (icons + labels, `w-52`, pushes content), **collapsed** (icons only, `w-14`, pushes content), and **hover-ready** (icons only, `w-14`, expands as overlay on hover — see sidebar-hover-expand spec). The effective state is determined by the state resolution matrix (see sidebar-state-matrix spec). Implements FR1, FR8 of improve-sidebar-ux.
 
-#### Scenario: Sidebar opens from collapsed state
-- **WHEN** sidebar is collapsed
-- **AND** user clicks the collapsed strip
-- **THEN** sidebar expands to show icons and labels
+#### Scenario: Sidebar renders expanded state
+- **WHEN** effective state is `expanded`
+- **THEN** sidebar shows icons and labels
+- **AND** sidebar width is `w-52`
+- **AND** sidebar pushes main content
 
-#### Scenario: Sidebar closes via toggle button
-- **WHEN** sidebar is expanded
-- **AND** user clicks the toggle button in the header
-- **THEN** sidebar collapses to show icons only
+#### Scenario: Sidebar renders collapsed state
+- **WHEN** effective state is `collapsed`
+- **THEN** sidebar shows icons only
+- **AND** sidebar width is `w-14`
+- **AND** sidebar pushes main content
 
-#### Scenario: Clicking empty area in expanded sidebar does nothing
-- **WHEN** sidebar is expanded
-- **AND** user clicks on empty space inside the sidebar (not on a button or nav item)
-- **THEN** sidebar remains expanded
+#### Scenario: Sidebar renders hover-ready state (not hovering)
+- **WHEN** effective state is `hover-ready`
+- **AND** mouse is NOT hovering over sidebar
+- **THEN** sidebar shows icons only (same as collapsed)
+- **AND** sidebar width is `w-14`
 
-#### Scenario: Toggle state persists across page reloads
-- **WHEN** user opens the sidebar via toggle button (setting `isPanelOpen=true`)
-- **AND** page is reloaded
-- **THEN** sidebar remains open
+### Requirement: Collapsed sidebar icon click navigates directly
 
-### Requirement: Toggle button renders in expanded sidebar header
+In collapsed and hover-ready (not hovering) states, clicking a navigation icon SHALL navigate to the corresponding route immediately without expanding the sidebar. Implements FR7, FR10 of improve-sidebar-ux.
 
-The expanded sidebar header SHALL render a toggle button as its first element. The button SHALL display `ChevronLeft` icon when sidebar is on the right, `ChevronRight` when sidebar is on the left (pointing toward the closing edge). Implements FR1 of improve-sidebar-ux.
+#### Scenario: Clicking icon in collapsed sidebar navigates
+- **WHEN** effective state is `collapsed`
+- **AND** user clicks the "Goals" navigation icon
+- **THEN** app navigates to the goals route
+- **AND** sidebar remains collapsed
 
-#### Scenario: Toggle button shows ChevronLeft for right-side sidebar
-- **WHEN** sidebar is expanded
-- **AND** sidebar side is "right"
-- **THEN** toggle button displays ChevronLeft icon
+#### Scenario: Clicking icon in hover-ready sidebar navigates
+- **WHEN** effective state is `hover-ready`
+- **AND** sidebar is not hover-expanded
+- **AND** user clicks a navigation icon
+- **THEN** app navigates to the corresponding route
+- **AND** sidebar remains in hover-ready state
 
-#### Scenario: Toggle button shows ChevronRight for left-side sidebar
-- **WHEN** sidebar is expanded
-- **AND** sidebar side is "left"
-- **THEN** toggle button displays ChevronRight icon
+### Requirement: Expanded sidebar navigation click does not collapse
 
-#### Scenario: Toggle button not rendered in collapsed state
-- **WHEN** sidebar is collapsed
-- **THEN** no toggle button is rendered
+In expanded state (not drawer), clicking a navigation item SHALL navigate without collapsing the sidebar. Implements FR1 of improve-sidebar-ux.
+
+#### Scenario: Clicking nav item in expanded sidebar keeps sidebar open
+- **WHEN** effective state is `expanded`
+- **AND** user clicks the "Goals" navigation item
+- **THEN** app navigates to the goals route
+- **AND** sidebar remains expanded
 
 ### Requirement: Sidebar uses accessible markup
 
-The sidebar filter list SHALL be wrapped in a `<nav>` element with an `aria-label`. Each filter button SHALL have an `aria-label` and `aria-pressed` attribute. The toggle button SHALL have `aria-label` (localized "Close sidebar" / "Open sidebar"), `role="button"`, and be keyboard accessible (Enter/Space). The expanded sidebar container SHALL NOT have `role="button"`, `tabIndex`, or toggle-related `aria-label`. Implements NFR-A1 of improve-sidebar-ux.
+The sidebar filter list SHALL be wrapped in a `<nav>` element with an `aria-label`. Each filter button SHALL have an `aria-label` and `aria-pressed` attribute. The sidebar container SHALL NOT have `role="button"`, `tabIndex`, or toggle-related `aria-label` in any state. Implements NFR-A1 of improve-sidebar-ux.
 
 #### Scenario: Nav element has aria-label
 - **WHEN** sidebar is rendered
@@ -55,25 +62,25 @@ The sidebar filter list SHALL be wrapped in a `<nav>` element with an `aria-labe
 - **THEN** the active filter button has `aria-pressed="true"`
 - **AND** inactive filter buttons have `aria-pressed="false"`
 
-#### Scenario: Toggle button is keyboard accessible
-- **WHEN** sidebar is expanded
-- **THEN** the toggle button has `aria-label` with localized "Close sidebar" text
-- **AND** pressing Enter on the toggle button collapses the sidebar
-
-#### Scenario: Expanded container has no button role
-- **WHEN** sidebar is expanded
+#### Scenario: Sidebar container has no button role
+- **WHEN** sidebar is rendered in any state
 - **THEN** the sidebar container does NOT have `role="button"`
 - **AND** the sidebar container does NOT have `tabIndex`
 
-#### Scenario: Collapsed strip is keyboard accessible
-- **WHEN** sidebar is collapsed
-- **THEN** the collapsed strip has `role="button"` and `tabIndex={0}`
-- **AND** pressing Enter on the strip expands the sidebar
-
 ## REMOVED Requirements
+
+### Requirement: Toggle button in expanded sidebar header
+
+**Reason**: Toggle buttons (`ChevronLeft`/`ChevronRight`) are replaced by the sidebar control popover with three modes (see sidebar-control spec). Implements FR4 of improve-sidebar-ux.
+
+### Requirement: Collapsed strip click opens sidebar
+
+**Reason**: Clicking the collapsed strip to open sidebar is removed. Navigation icons handle their own clicks directly (FR7). Sidebar mode is changed via the sidebar control popover (FR2). Implements FR4 of improve-sidebar-ux.
+
+### Requirement: Collapsed strip is keyboard accessible
+
+**Reason**: Collapsed strip no longer acts as a toggle button. Navigation icons are individually keyboard accessible. Implements FR4 of improve-sidebar-ux.
 
 ### Requirement: Always-open mode overrides toggle
 
-**Reason**: Redundant after implementing modal/standard drawer distinction. `isPanelOpen=true` in localStorage provides the same behavior as always-open mode — sidebar stays expanded and does not auto-collapse on navigation. Implements FR10 of improve-sidebar-ux.
-
-**Migration**: Users with `isPanelAlwaysOpen=true` will have `isPanelOpen` set to `true` automatically. The always-open toggle is removed from settings UI.
+**Reason**: Redundant — replaced by three-mode system (`expanded`/`collapsed`/`expand-on-hover`). Already removed in previous iteration.

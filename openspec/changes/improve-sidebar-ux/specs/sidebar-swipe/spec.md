@@ -1,41 +1,48 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
-### Requirement: Edge swipe opens sidebar on mobile
+### Requirement: Edge swipe opens drawer on narrow screen without hover
 
-On mobile (below `LG_BREAKPOINT_PX`), swiping from the sidebar edge zone (~24px from screen edge) toward center SHALL open the sidebar. Swipe direction depends on `panelSide`: when sidebar is on the right, swipe left to open; when on the left, swipe right to open. The sidebar SHALL follow the finger during the swipe gesture. Implements FR8 of improve-sidebar-ux.
+On narrow screen without hover capability (`isNarrow && !hasHover`), swiping from the sidebar edge zone (~24px from screen edge) toward center SHALL open the drawer. Swipe direction depends on `panelSide`: when sidebar is on the right, swipe left to open; when on the left, swipe right to open. The sidebar SHALL follow the finger during the swipe gesture. Swipe gestures SHALL NOT be active when hover capability is available. Implements FR13, NFR-R2 of improve-sidebar-ux.
 
 #### Scenario: Swipe from right edge opens right-side sidebar
-- **WHEN** sidebar is collapsed
+- **WHEN** screen is narrow and hover is not available
+- **AND** sidebar is collapsed
 - **AND** `panelSide` is `"right"`
 - **AND** user swipes left from within 24px of the right screen edge
-- **THEN** sidebar opens
+- **THEN** drawer opens
 
 #### Scenario: Swipe from left edge opens left-side sidebar
-- **WHEN** sidebar is collapsed
+- **WHEN** screen is narrow and hover is not available
+- **AND** sidebar is collapsed
 - **AND** `panelSide` is `"left"`
 - **AND** user swipes right from within 24px of the left screen edge
-- **THEN** sidebar opens
+- **THEN** drawer opens
 
 #### Scenario: Swipe outside edge zone does not open sidebar
-- **WHEN** sidebar is collapsed
+- **WHEN** screen is narrow and hover is not available
+- **AND** sidebar is collapsed
 - **AND** user swipes from the center of the screen
 - **THEN** sidebar remains collapsed
 
-#### Scenario: Swipe gestures are disabled on desktop
-- **WHEN** viewport is above `LG_BREAKPOINT_PX`
+#### Scenario: Swipe gestures disabled when hover is available
+- **WHEN** screen is narrow and hover IS available
 - **THEN** no swipe event listeners are attached
 
-### Requirement: Swipe-back closes sidebar on mobile
+#### Scenario: Swipe gestures disabled on wide screen
+- **WHEN** screen is wide
+- **THEN** no swipe event listeners are attached
 
-On mobile, swiping an open sidebar toward its edge SHALL close it. The sidebar SHALL follow the finger during the swipe. If released before reaching 30% of sidebar width, the sidebar SHALL snap back to open position. Implements FR9 of improve-sidebar-ux.
+### Requirement: Swipe-back closes drawer on narrow screen without hover
 
-#### Scenario: Full swipe-back closes sidebar
-- **WHEN** sidebar is expanded on mobile
+On narrow screen without hover, swiping an open drawer toward its edge SHALL close it. The sidebar SHALL follow the finger during the swipe. If released before reaching 30% of sidebar width, the sidebar SHALL snap back to open position. Implements FR13 of improve-sidebar-ux.
+
+#### Scenario: Full swipe-back closes drawer
+- **WHEN** drawer is open on narrow screen without hover
 - **AND** user swipes the sidebar toward the screen edge past 30% threshold
-- **THEN** sidebar closes
+- **THEN** drawer closes
 
 #### Scenario: Incomplete swipe-back snaps open
-- **WHEN** sidebar is expanded on mobile
+- **WHEN** drawer is open on narrow screen without hover
 - **AND** user swipes the sidebar toward the screen edge but releases before 30% threshold
 - **THEN** sidebar snaps back to fully open position
 

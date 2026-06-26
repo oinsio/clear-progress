@@ -2,7 +2,7 @@
 
 ### Requirement: Panel side preference
 
-The system SHALL store the panel side ("left", "right") in localStorage via `LocalPreferencesService`. Default value SHALL be platform-aware: `"left"` on desktop (above `LG_BREAKPOINT_PX`), `"right"` on mobile. Self-healing SHALL remove corrupted values and return the platform-appropriate default. Implements FR7 of improve-sidebar-ux.
+The system SHALL store the panel side ("left", "right") in localStorage via `LocalPreferencesService`. Default value SHALL be platform-aware: `"left"` on desktop (above `LG_BREAKPOINT_PX`), `"right"` on mobile. Self-healing SHALL remove corrupted values and return the platform-appropriate default. Retained from previous iteration of improve-sidebar-ux.
 
 #### Scenario: Default panel side is left on desktop
 - **WHEN** no panel side has been saved
@@ -28,37 +28,54 @@ The system SHALL store the panel side ("left", "right") in localStorage via `Loc
 - **THEN** the panel side falls back to the platform-appropriate default
 - **AND** the corrupted key is removed from localStorage
 
-### Requirement: Panel open state
+### Requirement: Sidebar mode preference
 
-The system SHALL store whether the panel is open (boolean) in localStorage via `LocalPreferencesService`. Default value SHALL be platform-aware: `true` on desktop (above `LG_BREAKPOINT_PX`), `false` on mobile. Self-healing SHALL remove corrupted values and return the platform-appropriate default. Implements FR7 of improve-sidebar-ux.
+The system SHALL store the sidebar mode (`"expanded"`, `"collapsed"`, `"expand-on-hover"`) in localStorage via `LocalPreferencesService` under `STORAGE_KEYS.SIDEBAR_MODE`. Default value SHALL be `"expanded"`. Self-healing SHALL remove corrupted values and return `"expanded"`. Implements FR1 of improve-sidebar-ux.
 
-#### Scenario: Default panel open is true on desktop
-- **WHEN** no panel open preference has been saved
-- **AND** viewport is above `LG_BREAKPOINT_PX`
-- **THEN** panel open is `true`
+#### Scenario: Default sidebar mode is expanded
+- **WHEN** no sidebar mode has been saved
+- **THEN** the sidebar mode is `"expanded"`
 
-#### Scenario: Default panel open is false on mobile
-- **WHEN** no panel open preference has been saved
-- **AND** viewport is below `LG_BREAKPOINT_PX`
-- **THEN** panel open is `false`
+#### Scenario: Saved sidebar mode overrides default
+- **WHEN** sidebar mode `"collapsed"` has been saved in localStorage
+- **THEN** the sidebar mode is `"collapsed"`
 
-#### Scenario: Saved panel open overrides platform default
-- **WHEN** panel open `false` has been saved in localStorage
-- **AND** viewport is above `LG_BREAKPOINT_PX`
-- **THEN** panel open is `false` (not the desktop default `true`)
+#### Scenario: Sidebar mode changes persist
+- **WHEN** sidebar mode is set to `"expand-on-hover"`
+- **THEN** localStorage contains `"expand-on-hover"` under the sidebar mode key
 
-#### Scenario: Panel open state persists
-- **WHEN** panel open is set to `true`
-- **THEN** localStorage contains "true" under the panel open key
-
-#### Scenario: Corrupted panel open self-heals
-- **WHEN** localStorage contains "maybe" under the panel open key
-- **THEN** panel open falls back to the platform-appropriate default
+#### Scenario: Corrupted sidebar mode self-heals
+- **WHEN** localStorage contains `"auto"` under the sidebar mode key
+- **THEN** the sidebar mode falls back to `"expanded"`
 - **AND** the corrupted key is removed from localStorage
+
+### Requirement: Migration from isPanelOpen to sidebarMode
+
+On app startup, if `SIDEBAR_MODE` key does not exist in localStorage, the system SHALL migrate from the legacy `PANEL_OPEN` key: `"true"` maps to `"expanded"`, `"false"` maps to `"collapsed"`. After migration, the `PANEL_OPEN` key SHALL be removed. If neither key exists, the default `"expanded"` is used. Implements FR1 of improve-sidebar-ux.
+
+#### Scenario: Migration from isPanelOpen true
+- **WHEN** `SIDEBAR_MODE` key does not exist in localStorage
+- **AND** `PANEL_OPEN` key contains `"true"`
+- **THEN** sidebar mode is set to `"expanded"`
+- **AND** `PANEL_OPEN` key is removed from localStorage
+
+#### Scenario: Migration from isPanelOpen false
+- **WHEN** `SIDEBAR_MODE` key does not exist in localStorage
+- **AND** `PANEL_OPEN` key contains `"false"`
+- **THEN** sidebar mode is set to `"collapsed"`
+- **AND** `PANEL_OPEN` key is removed from localStorage
+
+#### Scenario: No migration when sidebarMode already exists
+- **WHEN** `SIDEBAR_MODE` key exists in localStorage
+- **THEN** `PANEL_OPEN` key is NOT read or removed
+
+#### Scenario: Fresh install with no legacy keys
+- **WHEN** neither `SIDEBAR_MODE` nor `PANEL_OPEN` keys exist
+- **THEN** sidebar mode defaults to `"expanded"`
 
 ### Requirement: Filter bar position preference
 
-The system SHALL store the filter bar position ("top", "bottom") in localStorage via `LocalPreferencesService`. Default value SHALL be platform-aware: `"top"` on desktop (above `LG_BREAKPOINT_PX`), `"bottom"` on mobile. Self-healing SHALL remove corrupted values and return the platform-appropriate default. Implements FR7 of improve-sidebar-ux.
+The system SHALL store the filter bar position ("top", "bottom") in localStorage via `LocalPreferencesService`. Default value SHALL be platform-aware: `"top"` on desktop (above `LG_BREAKPOINT_PX`), `"bottom"` on mobile. Self-healing SHALL remove corrupted values and return the platform-appropriate default. Retained from previous iteration of improve-sidebar-ux.
 
 #### Scenario: Default filter bar position is top on desktop
 - **WHEN** no filter bar position has been saved
@@ -86,8 +103,10 @@ The system SHALL store the filter bar position ("top", "bottom") in localStorage
 
 ## REMOVED Requirements
 
-### Requirement: Panel open state (original with always-open)
+### Requirement: Panel open state (boolean)
 
-**Reason**: The panel always-open preference is removed. `isPanelOpen=true` provides the same persistent-open behavior. Implements FR10 of improve-sidebar-ux.
+**Reason**: Replaced by sidebar mode enum (`"expanded"` / `"collapsed"` / `"expand-on-hover"`). Boolean `isPanelOpen` could not represent the third mode. Migration handles existing users. Implements FR1 of improve-sidebar-ux.
 
-**Migration**: On app startup, if `PANEL_ALWAYS_OPEN` key exists in localStorage with value `"true"`, set `PANEL_OPEN` to `"true"` and remove `PANEL_ALWAYS_OPEN` key.
+### Requirement: Panel always-open preference
+
+**Reason**: Already removed in previous iteration. Migration to `isPanelOpen=true` was handled. Now further migrated to `sidebarMode="expanded"`.
