@@ -7,67 +7,26 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { buildCategoriesHook } from "@/test/builders/hookBuilders";
 import { buildCategory } from "@/test/factories/categoryFactory";
+import "./entityPage.testSetup";
 import CategoriesPage from "./CategoriesPage";
 
-vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({
-    accessToken: null,
-    userEmail: null,
-    userPicture: null,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    silentRefresh: vi.fn(),
-  }),
-}));
 vi.mock("@/hooks/useCategories");
-vi.mock("@/hooks/usePanelSide");
-vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/services/TaskService", () => ({
   TaskService: vi.fn().mockImplementation(() => ({
     getCategoryTaskCounts: vi.fn().mockResolvedValue({}),
   })),
 }));
-vi.mock("@/db/repositories/TaskRepository", () => ({
-  TaskRepository: vi.fn().mockImplementation(() => ({})),
-}));
-vi.mock("@/db/repositories/ChecklistRepository", () => ({
-  ChecklistRepository: vi.fn().mockImplementation(() => ({})),
-}));
-
-vi.mock("@/hooks/useFilterBarPosition", () => ({
-  useFilterBarPosition: () => ({
-    filterBarPosition: "bottom",
-    setFilterBarPosition: vi.fn(),
-  }),
-}));
-
-vi.mock("@/hooks/useHandedness", () => ({
-  useHandedness: () => ({
-    handedness: "right",
-    setHandedness: vi.fn(),
-  }),
-}));
 
 import { useCategories } from "@/hooks/useCategories";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 
 const mockUseCategories = vi.mocked(useCategories);
 const mockUsePanelSide = vi.mocked(usePanelSide);
-const mockUsePanelOpen = vi.mocked(usePanelOpen);
 
 function renderCategoriesPage() {
   mockUsePanelSide.mockReturnValue({
     panelSide: "right",
     setPanelSide: vi.fn(),
-  });
-  mockUsePanelOpen.mockReturnValue({
-    isPanelOpen: false,
-    isTemporarilyOpen: false,
-    effectiveIsOpen: false,
-    togglePanelOpen: vi.fn(),
-    openTemporarily: vi.fn(),
-    closeTemporary: vi.fn(),
   });
 
   render(
@@ -144,7 +103,7 @@ describe("CategoriesPage", () => {
     expect(screen.getByTestId("command-bar-entity-icon")).toBeInTheDocument();
   });
 
-  // FR-20: CommandBar has create button
+  // FR-20: CommandBar has a create button
   it("should render CommandBar create button", () => {
     mockUseCategories.mockReturnValue(buildCategoriesHook());
     renderCategoriesPage();
