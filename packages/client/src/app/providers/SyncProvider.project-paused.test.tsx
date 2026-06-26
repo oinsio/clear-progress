@@ -29,6 +29,20 @@ describe("SyncProvider — project paused (FR3 fix-project-paused)", () => {
     expect(screen.getByTestId("status").textContent).toBe("project_paused");
   });
 
+  it("should set syncStatus to 'error' when sync throws a generic Error (not ProjectPausedError)", async () => {
+    mockPull.mockRejectedValue(new Error("Something went wrong"));
+    renderProvider();
+    await act(async () => {});
+    expect(screen.getByTestId("status").textContent).toBe("error");
+  });
+
+  it("should set syncStatus to 'error' when sync throws a non-Error value", async () => {
+    mockPull.mockRejectedValue("string error");
+    renderProvider();
+    await act(async () => {});
+    expect(screen.getByTestId("status").textContent).toBe("error");
+  });
+
   it("should NOT start ping interval when status is 'project_paused'", async () => {
     mockPull.mockRejectedValue(new MockProjectPausedError());
     renderProvider();

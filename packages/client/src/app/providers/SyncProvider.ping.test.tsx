@@ -1,6 +1,6 @@
 import { act, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PING_INTERVAL_MS } from "@/constants";
+import { PING_INTERVAL_MS, SYNC_INTERVAL_MS } from "@/constants";
 
 vi.mock("@/app/providers/AuthProvider");
 vi.mock("@/services/SyncService");
@@ -13,8 +13,14 @@ import {
   setNavigatorOnline,
   setupBeforeEach,
   VALID_PING_INITIALIZED,
+  VALID_PING_NOT_INITIALIZED,
 } from "./SyncProvider.test-helpers";
-import { mockPing, mockPull, mockPush } from "./SyncProvider.test-mocks";
+import {
+  mockInit,
+  mockPing,
+  mockPull,
+  mockPush,
+} from "./SyncProvider.test-mocks";
 
 beforeEach(() => setupBeforeEach());
 afterEach(() => vi.useRealTimers());
@@ -92,5 +98,38 @@ describe("SyncProvider — ping on mount", () => {
       window.dispatchEvent(new Event("online"));
     });
     expect(mockPing).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("SyncProvider — ensureInitializedAndSync", () => {
+  it("should call init when initial ping returns initialized=false", async () => {
+    mockPing.mockResolvedValue(VALID_PING_NOT_INITIALIZED);
+    renderProvider();
+    await act(async () => {});
+    expect(mockInit).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalled();
+  });
+
+  it("should NOT call init when initial ping returns initialized=true", async () => {
+    mockPing.mockResolvedValue(VALID_PING_INITIALIZED);
+    renderProvider();
+    await act(async () => {});
+    expect(mockInit).not.toHaveBeenCalled();
+  });
+
+  it("should allow subsequent sync after init ping fails", async () => {
+    mockPing.mockRejectedValueOnce(new Error("Init ping failed"));
+    mockPing.mockResolvedValue(VALID_PING_INITIALIZED);
+    renderProvider();
+    await act(async () => {});
+    expect(screen.getByTestId("status").textContent).toBe("offline");
+
+    vi.clearAllMocks();
+    mockPush.mockResolvedValue(undefined);
+    mockPull.mockResolvedValue(undefined);
+    await act(async () => {
+      vi.advanceTimersByTime(SYNC_INTERVAL_MS);
+    });
+    expect(mockPush).toHaveBeenCalled();
   });
 });

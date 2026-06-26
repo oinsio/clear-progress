@@ -70,14 +70,14 @@ describe("SyncProvider — auth gate", () => {
     expect(mockSignOut).not.toHaveBeenCalled();
   });
 
-  it("should not set error status when sync throws ApiAuthError", async () => {
+  it("should set syncStatus to 'unauthorized' when sync throws ApiAuthError", async () => {
     mockPull.mockRejectedValue(new MockApiAuthError());
     renderProvider();
     await act(async () => {});
-    expect(screen.getByTestId("status").textContent).not.toBe("error");
+    expect(screen.getByTestId("status").textContent).toBe("unauthorized");
   });
 
-  it("should call signOut (not silentRefresh) after MAX_SILENT_REFRESH_ATTEMPTS consecutive auth errors", async () => {
+  it("should call signOut and set 'unauthorized' status after MAX_SILENT_REFRESH_ATTEMPTS consecutive auth errors", async () => {
     mockPull.mockRejectedValue(new MockApiAuthError());
     renderProvider();
     await act(async () => {});
@@ -90,6 +90,7 @@ describe("SyncProvider — auth gate", () => {
     expect(mockSilentRefresh).toHaveBeenCalledTimes(
       MAX_SILENT_REFRESH_ATTEMPTS - 1,
     );
+    expect(screen.getByTestId("status").textContent).toBe("unauthorized");
   });
 
   it("should reset attempt counter after successful sync and not call signOut on next auth error", async () => {

@@ -27,5 +27,5 @@
 ## 5. Verification
 
 - [x] 5.1 `pnpm run build` — project builds without errors
-- [ ] 5.2 Mutation testing on changed files — target >=95%
+- [x] 5.2 Mutation testing on changed files — target >=95%
 - [x] 5.3 Existing unit tests pass without regressions
