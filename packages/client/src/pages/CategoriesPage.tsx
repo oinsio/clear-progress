@@ -20,9 +20,9 @@ import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useCategories } from "@/hooks/useCategories";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
@@ -112,13 +112,17 @@ export default function CategoriesPage() {
   const [categoryTaskCounts, setCategoryTaskCounts] = useState<
     Record<string, number>
   >({});
-  const {
-    effectiveIsOpen,
-    isTemporarilyOpen,
-    togglePanelOpen,
-    openTemporarily,
-    closeTemporary,
-  } = usePanelOpen();
+  const { effectiveState, isNarrow, hasHover } = useSidebarState();
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+
+  // FR17: Close drawer when transitioning from narrow to wide
+  useEffect(() => {
+    if (!isNarrow) {
+      setIsDrawerOpen(false);
+    }
+  }, [isNarrow]);
 
   const activeCategories = categories.filter(
     (category) => !category.is_deleted,
@@ -160,8 +164,7 @@ export default function CategoriesPage() {
   );
 
   const handleModeChange = useSidebarNavigation();
-  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
-  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
+  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
 
   const handleSubmit = useCallback(
     (name: string) => {
@@ -227,13 +230,24 @@ export default function CategoriesPage() {
         </main>
       </div>
 
+      {/* FR8: Backdrop for drawer mode */}
+      {isNarrow && !hasHover && isDrawerOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       {/* Right filter panel — full height */}
       <Sidebar
         mode="categories"
-        isOpen={effectiveIsOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
         side={panelSide}
-        onToggle={handleToggle}
-        onCollapsedClick={openTemporarily}
         onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />

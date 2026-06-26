@@ -9,11 +9,13 @@ const {
   mockSetDetailPanelPinned,
   mockSetHandedness,
   mockSetFilterBarPosition,
+  mockSetSidebarMode,
 } = vi.hoisted(() => ({
   mockSetPanelSide: vi.fn(),
   mockSetDetailPanelPinned: vi.fn(),
   mockSetHandedness: vi.fn(),
   mockSetFilterBarPosition: vi.fn(),
+  mockSetSidebarMode: vi.fn(),
 }));
 
 vi.mock("react-i18next", () => ({
@@ -45,6 +47,10 @@ vi.mock("@/hooks/useFilterBarPosition", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useSidebarMode", () => ({
+  useSidebarMode: () => ["expanded", mockSetSidebarMode],
+}));
+
 vi.mock("@/components/settings/MenuOrderSection", () => ({
   MenuOrderSection: () => (
     <section data-testid="settings-menu-order">MenuOrderSection</section>
@@ -58,12 +64,16 @@ function renderSection() {
 describe("WorkspaceSection — i18n headings", () => {
   it.each([
     ["settings.panelSide"],
+    ["sidebar.control"],
     ["settings.handedness"],
     ["settings.filterBarPosition"],
     ["settings.handednessRight"],
     ["settings.handednessLeft"],
     ["settings.filterBarBottom"],
     ["settings.filterBarTop"],
+    ["sidebar.modeExpanded"],
+    ["sidebar.modeCollapsed"],
+    ["sidebar.modeExpandOnHover"],
   ])("should render i18n key %s", (key) => {
     renderSection();
     expect(screen.getByText(key)).toBeInTheDocument();
@@ -337,12 +347,82 @@ describe("WorkspaceSection — base CSS classes", () => {
   });
 });
 
+// implements FR3 of improve-sidebar-ux
+describe("WorkspaceSection — sidebar mode buttons", () => {
+  it("should set aria-pressed=true on selected sidebar mode (expanded)", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-expanded"),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("should set aria-pressed=false on non-selected sidebar mode (collapsed)", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-collapsed"),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should set aria-pressed=false on non-selected sidebar mode (expand-on-hover)", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-expand-on-hover"),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should call setSidebarMode with 'expanded' when expanded is clicked", () => {
+    renderSection();
+    fireEvent.click(
+      screen.getByTestId("settings-sidebar-mode-option-expanded"),
+    );
+    expect(mockSetSidebarMode).toHaveBeenCalledWith("expanded");
+  });
+
+  it("should call setSidebarMode with 'collapsed' when collapsed is clicked", () => {
+    renderSection();
+    fireEvent.click(
+      screen.getByTestId("settings-sidebar-mode-option-collapsed"),
+    );
+    expect(mockSetSidebarMode).toHaveBeenCalledWith("collapsed");
+  });
+
+  it("should call setSidebarMode with 'expand-on-hover' when expand-on-hover is clicked", () => {
+    renderSection();
+    fireEvent.click(
+      screen.getByTestId("settings-sidebar-mode-option-expand-on-hover"),
+    );
+    expect(mockSetSidebarMode).toHaveBeenCalledWith("expand-on-hover");
+  });
+
+  it("should apply bg-accent to selected sidebar mode button", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-expanded").classList,
+    ).toContain("bg-accent");
+  });
+
+  it("should apply bg-white to unselected sidebar mode button", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-collapsed").classList,
+    ).toContain("bg-white");
+  });
+
+  it("should apply rounded-lg to sidebar mode buttons", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-expanded").classList,
+    ).toContain("rounded-lg");
+  });
+});
+
 describe("WorkspaceSection — sections order", () => {
   it("should render all sections in correct DOM order", () => {
     const { container } = renderSection();
     const ids = [
       "settings-panel-side",
       "settings-detail-panel-pinned",
+      "settings-sidebar-mode",
       "settings-handedness",
       "settings-filter-bar-position",
       "settings-menu-order",

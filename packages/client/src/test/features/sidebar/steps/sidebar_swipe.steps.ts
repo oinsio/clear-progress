@@ -1,4 +1,4 @@
-// implements FR8, FR9, NFR-R2 of improve-sidebar-ux
+// implements FR13, NFR-R2 of improve-sidebar-ux
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { act, renderHook } from "@testing-library/react";
@@ -64,12 +64,12 @@ describeFeature(
       }
     }
 
-    // @improve-sidebar-ux @FR8 @NFR-R2
+    // @improve-sidebar-ux @FR13 @NFR-R2
     f.Scenario(
       "Edge swipe from right opens right-side sidebar",
       ({ Given, And, When, Then }) => {
         Given(
-          "user is on mobile with sidebar on the right",
+          "user is on a narrow screen without hover with sidebar on the right",
           (_ctx: TestContext) => {
             /* configured in When */
           },
@@ -92,12 +92,12 @@ describeFeature(
       },
     );
 
-    // @improve-sidebar-ux @FR8 @NFR-R2
+    // @improve-sidebar-ux @FR13 @NFR-R2
     f.Scenario(
       "Edge swipe from left opens left-side sidebar",
       ({ Given, And, When, Then }) => {
         Given(
-          "user is on mobile with sidebar on the left",
+          "user is on a narrow screen without hover with sidebar on the left",
           (_ctx: TestContext) => {
             /* configured in When */
           },
@@ -120,12 +120,12 @@ describeFeature(
       },
     );
 
-    // @improve-sidebar-ux @FR8 @NFR-R2
+    // @improve-sidebar-ux @FR13 @NFR-R2
     f.Scenario(
       "Swipe outside edge zone does not open sidebar",
       ({ Given, And, When, Then }) => {
         Given(
-          "user is on mobile with sidebar on the right",
+          "user is on a narrow screen without hover with sidebar on the right",
           (_ctx: TestContext) => {
             /* configured in When */
           },
@@ -157,12 +157,12 @@ describeFeature(
       },
     );
 
-    // @improve-sidebar-ux @FR9
+    // @improve-sidebar-ux @FR13
     f.Scenario(
       "Full swipe-back closes sidebar",
       ({ Given, And, When, Then }) => {
         Given(
-          "user is on mobile with sidebar on the right",
+          "user is on a narrow screen without hover with sidebar on the right",
           (_ctx: TestContext) => {
             /* configured in When */
           },
@@ -196,12 +196,12 @@ describeFeature(
       },
     );
 
-    // @improve-sidebar-ux @FR9
+    // @improve-sidebar-ux @FR13
     f.Scenario(
       "Incomplete swipe snaps back open",
       ({ Given, And, When, Then }) => {
         Given(
-          "user is on mobile with sidebar on the right",
+          "user is on a narrow screen without hover with sidebar on the right",
           (_ctx: TestContext) => {
             /* configured in When */
           },
@@ -235,12 +235,12 @@ describeFeature(
       },
     );
 
-    // @improve-sidebar-ux @FR8 @FR9 @NFR-R2
+    // @improve-sidebar-ux @FR13 @NFR-R2
     f.Scenario(
       "Vertical movement cancels swipe",
       ({ Given, And, When, Then }) => {
         Given(
-          "user is on mobile with sidebar on the right",
+          "user is on a narrow screen without hover with sidebar on the right",
           (_ctx: TestContext) => {
             /* configured in When */
           },
@@ -275,13 +275,16 @@ describeFeature(
       },
     );
 
-    // @improve-sidebar-ux @FR8 @FR9 @NFR-R2
+    // @improve-sidebar-ux @FR13 @NFR-R2
     f.Scenario(
-      "Desktop has no swipe listeners",
+      "Wide screen or hover-capable has no swipe listeners",
       ({ Given, And, When, Then }) => {
-        Given("user is on desktop", (_ctx: TestContext) => {
-          /* configured in When */
-        });
+        Given(
+          "user is on a wide screen or has hover capability",
+          (_ctx: TestContext) => {
+            /* configured in When */
+          },
+        );
 
         And("sidebar is closed on the right", (_ctx: TestContext) => {
           /* configured in When */

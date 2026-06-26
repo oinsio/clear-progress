@@ -5,8 +5,6 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { expect, type TestContext, vi } from "vitest";
 
-const mockOnToggle = vi.fn();
-
 import "./sidebarTestSetup";
 
 vi.mock("@/hooks/useConnectionStatus", () => ({
@@ -18,20 +16,21 @@ vi.mock("@/hooks/useMenuOrder", () => ({
 }));
 
 import { Sidebar } from "@/components/tasks/Sidebar";
+import type { SidebarEffectiveState } from "@/types/common";
 
 const feature = await loadFeature("../sidebar_toggle.feature");
 
 type FeatureContext = {
-  isOpen: boolean;
+  effectiveState: SidebarEffectiveState;
 };
 
-function renderSidebar(isOpen: boolean) {
+function renderSidebar(effectiveState: SidebarEffectiveState) {
   return render(
     <MemoryRouter>
       <Sidebar
         mode={null}
-        isOpen={isOpen}
-        onToggle={mockOnToggle}
+        effectiveState={effectiveState}
+        isDrawerOpen={false}
         onModeChange={vi.fn()}
       />
     </MemoryRouter>,
@@ -44,93 +43,58 @@ describeFeature(
     f.BeforeEachScenario(() => {
       cleanup();
       vi.clearAllMocks();
-      f.context.isOpen = false;
+      f.context.effectiveState = "collapsed";
     });
 
-    // @add-sidebar-specs @FR2
-    f.Scenario(
-      "Sidebar opens from collapsed state",
-      ({ Given, When, Then }) => {
-        Given("sidebar is collapsed", (_ctx: TestContext) => {
-          f.context.isOpen = false;
-          renderSidebar(false);
-        });
-
-        When("user clicks the collapsed strip", async (_ctx: TestContext) => {
-          const user = userEvent.setup();
-          const toggle = screen.getByTestId("sidebar-toggle");
-          await user.click(toggle);
-        });
-
-        Then(
-          "sidebar expands to show icons and labels",
-          (_ctx: TestContext) => {
-            expect(mockOnToggle).toHaveBeenCalledTimes(1);
-          },
-        );
-      },
-    );
-
-    // @improve-sidebar-ux @FR1
-    f.Scenario("Sidebar closes via toggle button", ({ Given, When, Then }) => {
-      Given("sidebar is expanded", (_ctx: TestContext) => {
-        f.context.isOpen = true;
-        renderSidebar(true);
+    // @improve-sidebar-ux @FR4
+    f.Scenario("Collapsed sidebar renders narrow strip", ({ Given, Then }) => {
+      Given("sidebar is collapsed", (_ctx: TestContext) => {
+        f.context.effectiveState = "collapsed";
+        renderSidebar("collapsed");
       });
 
-      When("user clicks the toggle button", async (_ctx: TestContext) => {
-        const user = userEvent.setup();
-        const toggleButton = screen.getByTestId("sidebar-toggle-button");
-        await user.click(toggleButton);
-      });
-
-      Then("sidebar collapses to show icons only", (_ctx: TestContext) => {
-        expect(mockOnToggle).toHaveBeenCalledTimes(1);
-      });
+      Then(
+        "sidebar renders a narrow strip with icon-only buttons",
+        (_ctx: TestContext) => {
+          const collapsed = screen.getByTestId("sidebar-collapsed");
+          expect(collapsed.className).toContain("w-14");
+        },
+      );
     });
 
-    // @add-sidebar-specs @FR2
+    // @improve-sidebar-ux @FR4
     f.Scenario(
-      "Collapsed sidebar renders narrow strip",
+      "Collapsed sidebar is not interactive as a whole",
       ({ Given, Then, And }) => {
         Given("sidebar is collapsed", (_ctx: TestContext) => {
-          f.context.isOpen = false;
-          renderSidebar(false);
+          f.context.effectiveState = "collapsed";
+          renderSidebar("collapsed");
         });
 
-        Then(
-          "sidebar renders a narrow strip with icon-only buttons",
-          (_ctx: TestContext) => {
-            const toggle = screen.getByTestId("sidebar-toggle");
-            expect(toggle.className).toContain("w-14");
-          },
-        );
+        Then("collapsed sidebar has no role attribute", (_ctx: TestContext) => {
+          const collapsed = screen.getByTestId("sidebar-collapsed");
+          expect(collapsed.getAttribute("role")).toBeNull();
+        });
 
-        And(
-          "sidebar toggle has {string} aria-label",
-          (_ctx: TestContext, _label: string) => {
-            const toggle = screen.getByTestId("sidebar-toggle");
-            expect(toggle).toHaveAttribute("aria-label", "Открыть панель");
-          },
-        );
+        And("collapsed sidebar has no tabIndex", (_ctx: TestContext) => {
+          const collapsed = screen.getByTestId("sidebar-collapsed");
+          expect(collapsed.getAttribute("tabindex")).toBeNull();
+        });
 
-        And(
-          "sidebar toggle has role {string}",
-          (_ctx: TestContext, _role: string) => {
-            const toggle = screen.getByTestId("sidebar-toggle");
-            expect(toggle).toHaveAttribute("role", "button");
-          },
-        );
+        And("collapsed sidebar has no cursor-pointer", (_ctx: TestContext) => {
+          const collapsed = screen.getByTestId("sidebar-collapsed");
+          expect(collapsed.className).not.toContain("cursor-pointer");
+        });
       },
     );
 
-    // @improve-sidebar-ux @FR1
+    // @improve-sidebar-ux @FR4
     f.Scenario(
       "Expanded sidebar container is not interactive",
       ({ Given, Then, And }) => {
         Given("sidebar is expanded", (_ctx: TestContext) => {
-          f.context.isOpen = true;
-          renderSidebar(true);
+          f.context.effectiveState = "expanded";
+          renderSidebar("expanded");
         });
 
         Then(
@@ -151,13 +115,13 @@ describeFeature(
       },
     );
 
-    // @improve-sidebar-ux @FR1
+    // @improve-sidebar-ux @FR4
     f.Scenario(
       "Clicking empty area in expanded sidebar does nothing",
       ({ Given, When, Then }) => {
         Given("sidebar is expanded", (_ctx: TestContext) => {
-          f.context.isOpen = true;
-          renderSidebar(true);
+          f.context.effectiveState = "expanded";
+          renderSidebar("expanded");
         });
 
         When(
@@ -169,43 +133,23 @@ describeFeature(
           },
         );
 
-        Then("sidebar remains expanded", (_ctx: TestContext) => {
-          expect(mockOnToggle).not.toHaveBeenCalled();
+        Then("no navigation or toggle occurs", (_ctx: TestContext) => {
+          // Expanded container should still be visible (no state change)
+          expect(screen.getByTestId("sidebar-expanded")).toBeInTheDocument();
         });
       },
     );
 
-    // @add-sidebar-specs @FR2
-    f.Scenario(
-      "Sidebar toggle is keyboard accessible",
-      ({ Given, Then, When }) => {
-        Given("sidebar is collapsed", (_ctx: TestContext) => {
-          f.context.isOpen = false;
-          renderSidebar(false);
-        });
+    // @improve-sidebar-ux @FR4
+    f.Scenario("Expanded sidebar has no backdrop", ({ Given, Then }) => {
+      Given("sidebar is expanded", (_ctx: TestContext) => {
+        f.context.effectiveState = "expanded";
+        renderSidebar("expanded");
+      });
 
-        Then("sidebar toggle has tabIndex 0", (_ctx: TestContext) => {
-          const toggle = screen.getByTestId("sidebar-toggle");
-          expect(toggle).toHaveAttribute("tabindex", "0");
-        });
-
-        When(
-          "user presses Enter on the toggle area",
-          async (_ctx: TestContext) => {
-            const user = userEvent.setup();
-            const toggle = screen.getByTestId("sidebar-toggle");
-            toggle.focus();
-            await user.keyboard("{Enter}");
-          },
-        );
-
-        Then(
-          "sidebar expands to show icons and labels",
-          (_ctx: TestContext) => {
-            expect(mockOnToggle).toHaveBeenCalledTimes(1);
-          },
-        );
-      },
-    );
+      Then("no backdrop overlay is rendered", (_ctx: TestContext) => {
+        expect(screen.queryByTestId("sidebar-backdrop")).toBeNull();
+      });
+    });
   },
 );

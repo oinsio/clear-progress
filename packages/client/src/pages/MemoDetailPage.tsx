@@ -10,9 +10,9 @@ import { Sidebar } from "@/components/tasks/Sidebar";
 import { ROUTES } from "@/constants";
 import { getMemo } from "@/content/memos";
 import { useLanguage } from "@/hooks/useLanguage";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 
 export default function MemoDetailPage() {
   const { t } = useTranslation();
@@ -21,7 +21,7 @@ export default function MemoDetailPage() {
   const navigate = useNavigate();
 
   const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const { effectiveState } = useSidebarState();
   const handleModeChange = useSidebarNavigation();
 
   const memo = slug ? getMemo(language, slug) : undefined;
@@ -66,9 +66,9 @@ export default function MemoDetailPage() {
 
       <Sidebar
         mode="memos"
-        isOpen={isPanelOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={false}
         side={panelSide}
-        onToggle={togglePanelOpen}
         onModeChange={handleModeChange}
       />
     </div>

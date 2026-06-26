@@ -215,6 +215,12 @@
     "noResults": "Nothing found",
     "emptyQuery": "Type to search"
   },
+  "sidebar": {
+    "control": "Sidebar mode",
+    "modeExpanded": "Expanded",
+    "modeCollapsed": "Collapsed",
+    "modeExpandOnHover": "Expand on hover"
+  },
   "filter": {
     "inbox": "Inbox",
     "contexts": "Contexts",

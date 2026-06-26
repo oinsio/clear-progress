@@ -263,8 +263,8 @@ export default function GoalDetailPage() {
           isOpen={state.isReplacementDialogOpen}
           goalToAdd={state.goal}
           focusedGoals={state.focusedGoalIds
-            .map((goalId) => state.goals.find((g) => g.id === goalId))
-            .filter((g): g is Goal => g !== undefined)}
+            .map((goalId) => state.goals.find((goal) => goal.id === goalId))
+            .filter((goal): goal is Goal => goal !== undefined)}
           onReplace={state.handleReplace}
           onClose={() => state.setIsReplacementDialogOpen(false)}
         />
@@ -273,14 +273,14 @@ export default function GoalDetailPage() {
       {/* Right filter panel */}
       <Sidebar
         mode={state.isFocused && state.isFocusedGoalsVisible ? null : "goals"}
-        isOpen={state.isPanelOpen}
+        effectiveState={state.sidebarEffectiveState}
+        isDrawerOpen={false}
         side={state.panelSide}
         activeFocusedGoalId={
           state.isFocused && state.isFocusedGoalsVisible
             ? state.goal?.id
             : undefined
         }
-        onToggle={state.togglePanelOpen}
         onModeChange={state.handleModeChange}
       />
     </div>

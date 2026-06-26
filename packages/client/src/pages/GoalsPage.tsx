@@ -1,6 +1,7 @@
 /**
  * GoalsPage — displays and manages goals.
  * Implements FR20 of command-bar.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
  */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
@@ -20,9 +21,9 @@ import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useGoals } from "@/hooks/useGoals";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import type { Goal } from "@/types/entities";
@@ -89,13 +90,7 @@ export default function GoalsPage() {
   const { t } = useTranslation();
   const { goals, isLoading, createGoal, reorderGoals } = useGoals();
   const { panelSide } = usePanelSide();
-  const {
-    effectiveIsOpen,
-    isTemporarilyOpen,
-    togglePanelOpen,
-    openTemporarily,
-    closeTemporary,
-  } = usePanelOpen();
+  const { effectiveState, isNarrow, hasHover } = useSidebarState();
   const navigate = useNavigate();
   const sensors = useDndSensors();
 
@@ -110,8 +105,17 @@ export default function GoalsPage() {
   }, []);
 
   const handleModeChange = useSidebarNavigation();
-  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
-  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
+
+  // FR17: Close drawer when transitioning from narrow to wide
+  useEffect(() => {
+    if (!isNarrow) {
+      setIsDrawerOpen(false);
+    }
+  }, [isNarrow]);
 
   const handleGoalNavigate = useCallback(
     (id: string) => {
@@ -216,13 +220,24 @@ export default function GoalsPage() {
         </main>
       </div>
 
+      {/* FR8: Backdrop for drawer mode */}
+      {isNarrow && !hasHover && isDrawerOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       {/* Right filter panel */}
       <Sidebar
         mode="goals"
-        isOpen={effectiveIsOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
         side={panelSide}
-        onToggle={handleToggle}
-        onCollapsedClick={openTemporarily}
         onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />

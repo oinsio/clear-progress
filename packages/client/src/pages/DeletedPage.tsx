@@ -6,17 +6,17 @@ import {
   Trash2,
 } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { useDeletedEntities } from "@/hooks/useDeletedEntities";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePurge } from "@/hooks/usePurge";
 import { useRestoreEntity } from "@/hooks/useRestoreEntity";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { cn } from "@/shared/lib/cn";
 
 const SECTION_KEY_TASKS = "deleted-tasks";
@@ -110,13 +110,7 @@ function DeletedSection<T extends { id: string }>({
 export default function DeletedPage() {
   const { t } = useTranslation();
   const { panelSide } = usePanelSide();
-  const {
-    effectiveIsOpen,
-    isTemporarilyOpen,
-    togglePanelOpen,
-    openTemporarily,
-    closeTemporary,
-  } = usePanelOpen();
+  const { effectiveState, isNarrow, hasHover } = useSidebarState();
   const {
     tasks,
     goals,
@@ -136,8 +130,17 @@ export default function DeletedPage() {
     restoreChecklistItem,
   } = useRestoreEntity();
   const handleModeChange = useSidebarNavigation();
-  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
-  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
+
+  // FR17: Close drawer when transitioning from narrow to wide
+  useEffect(() => {
+    if (!isNarrow) {
+      setIsDrawerOpen(false);
+    }
+  }, [isNarrow]);
   const { purge, isPurging } = usePurge();
   const [showPurgeDialog, setShowPurgeDialog] = useState(false);
   const [purgeError, setPurgeError] = useState<string | null>(null);
@@ -437,12 +440,23 @@ export default function DeletedPage() {
         </main>
       </div>
 
+      {/* FR8: Backdrop for drawer mode */}
+      {isNarrow && !hasHover && isDrawerOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       <Sidebar
         mode={null}
-        isOpen={effectiveIsOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
         side={panelSide}
-        onToggle={handleToggle}
-        onCollapsedClick={openTemporarily}
         onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />

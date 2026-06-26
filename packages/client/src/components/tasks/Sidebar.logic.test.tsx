@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FILTER_ITEMS } from "./Sidebar";
@@ -36,25 +36,13 @@ vi.mock("@/hooks/useMenuOrder", () => ({
 }));
 
 vi.mock("./SidebarSyncBlock", () => ({
-  SidebarSyncBlock: (props: Record<string, unknown>) => {
-    const onToggle = props.onToggle as (() => void) | undefined;
-    return (
-      <div
-        data-testid="sidebar-sync-block"
-        data-is-expanded={String(props.isExpanded)}
-        data-side={String(props.side)}
-        data-has-on-toggle={String(!!onToggle)}
-      >
-        {onToggle && (
-          <button
-            type="button"
-            data-testid="sidebar-toggle-button"
-            onClick={onToggle}
-          />
-        )}
-      </div>
-    );
-  },
+  SidebarSyncBlock: (props: Record<string, unknown>) => (
+    <div
+      data-testid="sidebar-sync-block"
+      data-is-expanded={String(props.isExpanded)}
+      data-side={String(props.side)}
+    />
+  ),
 }));
 
 vi.mock("./SidebarFilterNav", () => ({
@@ -74,11 +62,10 @@ vi.mock("./SidebarFilterNav", () => ({
 import { Sidebar } from "./Sidebar";
 
 function renderSidebar(overrides?: Partial<Parameters<typeof Sidebar>[0]>) {
-  const defaultOnToggle = vi.fn();
   const props = {
     mode: null as Parameters<typeof Sidebar>[0]["mode"],
-    isOpen: false,
-    onToggle: defaultOnToggle,
+    effectiveState: "collapsed" as const,
+    isDrawerOpen: false,
     onModeChange: vi.fn(),
     ...overrides,
   };
@@ -87,10 +74,9 @@ function renderSidebar(overrides?: Partial<Parameters<typeof Sidebar>[0]>) {
       <Sidebar {...props} />
     </MemoryRouter>,
   );
-  return { onToggle: props.onToggle };
 }
 
-// implements FR6 of add-sidebar-specs
+// implements FR4 of improve-sidebar-ux
 describe("Sidebar — conditional logic", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -98,115 +84,110 @@ describe("Sidebar — conditional logic", () => {
     mockUseMenuOrder.mockReturnValue({ menuOrder: [] });
   });
 
-  describe("isOpen logic", () => {
-    it("should render collapsed when isOpen is false", () => {
-      renderSidebar({ isOpen: false });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle.className).toContain("w-14");
+  describe("effectiveState logic", () => {
+    it("should render collapsed when effectiveState is collapsed", () => {
+      renderSidebar({ effectiveState: "collapsed" });
+      const collapsed = screen.getByTestId("sidebar-collapsed");
+      expect(collapsed.className).toContain("w-14");
       expect(screen.getByTestId("sidebar-sync-block").dataset.isExpanded).toBe(
         "false",
       );
     });
 
-    it("should render expanded when isOpen is true", () => {
-      renderSidebar({ isOpen: true });
+    it("should render expanded when effectiveState is expanded", () => {
+      renderSidebar({ effectiveState: "expanded" });
       const container = screen.getByTestId("sidebar-expanded");
       expect(container.className).toContain("w-52");
       expect(screen.getByTestId("sidebar-sync-block").dataset.isExpanded).toBe(
         "true",
       );
     });
+
+    it("should render collapsed when effectiveState is hover-ready", () => {
+      renderSidebar({ effectiveState: "hover-ready" });
+      expect(screen.queryByTestId("sidebar-collapsed")).not.toBeNull();
+      expect(screen.queryByTestId("sidebar-expanded")).toBeNull();
+    });
+
+    it("should render expanded when isDrawerOpen is true regardless of effectiveState", () => {
+      renderSidebar({ effectiveState: "collapsed", isDrawerOpen: true });
+      const container = screen.getByTestId("sidebar-expanded");
+      expect(container.className).toContain("w-52");
+    });
   });
 
   describe("expanded panel attributes", () => {
     it("should NOT have role attribute on the expanded panel", () => {
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       const container = screen.getByTestId("sidebar-expanded");
       expect(container.getAttribute("role")).toBeNull();
     });
 
     it("should NOT have tabIndex on the expanded panel", () => {
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       const container = screen.getByTestId("sidebar-expanded");
       expect(container.getAttribute("tabindex")).toBeNull();
     });
 
     it("should NOT have aria-label on the expanded panel", () => {
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       const container = screen.getByTestId("sidebar-expanded");
       expect(container.getAttribute("aria-label")).toBeNull();
     });
-
-    it("should NOT call onToggle when clicking the expanded container", () => {
-      const { onToggle } = renderSidebar({ isOpen: true });
-      fireEvent.click(screen.getByTestId("sidebar-expanded"));
-      expect(onToggle).not.toHaveBeenCalled();
-    });
-
-    it("should call onToggle when clicking the toggle button in expanded mode", () => {
-      const { onToggle } = renderSidebar({ isOpen: true });
-      fireEvent.click(screen.getByTestId("sidebar-toggle-button"));
-      expect(onToggle).toHaveBeenCalledTimes(1);
-    });
-
-    it("should pass onToggle to SidebarSyncBlock when expanded", () => {
-      renderSidebar({ isOpen: true });
-      const syncBlock = screen.getByTestId("sidebar-sync-block");
-      expect(syncBlock.dataset.hasOnToggle).toBe("true");
-    });
-
-    it("should NOT pass onToggle to SidebarSyncBlock when collapsed", () => {
-      renderSidebar({ isOpen: false });
-      const syncBlock = screen.getByTestId("sidebar-sync-block");
-      expect(syncBlock.dataset.hasOnToggle).toBe("false");
-    });
   });
 
-  describe("collapsed panel keyboard", () => {
-    it("should call onToggle when pressing Enter on the collapsed panel", () => {
-      const { onToggle } = renderSidebar({ isOpen: false });
-      fireEvent.keyDown(screen.getByTestId("sidebar-toggle"), {
-        key: "Enter",
-      });
-      expect(onToggle).toHaveBeenCalledTimes(1);
+  describe("collapsed panel is not interactive", () => {
+    it("should NOT have role attribute on the collapsed panel", () => {
+      renderSidebar({ effectiveState: "collapsed" });
+      const collapsed = screen.getByTestId("sidebar-collapsed");
+      expect(collapsed.getAttribute("role")).toBeNull();
     });
 
-    it("should not call onToggle when pressing a non-Enter key on the collapsed panel", () => {
-      const { onToggle } = renderSidebar({ isOpen: false });
-      fireEvent.keyDown(screen.getByTestId("sidebar-toggle"), {
-        key: "a",
-      });
-      expect(onToggle).not.toHaveBeenCalled();
+    it("should NOT have tabIndex on the collapsed panel", () => {
+      renderSidebar({ effectiveState: "collapsed" });
+      const collapsed = screen.getByTestId("sidebar-collapsed");
+      expect(collapsed.getAttribute("tabindex")).toBeNull();
+    });
+
+    it("should NOT have cursor-pointer on the collapsed panel", () => {
+      renderSidebar({ effectiveState: "collapsed" });
+      const collapsed = screen.getByTestId("sidebar-collapsed");
+      expect(collapsed.className).not.toContain("cursor-pointer");
+    });
+
+    it("should NOT have onClick on the collapsed panel", () => {
+      renderSidebar({ effectiveState: "collapsed" });
+      const collapsed = screen.getByTestId("sidebar-collapsed");
+      expect(collapsed.getAttribute("onclick")).toBeNull();
     });
   });
 
   describe("expanded panel non-interactive", () => {
     it("should not have onClick on the expanded container", () => {
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       const container = screen.getByTestId("sidebar-expanded");
       expect(container.getAttribute("onclick")).toBeNull();
     });
   });
 
-  describe("default side prop", () => {
-    it("should render with border-l class when side prop is not provided (defaults to right)", () => {
-      renderSidebar({ isOpen: false });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle.className).toContain("border-l");
+  describe("no backdrop in expanded mode", () => {
+    it("should NOT render backdrop overlay", () => {
+      renderSidebar({ effectiveState: "expanded" });
+      expect(screen.queryByTestId("sidebar-backdrop")).toBeNull();
     });
   });
 
-  describe("collapsed panel aria-label", () => {
-    it("should have non-empty aria-label on the collapsed panel", () => {
-      renderSidebar({ isOpen: false });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      expect(toggle.getAttribute("aria-label")).toBe("filter.open");
+  describe("default side prop", () => {
+    it("should render with border-l class when side prop is not provided (defaults to right)", () => {
+      renderSidebar({ effectiveState: "collapsed" });
+      const collapsed = screen.getByTestId("sidebar-collapsed");
+      expect(collapsed.className).toContain("border-l");
     });
   });
 
   describe("outer wrapper classes", () => {
     it("should have flex class on the expanded outer wrapper", () => {
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       const container = screen.getByTestId("sidebar-expanded");
       const outerWrapper = container.parentElement;
       expect(outerWrapper?.className).toContain("flex");
@@ -214,9 +195,9 @@ describe("Sidebar — conditional logic", () => {
     });
 
     it("should have flex class on the collapsed outer wrapper", () => {
-      renderSidebar({ isOpen: false });
-      const toggle = screen.getByTestId("sidebar-toggle");
-      const outerWrapper = toggle.parentElement;
+      renderSidebar({ effectiveState: "collapsed" });
+      const collapsed = screen.getByTestId("sidebar-collapsed");
+      const outerWrapper = collapsed.parentElement;
       expect(outerWrapper?.className).toContain("flex");
       expect(outerWrapper?.className).toContain("flex-shrink-0");
     });
@@ -224,28 +205,28 @@ describe("Sidebar — conditional logic", () => {
 
   describe("isExpanded prop passing to children", () => {
     it("should pass isExpanded=true to SidebarSyncBlock when expanded", () => {
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       expect(screen.getByTestId("sidebar-sync-block").dataset.isExpanded).toBe(
         "true",
       );
     });
 
     it("should pass isExpanded=true to SidebarFilterNav when expanded", () => {
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       expect(screen.getByTestId("sidebar-filter-nav").dataset.isExpanded).toBe(
         "true",
       );
     });
 
     it("should pass isExpanded=false to SidebarSyncBlock when collapsed", () => {
-      renderSidebar({ isOpen: false });
+      renderSidebar({ effectiveState: "collapsed" });
       expect(screen.getByTestId("sidebar-sync-block").dataset.isExpanded).toBe(
         "false",
       );
     });
 
     it("should pass isExpanded=false to SidebarFilterNav when collapsed", () => {
-      renderSidebar({ isOpen: false });
+      renderSidebar({ effectiveState: "collapsed" });
       expect(screen.getByTestId("sidebar-filter-nav").dataset.isExpanded).toBe(
         "false",
       );
@@ -261,7 +242,7 @@ describe("Sidebar — conditional logic", () => {
           { mode: "deleted", visible: false },
         ],
       });
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       const filterNav = screen.getByTestId("sidebar-filter-nav");
       const visibleItems = JSON.parse(
         filterNav.dataset.visibleItems ?? "[]",
@@ -276,7 +257,7 @@ describe("Sidebar — conditional logic", () => {
           { mode: "goals", visible: false },
         ],
       });
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       const filterNav = screen.getByTestId("sidebar-filter-nav");
       const visibleItems = JSON.parse(
         filterNav.dataset.visibleItems ?? "[]",
@@ -286,7 +267,7 @@ describe("Sidebar — conditional logic", () => {
 
     it("should pass empty array when menuOrder is empty", () => {
       mockUseMenuOrder.mockReturnValue({ menuOrder: [] });
-      renderSidebar({ isOpen: true });
+      renderSidebar({ effectiveState: "expanded" });
       const filterNav = screen.getByTestId("sidebar-filter-nav");
       const visibleItems = JSON.parse(
         filterNav.dataset.visibleItems ?? "[]",

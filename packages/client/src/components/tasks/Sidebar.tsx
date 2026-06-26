@@ -11,11 +11,15 @@ import {
   Trash2,
 } from "lucide-react";
 import type * as React from "react";
-import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/constants";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { cn } from "@/shared/lib/cn";
-import type { MenuMode, PanelSide } from "@/types/common";
+import type {
+  MenuMode,
+  PanelSide,
+  SidebarMode as SidebarBehaviorMode,
+  SidebarEffectiveState,
+} from "@/types/common";
 import { SidebarFilterNav } from "./SidebarFilterNav";
 import { SidebarSyncBlock } from "./SidebarSyncBlock";
 
@@ -103,15 +107,19 @@ const FILTER_ITEMS_MAP: Record<MenuMode, FilterItem> = Object.fromEntries(
 
 export interface SidebarProps {
   mode: SidebarMode;
-  isOpen: boolean;
+  effectiveState: SidebarEffectiveState;
+  isDrawerOpen: boolean;
+  isHoverExpanded?: boolean;
+  hoverHandlers?: { onMouseEnter: () => void; onMouseLeave: () => void };
   side?: PanelSide;
   activeFocusedGoalId?: string;
   containerRef?: React.Ref<HTMLDivElement>;
   sidebarTranslateX?: number;
-  onToggle: () => void;
-  onCollapsedClick?: () => void;
   onAutoCollapse?: () => void;
   onModeChange: (mode: SidebarMode) => void;
+  sidebarBehaviorMode?: SidebarBehaviorMode;
+  onSidebarBehaviorModeChange?: (mode: SidebarBehaviorMode) => void;
+  isControlVisible?: boolean;
 }
 
 /**
@@ -122,17 +130,20 @@ export interface SidebarProps {
  */
 export function Sidebar({
   mode,
-  isOpen,
+  effectiveState,
+  isDrawerOpen,
+  isHoverExpanded = false,
+  hoverHandlers,
   side = "right",
   activeFocusedGoalId,
   containerRef,
   sidebarTranslateX = 0,
-  onToggle,
-  onCollapsedClick,
   onAutoCollapse,
   onModeChange,
+  sidebarBehaviorMode,
+  onSidebarBehaviorModeChange,
+  isControlVisible = false,
 }: SidebarProps) {
-  const { t } = useTranslation();
   const { menuOrder } = useMenuOrder();
 
   const visibleFilterItems = menuOrder
@@ -144,7 +155,54 @@ export function Sidebar({
     ? "border-r border-accent/70"
     : "border-l border-accent/70";
 
-  if (isOpen) {
+  const isHoverOverlay = effectiveState === "hover-ready" && isHoverExpanded;
+
+  const isExpanded =
+    effectiveState === "expanded" || isDrawerOpen || isHoverOverlay;
+
+  const shouldAttachHoverHandlers = effectiveState === "hover-ready";
+
+  // Implements FR5 of improve-sidebar-ux — hover-expanded overlay
+  if (isHoverOverlay) {
+    return (
+      <div
+        className={cn(
+          "flex flex-shrink-0",
+          isLeft && "order-first flex-row-reverse",
+        )}
+        {...(shouldAttachHoverHandlers ? hoverHandlers : {})}
+      >
+        {/* Collapsed placeholder: keeps layout stable while overlay is shown */}
+        <div className={cn("w-14 flex-shrink-0 bg-accent", panelBorder)} />
+        <div
+          ref={containerRef}
+          className={cn(
+            "w-52 flex flex-col bg-accent overflow-hidden",
+            "absolute top-0 bottom-0 z-30",
+            isLeft ? "left-0" : "right-0",
+            panelBorder,
+          )}
+          data-testid="sidebar-hover-expanded"
+        >
+          <SidebarSyncBlock isExpanded={true} side={side} />
+          {/* Implements FR6 of improve-sidebar-ux — nav click does NOT collapse */}
+          <SidebarFilterNav
+            isExpanded={true}
+            mode={mode}
+            activeFocusedGoalId={activeFocusedGoalId}
+            visibleFilterItems={visibleFilterItems}
+            onModeChange={onModeChange}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isExpanded) {
     return (
       <div
         className={cn(
@@ -152,15 +210,6 @@ export function Sidebar({
           isLeft && "order-first flex-row-reverse",
         )}
       >
-        {/* Mobile backdrop overlay — implements FR8 of improve-sidebar-ux */}
-        <div
-          data-testid="sidebar-backdrop"
-          className="md:hidden fixed inset-0 bg-black/40 z-10"
-          aria-label={t("filter.closeSidebar")}
-          role="button"
-          tabIndex={-1}
-          onClick={onToggle}
-        />
         {/* Mobile placeholder: keeps flex layout stable while panel is an overlay */}
         <div
           className={cn("md:hidden w-14 flex-shrink-0 bg-accent", panelBorder)}
@@ -180,7 +229,7 @@ export function Sidebar({
           }
           data-testid="sidebar-expanded"
         >
-          <SidebarSyncBlock isExpanded={true} side={side} onToggle={onToggle} />
+          <SidebarSyncBlock isExpanded={true} side={side} />
           <SidebarFilterNav
             isExpanded={true}
             mode={mode}
@@ -188,6 +237,10 @@ export function Sidebar({
             visibleFilterItems={visibleFilterItems}
             onModeChange={onModeChange}
             onAutoCollapse={onAutoCollapse}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
           />
         </div>
       </div>
@@ -200,19 +253,14 @@ export function Sidebar({
         "flex flex-shrink-0",
         isLeft && "order-first flex-row-reverse",
       )}
+      {...(shouldAttachHoverHandlers ? hoverHandlers : {})}
     >
       <div
         className={cn(
-          "w-14 flex flex-col items-center bg-accent overflow-hidden cursor-pointer",
-          onCollapsedClick && "[&_button]:pointer-events-none",
+          "w-14 flex flex-col items-center bg-accent overflow-hidden",
           panelBorder,
         )}
-        onClick={onCollapsedClick ?? onToggle}
-        data-testid="sidebar-toggle"
-        aria-label={t("filter.open")}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && (onCollapsedClick ?? onToggle)()}
+        data-testid="sidebar-collapsed"
       >
         <SidebarSyncBlock isExpanded={false} side={side} />
         <SidebarFilterNav
@@ -221,6 +269,10 @@ export function Sidebar({
           activeFocusedGoalId={activeFocusedGoalId}
           visibleFilterItems={visibleFilterItems}
           onModeChange={onModeChange}
+          side={side}
+          sidebarBehaviorMode={sidebarBehaviorMode}
+          onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+          isControlVisible={isControlVisible}
         />
       </div>
     </div>

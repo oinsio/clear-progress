@@ -1,3 +1,4 @@
+// implements FR3 of add-sidebar-specs
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { cleanup, render, screen, within } from "@testing-library/react/pure";
@@ -62,8 +63,8 @@ function renderSidebar(
     <MemoryRouter>
       <Sidebar
         mode={mode}
-        isOpen={true}
-        onToggle={vi.fn()}
+        effectiveState="expanded"
+        isDrawerOpen={false}
         onModeChange={onModeChange}
       />
     </MemoryRouter>,

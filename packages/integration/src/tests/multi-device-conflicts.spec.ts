@@ -73,6 +73,29 @@ async function createTaskAndSyncBoth(taskName: string): Promise<string> {
   return serverTask?.id ?? "";
 }
 
+async function waitForAutoSyncIdle(testPage: Page): Promise<void> {
+  // Wait for the sync button to stop spinning (auto-sync from navigation done).
+  // The detail panel's useEffect resets input value when task.name changes from
+  // a live query, so editing before auto-sync completes causes a race: the pull
+  // overwrites IndexedDB → live query fires → useEffect resets the input →
+  // blur handler sees no change → rename is silently lost.
+  try {
+    await testPage.waitForFunction(
+      () => {
+        const button = document.querySelector('[data-testid="sidebar-sync"]');
+        if (!button) return false;
+        const icon = button.querySelector("svg");
+        return icon !== null && !icon.classList.contains("animate-spin");
+      },
+      { timeout: 8_000 },
+    );
+  } catch {
+    // Button might not have the spinning icon; proceed anyway.
+  }
+  // Extra settle time for IndexedDB writes + React re-render from live query
+  await testPage.waitForTimeout(300);
+}
+
 async function openTaskDetailAndRename(
   testPage: Page,
   possibleNames: string[],
@@ -80,6 +103,9 @@ async function openTaskDetailAndRename(
 ): Promise<void> {
   await testPage.goto("/tasks");
   await testPage.waitForSelector('[data-testid="active-tasks-page"]');
+
+  // Wait for auto-sync to fully complete before interacting with the form.
+  await waitForAutoSyncIdle(testPage);
 
   // Auto-sync from navigation may have pulled a rename from another device,
   // so the task might appear under any of the possible names.

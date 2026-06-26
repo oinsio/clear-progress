@@ -3,7 +3,15 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SettingsPage from "./SettingsPage";
 
-vi.mock("@/hooks/usePanelOpen");
+vi.mock("@/hooks/useSidebarState", () => ({
+  useSidebarState: () => ({
+    effectiveState: "collapsed",
+    sidebarMode: "expanded",
+    setSidebarMode: vi.fn(),
+    isNarrow: true,
+    hasHover: false,
+  }),
+}));
 vi.mock("@/hooks/useSidebarNavigation");
 vi.mock("@/app/providers/AuthProvider", () => ({
   useAuth: vi.fn(),
@@ -59,13 +67,11 @@ vi.mock("@/services/supabaseClientManager", () => ({
 import { useAuth } from "@/app/providers/AuthProvider";
 import { SETTINGS_SECTION_IDS } from "@/constants";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { localStorageMock } from "@/test/mocks/localStorageMock";
 
 const mockUseAuth = vi.mocked(useAuth);
 const mockUseConnectionConfig = vi.mocked(useConnectionConfig);
-const mockUsePanelOpen = vi.mocked(usePanelOpen);
 
 function renderPage() {
   return render(
@@ -88,14 +94,6 @@ describe("SettingsPage", () => {
       silentRefresh: vi.fn(),
     });
     mockUseConnectionConfig.mockReturnValue(null);
-    mockUsePanelOpen.mockReturnValue({
-      isPanelOpen: false,
-      isTemporarilyOpen: false,
-      effectiveIsOpen: false,
-      togglePanelOpen: vi.fn(),
-      openTemporarily: vi.fn(),
-      closeTemporary: vi.fn(),
-    });
     vi.mocked(useSidebarNavigation).mockReturnValue(vi.fn());
   });
 

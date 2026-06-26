@@ -3,7 +3,7 @@ import type * as React from "react";
 import type { Task } from "@/types/entities";
 import { TaskPageLayout } from "./TaskPageLayout";
 
-// FR-6: Mock all internal hooks
+// FR-6, FR8: Mock all internal hooks
 vi.mock("@/hooks/usePanelSplit", () => ({
   usePanelSplit: () => ({
     ratio: 0.6,
@@ -16,23 +16,15 @@ vi.mock("@/hooks/usePanelSide", () => ({
   usePanelSide: () => ({ panelSide: "right" as const }),
 }));
 
-const mockTogglePanelOpen = vi.fn();
-const mockCloseTemporary = vi.fn();
-const mockUsePanelOpen = vi.fn(() => ({
-  isPanelOpen: false,
-  isTemporarilyOpen: false,
-  effectiveIsOpen: false,
-  togglePanelOpen: mockTogglePanelOpen,
-  openTemporarily: vi.fn(),
-  closeTemporary: mockCloseTemporary,
+const mockUseSidebarState = vi.fn(() => ({
+  effectiveState: "collapsed" as const,
+  sidebarMode: "expanded" as const,
+  setSidebarMode: vi.fn(),
+  isNarrow: false,
+  hasHover: true,
 }));
-vi.mock("@/hooks/usePanelOpen", () => ({
-  usePanelOpen: () => mockUsePanelOpen(),
-}));
-
-const mockUseIsDesktop = vi.fn(() => true);
-vi.mock("@/hooks/useIsDesktop", () => ({
-  useIsDesktop: () => mockUseIsDesktop(),
+vi.mock("@/hooks/useSidebarState", () => ({
+  useSidebarState: () => mockUseSidebarState(),
 }));
 
 vi.mock("@/hooks/useSidebarNavigation", () => ({
@@ -71,17 +63,39 @@ const baseProps = {
 
 const selectedTask = { id: "task-1", name: "Test task" } as unknown as Task;
 
+const DESKTOP_SIDEBAR_STATE = {
+  effectiveState: "collapsed" as const,
+  sidebarMode: "expanded" as const,
+  setSidebarMode: vi.fn(),
+  isNarrow: false,
+  hasHover: true,
+};
+
+const MOBILE_SIDEBAR_STATE = {
+  effectiveState: "collapsed" as const,
+  sidebarMode: "expanded" as const,
+  setSidebarMode: vi.fn(),
+  isNarrow: true,
+  hasHover: false,
+};
+
+function setDesktopMode() {
+  mockUseSidebarState.mockReturnValue({
+    ...DESKTOP_SIDEBAR_STATE,
+    setSidebarMode: vi.fn(),
+  });
+}
+
+function setMobileMode() {
+  mockUseSidebarState.mockReturnValue({
+    ...MOBILE_SIDEBAR_STATE,
+    setSidebarMode: vi.fn(),
+  });
+}
+
 describe("TaskPageLayout", () => {
   beforeEach(() => {
-    mockUseIsDesktop.mockReturnValue(true);
-    mockUsePanelOpen.mockReturnValue({
-      isPanelOpen: false,
-      isTemporarilyOpen: false,
-      effectiveIsOpen: false,
-      togglePanelOpen: mockTogglePanelOpen,
-      openTemporarily: vi.fn(),
-      closeTemporary: mockCloseTemporary,
-    });
+    setDesktopMode();
   });
 
   // FR-6: renders children in main content area
@@ -141,7 +155,6 @@ describe("TaskPageLayout", () => {
 
   // FR-6: desktop layout shows resize handle when task selected
   it("should render resize handle on desktop when task is selected", () => {
-    mockUseIsDesktop.mockReturnValue(true);
     render(
       <TaskPageLayout {...baseProps} selectedTask={selectedTask}>
         <div>Content</div>
@@ -160,9 +173,9 @@ describe("TaskPageLayout", () => {
     expect(screen.queryByTestId("resize-handle")).not.toBeInTheDocument();
   });
 
-  // FR-6: no resize handle on mobile
+  // FR-6: no resize handle on mobile (isNarrow = true)
   it("should not render resize handle on mobile", () => {
-    mockUseIsDesktop.mockReturnValue(false);
+    setMobileMode();
     render(
       <TaskPageLayout {...baseProps} selectedTask={selectedTask}>
         <div>Content</div>
@@ -173,7 +186,7 @@ describe("TaskPageLayout", () => {
 
   // FR-6: mobile hides main content when task is selected
   it("should hide main content on mobile when task is selected", () => {
-    mockUseIsDesktop.mockReturnValue(false);
+    setMobileMode();
     render(
       <TaskPageLayout {...baseProps} selectedTask={selectedTask}>
         <div>Child content</div>
@@ -185,7 +198,7 @@ describe("TaskPageLayout", () => {
 
   // FR-6: mobile shows main content when no task selected
   it("should show main content on mobile when no task is selected", () => {
-    mockUseIsDesktop.mockReturnValue(false);
+    setMobileMode();
     render(
       <TaskPageLayout {...baseProps} selectedTask={null}>
         <div>Child content</div>
@@ -209,7 +222,6 @@ describe("TaskPageLayout", () => {
 
   // FR-6: desktop with selected task applies split ratio to main column
   it("should apply split ratio width on desktop when task is selected", () => {
-    mockUseIsDesktop.mockReturnValue(true);
     render(
       <TaskPageLayout {...baseProps} selectedTask={selectedTask}>
         <div>Content</div>
@@ -221,7 +233,6 @@ describe("TaskPageLayout", () => {
 
   // FR-6: desktop without selected task uses flex style for main column
   it("should apply flex style to main column on desktop when no task selected", () => {
-    mockUseIsDesktop.mockReturnValue(true);
     render(
       <TaskPageLayout {...baseProps} selectedTask={null}>
         <div>Content</div>
@@ -234,7 +245,7 @@ describe("TaskPageLayout", () => {
 
   // FR-6: mobile uses flex style for main column
   it("should apply flex style to main column on mobile", () => {
-    mockUseIsDesktop.mockReturnValue(false);
+    setMobileMode();
     render(
       <TaskPageLayout {...baseProps} selectedTask={null}>
         <div>Content</div>
@@ -246,7 +257,6 @@ describe("TaskPageLayout", () => {
 
   // FR-6: detail panel gets correct width style on desktop
   it("should apply split ratio width to detail panel on desktop", () => {
-    mockUseIsDesktop.mockReturnValue(true);
     render(
       <TaskPageLayout {...baseProps} selectedTask={selectedTask}>
         <div>Content</div>
@@ -259,7 +269,7 @@ describe("TaskPageLayout", () => {
 
   // FR-6: detail panel gets flex style on mobile
   it("should apply flex style to detail panel on mobile", () => {
-    mockUseIsDesktop.mockReturnValue(false);
+    setMobileMode();
     render(
       <TaskPageLayout {...baseProps} selectedTask={selectedTask}>
         <div>Content</div>
@@ -282,7 +292,6 @@ describe("TaskPageLayout", () => {
 
   // FR-6: main column flexShrink is 0 on desktop with task selected
   it("should set flexShrink 0 on main column when desktop and task selected", () => {
-    mockUseIsDesktop.mockReturnValue(true);
     render(
       <TaskPageLayout {...baseProps} selectedTask={selectedTask}>
         <div>Content</div>
@@ -292,5 +301,5 @@ describe("TaskPageLayout", () => {
     expect(mainColumn.style.flexShrink).toBe("0");
   });
 
-  // NOTE: Backdrop tests moved to Sidebar.test.tsx — backdrop is now rendered inside Sidebar component
+  // NOTE: Backdrop tests moved to layout-level — backdrop is now rendered in TaskPageLayout
 });

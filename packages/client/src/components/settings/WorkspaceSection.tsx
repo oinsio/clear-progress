@@ -6,13 +6,21 @@ import {
   FILTER_BAR_POSITIONS,
   HANDEDNESS_OPTIONS,
   PANEL_SIDES,
+  SIDEBAR_MODE_I18N_KEYS,
+  SIDEBAR_MODES,
 } from "@/constants";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useHandedness } from "@/hooks/useHandedness";
 import { usePanelSide } from "@/hooks/usePanelSide";
+import { useSidebarMode } from "@/hooks/useSidebarMode";
 import { cn } from "@/shared/lib/cn";
-import type { FilterBarPosition, Handedness, PanelSide } from "@/types/common";
+import type {
+  FilterBarPosition,
+  Handedness,
+  PanelSide,
+  SidebarMode,
+} from "@/types/common";
 
 const PANEL_SIDE_ICONS: Record<PanelSide, React.FC<{ className?: string }>> = {
   left: ({ className }) => <PanelLeft className={className} />,
@@ -26,6 +34,7 @@ export function WorkspaceSection() {
   const { isDetailPanelPinned, setDetailPanelPinned } = useDetailPanelPinned();
   const { handedness, setHandedness } = useHandedness();
   const { filterBarPosition, setFilterBarPosition } = useFilterBarPosition();
+  const [sidebarMode, setSidebarMode] = useSidebarMode();
 
   const handlePanelSideSelect = (side: PanelSide): void => {
     setPanelSide(side);
@@ -37,6 +46,10 @@ export function WorkspaceSection() {
 
   const handleHandednessSelect = (value: Handedness): void => {
     setHandedness(value);
+  };
+
+  const handleSidebarModeSelect = (mode: SidebarMode): void => {
+    setSidebarMode(mode);
   };
 
   return (
@@ -106,6 +119,31 @@ export function WorkspaceSection() {
               : t("settings.pinDetailPanel")}
           </span>
         </button>
+      </section>
+
+      {/* Sidebar mode section — implements FR3 of improve-sidebar-ux */}
+      <section data-testid="settings-sidebar-mode" className="space-y-3">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          {t("sidebar.control")}
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {SIDEBAR_MODES.map((modeOption) => (
+            <button
+              key={modeOption}
+              data-testid={`settings-sidebar-mode-option-${modeOption}`}
+              aria-pressed={sidebarMode === modeOption}
+              onClick={() => handleSidebarModeSelect(modeOption)}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
+                sidebarMode === modeOption
+                  ? "bg-accent border-accent text-white"
+                  : "bg-white border-gray-200 text-gray-700 hover:border-gray-300",
+              )}
+            >
+              {t(SIDEBAR_MODE_I18N_KEYS[modeOption])}
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* Handedness section */}

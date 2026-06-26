@@ -1,6 +1,7 @@
 /**
  * ContextsPage — displays and manages contexts.
  * Implements FR20 of command-bar.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
  */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
@@ -20,9 +21,9 @@ import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useContexts } from "@/hooks/useContexts";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
@@ -105,25 +106,28 @@ export default function ContextsPage() {
   const { contexts, isLoading, createContext, reorderContexts } = useContexts();
   const { panelSide } = usePanelSide();
   const navigate = useNavigate();
-
   const sensors = useDndSensors();
+  const { effectiveState, isNarrow, hasHover } = useSidebarState();
 
   const [contextTaskCounts, setContextTaskCounts] = useState<
     Record<string, number>
   >({});
-  const {
-    effectiveIsOpen,
-    isTemporarilyOpen,
-    togglePanelOpen,
-    openTemporarily,
-    closeTemporary,
-  } = usePanelOpen();
 
   const activeContexts = contexts.filter((context) => !context.is_deleted);
 
   useEffect(() => {
     void defaultTaskService.getContextTaskCounts().then(setContextTaskCounts);
   }, []);
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+
+  // FR17: Close drawer when transitioning from narrow to wide
+  useEffect(() => {
+    if (!isNarrow) {
+      setIsDrawerOpen(false);
+    }
+  }, [isNarrow]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -157,8 +161,7 @@ export default function ContextsPage() {
   );
 
   const handleModeChange = useSidebarNavigation();
-  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
-  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
+  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
 
   const handleSubmit = useCallback(
     (name: string) => {
@@ -224,13 +227,24 @@ export default function ContextsPage() {
         </main>
       </div>
 
+      {/* FR8: Backdrop for drawer mode */}
+      {isNarrow && !hasHover && isDrawerOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       {/* Right filter panel */}
       <Sidebar
         mode="contexts"
-        isOpen={effectiveIsOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
         side={panelSide}
-        onToggle={handleToggle}
-        onCollapsedClick={openTemporarily}
         onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />

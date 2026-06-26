@@ -3,7 +3,7 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { cleanup, render, screen } from "@testing-library/react/pure";
 import { MemoryRouter } from "react-router-dom";
 import { expect, type TestContext, vi } from "vitest";
-import type { PanelSide } from "@/types/common";
+import type { PanelSide, SidebarEffectiveState } from "@/types/common";
 
 import "./sidebarTestSetup";
 
@@ -20,37 +20,40 @@ import { Sidebar } from "@/components/tasks/Sidebar";
 const feature = await loadFeature("../sidebar_side.feature");
 
 type FeatureContext = {
-  isOpen: boolean;
+  effectiveState: SidebarEffectiveState;
   side: PanelSide;
 };
 
-function renderSidebar(isOpen: boolean, side: PanelSide) {
+function renderSidebar(effectiveState: SidebarEffectiveState, side: PanelSide) {
   return render(
     <MemoryRouter>
       <Sidebar
         mode={null}
-        isOpen={isOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={false}
         side={side}
-        onToggle={vi.fn()}
         onModeChange={vi.fn()}
       />
     </MemoryRouter>,
   );
 }
 
-function getSidebarPanel(isOpen: boolean) {
-  return isOpen
-    ? screen.getByTestId("sidebar-expanded")
-    : screen.getByTestId("sidebar-toggle");
+function getSidebarPanel(effectiveState: SidebarEffectiveState) {
+  return effectiveState === "collapsed"
+    ? screen.getByTestId("sidebar-collapsed")
+    : screen.getByTestId("sidebar-expanded");
 }
 
-function expectToggleBorder(borderClass: string, isOpen: boolean) {
-  const panel = getSidebarPanel(isOpen);
+function expectToggleBorder(
+  borderClass: string,
+  effectiveState: SidebarEffectiveState,
+) {
+  const panel = getSidebarPanel(effectiveState);
   expect(panel.className).toContain(borderClass);
 }
 
-function expectOrderFirstClass(isOpen: boolean) {
-  const panel = getSidebarPanel(isOpen);
+function expectOrderFirstClass(effectiveState: SidebarEffectiveState) {
+  const panel = getSidebarPanel(effectiveState);
   const outerWrapper = panel.parentElement as HTMLElement;
   expect(outerWrapper.className).toContain("order-first");
 }
@@ -72,28 +75,28 @@ describeFeature(
     f.BeforeEachScenario(() => {
       cleanup();
       vi.clearAllMocks();
-      f.context.isOpen = true;
+      f.context.effectiveState = "expanded";
       f.context.side = "right";
     });
 
     const givenExpanded = (_ctx: TestContext) => {
-      f.context.isOpen = true;
+      f.context.effectiveState = "expanded";
     };
     const givenCollapsed = (_ctx: TestContext) => {
-      f.context.isOpen = false;
+      f.context.effectiveState = "collapsed";
     };
     const whenSideIs = (_ctx: TestContext, side: string) => {
       f.context.side = side as PanelSide;
-      renderSidebar(f.context.isOpen, side as PanelSide);
+      renderSidebar(f.context.effectiveState, side as PanelSide);
     };
     const thenHasOrderFirst = (_ctx: TestContext) => {
-      expectOrderFirstClass(f.context.isOpen);
+      expectOrderFirstClass(f.context.effectiveState);
     };
     const thenLeftBorder = (_ctx: TestContext) => {
-      expectToggleBorder("border-l", f.context.isOpen);
+      expectToggleBorder("border-l", f.context.effectiveState);
     };
     const thenRightBorder = (_ctx: TestContext) => {
-      expectToggleBorder("border-r", f.context.isOpen);
+      expectToggleBorder("border-r", f.context.effectiveState);
     };
 
     // @add-sidebar-specs @FR4

@@ -20,10 +20,11 @@ import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useShowHidden } from "@/hooks/useShowHidden";
+import { useSidebarHover } from "@/hooks/useSidebarHover";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { useTargetBox } from "@/hooks/useTargetBox";
 import { useTasksByBox } from "@/hooks/useTasksByBox";
 import { defaultTaskService } from "@/services/defaultServices";
@@ -91,7 +92,7 @@ export function EntityDetailLayout({
   const navigate = useNavigate();
 
   const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
+  const { effectiveState: sidebarEffectiveState } = useSidebarState();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const isDesktop = useIsDesktop();
   const { isDetailPanelPinned } = useDetailPanelPinned();
@@ -100,6 +101,9 @@ export function EntityDetailLayout({
     containerRef: splitContainerRef,
     handleResizeMouseDown,
   } = usePanelSplit();
+  const { isHoverExpanded, hoverHandlers } = useSidebarHover(
+    sidebarEffectiveState,
+  );
   const isUnsynced = useIsUnsynced(entity ?? { needsSync: false });
   const { showHidden, toggleShowHidden } = useShowHidden();
   const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
@@ -441,9 +445,11 @@ export function EntityDetailLayout({
       {/* Sidebar — full height */}
       <Sidebar
         mode={panelMode}
-        isOpen={isPanelOpen}
+        effectiveState={sidebarEffectiveState}
+        isDrawerOpen={false}
+        isHoverExpanded={isHoverExpanded}
+        hoverHandlers={hoverHandlers}
         side={panelSide}
-        onToggle={togglePanelOpen}
         onModeChange={onModeChange}
       />
     </div>

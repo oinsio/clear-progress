@@ -1,3 +1,7 @@
+/**
+ * SearchPage — full-text search across tasks, goals, and ideas.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
+ */
 import { Search } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -9,15 +13,16 @@ import { IdeaItem } from "@/components/ideas/IdeaItem";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
+import { ROUTES } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSearch } from "@/hooks/useSearch";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { systemClock } from "@/lib/temporal";
 import {
   defaultIdeaService,
@@ -40,18 +45,21 @@ export default function SearchPage() {
   const { contexts } = useContexts();
   const { categories } = useCategories();
   const { panelSide } = usePanelSide();
-  const {
-    effectiveIsOpen,
-    isTemporarilyOpen,
-    togglePanelOpen,
-    openTemporarily,
-    closeTemporary,
-  } = usePanelOpen();
+  const { effectiveState, isNarrow, hasHover } = useSidebarState();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const navigate = useNavigate();
   const handleModeChange = useSidebarNavigation();
-  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
-  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
+
+  // FR17: Close drawer when transitioning from narrow to wide
+  useEffect(() => {
+    if (!isNarrow) {
+      setIsDrawerOpen(false);
+    }
+  }, [isNarrow]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -109,7 +117,7 @@ export default function SearchPage() {
 
   const handleNavigateToGoal = useCallback(
     (id: string) => {
-      navigate(`/goals/${id}`);
+      navigate(`${ROUTES.GOALS}/${id}`);
     },
     [navigate],
   );
@@ -276,7 +284,7 @@ export default function SearchPage() {
       {/* Task detail panel */}
       {selectedTaskId &&
         (() => {
-          const selectedTask = tasks.find((t) => t.id === selectedTaskId);
+          const selectedTask = tasks.find((task) => task.id === selectedTaskId);
           return selectedTask ? (
             <TaskDetailPanel
               task={selectedTask}
@@ -308,13 +316,24 @@ export default function SearchPage() {
           ) : null;
         })()}
 
+      {/* FR8: Backdrop for drawer mode */}
+      {isNarrow && !hasHover && isDrawerOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       {/* Right filter panel */}
       <Sidebar
         mode="search"
-        isOpen={effectiveIsOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
         side={panelSide}
-        onToggle={handleToggle}
-        onCollapsedClick={openTemporarily}
         onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />

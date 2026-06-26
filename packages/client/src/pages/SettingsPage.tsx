@@ -1,5 +1,5 @@
 import { Clipboard, Cloud, Link, Monitor, Palette } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -15,9 +15,9 @@ import { WorkspaceSection } from "@/components/settings/WorkspaceSection";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import {
   clearOauthReturnFlag,
   isOauthReturn,
@@ -30,13 +30,7 @@ import {
  */
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const {
-    effectiveIsOpen,
-    isTemporarilyOpen,
-    togglePanelOpen,
-    openTemporarily,
-    closeTemporary,
-  } = usePanelOpen();
+  const { effectiveState, isNarrow, hasHover } = useSidebarState();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,11 +85,18 @@ export default function SettingsPage() {
   }, [accessToken, navigate]);
 
   const { panelSide } = usePanelSide();
-  const handlePanelToggle = isTemporarilyOpen
-    ? closeTemporary
-    : togglePanelOpen;
   const handleModeChange = useSidebarNavigation();
-  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
+
+  // FR17: Close drawer when transitioning from narrow to wide
+  useEffect(() => {
+    if (!isNarrow) {
+      setIsDrawerOpen(false);
+    }
+  }, [isNarrow]);
 
   /** Implements FR13 of improve-sidebar-ux */
   const initialExpandedSection =
@@ -158,13 +159,24 @@ export default function SettingsPage() {
         </main>
       </div>
 
+      {/* FR8: Backdrop for drawer mode */}
+      {isNarrow && !hasHover && isDrawerOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       {/* Right panel — same as on main page */}
       <Sidebar
         mode={null}
-        isOpen={effectiveIsOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
         side={panelSide}
-        onToggle={handlePanelToggle}
-        onCollapsedClick={openTemporarily}
         onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />

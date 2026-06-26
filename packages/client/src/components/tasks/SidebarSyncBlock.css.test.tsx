@@ -7,7 +7,6 @@ import type { PanelSide } from "@/types/common";
 interface SidebarSyncBlockProps {
   isExpanded: boolean;
   side: PanelSide;
-  onToggle?: () => void;
 }
 
 const { mockUseConnectionStatus, mockUseAuth, mockUseSync } = vi.hoisted(
@@ -193,48 +192,13 @@ describe("SidebarSyncBlock CSS — expanded", () => {
     expect(buttons?.[1]?.dataset.testid).toBe("sidebar-sync");
   });
 
-  it("should render sync button before account button when side is right (no toggle)", () => {
+  it("should render sync button before account button when side is right", () => {
     mockUseConnectionStatus.mockReturnValue("synced");
     const { container } = renderSyncBlock({ isExpanded: true, side: "right" });
     const wrapper = container.firstElementChild;
     const buttons = wrapper?.querySelectorAll("button");
     expect(buttons?.[0]?.dataset.testid).toBe("sidebar-sync");
     expect(buttons?.[1]?.dataset.testid).toBe("sidebar-account");
-  });
-
-  it("should render toggle button first when side is right and onToggle provided", () => {
-    mockUseConnectionStatus.mockReturnValue("synced");
-    const { container } = renderSyncBlock({
-      isExpanded: true,
-      side: "right",
-      onToggle: vi.fn(),
-    });
-    const wrapper = container.firstElementChild;
-    const buttons = wrapper?.querySelectorAll("button");
-    expect(buttons?.[0]?.dataset.testid).toBe("sidebar-toggle-button");
-    expect(buttons?.[1]?.dataset.testid).toBe("sidebar-sync");
-    expect(buttons?.[2]?.dataset.testid).toBe("sidebar-account");
-  });
-
-  it("should render toggle button last when side is left and onToggle provided", () => {
-    mockUseConnectionStatus.mockReturnValue("synced");
-    const { container } = renderSyncBlock({
-      isExpanded: true,
-      side: "left",
-      onToggle: vi.fn(),
-    });
-    const wrapper = container.firstElementChild;
-    const buttons = wrapper?.querySelectorAll("button");
-    expect(buttons?.[0]?.dataset.testid).toBe("sidebar-account");
-    expect(buttons?.[1]?.dataset.testid).toBe("sidebar-sync");
-    expect(buttons?.[2]?.dataset.testid).toBe("sidebar-toggle-button");
-  });
-
-  it("should have aria-label on toggle button", () => {
-    mockUseConnectionStatus.mockReturnValue("synced");
-    renderSyncBlock({ isExpanded: true, onToggle: vi.fn() });
-    const toggleButton = screen.getByTestId("sidebar-toggle-button");
-    expect(toggleButton.getAttribute("aria-label")).toBe("filter.closeSidebar");
   });
 });
 

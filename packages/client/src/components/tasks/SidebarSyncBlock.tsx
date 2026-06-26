@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, CircleUser, RefreshCw } from "lucide-react";
+import { CircleUser, RefreshCw } from "lucide-react";
 import type * as React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +12,6 @@ import type { PanelSide } from "@/types/common";
 interface SidebarSyncBlockProps {
   isExpanded: boolean;
   side: PanelSide;
-  onToggle?: () => void;
 }
 
 /**
@@ -21,11 +20,7 @@ interface SidebarSyncBlockProps {
  *
  * Implements FR3 of rename-right-panel-to-sidebar.
  */
-export function SidebarSyncBlock({
-  isExpanded,
-  side,
-  onToggle,
-}: SidebarSyncBlockProps) {
+export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { pull } = useSync();
@@ -94,30 +89,15 @@ export function SidebarSyncBlock({
     t,
   });
 
-  const ChevronIcon = side === "right" ? ChevronRight : ChevronLeft;
-  const toggleButton = onToggle ? (
-    <button
-      type="button"
-      aria-label={t("filter.closeSidebar")}
-      data-testid="sidebar-toggle-button"
-      onClick={onToggle}
-      className="flex-shrink-0 flex items-center justify-center px-2 py-4 text-white hover:bg-black/15 transition-colors"
-    >
-      <ChevronIcon className="w-5 h-5" aria-hidden="true" />
-    </button>
-  ) : null;
-
   return (
     <div className="flex items-center justify-between border-b border-white/20">
       {isLeft ? (
         <>
           {accountButton}
           {syncLoginButton}
-          {toggleButton}
         </>
       ) : (
         <>
-          {toggleButton}
           {syncLoginButton}
           {accountButton}
         </>

@@ -1,7 +1,9 @@
 Feature: Sidebar Platform-Aware Defaults
   Sidebar preferences use platform-aware defaults based on screen size.
-  Desktop defaults differ from mobile defaults.
+  Desktop and mobile share the same default sidebar mode (expanded).
+  Mobile collapsing is handled at the layout level, not in the mode preference.
   Saved values in localStorage override platform defaults.
+  Legacy panel_open values are migrated to the new sidebar mode system.
 
   @improve-sidebar-ux @FR7
   Scenario: Desktop defaults for panel side
@@ -25,25 +27,25 @@ Feature: Sidebar Platform-Aware Defaults
     Then the panel side is "right"
 
   @improve-sidebar-ux @FR7
-  Scenario: Desktop defaults for panel open state
+  Scenario: Desktop defaults for sidebar mode
     Given the user is on a desktop device
-    And no panel open state is saved in localStorage
-    When the panel open preference is loaded
-    Then the panel is open
+    And no sidebar mode is saved in localStorage
+    When the sidebar mode preference is loaded
+    Then the sidebar mode is "expanded"
 
   @improve-sidebar-ux @FR7
-  Scenario: Mobile defaults for panel open state
+  Scenario: Mobile defaults for sidebar mode
     Given the user is on a mobile device
-    And no panel open state is saved in localStorage
-    When the panel open preference is loaded
-    Then the panel is closed
+    And no sidebar mode is saved in localStorage
+    When the sidebar mode preference is loaded
+    Then the sidebar mode is "expanded"
 
   @improve-sidebar-ux @FR7
-  Scenario: Saved panel open state overrides mobile default
+  Scenario: Legacy panel open migrates to sidebar mode
     Given the user is on a mobile device
-    And panel open state "true" is saved in localStorage
-    When the panel open preference is loaded
-    Then the panel is open
+    And legacy panel open "true" is saved in localStorage
+    When the sidebar mode preference is loaded
+    Then the sidebar mode is "expanded"
 
   @improve-sidebar-ux @FR7
   Scenario: Desktop defaults for filter bar position

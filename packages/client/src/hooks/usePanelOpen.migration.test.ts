@@ -1,71 +1,70 @@
 // implements FR10 of improve-sidebar-ux
 import { renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
+import {
+  LEGACY_ALWAYS_OPEN_KEY,
+  LEGACY_PANEL_OPEN_KEY,
+  useSidebarMode,
+} from "./useSidebarMode";
 
-vi.mock("@/hooks/useIsDesktop", () => ({
-  useIsDesktop: () => true,
-}));
-
-import { LEGACY_ALWAYS_OPEN_KEY, usePanelOpen } from "./usePanelOpen";
-
-describe("usePanelOpen — always-open migration", () => {
+describe("useSidebarMode — always-open migration chain", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it("should set PANEL_OPEN to true and remove legacy key when PANEL_ALWAYS_OPEN was true", () => {
+  it("should migrate PANEL_ALWAYS_OPEN true through to expanded sidebar mode", () => {
     localStorage.setItem(LEGACY_ALWAYS_OPEN_KEY, "true");
 
-    renderHook(() => usePanelOpen());
+    renderHook(() => useSidebarMode());
 
-    expect(localStorage.getItem(STORAGE_KEYS.PANEL_OPEN)).toBe("true");
+    expect(localStorage.getItem(STORAGE_KEYS.SIDEBAR_MODE)).toBe("expanded");
     expect(localStorage.getItem(LEGACY_ALWAYS_OPEN_KEY)).toBeNull();
+    expect(localStorage.getItem(LEGACY_PANEL_OPEN_KEY)).toBeNull();
   });
 
-  it("should remove legacy key without changing PANEL_OPEN when PANEL_ALWAYS_OPEN was false", () => {
+  it("should remove legacy key without setting sidebar mode when PANEL_ALWAYS_OPEN was false", () => {
     localStorage.setItem(LEGACY_ALWAYS_OPEN_KEY, "false");
 
-    renderHook(() => usePanelOpen());
+    renderHook(() => useSidebarMode());
 
     expect(localStorage.getItem(LEGACY_ALWAYS_OPEN_KEY)).toBeNull();
   });
 
-  it("should not touch PANEL_OPEN when PANEL_ALWAYS_OPEN is not present", () => {
-    renderHook(() => usePanelOpen());
+  it("should not touch sidebar mode when PANEL_ALWAYS_OPEN is not present", () => {
+    renderHook(() => useSidebarMode());
 
-    expect(localStorage.getItem(STORAGE_KEYS.PANEL_OPEN)).toBeNull();
+    expect(localStorage.getItem(LEGACY_PANEL_OPEN_KEY)).toBeNull();
     expect(localStorage.getItem(LEGACY_ALWAYS_OPEN_KEY)).toBeNull();
   });
 
-  it("should preserve existing PANEL_OPEN value when PANEL_ALWAYS_OPEN is not present", () => {
-    localStorage.setItem(STORAGE_KEYS.PANEL_OPEN, "false");
+  it("should preserve existing sidebar mode when PANEL_ALWAYS_OPEN is not present", () => {
+    localStorage.setItem(STORAGE_KEYS.SIDEBAR_MODE, "collapsed");
 
-    renderHook(() => usePanelOpen());
+    renderHook(() => useSidebarMode());
 
-    expect(localStorage.getItem(STORAGE_KEYS.PANEL_OPEN)).toBe("false");
+    expect(localStorage.getItem(STORAGE_KEYS.SIDEBAR_MODE)).toBe("collapsed");
   });
 
-  it("should return isPanelOpen as true after migration from always-open", () => {
+  it("should return expanded sidebar mode after migration from always-open", () => {
     localStorage.setItem(LEGACY_ALWAYS_OPEN_KEY, "true");
 
-    const { result } = renderHook(() => usePanelOpen());
+    const { result } = renderHook(() => useSidebarMode());
 
-    expect(result.current.isPanelOpen).toBe(true);
+    expect(result.current[0]).toBe("expanded");
   });
 
   it("should export the correct legacy key value", () => {
     expect(LEGACY_ALWAYS_OPEN_KEY).toBe("panel_always_open");
   });
 
-  it("should not set PANEL_OPEN when legacy key has non-true value", () => {
+  it("should not set sidebar mode when legacy key has non-true value", () => {
     localStorage.setItem(LEGACY_ALWAYS_OPEN_KEY, "something_else");
 
-    renderHook(() => usePanelOpen());
+    renderHook(() => useSidebarMode());
 
-    // PANEL_OPEN should not be set because legacy value was not "true"
-    // On desktop default is true, so stored value should still be null
-    expect(localStorage.getItem(STORAGE_KEYS.PANEL_OPEN)).toBeNull();
+    // Legacy key should be removed, but no panel_open value was set
+    // so sidebar_mode uses the default "expanded"
     expect(localStorage.getItem(LEGACY_ALWAYS_OPEN_KEY)).toBeNull();
   });
 });

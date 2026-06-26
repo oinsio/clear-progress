@@ -7,6 +7,7 @@ import type {
   Handedness,
   InterfaceScale,
   PanelSide,
+  SidebarMode,
 } from "@/types/common";
 
 export const ROUTES = {
@@ -70,10 +71,6 @@ export const PANEL_SIDES: PanelSide[] = ["left", "right"];
 // implements FR7 of improve-sidebar-ux
 export const DESKTOP_FILTER_BAR_POSITION: FilterBarPosition = "top";
 export const MOBILE_FILTER_BAR_POSITION: FilterBarPosition = "bottom";
-
-// implements FR7 of improve-sidebar-ux
-export const DESKTOP_PANEL_OPEN_DEFAULT = true;
-export const MOBILE_PANEL_OPEN_DEFAULT = false;
 
 export const FILTER_BAR_POSITIONS: FilterBarPosition[] = ["bottom", "top"];
 
@@ -161,7 +158,6 @@ export const STORAGE_KEYS = {
   CUSTOM_ACCENT_DARK: "custom_accent_dark",
   DEFAULT_BOX: "default_box",
   PANEL_SIDE: "panel_side",
-  PANEL_OPEN: "panel_open",
   LANGUAGE: "language",
   PANEL_SPLIT: "panel_split",
   FILTER_BAR_POSITION: "filter_bar_position",
@@ -180,6 +176,7 @@ export const STORAGE_KEYS = {
   DAY_BOUNDARY: "day_boundary",
   ONBOARDING_SHOWN: "onboarding_shown",
   DETAIL_PANEL_PINNED: "detail_panel_pinned",
+  SIDEBAR_MODE: "sidebar_mode",
 } as const;
 
 export const DEFAULT_FOCUS_OPACITY = 30;
@@ -269,6 +266,23 @@ export const SETTINGS_SECTION_IDS = {
   TASKS: "settings-accordion-tasks",
   ACCOUNT_SYNC: "settings-accordion-account-sync",
 } as const;
+
+// implements FR1, FR8 of improve-sidebar-ux
+export const SIDEBAR_MODES: readonly SidebarMode[] = [
+  "expanded",
+  "collapsed",
+  "expand-on-hover",
+];
+export const DEFAULT_SIDEBAR_MODE: SidebarMode = "expanded";
+
+/** i18n key mapping for sidebar mode options — implements FR3 of improve-sidebar-ux */
+export const SIDEBAR_MODE_I18N_KEYS: Record<SidebarMode, string> = {
+  expanded: "sidebar.modeExpanded",
+  collapsed: "sidebar.modeCollapsed",
+  "expand-on-hover": "sidebar.modeExpandOnHover",
+};
+export const SIDEBAR_HOVER_OPEN_DELAY_MS = 250;
+export const SIDEBAR_HOVER_CLOSE_DELAY_MS = 150;
 
 // implements FR8, FR9 of improve-sidebar-ux
 export const SIDEBAR_SWIPE_EDGE_ZONE_PX = 24;

@@ -9,7 +9,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { GripVertical, Lightbulb } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CommandBar } from "@/components/command-bar";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
@@ -17,11 +17,10 @@ import { IdeaItem } from "@/components/ideas/IdeaItem";
 import { Sidebar } from "@/components/tasks/Sidebar";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useIdeas } from "@/hooks/useIdeas";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
@@ -79,15 +78,9 @@ export default function IdeasPage() {
   const { ideas, isLoading, createIdea, updateIdea, deleteIdea, reorderIdeas } =
     useIdeas();
   const { panelSide } = usePanelSide();
-  const {
-    effectiveIsOpen,
-    isTemporarilyOpen,
-    togglePanelOpen,
-    openTemporarily,
-    closeTemporary,
-  } = usePanelOpen();
+  const { effectiveState, isNarrow, hasHover } = useSidebarState();
   const sensors = useDndSensors();
-  const isDesktop = useIsDesktop();
+  const isDesktop = !isNarrow;
   const {
     ratio,
     containerRef: splitContainerRef,
@@ -99,8 +92,17 @@ export default function IdeasPage() {
   const activeIdeas = ideas.filter((idea) => !idea.is_deleted);
 
   const handleModeChange = useSidebarNavigation();
-  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
-  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
+
+  // FR17: Close drawer when transitioning from narrow to wide
+  useEffect(() => {
+    if (!isNarrow) {
+      setIsDrawerOpen(false);
+    }
+  }, [isNarrow]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -262,13 +264,24 @@ export default function IdeasPage() {
       </div>
       {/* end splitContainerRef */}
 
+      {/* FR8: Backdrop for drawer mode */}
+      {isNarrow && !hasHover && isDrawerOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       {/* Right filter panel */}
       <Sidebar
         mode="ideas"
-        isOpen={effectiveIsOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
         side={panelSide}
-        onToggle={handleToggle}
-        onCollapsedClick={openTemporarily}
         onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
       />

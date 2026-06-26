@@ -21,7 +21,15 @@ vi.mock("@/app/providers/AuthProvider", () => ({
 vi.mock("@/hooks/useDeletedEntities");
 vi.mock("@/hooks/useRestoreEntity");
 vi.mock("@/hooks/usePanelSide");
-vi.mock("@/hooks/usePanelOpen");
+vi.mock("@/hooks/useSidebarState", () => ({
+  useSidebarState: () => ({
+    effectiveState: "collapsed",
+    sidebarMode: "expanded",
+    setSidebarMode: vi.fn(),
+    isNarrow: true,
+    hasHover: false,
+  }),
+}));
 vi.mock("@/hooks/usePurge");
 vi.mock("@/hooks/useSidebarNavigation");
 
@@ -44,7 +52,6 @@ vi.mock("@/hooks/useIsDesktop", () => ({
 }));
 
 import { useDeletedEntities } from "@/hooks/useDeletedEntities";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePurge } from "@/hooks/usePurge";
 import { useRestoreEntity } from "@/hooks/useRestoreEntity";
@@ -54,7 +61,6 @@ import DeletedPage from "./DeletedPage";
 export const mockUseDeletedEntities = vi.mocked(useDeletedEntities);
 export const mockUseRestoreEntity = vi.mocked(useRestoreEntity);
 export const mockUsePanelSide = vi.mocked(usePanelSide);
-export const mockUsePanelOpen = vi.mocked(usePanelOpen);
 export const mockUsePurge = vi.mocked(usePurge);
 export const mockUseSidebarNavigation = vi.mocked(useSidebarNavigation);
 
@@ -91,14 +97,6 @@ export function renderDeletedPage(
   mockUsePanelSide.mockReturnValue({
     panelSide: "right",
     setPanelSide: vi.fn(),
-  });
-  mockUsePanelOpen.mockReturnValue({
-    isPanelOpen: false,
-    isTemporarilyOpen: false,
-    effectiveIsOpen: false,
-    togglePanelOpen: vi.fn(),
-    openTemporarily: vi.fn(),
-    closeTemporary: vi.fn(),
   });
   mockUsePurge.mockReturnValue({
     purge: purgeOverrides.purge ?? vi.fn(),

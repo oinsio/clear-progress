@@ -1,20 +1,21 @@
 /**
  * Implements FR6 of refactor-task-pages.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
  *
  * Shared layout component providing split-pane + Sidebar + TaskDetailPanel
- * for all task pages.
+ * for all task pages. Manages drawer state for mobile (narrow, no hover).
  */
 
 import { Pin } from "lucide-react";
 import type * as React from "react";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { useSidebarHover } from "@/hooks/useSidebarHover";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { useSidebarSwipe } from "@/hooks/useSidebarSwipe";
 import { cn } from "@/shared/lib/cn";
 import type { Box } from "@/types/common";
@@ -38,6 +39,7 @@ export interface TaskPageLayoutProps {
   onModeChange?: (newMode: SidebarMode) => void;
 }
 
+/** Implements FR8, FR14-FR17 of improve-sidebar-ux */
 export function TaskPageLayout({
   children,
   commandBar,
@@ -56,30 +58,45 @@ export function TaskPageLayout({
   const { ratio, containerRef, handleResizeMouseDown } = usePanelSplit();
   const { panelSide } = usePanelSide();
   const {
-    isTemporarilyOpen,
-    effectiveIsOpen,
-    togglePanelOpen,
-    openTemporarily,
-    closeTemporary,
-  } = usePanelOpen();
-  const isDesktop = useIsDesktop();
+    effectiveState,
+    sidebarMode: sidebarBehaviorMode,
+    setSidebarMode: setSidebarBehaviorMode,
+    isNarrow,
+    hasHover,
+  } = useSidebarState();
+
+  // FR14-FR17: Drawer state for mobile (narrow + no hover)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const openDrawer = useCallback(() => setIsDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
+
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { sidebarTranslateX } = useSidebarSwipe({
     sidebarRef,
     side: panelSide,
-    isOpen: effectiveIsOpen,
-    isDesktop,
-    onOpen: openTemporarily,
-    onClose: closeTemporary,
+    isOpen: isDrawerOpen,
+    isDesktop: !isNarrow || hasHover,
+    onOpen: openDrawer,
+    onClose: closeDrawer,
   });
   const { t } = useTranslation();
   const { isDetailPanelPinned } = useDetailPanelPinned();
   const defaultModeChange = useSidebarNavigation();
   const handleModeChange = externalModeChange ?? defaultModeChange;
 
-  const handleToggle = isTemporarilyOpen ? closeTemporary : togglePanelOpen;
-  const handleAutoCollapse = isTemporarilyOpen ? closeTemporary : undefined;
+  const { isHoverExpanded, hoverHandlers } = useSidebarHover(effectiveState);
 
+  // FR11: Auto-collapse only when drawer is open
+  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
+
+  // FR17: Close drawer when transitioning from narrow to wide
+  useEffect(() => {
+    if (!isNarrow) {
+      setIsDrawerOpen(false);
+    }
+  }, [isNarrow]);
+
+  const isDesktop = !isNarrow;
   const isTaskSelected = selectedTask !== null;
   const showDetailColumn = isDesktop && (isDetailPanelPinned || isTaskSelected);
   const showResizeHandle = showDetailColumn;
@@ -148,16 +165,32 @@ export function TaskPageLayout({
         )}
       </div>
 
+      {/* FR8: Backdrop for drawer mode (narrow + no hover + drawer open) */}
+      {isNarrow && !hasHover && isDrawerOpen && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 bg-black/40 z-10"
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       <Sidebar
         mode={sidebarMode}
-        isOpen={effectiveIsOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
+        isHoverExpanded={isHoverExpanded}
+        hoverHandlers={hoverHandlers}
         side={panelSide}
         containerRef={sidebarRef}
         sidebarTranslateX={sidebarTranslateX}
-        onToggle={handleToggle}
-        onCollapsedClick={openTemporarily}
         onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
+        sidebarBehaviorMode={sidebarBehaviorMode}
+        onSidebarBehaviorModeChange={setSidebarBehaviorMode}
+        isControlVisible={!isNarrow || hasHover}
       />
     </div>
   );

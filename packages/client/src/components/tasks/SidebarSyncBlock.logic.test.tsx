@@ -9,7 +9,6 @@ import type { PanelSide } from "@/types/common";
 interface SidebarSyncBlockProps {
   isExpanded: boolean;
   side: PanelSide;
-  onToggle?: () => void;
 }
 
 const mockNavigate = vi.fn();
@@ -168,26 +167,15 @@ describe("SidebarSyncBlock logic — handler behavior", () => {
     });
   });
 
-  it("should call onToggle when clicking the toggle button", async () => {
-    const mockOnToggle = vi.fn();
-    mockUseConnectionStatus.mockReturnValue("synced");
-    renderSyncBlock({ isExpanded: true, onToggle: mockOnToggle });
-
-    const user = userEvent.setup();
-    await user.click(screen.getByTestId("sidebar-toggle-button"));
-    expect(mockOnToggle).toHaveBeenCalledOnce();
-  });
-
-  it("should not render toggle button when onToggle is not provided", () => {
+  it("should not render toggle button in expanded mode", () => {
     mockUseConnectionStatus.mockReturnValue("synced");
     renderSyncBlock({ isExpanded: true });
     expect(screen.queryByTestId("sidebar-toggle-button")).toBeNull();
   });
 
-  it("should not render toggle button when collapsed", () => {
-    const mockOnToggle = vi.fn();
+  it("should not render toggle button in collapsed mode", () => {
     mockUseConnectionStatus.mockReturnValue("synced");
-    renderSyncBlock({ isExpanded: false, onToggle: mockOnToggle });
+    renderSyncBlock({ isExpanded: false });
     expect(screen.queryByTestId("sidebar-toggle-button")).toBeNull();
   });
 });
