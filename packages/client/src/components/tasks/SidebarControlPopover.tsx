@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
-import React, { useCallback, useEffect, useRef } from "react";
+import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { SIDEBAR_MODE_I18N_KEYS, SIDEBAR_MODES } from "@/constants";
 import { cn } from "@/shared/lib/cn";
