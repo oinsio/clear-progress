@@ -94,7 +94,11 @@ export function renderDeletedPage(
   });
   mockUsePanelOpen.mockReturnValue({
     isPanelOpen: false,
+    isTemporarilyOpen: false,
+    effectiveIsOpen: false,
     togglePanelOpen: vi.fn(),
+    openTemporarily: vi.fn(),
+    closeTemporary: vi.fn(),
   });
   mockUsePurge.mockReturnValue({
     purge: purgeOverrides.purge ?? vi.fn(),
