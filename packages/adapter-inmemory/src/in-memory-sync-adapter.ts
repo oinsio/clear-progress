@@ -54,6 +54,7 @@ type EntityWithId =
   | WireChecklistItem
   | WireAttachment;
 
+// implements FR7 of fix-pull-pagination
 export class InMemorySyncAdapter implements SyncAdapter {
   private tasks = new Map<string, WireTask>();
   private goals = new Map<string, WireGoal>();
@@ -68,6 +69,11 @@ export class InMemorySyncAdapter implements SyncAdapter {
   private nextRevision = 1;
   private purgeRevision = 0;
   private initialized = false;
+  private readonly maxRowsPerTable: number;
+
+  constructor(options: { maxRowsPerTable?: number } = {}) {
+    this.maxRowsPerTable = options.maxRowsPerTable ?? Infinity;
+  }
 
   async ping(): Promise<PingResponse> {
     return {
@@ -83,28 +89,75 @@ export class InMemorySyncAdapter implements SyncAdapter {
     return { ok: true };
   }
 
+  // implements FR7 of fix-pull-pagination
   async pull(request: PullRequest): Promise<PullResponse> {
-    const tasks = Array.from(this.tasks.values()).filter(
-      (task) => task.revision > request.since_revision,
+    const allTasks = this.filterAndSort(this.tasks, request.since_revision);
+    const allGoals = this.filterAndSort(this.goals, request.since_revision);
+    const allContexts = this.filterAndSort(
+      this.contexts,
+      request.since_revision,
     );
-    const goals = Array.from(this.goals.values()).filter(
-      (goal) => goal.revision > request.since_revision,
+    const allCategories = this.filterAndSort(
+      this.categories,
+      request.since_revision,
     );
-    const contexts = Array.from(this.contexts.values()).filter(
-      (context) => context.revision > request.since_revision,
+    const allIdeas = this.filterAndSort(this.ideas, request.since_revision);
+    const allChecklistItems = this.filterAndSort(
+      this.checklistItems,
+      request.since_revision,
     );
-    const categories = Array.from(this.categories.values()).filter(
-      (category) => category.revision > request.since_revision,
+    const allAttachments = this.filterAndSort(
+      this.attachments,
+      request.since_revision,
     );
-    const ideas = Array.from(this.ideas.values()).filter(
-      (idea) => idea.revision > request.since_revision,
+
+    const allEntityArrays = [
+      allTasks,
+      allGoals,
+      allContexts,
+      allCategories,
+      allIdeas,
+      allChecklistItems,
+      allAttachments,
+    ];
+
+    const hasMore = allEntityArrays.some(
+      (entities) => entities.length > this.maxRowsPerTable,
     );
-    const checklistItems = Array.from(this.checklistItems.values()).filter(
-      (item) => item.revision > request.since_revision,
-    );
-    const attachments = Array.from(this.attachments.values()).filter(
-      (attachment) => attachment.revision > request.since_revision,
-    );
+
+    const tasks = allTasks.slice(0, this.maxRowsPerTable);
+    const goals = allGoals.slice(0, this.maxRowsPerTable);
+    const contexts = allContexts.slice(0, this.maxRowsPerTable);
+    const categories = allCategories.slice(0, this.maxRowsPerTable);
+    const ideas = allIdeas.slice(0, this.maxRowsPerTable);
+    const checklistItems = allChecklistItems.slice(0, this.maxRowsPerTable);
+    const attachments = allAttachments.slice(0, this.maxRowsPerTable);
+
+    const truncatedArrays = [
+      tasks,
+      goals,
+      contexts,
+      categories,
+      ideas,
+      checklistItems,
+      attachments,
+    ];
+
+    let currentRevision: number;
+    if (hasMore) {
+      const maxRevisions = truncatedArrays
+        .filter((entities) => entities.length > 0)
+        .map((entities) => {
+          const lastEntity = entities[entities.length - 1];
+          return lastEntity ? lastEntity.revision : 0;
+        });
+      currentRevision =
+        maxRevisions.length > 0
+          ? Math.min(...maxRevisions)
+          : this.nextRevision - 1;
+    } else {
+      currentRevision = this.nextRevision - 1;
+    }
 
     let settings = Array.from(this.settings.values());
     const settingsUpdatedAt = request.settings_updated_at;
@@ -124,10 +177,20 @@ export class InMemorySyncAdapter implements SyncAdapter {
       checklist_items: checklistItems,
       attachments,
       settings,
-      current_revision: this.nextRevision - 1,
+      current_revision: currentRevision,
       purge_revision: this.purgeRevision,
+      has_more: hasMore,
       server_time: new Date().toISOString(),
     };
+  }
+
+  private filterAndSort<T extends { revision: number }>(
+    store: Map<string, T>,
+    sinceRevision: number,
+  ): T[] {
+    return Array.from(store.values())
+      .filter((entity) => entity.revision > sinceRevision)
+      .sort((a, b) => a.revision - b.revision);
   }
 
   async push(request: PushRequest): Promise<PushResponse> {

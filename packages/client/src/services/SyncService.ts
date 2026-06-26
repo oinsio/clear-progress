@@ -1,5 +1,9 @@
 // implements FR6, FR7 of localstorage-refactor
-import type { PushResponse, SyncAdapter } from "@clear-progress/contract";
+import type {
+  PullResponse,
+  PushResponse,
+  SyncAdapter,
+} from "@clear-progress/contract";
 import {
   PUSH_CHUNK_SIZE,
   PUSH_RESULT_STATUS,
@@ -72,8 +76,9 @@ export class SyncService {
     return this.withLock(() => this._push(force));
   }
 
+  // implements FR5, FR6 of fix-pull-pagination
   private async _pull(): Promise<void> {
-    const sinceRevision = await this.syncMetaRepository.getValue(
+    let sinceRevision = await this.syncMetaRepository.getValue(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
     );
     let settingsUpdatedAt: string | undefined;
@@ -84,29 +89,67 @@ export class SyncService {
       settingsUpdatedAt = undefined;
     }
 
-    const pullResponse = await this.syncAdapter.pull({
-      since_revision: sinceRevision,
-      settings_updated_at: settingsUpdatedAt,
-    });
+    let isFirstIteration = true;
+    let pullResponse: PullResponse;
 
-    if (!pullResponse.ok) {
-      throw new Error("Pull failed");
-    }
+    do {
+      pullResponse = await this.syncAdapter.pull({
+        since_revision: sinceRevision,
+        settings_updated_at: isFirstIteration ? settingsUpdatedAt : undefined,
+      });
 
-    // Check purge_revision
-    const localPurgeRevision = await this.syncMetaRepository.getValue(
-      SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+      if (!pullResponse.ok) {
+        throw new Error("Pull failed");
+      }
+
+      // Check purge_revision only on first iteration
+      if (isFirstIteration) {
+        const localPurgeRevision = await this.syncMetaRepository.getValue(
+          SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+        );
+
+        if (pullResponse.purge_revision > localPurgeRevision) {
+          await this._purgeLocalDeletedRecords();
+          await this.syncMetaRepository.setValue(
+            SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+            pullResponse.purge_revision,
+          );
+        }
+      }
+
+      await this._applyPullBatch(pullResponse);
+
+      // Update settings_updated_at if settings received
+      if (pullResponse.settings.length > 0) {
+        settingsUpdatedAt = this._computeMaxSettingsUpdatedAt(
+          pullResponse.settings,
+          settingsUpdatedAt,
+        );
+      }
+
+      sinceRevision = pullResponse.current_revision;
+      isFirstIteration = false;
+    } while (pullResponse.has_more);
+
+    // Save revision only after all pages are fetched
+    await this.syncMetaRepository.setValue(
+      SYNC_META_KEYS.LAST_KNOWN_REVISION,
+      pullResponse.current_revision,
     );
 
-    if (pullResponse.purge_revision > localPurgeRevision) {
-      // Someone else called purge — delete local soft-deleted records
-      await this._purgeLocalDeletedRecords();
-      await this.syncMetaRepository.setValue(
-        SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
-        pullResponse.purge_revision,
-      );
+    // Persist settings_updated_at after pagination completes
+    if (settingsUpdatedAt) {
+      setPreference(STORAGE_KEYS.SETTINGS_UPDATED_AT, settingsUpdatedAt);
     }
 
+    // Notify about sync completion
+    window.dispatchEvent(new CustomEvent("sync_complete"));
+  }
+
+  // implements FR5 of fix-pull-pagination
+  private async _applyPullBatch(
+    pullResponse: Awaited<ReturnType<SyncAdapter["pull"]>>,
+  ): Promise<void> {
     // Normalize sort_order: server may send INTEGER, client expects string
     // Implements FR1 of fractional-sort-order
     const normalizedTasks = pullResponse.tasks.map(normalizeSortOrder);
@@ -176,43 +219,37 @@ export class SyncService {
           throw error;
         }),
     ]);
+  }
 
-    // Update settings_updated_at
+  // implements FR5 of fix-pull-pagination
+  private _computeMaxSettingsUpdatedAt(
+    settings: Array<{ updated_at: string }>,
+    currentMax: string | undefined,
+  ): string {
     // Use numeric comparison via Temporal.Instant.compare instead of
     // lexicographic comparison, since ISO 8601 strings can have different numbers
     // of decimal places (0 vs. 3), which breaks string comparison.
-    if (pullResponse.settings.length > 0) {
-      try {
-        const maxUpdatedAt = pullResponse.settings.reduce((max, setting) => {
-          if (!max) return setting.updated_at;
-          return Temporal.Instant.compare(
-            Temporal.Instant.from(setting.updated_at),
-            Temporal.Instant.from(max),
-          ) > 0
-            ? setting.updated_at
-            : max;
-        }, settingsUpdatedAt ?? "");
-        setPreference(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
-      } catch (temporalError) {
-        console.error(
-          "[SyncService] Temporal.Instant.from failed in settings_updated_at:",
-          temporalError,
-          {
-            settingsUpdatedAt,
-            settings: pullResponse.settings.map((s) => s.updated_at),
-          },
-        );
-        throw temporalError;
-      }
+    try {
+      return settings.reduce((max, setting) => {
+        if (!max) return setting.updated_at;
+        return Temporal.Instant.compare(
+          Temporal.Instant.from(setting.updated_at),
+          Temporal.Instant.from(max),
+        ) > 0
+          ? setting.updated_at
+          : max;
+      }, currentMax ?? "");
+    } catch (temporalError) {
+      console.error(
+        "[SyncService] Temporal.Instant.from failed in settings_updated_at:",
+        temporalError,
+        {
+          currentMax,
+          settings: settings.map((s) => s.updated_at),
+        },
+      );
+      throw temporalError;
     }
-
-    await this.syncMetaRepository.setValue(
-      SYNC_META_KEYS.LAST_KNOWN_REVISION,
-      pullResponse.current_revision,
-    );
-
-    // Notify about sync completion
-    window.dispatchEvent(new CustomEvent("sync_complete"));
   }
 
   private async _push(force = false): Promise<void> {

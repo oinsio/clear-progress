@@ -41,6 +41,7 @@ export function makePullResponse(
     current_revision: 10,
     purge_revision: 0,
     server_time: "2026-03-04T11:00:00.000Z",
+    has_more: false,
     ...overrides,
   };
 }

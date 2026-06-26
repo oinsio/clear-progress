@@ -1,5 +1,6 @@
 // implements FR4, FR14 of add-supabase-adapter
 // implements FR6 of add-file-attachments
+// implements FR1, FR2, FR3 of fix-pull-pagination
 // POST /pull — returns all records with revision > since_revision for the authenticated user
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
@@ -63,15 +64,16 @@ Deno.serve(
       metaRows.find(
         (r: { key: string; value: number }) => r.key === "purge_revision",
       )?.value ?? 0;
-    const currentRevision = nextRevision - 1;
+    const latestRevision = nextRevision - 1;
 
-    // Run entity queries in parallel
+    // Run entity queries in parallel with exact count for pagination
     const entityQueryBase = (table: string) =>
       serviceClient
         .from(table)
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("user_id", userId)
-        .gt("revision", sinceRevision);
+        .gt("revision", sinceRevision)
+        .order("revision", { ascending: true });
 
     let settingsQuery = serviceClient
       .from("settings")
@@ -115,6 +117,42 @@ Deno.serve(
       return errorResponse(ErrorCode.INTERNAL_ERROR, firstError.message, 500);
     }
 
+    // Compute has_more: true if any entity table has more rows than returned
+    const entityResults = [
+      tasksResult,
+      goalsResult,
+      ideasResult,
+      contextsResult,
+      categoriesResult,
+      checklistResult,
+      attachmentsResult,
+    ];
+
+    const hasMore = entityResults.some(
+      (result) =>
+        result.count !== null &&
+        result.count !== undefined &&
+        result.count > (result.data ?? []).length,
+    );
+
+    // Compute current_revision based on pagination state
+    let currentRevision: number;
+    if (hasMore) {
+      // Find the minimum max-revision across entity tables that have data
+      const maxRevisions = entityResults
+        .filter((result) => (result.data ?? []).length > 0)
+        .map((result) => {
+          const rows = result.data ?? [];
+          const lastRow = rows[rows.length - 1];
+          return lastRow.revision as number;
+        });
+
+      currentRevision =
+        maxRevisions.length > 0 ? Math.min(...maxRevisions) : latestRevision;
+    } else {
+      currentRevision = latestRevision;
+    }
+
     return okResponse({
       ok: true,
       tasks: (tasksResult.data ?? []).map(serializeTaskRow),
@@ -128,6 +166,7 @@ Deno.serve(
       attachments: (attachmentsResult.data ?? []).map(serializeAttachmentRow),
       settings: (settingsResult.data ?? []).map(serializeSettingRow),
       current_revision: currentRevision,
+      has_more: hasMore,
       purge_revision: purgeRevision,
       server_time: new Date().toISOString(),
     });

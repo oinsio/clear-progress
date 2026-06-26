@@ -27,4 +27,5 @@ export interface PullResponse {
   current_revision: number;
   purge_revision: number;
   server_time: string;
+  has_more: boolean; // implements FR4 of fix-pull-pagination
 }

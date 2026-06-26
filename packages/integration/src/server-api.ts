@@ -31,26 +31,119 @@ export interface ServerCallCredentials {
   anonKey: string;
 }
 
+/** Entity array keys returned by the pull endpoint. */
+const PULL_ENTITY_KEYS = [
+  "tasks",
+  "goals",
+  "ideas",
+  "contexts",
+  "categories",
+  "checklist_items",
+  "attachments",
+  "settings",
+] as const;
+
+/** Shape of a single pull response page from the server. */
+interface PullPageResponse {
+  ok: boolean;
+  has_more: boolean;
+  current_revision: number;
+  [key: string]: unknown;
+}
+
 /**
- * Calls the pull Edge Function and returns the full dataset (since_revision=0).
+ * Calls the pull Edge Function, automatically paginating when has_more is true.
+ * Aggregates entity arrays across all pages into a single response.
+ * Implements FR1 of fix-pull-pagination.
  * Generic parameter T lets each test file narrow the response type.
  */
 export async function pullFromServer<T = Record<string, unknown>>(
   credentials: ServerCallCredentials,
+  sinceRevision: number = 0,
 ): Promise<T> {
-  const response = await fetch(`${credentials.supabaseUrl}/functions/v1/pull`, {
+  const aggregated: Record<string, unknown[]> = {};
+  for (const key of PULL_ENTITY_KEYS) {
+    aggregated[key] = [];
+  }
+
+  let currentSinceRevision = sinceRevision;
+  let lastPage: PullPageResponse | undefined;
+
+  do {
+    const requestBody: Record<string, unknown> = {
+      since_revision: currentSinceRevision,
+    };
+
+    const response = await fetch(
+      `${credentials.supabaseUrl}/functions/v1/pull`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${credentials.accessToken}`,
+          apikey: credentials.anonKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(
+        `pull failed: ${response.status} ${await response.text()}`,
+      );
+    }
+
+    const pageData = (await response.json()) as PullPageResponse;
+    lastPage = pageData;
+
+    for (const key of PULL_ENTITY_KEYS) {
+      const pageEntities = pageData[key];
+      if (Array.isArray(pageEntities)) {
+        (aggregated[key] as unknown[]).push(...pageEntities);
+      }
+    }
+
+    if (pageData.has_more) {
+      currentSinceRevision = pageData.current_revision;
+    }
+  } while (lastPage?.has_more);
+
+  return {
+    ...lastPage,
+    ...aggregated,
+  } as T;
+}
+
+/**
+ * Response shape from the push Edge Function.
+ * Implements FR1 of fix-pull-pagination.
+ */
+export interface PushResponse {
+  ok: boolean;
+  results: Record<string, unknown[]>;
+  revision?: number;
+}
+
+/**
+ * Calls the push Edge Function to send records to the server.
+ * Implements FR1 of fix-pull-pagination.
+ */
+export async function pushToServer(
+  credentials: ServerCallCredentials,
+  payload: Record<string, unknown[]>,
+): Promise<PushResponse> {
+  const response = await fetch(`${credentials.supabaseUrl}/functions/v1/push`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${credentials.accessToken}`,
       apikey: credentials.anonKey,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ since_revision: 0 }),
+    body: JSON.stringify(payload),
   });
   if (!response.ok) {
-    throw new Error(`pull failed: ${response.status} ${await response.text()}`);
+    throw new Error(`push failed: ${response.status} ${await response.text()}`);
   }
-  return (await response.json()) as T;
+  return (await response.json()) as PushResponse;
 }
 
 /**
