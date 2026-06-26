@@ -4,6 +4,7 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { renderHook } from "@testing-library/react";
 import { expect, type TestContext, vi } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
+import { LEGACY_PANEL_OPEN_KEY } from "@/hooks/useSidebarMode";
 
 let mockIsDesktop = true;
 
@@ -12,8 +13,8 @@ vi.mock("@/hooks/useIsDesktop", () => ({
 }));
 
 import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
+import { useSidebarMode } from "@/hooks/useSidebarMode";
 
 const feature = await loadFeature("../sidebar_defaults.feature");
 
@@ -120,81 +121,76 @@ describeFeature(
       },
     );
 
-    // --- Panel open scenarios ---
+    // --- Shared sidebar mode steps ---
+
+    const whenSidebarModeLoaded = (_ctx: TestContext) => {
+      const { result } = renderHook(() => useSidebarMode());
+      sidebarMode = result.current[0];
+    };
+
+    const thenSidebarModeIs = (_ctx: TestContext, expectedMode: string) => {
+      expect(sidebarMode).toBe(expectedMode);
+    };
+
+    // --- Sidebar mode scenarios (using useSidebarMode) ---
+
+    let sidebarMode: string;
 
     // @improve-sidebar-ux @FR7
     f.Scenario(
-      "Desktop defaults for panel open state",
+      "Desktop defaults for sidebar mode",
       ({ Given, And, When, Then }) => {
-        let isPanelOpen: boolean;
-
         Given("the user is on a desktop device", givenDesktopDevice);
-
-        And(
-          "no panel open state is saved in localStorage",
-          givenNoSavedPreference,
-        );
-
-        When("the panel open preference is loaded", (_ctx: TestContext) => {
-          const { result } = renderHook(() => usePanelOpen());
-          isPanelOpen = result.current.isPanelOpen;
-        });
-
-        Then("the panel is open", (_ctx: TestContext) => {
-          expect(isPanelOpen).toBe(true);
-        });
+        And("no sidebar mode is saved in localStorage", givenNoSavedPreference);
+        When("the sidebar mode preference is loaded", whenSidebarModeLoaded);
+        Then("the sidebar mode is {string}", thenSidebarModeIs);
       },
     );
 
     // @improve-sidebar-ux @FR7
     f.Scenario(
-      "Mobile defaults for panel open state",
+      "Mobile defaults for sidebar mode",
       ({ Given, And, When, Then }) => {
-        let isPanelOpen: boolean;
-
         Given("the user is on a mobile device", givenMobileDevice);
-
-        And(
-          "no panel open state is saved in localStorage",
-          givenNoSavedPreference,
-        );
-
-        When("the panel open preference is loaded", (_ctx: TestContext) => {
-          const { result } = renderHook(() => usePanelOpen());
-          isPanelOpen = result.current.isPanelOpen;
-        });
-
-        Then("the panel is closed", (_ctx: TestContext) => {
-          expect(isPanelOpen).toBe(false);
-        });
+        And("no sidebar mode is saved in localStorage", givenNoSavedPreference);
+        When("the sidebar mode preference is loaded", whenSidebarModeLoaded);
+        Then("the sidebar mode is {string}", thenSidebarModeIs);
       },
     );
 
     // @improve-sidebar-ux @FR7
     f.Scenario(
-      "Saved panel open state overrides mobile default",
+      "Legacy panel open migrates to sidebar mode",
       ({ Given, And, When, Then }) => {
-        let isPanelOpen: boolean;
-
         Given("the user is on a mobile device", givenMobileDevice);
 
         And(
-          "panel open state {string} is saved in localStorage",
+          "legacy panel open {string} is saved in localStorage",
           (_ctx: TestContext, savedValue: string) => {
-            localStorage.setItem(STORAGE_KEYS.PANEL_OPEN, savedValue);
+            localStorage.setItem(LEGACY_PANEL_OPEN_KEY, savedValue);
           },
         );
 
-        When("the panel open preference is loaded", (_ctx: TestContext) => {
-          const { result } = renderHook(() => usePanelOpen());
-          isPanelOpen = result.current.isPanelOpen;
-        });
-
-        Then("the panel is open", (_ctx: TestContext) => {
-          expect(isPanelOpen).toBe(true);
-        });
+        When("the sidebar mode preference is loaded", whenSidebarModeLoaded);
+        Then("the sidebar mode is {string}", thenSidebarModeIs);
       },
     );
+
+    // --- Shared filter bar position steps ---
+
+    let filterBarPosition: string;
+
+    const whenFilterBarPositionLoaded = (_ctx: TestContext) => {
+      const { result } = renderHook(() => useFilterBarPosition());
+      filterBarPosition = result.current.filterBarPosition;
+    };
+
+    const thenFilterBarPositionIs = (
+      _ctx: TestContext,
+      expectedPosition: string,
+    ) => {
+      expect(filterBarPosition).toBe(expectedPosition);
+    };
 
     // --- Filter bar position scenarios ---
 
@@ -202,29 +198,16 @@ describeFeature(
     f.Scenario(
       "Desktop defaults for filter bar position",
       ({ Given, And, When, Then }) => {
-        let filterBarPosition: string;
-
         Given("the user is on a desktop device", givenDesktopDevice);
-
         And(
           "no filter bar position is saved in localStorage",
           givenNoSavedPreference,
         );
-
         When(
           "the filter bar position preference is loaded",
-          (_ctx: TestContext) => {
-            const { result } = renderHook(() => useFilterBarPosition());
-            filterBarPosition = result.current.filterBarPosition;
-          },
+          whenFilterBarPositionLoaded,
         );
-
-        Then(
-          "the filter bar position is {string}",
-          (_ctx: TestContext, expectedPosition: string) => {
-            expect(filterBarPosition).toBe(expectedPosition);
-          },
-        );
+        Then("the filter bar position is {string}", thenFilterBarPositionIs);
       },
     );
 
@@ -232,29 +215,16 @@ describeFeature(
     f.Scenario(
       "Mobile defaults for filter bar position",
       ({ Given, And, When, Then }) => {
-        let filterBarPosition: string;
-
         Given("the user is on a mobile device", givenMobileDevice);
-
         And(
           "no filter bar position is saved in localStorage",
           givenNoSavedPreference,
         );
-
         When(
           "the filter bar position preference is loaded",
-          (_ctx: TestContext) => {
-            const { result } = renderHook(() => useFilterBarPosition());
-            filterBarPosition = result.current.filterBarPosition;
-          },
+          whenFilterBarPositionLoaded,
         );
-
-        Then(
-          "the filter bar position is {string}",
-          (_ctx: TestContext, expectedPosition: string) => {
-            expect(filterBarPosition).toBe(expectedPosition);
-          },
-        );
+        Then("the filter bar position is {string}", thenFilterBarPositionIs);
       },
     );
 
@@ -262,8 +232,6 @@ describeFeature(
     f.Scenario(
       "Saved filter bar position overrides desktop default",
       ({ Given, And, When, Then }) => {
-        let filterBarPosition: string;
-
         Given("the user is on a desktop device", givenDesktopDevice);
 
         And(
@@ -278,18 +246,9 @@ describeFeature(
 
         When(
           "the filter bar position preference is loaded",
-          (_ctx: TestContext) => {
-            const { result } = renderHook(() => useFilterBarPosition());
-            filterBarPosition = result.current.filterBarPosition;
-          },
+          whenFilterBarPositionLoaded,
         );
-
-        Then(
-          "the filter bar position is {string}",
-          (_ctx: TestContext, expectedPosition: string) => {
-            expect(filterBarPosition).toBe(expectedPosition);
-          },
-        );
+        Then("the filter bar position is {string}", thenFilterBarPositionIs);
       },
     );
   },

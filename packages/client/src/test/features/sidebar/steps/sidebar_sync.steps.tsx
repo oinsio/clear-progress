@@ -46,8 +46,8 @@ function renderSidebar() {
     <MemoryRouter>
       <Sidebar
         mode={null}
-        isOpen={true}
-        onToggle={vi.fn()}
+        effectiveState="expanded"
+        isDrawerOpen={false}
         onModeChange={vi.fn()}
       />
     </MemoryRouter>,
