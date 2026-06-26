@@ -1,94 +1,111 @@
-## 1. Remove always-open feature (FR10)
+## 1. Sidebar mode preference and state resolution (FR1, FR8)
 
-- [x] 1.1 Add migration logic in `usePanelOpen`: if `PANEL_ALWAYS_OPEN` is `"true"` in localStorage, set `PANEL_OPEN` to `"true"` and remove `PANEL_ALWAYS_OPEN` key
-- [x] 1.2 Remove `usePanelAlwaysOpen` hook, remove always-open state from `PanelSettingsProvider`
-- [x] 1.3 Remove `PANEL_ALWAYS_OPEN` from `STORAGE_KEYS` in `constants/index.ts`
-- [x] 1.4 Remove always-open toggle from `WorkspaceSection.tsx` settings UI
-- [x] 1.5 Remove always-open logic from `Sidebar.tsx` (`isPanelAlwaysOpen` usage, `effectiveIsOpen`)
-- [x] 1.6 Update all tests referencing `usePanelAlwaysOpen` / `isPanelAlwaysOpen` (sidebar toggle, mode, side, sync BDD steps, Sidebar.test.tsx, Sidebar.css.test.tsx, Sidebar.logic.test.tsx)
-- [x] 1.7 BDD: Remove always-open scenarios from `sidebar_toggle.feature` and steps
-- [x] 1.8 Unit tests for migration logic (always-open true → panel open true, key removed)
-- [x] 1.9 Verify build passes: `pnpm run build`
+- [ ] 1.1 Add `SidebarMode` type (`'expanded' | 'collapsed' | 'expand-on-hover'`) to `types/common.ts`
+- [ ] 1.2 Add constants: `SIDEBAR_MODES` array, `STORAGE_KEYS.SIDEBAR_MODE`, `SIDEBAR_HOVER_OPEN_DELAY_MS = 250`, `SIDEBAR_HOVER_CLOSE_DELAY_MS = 150` in `constants/index.ts`
+- [ ] 1.3 Create `useHoverCapability` hook — wraps `window.matchMedia('(hover: hover)')` with change listener, returns `hasHover: boolean`
+- [ ] 1.4 Create `useSidebarMode` hook — reads/writes `SIDEBAR_MODE` from localStorage via `usePreference`. Migration: if `SIDEBAR_MODE` absent, read `PANEL_OPEN` (`"true"` → `"expanded"`, `"false"` → `"collapsed"`), remove `PANEL_OPEN`
+- [ ] 1.5 Create `resolveSidebarState` pure function — inputs: `isNarrow`, `hasHover`, `sidebarMode` → returns effective state (`'expanded' | 'collapsed' | 'hover-ready'`). Implements the 12-cell matrix from proposal.
+- [ ] 1.6 Create `useSidebarState` hook — combines `useIsDesktop` (inverted as `isNarrow`), `useHoverCapability`, `useSidebarMode` → calls `resolveSidebarState` → returns `{ effectiveState, sidebarMode, setSidebarMode, isNarrow, hasHover }`
+- [ ] 1.7 Unit tests for `resolveSidebarState`: `it.each` for all 12 matrix combinations
+- [ ] 1.8 Unit tests for `useHoverCapability`: matchMedia mock, change event
+- [ ] 1.9 Unit tests for `useSidebarMode`: default value, migration from `PANEL_OPEN`, persistence
+- [ ] 1.10 Unit tests for `useSidebarState`: integration of three factors
+- [ ] 1.11 BDD: Create `sidebar_state_matrix.feature` with scenarios for all matrix combinations, tagged `@improve-sidebar-ux @FR8`
+- [ ] 1.12 Verify build: `pnpm run build`
 
-## 2. Platform-aware defaults (FR7)
+## 2. Remove toggle buttons and refactor Sidebar props (FR4)
 
-- [x] 2.1 Update `usePanelSide` to accept dynamic default from `useIsDesktop()`: desktop → `"left"`, mobile → `"right"`
-- [x] 2.2 Update `usePanelOpen` to accept dynamic default from `useIsDesktop()`: desktop → `true`, mobile → `false`
-- [x] 2.3 Update `useFilterBarPosition` to accept dynamic default from `useIsDesktop()`: desktop → `"top"`, mobile → `"bottom"`
-- [x] 2.4 Update `constants/index.ts`: remove static `DEFAULT_PANEL_SIDE`, add `DESKTOP_PANEL_SIDE` / `MOBILE_PANEL_SIDE` (same for open and filter bar position)
-- [x] 2.5 BDD unit tests for platform-aware defaults: desktop defaults, mobile defaults, saved value overrides default
-- [x] 2.6 Update existing tests that depend on `DEFAULT_PANEL_SIDE` / `DEFAULT_FILTER_BAR_POSITION` constants
-- [x] 2.7 Mutation testing on `usePanelSide`, `usePanelOpen`, `useFilterBarPosition` (scoped, max 5 files)
+- [ ] 2.1 Remove toggle button (`ChevronLeft`/`ChevronRight`, `sidebar-toggle-button`) from `SidebarSyncBlock.tsx` — remove `onToggle` prop, remove chevron imports
+- [ ] 2.2 Update `Sidebar.tsx` props: remove `onToggle`, `onCollapsedClick`, `isOpen` boolean → replace with `effectiveState: 'expanded' | 'collapsed' | 'hover-ready'` and `isDrawerOpen: boolean` (for mobile drawer)
+- [ ] 2.3 Remove backdrop from `Sidebar.tsx` expanded branch (will be in `TaskPageLayout` scoped to narrow + no hover)
+- [ ] 2.4 Update collapsed sidebar container: remove `onClick={onCollapsedClick ?? onToggle}`, `cursor-pointer`, `role="button"`, `tabIndex`, `onKeyDown`. Navigation icons handle their own clicks.
+- [ ] 2.5 Update `SidebarFilterNav.tsx`: remove `onAutoCollapse` from expanded mode. In collapsed mode, each icon click directly navigates (already does).
+- [ ] 2.6 Update tests: `Sidebar.test.tsx`, `Sidebar.css.test.tsx`, `Sidebar.logic.test.tsx`, `SidebarSyncBlock.css.test.tsx`, `SidebarSyncBlock.logic.test.tsx` for new props
+- [ ] 2.7 BDD: Update `sidebar_toggle.feature` — remove toggle button scenarios, update to new mode system
+- [ ] 2.8 Verify build: `pnpm run build`
 
-## 3. Toggle button and remove container onClick (FR1, FR2, NFR-A1)
+## 3. Hover expand behavior (FR5, FR6, NFR-R3)
 
-- [x] 3.1 Add toggle button to `SidebarSyncBlock.tsx` expanded mode: `ChevronLeft` for right-side, `ChevronRight` for left-side. Accept `onToggle` prop.
-- [x] 3.2 Remove from expanded `Sidebar.tsx` container: `onClick`, `cursor-pointer`, `role="button"`, `tabIndex`, `onKeyDown`
-- [x] 3.3 Remove `stopPropagation` calls from `SidebarFilterNav.tsx` and `SidebarSyncBlock.tsx` (no longer needed)
-- [x] 3.4 Add `aria-label` to toggle button (localized "Close sidebar" / "Open sidebar"), ensure keyboard accessibility (Enter/Space)
-- [x] 3.5 BDD: Update `sidebar_toggle.feature` — replace "clicks the panel area" with "clicks the toggle button", add scenario "Clicking empty area does nothing"
-- [x] 3.6 Unit tests for toggle button rendering per side, toggle click behavior, keyboard accessibility
-- [ ] 3.7 Mutation testing on `Sidebar.tsx`, `SidebarSyncBlock.tsx` (scoped)
+- [ ] 3.1 Create `useSidebarHover` hook — `mouseenter`/`mouseleave` on sidebar ref with debounced open/close timers (`SIDEBAR_HOVER_OPEN_DELAY_MS`, `SIDEBAR_HOVER_CLOSE_DELAY_MS`). Returns `{ isHoverExpanded: boolean, hoverHandlers: { onMouseEnter, onMouseLeave } }`. Active only when `effectiveState === 'hover-ready'`.
+- [ ] 3.2 Update `Sidebar.tsx`: when `effectiveState === 'hover-ready'` and `isHoverExpanded === true`, render expanded variant as overlay (absolute/fixed positioning, higher z-index, no content push)
+- [ ] 3.3 When `effectiveState === 'hover-ready'` and `isHoverExpanded === false`, render collapsed variant
+- [ ] 3.4 In hover-expanded mode, navigation click navigates but does NOT collapse sidebar (cursor still inside)
+- [ ] 3.5 Unit tests for `useSidebarHover`: debounce timing, mouseenter/mouseleave, active only when hover-ready
+- [ ] 3.6 BDD: Create `sidebar_hover.feature` — hover opens overlay, cursor leave closes, debounce prevents flicker, nav click keeps sidebar open. Tagged `@improve-sidebar-ux @FR5 @FR6`
+- [ ] 3.7 Verify build: `pnpm run build`
 
-## 4. Modal drawer behavior (FR4, FR5, FR6)
+## 4. Sidebar control popover (FR2, NFR-A1, NFR-A2)
 
-- [x] 4.1 Extend `usePanelOpen` hook: add `isTemporarilyOpen` state, `openTemporarily()`, `closeTemporary()` methods
-- [x] 4.2 Update `Sidebar.tsx`: collapsed strip click calls `openTemporarily()` when `isPanelOpen=false`
-- [x] 4.3 Add `onAutoCollapse` callback prop to `SidebarFilterNav` — called on nav item click when in modal mode
-- [x] 4.4 Update `TaskPageLayout.tsx`: pass `onAutoCollapse` that calls `closeTemporary()` when `isTemporarilyOpen` is true
-- [x] 4.5 BDD: Create `sidebar_modal.feature` with scenarios: modal opens without persisting, modal closes on nav click, standard stays open on nav click
-- [x] 4.6 Unit tests for `usePanelOpen` extended API: `openTemporarily`, `closeTemporary`, interaction with `isPanelOpen`
-- [ ] 4.7 Mutation testing on `usePanelOpen.ts` (scoped)
+- [ ] 4.1 Create `SidebarControlPopover.tsx` — popover with three radio-style options (Expanded, Collapsed, Expand on hover). Active mode indicated visually. Accepts `currentMode`, `onModeChange` props.
+- [ ] 4.2 Add popover trigger button to `SidebarFilterNav.tsx` bottom area (above search, above divider): `PanelLeft` icon when `side === 'left'`, `PanelRight` when `side === 'right'`. Hidden when `isNarrow && !hasHover` (FR18).
+- [ ] 4.3 Add `aria-label` to trigger button, keyboard navigation in popover (arrow keys, Enter, Escape) (NFR-A1, NFR-A2)
+- [ ] 4.4 Add i18n keys: `sidebar.control`, `sidebar.modeExpanded`, `sidebar.modeCollapsed`, `sidebar.modeExpandOnHover` to `ru.json` and `en.json`
+- [ ] 4.5 Unit tests for `SidebarControlPopover`: renders three options, active state, click changes mode, keyboard navigation, hidden on mobile
+- [ ] 4.6 BDD: Create `sidebar_control.feature` — popover opens, mode switch, sync with settings. Tagged `@improve-sidebar-ux @FR2`
+- [ ] 4.7 Verify build: `pnpm run build`
 
-## 5. Backdrop on mobile (FR3, NFR-A2, NFR-R1)
+## 5. Integrate into TaskPageLayout (FR8, FR14-FR17)
 
-- [x] 5.1 Add backdrop `div` in `TaskPageLayout.tsx`: render when `!isDesktop && effectiveIsOpen`, with `onClick` to close sidebar
-- [x] 5.2 Style backdrop: `fixed inset-0 bg-black/40 z-10` (sidebar at `z-20`)
-- [x] 5.3 Add `aria-label` to backdrop (localized "Close sidebar")
-- [x] 5.4 BDD: Create `sidebar_backdrop.feature` with scenarios: visible on mobile expanded, not visible on desktop, tap closes
-- [x] 5.5 Unit tests for backdrop rendering conditions, click handler, aria-label
-- [ ] 5.6 Mutation testing on `TaskPageLayout.tsx` backdrop logic (scoped)
+- [ ] 5.1 Refactor `TaskPageLayout.tsx`: replace `usePanelOpen` with `useSidebarState`. Pass `effectiveState` and `isHoverExpanded` to `Sidebar`.
+- [ ] 5.2 Drawer state for mobile: add `isDrawerOpen` local state. Swipe opens drawer (`setIsDrawerOpen(true)`), backdrop/nav click closes it (`setIsDrawerOpen(false)`).
+- [ ] 5.3 Backdrop rendering: only when `isNarrow && !hasHover && isDrawerOpen`. Move backdrop from `Sidebar.tsx` to `TaskPageLayout.tsx`.
+- [ ] 5.4 Pass `isDrawerOpen` to `Sidebar` for mobile drawer rendering.
+- [ ] 5.5 Resize transitions (FR14-FR17): `useSidebarState` recalculates `effectiveState` reactively. When transitioning to narrow: if drawer was not explicitly opened, it stays closed. When transitioning to wide: close drawer, apply saved setting.
+- [ ] 5.6 Update `useSidebarSwipe` guards: `isNarrow && !hasHover` instead of `!isDesktop`. Update `onOpen`/`onClose` to use drawer state.
+- [ ] 5.7 Auto-collapse on navigation in drawer mode (FR11): `SidebarFilterNav` calls `onAutoCollapse` only when `isDrawerOpen` is true.
+- [ ] 5.8 Update `TaskPageLayout.test.tsx` for new integration
+- [ ] 5.9 BDD: Create `sidebar_resize.feature` — resize transitions for all combinations. Tagged `@improve-sidebar-ux @FR14 @FR15 @FR16 @FR17`
+- [ ] 5.10 Verify build: `pnpm run build`
 
-## 6. Swipe gestures on mobile (FR8, FR9, NFR-R2)
+## 6. Mobile behavior — collapsed navigation and drawer (FR9, FR10, FR11, FR12, FR13)
 
-- [x] 6.1 Create `useSidebarSwipe` hook: edge swipe detection, swipe-to-close, translateX tracking, threshold snap-back
-- [x] 6.2 Add constants: `SIDEBAR_SWIPE_EDGE_ZONE_PX = 24`, `SIDEBAR_SWIPE_THRESHOLD_PERCENT = 0.3`
-- [x] 6.3 Integrate `useSidebarSwipe` in `TaskPageLayout.tsx`: pass sidebar ref, side, open/close callbacks
-- [x] 6.4 Apply `transform: translateX()` to sidebar during swipe for finger-following
-- [x] 6.5 Handle vertical scroll cancellation: cancel swipe if vertical movement exceeds horizontal
-- [x] 6.6 Disable swipe on desktop (`!isDesktop` guard)
-- [x] 6.7 BDD: Create `sidebar_swipe.feature` with scenarios: edge swipe opens, swipe-back closes, incomplete swipe snaps back, vertical cancels, desktop disabled
-- [x] 6.8 Unit tests for `useSidebarSwipe`: edge detection, threshold, direction per side, vertical cancellation
-- [ ] 6.9 Mutation testing on `useSidebarSwipe.ts` (scoped)
+- [ ] 6.1 On narrow + no hover: collapsed sidebar icons navigate directly on tap (FR10) — already works via `SidebarFilterNav` collapsed mode
+- [ ] 6.2 Swipe opens drawer with backdrop (FR13) — update `useSidebarSwipe` to use new drawer state
+- [ ] 6.3 Backdrop tap closes drawer (FR12) — already in TaskPageLayout from task 5.3
+- [ ] 6.4 Drawer auto-collapse on nav click (FR11) — already from task 5.7
+- [ ] 6.5 Sidebar control popover hidden on narrow + no hover (FR18) — already from task 4.2
+- [ ] 6.6 BDD: Update `sidebar_backdrop.feature` — scoped to narrow + no hover. Tagged `@improve-sidebar-ux @FR12`
+- [ ] 6.7 BDD: Update `sidebar_swipe.feature` — scoped to narrow + no hover. Tagged `@improve-sidebar-ux @FR13`
+- [ ] 6.8 BDD: Update `sidebar_modal.feature` — drawer auto-collapse. Tagged `@improve-sidebar-ux @FR11`
+- [ ] 6.9 Verify build: `pnpm run build`
 
-## 7. Pin icon button in settings (FR11)
+## 7. Settings page — sidebar control (FR3)
 
-- [x] 7.1 Replace switch toggle in `WorkspaceSection.tsx` "detail panel pinned" section with Pin icon button + text label
-- [x] 7.2 Pin icon: `fill-current` when pinned (accent color), `rotate-45` when unpinned (gray), matching `TaskDetailPanel.tsx` style
-- [x] 7.3 Add `aria-label` (localized pin/unpin) and `aria-pressed` to the button
-- [x] 7.4 Unit tests: pin button renders correct icon state, click toggles, accessible attributes
-- [x] 7.5 Update `WorkspaceSection.test.tsx` for new pin button markup
+- [ ] 7.1 Add sidebar mode selector to `WorkspaceSection.tsx` — same three options as popover, using `useSidebarMode` hook
+- [ ] 7.2 Ensure sync: both popover and settings read/write the same `SIDEBAR_MODE` localStorage key via `useSidebarMode`
+- [ ] 7.3 Add i18n keys for settings labels if not covered by task 4.4
+- [ ] 7.4 Unit tests: `WorkspaceSection.test.tsx` — sidebar mode selector renders, changes mode, syncs with localStorage
+- [ ] 7.5 Verify build: `pnpm run build`
 
-## 8. Settings accordion all-collapsed and deep-link (FR12, FR13)
+## 8. Cleanup legacy code
 
-- [x] 8.1 Modify `SettingsAccordion.tsx`: change `expandedSectionId` type to `string | null`, default to `null` (all collapsed)
-- [x] 8.2 Update `handleToggle`: clicking expanded section sets `null` instead of `firstSectionId`
-- [x] 8.3 Update `readPersistedSection`: return `null` as fallback instead of `firstSectionId`
-- [x] 8.4 Add `initialExpandedSection` prop to `SettingsAccordion` — overrides default on mount
-- [x] 8.5 In `SettingsPage.tsx`: read `location.state?.expandSection`, pass as `initialExpandedSection`
-- [x] 8.6 In `SidebarSyncBlock.tsx`: update "Configure server" navigation to pass `{ state: { expandSection: SETTINGS_SECTION_IDS.ACCOUNT_SYNC } }`
-- [x] 8.7 Unit tests for accordion: all-collapsed default, click to collapse expanded, deep-link opens section
-- [x] 8.8 Update `SettingsAccordion.test.tsx` for new default behavior
-- [ ] 8.9 Mutation testing on `SettingsAccordion.tsx` (scoped)
+- [ ] 8.1 Remove `isTemporarilyOpen`, `openTemporarily`, `closeTemporary` from `usePanelOpen.ts` (replaced by drawer state + hover state)
+- [ ] 8.2 Remove `DESKTOP_PANEL_OPEN_DEFAULT`, `MOBILE_PANEL_OPEN_DEFAULT` from constants (replaced by sidebar mode)
+- [ ] 8.3 Remove `STORAGE_KEYS.PANEL_OPEN` after migration logic is in `useSidebarMode`
+- [ ] 8.4 Update `usePanelOpen.migration.test.ts` — migration now in `useSidebarMode`
+- [ ] 8.5 Clean up unused imports across all changed files
+- [ ] 8.6 Verify build: `pnpm run build`
 
-## 9. i18n keys
+## 9. BDD defaults and existing feature updates
 
-- [x] 9.1 Add i18n keys to `ru.json` and `en.json`: `sidebar.close`, `sidebar.open`, `sidebar.closeBackdrop` (or reuse existing `filter.close`/`filter.open` if sufficient)
+- [ ] 9.1 Update `sidebar_defaults.feature` — default is `expanded` on desktop, sidebar control not applicable on mobile
+- [ ] 9.2 Update `sidebar_mode.feature` — replace old mode scenarios with new three-mode system
+- [ ] 9.3 Update all sidebar BDD step files for new hook APIs and props
+- [ ] 9.4 Verify all sidebar BDD features pass: `npx vitest run --reporter=verbose src/test/features/sidebar/`
 
-## 10. Final verification
+## 10. Mutation testing
 
-- [x] 10.1 Verify build: `pnpm run build`
-- [x] 10.2 Run full BDD sidebar suite: all sidebar feature files pass
-- [x] 10.3 Run existing page tests that use sidebar mocks (InboxPage, GoalsPage, etc.) — verify no regressions
-- [x] 10.4 Run settings page tests — verify no regressions
-- [x] 10.5 Check JetBrains IDE diagnostics on all changed files
+- [ ] 10.1 Mutation testing on `resolveSidebarState.ts` (scoped)
+- [ ] 10.2 Mutation testing on `useSidebarMode.ts`, `useHoverCapability.ts` (scoped, max 3 files)
+- [ ] 10.3 Mutation testing on `useSidebarHover.ts` (scoped)
+- [ ] 10.4 Mutation testing on `SidebarControlPopover.tsx` (scoped)
+- [ ] 10.5 Mutation testing on `Sidebar.tsx`, `SidebarSyncBlock.tsx` (scoped)
+- [ ] 10.6 Target >= 95% mutation score on all new/modified files
+
+## 11. Final verification
+
+- [ ] 11.1 Verify build: `pnpm run build`
+- [ ] 11.2 Run full BDD sidebar suite: all sidebar feature files pass
+- [ ] 11.3 Run existing page tests (InboxPage, GoalsPage, etc.) — verify no regressions
+- [ ] 11.4 Run settings page tests — verify no regressions
+- [ ] 11.5 Check JetBrains IDE diagnostics on all changed files

@@ -1,119 +1,100 @@
+# Design: Improve Sidebar UX
+
 ## Context
 
-The sidebar currently uses a single `isPanelOpen` boolean in localStorage and a separate `isPanelAlwaysOpen` boolean. The expanded sidebar container itself acts as a close button (`onClick={onToggle}` on the entire `div`), with inner elements using `stopPropagation`. This causes accidental closes and lacks standard UX patterns (toggle button, backdrop, swipe). Defaults are static constants, not platform-aware.
+The sidebar needs three modes (Expanded, Collapsed, Expand on hover) with behavior adapting to two independent factors: screen width and hover capability. This replaces the previous toggle-button approach (FR1-FR18, G1-G4 from proposal).
 
-Material Design 3 defines two drawer types: **modal** (temporary, closes on selection, has scrim) and **standard** (persistent, stays open on selection). Our current implementation doesn't distinguish between these.
+Key insight from device detection research: determining device type is unreliable, but we don't need device type — we need **input capabilities**. CSS `@media (hover: hover)` reliably tells us if a precise pointer (mouse) is available, which is the only factor that matters for hover-expand behavior.
 
-Driven by FR1-FR10, G1-G3 from proposal.
+## Decision 1: Two-factor state resolution (FR8)
 
-## Goals / Non-Goals
-
-**Goals:**
-- Implement modal/standard drawer distinction using existing `isPanelOpen` localStorage value
-- Add explicit toggle button, backdrop, swipe gestures
-- Make defaults platform-aware without breaking existing user preferences
-- Cleanly remove always-open feature with migration
-
-**Non-Goals:**
-- Slide animation (NG1 from proposal)
-- Changing sidebar visual design (NG3)
-- Server-side preference sync (preferences remain in localStorage only)
-
-## Decisions
-
-### Decision 1: Modal drawer via transient React state (FR4, FR5, FR6)
-
-**Choice**: Introduce `isTemporarilyOpen` React state (not persisted) alongside persistent `isPanelOpen` in localStorage.
+**Choice**: Resolve effective sidebar state from three inputs: screen width (wide/narrow via breakpoint), hover capability (`@media (hover: hover)`), and user setting (localStorage). A pure function maps these to one of four effective states.
 
 **Alternatives considered**:
-- A) Track `wasCollapsedBeforeOpen` ref — simpler but `isPanelOpen` still toggles in localStorage on every click, causing wrong state if user closes browser while temporarily open.
-- B) Always auto-collapse on mobile, never on desktop — too rigid, doesn't respect user intent.
+- A) Single breakpoint (mobile/desktop) — loses information when desktop user resizes to narrow. User with mouse can't access text labels.
+- B) Device detection (UA, touch points) — unreliable per `device-detection-research.md`. iPad masquerades as Mac, laptops have touchscreens.
 
-**Rationale**: Option chosen cleanly separates user preference (localStorage) from transient UI state (React). Matches Material Design 3: modal drawer = temporary overlay, standard drawer = persistent panel. The `isPanelOpen` value in localStorage represents the user's deliberate choice.
+**Rationale**: Width and hover are orthogonal capabilities that can be detected reliably via standard browser APIs. The 12-cell matrix is deterministic and fully testable. No device guessing needed.
 
-**Implementation in `usePanelOpen`**:
+**Implementation** — `useSidebarState` hook:
 ```
-isPanelOpen (localStorage)  +  isTemporarilyOpen (useState)
-─────────────────────────      ──────────────────────────
-false                          false  →  sidebar collapsed
-false                          true   →  sidebar open (MODAL — closes on nav)
-true                           -      →  sidebar open (STANDARD — stays open)
+inputs:  isNarrow (breakpoint), hasHover (media query), setting (localStorage)
+output:  effectiveState: 'expanded' | 'collapsed' | 'hover-ready'
 ```
 
-The hook returns: `{ isPanelOpen, isTemporarilyOpen, openTemporarily, closeTemporary, togglePanelOpen }`.
+State resolution is a pure function — easily unit-tested with `it.each` for all 12 combinations.
 
-### Decision 2: Platform-aware defaults via hooks (FR7)
+## Decision 2: Sidebar mode as single enum preference (FR1)
 
-**Choice**: Move default resolution from static constants to hooks. Each preference hook (`usePanelSide`, `usePanelOpen`, `useFilterBarPosition`) calls `useIsDesktop()` to determine the default when no localStorage value exists.
+**Choice**: Replace `isPanelOpen` (boolean) with `sidebarMode` enum: `'expanded' | 'collapsed' | 'expand-on-hover'`. Stored in localStorage under a new key.
 
 **Alternatives considered**:
-- A) Set defaults on app startup via an initialization effect — creates timing issues, may flash wrong layout.
-- B) Use CSS media queries only — doesn't work for localStorage defaults.
+- A) Keep `isPanelOpen` boolean + add separate `hoverMode` boolean — two booleans create 4 combinations where only 3 are valid. Invalid state possible.
+- B) Numeric mode (0/1/2) — less readable in localStorage debugging.
 
-**Rationale**: Hooks already call `usePreference` which accepts a `defaultValue`. Making this dynamic is minimal change. The default is used only when localStorage key is absent, so existing users are unaffected.
+**Rationale**: Single enum prevents invalid states. Three values map directly to three UI options in the popover. Migration from `isPanelOpen`: `true` → `'expanded'`, `false` → `'collapsed'`.
 
-**Defaults matrix**:
-| Preference | Desktop default | Mobile default |
-|---|---|---|
-| `panelSide` | `"left"` | `"right"` |
-| `isPanelOpen` | `true` | `false` |
-| `filterBarPosition` | `"top"` | `"bottom"` |
+**Migration logic** (in `useSidebarMode` initialization):
+1. Check if `SIDEBAR_MODE` key exists in localStorage → use it
+2. Else check if `PANEL_OPEN` key exists → migrate: `"true"` → `"expanded"`, `"false"` → `"collapsed"`, remove `PANEL_OPEN`
+3. Else use platform default: `"expanded"`
 
-### Decision 3: Swipe via new dedicated hook (FR8, FR9)
+## Decision 3: Hover capability via matchMedia (NFR-R3)
 
-**Choice**: Create `useSidebarSwipe` hook, separate from existing `useSwipeAction`.
+**Choice**: Create `useHoverCapability` hook that uses `window.matchMedia('(hover: hover)')` with a change listener.
 
-**Rationale**: `useSwipeAction` is designed for list item swipe actions (right-swipe on TaskItem). Sidebar swipe has different mechanics:
-- Edge detection (touch starts near screen edge)
-- Bidirectional (open = toward center, close = toward edge)
-- Translates the entire sidebar panel, not a list item
-- Must not conflict with `useSwipeAction` on task items
+**Rationale**: CSS media query `(hover: hover)` is the most reliable way to detect if a primary pointing device can hover. It's:
+- Supported in all modern browsers (Safari 9+, Chrome 38+, Firefox 64+)
+- Reactive — updates if input device changes (e.g., tablet connects/disconnects keyboard with trackpad)
+- No user-agent parsing needed
 
-The hook listens on `document` for edge-swipe-to-open, and on sidebar `ref` for swipe-to-close. Returns `sidebarTranslateX` for CSS transform. Only active when `!isDesktop`.
+The hook returns `hasHover: boolean` and updates reactively via `matchMedia.addEventListener('change', ...)`.
 
-**Edge zone**: 24px from screen edge (constant `SIDEBAR_SWIPE_EDGE_ZONE_PX`). Snap-back threshold: 30% of sidebar width (constant `SIDEBAR_SWIPE_THRESHOLD_PERCENT`).
+## Decision 4: Hover expand as overlay (FR5)
 
-### Decision 4: Always-open removal and migration (FR10)
+**Choice**: In hover-ready state, expanded sidebar renders as a fixed/absolute overlay with higher z-index, not pushing content. Same positioning as drawer but without backdrop.
 
-**Choice**: Remove `usePanelAlwaysOpen`, `PanelSettingsProvider` always-open logic, `PANEL_ALWAYS_OPEN` storage key, and settings UI toggle. Migrate on app startup.
+**Alternatives considered**:
+- A) Push content on hover — causes layout shift, content reflows, feels jarring for a temporary expansion.
+- B) Use backdrop like drawer — too heavy for hover interaction, backdrop flash on every hover is distracting.
 
-**Migration logic** (one-time, in `usePanelOpen` initialization):
-1. Check if `PANEL_ALWAYS_OPEN` key exists in localStorage
-2. If value is `"true"`, set `PANEL_OPEN` to `"true"` in localStorage
-3. Remove `PANEL_ALWAYS_OPEN` key
-4. This runs once — key absence means migration is complete
+**Rationale**: Overlay without backdrop is lightweight and non-disruptive. Content stays stable. Sidebar appears on top, disappears when cursor leaves. Same mental model as a tooltip or dropdown menu.
 
-No toast notification for removal (answering Q2 from proposal) — the behavior is preserved, just the explicit toggle is gone.
+## Decision 5: Debounce timing (FR5)
 
-### Decision 5: Toggle button placement (FR1)
+**Choice**: Open debounce ~250ms, close debounce ~150ms. Extracted as constants `SIDEBAR_HOVER_OPEN_DELAY_MS` and `SIDEBAR_HOVER_CLOSE_DELAY_MS`.
 
-**Choice**: Add toggle button as first child in `SidebarSyncBlock` (expanded mode only), before the sync area. Button renders chevron: `ChevronLeft` when `side="right"`, `ChevronRight` when `side="left"` (pointing toward the edge = "close toward edge").
+**Rationale**:
+- **Open 250ms**: Prevents accidental expansion when cursor passes through sidebar area (e.g., moving to scrollbar). Long enough to filter drive-by, short enough to feel responsive on intentional hover.
+- **Close 150ms**: Shorter than open — once expanded, we want to keep it stable. Gives user time to briefly overshoot the sidebar boundary and return without it collapsing. Standard pattern in hover menus (VS Code, macOS dock).
 
-**Rationale**: Placing in the header row keeps it always visible without scrolling. Using Lucide `ChevronLeft`/`ChevronRight` icons is consistent with the existing icon system.
+## Decision 6: Sidebar control popover placement (FR2)
 
-### Decision 6: Backdrop implementation (FR3)
+**Choice**: Small icon button in the bottom area of the sidebar, above the search icon and above the divider line. Clicking opens a popover (not dropdown menu) with three labeled options and radio-style selection indicator.
 
-**Choice**: Render backdrop as a sibling `div` inside `TaskPageLayout`, not inside `Sidebar` component. Backdrop is conditionally rendered when `!isDesktop && effectiveIsOpen`.
+**Visual reference**: Supabase dashboard sidebar control — compact icon, popover with clear labels and active state indicator.
 
-**Rationale**: Backdrop needs to cover the main content area (behind sidebar, in front of content). Placing it in `TaskPageLayout` gives correct z-index stacking without complex CSS.
+**Rationale**: Bottom placement is discoverable but not intrusive. Popover (vs dropdown) allows richer content (labels + descriptions if needed later). Same component can be reused in settings page.
 
-### Decision 7: Pin icon button instead of toggle for detail panel pinned (FR11)
+## Decision 7: Remove toggle buttons and isTemporarilyOpen (FR4)
 
-**Choice**: Replace the switch toggle in `WorkspaceSection.tsx` with a `Pin` icon button + text label. The pin uses the same visual states as `TaskDetailPanel`: `fill-current` when pinned, `rotate-45` when unpinned.
+**Choice**: Remove `‹`/`›` toggle buttons from `SidebarSyncBlock.tsx`. Remove `isTemporarilyOpen` state from `usePanelOpen`. The three-mode system replaces both:
+- Toggle button function → sidebar control popover
+- isTemporarilyOpen (modal drawer) → hover-ready/hover-expanded states on desktop; drawer state on mobile
 
-**Rationale**: Consistent iconography — user sees the same visual language in settings as on the panel itself. A pin is more semantically meaningful than a generic toggle for this specific feature.
+**Rationale**: Toggle buttons are redundant with the three-mode popover. Modal drawer logic (`isTemporarilyOpen`) was a workaround for not having hover mode — with hover-expand available, there's no need for a separate "temporarily open" concept on desktop.
 
-### Decision 8: Accordion all-collapsed state and deep-linking (FR12, FR13)
+On mobile (narrow + no hover), drawer behavior remains but is triggered by swipe, not by clicking collapsed strip. Tapping collapsed icon = immediate navigation.
 
-**Choice**: Modify `SettingsAccordion` to use `string | null` for `expandedSectionId` (where `null` = all collapsed). Default initial state = `null`. Clicking expanded section sets `null`. Support an `initialExpandedSection` prop that overrides the default when provided.
+## Decision 8: Scoping backdrop and swipe to narrow + no hover (FR12, FR13)
 
-**Alternative considered**: Using URL hash (`#account-sync`) for deep-linking. Rejected because it's visible in the URL bar and unnecessary for an internal navigation action.
+**Choice**: Change the condition for backdrop and swipe from `!isDesktop` (breakpoint only) to `isNarrow && !hasHover`.
 
-**Deep-link mechanism**: `SidebarSyncBlock` navigates to `/settings` with React Router state `{ expandSection: SETTINGS_SECTION_IDS.ACCOUNT_SYNC }`. `SettingsPage` reads `location.state?.expandSection` and passes it as `initialExpandedSection` to `SettingsAccordion`. This is a one-time effect — subsequent accordion interactions use normal state.
+**Rationale**: On narrow screen WITH hover (desktop browser resized), the user has mouse — they don't need swipe gestures or backdrop. Hover-expand provides access to full navigation. Swipe and backdrop are mobile-specific patterns for touch input.
 
 ## Risks / Trade-offs
 
-- **[Risk] iOS back-swipe conflict (Q1)**: Left-edge swipe on iOS triggers browser back navigation. **Mitigation**: Use wider activation zone (~30-40px from edge) where iOS gesture no longer intercepts. Left-side sidebar is essential for left-handed users so disabling is not an option.
-- **[Risk] Existing tests break**: Many tests mock `usePanelAlwaysOpen` and test always-open scenarios. **Mitigation**: Remove these tests as part of the change; they test removed functionality.
-- **[Risk] `useIsDesktop` SSR mismatch**: `useIsDesktop` returns `false` during SSR/initial render if `window` is undefined. **Mitigation**: App is a client-side PWA, no SSR. `useState` initializer calls `window.matchMedia` synchronously, so first render is correct.
-- **[Trade-off] No slide animation**: Sidebar appears/disappears instantly. This is simpler but less polished. Can be added in a follow-up change.
+- **[Risk] `hover: hover` on Samsung Z Flip**: Some foldables report `hover: hover` inconsistently. **Mitigation**: This affects a tiny fraction of users. Fallback (collapsed + drawer) is always functional. User can switch mode via settings page if popover is hidden.
+- **[Risk] Hover expand blocks content interaction**: Expanded overlay covers part of the content. **Mitigation**: Overlay only appears on intentional hover (250ms debounce). Moving cursor away dismisses it quickly (150ms). Users learn the pattern fast.
+- **[Trade-off] No slide animation**: Sidebar appears/disappears instantly in all modes. Simpler but less polished. Can be added in follow-up.
+- **[Trade-off] 12 matrix combinations to test**: More test cases than before. **Mitigation**: Pure function resolution — all 12 covered by `it.each` parameterized test in one test file. No complex mocking needed.

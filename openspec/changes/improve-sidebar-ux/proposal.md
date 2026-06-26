@@ -2,91 +2,123 @@
 
 ## Why
 
-Current sidebar has several UX issues: closing happens via click on empty area (unexpected, no visual affordance), no backdrop on mobile (no standard drawer-close pattern), defaults are not optimized per platform, and there's no swipe gesture support. These problems make the sidebar feel unfamiliar and error-prone, especially on mobile. The "always-open" setting is redundant once proper modal/standard drawer distinction is implemented. Additionally, the settings page has UX inconsistencies: the "pin detail panel" toggle uses a generic switch instead of the pin icon used on the panel itself, settings accordion always has one section expanded (can't collapse all), and the "Configure server" button doesn't deep-link to the relevant settings section.
+Current sidebar has UX issues: closing happens via toggle buttons (`‹`/`›`) that feel disconnected from the sidebar itself, there's no "expand on hover" mode for power users who want quick access without permanent sidebar, and behavior doesn't adapt intelligently to screen width and input capabilities. The sidebar should offer three clear modes (Expanded, Collapsed, Expand on hover) controlled via an intuitive popover — similar to Supabase dashboard — and adapt behavior based on two independent factors: screen width and hover capability.
 
 ## What Changes
 
-- **ADDED**: Toggle button (`‹`/`›`) in expanded sidebar header for explicit close action
-- **ADDED**: Backdrop overlay on mobile when sidebar is expanded
-- **ADDED**: Modal drawer behavior — temporary open auto-collapses on navigation
-- **ADDED**: Swipe gestures on mobile — edge swipe to open, swipe-back to close
-- **MODIFIED**: Expanded sidebar container no longer acts as a close button (remove onClick, cursor-pointer, role, tabIndex)
-- **MODIFIED**: Platform-aware defaults — desktop: sidebar left + expanded + command bar top; mobile: sidebar right + collapsed + command bar bottom
-- **REMOVED**: "Always open" setting (`usePanelAlwaysOpen`, `isPanelAlwaysOpen`, `PANEL_ALWAYS_OPEN` localStorage key)
-- **MODIFIED**: Settings "pin detail panel" toggle replaced with Pin icon button (matching TaskDetailPanel pin style)
-- **MODIFIED**: Settings accordion allows all sections collapsed; all collapsed by default on page open
-- **MODIFIED**: "Configure server" sidebar button deep-links to settings with "Account & Sync" section expanded
+- **ADDED**: Sidebar control popover with three modes (Expanded, Collapsed, Expand on hover) — icon in bottom of sidebar
+- **ADDED**: "Expand on hover" mode — sidebar collapsed by default, expands as overlay on mouse hover with debounce
+- **ADDED**: Hover capability detection via `@media (hover: hover)` as independent factor from screen width
+- **ADDED**: Smart state resolution matrix: width x hover x setting → sidebar state
+- **MODIFIED**: Sidebar behavior adapts to two factors (screen width + hover capability) instead of one breakpoint
+- **MODIFIED**: Settings page "Workspace" section includes sidebar control setting
+- **REMOVED**: Toggle buttons (`‹`/`›`) from sidebar header
+- **REMOVED**: `isTemporarilyOpen` modal drawer logic on desktop (replaced by three-mode system)
+
+Retained from previous iteration:
+- Backdrop overlay on mobile when drawer is open
+- Swipe gestures on mobile (edge swipe to open, swipe-back to close)
+- Auto-collapse on navigation in drawer mode
+- Platform-aware defaults
+- "Always open" removal and migration (already implemented)
+- Pin icon button in settings (already implemented)
+- Settings accordion all-collapsed + deep-link (already implemented)
 
 ## Goals
 
-- G1: Sidebar close/open interactions follow established UX patterns (Material Design 3 navigation drawer)
-- G2: First-time experience is optimized per platform without requiring manual configuration
+- G1: Sidebar offers three intuitive modes that cover all use cases (always visible, minimal, quick-access on hover)
+- G2: Sidebar adapts intelligently to screen width AND input capabilities — no information lost when resizing
 - G3: Mobile sidebar interactions feel native (swipe, backdrop, auto-collapse)
+- G4: Sidebar control is discoverable and consistent (same popover in sidebar + settings page)
 
 ## Non-Goals
 
 - NG1: Slide animation for sidebar open/close (can be added later)
 - NG2: Resizable sidebar width
 - NG3: Changing sidebar visual design (colors, spacing, icons)
-- NG4: Bottom sheet navigation on mobile (alternative to sidebar)
+- NG4: Bottom sheet navigation on mobile
 
 ## Users & Scenarios
 
-- U1: Desktop user — sees sidebar expanded on left with labeled menu items on first launch, uses toggle button to collapse/expand
-- U2: Mobile user — sees collapsed sidebar on right, swipes from edge to open, taps backdrop or swipes back to close, sidebar auto-collapses after selecting a menu item
-- U3: Existing user with saved preferences — all saved settings preserved, only "always open" removed (replaced by `isPanelOpen=true`)
+- U1: Desktop user with wide screen — uses Expanded mode, sees sidebar with icons and labels permanently
+- U2: Desktop power user — uses "Expand on hover", sidebar stays collapsed until mouse hovers, then expands as overlay
+- U3: Desktop user who resizes browser to narrow width — if hover available, gets hover-ready mode instead of losing text labels; if no hover, falls back to collapsed
+- U4: Mobile user — sidebar always collapsed with icons, opens as drawer via swipe, auto-collapses after navigation
+- U5: User who prefers minimal UI — uses Collapsed mode, navigates by icons only
 
 ## Requirements
 
 ### Functional
 
-- FR1: Expanded sidebar SHALL render a toggle button (`‹` when sidebar is on right, `›` when on left) in the header area. Clicking it SHALL collapse the sidebar and persist `isPanelOpen=false` to localStorage.
-- FR2: Expanded sidebar container SHALL NOT have `onClick`, `cursor-pointer`, `role="button"`, `tabIndex`, or `onKeyDown` for toggling. Only the toggle button and collapsed strip handle open/close.
-- FR3: On mobile (below `LG_BREAKPOINT_PX`), when sidebar is expanded, a backdrop overlay SHALL render behind the sidebar. Tapping the backdrop SHALL close the sidebar.
-- FR4: When `isPanelOpen` is `false` in localStorage and user opens sidebar via collapsed strip click, the sidebar SHALL open in modal (temporary) mode. Modal mode is tracked via React state (`isTemporarilyOpen`), not persisted to localStorage.
-- FR5: In modal mode, clicking a navigation item SHALL navigate to the selected route AND close the sidebar (set `isTemporarilyOpen=false`).
-- FR6: When `isPanelOpen` is `true` in localStorage (standard drawer mode), clicking a navigation item SHALL navigate but NOT close the sidebar.
-- FR7: On desktop, first launch defaults SHALL be: `panelSide=left`, `isPanelOpen=true`, `filterBarPosition=top`. On mobile: `panelSide=right`, `isPanelOpen=false`, `filterBarPosition=bottom`. Defaults apply only when no value exists in localStorage.
-- FR8: On mobile, swiping from the sidebar edge (~20-30px zone) toward center SHALL open the sidebar. Swipe direction depends on `panelSide`.
-- FR9: On mobile, swiping an open sidebar toward its edge SHALL close it. The sidebar SHALL follow the finger during swipe. If released before 30% threshold, sidebar snaps back open.
-- FR10: The `usePanelAlwaysOpen` hook, `isPanelAlwaysOpen` state, `PANEL_ALWAYS_OPEN` storage key, and all references SHALL be removed. Existing users with `isPanelAlwaysOpen=true` SHALL be migrated: set `isPanelOpen=true` if not already set.
-- FR11: In settings, the "pin detail panel" control SHALL use a Pin icon button (same as in TaskDetailPanel: `Pin` icon, `fill-current` when pinned, `rotate-45` when unpinned) instead of a switch toggle. The button SHALL be accompanied by a text label.
-- FR12: Settings accordion SHALL allow all sections to be collapsed. Clicking the currently expanded section SHALL collapse it (resulting in no sections expanded). On settings page open, all sections SHALL be collapsed by default.
-- FR13: Clicking "Configure server" button in sidebar SHALL navigate to settings page with the "Account & Sync" section automatically expanded.
+- FR1: Sidebar SHALL support three modes stored in localStorage: `expanded`, `collapsed`, `expand-on-hover`.
+- FR2: A sidebar control icon SHALL render in the bottom area of the sidebar (above search, above the divider line). Clicking it SHALL open a popover with three options: Expanded, Collapsed, Expand on hover. The active mode SHALL be visually indicated.
+- FR3: The same three-mode setting SHALL be available on the Settings page in the "Workspace" section.
+- FR4: Toggle buttons (`‹`/`›`) SHALL be removed from the sidebar.
+- FR5: In "Expand on hover" mode, hovering the mouse over the collapsed sidebar SHALL expand it as an overlay (over content, not pushing it) after a ~250ms debounce delay. Moving the mouse out SHALL collapse it after a ~150ms debounce delay.
+- FR6: In "Expand on hover" mode, clicking a navigation item while hover-expanded SHALL navigate without closing the sidebar (sidebar stays expanded while cursor is inside).
+- FR7: In "Collapsed" mode on desktop, clicking a navigation icon SHALL navigate immediately without expanding the sidebar.
+- FR8: The effective sidebar state SHALL be resolved from three independent factors: screen width (wide/narrow), hover capability (yes/no), and user setting (expanded/collapsed/hover). Resolution follows the state matrix defined in this proposal.
+- FR9: On narrow screen without hover (mobile), sidebar SHALL always be collapsed. Opening is only via swipe gesture → drawer with backdrop.
+- FR10: On narrow screen without hover, tapping a navigation icon in collapsed sidebar SHALL navigate immediately (no drawer opening).
+- FR11: On narrow screen without hover, drawer auto-collapses after navigation item click.
+- FR12: Backdrop overlay SHALL render when drawer is open (narrow + no hover only). Tapping backdrop SHALL close the drawer.
+- FR13: Swipe from screen edge SHALL open drawer. Swipe-back SHALL close drawer. Swipe gestures active only when hover is NOT available.
+- FR14: When screen width crosses the breakpoint (resize), sidebar state SHALL be recalculated from the matrix. User setting in localStorage SHALL NOT change on resize.
+- FR15: When resizing from wide to narrow while hover-expanded, the overlay SHALL close and sidebar SHALL transition to hover-ready (if hover available) or collapsed (if no hover).
+- FR16: When resizing from narrow to wide, sidebar SHALL restore the state matching the saved setting.
+- FR17: When drawer is open during resize from narrow to wide, drawer and backdrop SHALL close, and saved setting SHALL be applied.
+- FR18: The sidebar control popover SHALL be hidden on narrow screens without hover capability (setting does not apply in mobile mode).
 
 ### Non-Functional
 
-#### Accessibility — NFR-A1
+#### Accessibility — NFR-A
 
-- NFR-A1: Toggle button SHALL have `aria-label` (localized "Close sidebar" / "Open sidebar"), `role="button"`, and be keyboard accessible (Enter/Space).
-- NFR-A2: Backdrop SHALL have `aria-label` (localized "Close sidebar") for screen readers.
+- NFR-A1: Sidebar control button SHALL have `aria-label` (localized), `role="button"`, keyboard accessible (Enter/Space).
+- NFR-A2: Popover SHALL be keyboard navigable (arrow keys, Enter to select, Escape to close).
+- NFR-A3: Backdrop SHALL have `aria-label` (localized "Close sidebar") for screen readers.
 
-#### Responsive — NFR-R1
+#### Responsive — NFR-R
 
-- NFR-R1: Backdrop renders only on mobile (below `LG_BREAKPOINT_PX`). On desktop, no backdrop.
-- NFR-R2: Swipe gestures activate only on mobile. On desktop, no swipe handling.
-- NFR-R3: Platform-aware defaults use `useIsDesktop()` hook to determine platform at first render.
+- NFR-R1: Backdrop renders only on narrow screen without hover. On wide screen or with hover — no backdrop.
+- NFR-R2: Swipe gestures activate only on narrow screen without hover.
+- NFR-R3: Hover-expand activates only when `@media (hover: hover)` matches.
 
 ## UX Acceptance Criteria
 
-- UX1: User can close expanded sidebar ONLY via toggle button (desktop) or toggle button / backdrop tap / swipe-back (mobile). Clicking empty space inside sidebar does nothing.
-- UX2: On mobile, expanded sidebar shows darkened backdrop behind it. Tapping backdrop closes sidebar.
-- UX3: When user opens collapsed sidebar and picks a menu item, sidebar auto-collapses and app navigates. No extra tap needed to dismiss.
-- UX4: Swipe from screen edge on mobile opens sidebar with finger-following animation. Swipe-back closes with finger-following.
-- UX5: First-time desktop user sees sidebar expanded on left with all labels visible and command bar at top — ready to use without configuration.
-- UX6: First-time mobile user sees compact collapsed sidebar on right and command bar at bottom — optimized for thumb reach.
-- UX7: Pin detail panel control in settings visually matches the pin button on the task detail panel itself — consistent iconography.
-- UX8: Settings page opens with all sections collapsed — user sees all section headers at a glance and opens only the one they need.
-- UX9: Clicking "Configure server" in sidebar takes user directly to the relevant settings section, already expanded — no hunting.
+- UX1: User can switch sidebar mode via a small icon at the bottom of the sidebar — popover appears with three clearly labeled options.
+- UX2: In "Expand on hover" mode, sidebar feels responsive but not twitchy — no accidental expansions from passing the mouse through.
+- UX3: User who resizes desktop browser to phone width retains access to navigation text via hover — no information is lost if mouse is available.
+- UX4: On mobile, sidebar drawer opens with backdrop, closes on backdrop tap or swipe — standard mobile pattern.
+- UX5: Tapping an icon in collapsed sidebar on mobile navigates immediately — no extra step needed.
+- UX6: The sidebar control setting in sidebar popover and in settings page are always in sync.
+- UX7: First-time desktop user sees sidebar expanded — ready to use without configuration.
+
+## State Resolution Matrix
+
+| Width  | Hover | Setting   | Effective State                                           |
+|--------|-------|-----------|-----------------------------------------------------------|
+| Wide   | Yes   | Expanded  | **Expanded** — icons + text, pushes content               |
+| Wide   | Yes   | Collapsed | **Collapsed** — icons only, pushes content                |
+| Wide   | Yes   | Hover     | **Hover-ready** — icons only, expands on hover as overlay |
+| Wide   | No    | Expanded  | **Expanded** — icons + text, pushes content               |
+| Wide   | No    | Collapsed | **Collapsed** — icons only, pushes content                |
+| Wide   | No    | Hover     | **Collapsed** — hover unavailable, fallback               |
+| Narrow | Yes   | Expanded  | **Hover-ready** — expanded won't fit, hover as compromise |
+| Narrow | Yes   | Collapsed | **Collapsed** — icons only                                |
+| Narrow | Yes   | Hover     | **Hover-ready** — direct match                            |
+| Narrow | No    | Expanded  | **Collapsed** — neither expanded nor hover possible       |
+| Narrow | No    | Collapsed | **Collapsed** — direct match                              |
+| Narrow | No    | Hover     | **Collapsed** — hover unavailable, fallback               |
 
 ## Behavior
 
 Scenarios defined in:
-- `features/sidebar/sidebar_toggle.feature` — updated for toggle button, remove always-open scenarios
-- `features/sidebar/sidebar_modal.feature` — new: modal vs standard drawer behavior
-- `features/sidebar/sidebar_swipe.feature` — new: swipe gestures on mobile
-- `features/sidebar/sidebar_backdrop.feature` — new: backdrop behavior
-- `features/sidebar/sidebar_defaults.feature` — new: platform-aware defaults
+- `features/sidebar/sidebar_control.feature` — sidebar control popover, mode switching
+- `features/sidebar/sidebar_hover.feature` — expand on hover behavior, debounce
+- `features/sidebar/sidebar_state_matrix.feature` — state resolution from width x hover x setting
+- `features/sidebar/sidebar_resize.feature` — transitions on breakpoint crossing
+- `features/sidebar/sidebar_swipe.feature` — swipe gestures (retained)
+- `features/sidebar/sidebar_backdrop.feature` — backdrop behavior (retained)
 
 All scenarios tagged `@improve-sidebar-ux`.
 
@@ -96,46 +128,53 @@ No IA changes — sidebar navigation structure remains the same.
 
 ## Success Metrics
 
-- M1: Zero accidental sidebar closes from clicking empty space (eliminated by design)
-- M2: All sidebar interactions (open, close, navigate) achievable within 1 tap/gesture on mobile
-- M3: Mutation test score >= 95% on new/modified hooks and components
+- M1: All 12 matrix combinations resolve to correct state (automated test coverage)
+- M2: Hover debounce prevents accidental expansion — no expansion on cursor pass-through under 250ms
+- M3: All sidebar interactions (open, close, navigate, switch mode) achievable within 1 tap/gesture on mobile
+- M4: Mutation test score >= 95% on new/modified hooks and components
 
 ## Open Questions
 
-- ~~Q1~~: **Resolved.** iOS back-swipe conflict when sidebar is on the left: use a wider activation zone (~30-40px from edge) so our swipe starts where iOS gesture no longer intercepts. Left-side sidebar is essential for left-handed users, so disabling edge swipe is not an option.
-- ~~Q2~~: **Resolved.** No migration toast needed — app is not yet in production. Silent migration of `isPanelAlwaysOpen` to `isPanelOpen` is sufficient.
+- ~~Q1~~: **Resolved.** iOS back-swipe conflict: use wider activation zone (~30-40px from edge).
+- ~~Q2~~: **Resolved.** No migration toast — silent migration.
+- ~~Q3~~: **Resolved.** Sidebar control icon: `PanelLeft` when sidebar is on left, `PanelRight` when on right. Matches sidebar position semantically.
+- ~~Q4~~: **Resolved.** "Expand on hover" option always shown and selectable, even on devices without hover. Setting is declarative ("I want hover when possible"), state matrix handles fallback automatically. User on tablet can pre-select hover, connect keyboard with trackpad — works without reconfiguration.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `sidebar-modal-drawer`: Modal (temporary) vs standard (persistent) drawer behavior with auto-collapse on navigation
-- `sidebar-swipe`: Swipe gestures for opening/closing sidebar on mobile
-- `sidebar-backdrop`: Backdrop overlay behind expanded sidebar on mobile
+- `sidebar-control`: Popover with three modes (Expanded, Collapsed, Expand on hover) in sidebar bottom area
+- `sidebar-hover-expand`: Expand on hover behavior with debounce, overlay mode
+- `sidebar-state-matrix`: Smart state resolution from width x hover x setting
 
 ### Modified Capabilities
 
-- `sidebar-navigation`: Toggle button in header, remove onClick from container, remove always-open mode, accessible markup updates
-- `local-preferences`: Platform-aware defaults for panel side, panel open, and filter bar position; remove panel-always-open preference; migration from always-open to panel-open
-- `settings-page-sections`: Accordion allows all-collapsed state, default to all-collapsed, deep-link to specific section
-- `settings-page-reordering`: Pin icon button replaces toggle for detail panel pinned setting
+- `sidebar-navigation`: Remove toggle buttons, adapt to three-mode system
+- `sidebar-backdrop`: Scoped to narrow + no hover (was: below breakpoint)
+- `sidebar-swipe`: Scoped to narrow + no hover (was: below breakpoint)
+- `local-preferences`: New `sidebarMode` preference (expanded/collapsed/expand-on-hover), remove `isPanelOpen`
+- `settings-page-reordering`: Sidebar control setting in Workspace section
+
+### Retained (already implemented)
+
+- `sidebar-modal-drawer`: Auto-collapse on navigation in drawer mode
+- `settings-page-sections`: Accordion all-collapsed, deep-link
+- Pin icon button for detail panel setting
 
 ## Impact
 
-- `Sidebar.tsx` — toggle button, remove container onClick, backdrop rendering
-- `SidebarFilterNav.tsx` — auto-collapse callback on navigation click
-- `SidebarSyncBlock.tsx` — remove stopPropagation (no longer needed)
-- `TaskPageLayout.tsx` — modal drawer logic, backdrop, swipe integration
-- `usePanelOpen.ts` — temporary open state logic
-- `usePanelSide.ts` — platform-aware default
-- `useFilterBarPosition.ts` — platform-aware default
-- `usePanelAlwaysOpen.ts` — DELETE
-- `PanelSettingsProvider.tsx` — remove always-open context
-- `constants/index.ts` — remove PANEL_ALWAYS_OPEN, update defaults
-- `WorkspaceSection.tsx` — remove always-open toggle, replace pin toggle with Pin icon button
-- `SettingsAccordion.tsx` — allow all-collapsed state, default to collapsed, support external section override
-- `SettingsPage.tsx` — accept section query param/state for deep-linking
-- `SidebarSyncBlock.tsx` — navigate to settings with section param when "Configure server" clicked
-- New hook: `useSidebarSwipe.ts` — swipe gesture handling
-- BDD features: update existing sidebar features, add new ones
-- Tests: update all tests referencing always-open behavior, accordion behavior, pin toggle
+- `Sidebar.tsx` — remove toggle button, add sidebar control icon + popover, hover expand logic
+- `SidebarControlPopover.tsx` — NEW: popover component with three mode options
+- `SidebarFilterNav.tsx` — adapt navigation click behavior per mode
+- `TaskPageLayout.tsx` — state matrix resolution, backdrop scoping, hover integration
+- `useSidebarMode.ts` — NEW: hook for three-mode preference (replaces `usePanelOpen` open/close logic)
+- `useSidebarState.ts` — NEW: hook resolving effective state from width x hover x setting
+- `useSidebarHover.ts` — NEW: hover expand/collapse with debounce
+- `useHoverCapability.ts` — NEW: hook wrapping `@media (hover: hover)` match
+- `useSidebarSwipe.ts` — update guards (narrow + no hover instead of !isDesktop)
+- `usePanelOpen.ts` — remove `isTemporarilyOpen` logic (replaced by mode system)
+- `WorkspaceSection.tsx` — add sidebar control setting
+- `constants/index.ts` — sidebar mode values, debounce timing constants
+- BDD features: new and updated sidebar features
+- Tests: update all tests for new mode system
