@@ -7,67 +7,26 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildGoalsHook } from "@/test/builders/hookBuilders";
 import { buildGoal } from "@/test/factories/goalFactory";
+import "./entityPage.testSetup";
 import GoalsPage from "./GoalsPage";
 
-vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({
-    accessToken: null,
-    userEmail: null,
-    userPicture: null,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    silentRefresh: vi.fn(),
-  }),
-}));
 vi.mock("@/hooks/useGoals");
-vi.mock("@/hooks/usePanelSide");
-vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/services/TaskService", () => ({
   TaskService: vi.fn().mockImplementation(() => ({
     getGoalTaskCounts: vi.fn().mockResolvedValue({}),
   })),
 }));
-vi.mock("@/db/repositories/TaskRepository", () => ({
-  TaskRepository: vi.fn().mockImplementation(() => ({})),
-}));
-vi.mock("@/db/repositories/ChecklistRepository", () => ({
-  ChecklistRepository: vi.fn().mockImplementation(() => ({})),
-}));
-
-vi.mock("@/hooks/useFilterBarPosition", () => ({
-  useFilterBarPosition: () => ({
-    filterBarPosition: "bottom",
-    setFilterBarPosition: vi.fn(),
-  }),
-}));
-
-vi.mock("@/hooks/useHandedness", () => ({
-  useHandedness: () => ({
-    handedness: "right",
-    setHandedness: vi.fn(),
-  }),
-}));
 
 import { useGoals } from "@/hooks/useGoals";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 
 const mockUseGoals = vi.mocked(useGoals);
 const mockUsePanelSide = vi.mocked(usePanelSide);
-const mockUsePanelOpen = vi.mocked(usePanelOpen);
 
 function renderGoalsPage() {
   mockUsePanelSide.mockReturnValue({
     panelSide: "right",
     setPanelSide: vi.fn(),
-  });
-  mockUsePanelOpen.mockReturnValue({
-    isPanelOpen: false,
-    isTemporarilyOpen: false,
-    effectiveIsOpen: false,
-    togglePanelOpen: vi.fn(),
-    openTemporarily: vi.fn(),
-    closeTemporary: vi.fn(),
   });
 
   render(
@@ -158,7 +117,7 @@ describe("GoalsPage", () => {
     expect(screen.getByTestId("command-bar-entity-icon")).toBeInTheDocument();
   });
 
-  // FR-20: CommandBar has create button
+  // FR-20: CommandBar has a create button
   it("should render CommandBar create button", () => {
     renderGoalsPage();
     expect(screen.getByTestId("command-bar-create-button")).toBeInTheDocument();

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MapPin } from "lucide-react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import "@/pages/entityPage.testSetup";
 import {
   buildTasksInMultipleBoxes,
   expectAllBoxesWithSectionHeaders,
@@ -13,18 +14,6 @@ import {
   type EntityDetailLayoutProps,
 } from "./EntityDetailLayout";
 
-vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({
-    accessToken: null,
-    userEmail: null,
-    userPicture: null,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    silentRefresh: vi.fn(),
-  }),
-}));
-vi.mock("@/hooks/usePanelSide");
-vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/useIsUnsynced");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
@@ -47,28 +36,12 @@ vi.mock("@/hooks/useSettings", () => ({
   getCachedDayBoundary: () => "00:00",
 }));
 
-vi.mock("@/hooks/useFilterBarPosition", () => ({
-  useFilterBarPosition: () => ({
-    filterBarPosition: "bottom",
-    setFilterBarPosition: vi.fn(),
-  }),
-}));
-
-vi.mock("@/hooks/useHandedness", () => ({
-  useHandedness: () => ({
-    handedness: "right",
-    setHandedness: vi.fn(),
-  }),
-}));
-
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 
 const mockUsePanelSide = vi.mocked(usePanelSide);
-const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUseIsUnsynced = vi.mocked(useIsUnsynced);
 const mockUseIsDesktop = vi.mocked(useIsDesktop);
 const mockUsePanelSplit = vi.mocked(usePanelSplit);
@@ -126,14 +99,6 @@ beforeEach(() => {
   mockUsePanelSide.mockReturnValue({
     panelSide: "right",
     setPanelSide: vi.fn(),
-  });
-  mockUsePanelOpen.mockReturnValue({
-    isPanelOpen: false,
-    isTemporarilyOpen: false,
-    effectiveIsOpen: false,
-    togglePanelOpen: vi.fn(),
-    openTemporarily: vi.fn(),
-    closeTemporary: vi.fn(),
   });
   mockUseIsUnsynced.mockReturnValue(false);
   mockUseIsDesktop.mockReturnValue(false);
