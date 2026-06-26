@@ -1,5 +1,4 @@
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockNavigate = vi.fn();
@@ -28,21 +27,7 @@ vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: () => ({ menuOrder: [] }),
 }));
 
-import { Sidebar } from "./Sidebar";
-
-function renderSidebar(overrides?: Partial<Parameters<typeof Sidebar>[0]>) {
-  return render(
-    <MemoryRouter>
-      <Sidebar
-        mode={null}
-        isOpen={true}
-        onToggle={vi.fn()}
-        onModeChange={vi.fn()}
-        {...overrides}
-      />
-    </MemoryRouter>,
-  );
-}
+import { renderSidebar } from "./Sidebar.test-utils";
 
 // implements FR6 of add-sidebar-specs
 describe("Sidebar — CSS classes", () => {
@@ -93,8 +78,8 @@ describe("Sidebar — CSS classes", () => {
   });
 
   it("should apply w-14 on collapsed panel", () => {
-    renderSidebar({ isOpen: false });
-    const panel = screen.getByTestId("sidebar-toggle");
+    renderSidebar({ effectiveState: "collapsed" as const });
+    const panel = screen.getByTestId("sidebar-collapsed");
     expect(panel.className).toContain("w-14");
   });
 
@@ -135,22 +120,22 @@ describe("Sidebar — CSS classes", () => {
   });
 
   it("should apply bg-accent on collapsed panel", () => {
-    renderSidebar({ isOpen: false });
-    const panel = screen.getByTestId("sidebar-toggle");
+    renderSidebar({ effectiveState: "collapsed" as const });
+    const panel = screen.getByTestId("sidebar-collapsed");
     expect(panel.className).toContain("bg-accent");
   });
 
   it("should apply order-first and flex-row-reverse to outer wrapper when side is left and collapsed", () => {
-    renderSidebar({ side: "left", isOpen: false });
-    const collapsedPanel = screen.getByTestId("sidebar-toggle");
+    renderSidebar({ side: "left", effectiveState: "collapsed" as const });
+    const collapsedPanel = screen.getByTestId("sidebar-collapsed");
     const outerWrapper = collapsedPanel.parentElement!;
     expect(outerWrapper.className).toContain("order-first");
     expect(outerWrapper.className).toContain("flex-row-reverse");
   });
 
   it("should not apply order-first to outer wrapper when side is right and collapsed", () => {
-    renderSidebar({ side: "right", isOpen: false });
-    const collapsedPanel = screen.getByTestId("sidebar-toggle");
+    renderSidebar({ side: "right", effectiveState: "collapsed" as const });
+    const collapsedPanel = screen.getByTestId("sidebar-collapsed");
     const outerWrapper = collapsedPanel.parentElement!;
     expect(outerWrapper.className).not.toContain("order-first");
   });
