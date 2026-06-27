@@ -188,7 +188,9 @@ Deno.serve(
         const totalCount = result.count ?? 0;
         if (totalCount > rows.length && rows.length > 0) {
           const lastRow = rows[rows.length - 1];
-          responseCursors![entityTableNames[index]] = {
+          (responseCursors as Record<string, unknown>)[
+            entityTableNames[index]
+          ] = {
             revision: lastRow.revision as number,
             last_id: lastRow.id as string,
           };

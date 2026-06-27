@@ -121,7 +121,7 @@ describe("InMemorySyncAdapter pagination", () => {
           expect(response.has_more).toBe(true);
           expect(response.tasks).toHaveLength(MAX_ROWS);
           expect(response.cursors).toBeDefined();
-          expect(response.cursors!["tasks"]).toBeDefined();
+          expect(response.cursors!.tasks).toBeDefined();
           isFirstPull = false;
         }
 

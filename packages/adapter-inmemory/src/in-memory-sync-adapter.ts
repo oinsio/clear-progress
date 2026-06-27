@@ -98,37 +98,37 @@ export class InMemorySyncAdapter implements SyncAdapter {
     const allTasks = this.filterAndSort(
       this.tasks,
       sinceRevision,
-      requestCursors["tasks"],
+      requestCursors.tasks,
     );
     const allGoals = this.filterAndSort(
       this.goals,
       sinceRevision,
-      requestCursors["goals"],
+      requestCursors.goals,
     );
     const allContexts = this.filterAndSort(
       this.contexts,
       sinceRevision,
-      requestCursors["contexts"],
+      requestCursors.contexts,
     );
     const allCategories = this.filterAndSort(
       this.categories,
       sinceRevision,
-      requestCursors["categories"],
+      requestCursors.categories,
     );
     const allIdeas = this.filterAndSort(
       this.ideas,
       sinceRevision,
-      requestCursors["ideas"],
+      requestCursors.ideas,
     );
     const allChecklistItems = this.filterAndSort(
       this.checklistItems,
       sinceRevision,
-      requestCursors["checklist_items"],
+      requestCursors.checklist_items,
     );
     const allAttachments = this.filterAndSort(
       this.attachments,
       sinceRevision,
-      requestCursors["attachments"],
+      requestCursors.attachments,
     );
 
     const allEntityArrays = [
@@ -165,9 +165,15 @@ export class InMemorySyncAdapter implements SyncAdapter {
 
     let currentRevision: number;
     if (hasMore) {
-      const maxRevisions = truncatedArrays
-        .filter((entities) => entities.length > 0)
-        .map((entities) => entities[entities.length - 1]!.revision);
+      const maxRevisions: number[] = [];
+      for (const entities of truncatedArrays) {
+        if (entities.length > 0) {
+          const lastEntity = entities[entities.length - 1];
+          if (lastEntity) {
+            maxRevisions.push(lastEntity.revision);
+          }
+        }
+      }
       currentRevision =
         maxRevisions.length > 0
           ? Math.min(...maxRevisions)
@@ -188,10 +194,16 @@ export class InMemorySyncAdapter implements SyncAdapter {
         "attachments",
       ];
       tableNames.forEach((tableName, index) => {
-        const allEntities = allEntityArrays[index]!;
-        const truncated = truncatedArrays[index]!;
+        const allEntities = allEntityArrays[
+          index
+        ] as (typeof allEntityArrays)[number];
+        const truncated = truncatedArrays[
+          index
+        ] as (typeof truncatedArrays)[number];
         if (allEntities.length > this.maxRowsPerTable && truncated.length > 0) {
-          const lastEntity = truncated[truncated.length - 1]!;
+          const lastEntity = truncated[
+            truncated.length - 1
+          ] as (typeof truncated)[number];
           responseCursors[tableName] = {
             revision: lastEntity.revision,
             last_id: lastEntity.id,
