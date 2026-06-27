@@ -1,39 +1,48 @@
-## 1. Contract: PullResponse extension
+## 1. Contract: PullRequest/PullResponse extension
 
 - [x] 1.1 Add `has_more: boolean` to `PullResponse` (`packages/contract/src/protocol/pull.ts`) — FR4
 - [x] 1.2 Update PullResponse Zod validation schema (if exists) — FR4
+- [ ] 1.3 Add `cursors?: Record<string, { revision: number; last_id: string }>` to `PullResponse` — FR4
+- [ ] 1.4 Add `cursors?: Record<string, { revision: number; last_id: string }>` to `PullRequest` — FR8
 
-## 2. Server: Pull Edge Function with pagination
+## 2. Migration: Composite index for keyset pagination
 
-- [x] 2.1 Replace `select("*")` with `select("*", { count: "exact" })` for all tables in `pull/index.ts` — FR1
-- [x] 2.2 Add `.order("revision", { ascending: true })` to all entity queries — FR2
-- [x] 2.3 Compute `has_more`: `true` if `count > data.length` for any table — FR1
-- [x] 2.4 Compute `current_revision`: when `has_more` — `MIN(max_revision)` across tables with data; when `!has_more` — `next_revision - 1` as before — FR3
-- [x] 2.5 Include `has_more` in response — FR4
+- [ ] 2.1 Create migration adding composite index `(user_id, revision, id)` on all 7 entity tables — FR10, NFR-P2
 
-## 3. Client: Pagination loop in SyncService._pull()
+## 3. Server: Pull Edge Function with composite cursor
 
-- [x] 3.1 Write unit tests for pagination loop (TDD red phase) — FR5, FR6
-- [x] 3.2 Implement `do/while(has_more)` loop in `_pull()`, using `current_revision` as cursor — FR5
-- [x] 3.3 Move `last_known_revision` save outside the loop (only after `has_more === false`) — FR6
-- [x] 3.4 Ensure entities from each batch are applied immediately inside the loop — FR5
-- [x] 3.5 Run unit tests (TDD green phase) — FR5, FR6
+- [x] 3.1 Use `select("*", { count: "exact" })` for all entity tables in `pull/index.ts` — FR1
+- [ ] 3.2 Add `.order("id", { ascending: true })` as secondary sort after `.order("revision")` — FR2
+- [ ] 3.3 Parse `cursors` from request body — FR8
+- [ ] 3.4 Use composite `.or('revision.gt.R,and(revision.eq.R,id.gt.ID)')` filter for tables with cursor; standard `gt` for others — FR9
+- [x] 3.5 Compute `has_more`: `true` if `count > data.length` for any table — FR1
+- [ ] 3.6 Build `cursors` object with `{ revision, last_id }` for each truncated table — FR3
+- [ ] 3.7 Compute `current_revision`: when `has_more` — `MIN(max_revision)`; otherwise `next_revision - 1` — FR3
+- [ ] 3.8 Include `cursors` in response when `has_more` — FR3
 
-## 4. In-memory adapter: pagination support
+## 4. Client: Pagination loop with cursor passthrough
 
-- [x] 4.1 Write contract tests for pagination in in-memory adapter (TDD red phase) — FR7
-- [x] 4.2 Add configurable `maxRowsPerTable` to `InMemorySyncAdapter` — FR7
-- [x] 4.3 Implement truncation, ordering, and `has_more`/`current_revision` logic in `pull()` — FR7
-- [x] 4.4 Run contract tests (TDD green phase) — FR7
+- [ ] 4.1 Update unit tests for pagination loop with cursors (TDD red phase) — FR5, FR8
+- [ ] 4.2 Implement cursor passthrough in `_pull()` do/while loop — FR5
+- [x] 4.3 Move `last_known_revision` save outside the loop (only after `has_more === false`) — FR6
+- [ ] 4.4 Run unit tests (TDD green phase) — FR5
 
-## 5. Integration tests with real Supabase
+## 5. In-memory adapter: composite cursor pagination
 
-- [x] 5.1 Integration test: initial pull with record count > `max_rows` — all records fetched — M1
-- [x] 5.2 Integration test: incremental pull after partial batch — M1
-- [x] 5.3 Integration test: crash-recovery (interrupted pagination cycle) — M2
+- [ ] 5.1 Update contract tests for composite cursor pagination (TDD red phase) — FR7
+- [ ] 5.2 Add composite cursor support: `ORDER BY revision, id`, `.or()` filter, cursors in response — FR7
+- [ ] 5.3 Add test case: >maxRows records with same revision are all fetched — FR7
+- [ ] 5.4 Run contract tests (TDD green phase) — FR7
 
-## 6. Verification
+## 6. Integration tests with real Supabase
 
-- [x] 6.1 `pnpm run build` — project builds without errors
-- [x] 6.2 Mutation testing on changed SyncService files — target >=95% (93.03% total / 98.42% covered; survivors in pre-existing code outside pagination scope)
-- [x] 6.3 Existing unit tests pass without regressions
+- [ ] 6.1 Integration test: single-batch push of >max_rows records with same revision — all fetched via composite cursor — M1
+- [ ] 6.2 Integration test: incremental pull after batch with same-revision records — M1
+- [ ] 6.3 Integration test: crash-recovery with composite cursor pagination — M2
+- [ ] 6.4 Remove `pushTasksInBatches` workaround — use single push for all test records
+
+## 7. Verification
+
+- [ ] 7.1 `pnpm run build` — project builds without errors
+- [ ] 7.2 Mutation testing on changed files — target >=95%
+- [ ] 7.3 Existing unit tests pass without regressions
