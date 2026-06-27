@@ -181,7 +181,11 @@ export function EntityDetailLayout({
   }
 
   return (
-    <SidebarShell mode={panelMode} onModeChange={onModeChange}>
+    <SidebarShell
+      mode={panelMode}
+      onModeChange={onModeChange}
+      data-testid={`${testIdPrefix}-detail-page`}
+    >
       {/* Split container: task list + optional task detail panel */}
       <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
         {/* Main content column */}

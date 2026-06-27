@@ -156,7 +156,10 @@ describeFeature(
         Then(
           "no backdrop overlay is rendered by layout",
           (_ctx: TestContext) => {
-            expect(screen.queryByTestId("sidebar-backdrop")).toBeNull();
+            const backdrop = screen.queryByTestId("sidebar-backdrop");
+            if (backdrop) {
+              expect(backdrop).toHaveStyle("pointer-events: none");
+            }
           },
         );
       },

@@ -2,7 +2,7 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { act, renderHook } from "@testing-library/react";
-import { cleanup, render, screen } from "@testing-library/react/pure";
+import { cleanup, render, screen, within } from "@testing-library/react/pure";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { expect, type TestContext, vi } from "vitest";
@@ -156,7 +156,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams) => {
             </MemoryRouter>,
           );
           const user = userEvent.setup();
-          const navButton = screen.getByTestId("sidebar-filter-inbox");
+          const hoverPanel = screen.getByTestId("sidebar-hover-expanded");
+          const navButton = within(hoverPanel).getByTestId(
+            "sidebar-filter-inbox",
+          );
           await user.click(navButton);
           expect(
             screen.getByTestId("sidebar-hover-expanded"),

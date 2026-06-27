@@ -152,7 +152,7 @@ export default function IdeasPage() {
     : null;
 
   return (
-    <SidebarShell mode="ideas">
+    <SidebarShell mode="ideas" data-testid="ideas-page">
       {/* Split container: idea list + optional idea detail panel */}
       <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
         {/* Main content */}

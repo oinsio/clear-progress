@@ -154,7 +154,7 @@ export default function ContextsPage() {
   );
 
   return (
-    <SidebarShell mode="contexts">
+    <SidebarShell mode="contexts" data-testid="contexts-page">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar

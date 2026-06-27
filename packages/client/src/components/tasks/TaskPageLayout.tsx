@@ -8,15 +8,12 @@
 
 import { Pin } from "lucide-react";
 import type * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SIDEBAR_DRAWER_TRANSITION_MS } from "@/constants";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useSidebarHover } from "@/hooks/useSidebarHover";
+import { useSidebarDrawer } from "@/hooks/useSidebarDrawer";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
-import { useSidebarSwipe } from "@/hooks/useSidebarSwipe";
 import { cn } from "@/shared/lib/cn";
 import type { Box } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
@@ -56,45 +53,28 @@ export function TaskPageLayout({
   onModeChange: externalModeChange,
 }: TaskPageLayoutProps) {
   const { ratio, containerRef, handleResizeMouseDown } = usePanelSplit();
-  const { panelSide } = usePanelSide();
   const {
+    panelSide,
     effectiveState,
-    sidebarMode: sidebarBehaviorMode,
-    setSidebarMode: setSidebarBehaviorMode,
+    sidebarBehaviorMode,
+    setSidebarBehaviorMode,
     isNarrow,
     hasHover,
-  } = useSidebarState();
-
-  // FR14-FR17: Drawer state for mobile (narrow + no hover)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const openDrawer = useCallback(() => setIsDrawerOpen(true), []);
-  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
-
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const { sidebarTranslateX } = useSidebarSwipe({
+    isDrawerOpen,
+    closeDrawer,
     sidebarRef,
-    side: panelSide,
-    isOpen: isDrawerOpen,
-    isDesktop: !isNarrow || hasHover,
-    onOpen: openDrawer,
-    onClose: closeDrawer,
-  });
+    isMobileDrawer,
+    sidebarTranslateX,
+    isSwiping,
+    isHoverExpanded,
+    hoverHandlers,
+    handleAutoCollapse,
+  } = useSidebarDrawer();
+
   const { t } = useTranslation();
   const { isDetailPanelPinned } = useDetailPanelPinned();
   const defaultModeChange = useSidebarNavigation();
   const handleModeChange = externalModeChange ?? defaultModeChange;
-
-  const { isHoverExpanded, hoverHandlers } = useSidebarHover(effectiveState);
-
-  // FR11: Auto-collapse only when drawer is open
-  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
-
-  // FR17: Close drawer when transitioning from narrow to wide
-  useEffect(() => {
-    if (!isNarrow) {
-      setIsDrawerOpen(false);
-    }
-  }, [isNarrow]);
 
   const isDesktop = !isNarrow;
   const isTaskSelected = selectedTask !== null;
@@ -165,11 +145,16 @@ export function TaskPageLayout({
         )}
       </div>
 
-      {/* FR8: Backdrop for drawer mode (narrow + no hover + drawer open) */}
-      {isNarrow && !hasHover && isDrawerOpen && (
+      {/* FR8: Backdrop for drawer mode — always in DOM for animation */}
+      {isMobileDrawer && (
         <div
           data-testid="sidebar-backdrop"
-          className="fixed inset-0 bg-black/40 z-10"
+          className="fixed inset-0 z-10"
+          style={{
+            backgroundColor: `rgba(0, 0, 0, ${isDrawerOpen ? 0.4 : 0})`,
+            transition: `background-color ${SIDEBAR_DRAWER_TRANSITION_MS}ms ease-out`,
+            pointerEvents: isDrawerOpen ? "auto" : "none",
+          }}
           aria-label={t("filter.closeSidebar")}
           role="button"
           tabIndex={-1}
@@ -191,6 +176,8 @@ export function TaskPageLayout({
         sidebarBehaviorMode={sidebarBehaviorMode}
         onSidebarBehaviorModeChange={setSidebarBehaviorMode}
         isControlVisible={!isNarrow || hasHover}
+        isMobileDrawer={isMobileDrawer}
+        isSwiping={isSwiping}
       />
     </div>
   );

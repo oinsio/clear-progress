@@ -146,7 +146,7 @@ export default function GoalsPage() {
   );
 
   return (
-    <SidebarShell mode="goals">
+    <SidebarShell mode="goals" data-testid="goals-page">
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar

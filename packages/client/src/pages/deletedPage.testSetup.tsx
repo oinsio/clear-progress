@@ -33,6 +33,10 @@ vi.mock("@/hooks/useSidebarState", () => ({
 vi.mock("@/hooks/usePurge");
 vi.mock("@/hooks/useSidebarNavigation");
 
+vi.mock("@/hooks/useMenuOrder", () => ({
+  useMenuOrder: () => ({ menuOrder: [] }),
+}));
+
 vi.mock("@/hooks/useFilterBarPosition", () => ({
   useFilterBarPosition: () => ({
     filterBarPosition: "bottom",

@@ -112,7 +112,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <SidebarShell mode={null}>
+    <SidebarShell mode={null} data-testid="settings-page">
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto">

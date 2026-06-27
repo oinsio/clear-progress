@@ -157,7 +157,7 @@ export default function CategoriesPage() {
   );
 
   return (
-    <SidebarShell mode="categories">
+    <SidebarShell mode="categories" data-testid="categories-page">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar
