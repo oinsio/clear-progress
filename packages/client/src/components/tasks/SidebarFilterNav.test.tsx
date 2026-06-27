@@ -243,26 +243,6 @@ describe("SidebarFilterNav", () => {
       await user.click(screen.getByTestId("sidebar-filter-inbox"));
       expect(onModeChange).toHaveBeenCalledWith("inbox");
     });
-
-    it("click filter item calls stopPropagation", async () => {
-      const user = userEvent.setup();
-      const parentClickHandler = vi.fn();
-      render(
-        <MemoryRouter>
-          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
-          <div onClick={parentClickHandler}>
-            <SidebarFilterNav
-              isExpanded={true}
-              mode={null}
-              visibleFilterItems={[itemWithoutRoute]}
-              onModeChange={vi.fn()}
-            />
-          </div>
-        </MemoryRouter>,
-      );
-      await user.click(screen.getByTestId("sidebar-filter-inbox"));
-      expect(parentClickHandler).not.toHaveBeenCalled();
-    });
   });
 
   describe("handleSearchClick", () => {
@@ -271,26 +251,6 @@ describe("SidebarFilterNav", () => {
       renderComponent({ isExpanded: true });
       await user.click(screen.getByTestId("sidebar-filter-search"));
       expect(mockNavigate).toHaveBeenCalledWith(ROUTES.SEARCH);
-    });
-
-    it("click search button calls stopPropagation", async () => {
-      const user = userEvent.setup();
-      const parentClickHandler = vi.fn();
-      render(
-        <MemoryRouter>
-          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
-          <div onClick={parentClickHandler}>
-            <SidebarFilterNav
-              isExpanded={true}
-              mode={null}
-              visibleFilterItems={[]}
-              onModeChange={vi.fn()}
-            />
-          </div>
-        </MemoryRouter>,
-      );
-      await user.click(screen.getByTestId("sidebar-filter-search"));
-      expect(parentClickHandler).not.toHaveBeenCalled();
     });
   });
 

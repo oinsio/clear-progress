@@ -20,6 +20,7 @@ export interface SettingsAccordionSection {
 export interface SettingsAccordionProps {
   sections: SettingsAccordionSection[];
   storageKeyPrefix?: string;
+  initialExpandedSection?: string | null;
 }
 
 function buildStorageKey(prefix: string): string {
@@ -29,19 +30,19 @@ function buildStorageKey(prefix: string): string {
 function readPersistedSection(
   storageKey: string,
   validIds: Set<string>,
-  fallbackId: string,
-): string {
+): string | null {
   const stored = localStorage.getItem(storageKey);
   if (stored && validIds.has(stored)) {
     return stored;
   }
-  return fallbackId;
+  return null;
 }
 
-/** Implements FR11 of settings-page-reordering */
+/** Implements FR11, FR12, FR13 of settings-page-reordering */
 export function SettingsAccordion({
   sections,
   storageKeyPrefix = DEFAULT_STORAGE_KEY_PREFIX,
+  initialExpandedSection,
 }: SettingsAccordionProps) {
   const { t } = useTranslation();
 
@@ -55,20 +56,24 @@ export function SettingsAccordion({
     [sections],
   );
 
-  const firstSectionId = sections[0]?.id ?? "";
-
-  const [expandedSectionId, setExpandedSectionId] = useState<string>(() =>
-    readPersistedSection(storageKey, validSectionIds, firstSectionId),
+  const [expandedSectionId, setExpandedSectionId] = useState<string | null>(
+    () => {
+      if (initialExpandedSection !== undefined) return initialExpandedSection;
+      return readPersistedSection(storageKey, validSectionIds);
+    },
   );
 
   const handleToggle = useCallback(
     (sectionId: string) => {
-      const nextId =
-        sectionId === expandedSectionId ? firstSectionId : sectionId;
+      const nextId = sectionId === expandedSectionId ? null : sectionId;
       setExpandedSectionId(nextId);
-      localStorage.setItem(storageKey, nextId);
+      if (nextId === null) {
+        localStorage.removeItem(storageKey);
+      } else {
+        localStorage.setItem(storageKey, nextId);
+      }
     },
-    [expandedSectionId, firstSectionId, storageKey],
+    [expandedSectionId, storageKey],
   );
 
   const handleKeyDown = useCallback(

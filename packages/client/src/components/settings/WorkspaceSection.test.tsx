@@ -6,16 +6,16 @@ import { WorkspaceSection } from "./WorkspaceSection";
 
 const {
   mockSetPanelSide,
-  mockSetPanelAlwaysOpen,
   mockSetDetailPanelPinned,
   mockSetHandedness,
   mockSetFilterBarPosition,
+  mockSetSidebarMode,
 } = vi.hoisted(() => ({
   mockSetPanelSide: vi.fn(),
-  mockSetPanelAlwaysOpen: vi.fn(),
   mockSetDetailPanelPinned: vi.fn(),
   mockSetHandedness: vi.fn(),
   mockSetFilterBarPosition: vi.fn(),
+  mockSetSidebarMode: vi.fn(),
 }));
 
 vi.mock("react-i18next", () => ({
@@ -24,13 +24,6 @@ vi.mock("react-i18next", () => ({
 
 vi.mock("@/hooks/usePanelSide", () => ({
   usePanelSide: () => ({ panelSide: "right", setPanelSide: mockSetPanelSide }),
-}));
-
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: () => ({
-    isPanelAlwaysOpen: false,
-    setPanelAlwaysOpen: mockSetPanelAlwaysOpen,
-  }),
 }));
 
 vi.mock("@/hooks/useDetailPanelPinned", () => ({
@@ -54,6 +47,10 @@ vi.mock("@/hooks/useFilterBarPosition", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useSidebarMode", () => ({
+  useSidebarMode: () => ["expanded", mockSetSidebarMode],
+}));
+
 vi.mock("@/components/settings/MenuOrderSection", () => ({
   MenuOrderSection: () => (
     <section data-testid="settings-menu-order">MenuOrderSection</section>
@@ -67,14 +64,16 @@ function renderSection() {
 describe("WorkspaceSection — i18n headings", () => {
   it.each([
     ["settings.panelSide"],
-    ["settings.panelAlwaysOpen"],
-    ["settings.detailPanelPinned"],
+    ["sidebar.control"],
     ["settings.handedness"],
     ["settings.filterBarPosition"],
     ["settings.handednessRight"],
     ["settings.handednessLeft"],
     ["settings.filterBarBottom"],
     ["settings.filterBarTop"],
+    ["sidebar.modeExpanded"],
+    ["sidebar.modeCollapsed"],
+    ["sidebar.modeExpandOnHover"],
   ])("should render i18n key %s", (key) => {
     renderSection();
     expect(screen.getByText(key)).toBeInTheDocument();
@@ -125,28 +124,26 @@ describe("WorkspaceSection — panel side click handlers", () => {
   });
 });
 
-describe("WorkspaceSection — panel always open toggle", () => {
-  it("should render toggle with aria-checked=false when off", () => {
-    renderSection();
-    expect(
-      screen.getByTestId("settings-panel-always-open-toggle"),
-    ).toHaveAttribute("aria-checked", "false");
-  });
-
-  it("should call setPanelAlwaysOpen with true (negated false) when clicked", () => {
-    renderSection();
-    fireEvent.click(screen.getByTestId("settings-panel-always-open-toggle"));
-    expect(mockSetPanelAlwaysOpen).toHaveBeenCalledWith(true);
-    expect(mockSetPanelAlwaysOpen).not.toHaveBeenCalledWith(false);
-  });
-});
-
 describe("WorkspaceSection — detail panel pinned toggle", () => {
-  it("should render toggle with aria-checked=false when off", () => {
+  it("should render toggle with aria-pressed=false when off", () => {
     renderSection();
     expect(
       screen.getByTestId("settings-detail-panel-pinned-toggle"),
-    ).toHaveAttribute("aria-checked", "false");
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should set aria-label to pinDetailPanel when unpinned", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-detail-panel-pinned-toggle"),
+    ).toHaveAttribute("aria-label", "settings.pinDetailPanel");
+  });
+
+  it("should render Pin icon with rotate-45 class when unpinned", () => {
+    renderSection();
+    const toggle = screen.getByTestId("settings-detail-panel-pinned-toggle");
+    const icon = toggle.querySelector("svg");
+    expect(icon?.getAttribute("class")).toContain("rotate-45");
   });
 
   it("should call setDetailPanelPinned with true (negated false) when clicked", () => {
@@ -221,28 +218,28 @@ describe("WorkspaceSection — CSS classes for selected/unselected", () => {
   it("should apply text-accent to selected panel side button", () => {
     renderSection();
     expect(
-      screen.getByTestId("settings-panel-side-option-right").className,
+      screen.getByTestId("settings-panel-side-option-right").classList,
     ).toContain("text-accent");
   });
 
   it("should apply text-gray-400 to unselected panel side button", () => {
     renderSection();
     expect(
-      screen.getByTestId("settings-panel-side-option-left").className,
+      screen.getByTestId("settings-panel-side-option-left").classList,
     ).toContain("text-gray-400");
   });
 
   it("should apply bg-accent to selected handedness button", () => {
     renderSection();
     expect(
-      screen.getByTestId("settings-handedness-option-right").className,
+      screen.getByTestId("settings-handedness-option-right").classList,
     ).toContain("bg-accent");
   });
 
   it("should apply bg-white to unselected handedness button", () => {
     renderSection();
     expect(
-      screen.getByTestId("settings-handedness-option-left").className,
+      screen.getByTestId("settings-handedness-option-left").classList,
     ).toContain("bg-white");
   });
 
@@ -250,29 +247,15 @@ describe("WorkspaceSection — CSS classes for selected/unselected", () => {
     renderSection();
     expect(
       screen.getByTestId("settings-filter-bar-position-option-bottom")
-        .className,
+        .classList,
     ).toContain("bg-accent");
   });
 
   it("should apply bg-white to unselected filter bar position button", () => {
     renderSection();
     expect(
-      screen.getByTestId("settings-filter-bar-position-option-top").className,
+      screen.getByTestId("settings-filter-bar-position-option-top").classList,
     ).toContain("bg-white");
-  });
-
-  it("should apply bg-gray-200 class to panel-always-open toggle when off", () => {
-    renderSection();
-    const toggle = screen.getByTestId("settings-panel-always-open-toggle");
-    const track = toggle.querySelector("span");
-    expect(track?.className).toContain("bg-gray-200");
-  });
-
-  it("should apply translate-x-0 to toggle knob when off", () => {
-    renderSection();
-    const toggle = screen.getByTestId("settings-panel-always-open-toggle");
-    const knob = toggle.querySelector("span span");
-    expect(knob?.className).toContain("translate-x-0");
   });
 });
 
@@ -308,19 +291,18 @@ describe("WorkspaceSection — filter bar labels match position", () => {
   });
 });
 
-describe("WorkspaceSection — toggle track and knob CSS detail-panel", () => {
-  it("should apply bg-gray-200 class to detail-panel-pinned toggle track when off", () => {
+describe("WorkspaceSection — pin icon CSS detail-panel", () => {
+  it("should apply text-gray-400 to pin button when unpinned", () => {
     renderSection();
-    const toggle = screen.getByTestId("settings-detail-panel-pinned-toggle");
-    const track = toggle.querySelector("span");
-    expect(track?.className).toContain("bg-gray-200");
+    expect(
+      screen.getByTestId("settings-detail-panel-pinned-toggle").classList,
+    ).toContain("text-gray-400");
   });
 
-  it("should apply translate-x-0 to detail-panel-pinned toggle knob when off", () => {
+  it("should render svg icon inside pin button", () => {
     renderSection();
     const toggle = screen.getByTestId("settings-detail-panel-pinned-toggle");
-    const knob = toggle.querySelector("span span");
-    expect(knob?.className).toContain("translate-x-0");
+    expect(toggle.querySelector("svg")).toBeInTheDocument();
   });
 });
 
@@ -338,28 +320,21 @@ describe("WorkspaceSection — base CSS classes", () => {
   it("should apply rounded-full to panel side buttons", () => {
     renderSection();
     expect(
-      screen.getByTestId("settings-panel-side-option-right").className,
+      screen.getByTestId("settings-panel-side-option-right").classList,
     ).toContain("rounded-full");
   });
 
-  it("should apply rounded-full to toggle tracks", () => {
+  it("should apply rounded-lg to pin button", () => {
     renderSection();
-    const toggle = screen.getByTestId("settings-panel-always-open-toggle");
-    expect(toggle.querySelector("span")?.className).toContain("rounded-full");
-  });
-
-  it("should apply rounded-full to toggle knobs", () => {
-    renderSection();
-    const toggle = screen.getByTestId("settings-panel-always-open-toggle");
-    expect(toggle.querySelector("span span")?.className).toContain(
-      "rounded-full",
-    );
+    expect(
+      screen.getByTestId("settings-detail-panel-pinned-toggle").classList,
+    ).toContain("rounded-lg");
   });
 
   it("should apply rounded-lg to handedness buttons", () => {
     renderSection();
     expect(
-      screen.getByTestId("settings-handedness-option-right").className,
+      screen.getByTestId("settings-handedness-option-right").classList,
     ).toContain("rounded-lg");
   });
 
@@ -367,7 +342,76 @@ describe("WorkspaceSection — base CSS classes", () => {
     renderSection();
     expect(
       screen.getByTestId("settings-filter-bar-position-option-bottom")
-        .className,
+        .classList,
+    ).toContain("rounded-lg");
+  });
+});
+
+// implements FR3 of improve-sidebar-ux
+describe("WorkspaceSection — sidebar mode buttons", () => {
+  it("should set aria-pressed=true on selected sidebar mode (expanded)", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-expanded"),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("should set aria-pressed=false on non-selected sidebar mode (collapsed)", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-collapsed"),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should set aria-pressed=false on non-selected sidebar mode (expand-on-hover)", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-expand-on-hover"),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("should call setSidebarMode with 'expanded' when expanded is clicked", () => {
+    renderSection();
+    fireEvent.click(
+      screen.getByTestId("settings-sidebar-mode-option-expanded"),
+    );
+    expect(mockSetSidebarMode).toHaveBeenCalledWith("expanded");
+  });
+
+  it("should call setSidebarMode with 'collapsed' when collapsed is clicked", () => {
+    renderSection();
+    fireEvent.click(
+      screen.getByTestId("settings-sidebar-mode-option-collapsed"),
+    );
+    expect(mockSetSidebarMode).toHaveBeenCalledWith("collapsed");
+  });
+
+  it("should call setSidebarMode with 'expand-on-hover' when expand-on-hover is clicked", () => {
+    renderSection();
+    fireEvent.click(
+      screen.getByTestId("settings-sidebar-mode-option-expand-on-hover"),
+    );
+    expect(mockSetSidebarMode).toHaveBeenCalledWith("expand-on-hover");
+  });
+
+  it("should apply bg-accent to selected sidebar mode button", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-expanded").classList,
+    ).toContain("bg-accent");
+  });
+
+  it("should apply bg-white to unselected sidebar mode button", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-collapsed").classList,
+    ).toContain("bg-white");
+  });
+
+  it("should apply rounded-lg to sidebar mode buttons", () => {
+    renderSection();
+    expect(
+      screen.getByTestId("settings-sidebar-mode-option-expanded").classList,
     ).toContain("rounded-lg");
   });
 });
@@ -377,8 +421,8 @@ describe("WorkspaceSection — sections order", () => {
     const { container } = renderSection();
     const ids = [
       "settings-panel-side",
-      "settings-panel-always-open",
       "settings-detail-panel-pinned",
+      "settings-sidebar-mode",
       "settings-handedness",
       "settings-filter-bar-position",
       "settings-menu-order",

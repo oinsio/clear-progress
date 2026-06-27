@@ -13,16 +13,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useCategories } from "@/hooks/useCategories";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
@@ -104,7 +102,6 @@ export default function CategoriesPage() {
   const { t } = useTranslation();
   const { categories, isLoading, createCategory, reorderCategories } =
     useCategories();
-  const { panelSide } = usePanelSide();
   const navigate = useNavigate();
 
   const sensors = useDndSensors();
@@ -112,7 +109,6 @@ export default function CategoriesPage() {
   const [categoryTaskCounts, setCategoryTaskCounts] = useState<
     Record<string, number>
   >({});
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
 
   const activeCategories = categories.filter(
     (category) => !category.is_deleted,
@@ -153,8 +149,6 @@ export default function CategoriesPage() {
     [activeCategories, reorderCategories],
   );
 
-  const handleModeChange = useSidebarNavigation();
-
   const handleSubmit = useCallback(
     (name: string) => {
       void createCategory(name);
@@ -163,10 +157,7 @@ export default function CategoriesPage() {
   );
 
   return (
-    <div
-      data-testid="categories-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="categories" data-testid="categories-page">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar
@@ -218,15 +209,6 @@ export default function CategoriesPage() {
           </div>
         </main>
       </div>
-
-      {/* Right filter panel — full height */}
-      <Sidebar
-        mode="categories"
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

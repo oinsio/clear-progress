@@ -35,12 +35,14 @@ function renderAccordion(
   overrides: {
     sections?: SettingsAccordionSection[];
     storageKeyPrefix?: string;
+    initialExpandedSection?: string | null;
   } = {},
 ) {
   return render(
     <SettingsAccordion
       sections={overrides.sections ?? TEST_SECTIONS}
       storageKeyPrefix={overrides.storageKeyPrefix}
+      initialExpandedSection={overrides.initialExpandedSection}
     />,
   );
 }
@@ -67,14 +69,16 @@ describe("SettingsAccordion single-expand mode", () => {
     expect(screen.getByTestId("icon-tasks")).toBeInTheDocument();
   });
 
-  it("should expand first section by default when no persisted state", () => {
+  it("should have all sections collapsed by default when no persisted state", () => {
     renderAccordion();
-    expect(screen.getByTestId("content-look-and-feel")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("content-look-and-feel"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
     expect(screen.queryByTestId("content-tasks")).not.toBeInTheDocument();
   });
 
-  it("should collapse current section and expand clicked section", () => {
+  it("should expand clicked section when all are collapsed", () => {
     renderAccordion();
     const workspaceHeader = screen.getByText("settings.sections.workspace");
     fireEvent.click(workspaceHeader);
@@ -85,17 +89,19 @@ describe("SettingsAccordion single-expand mode", () => {
     expect(screen.getByTestId("content-workspace")).toBeInTheDocument();
   });
 
-  it("should fall back to first section when clicking the currently expanded section", () => {
+  it("should collapse current section and expand clicked section", () => {
     renderAccordion();
-    // First section is expanded by default
-    const firstHeader = screen.getByText("settings.sections.lookAndFeel");
-    fireEvent.click(firstHeader);
+    // Open workspace first
+    fireEvent.click(screen.getByText("settings.sections.workspace"));
+    expect(screen.getByTestId("content-workspace")).toBeInTheDocument();
 
-    // Should fall back to first section (which IS the first section, so it stays expanded)
-    expect(screen.getByTestId("content-look-and-feel")).toBeInTheDocument();
+    // Click tasks — should switch to tasks
+    fireEvent.click(screen.getByText("settings.sections.tasks"));
+    expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
+    expect(screen.getByTestId("content-tasks")).toBeInTheDocument();
   });
 
-  it("should fall back to first section when clicking a non-first expanded section", () => {
+  it("should collapse to all-collapsed when clicking the currently expanded section", () => {
     renderAccordion();
     // Open workspace
     fireEvent.click(screen.getByText("settings.sections.workspace"));
@@ -104,23 +110,34 @@ describe("SettingsAccordion single-expand mode", () => {
     // Click workspace again to collapse it
     fireEvent.click(screen.getByText("settings.sections.workspace"));
 
-    // Should fall back to first section
-    expect(screen.getByTestId("content-look-and-feel")).toBeInTheDocument();
+    // All should be collapsed
+    expect(
+      screen.queryByTestId("content-look-and-feel"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("content-tasks")).not.toBeInTheDocument();
   });
 });
 
-// FR6: Default expanded — first section
+// FR12: Default expanded — all collapsed
 describe("SettingsAccordion default expanded", () => {
-  it("should expand first section when no localStorage value exists", () => {
+  it("should have all sections collapsed when no localStorage value exists", () => {
     renderAccordion();
-    expect(screen.getByTestId("content-look-and-feel")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("content-look-and-feel"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("content-tasks")).not.toBeInTheDocument();
   });
 
-  it("should expand first section when persisted value is invalid", () => {
+  it("should have all sections collapsed when persisted value is invalid", () => {
     localStorage.setItem(STORAGE_KEY, "non-existent-id");
     renderAccordion();
-    expect(screen.getByTestId("content-look-and-feel")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("content-look-and-feel"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("content-tasks")).not.toBeInTheDocument();
   });
 });
 
@@ -132,6 +149,18 @@ describe("SettingsAccordion persistence", () => {
 
     const stored = localStorage.getItem(STORAGE_KEY);
     expect(stored).toBe(SETTINGS_SECTION_IDS.WORKSPACE);
+  });
+
+  it("should remove localStorage key when collapsing to all-collapsed", () => {
+    renderAccordion();
+    fireEvent.click(screen.getByText("settings.sections.workspace"));
+    expect(localStorage.getItem(STORAGE_KEY)).toBe(
+      SETTINGS_SECTION_IDS.WORKSPACE,
+    );
+
+    // Click again to collapse
+    fireEvent.click(screen.getByText("settings.sections.workspace"));
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 
   it("should restore expanded section from localStorage on mount", () => {
@@ -170,11 +199,20 @@ describe("SettingsAccordion ARIA", () => {
     expect(headers.length).toBe(TEST_SECTIONS.length);
   });
 
-  it("should set aria-expanded=true for expanded section header", () => {
+  it("should set aria-expanded=false for all sections when all collapsed", () => {
     renderAccordion();
     const headers = screen.getAllByRole("button");
-    expect(headers[0]).toHaveAttribute("aria-expanded", "true");
+    expect(headers[0]).toHaveAttribute("aria-expanded", "false");
     expect(headers[1]).toHaveAttribute("aria-expanded", "false");
+    expect(headers[2]).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("should set aria-expanded=true for expanded section header", () => {
+    renderAccordion();
+    fireEvent.click(screen.getByText("settings.sections.workspace"));
+    const headers = screen.getAllByRole("button");
+    expect(headers[0]).toHaveAttribute("aria-expanded", "false");
+    expect(headers[1]).toHaveAttribute("aria-expanded", "true");
     expect(headers[2]).toHaveAttribute("aria-expanded", "false");
   });
 
@@ -193,6 +231,7 @@ describe("SettingsAccordion ARIA", () => {
 
   it("should have matching panel ID on the content region", () => {
     renderAccordion();
+    fireEvent.click(screen.getByText("settings.sections.lookAndFeel"));
     const panel = document.getElementById(
       `${SETTINGS_SECTION_IDS.LOOK_AND_FEEL}-panel`,
     );
@@ -226,8 +265,10 @@ describe("SettingsAccordion ARIA", () => {
     const workspaceHeader = screen.getAllByRole("button")[1];
     fireEvent.keyDown(workspaceHeader, { key: "Tab" });
 
-    // First section should remain expanded
-    expect(screen.getByTestId("content-look-and-feel")).toBeInTheDocument();
+    // All sections should remain collapsed
+    expect(
+      screen.queryByTestId("content-look-and-feel"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
   });
 });
@@ -236,6 +277,7 @@ describe("SettingsAccordion ARIA", () => {
 describe("SettingsAccordion chevron icons", () => {
   it("should show chevron-down for expanded section", () => {
     renderAccordion();
+    fireEvent.click(screen.getByText("settings.sections.lookAndFeel"));
     const expandedHeader = screen.getAllByRole("button")[0];
     expect(
       expandedHeader.querySelector("[data-testid='chevron-down']"),
@@ -244,7 +286,7 @@ describe("SettingsAccordion chevron icons", () => {
 
   it("should show chevron-right for collapsed sections", () => {
     renderAccordion();
-    const collapsedHeader = screen.getAllByRole("button")[1];
+    const collapsedHeader = screen.getAllByRole("button")[0];
     expect(
       collapsedHeader.querySelector("[data-testid='chevron-right']"),
     ).toBeInTheDocument();
@@ -253,14 +295,59 @@ describe("SettingsAccordion chevron icons", () => {
 
 // Collapsed section content not rendered
 describe("SettingsAccordion content visibility", () => {
-  it("should not render collapsed section content in DOM", () => {
+  it("should not render any section content when all collapsed", () => {
     renderAccordion();
+    expect(
+      screen.queryByTestId("content-look-and-feel"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
     expect(screen.queryByTestId("content-tasks")).not.toBeInTheDocument();
   });
 
   it("should render expanded section content in DOM", () => {
     renderAccordion();
+    fireEvent.click(screen.getByText("settings.sections.lookAndFeel"));
     expect(screen.getByTestId("content-look-and-feel")).toBeInTheDocument();
+  });
+});
+
+// FR13: Deep-link via initialExpandedSection
+describe("SettingsAccordion deep-link", () => {
+  it("should open specific section when initialExpandedSection is provided", () => {
+    renderAccordion({
+      initialExpandedSection: SETTINGS_SECTION_IDS.TASKS,
+    });
+    expect(
+      screen.queryByTestId("content-look-and-feel"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
+    expect(screen.getByTestId("content-tasks")).toBeInTheDocument();
+  });
+
+  it("should override persisted state when initialExpandedSection is provided", () => {
+    localStorage.setItem(STORAGE_KEY, SETTINGS_SECTION_IDS.WORKSPACE);
+    renderAccordion({
+      initialExpandedSection: SETTINGS_SECTION_IDS.TASKS,
+    });
+    expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
+    expect(screen.getByTestId("content-tasks")).toBeInTheDocument();
+  });
+
+  it("should keep all collapsed when initialExpandedSection is null", () => {
+    localStorage.setItem(STORAGE_KEY, SETTINGS_SECTION_IDS.WORKSPACE);
+    renderAccordion({
+      initialExpandedSection: null,
+    });
+    expect(
+      screen.queryByTestId("content-look-and-feel"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("content-workspace")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("content-tasks")).not.toBeInTheDocument();
+  });
+
+  it("should use persisted state when initialExpandedSection is undefined", () => {
+    localStorage.setItem(STORAGE_KEY, SETTINGS_SECTION_IDS.WORKSPACE);
+    renderAccordion();
+    expect(screen.getByTestId("content-workspace")).toBeInTheDocument();
   });
 });

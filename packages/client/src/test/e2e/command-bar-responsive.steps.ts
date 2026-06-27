@@ -33,7 +33,7 @@ Given("user is on a page with CommandBar", async ({ page }) => {
 // Verifies NFR-R3 of command-bar
 Then("CommandBar does not overlap the Sidebar", async ({ page }) => {
   const commandBar = page.getByTestId("command-bar");
-  const sidebar = page.getByTestId("sidebar-toggle");
+  const sidebar = page.getByTestId("sidebar-collapsed");
 
   const commandBarBox = await commandBar.boundingBox();
   const sidebarBox = await sidebar.boundingBox();

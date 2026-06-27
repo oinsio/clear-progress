@@ -4,6 +4,7 @@ import { cleanup, render, screen } from "@testing-library/react/pure";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { expect, type TestContext, vi } from "vitest";
+import { SETTINGS_SECTION_IDS } from "@/constants";
 
 const { mockNavigate, mockUseConnectionStatus, mockSignIn } = vi.hoisted(
   () => ({
@@ -34,10 +35,6 @@ vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: () => ({ menuOrder: [] }),
 }));
 
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: () => ({ isPanelAlwaysOpen: false }),
-}));
-
 import { Sidebar } from "@/components/tasks/Sidebar";
 
 const feature = await loadFeature("../sidebar_sync.feature");
@@ -49,12 +46,34 @@ function renderSidebar() {
     <MemoryRouter>
       <Sidebar
         mode={null}
-        isOpen={true}
-        onToggle={vi.fn()}
+        effectiveState="expanded"
+        isDrawerOpen={false}
         onModeChange={vi.fn()}
       />
     </MemoryRouter>,
   );
+}
+
+function givenSidebarIsExpanded(_ctx: TestContext) {
+  // render after connection status is set
+}
+
+function andConnectionStatusIs(_ctx: TestContext, status: string) {
+  mockUseConnectionStatus.mockReturnValue(status);
+  renderSidebar();
+}
+
+function thenSyncButtonShowsRedErrorBadge(_ctx: TestContext) {
+  const syncButton = screen.getByTestId("sidebar-sync");
+  expect(syncButton.querySelector(".bg-red-500")).toBeTruthy();
+}
+
+function thenSyncButtonIsNotDisplayed(_ctx: TestContext) {
+  expect(screen.queryByTestId("sidebar-sync")).toBeNull();
+}
+
+function thenSignInButtonIsDisplayed(_ctx: TestContext) {
+  expect(screen.getByTestId("sidebar-sign-in")).toBeInTheDocument();
 }
 
 describeFeature(
@@ -70,17 +89,8 @@ describeFeature(
     f.Scenario(
       "Synced state shows static sync button",
       ({ Given, Then, And }) => {
-        Given("sidebar is expanded", (_ctx: TestContext) => {
-          // render after connection status is set
-        });
-
-        And(
-          "connection status is {string}",
-          (_ctx: TestContext, status: string) => {
-            mockUseConnectionStatus.mockReturnValue(status);
-            renderSidebar();
-          },
-        );
+        Given("sidebar is expanded", givenSidebarIsExpanded);
+        And("connection status is {string}", andConnectionStatusIs);
 
         Then("sync button is displayed", (_ctx: TestContext) => {
           expect(screen.getByTestId("sidebar-sync")).toBeInTheDocument();
@@ -96,17 +106,8 @@ describeFeature(
 
     // @add-sidebar-specs @FR5
     f.Scenario("Syncing state shows spinning icon", ({ Given, Then, And }) => {
-      Given("sidebar is expanded", (_ctx: TestContext) => {
-        // render after connection status is set
-      });
-
-      And(
-        "connection status is {string}",
-        (_ctx: TestContext, status: string) => {
-          mockUseConnectionStatus.mockReturnValue(status);
-          renderSidebar();
-        },
-      );
+      Given("sidebar is expanded", givenSidebarIsExpanded);
+      And("connection status is {string}", andConnectionStatusIs);
 
       Then("sync button is displayed", (_ctx: TestContext) => {
         expect(screen.getByTestId("sidebar-sync")).toBeInTheDocument();
@@ -123,22 +124,13 @@ describeFeature(
     f.Scenario(
       "Offline state shows error badge and no connection text",
       ({ Given, Then, And }) => {
-        Given("sidebar is expanded", (_ctx: TestContext) => {
-          // render after connection status is set
-        });
+        Given("sidebar is expanded", givenSidebarIsExpanded);
+        And("connection status is {string}", andConnectionStatusIs);
 
-        And(
-          "connection status is {string}",
-          (_ctx: TestContext, status: string) => {
-            mockUseConnectionStatus.mockReturnValue(status);
-            renderSidebar();
-          },
+        Then(
+          "sync button shows a red error badge",
+          thenSyncButtonShowsRedErrorBadge,
         );
-
-        Then("sync button shows a red error badge", (_ctx: TestContext) => {
-          const syncButton = screen.getByTestId("sidebar-sync");
-          expect(syncButton.querySelector(".bg-red-500")).toBeTruthy();
-        });
 
         And(
           "sidebar shows {string} text",
@@ -154,22 +146,13 @@ describeFeature(
     f.Scenario(
       "Server error state shows error badge and error text",
       ({ Given, Then, And }) => {
-        Given("sidebar is expanded", (_ctx: TestContext) => {
-          // render after connection status is set
-        });
+        Given("sidebar is expanded", givenSidebarIsExpanded);
+        And("connection status is {string}", andConnectionStatusIs);
 
-        And(
-          "connection status is {string}",
-          (_ctx: TestContext, status: string) => {
-            mockUseConnectionStatus.mockReturnValue(status);
-            renderSidebar();
-          },
+        Then(
+          "sync button shows a red error badge",
+          thenSyncButtonShowsRedErrorBadge,
         );
-
-        Then("sync button shows a red error badge", (_ctx: TestContext) => {
-          const syncButton = screen.getByTestId("sidebar-sync");
-          expect(syncButton.querySelector(".bg-red-500")).toBeTruthy();
-        });
 
         And(
           "sidebar shows {string} text",
@@ -185,25 +168,14 @@ describeFeature(
     f.Scenario(
       "Configure server button when not configured",
       ({ Given, Then, And }) => {
-        Given("sidebar is expanded", (_ctx: TestContext) => {
-          // render after connection status is set
-        });
-
-        And(
-          "connection status is {string}",
-          (_ctx: TestContext, status: string) => {
-            mockUseConnectionStatus.mockReturnValue(status);
-            renderSidebar();
-          },
-        );
+        Given("sidebar is expanded", givenSidebarIsExpanded);
+        And("connection status is {string}", andConnectionStatusIs);
 
         Then("a configure server button is displayed", (_ctx: TestContext) => {
           expect(screen.getByTestId("sidebar-login")).toBeInTheDocument();
         });
 
-        And("sync button is not displayed", (_ctx: TestContext) => {
-          expect(screen.queryByTestId("sidebar-sync")).toBeNull();
-        });
+        And("sync button is not displayed", thenSyncButtonIsNotDisplayed);
       },
     );
 
@@ -211,17 +183,8 @@ describeFeature(
     f.Scenario(
       "Configure server button navigates to settings",
       ({ Given, When, Then, And }) => {
-        Given("sidebar is expanded", (_ctx: TestContext) => {
-          // render after connection status is set
-        });
-
-        And(
-          "connection status is {string}",
-          (_ctx: TestContext, status: string) => {
-            mockUseConnectionStatus.mockReturnValue(status);
-            renderSidebar();
-          },
-        );
+        Given("sidebar is expanded", givenSidebarIsExpanded);
+        And("connection status is {string}", andConnectionStatusIs);
 
         When(
           "user clicks the configure server button",
@@ -232,68 +195,36 @@ describeFeature(
         );
 
         Then("app navigates to settings", (_ctx: TestContext) => {
-          expect(mockNavigate).toHaveBeenCalledWith("/settings");
+          expect(mockNavigate).toHaveBeenCalledWith("/settings", {
+            state: { expandSection: SETTINGS_SECTION_IDS.ACCOUNT_SYNC },
+          });
         });
       },
     );
 
     // @add-sidebar-specs @FR5
     f.Scenario("Sign-in button when unauthorized", ({ Given, Then, And }) => {
-      Given("sidebar is expanded", (_ctx: TestContext) => {
-        // render after connection status is set
-      });
+      Given("sidebar is expanded", givenSidebarIsExpanded);
+      And("connection status is {string}", andConnectionStatusIs);
 
-      And(
-        "connection status is {string}",
-        (_ctx: TestContext, status: string) => {
-          mockUseConnectionStatus.mockReturnValue(status);
-          renderSidebar();
-        },
-      );
-
-      Then("a sign-in button is displayed", (_ctx: TestContext) => {
-        expect(screen.getByTestId("sidebar-sign-in")).toBeInTheDocument();
-      });
-
-      And("sync button is not displayed", (_ctx: TestContext) => {
-        expect(screen.queryByTestId("sidebar-sync")).toBeNull();
-      });
+      Then("a sign-in button is displayed", thenSignInButtonIsDisplayed);
+      And("sync button is not displayed", thenSyncButtonIsNotDisplayed);
     });
 
     // @add-sidebar-specs @FR5
     f.Scenario("Sign-in button when no auth", ({ Given, Then, And }) => {
-      Given("sidebar is expanded", (_ctx: TestContext) => {
-        // render after connection status is set
-      });
+      Given("sidebar is expanded", givenSidebarIsExpanded);
+      And("connection status is {string}", andConnectionStatusIs);
 
-      And(
-        "connection status is {string}",
-        (_ctx: TestContext, status: string) => {
-          mockUseConnectionStatus.mockReturnValue(status);
-          renderSidebar();
-        },
-      );
-
-      Then("a sign-in button is displayed", (_ctx: TestContext) => {
-        expect(screen.getByTestId("sidebar-sign-in")).toBeInTheDocument();
-      });
+      Then("a sign-in button is displayed", thenSignInButtonIsDisplayed);
     });
 
     // @add-sidebar-specs @FR5
     f.Scenario(
       "Clicking sign-in invokes auth flow",
       ({ Given, When, Then, And }) => {
-        Given("sidebar is expanded", (_ctx: TestContext) => {
-          // render after connection status is set
-        });
-
-        And(
-          "connection status is {string}",
-          (_ctx: TestContext, status: string) => {
-            mockUseConnectionStatus.mockReturnValue(status);
-            renderSidebar();
-          },
-        );
+        Given("sidebar is expanded", givenSidebarIsExpanded);
+        And("connection status is {string}", andConnectionStatusIs);
 
         When("user clicks the sign-in button", async (_ctx: TestContext) => {
           const user = userEvent.setup();
@@ -310,17 +241,8 @@ describeFeature(
     f.Scenario(
       "Account button navigates to settings",
       ({ Given, When, Then, And }) => {
-        Given("sidebar is expanded", (_ctx: TestContext) => {
-          // render after connection status is set
-        });
-
-        And(
-          "connection status is {string}",
-          (_ctx: TestContext, status: string) => {
-            mockUseConnectionStatus.mockReturnValue(status);
-            renderSidebar();
-          },
-        );
+        Given("sidebar is expanded", givenSidebarIsExpanded);
+        And("connection status is {string}", andConnectionStatusIs);
 
         When("user clicks the account button", async (_ctx: TestContext) => {
           const user = userEvent.setup();

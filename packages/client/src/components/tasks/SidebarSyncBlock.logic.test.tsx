@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 import type { PanelSide } from "@/types/common";
 
 interface SidebarSyncBlockProps {
@@ -46,18 +47,6 @@ function renderSyncBlock(props: Partial<SidebarSyncBlockProps> = {}) {
       <SidebarSyncBlock isExpanded={true} side="right" {...props} />
     </MemoryRouter>,
   );
-}
-
-function renderSyncBlockInParent(props: Partial<SidebarSyncBlockProps> = {}) {
-  const parentClick = vi.fn();
-  const result = render(
-    <MemoryRouter>
-      <div onClick={parentClick} data-testid="parent-wrapper">
-        <SidebarSyncBlock isExpanded={true} side="right" {...props} />
-      </div>
-    </MemoryRouter>,
-  );
-  return { ...result, parentClick };
 }
 
 beforeEach(() => {
@@ -164,7 +153,7 @@ describe("SidebarSyncBlock logic — handler behavior", () => {
 
     const user = userEvent.setup();
     await user.click(screen.getByTestId("sidebar-account"));
-    expect(mockNavigate).toHaveBeenCalledWith("/settings");
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.SETTINGS);
   });
 
   it("should navigate to settings when clicking login button in expanded mode", async () => {
@@ -173,20 +162,21 @@ describe("SidebarSyncBlock logic — handler behavior", () => {
 
     const user = userEvent.setup();
     await user.click(screen.getByTestId("sidebar-login"));
-    expect(mockNavigate).toHaveBeenCalledWith("/settings");
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.SETTINGS, {
+      state: { expandSection: SETTINGS_SECTION_IDS.ACCOUNT_SYNC },
+    });
   });
 
-  it.each([
-    ["synced", "sidebar-sync"],
-    ["synced", "sidebar-account"],
-    ["unauthorized", "sidebar-sign-in"],
-  ])("should stop propagation when clicking %s button (%s)", async (status, testId) => {
-    mockUseConnectionStatus.mockReturnValue(status);
-    const { parentClick } = renderSyncBlockInParent({ isExpanded: true });
+  it("should not render toggle button in expanded mode", () => {
+    mockUseConnectionStatus.mockReturnValue("synced");
+    renderSyncBlock({ isExpanded: true });
+    expect(screen.queryByTestId("sidebar-toggle-button")).toBeNull();
+  });
 
-    const user = userEvent.setup();
-    await user.click(screen.getByTestId(testId));
-    expect(parentClick).not.toHaveBeenCalled();
+  it("should not render toggle button in collapsed mode", () => {
+    mockUseConnectionStatus.mockReturnValue("synced");
+    renderSyncBlock({ isExpanded: false });
+    expect(screen.queryByTestId("sidebar-toggle-button")).toBeNull();
   });
 });
 

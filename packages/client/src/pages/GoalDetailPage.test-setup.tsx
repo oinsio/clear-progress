@@ -18,7 +18,15 @@ vi.mock("@/hooks/useGoals");
 vi.mock("@/hooks/useContexts");
 vi.mock("@/hooks/useCategories");
 vi.mock("@/hooks/usePanelSide");
-vi.mock("@/hooks/usePanelOpen");
+vi.mock("@/hooks/useSidebarState", () => ({
+  useSidebarState: () => ({
+    effectiveState: "collapsed",
+    sidebarMode: "expanded",
+    setSidebarMode: vi.fn(),
+    isNarrow: true,
+    hasHover: false,
+  }),
+}));
 vi.mock("@/hooks/useSidebarNavigation");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
@@ -27,34 +35,7 @@ vi.mock("@/hooks/useFilePreview");
 vi.mock("@/hooks/useAttachments", () => ({
   useAttachments: () => ({ attachments: [], isLoading: false }),
 }));
-vi.mock("@/hooks/useShowHidden", () => ({
-  useShowHidden: () => ({
-    showHidden: false,
-    toggleShowHidden: vi.fn(),
-  }),
-}));
-vi.mock("@/hooks/useSettings", () => ({
-  useSettings: () => ({
-    defaultBox: "today",
-    accentColor: "green",
-    isLoading: false,
-    setDefaultBox: vi.fn(),
-    setAccentColor: vi.fn(),
-  }),
-  getCachedDayBoundary: () => "00:00",
-}));
-vi.mock("@/hooks/useFilterBarPosition", () => ({
-  useFilterBarPosition: () => ({
-    filterBarPosition: "bottom",
-    setFilterBarPosition: vi.fn(),
-  }),
-}));
-vi.mock("@/hooks/useHandedness", () => ({
-  useHandedness: () => ({
-    handedness: "right",
-    setHandedness: vi.fn(),
-  }),
-}));
+import "@/test/mocks/settingsMocks";
 
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
@@ -64,7 +45,6 @@ import { useGoal } from "@/hooks/useGoal";
 import { useGoals } from "@/hooks/useGoals";
 import { useGoalTasks } from "@/hooks/useGoalTasks";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
@@ -83,7 +63,6 @@ export const mockUseGoals = vi.mocked(useGoals);
 export const mockUseContexts = vi.mocked(useContexts);
 export const mockUseCategories = vi.mocked(useCategories);
 export const mockUsePanelSide = vi.mocked(usePanelSide);
-export const mockUsePanelOpen = vi.mocked(usePanelOpen);
 export const mockUseSidebarNavigation = vi.mocked(useSidebarNavigation);
 export const mockUseIsDesktop = vi.mocked(useIsDesktop);
 export const mockUsePanelSplit = vi.mocked(usePanelSplit);
@@ -99,10 +78,6 @@ export function setupDefaultMocks() {
   mockUsePanelSide.mockReturnValue({
     panelSide: "right",
     setPanelSide: vi.fn(),
-  });
-  mockUsePanelOpen.mockReturnValue({
-    isPanelOpen: false,
-    togglePanelOpen: vi.fn(),
   });
   mockUseSidebarNavigation.mockReturnValue(vi.fn());
   mockUseIsDesktop.mockReturnValue(false);

@@ -5,14 +5,11 @@
 import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { MemoMarkdown } from "@/components/memos/MemoMarkdown";
-import { Sidebar } from "@/components/tasks/Sidebar";
 import { ROUTES } from "@/constants";
 import { getMemo } from "@/content/memos";
 import { useLanguage } from "@/hooks/useLanguage";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 
 export default function MemoDetailPage() {
   const { t } = useTranslation();
@@ -20,17 +17,10 @@ export default function MemoDetailPage() {
   const { language } = useLanguage();
   const navigate = useNavigate();
 
-  const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const handleModeChange = useSidebarNavigation();
-
   const memo = slug ? getMemo(language, slug) : undefined;
 
   return (
-    <div
-      data-testid="memo-detail-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="memos">
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header with back button */}
         <header className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
@@ -63,14 +53,6 @@ export default function MemoDetailPage() {
           </div>
         </main>
       </div>
-
-      <Sidebar
-        mode="memos"
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

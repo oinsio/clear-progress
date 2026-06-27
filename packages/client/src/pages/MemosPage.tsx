@@ -1,33 +1,25 @@
 /**
  * MemosPage — displays all available memos for the current language.
  * Implements FR3, FR4, UX1 of add-memos.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
  */
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { MemoCard } from "@/components/memos/MemoCard";
-import { Sidebar } from "@/components/tasks/Sidebar";
 import { ROUTES } from "@/constants";
 import { getMemos } from "@/content/memos";
 import { useLanguage } from "@/hooks/useLanguage";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 
 export default function MemosPage() {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const handleModeChange = useSidebarNavigation();
 
   const memos = getMemos(language);
 
   return (
-    <div
-      data-testid="memos-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="memos">
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <header className="px-4 py-3 border-b border-gray-100">
@@ -62,14 +54,6 @@ export default function MemosPage() {
           </div>
         </main>
       </div>
-
-      <Sidebar
-        mode="memos"
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

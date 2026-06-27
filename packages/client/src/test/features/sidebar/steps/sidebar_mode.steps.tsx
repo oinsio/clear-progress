@@ -1,3 +1,4 @@
+// implements FR3 of add-sidebar-specs
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { cleanup, render, screen, within } from "@testing-library/react/pure";
@@ -32,10 +33,6 @@ vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: mockUseMenuOrder,
 }));
 
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: () => ({ isPanelAlwaysOpen: false }),
-}));
-
 import { Sidebar } from "@/components/tasks/Sidebar";
 
 const feature = await loadFeature("../sidebar_mode.feature");
@@ -66,8 +63,8 @@ function renderSidebar(
     <MemoryRouter>
       <Sidebar
         mode={mode}
-        isOpen={true}
-        onToggle={vi.fn()}
+        effectiveState="expanded"
+        isDrawerOpen={false}
         onModeChange={onModeChange}
       />
     </MemoryRouter>,

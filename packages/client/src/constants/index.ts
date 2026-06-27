@@ -7,6 +7,7 @@ import type {
   Handedness,
   InterfaceScale,
   PanelSide,
+  SidebarMode,
 } from "@/types/common";
 
 export const ROUTES = {
@@ -61,11 +62,15 @@ export const FULL_BOX_FILTER_ORDER: BoxFilter[] = [
   "all",
 ];
 
-export const DEFAULT_PANEL_SIDE: PanelSide = "right";
+// implements FR7 of improve-sidebar-ux
+export const DESKTOP_PANEL_SIDE: PanelSide = "left";
+export const MOBILE_PANEL_SIDE: PanelSide = "right";
 
 export const PANEL_SIDES: PanelSide[] = ["left", "right"];
 
-export const DEFAULT_FILTER_BAR_POSITION: FilterBarPosition = "bottom";
+// implements FR7 of improve-sidebar-ux
+export const DESKTOP_FILTER_BAR_POSITION: FilterBarPosition = "top";
+export const MOBILE_FILTER_BAR_POSITION: FilterBarPosition = "bottom";
 
 export const FILTER_BAR_POSITIONS: FilterBarPosition[] = ["bottom", "top"];
 
@@ -153,10 +158,8 @@ export const STORAGE_KEYS = {
   CUSTOM_ACCENT_DARK: "custom_accent_dark",
   DEFAULT_BOX: "default_box",
   PANEL_SIDE: "panel_side",
-  PANEL_OPEN: "panel_open",
   LANGUAGE: "language",
   PANEL_SPLIT: "panel_split",
-  PANEL_ALWAYS_OPEN: "panel_always_open",
   FILTER_BAR_POSITION: "filter_bar_position",
   INTERFACE_SCALE: "interface_scale",
   MENU_ORDER: "menu_order",
@@ -173,6 +176,7 @@ export const STORAGE_KEYS = {
   DAY_BOUNDARY: "day_boundary",
   ONBOARDING_SHOWN: "onboarding_shown",
   DETAIL_PANEL_PINNED: "detail_panel_pinned",
+  SIDEBAR_MODE: "sidebar_mode",
 } as const;
 
 export const DEFAULT_FOCUS_OPACITY = 30;
@@ -261,6 +265,37 @@ export const SETTINGS_SECTION_IDS = {
   WORKSPACE: "settings-accordion-workspace",
   TASKS: "settings-accordion-tasks",
   ACCOUNT_SYNC: "settings-accordion-account-sync",
+} as const;
+
+// implements FR1, FR8 of improve-sidebar-ux
+export const SIDEBAR_MODES: readonly SidebarMode[] = [
+  "expanded",
+  "collapsed",
+  "expand-on-hover",
+];
+export const DEFAULT_SIDEBAR_MODE: SidebarMode = "expanded";
+
+/** i18n key mapping for sidebar mode options — implements FR3 of improve-sidebar-ux */
+export const SIDEBAR_MODE_I18N_KEYS: Record<SidebarMode, string> = {
+  expanded: "sidebar.modeExpanded",
+  collapsed: "sidebar.modeCollapsed",
+  "expand-on-hover": "sidebar.modeExpandOnHover",
+};
+export const SIDEBAR_HOVER_OPEN_DELAY_MS = 120;
+export const SIDEBAR_HOVER_CLOSE_DELAY_MS = 150;
+export const SIDEBAR_HOVER_TRANSITION_MS = 200;
+
+export const SIDEBAR_DRAWER_TRANSITION_MS = 200;
+export const SIDEBAR_EXPANDED_WIDTH_PX = 208;
+
+// implements FR8, FR9 of improve-sidebar-ux
+export const SIDEBAR_SWIPE_EDGE_ZONE_PX = 24;
+export const SIDEBAR_SWIPE_THRESHOLD_PERCENT = 0.3;
+
+export const ENTITY_TYPE = {
+  TASK: "task",
+  GOAL: "goal",
+  IDEA: "idea",
 } as const;
 
 export const SYNCED_SETTING_KEYS = new Set([

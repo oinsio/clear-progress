@@ -4,7 +4,7 @@
  */
 import { expect, type Page, test } from "@playwright/test";
 
-const SIDEBAR_TESTID = "sidebar-toggle";
+const SIDEBAR_TESTID = "sidebar-collapsed";
 const COMMAND_BAR_TESTID = "command-bar";
 const MAIN_COLUMN_TESTID = "main-column";
 

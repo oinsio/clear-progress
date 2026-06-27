@@ -215,6 +215,12 @@
     "noResults": "Nothing found",
     "emptyQuery": "Type to search"
   },
+  "sidebar": {
+    "control": "Sidebar mode",
+    "modeExpanded": "Expanded",
+    "modeCollapsed": "Collapsed",
+    "modeExpandOnHover": "Expand on hover"
+  },
   "filter": {
     "inbox": "Inbox",
     "contexts": "Contexts",
@@ -226,6 +232,7 @@
     "completed": "Completed",
     "close": "Close panel",
     "open": "Open panel",
+    "closeSidebar": "Close sidebar",
     "search": "Search",
     "memos": "Memos",
     "deleted": "Deleted",
@@ -235,7 +242,7 @@
     "name": "Settings",
     "defaultBox": "Default box",
     "accentColor": "App color",
-    "panelSide": "Panel position",
+    "panelSide": "Sidebar",
     "language": "Language",
     "panelLeft": "Left",
     "panelRight": "Right",
@@ -294,6 +301,8 @@
     "dayBoundaryMinutes": "Minutes",
     "dayBoundaryDescription": "Time when your day starts. Tasks deferred to tomorrow will appear at this time.",
     "detailPanelPinned": "Pin detail panel",
+    "pinDetailPanel": "Pin detail panel",
+    "unpinDetailPanel": "Unpin detail panel",
     "sections": {
       "lookAndFeel": "Look & Feel",
       "workspace": "Workspace",

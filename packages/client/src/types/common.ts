@@ -48,6 +48,10 @@ export type InterfaceScale = "small" | "normal" | "large" | "xLarge";
 
 export type Handedness = "right" | "left";
 
+export type SidebarMode = "expanded" | "collapsed" | "expand-on-hover";
+
+export type SidebarEffectiveState = "expanded" | "collapsed" | "hover-ready";
+
 export type {
   MenuItemConfig,
   MenuMode,

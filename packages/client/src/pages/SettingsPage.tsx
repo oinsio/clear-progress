@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { AccountSyncSection } from "@/components/settings/AccountSyncSection";
 import { LookAndFeelSection } from "@/components/settings/LookAndFeelSection";
 import {
@@ -12,12 +13,8 @@ import {
 import { ShareAppSection } from "@/components/settings/ShareAppSection";
 import { TasksSection } from "@/components/settings/TasksSection";
 import { WorkspaceSection } from "@/components/settings/WorkspaceSection";
-import { Sidebar } from "@/components/tasks/Sidebar";
 import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import {
   clearOauthReturnFlag,
   isOauthReturn,
@@ -30,7 +27,6 @@ import {
  */
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -84,9 +80,9 @@ export default function SettingsPage() {
     }
   }, [accessToken, navigate]);
 
-  const { panelSide } = usePanelSide();
-  const handlePanelToggle = togglePanelOpen;
-  const handleModeChange = useSidebarNavigation();
+  /** Implements FR13 of improve-sidebar-ux */
+  const initialExpandedSection =
+    (location.state as { expandSection?: string })?.expandSection ?? undefined;
 
   const sections: SettingsAccordionSection[] = [
     {
@@ -116,10 +112,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div
-      data-testid="settings-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode={null} data-testid="settings-page">
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto">
@@ -128,7 +121,10 @@ export default function SettingsPage() {
               {t("settings.name")}
             </h1>
 
-            <SettingsAccordion sections={sections} />
+            <SettingsAccordion
+              sections={sections}
+              initialExpandedSection={initialExpandedSection}
+            />
 
             {/* Share app section — implements FR1 of share-with-friend */}
             <ShareAppSection />
@@ -141,15 +137,6 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
-
-      {/* Right panel — same as on main page */}
-      <Sidebar
-        mode={null}
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={handlePanelToggle}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

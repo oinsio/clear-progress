@@ -19,11 +19,11 @@ import { CoverLightbox } from "@/components/goals/CoverLightbox";
 import { GoalStatusBadge } from "@/components/goals/GoalStatusBadge";
 import { AttachmentList } from "@/components/shared/AttachmentList";
 import { DescriptionMarkdown } from "@/components/ui/DescriptionMarkdown";
+import { ENTITY_TYPE } from "@/constants";
 import { useAttachments } from "@/hooks/useAttachments";
 import { cn } from "@/shared/lib/cn";
 import type { Goal } from "@/types/entities";
 
-const ENTITY_TYPE_GOAL = "goal" as const;
 const NOOP_DELETE = () => {};
 
 interface GoalCardViewModeProps {
@@ -55,7 +55,7 @@ export function GoalCardViewMode({
 
   const hasRealCover = Boolean(existingCoverUrl);
 
-  const { attachments } = useAttachments(ENTITY_TYPE_GOAL, goal.id);
+  const { attachments } = useAttachments(ENTITY_TYPE.GOAL, goal.id);
   const hasAttachments = attachments.length > 0;
   const hasDescription = Boolean(goal.description);
 

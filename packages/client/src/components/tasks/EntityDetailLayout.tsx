@@ -11,8 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
-import { BoxSectionList } from "@/components/tasks/BoxSectionList";
-import { Sidebar, type SidebarMode } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
 import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER } from "@/constants";
@@ -20,8 +19,6 @@ import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useShowHidden } from "@/hooks/useShowHidden";
 import { useTargetBox } from "@/hooks/useTargetBox";
@@ -30,6 +27,8 @@ import { defaultTaskService } from "@/services/defaultServices";
 import { cn } from "@/shared/lib/cn";
 import type { Box, BoxFilter } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
+import { BoxSectionList } from "./BoxSectionList";
+import type { SidebarMode } from "./Sidebar";
 
 interface EntityDetailLayoutI18nKeys {
   back: string;
@@ -90,8 +89,6 @@ export function EntityDetailLayout({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const isDesktop = useIsDesktop();
   const { isDetailPanelPinned } = useDetailPanelPinned();
@@ -184,9 +181,10 @@ export function EntityDetailLayout({
   }
 
   return (
-    <div
+    <SidebarShell
+      mode={panelMode}
+      onModeChange={onModeChange}
       data-testid={`${testIdPrefix}-detail-page`}
-      className="relative flex flex-1 overflow-hidden bg-white"
     >
       {/* Split container: task list + optional task detail panel */}
       <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
@@ -436,16 +434,6 @@ export function EntityDetailLayout({
           </div>
         )}
       </div>
-      {/* end splitContainerRef */}
-
-      {/* Sidebar — full height */}
-      <Sidebar
-        mode={panelMode}
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={onModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

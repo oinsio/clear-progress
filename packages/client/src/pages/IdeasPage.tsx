@@ -14,14 +14,11 @@ import { useTranslation } from "react-i18next";
 import { CommandBar } from "@/components/command-bar";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
@@ -78,8 +75,6 @@ export default function IdeasPage() {
   const { t } = useTranslation();
   const { ideas, isLoading, createIdea, updateIdea, deleteIdea, reorderIdeas } =
     useIdeas();
-  const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const sensors = useDndSensors();
   const isDesktop = useIsDesktop();
   const {
@@ -91,8 +86,6 @@ export default function IdeasPage() {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
 
   const activeIdeas = ideas.filter((idea) => !idea.is_deleted);
-
-  const handleModeChange = useSidebarNavigation();
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -159,10 +152,7 @@ export default function IdeasPage() {
     : null;
 
   return (
-    <div
-      data-testid="ideas-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="ideas" data-testid="ideas-page">
       {/* Split container: idea list + optional idea detail panel */}
       <div ref={splitContainerRef} className="flex flex-1 overflow-hidden">
         {/* Main content */}
@@ -252,16 +242,6 @@ export default function IdeasPage() {
           />
         )}
       </div>
-      {/* end splitContainerRef */}
-
-      {/* Right filter panel */}
-      <Sidebar
-        mode="ideas"
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

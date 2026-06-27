@@ -1,6 +1,7 @@
 /**
  * ContextsPage — displays and manages contexts.
  * Implements FR20 of command-bar.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
  */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
@@ -13,16 +14,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useContexts } from "@/hooks/useContexts";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
@@ -103,15 +102,12 @@ function SortableContextItem({
 export default function ContextsPage() {
   const { t } = useTranslation();
   const { contexts, isLoading, createContext, reorderContexts } = useContexts();
-  const { panelSide } = usePanelSide();
   const navigate = useNavigate();
-
   const sensors = useDndSensors();
 
   const [contextTaskCounts, setContextTaskCounts] = useState<
     Record<string, number>
   >({});
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
 
   const activeContexts = contexts.filter((context) => !context.is_deleted);
 
@@ -150,8 +146,6 @@ export default function ContextsPage() {
     [activeContexts, reorderContexts],
   );
 
-  const handleModeChange = useSidebarNavigation();
-
   const handleSubmit = useCallback(
     (name: string) => {
       void createContext(name);
@@ -160,10 +154,7 @@ export default function ContextsPage() {
   );
 
   return (
-    <div
-      data-testid="contexts-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="contexts" data-testid="contexts-page">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar
@@ -215,15 +206,6 @@ export default function ContextsPage() {
           </div>
         </main>
       </div>
-
-      {/* Right filter panel */}
-      <Sidebar
-        mode="contexts"
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

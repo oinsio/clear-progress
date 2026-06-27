@@ -1,18 +1,18 @@
 /**
  * Implements FR6 of refactor-task-pages.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
  *
  * Shared layout component providing split-pane + Sidebar + TaskDetailPanel
- * for all task pages.
+ * for all task pages. Manages drawer state for mobile (narrow, no hover).
  */
 
 import { Pin } from "lucide-react";
 import type * as React from "react";
 import { useTranslation } from "react-i18next";
+import { SIDEBAR_DRAWER_TRANSITION_MS } from "@/constants";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
+import { useSidebarDrawer } from "@/hooks/useSidebarDrawer";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { cn } from "@/shared/lib/cn";
 import type { Box } from "@/types/common";
@@ -36,6 +36,7 @@ export interface TaskPageLayoutProps {
   onModeChange?: (newMode: SidebarMode) => void;
 }
 
+/** Implements FR8, FR14-FR17 of improve-sidebar-ux */
 export function TaskPageLayout({
   children,
   commandBar,
@@ -52,14 +53,30 @@ export function TaskPageLayout({
   onModeChange: externalModeChange,
 }: TaskPageLayoutProps) {
   const { ratio, containerRef, handleResizeMouseDown } = usePanelSplit();
-  const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
-  const isDesktop = useIsDesktop();
+  const {
+    panelSide,
+    effectiveState,
+    sidebarBehaviorMode,
+    setSidebarBehaviorMode,
+    isNarrow,
+    hasHover,
+    isDrawerOpen,
+    closeDrawer,
+    sidebarRef,
+    isMobileDrawer,
+    sidebarTranslateX,
+    isSwiping,
+    isHoverExpanded,
+    hoverHandlers,
+    handleAutoCollapse,
+  } = useSidebarDrawer();
+
   const { t } = useTranslation();
   const { isDetailPanelPinned } = useDetailPanelPinned();
   const defaultModeChange = useSidebarNavigation();
   const handleModeChange = externalModeChange ?? defaultModeChange;
 
+  const isDesktop = !isNarrow;
   const isTaskSelected = selectedTask !== null;
   const showDetailColumn = isDesktop && (isDetailPanelPinned || isTaskSelected);
   const showResizeHandle = showDetailColumn;
@@ -128,12 +145,39 @@ export function TaskPageLayout({
         )}
       </div>
 
+      {/* FR8: Backdrop for drawer mode — always in DOM for animation */}
+      {isMobileDrawer && (
+        <div
+          data-testid="sidebar-backdrop"
+          className="fixed inset-0 z-10"
+          style={{
+            backgroundColor: `rgba(0, 0, 0, ${isDrawerOpen ? 0.4 : 0})`,
+            transition: `background-color ${SIDEBAR_DRAWER_TRANSITION_MS}ms ease-out`,
+            pointerEvents: isDrawerOpen ? "auto" : "none",
+          }}
+          aria-label={t("filter.closeSidebar")}
+          role="button"
+          tabIndex={-1}
+          onClick={closeDrawer}
+        />
+      )}
+
       <Sidebar
         mode={sidebarMode}
-        isOpen={isPanelOpen}
+        effectiveState={effectiveState}
+        isDrawerOpen={isDrawerOpen}
+        isHoverExpanded={isHoverExpanded}
+        hoverHandlers={hoverHandlers}
         side={panelSide}
-        onToggle={togglePanelOpen}
+        containerRef={sidebarRef}
+        sidebarTranslateX={sidebarTranslateX}
+        onAutoCollapse={handleAutoCollapse}
         onModeChange={handleModeChange}
+        sidebarBehaviorMode={sidebarBehaviorMode}
+        onSidebarBehaviorModeChange={setSidebarBehaviorMode}
+        isControlVisible={!isNarrow || hasHover}
+        isMobileDrawer={isMobileDrawer}
+        isSwiping={isSwiping}
       />
     </div>
   );

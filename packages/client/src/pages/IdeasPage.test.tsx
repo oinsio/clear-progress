@@ -21,7 +21,15 @@ vi.mock("@/app/providers/AuthProvider", () => ({
 }));
 vi.mock("@/hooks/useIdeas");
 vi.mock("@/hooks/usePanelSide");
-vi.mock("@/hooks/usePanelOpen");
+vi.mock("@/hooks/useSidebarState", () => ({
+  useSidebarState: () => ({
+    effectiveState: "collapsed",
+    sidebarMode: "expanded",
+    setSidebarMode: vi.fn(),
+    isNarrow: true,
+    hasHover: false,
+  }),
+}));
 
 vi.mock("@/hooks/useFilterBarPosition", () => ({
   useFilterBarPosition: () => ({
@@ -42,21 +50,15 @@ vi.mock("@/hooks/useIsDesktop", () => ({
 }));
 
 import { useIdeas } from "@/hooks/useIdeas";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 
 const mockUseIdeas = vi.mocked(useIdeas);
 const mockUsePanelSide = vi.mocked(usePanelSide);
-const mockUsePanelOpen = vi.mocked(usePanelOpen);
 
 function renderIdeasPage() {
   mockUsePanelSide.mockReturnValue({
     panelSide: "right",
     setPanelSide: vi.fn(),
-  });
-  mockUsePanelOpen.mockReturnValue({
-    isPanelOpen: false,
-    togglePanelOpen: vi.fn(),
   });
 
   render(

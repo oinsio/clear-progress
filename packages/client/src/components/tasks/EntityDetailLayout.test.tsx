@@ -2,25 +2,18 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MapPin } from "lucide-react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildTask } from "@/test/factories/taskFactory";
+import "@/pages/entityPage.testSetup";
+import {
+  buildTasksInMultipleBoxes,
+  expectAllBoxesWithSectionHeaders,
+  expectOnlyFilteredBoxTasks,
+} from "@/test/helpers/boxFilterTestHelpers";
 import type { Task } from "@/types/entities";
 import {
   EntityDetailLayout,
   type EntityDetailLayoutProps,
 } from "./EntityDetailLayout";
 
-vi.mock("@/app/providers/AuthProvider", () => ({
-  useAuth: () => ({
-    accessToken: null,
-    userEmail: null,
-    userPicture: null,
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    silentRefresh: vi.fn(),
-  }),
-}));
-vi.mock("@/hooks/usePanelSide");
-vi.mock("@/hooks/usePanelOpen");
 vi.mock("@/hooks/useIsUnsynced");
 vi.mock("@/hooks/useIsDesktop");
 vi.mock("@/hooks/usePanelSplit");
@@ -43,28 +36,12 @@ vi.mock("@/hooks/useSettings", () => ({
   getCachedDayBoundary: () => "00:00",
 }));
 
-vi.mock("@/hooks/useFilterBarPosition", () => ({
-  useFilterBarPosition: () => ({
-    filterBarPosition: "bottom",
-    setFilterBarPosition: vi.fn(),
-  }),
-}));
-
-vi.mock("@/hooks/useHandedness", () => ({
-  useHandedness: () => ({
-    handedness: "right",
-    setHandedness: vi.fn(),
-  }),
-}));
-
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 
 const mockUsePanelSide = vi.mocked(usePanelSide);
-const mockUsePanelOpen = vi.mocked(usePanelOpen);
 const mockUseIsUnsynced = vi.mocked(useIsUnsynced);
 const mockUseIsDesktop = vi.mocked(useIsDesktop);
 const mockUsePanelSplit = vi.mocked(usePanelSplit);
@@ -122,10 +99,6 @@ beforeEach(() => {
   mockUsePanelSide.mockReturnValue({
     panelSide: "right",
     setPanelSide: vi.fn(),
-  });
-  mockUsePanelOpen.mockReturnValue({
-    isPanelOpen: false,
-    togglePanelOpen: vi.fn(),
   });
   mockUseIsUnsynced.mockReturnValue(false);
   mockUseIsDesktop.mockReturnValue(false);
@@ -199,28 +172,6 @@ describe("EntityDetailLayout — entity name editing", () => {
   });
 });
 
-const TODAY_TASK_NAME = "Купить продукты";
-const WEEK_TASK_NAME = "Спланировать отпуск";
-const INBOX_TASK_NAME = "Случайная мысль";
-
-const SECTION_HEADER_INBOX = "Входящие (1)";
-const SECTION_HEADER_TODAY = "Сегодня (1)";
-const SECTION_HEADER_WEEK = "Неделя (1)";
-
-function buildTasksInMultipleBoxes(): Task[] {
-  const todayTask = buildTask({ box: "today", name: TODAY_TASK_NAME });
-  const weekTask = buildTask({ box: "week", name: WEEK_TASK_NAME });
-  const inboxTask = buildTask({ box: "inbox", name: INBOX_TASK_NAME });
-  return [todayTask, weekTask, inboxTask];
-}
-
-function openFilterBarAndSelectBox(boxTestId: string) {
-  const filterToggle = screen.getByTestId("command-bar-filter-toggle");
-  fireEvent.click(filterToggle);
-  const boxButton = screen.getByTestId(boxTestId);
-  fireEvent.click(boxButton);
-}
-
 // Implements FR2 of fix-box-filter-and-move-sort
 describe.each([
   "category",
@@ -229,28 +180,12 @@ describe.each([
   it("should show only selected box tasks when box filter is active", () => {
     const tasks = buildTasksInMultipleBoxes();
     renderLayout({ tasks, testIdPrefix });
-
-    openFilterBarAndSelectBox("box-filter-today");
-
-    expect(screen.getByText(TODAY_TASK_NAME)).toBeInTheDocument();
-    expect(screen.queryByText(WEEK_TASK_NAME)).not.toBeInTheDocument();
-    expect(screen.queryByText(INBOX_TASK_NAME)).not.toBeInTheDocument();
-
-    expect(screen.queryByText(SECTION_HEADER_INBOX)).not.toBeInTheDocument();
-    expect(screen.queryByText(SECTION_HEADER_TODAY)).not.toBeInTheDocument();
-    expect(screen.queryByText(SECTION_HEADER_WEEK)).not.toBeInTheDocument();
+    expectOnlyFilteredBoxTasks();
   });
 
   it("should show all boxes grouped with section headers by default", () => {
     const tasks = buildTasksInMultipleBoxes();
     renderLayout({ tasks, testIdPrefix });
-
-    expect(screen.getByText(SECTION_HEADER_INBOX)).toBeInTheDocument();
-    expect(screen.getByText(SECTION_HEADER_TODAY)).toBeInTheDocument();
-    expect(screen.getByText(SECTION_HEADER_WEEK)).toBeInTheDocument();
-
-    expect(screen.getByText(TODAY_TASK_NAME)).toBeInTheDocument();
-    expect(screen.getByText(WEEK_TASK_NAME)).toBeInTheDocument();
-    expect(screen.getByText(INBOX_TASK_NAME)).toBeInTheDocument();
+    expectAllBoxesWithSectionHeaders();
   });
 });

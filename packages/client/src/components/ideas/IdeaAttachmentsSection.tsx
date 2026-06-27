@@ -1,8 +1,8 @@
 /** Implements UX4, FR5 of add-file-attachments */
 import { useTranslation } from "react-i18next";
+import { ENTITY_TYPE } from "@/constants";
 import { EntityAttachments } from "../shared/EntityAttachments";
 
-const ENTITY_TYPE_IDEA = "idea" as const;
 const I18N_PREFIX = "idea.attachments";
 
 interface IdeaAttachmentsSectionProps {
@@ -22,7 +22,7 @@ export function IdeaAttachmentsSection({
       </label>
 
       <EntityAttachments
-        entityType={ENTITY_TYPE_IDEA}
+        entityType={ENTITY_TYPE.IDEA}
         entityId={ideaId}
         i18nPrefix={I18N_PREFIX}
       />

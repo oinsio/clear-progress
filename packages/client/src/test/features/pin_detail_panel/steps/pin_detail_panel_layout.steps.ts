@@ -37,11 +37,14 @@ vi.mock("@/hooks/usePanelSide", () => ({
   }),
 }));
 
-// Mock usePanelOpen
-vi.mock("@/hooks/usePanelOpen", () => ({
-  usePanelOpen: () => ({
-    isPanelOpen: false,
-    togglePanelOpen: vi.fn(),
+// Mock useSidebarState — dynamic, tied to mockIsDesktop
+vi.mock("@/hooks/useSidebarState", () => ({
+  useSidebarState: () => ({
+    effectiveState: "collapsed",
+    sidebarMode: "expanded",
+    setSidebarMode: vi.fn(),
+    isNarrow: !mockIsDesktop,
+    hasHover: mockIsDesktop,
   }),
 }));
 

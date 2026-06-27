@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useSync } from "@/app/providers/SyncProvider";
-import { ROUTES } from "@/constants";
+import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { cn } from "@/shared/lib/cn";
 import type { PanelSide } from "@/types/common";
@@ -36,16 +36,19 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
   const isConfigured = connectionStatus !== "not_configured";
   const isLeft = side === "left";
 
-  const handleSyncClick = (event: React.MouseEvent): void => {
-    event.stopPropagation();
+  const handleSyncClick = (): void => {
     void pull();
   };
-  const navigateToSettings = (event: React.MouseEvent): void => {
-    event.stopPropagation();
+  const navigateToSettings = (): void => {
     navigate(ROUTES.SETTINGS);
   };
-  const handleSignIn = (event: React.MouseEvent): void => {
-    event.stopPropagation();
+  /** Implements FR13 of improve-sidebar-ux */
+  const navigateToSettingsDeepLink = (): void => {
+    navigate(ROUTES.SETTINGS, {
+      state: { expandSection: SETTINGS_SECTION_IDS.ACCOUNT_SYNC },
+    });
+  };
+  const handleSignIn = (): void => {
     signIn();
   };
 
@@ -82,7 +85,7 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
     syncLabel,
     onSyncClick: handleSyncClick,
     onSignIn: handleSignIn,
-    onSettings: navigateToSettings,
+    onSettings: navigateToSettingsDeepLink,
     t,
   });
 
@@ -105,7 +108,7 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
 
 function renderAccountButton(
   userPicture: string | null,
-  onSettings: (event: React.MouseEvent) => void,
+  onSettings: () => void,
   t: (key: string) => string,
 ): React.JSX.Element {
   return (
@@ -150,9 +153,9 @@ interface SyncActionParams {
   isConfigured: boolean;
   isSyncing: boolean;
   hasSyncError: boolean;
-  onSyncClick: (event: React.MouseEvent) => void;
-  onSignIn: (event: React.MouseEvent) => void;
-  onSettings: (event: React.MouseEvent) => void;
+  onSyncClick: () => void;
+  onSignIn: () => void;
+  onSettings: () => void;
   t: (key: string) => string;
 }
 

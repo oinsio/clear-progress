@@ -11,12 +11,20 @@ import {
   Trash2,
 } from "lucide-react";
 import type * as React from "react";
-import { useTranslation } from "react-i18next";
-import { ROUTES } from "@/constants";
+import {
+  ROUTES,
+  SIDEBAR_DRAWER_TRANSITION_MS,
+  SIDEBAR_EXPANDED_WIDTH_PX,
+  SIDEBAR_HOVER_TRANSITION_MS,
+} from "@/constants";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
-import { usePanelAlwaysOpen } from "@/hooks/usePanelAlwaysOpen";
 import { cn } from "@/shared/lib/cn";
-import type { MenuMode, PanelSide } from "@/types/common";
+import type {
+  MenuMode,
+  PanelSide,
+  SidebarMode as SidebarBehaviorMode,
+  SidebarEffectiveState,
+} from "@/types/common";
 import { SidebarFilterNav } from "./SidebarFilterNav";
 import { SidebarSyncBlock } from "./SidebarSyncBlock";
 
@@ -104,41 +112,202 @@ const FILTER_ITEMS_MAP: Record<MenuMode, FilterItem> = Object.fromEntries(
 
 export interface SidebarProps {
   mode: SidebarMode;
-  isOpen: boolean;
+  effectiveState: SidebarEffectiveState;
+  isDrawerOpen: boolean;
+  isHoverExpanded?: boolean;
+  hoverHandlers?: { onMouseEnter: () => void; onMouseLeave: () => void };
   side?: PanelSide;
   activeFocusedGoalId?: string;
-  onToggle: () => void;
+  containerRef?: React.Ref<HTMLDivElement>;
+  sidebarTranslateX?: number;
+  onAutoCollapse?: () => void;
   onModeChange: (mode: SidebarMode) => void;
+  sidebarBehaviorMode?: SidebarBehaviorMode;
+  onSidebarBehaviorModeChange?: (mode: SidebarBehaviorMode) => void;
+  isControlVisible?: boolean;
+  isMobileDrawer?: boolean;
+  isSwiping?: boolean;
 }
 
 /**
  * Main sidebar component — thin orchestrator composing SidebarSyncBlock and SidebarFilterNav.
  *
  * Implements FR1 of rename-right-panel-to-sidebar.
+ * Implements FR4, FR5 of improve-sidebar-ux.
  */
 export function Sidebar({
   mode,
-  isOpen,
+  effectiveState,
+  isDrawerOpen,
+  isHoverExpanded = false,
+  hoverHandlers,
   side = "right",
   activeFocusedGoalId,
-  onToggle,
+  containerRef,
+  sidebarTranslateX = 0,
+  onAutoCollapse,
   onModeChange,
+  sidebarBehaviorMode,
+  onSidebarBehaviorModeChange,
+  isControlVisible = false,
+  isMobileDrawer = false,
+  isSwiping = false,
 }: SidebarProps) {
-  const { t } = useTranslation();
   const { menuOrder } = useMenuOrder();
-  const { isPanelAlwaysOpen } = usePanelAlwaysOpen();
 
   const visibleFilterItems = menuOrder
     .filter((config) => config.visible)
     .map((config) => FILTER_ITEMS_MAP[config.mode]);
 
   const isLeft = side === "left";
-  const effectiveIsOpen = isPanelAlwaysOpen ? true : isOpen;
   const panelBorder = isLeft
     ? "border-r border-accent/70"
     : "border-l border-accent/70";
 
-  if (effectiveIsOpen) {
+  const isHoverReady = effectiveState === "hover-ready";
+
+  const isExpanded = effectiveState === "expanded" || isDrawerOpen;
+
+  // Mobile drawer: collapsed bar always visible + expanded overlay always in DOM
+  if (isMobileDrawer) {
+    const offScreenX = isLeft
+      ? -SIDEBAR_EXPANDED_WIDTH_PX
+      : SIDEBAR_EXPANDED_WIDTH_PX;
+    const targetX = isDrawerOpen ? 0 : offScreenX;
+    const drawerTranslateX =
+      isSwiping && sidebarTranslateX !== 0 ? sidebarTranslateX : targetX;
+
+    return (
+      <div
+        className={cn(
+          "flex flex-shrink-0",
+          isLeft && "order-first flex-row-reverse",
+        )}
+      >
+        {/* Collapsed bar — always visible */}
+        <div
+          className={cn(
+            "w-14 flex flex-col items-center bg-accent",
+            panelBorder,
+          )}
+          data-testid="sidebar-collapsed"
+        >
+          <SidebarSyncBlock isExpanded={false} side={side} />
+          <SidebarFilterNav
+            isExpanded={false}
+            mode={mode}
+            activeFocusedGoalId={activeFocusedGoalId}
+            visibleFilterItems={visibleFilterItems}
+            onModeChange={onModeChange}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
+          />
+        </div>
+        {/* Expanded overlay — always in DOM, animated via transform */}
+        <div
+          ref={containerRef}
+          className={cn(
+            "w-52 flex flex-col bg-accent overflow-hidden",
+            "absolute top-0 bottom-0 z-20",
+            isLeft ? "left-0" : "right-0",
+            panelBorder,
+          )}
+          style={{
+            transform: `translateX(${drawerTranslateX}px)`,
+            transition: isSwiping
+              ? "none"
+              : `transform ${SIDEBAR_DRAWER_TRANSITION_MS}ms ease-out`,
+          }}
+          data-testid="sidebar-expanded"
+          aria-hidden={!isDrawerOpen && !isSwiping}
+        >
+          <SidebarSyncBlock isExpanded={true} side={side} />
+          <SidebarFilterNav
+            isExpanded={true}
+            mode={mode}
+            activeFocusedGoalId={activeFocusedGoalId}
+            visibleFilterItems={visibleFilterItems}
+            onModeChange={onModeChange}
+            onAutoCollapse={onAutoCollapse}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Hover-ready state: collapsed sidebar + animated overlay
+  if (isHoverReady) {
+    const overlayTranslateX = isHoverExpanded ? 0 : isLeft ? -208 : 208;
+
+    return (
+      <div
+        className={cn(
+          "flex flex-shrink-0",
+          isLeft && "order-first flex-row-reverse",
+        )}
+        {...hoverHandlers}
+      >
+        {/* Collapsed sidebar — always visible */}
+        <div
+          className={cn(
+            "w-14 flex flex-col items-center bg-accent",
+            panelBorder,
+          )}
+          data-testid="sidebar-collapsed"
+        >
+          <SidebarSyncBlock isExpanded={false} side={side} />
+          <SidebarFilterNav
+            isExpanded={false}
+            mode={mode}
+            activeFocusedGoalId={activeFocusedGoalId}
+            visibleFilterItems={visibleFilterItems}
+            onModeChange={onModeChange}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
+          />
+        </div>
+        {/* Hover overlay — always in DOM, animated via transform */}
+        <div
+          ref={containerRef}
+          className={cn(
+            "w-52 flex flex-col bg-accent overflow-hidden",
+            "absolute top-0 bottom-0 z-30",
+            isLeft ? "left-0" : "right-0",
+            panelBorder,
+          )}
+          style={{
+            transform: `translateX(${overlayTranslateX}px)`,
+            transition: `transform ${SIDEBAR_HOVER_TRANSITION_MS}ms ease-out`,
+          }}
+          data-testid="sidebar-hover-expanded"
+          aria-hidden={!isHoverExpanded}
+        >
+          <SidebarSyncBlock isExpanded={true} side={side} />
+          <SidebarFilterNav
+            isExpanded={true}
+            mode={mode}
+            activeFocusedGoalId={activeFocusedGoalId}
+            visibleFilterItems={visibleFilterItems}
+            onModeChange={onModeChange}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isExpanded) {
     return (
       <div
         className={cn(
@@ -151,23 +320,19 @@ export function Sidebar({
           className={cn("md:hidden w-14 flex-shrink-0 bg-accent", panelBorder)}
         />
         <div
+          ref={containerRef}
           className={cn(
             "w-52 flex flex-col bg-accent overflow-hidden",
-            !isPanelAlwaysOpen && "cursor-pointer",
             "absolute top-0 bottom-0 z-20 md:relative md:z-auto",
             isLeft ? "left-0" : "right-0",
             panelBorder,
           )}
-          onClick={isPanelAlwaysOpen ? undefined : onToggle}
-          data-testid="sidebar-toggle"
-          aria-label={isPanelAlwaysOpen ? undefined : t("filter.close")}
-          role={isPanelAlwaysOpen ? undefined : "button"}
-          tabIndex={isPanelAlwaysOpen ? undefined : 0}
-          onKeyDown={
-            isPanelAlwaysOpen
-              ? undefined
-              : (e) => e.key === "Enter" && onToggle()
+          style={
+            sidebarTranslateX !== 0
+              ? { transform: `translateX(${sidebarTranslateX}px)` }
+              : undefined
           }
+          data-testid="sidebar-expanded"
         >
           <SidebarSyncBlock isExpanded={true} side={side} />
           <SidebarFilterNav
@@ -176,6 +341,11 @@ export function Sidebar({
             activeFocusedGoalId={activeFocusedGoalId}
             visibleFilterItems={visibleFilterItems}
             onModeChange={onModeChange}
+            onAutoCollapse={onAutoCollapse}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
           />
         </div>
       </div>
@@ -190,16 +360,8 @@ export function Sidebar({
       )}
     >
       <div
-        className={cn(
-          "w-14 flex flex-col items-center bg-accent overflow-hidden cursor-pointer",
-          panelBorder,
-        )}
-        onClick={onToggle}
-        data-testid="sidebar-toggle"
-        aria-label={t("filter.open")}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && onToggle()}
+        className={cn("w-14 flex flex-col items-center bg-accent", panelBorder)}
+        data-testid="sidebar-collapsed"
       >
         <SidebarSyncBlock isExpanded={false} side={side} />
         <SidebarFilterNav
@@ -208,6 +370,10 @@ export function Sidebar({
           activeFocusedGoalId={activeFocusedGoalId}
           visibleFilterItems={visibleFilterItems}
           onModeChange={onModeChange}
+          side={side}
+          sidebarBehaviorMode={sidebarBehaviorMode}
+          onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+          isControlVisible={isControlVisible}
         />
       </div>
     </div>

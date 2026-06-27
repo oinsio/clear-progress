@@ -39,13 +39,6 @@ vi.mock("@/hooks/useHandedness", () => ({
   useHandedness: () => ({ handedness: "right", setHandedness: vi.fn() }),
 }));
 
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: () => ({
-    isPanelAlwaysOpen: false,
-    setPanelAlwaysOpen: vi.fn(),
-  }),
-}));
-
 vi.mock("@/hooks/usePanelSide", () => ({
   usePanelSide: () => ({ panelSide: "right", setPanelSide: vi.fn() }),
 }));
@@ -88,7 +81,7 @@ describeFeature(
           const toggle = screen.getByTestId(
             "settings-detail-panel-pinned-toggle",
           );
-          expect(toggle.getAttribute("aria-checked")).toBe("true");
+          expect(toggle.getAttribute("aria-pressed")).toBe("true");
         });
       },
     );
@@ -109,7 +102,7 @@ describeFeature(
           const toggle = screen.getByTestId(
             "settings-detail-panel-pinned-toggle",
           );
-          expect(toggle.getAttribute("aria-checked")).toBe("false");
+          expect(toggle.getAttribute("aria-pressed")).toBe("false");
         });
       },
     );

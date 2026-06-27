@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DragHandleProps } from "@/components/shared/SortableItem";
 import {
+  ENTITY_TYPE,
   LONG_PRESS_MOVE_THRESHOLD_PX,
   LONG_PRESS_THRESHOLD_MS,
   TASK_COMPLETE_ANIMATION_DELAY_MS,
@@ -50,8 +51,6 @@ interface TaskItemProps {
   focusDimmedOpacity?: number;
 }
 
-const ENTITY_TYPE_TASK = "task" as const;
-
 export function TaskItem({
   task,
   goals,
@@ -73,7 +72,7 @@ export function TaskItem({
     task.id,
   );
   const { attachmentCount, hasUnsyncedAttachments } = useAttachmentCount(
-    ENTITY_TYPE_TASK,
+    ENTITY_TYPE.TASK,
     task.id,
   );
   const isTaskUnsynced = useIsUnsynced(task);

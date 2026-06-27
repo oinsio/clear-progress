@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 
 const mockNavigate = vi.fn();
 const { mockSignIn, mockUseConnectionStatus } = vi.hoisted(() => ({
@@ -30,25 +30,7 @@ vi.mock("@/hooks/useMenuOrder", () => ({
   useMenuOrder: () => ({ menuOrder: [] }),
 }));
 
-vi.mock("@/hooks/usePanelAlwaysOpen", () => ({
-  usePanelAlwaysOpen: () => ({ isPanelAlwaysOpen: false }),
-}));
-
-import { Sidebar } from "./Sidebar";
-
-function renderPanel(overrides?: Partial<Parameters<typeof Sidebar>[0]>) {
-  return render(
-    <MemoryRouter>
-      <Sidebar
-        mode={null}
-        isOpen={true}
-        onToggle={vi.fn()}
-        onModeChange={vi.fn()}
-        {...overrides}
-      />
-    </MemoryRouter>,
-  );
-}
+import { renderSidebar as renderPanel } from "./Sidebar.test-utils";
 
 describe("Sidebar — connection status", () => {
   beforeEach(() => {
@@ -138,6 +120,81 @@ describe("Sidebar — connection status", () => {
     mockUseConnectionStatus.mockReturnValue("not_configured");
     renderPanel();
     await user.click(screen.getAllByTestId("sidebar-login")[0]);
-    expect(mockNavigate).toHaveBeenCalledWith("/settings");
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.SETTINGS, {
+      state: { expandSection: SETTINGS_SECTION_IDS.ACCOUNT_SYNC },
+    });
+  });
+});
+
+describe("Sidebar — layout states", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseConnectionStatus.mockReturnValue("synced");
+  });
+
+  it("should render collapsed sidebar when effectiveState is collapsed", () => {
+    renderPanel({ effectiveState: "collapsed" });
+    expect(screen.getByTestId("sidebar-collapsed")).toBeInTheDocument();
+    expect(screen.queryByTestId("sidebar-expanded")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("sidebar-hover-expanded"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("should render expanded sidebar when effectiveState is expanded", () => {
+    renderPanel({ effectiveState: "expanded" });
+    expect(screen.getByTestId("sidebar-expanded")).toBeInTheDocument();
+    expect(screen.queryByTestId("sidebar-collapsed")).not.toBeInTheDocument();
+  });
+
+  it("should render expanded sidebar when drawer is open", () => {
+    renderPanel({ effectiveState: "collapsed", isDrawerOpen: true });
+    expect(screen.getByTestId("sidebar-expanded")).toBeInTheDocument();
+  });
+
+  it("should render hover-expanded overlay when hover-ready and isHoverExpanded", () => {
+    renderPanel({
+      effectiveState: "hover-ready",
+      isHoverExpanded: true,
+      hoverHandlers: { onMouseEnter: vi.fn(), onMouseLeave: vi.fn() },
+    });
+    expect(screen.getByTestId("sidebar-hover-expanded")).toBeInTheDocument();
+  });
+
+  it("should render collapsed sidebar when hover-ready but not hover-expanded", () => {
+    renderPanel({
+      effectiveState: "hover-ready",
+      isHoverExpanded: false,
+      hoverHandlers: { onMouseEnter: vi.fn(), onMouseLeave: vi.fn() },
+    });
+    expect(screen.getByTestId("sidebar-collapsed")).toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-hover-expanded")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+  });
+
+  it("should apply left side styles when side is left", () => {
+    renderPanel({ side: "left", effectiveState: "collapsed" });
+    const collapsed = screen.getByTestId("sidebar-collapsed");
+    expect(collapsed.className).toContain("border-r");
+  });
+
+  it("should apply right side styles when side is right", () => {
+    renderPanel({ side: "right", effectiveState: "collapsed" });
+    const collapsed = screen.getByTestId("sidebar-collapsed");
+    expect(collapsed.className).toContain("border-l");
+  });
+
+  it("should apply translateX style when sidebarTranslateX is non-zero", () => {
+    renderPanel({ effectiveState: "expanded", sidebarTranslateX: 100 });
+    const expanded = screen.getByTestId("sidebar-expanded");
+    expect(expanded.style.transform).toBe("translateX(100px)");
+  });
+
+  it("should not apply transform style when sidebarTranslateX is zero", () => {
+    renderPanel({ effectiveState: "expanded", sidebarTranslateX: 0 });
+    const expanded = screen.getByTestId("sidebar-expanded");
+    expect(expanded.style.transform).toBe("");
   });
 });

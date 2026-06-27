@@ -29,7 +29,7 @@ Given("user is on a page with CommandBar", async ({ page }) => {
 
 Then("CommandBar does not overlap the Sidebar", async ({ page }) => {
   const commandBar = page.getByTestId("command-bar");
-  const sidebarToggle = page.getByTestId("sidebar-toggle").first();
+  const sidebarToggle = page.getByTestId("sidebar-collapsed").first();
 
   const commandBarBox = await commandBar.boundingBox();
   const sidebarBox = await sidebarToggle.boundingBox();

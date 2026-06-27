@@ -1,3 +1,7 @@
+/**
+ * SearchPage — full-text search across tasks, goals, and ideas.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
+ */
 import { Search } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -6,18 +10,16 @@ import { useNavigate } from "react-router-dom";
 import { GoalItem } from "@/components/goals/GoalItem";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
+import { ROUTES } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSearch } from "@/hooks/useSearch";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { systemClock } from "@/lib/temporal";
 import {
   defaultIdeaService,
@@ -39,11 +41,9 @@ export default function SearchPage() {
   const { goals: allGoals } = useGoals();
   const { contexts } = useContexts();
   const { categories } = useCategories();
-  const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const navigate = useNavigate();
-  const handleModeChange = useSidebarNavigation();
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function SearchPage() {
 
   const handleNavigateToGoal = useCallback(
     (id: string) => {
-      navigate(`/goals/${id}`);
+      navigate(`${ROUTES.GOALS}/${id}`);
     },
     [navigate],
   );
@@ -160,10 +160,7 @@ export default function SearchPage() {
   const hasQuery = searchQuery.length > 0;
 
   return (
-    <div
-      data-testid="search-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="search">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Search header */}
@@ -268,7 +265,7 @@ export default function SearchPage() {
       {/* Task detail panel */}
       {selectedTaskId &&
         (() => {
-          const selectedTask = tasks.find((t) => t.id === selectedTaskId);
+          const selectedTask = tasks.find((task) => task.id === selectedTaskId);
           return selectedTask ? (
             <TaskDetailPanel
               task={selectedTask}
@@ -299,15 +296,6 @@ export default function SearchPage() {
             />
           ) : null;
         })()}
-
-      {/* Right filter panel */}
-      <Sidebar
-        mode="search"
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

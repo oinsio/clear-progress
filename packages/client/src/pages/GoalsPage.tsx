@@ -1,6 +1,7 @@
 /**
  * GoalsPage — displays and manages goals.
  * Implements FR20 of command-bar.
+ * Implements FR8, FR14-FR17 of improve-sidebar-ux.
  */
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
@@ -14,15 +15,12 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
 import { GoalItem } from "@/components/goals/GoalItem";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useGoals } from "@/hooks/useGoals";
-import { usePanelOpen } from "@/hooks/usePanelOpen";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import type { Goal } from "@/types/entities";
@@ -88,8 +86,6 @@ const defaultTaskService = new TaskService(
 export default function GoalsPage() {
   const { t } = useTranslation();
   const { goals, isLoading, createGoal, reorderGoals } = useGoals();
-  const { panelSide } = usePanelSide();
-  const { isPanelOpen, togglePanelOpen } = usePanelOpen();
   const navigate = useNavigate();
   const sensors = useDndSensors();
 
@@ -102,8 +98,6 @@ export default function GoalsPage() {
   useEffect(() => {
     void defaultTaskService.getGoalTaskCounts().then(setGoalTaskCounts);
   }, []);
-
-  const handleModeChange = useSidebarNavigation();
 
   const handleGoalNavigate = useCallback(
     (id: string) => {
@@ -152,10 +146,7 @@ export default function GoalsPage() {
   );
 
   return (
-    <div
-      data-testid="goals-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="goals" data-testid="goals-page">
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar
@@ -207,15 +198,6 @@ export default function GoalsPage() {
           </div>
         </main>
       </div>
-
-      {/* Right filter panel */}
-      <Sidebar
-        mode="goals"
-        isOpen={isPanelOpen}
-        side={panelSide}
-        onToggle={togglePanelOpen}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

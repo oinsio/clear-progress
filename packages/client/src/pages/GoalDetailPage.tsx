@@ -9,8 +9,8 @@ import { CommandBar } from "@/components/command-bar";
 import { FocusGoalReplacementDialog } from "@/components/goals/FocusGoalReplacementDialog";
 import { GoalCardEditMode } from "@/components/goals/GoalCardEditMode";
 import { GoalCardViewMode } from "@/components/goals/GoalCardViewMode";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
-import { Sidebar } from "@/components/tasks/Sidebar";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
 import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER, ROUTES } from "@/constants";
@@ -35,12 +35,19 @@ export default function GoalDetailPage() {
     );
   }
 
+  const sidebarMode =
+    state.isFocused && state.isFocusedGoalsVisible ? null : "goals";
+  const activeFocusedGoalId =
+    state.isFocused && state.isFocusedGoalsVisible ? state.goal?.id : undefined;
+
   return (
-    <div
-      data-testid="goal-detail-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
+    <SidebarShell
+      mode={sidebarMode}
+      onModeChange={state.handleModeChange}
+      activeFocusedGoalId={activeFocusedGoalId}
     >
       <div
+        data-testid="goal-detail-page"
         ref={state.splitContainerRef}
         className="flex flex-1 overflow-hidden"
       >
@@ -263,26 +270,12 @@ export default function GoalDetailPage() {
           isOpen={state.isReplacementDialogOpen}
           goalToAdd={state.goal}
           focusedGoals={state.focusedGoalIds
-            .map((goalId) => state.goals.find((g) => g.id === goalId))
-            .filter((g): g is Goal => g !== undefined)}
+            .map((goalId) => state.goals.find((goal) => goal.id === goalId))
+            .filter((goal): goal is Goal => goal !== undefined)}
           onReplace={state.handleReplace}
           onClose={() => state.setIsReplacementDialogOpen(false)}
         />
       )}
-
-      {/* Right filter panel */}
-      <Sidebar
-        mode={state.isFocused && state.isFocusedGoalsVisible ? null : "goals"}
-        isOpen={state.isPanelOpen}
-        side={state.panelSide}
-        activeFocusedGoalId={
-          state.isFocused && state.isFocusedGoalsVisible
-            ? state.goal?.id
-            : undefined
-        }
-        onToggle={state.togglePanelOpen}
-        onModeChange={state.handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }
