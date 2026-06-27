@@ -55,31 +55,8 @@ async function createRecurringTask(
   await setFixedDailyRepeat(testPage);
 }
 
-const SYNC_UNTIL_VISIBLE_MAX_RETRIES = 3;
-const TASK_VISIBLE_TIMEOUT_MS = 3_000;
+const TASK_VISIBLE_TIMEOUT_MS = 5_000;
 const COMPLETE_SETTLE_MS = 300;
-
-/**
- * Syncs the page and waits for a task with the given name to appear in the UI.
- * Retries sync if the task is not visible after a short timeout — this handles
- * the case where the first sync completes before the server has processed the
- * push from the other page.
- */
-async function syncUntilTaskVisible(
-  testPage: Page,
-  taskName: string,
-): Promise<void> {
-  for (let attempt = 1; attempt <= SYNC_UNTIL_VISIBLE_MAX_RETRIES; attempt++) {
-    await triggerSyncAndWait(testPage);
-    const isVisible = await findTaskItem(testPage, taskName)
-      .waitFor({ state: "visible", timeout: TASK_VISIBLE_TIMEOUT_MS })
-      .then(() => true)
-      .catch(() => false);
-    if (isVisible) return;
-  }
-  // Final attempt — let it throw with a clear error
-  await findTaskItem(testPage, taskName).waitFor({ state: "visible" });
-}
 
 async function completeTask(testPage: Page, taskName: string): Promise<void> {
   await findTaskItem(testPage, taskName)
@@ -151,8 +128,12 @@ test("Both complete same recurring offline → push both → consistent state", 
   await pageB.goto("/tasks");
   await pageB.waitForSelector('[data-testid="active-tasks-page"]');
 
-  // Sync + wait for task to appear on pageB (retry sync if task not yet visible)
-  await syncUntilTaskVisible(pageB, conflictTaskName);
+  // Sync pageB — data is already on server (pageA synced above)
+  await triggerSyncAndWait(pageB);
+  await findTaskItem(pageB, conflictTaskName).waitFor({
+    state: "visible",
+    timeout: TASK_VISIBLE_TIMEOUT_MS,
+  });
 
   // Both complete without syncing between them (parallel — different pages)
   await Promise.all([
