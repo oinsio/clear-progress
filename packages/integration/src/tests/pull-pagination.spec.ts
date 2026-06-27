@@ -11,10 +11,6 @@ import {
 const PAGINATION_TEST_TASK_COUNT = 15;
 const INCREMENTAL_TASK_COUNT = 12;
 const CRASH_RECOVERY_TASK_COUNT = 15;
-// Push tasks in batches to ensure each batch gets a unique server revision.
-// Pushing all tasks in a single call assigns the same revision to all,
-// which breaks gt-based pagination when batch > PGRST_DB_MAX_ROWS.
-const PUSH_BATCH_SIZE = 5;
 
 const { getPage, getCredentials } = setupSingleDeviceTest();
 
@@ -60,26 +56,6 @@ function buildTestTasks(prefix: string, count: number) {
   return { ids, tasks };
 }
 
-async function pushTasksInBatches(
-  credentials: ReturnType<typeof getCredentials>,
-  tasks: ReturnType<typeof buildTestTasks>["tasks"],
-) {
-  for (let offset = 0; offset < tasks.length; offset += PUSH_BATCH_SIZE) {
-    const batch = tasks.slice(offset, offset + PUSH_BATCH_SIZE);
-    const pushResponse = await pushToServer(credentials, {
-      tasks: batch,
-      goals: [],
-      contexts: [],
-      categories: [],
-      checklist_items: [],
-      ideas: [],
-      attachments: [],
-      settings: [],
-    });
-    expect(pushResponse.ok).toBe(true);
-  }
-}
-
 // ---------------------------------------------------------------------------
 // 5.1 — Initial pull with record count > max_rows fetches all records
 // Verifies that pullFromServer aggregates paginated responses automatically.
@@ -93,12 +69,22 @@ test("initial pull with record count > max_rows fetches all records", async () =
   await page.goto("/tasks");
   await triggerSyncAndWait(page);
 
-  // Step 2: Generate and push 15 tasks in batches (each batch gets a unique revision)
+  // Step 2: Generate and push 15 tasks in a single call (all share the same revision)
   const { ids: pushedTaskIds, tasks: tasksToCreate } = buildTestTasks(
     "Pagination Task",
     PAGINATION_TEST_TASK_COUNT,
   );
-  await pushTasksInBatches(credentials, tasksToCreate);
+  const pushResponse = await pushToServer(credentials, {
+    tasks: tasksToCreate,
+    goals: [],
+    contexts: [],
+    categories: [],
+    checklist_items: [],
+    ideas: [],
+    attachments: [],
+    settings: [],
+  });
+  expect(pushResponse.ok).toBe(true);
 
   // Step 3: Pull all records — pullFromServer should auto-paginate
   const sinceRevisionZero = 0;
@@ -140,12 +126,22 @@ test("incremental pull after partial batch — all records fetched", async () =>
   expect(baselinePullResponse.ok).toBe(true);
   const baselineRevision = baselinePullResponse.current_revision;
 
-  // Step 2: Push 12 more tasks in batches (each batch gets a unique revision)
+  // Step 2: Push 12 more tasks in a single call (all share the same revision)
   const { ids: incrementalTaskIds, tasks: incrementalTasks } = buildTestTasks(
     "Incremental Task",
     INCREMENTAL_TASK_COUNT,
   );
-  await pushTasksInBatches(credentials, incrementalTasks);
+  const incrementalPushResponse = await pushToServer(credentials, {
+    tasks: incrementalTasks,
+    goals: [],
+    contexts: [],
+    categories: [],
+    checklist_items: [],
+    ideas: [],
+    attachments: [],
+    settings: [],
+  });
+  expect(incrementalPushResponse.ok).toBe(true);
 
   // Step 3: Pull only changes since baseline revision
   const incrementalPullResponse = await pullFromServer<PaginationPullResponse>(
@@ -196,10 +192,20 @@ test("crash-recovery — re-pull from last saved revision fetches all records", 
   expect(baselinePullResponse.ok).toBe(true);
   const baselineRevision = baselinePullResponse.current_revision;
 
-  // Step 2: Push 15 more tasks in batches to ensure pagination is needed (max_rows=10)
+  // Step 2: Push 15 more tasks in a single call to ensure pagination is needed (max_rows=10)
   const { ids: crashRecoveryTaskIds, tasks: crashRecoveryTasks } =
     buildTestTasks("CrashRecovery Task", CRASH_RECOVERY_TASK_COUNT);
-  await pushTasksInBatches(credentials, crashRecoveryTasks);
+  const crashPushResponse = await pushToServer(credentials, {
+    tasks: crashRecoveryTasks,
+    goals: [],
+    contexts: [],
+    categories: [],
+    checklist_items: [],
+    ideas: [],
+    attachments: [],
+    settings: [],
+  });
+  expect(crashPushResponse.ok).toBe(true);
 
   // Step 3: Simulate "crash" — fetch only the first page (no auto-pagination)
   // The client would NOT save current_revision because has_more === true (D4)
@@ -216,8 +222,14 @@ test("crash-recovery — re-pull from last saved revision fetches all records", 
     },
   );
   const singlePageData =
-    (await singlePageResponse.json()) as PaginationPullResponse;
+    (await singlePageResponse.json()) as PaginationPullResponse & {
+      cursors?: Record<string, { revision: number; last_id: string }>;
+    };
   expect(singlePageData.has_more).toBe(true);
+
+  // Verify the response includes cursors when has_more is true
+  expect(singlePageData.cursors).toBeDefined();
+  expect(typeof singlePageData.cursors).toBe("object");
 
   // Step 4: Simulate restart — re-pull from the same baseline revision
   // Since the "crash" happened before saving, the client retries from

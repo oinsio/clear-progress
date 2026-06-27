@@ -155,6 +155,60 @@ describe("SyncService — pull pagination", () => {
     expect(revisionSetCalls[0][1]).toBe(15);
   });
 
+  it("should pass cursors from first response to second request", async () => {
+    const responseCursors = { tasks: { revision: 5, last_id: "xyz" } };
+
+    asMock(ctx.mockSyncAdapter.pull)
+      .mockResolvedValueOnce(
+        makePullResponse({
+          has_more: true,
+          current_revision: 5,
+          cursors: responseCursors,
+        }),
+      )
+      .mockResolvedValueOnce(
+        makePullResponse({ has_more: false, current_revision: 10 }),
+      );
+
+    const service = createService(ctx);
+    await service.pull();
+
+    const secondCallArgs = asMock(ctx.mockSyncAdapter.pull).mock.calls[1][0];
+    expect(secondCallArgs.cursors).toEqual(responseCursors);
+  });
+
+  it("should not include cursors in first pull request", async () => {
+    asMock(ctx.mockSyncAdapter.pull)
+      .mockResolvedValueOnce(
+        makePullResponse({
+          has_more: true,
+          current_revision: 5,
+          cursors: { tasks: { revision: 5, last_id: "abc" } },
+        }),
+      )
+      .mockResolvedValueOnce(
+        makePullResponse({ has_more: false, current_revision: 10 }),
+      );
+
+    const service = createService(ctx);
+    await service.pull();
+
+    const firstCallArgs = asMock(ctx.mockSyncAdapter.pull).mock.calls[0][0];
+    expect(firstCallArgs.cursors).toBeUndefined();
+  });
+
+  it("should not include cursors when response has_more is false", async () => {
+    asMock(ctx.mockSyncAdapter.pull).mockResolvedValue(
+      makePullResponse({ has_more: false, current_revision: 5 }),
+    );
+
+    const service = createService(ctx);
+    await service.pull();
+
+    const firstCallArgs = asMock(ctx.mockSyncAdapter.pull).mock.calls[0][0];
+    expect(firstCallArgs.cursors).toBeUndefined();
+  });
+
   it("should pass settings_updated_at only on first request", async () => {
     const storedTimestamp = "2026-01-15T10:00:00.000Z";
     localStorage.setItem("settings_updated_at", storedTimestamp);

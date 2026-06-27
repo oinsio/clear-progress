@@ -48,6 +48,7 @@ interface PullPageResponse {
   ok: boolean;
   has_more: boolean;
   current_revision: number;
+  cursors?: Record<string, { revision: number; last_id: string }>;
   [key: string]: unknown;
 }
 
@@ -67,12 +68,18 @@ export async function pullFromServer<T = Record<string, unknown>>(
   }
 
   let currentSinceRevision = sinceRevision;
+  let currentCursors:
+    | Record<string, { revision: number; last_id: string }>
+    | undefined;
   let lastPage: PullPageResponse | undefined;
 
   do {
     const requestBody: Record<string, unknown> = {
       since_revision: currentSinceRevision,
     };
+    if (currentCursors) {
+      requestBody.cursors = currentCursors;
+    }
 
     const response = await fetch(
       `${credentials.supabaseUrl}/functions/v1/pull`,
@@ -104,6 +111,7 @@ export async function pullFromServer<T = Record<string, unknown>>(
 
     if (pageData.has_more) {
       currentSinceRevision = pageData.current_revision;
+      currentCursors = pageData.cursors;
     }
   } while (lastPage?.has_more);
 

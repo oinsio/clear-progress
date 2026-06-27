@@ -56,6 +56,7 @@ export type {
   PushRequest,
   PushResponse,
   PushSettingResult,
+  TableCursor,
   UploadFileBatchItem,
   UploadFileBatchResult,
   UploadFileRequest,

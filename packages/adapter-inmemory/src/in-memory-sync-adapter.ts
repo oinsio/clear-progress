@@ -13,6 +13,7 @@ import type {
   PushResponse,
   PushSettingResult,
   SyncAdapter,
+  TableCursor,
   UploadFileRequest,
   UploadFileResponse,
   UploadFilesRequest,
@@ -89,26 +90,45 @@ export class InMemorySyncAdapter implements SyncAdapter {
     return { ok: true };
   }
 
-  // implements FR7 of fix-pull-pagination
+  // implements FR7, FR8 of fix-pull-pagination
   async pull(request: PullRequest): Promise<PullResponse> {
-    const allTasks = this.filterAndSort(this.tasks, request.since_revision);
-    const allGoals = this.filterAndSort(this.goals, request.since_revision);
+    const requestCursors = request.cursors ?? {};
+    const sinceRevision = request.since_revision;
+
+    const allTasks = this.filterAndSort(
+      this.tasks,
+      sinceRevision,
+      requestCursors["tasks"],
+    );
+    const allGoals = this.filterAndSort(
+      this.goals,
+      sinceRevision,
+      requestCursors["goals"],
+    );
     const allContexts = this.filterAndSort(
       this.contexts,
-      request.since_revision,
+      sinceRevision,
+      requestCursors["contexts"],
     );
     const allCategories = this.filterAndSort(
       this.categories,
-      request.since_revision,
+      sinceRevision,
+      requestCursors["categories"],
     );
-    const allIdeas = this.filterAndSort(this.ideas, request.since_revision);
+    const allIdeas = this.filterAndSort(
+      this.ideas,
+      sinceRevision,
+      requestCursors["ideas"],
+    );
     const allChecklistItems = this.filterAndSort(
       this.checklistItems,
-      request.since_revision,
+      sinceRevision,
+      requestCursors["checklist_items"],
     );
     const allAttachments = this.filterAndSort(
       this.attachments,
-      request.since_revision,
+      sinceRevision,
+      requestCursors["attachments"],
     );
 
     const allEntityArrays = [
@@ -147,16 +167,37 @@ export class InMemorySyncAdapter implements SyncAdapter {
     if (hasMore) {
       const maxRevisions = truncatedArrays
         .filter((entities) => entities.length > 0)
-        .map((entities) => {
-          const lastEntity = entities[entities.length - 1];
-          return lastEntity ? lastEntity.revision : 0;
-        });
+        .map((entities) => entities[entities.length - 1]!.revision);
       currentRevision =
         maxRevisions.length > 0
           ? Math.min(...maxRevisions)
           : this.nextRevision - 1;
     } else {
       currentRevision = this.nextRevision - 1;
+    }
+
+    const responseCursors: Record<string, TableCursor> = {};
+    if (hasMore) {
+      const tableNames = [
+        "tasks",
+        "goals",
+        "contexts",
+        "categories",
+        "ideas",
+        "checklist_items",
+        "attachments",
+      ];
+      tableNames.forEach((tableName, index) => {
+        const allEntities = allEntityArrays[index]!;
+        const truncated = truncatedArrays[index]!;
+        if (allEntities.length > this.maxRowsPerTable && truncated.length > 0) {
+          const lastEntity = truncated[truncated.length - 1]!;
+          responseCursors[tableName] = {
+            revision: lastEntity.revision,
+            last_id: lastEntity.id,
+          };
+        }
+      });
     }
 
     let settings = Array.from(this.settings.values());
@@ -181,16 +222,32 @@ export class InMemorySyncAdapter implements SyncAdapter {
       purge_revision: this.purgeRevision,
       has_more: hasMore,
       server_time: new Date().toISOString(),
+      ...(Object.keys(responseCursors).length > 0 && {
+        cursors: responseCursors,
+      }),
     };
   }
 
-  private filterAndSort<T extends { revision: number }>(
+  private filterAndSort<T extends { revision: number; id: string }>(
     store: Map<string, T>,
     sinceRevision: number,
+    cursor?: TableCursor,
   ): T[] {
     return Array.from(store.values())
-      .filter((entity) => entity.revision > sinceRevision)
-      .sort((a, b) => a.revision - b.revision);
+      .filter((entity) => {
+        if (cursor) {
+          return (
+            entity.revision > cursor.revision ||
+            (entity.revision === cursor.revision && entity.id > cursor.last_id)
+          );
+        }
+        return entity.revision > sinceRevision;
+      })
+      .sort((a, b) =>
+        a.revision !== b.revision
+          ? a.revision - b.revision
+          : a.id.localeCompare(b.id),
+      );
   }
 
   async push(request: PushRequest): Promise<PushResponse> {

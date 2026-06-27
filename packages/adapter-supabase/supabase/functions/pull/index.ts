@@ -1,6 +1,6 @@
 // implements FR4, FR14 of add-supabase-adapter
 // implements FR6 of add-file-attachments
-// implements FR1, FR2, FR3 of fix-pull-pagination
+// implements FR1, FR2, FR3, FR8, FR9 of fix-pull-pagination
 // POST /pull — returns all records with revision > since_revision for the authenticated user
 
 import { errorResponse, okResponse } from "../_shared/auth.ts";
@@ -24,6 +24,7 @@ Deno.serve(
     const body = parsed.body as {
       since_revision?: unknown;
       settings_updated_at?: unknown;
+      cursors?: Record<string, { revision: number; last_id: string }>;
     };
 
     if (typeof body.since_revision !== "number") {
@@ -38,6 +39,8 @@ Deno.serve(
       typeof body.settings_updated_at === "string"
         ? body.settings_updated_at
         : undefined;
+
+    const requestCursors = body.cursors ?? {};
 
     // Read sync_meta: check initialized and get revision counters
     const { data: metaRows, error: metaError } = await serviceClient
@@ -67,13 +70,26 @@ Deno.serve(
     const latestRevision = nextRevision - 1;
 
     // Run entity queries in parallel with exact count for pagination
-    const entityQueryBase = (table: string) =>
-      serviceClient
+    const entityQueryBase = (table: string) => {
+      const cursor = requestCursors[table];
+      let query = serviceClient
         .from(table)
         .select("*", { count: "exact" })
-        .eq("user_id", userId)
-        .gt("revision", sinceRevision)
-        .order("revision", { ascending: true });
+        .eq("user_id", userId);
+
+      if (cursor) {
+        // Composite cursor: rows after (revision, id) in sort order
+        query = query.or(
+          `revision.gt.${cursor.revision},and(revision.eq.${cursor.revision},id.gt.${cursor.last_id})`,
+        );
+      } else {
+        query = query.gt("revision", sinceRevision);
+      }
+
+      return query
+        .order("revision", { ascending: true })
+        .order("id", { ascending: true });
+    };
 
     let settingsQuery = serviceClient
       .from("settings")
@@ -135,8 +151,23 @@ Deno.serve(
         result.count > (result.data ?? []).length,
     );
 
+    // Map entity results to table names for cursor building
+    const entityTableNames = [
+      "tasks",
+      "goals",
+      "ideas",
+      "contexts",
+      "categories",
+      "checklist_items",
+      "attachments",
+    ] as const;
+
     // Compute current_revision based on pagination state
     let currentRevision: number;
+    let responseCursors:
+      | Record<string, { revision: number; last_id: string }>
+      | undefined;
+
     if (hasMore) {
       // Find the minimum max-revision across entity tables that have data
       const maxRevisions = entityResults
@@ -149,6 +180,20 @@ Deno.serve(
 
       currentRevision =
         maxRevisions.length > 0 ? Math.min(...maxRevisions) : latestRevision;
+
+      // Build cursors for truncated tables
+      responseCursors = {};
+      entityResults.forEach((result, index) => {
+        const rows = result.data ?? [];
+        const totalCount = result.count ?? 0;
+        if (totalCount > rows.length && rows.length > 0) {
+          const lastRow = rows[rows.length - 1];
+          responseCursors![entityTableNames[index]] = {
+            revision: lastRow.revision as number,
+            last_id: lastRow.id as string,
+          };
+        }
+      });
     } else {
       currentRevision = latestRevision;
     }
@@ -167,6 +212,7 @@ Deno.serve(
       settings: (settingsResult.data ?? []).map(serializeSettingRow),
       current_revision: currentRevision,
       has_more: hasMore,
+      ...(responseCursors ? { cursors: responseCursors } : {}),
       purge_revision: purgeRevision,
       server_time: new Date().toISOString(),
     });
