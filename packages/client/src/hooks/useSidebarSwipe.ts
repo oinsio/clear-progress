@@ -23,9 +23,104 @@ export interface UseSidebarSwipeOptions {
 
 export interface UseSidebarSwipeReturn {
   sidebarTranslateX: number;
+  isSwiping: boolean;
 }
 
 type SwipePhase = "idle" | "detecting" | "swiping";
+
+interface SwipeGestureConfig {
+  shouldStartDetecting: (touch: Touch) => boolean;
+  isSwipeDirection: (deltaX: number) => boolean;
+  computeTranslateX: (deltaX: number, sidebarWidth: number) => number;
+  computeMovedDistance: (translateX: number, sidebarWidth: number) => number;
+  onCommit: () => void;
+}
+
+function createSwipeHandlers(
+  config: SwipeGestureConfig,
+  phaseRef: React.MutableRefObject<SwipePhase>,
+  startXRef: React.MutableRefObject<number>,
+  startYRef: React.MutableRefObject<number>,
+  translateXRef: React.MutableRefObject<number>,
+  getSidebarWidth: () => number,
+  setIsSwiping: (value: boolean) => void,
+  setSidebarTranslateX: (value: number) => void,
+) {
+  function handleTouchStart(event: TouchEvent) {
+    const touch = event.touches[0];
+    if (!config.shouldStartDetecting(touch)) return;
+
+    phaseRef.current = "detecting";
+    startXRef.current = touch.clientX;
+    startYRef.current = touch.clientY;
+    translateXRef.current = 0;
+  }
+
+  function handleTouchMove(event: TouchEvent) {
+    if (phaseRef.current === "idle") return;
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - startXRef.current;
+    const deltaY = touch.clientY - startYRef.current;
+
+    if (phaseRef.current === "detecting") {
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+
+      if (absY > absX && absY > SIDEBAR_SWIPE_EDGE_ZONE_PX / 2) {
+        phaseRef.current = "idle";
+        return;
+      }
+
+      if (
+        absX > SIDEBAR_SWIPE_EDGE_ZONE_PX / 2 &&
+        config.isSwipeDirection(deltaX)
+      ) {
+        phaseRef.current = "swiping";
+        setIsSwiping(true);
+      } else if (absX > SIDEBAR_SWIPE_EDGE_ZONE_PX / 2) {
+        phaseRef.current = "idle";
+        return;
+      } else {
+        return;
+      }
+    }
+
+    event.preventDefault();
+
+    const sidebarWidth = getSidebarWidth();
+    if (sidebarWidth === 0) return;
+
+    const currentTranslateX = config.computeTranslateX(deltaX, sidebarWidth);
+    translateXRef.current = currentTranslateX;
+    setSidebarTranslateX(currentTranslateX);
+  }
+
+  function handleTouchEnd() {
+    if (phaseRef.current !== "swiping") {
+      phaseRef.current = "idle";
+      return;
+    }
+
+    const sidebarWidth = getSidebarWidth();
+    const threshold = sidebarWidth * SIDEBAR_SWIPE_THRESHOLD_PERCENT;
+    const movedDistance = config.computeMovedDistance(
+      translateXRef.current,
+      sidebarWidth,
+    );
+
+    if (movedDistance >= threshold) {
+      config.onCommit();
+    }
+
+    phaseRef.current = "idle";
+    translateXRef.current = 0;
+    setIsSwiping(false);
+    setSidebarTranslateX(0);
+  }
+
+  return { handleTouchStart, handleTouchMove, handleTouchEnd };
+}
 
 export function useSidebarSwipe({
   sidebarRef,
@@ -36,6 +131,7 @@ export function useSidebarSwipe({
   onClose,
 }: UseSidebarSwipeOptions): UseSidebarSwipeReturn {
   const [sidebarTranslateX, setSidebarTranslateX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   const openPhaseRef = useRef<SwipePhase>("idle");
   const openStartXRef = useRef(0);
@@ -62,217 +158,104 @@ export function useSidebarSwipe({
     onCloseRef.current = onClose;
   }, [onClose]);
 
-  // Edge swipe to open (listens on document)
-  useEffect(() => {
-    if (isDesktop) return;
+  function useSwipeGesture(
+    config: SwipeGestureConfig,
+    phaseRef: React.MutableRefObject<SwipePhase>,
+    startXRef: React.MutableRefObject<number>,
+    startYRef: React.MutableRefObject<number>,
+    translateXRef: React.MutableRefObject<number>,
+  ) {
+    useEffect(() => {
+      if (isDesktop) return;
 
-    function getSidebarWidth(): number {
-      return sidebarRef.current?.offsetWidth ?? 0;
-    }
-
-    function isEdgeTouch(touchX: number): boolean {
-      if (side === "right") {
-        return window.innerWidth - touchX < SIDEBAR_SWIPE_EDGE_ZONE_PX;
-      }
-      return touchX < SIDEBAR_SWIPE_EDGE_ZONE_PX;
-    }
-
-    function handleTouchStart(event: TouchEvent) {
-      if (isOpenRef.current) return;
-      const touch = event.touches[0];
-      if (!isEdgeTouch(touch.clientX)) return;
-
-      openPhaseRef.current = "detecting";
-      openStartXRef.current = touch.clientX;
-      openStartYRef.current = touch.clientY;
-      openTranslateXRef.current = 0;
-    }
-
-    function handleTouchMove(event: TouchEvent) {
-      if (openPhaseRef.current === "idle") return;
-
-      const touch = event.touches[0];
-      const deltaX = touch.clientX - openStartXRef.current;
-      const deltaY = touch.clientY - openStartYRef.current;
-
-      if (openPhaseRef.current === "detecting") {
-        const absX = Math.abs(deltaX);
-        const absY = Math.abs(deltaY);
-
-        if (absY > absX && absY > SIDEBAR_SWIPE_EDGE_ZONE_PX / 2) {
-          openPhaseRef.current = "idle";
-          return;
-        }
-
-        if (absX > SIDEBAR_SWIPE_EDGE_ZONE_PX / 2) {
-          openPhaseRef.current = "swiping";
-        } else {
-          return;
-        }
+      function getSidebarWidth(): number {
+        return sidebarRef.current?.offsetWidth ?? 0;
       }
 
-      event.preventDefault();
+      const { handleTouchStart, handleTouchMove, handleTouchEnd } =
+        createSwipeHandlers(
+          config,
+          phaseRef,
+          startXRef,
+          startYRef,
+          translateXRef,
+          getSidebarWidth,
+          setIsSwiping,
+          setSidebarTranslateX,
+        );
 
-      const sidebarWidth = getSidebarWidth();
-      if (sidebarWidth === 0) return;
+      document.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
+      document.addEventListener("touchend", handleTouchEnd, { passive: true });
 
-      // Opening: for right side, deltaX is negative (swiping left from edge)
-      // translateX goes from +sidebarWidth (off-screen) toward 0 (visible)
-      if (side === "right") {
-        const progress = Math.min(Math.abs(deltaX), sidebarWidth);
-        const currentTranslateX = sidebarWidth - progress;
-        openTranslateXRef.current = currentTranslateX;
-        setSidebarTranslateX(currentTranslateX);
-      } else {
+      return () => {
+        document.removeEventListener("touchstart", handleTouchStart);
+        document.removeEventListener("touchmove", handleTouchMove);
+        document.removeEventListener("touchend", handleTouchEnd);
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isDesktop, side, sidebarRef]);
+  }
+
+  function isEdgeTouch(touchX: number): boolean {
+    if (side === "right") {
+      return window.innerWidth - touchX < SIDEBAR_SWIPE_EDGE_ZONE_PX;
+    }
+    return touchX < SIDEBAR_SWIPE_EDGE_ZONE_PX;
+  }
+
+  // Edge swipe to open
+  useSwipeGesture(
+    {
+      shouldStartDetecting: (touch) =>
+        !isOpenRef.current && isEdgeTouch(touch.clientX),
+      isSwipeDirection: () => true,
+      computeTranslateX: (deltaX, sidebarWidth) => {
+        if (side === "right") {
+          const progress = Math.min(Math.abs(deltaX), sidebarWidth);
+          return sidebarWidth - progress;
+        }
         const progress = Math.min(deltaX, sidebarWidth);
-        const currentTranslateX =
-          progress > 0 ? -(sidebarWidth - progress) : -sidebarWidth;
-        openTranslateXRef.current = currentTranslateX;
-        setSidebarTranslateX(currentTranslateX);
-      }
-    }
+        return progress > 0 ? -(sidebarWidth - progress) : -sidebarWidth;
+      },
+      computeMovedDistance: (translateX, sidebarWidth) =>
+        side === "right"
+          ? sidebarWidth - translateX
+          : sidebarWidth + translateX,
+      onCommit: () => onOpenRef.current(),
+    },
+    openPhaseRef,
+    openStartXRef,
+    openStartYRef,
+    openTranslateXRef,
+  );
 
-    function handleTouchEnd() {
-      if (openPhaseRef.current !== "swiping") {
-        openPhaseRef.current = "idle";
-        return;
-      }
-
-      const sidebarWidth = getSidebarWidth();
-      const threshold = sidebarWidth * SIDEBAR_SWIPE_THRESHOLD_PERCENT;
-
-      if (side === "right") {
-        const movedDistance = sidebarWidth - openTranslateXRef.current;
-        if (movedDistance >= threshold) {
-          onOpenRef.current();
+  // Swipe-to-close
+  useSwipeGesture(
+    {
+      shouldStartDetecting: (touch) =>
+        isOpenRef.current &&
+        !!sidebarRef.current?.contains(touch.target as Node),
+      isSwipeDirection: (deltaX) =>
+        side === "right" ? deltaX > 0 : deltaX < 0,
+      computeTranslateX: (deltaX, sidebarWidth) => {
+        if (side === "right") {
+          return Math.max(0, Math.min(deltaX, sidebarWidth));
         }
-      } else {
-        const movedDistance = sidebarWidth + openTranslateXRef.current;
-        if (movedDistance >= threshold) {
-          onOpenRef.current();
-        }
-      }
+        return Math.min(0, Math.max(deltaX, -sidebarWidth));
+      },
+      computeMovedDistance: (translateX) => Math.abs(translateX),
+      onCommit: () => onCloseRef.current(),
+    },
+    closePhaseRef,
+    closeStartXRef,
+    closeStartYRef,
+    closeTranslateXRef,
+  );
 
-      openPhaseRef.current = "idle";
-      openTranslateXRef.current = 0;
-      setSidebarTranslateX(0);
-    }
-
-    document.addEventListener("touchstart", handleTouchStart, {
-      passive: true,
-    });
-    document.addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-    return () => {
-      document.removeEventListener("touchstart", handleTouchStart);
-      document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [isDesktop, side, sidebarRef]);
-
-  // Swipe-to-close (listens on sidebar ref)
-  useEffect(() => {
-    if (isDesktop) return;
-
-    const sidebarElement = sidebarRef.current;
-    if (!sidebarElement) return;
-
-    function getSidebarWidth(): number {
-      return sidebarElement?.offsetWidth ?? 0;
-    }
-
-    function handleTouchStart(event: TouchEvent) {
-      if (!isOpenRef.current) return;
-
-      const touch = event.touches[0];
-      closePhaseRef.current = "detecting";
-      closeStartXRef.current = touch.clientX;
-      closeStartYRef.current = touch.clientY;
-      closeTranslateXRef.current = 0;
-    }
-
-    function handleTouchMove(event: TouchEvent) {
-      if (closePhaseRef.current === "idle") return;
-
-      const touch = event.touches[0];
-      const deltaX = touch.clientX - closeStartXRef.current;
-      const deltaY = touch.clientY - closeStartYRef.current;
-
-      if (closePhaseRef.current === "detecting") {
-        const absX = Math.abs(deltaX);
-        const absY = Math.abs(deltaY);
-
-        if (absY > absX && absY > SIDEBAR_SWIPE_EDGE_ZONE_PX / 2) {
-          closePhaseRef.current = "idle";
-          return;
-        }
-
-        // For closing: right sidebar swipes right (+), left sidebar swipes left (-)
-        const isClosingDirection = side === "right" ? deltaX > 0 : deltaX < 0;
-        if (absX > SIDEBAR_SWIPE_EDGE_ZONE_PX / 2 && isClosingDirection) {
-          closePhaseRef.current = "swiping";
-        } else if (absX > SIDEBAR_SWIPE_EDGE_ZONE_PX / 2) {
-          closePhaseRef.current = "idle";
-          return;
-        } else {
-          return;
-        }
-      }
-
-      event.preventDefault();
-
-      const sidebarWidth = getSidebarWidth();
-      if (sidebarWidth === 0) return;
-
-      if (side === "right") {
-        // Closing right sidebar: positive translateX pushes it right
-        const clamped = Math.max(0, Math.min(deltaX, sidebarWidth));
-        closeTranslateXRef.current = clamped;
-        setSidebarTranslateX(clamped);
-      } else {
-        // Closing left sidebar: negative translateX pushes it left
-        const clamped = Math.min(0, Math.max(deltaX, -sidebarWidth));
-        closeTranslateXRef.current = clamped;
-        setSidebarTranslateX(clamped);
-      }
-    }
-
-    function handleTouchEnd() {
-      if (closePhaseRef.current !== "swiping") {
-        closePhaseRef.current = "idle";
-        return;
-      }
-
-      const sidebarWidth = getSidebarWidth();
-      const threshold = sidebarWidth * SIDEBAR_SWIPE_THRESHOLD_PERCENT;
-
-      const movedDistance = Math.abs(closeTranslateXRef.current);
-      if (movedDistance >= threshold) {
-        onCloseRef.current();
-      }
-
-      closePhaseRef.current = "idle";
-      closeTranslateXRef.current = 0;
-      setSidebarTranslateX(0);
-    }
-
-    sidebarElement.addEventListener("touchstart", handleTouchStart, {
-      passive: true,
-    });
-    sidebarElement.addEventListener("touchmove", handleTouchMove, {
-      passive: false,
-    });
-    sidebarElement.addEventListener("touchend", handleTouchEnd, {
-      passive: true,
-    });
-
-    return () => {
-      sidebarElement.removeEventListener("touchstart", handleTouchStart);
-      sidebarElement.removeEventListener("touchmove", handleTouchMove);
-      sidebarElement.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [isDesktop, side, sidebarRef]);
-
-  return { sidebarTranslateX };
+  return { sidebarTranslateX, isSwiping };
 }
