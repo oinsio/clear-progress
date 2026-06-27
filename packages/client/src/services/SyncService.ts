@@ -1,5 +1,6 @@
 // implements FR6, FR7 of localstorage-refactor
 import type {
+  PullRequest,
   PullResponse,
   PushResponse,
   SyncAdapter,
@@ -91,11 +92,13 @@ export class SyncService {
 
     let isFirstIteration = true;
     let pullResponse: PullResponse;
+    let cursors: PullRequest["cursors"];
 
     do {
       pullResponse = await this.syncAdapter.pull({
         since_revision: sinceRevision,
         settings_updated_at: isFirstIteration ? settingsUpdatedAt : undefined,
+        cursors,
       });
 
       if (!pullResponse.ok) {
@@ -128,6 +131,7 @@ export class SyncService {
       }
 
       sinceRevision = pullResponse.current_revision;
+      cursors = pullResponse.cursors;
       isFirstIteration = false;
     } while (pullResponse.has_more);
 

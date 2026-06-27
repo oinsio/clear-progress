@@ -1,5 +1,6 @@
 // implements FR7 of fix-pull-pagination
 
+import type { PullResponse } from "@clear-progress/contract";
 import {
   createWireGoal,
   createWireTask,
@@ -58,7 +59,7 @@ describe("InMemorySyncAdapter pagination", () => {
   });
 
   describe("multiple rounds return all records", () => {
-    it("should return all records across 3 pulls (10+10+5)", async () => {
+    it("should return all records across 3 pulls (10+10+5) using composite cursors", async () => {
       const TOTAL_TASKS = 25;
       const MAX_ROWS = 10;
       const adapter = new InMemorySyncAdapter({ maxRowsPerTable: MAX_ROWS });
@@ -67,21 +68,75 @@ describe("InMemorySyncAdapter pagination", () => {
         await adapter.push({ tasks: [createWireTask()] });
       }
 
-      const allTasks = [];
+      const allTasks: PullResponse["tasks"] = [];
       let sinceRevision = 0;
+      let cursors: PullResponse["cursors"];
       let pullCount = 0;
 
+      // eslint-disable-next-line no-constant-condition
       while (true) {
-        const response = await adapter.pull({ since_revision: sinceRevision });
+        const response = await adapter.pull({
+          since_revision: sinceRevision,
+          cursors,
+        });
         allTasks.push(...response.tasks);
         pullCount++;
         sinceRevision = response.current_revision;
+        cursors = response.cursors;
 
         if (!response.has_more) break;
       }
 
       expect(allTasks).toHaveLength(TOTAL_TASKS);
       expect(pullCount).toBe(3);
+    });
+  });
+
+  describe("same revision records fetched via composite cursor", () => {
+    it("should fetch all 15 records with same revision across 2 rounds", async () => {
+      const TOTAL_TASKS = 15;
+      const MAX_ROWS = 10;
+      const adapter = new InMemorySyncAdapter({ maxRowsPerTable: MAX_ROWS });
+
+      // Push all 15 tasks in a single push — they all get the same revision
+      const tasks = Array.from({ length: TOTAL_TASKS }, () => createWireTask());
+      await adapter.push({ tasks });
+
+      const allTasks: PullResponse["tasks"] = [];
+      let sinceRevision = 0;
+      let cursors: PullResponse["cursors"];
+      let pullCount = 0;
+      let isFirstPull = true;
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const response = await adapter.pull({
+          since_revision: sinceRevision,
+          cursors,
+        });
+        allTasks.push(...response.tasks);
+        pullCount++;
+
+        if (isFirstPull) {
+          expect(response.has_more).toBe(true);
+          expect(response.tasks).toHaveLength(MAX_ROWS);
+          expect(response.cursors).toBeDefined();
+          expect(response.cursors!["tasks"]).toBeDefined();
+          isFirstPull = false;
+        }
+
+        sinceRevision = response.current_revision;
+        cursors = response.cursors;
+
+        if (!response.has_more) break;
+      }
+
+      expect(allTasks).toHaveLength(TOTAL_TASKS);
+      expect(pullCount).toBe(2);
+
+      // Verify no duplicates
+      const uniqueIds = new Set(allTasks.map((task) => task.id));
+      expect(uniqueIds.size).toBe(TOTAL_TASKS);
     });
   });
 
