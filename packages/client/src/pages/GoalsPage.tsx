@@ -15,15 +15,12 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
 import { GoalItem } from "@/components/goals/GoalItem";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useGoals } from "@/hooks/useGoals";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import type { Goal } from "@/types/entities";
@@ -89,8 +86,6 @@ const defaultTaskService = new TaskService(
 export default function GoalsPage() {
   const { t } = useTranslation();
   const { goals, isLoading, createGoal, reorderGoals } = useGoals();
-  const { panelSide } = usePanelSide();
-  const { effectiveState, isNarrow, hasHover } = useSidebarState();
   const navigate = useNavigate();
   const sensors = useDndSensors();
 
@@ -103,19 +98,6 @@ export default function GoalsPage() {
   useEffect(() => {
     void defaultTaskService.getGoalTaskCounts().then(setGoalTaskCounts);
   }, []);
-
-  const handleModeChange = useSidebarNavigation();
-
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
-  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
-
-  // FR17: Close drawer when transitioning from narrow to wide
-  useEffect(() => {
-    if (!isNarrow) {
-      setIsDrawerOpen(false);
-    }
-  }, [isNarrow]);
 
   const handleGoalNavigate = useCallback(
     (id: string) => {
@@ -164,10 +146,7 @@ export default function GoalsPage() {
   );
 
   return (
-    <div
-      data-testid="goals-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="goals">
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar
@@ -219,28 +198,6 @@ export default function GoalsPage() {
           </div>
         </main>
       </div>
-
-      {/* FR8: Backdrop for drawer mode */}
-      {isNarrow && !hasHover && isDrawerOpen && (
-        <div
-          data-testid="sidebar-backdrop"
-          className="fixed inset-0 bg-black/40 z-10"
-          aria-label={t("filter.closeSidebar")}
-          role="button"
-          tabIndex={-1}
-          onClick={closeDrawer}
-        />
-      )}
-
-      {/* Right filter panel */}
-      <Sidebar
-        mode="goals"
-        effectiveState={effectiveState}
-        isDrawerOpen={isDrawerOpen}
-        side={panelSide}
-        onAutoCollapse={handleAutoCollapse}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

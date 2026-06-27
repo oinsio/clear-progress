@@ -65,4 +65,34 @@ describe("usePanelSide", () => {
 
     expect(result.current.panelSide).toBe("right");
   });
+
+  it("should lock in platform default on first render so resize does not flip side", () => {
+    mockIsDesktop = true;
+
+    const { result, rerender } = renderHook(() => usePanelSide());
+
+    expect(result.current.panelSide).toBe("left");
+    expect(localStorage.getItem(STORAGE_KEYS.PANEL_SIDE)).toBe("left");
+
+    // Simulate window resize crossing the breakpoint
+    mockIsDesktop = false;
+    rerender();
+
+    expect(result.current.panelSide).toBe("left");
+  });
+
+  it("should lock in mobile default when first opened on mobile", () => {
+    mockIsDesktop = false;
+
+    const { result, rerender } = renderHook(() => usePanelSide());
+
+    expect(result.current.panelSide).toBe("right");
+    expect(localStorage.getItem(STORAGE_KEYS.PANEL_SIDE)).toBe("right");
+
+    // Simulate window resize to desktop
+    mockIsDesktop = true;
+    rerender();
+
+    expect(result.current.panelSide).toBe("right");
+  });
 });

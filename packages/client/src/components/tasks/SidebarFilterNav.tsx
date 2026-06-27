@@ -94,32 +94,34 @@ export function SidebarFilterNav({
             ),
           )}
         </nav>
+        {isControlVisible &&
+          sidebarBehaviorMode &&
+          onSidebarBehaviorModeChange && (
+            <div
+              className={cn(
+                "relative px-2 py-1 flex items-center",
+                side === "right" && "justify-end",
+              )}
+            >
+              <button
+                type="button"
+                aria-label={t("sidebar.control")}
+                data-testid="sidebar-control-trigger"
+                onClick={handleTogglePopover}
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors text-white/70 hover:bg-white/10 hover:text-white"
+              >
+                <PanelIcon className="w-5 h-5" aria-hidden="true" />
+              </button>
+              <SidebarControlPopover
+                currentMode={sidebarBehaviorMode}
+                onModeChange={onSidebarBehaviorModeChange}
+                isOpen={isPopoverOpen}
+                onClose={handleClosePopover}
+                side={side}
+              />
+            </div>
+          )}
         <div className="px-2 py-2 border-t border-white/25 flex flex-col gap-1">
-          {isControlVisible &&
-            sidebarBehaviorMode &&
-            onSidebarBehaviorModeChange && (
-              <div className="relative">
-                <button
-                  type="button"
-                  aria-label={t("sidebar.control")}
-                  data-testid="sidebar-control-trigger"
-                  onClick={handleTogglePopover}
-                  className="w-full flex items-center gap-3 px-3 h-10 rounded-xl text-sm font-medium transition-colors text-left text-white/80 hover:bg-white/10 hover:text-white"
-                >
-                  <PanelIcon
-                    className="w-5 h-5 flex-shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span>{t("sidebar.control")}</span>
-                </button>
-                <SidebarControlPopover
-                  currentMode={sidebarBehaviorMode}
-                  onModeChange={onSidebarBehaviorModeChange}
-                  isOpen={isPopoverOpen}
-                  onClose={handleClosePopover}
-                />
-              </div>
-            )}
           <button
             type="button"
             aria-label={t("filter.search")}
@@ -151,28 +153,30 @@ export function SidebarFilterNav({
           ),
         )}
       </nav>
+      {isControlVisible &&
+        sidebarBehaviorMode &&
+        onSidebarBehaviorModeChange && (
+          <div className="relative flex justify-center py-1">
+            <button
+              type="button"
+              aria-label={t("sidebar.control")}
+              data-testid="sidebar-control-trigger"
+              onClick={handleTogglePopover}
+              className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors text-white/70 hover:bg-white/10 hover:text-white"
+            >
+              <PanelIcon className="w-5 h-5" aria-hidden="true" />
+            </button>
+            <SidebarControlPopover
+              currentMode={sidebarBehaviorMode}
+              onModeChange={onSidebarBehaviorModeChange}
+              isOpen={isPopoverOpen}
+              onClose={handleClosePopover}
+              isCollapsed={true}
+              side={side}
+            />
+          </div>
+        )}
       <div className="flex flex-col items-center py-2 border-t border-white/25 gap-1">
-        {isControlVisible &&
-          sidebarBehaviorMode &&
-          onSidebarBehaviorModeChange && (
-            <div className="relative">
-              <button
-                type="button"
-                aria-label={t("sidebar.control")}
-                data-testid="sidebar-control-trigger"
-                onClick={handleTogglePopover}
-                className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors text-white/70 hover:bg-white/10 hover:text-white"
-              >
-                <PanelIcon className="w-5 h-5" aria-hidden="true" />
-              </button>
-              <SidebarControlPopover
-                currentMode={sidebarBehaviorMode}
-                onModeChange={onSidebarBehaviorModeChange}
-                isOpen={isPopoverOpen}
-                onClose={handleClosePopover}
-              />
-            </div>
-          )}
         <button
           type="button"
           aria-label={t("filter.search")}

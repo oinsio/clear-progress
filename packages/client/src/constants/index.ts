@@ -281,8 +281,12 @@ export const SIDEBAR_MODE_I18N_KEYS: Record<SidebarMode, string> = {
   collapsed: "sidebar.modeCollapsed",
   "expand-on-hover": "sidebar.modeExpandOnHover",
 };
-export const SIDEBAR_HOVER_OPEN_DELAY_MS = 250;
+export const SIDEBAR_HOVER_OPEN_DELAY_MS = 120;
 export const SIDEBAR_HOVER_CLOSE_DELAY_MS = 150;
+export const SIDEBAR_HOVER_TRANSITION_MS = 200;
+
+export const SIDEBAR_DRAWER_TRANSITION_MS = 200;
+export const SIDEBAR_EXPANDED_WIDTH_PX = 208;
 
 // implements FR8, FR9 of improve-sidebar-ux
 export const SIDEBAR_SWIPE_EDGE_ZONE_PX = 24;

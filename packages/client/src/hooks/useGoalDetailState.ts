@@ -18,11 +18,9 @@ import { useGoalTasks } from "@/hooks/useGoalTasks";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePanelSplit } from "@/hooks/usePanelSplit";
 import { useShowHidden } from "@/hooks/useShowHidden";
 import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
 import { useTargetBox } from "@/hooks/useTargetBox";
 import { useTasksByBox } from "@/hooks/useTasksByBox";
 import { defaultTaskService } from "@/services/defaultServices";
@@ -65,8 +63,6 @@ export function useGoalDetailState() {
   const { contexts } = useContexts();
   const { categories } = useCategories();
   const { menuOrder } = useMenuOrder();
-  const { panelSide } = usePanelSide();
-  const { effectiveState: sidebarEffectiveState } = useSidebarState();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const isDesktop = useIsDesktop();
   const {
@@ -250,8 +246,6 @@ export function useGoalDetailState() {
     ratio,
     splitContainerRef,
     handleResizeMouseDown,
-    panelSide,
-    sidebarEffectiveState,
     // focus
     isFocusMode,
     focusOpacity,

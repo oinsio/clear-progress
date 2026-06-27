@@ -19,6 +19,12 @@ export function usePanelSide(): UsePanelSideReturn {
   const isDesktop = useIsDesktop();
   const platformDefault = isDesktop ? DESKTOP_PANEL_SIDE : MOBILE_PANEL_SIDE;
 
+  // Lock in the platform default on first visit so resizing the window
+  // does not flip the sidebar to the other side's default.
+  if (localStorage.getItem(STORAGE_KEYS.PANEL_SIDE) === null) {
+    localStorage.setItem(STORAGE_KEYS.PANEL_SIDE, platformDefault);
+  }
+
   const [panelSide, setPanelSide] = usePreference<PanelSide>({
     type: "enum",
     key: STORAGE_KEYS.PANEL_SIDE,

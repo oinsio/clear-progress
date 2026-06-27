@@ -11,7 +11,12 @@ import {
   Trash2,
 } from "lucide-react";
 import type * as React from "react";
-import { ROUTES } from "@/constants";
+import {
+  ROUTES,
+  SIDEBAR_DRAWER_TRANSITION_MS,
+  SIDEBAR_EXPANDED_WIDTH_PX,
+  SIDEBAR_HOVER_TRANSITION_MS,
+} from "@/constants";
 import { useMenuOrder } from "@/hooks/useMenuOrder";
 import { cn } from "@/shared/lib/cn";
 import type {
@@ -120,6 +125,8 @@ export interface SidebarProps {
   sidebarBehaviorMode?: SidebarBehaviorMode;
   onSidebarBehaviorModeChange?: (mode: SidebarBehaviorMode) => void;
   isControlVisible?: boolean;
+  isMobileDrawer?: boolean;
+  isSwiping?: boolean;
 }
 
 /**
@@ -143,6 +150,8 @@ export function Sidebar({
   sidebarBehaviorMode,
   onSidebarBehaviorModeChange,
   isControlVisible = false,
+  isMobileDrawer = false,
+  isSwiping = false,
 }: SidebarProps) {
   const { menuOrder } = useMenuOrder();
 
@@ -155,25 +164,117 @@ export function Sidebar({
     ? "border-r border-accent/70"
     : "border-l border-accent/70";
 
-  const isHoverOverlay = effectiveState === "hover-ready" && isHoverExpanded;
+  const isHoverReady = effectiveState === "hover-ready";
 
-  const isExpanded =
-    effectiveState === "expanded" || isDrawerOpen || isHoverOverlay;
+  const isExpanded = effectiveState === "expanded" || isDrawerOpen;
 
-  const shouldAttachHoverHandlers = effectiveState === "hover-ready";
+  // Mobile drawer: collapsed bar always visible + expanded overlay always in DOM
+  if (isMobileDrawer) {
+    const offScreenX = isLeft
+      ? -SIDEBAR_EXPANDED_WIDTH_PX
+      : SIDEBAR_EXPANDED_WIDTH_PX;
+    const targetX = isDrawerOpen ? 0 : offScreenX;
+    const drawerTranslateX =
+      isSwiping && sidebarTranslateX !== 0 ? sidebarTranslateX : targetX;
 
-  // Implements FR5 of improve-sidebar-ux — hover-expanded overlay
-  if (isHoverOverlay) {
     return (
       <div
         className={cn(
           "flex flex-shrink-0",
           isLeft && "order-first flex-row-reverse",
         )}
-        {...(shouldAttachHoverHandlers ? hoverHandlers : {})}
       >
-        {/* Collapsed placeholder: keeps layout stable while overlay is shown */}
-        <div className={cn("w-14 flex-shrink-0 bg-accent", panelBorder)} />
+        {/* Collapsed bar — always visible */}
+        <div
+          className={cn(
+            "w-14 flex flex-col items-center bg-accent",
+            panelBorder,
+          )}
+          data-testid="sidebar-collapsed"
+        >
+          <SidebarSyncBlock isExpanded={false} side={side} />
+          <SidebarFilterNav
+            isExpanded={false}
+            mode={mode}
+            activeFocusedGoalId={activeFocusedGoalId}
+            visibleFilterItems={visibleFilterItems}
+            onModeChange={onModeChange}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
+          />
+        </div>
+        {/* Expanded overlay — always in DOM, animated via transform */}
+        <div
+          ref={containerRef}
+          className={cn(
+            "w-52 flex flex-col bg-accent overflow-hidden",
+            "absolute top-0 bottom-0 z-20",
+            isLeft ? "left-0" : "right-0",
+            panelBorder,
+          )}
+          style={{
+            transform: `translateX(${drawerTranslateX}px)`,
+            transition: isSwiping
+              ? "none"
+              : `transform ${SIDEBAR_DRAWER_TRANSITION_MS}ms ease-out`,
+          }}
+          data-testid="sidebar-expanded"
+          aria-hidden={!isDrawerOpen && !isSwiping}
+        >
+          <SidebarSyncBlock isExpanded={true} side={side} />
+          <SidebarFilterNav
+            isExpanded={true}
+            mode={mode}
+            activeFocusedGoalId={activeFocusedGoalId}
+            visibleFilterItems={visibleFilterItems}
+            onModeChange={onModeChange}
+            onAutoCollapse={onAutoCollapse}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Hover-ready state: collapsed sidebar + animated overlay
+  if (isHoverReady) {
+    const overlayTranslateX = isHoverExpanded ? 0 : isLeft ? -208 : 208;
+
+    return (
+      <div
+        className={cn(
+          "flex flex-shrink-0",
+          isLeft && "order-first flex-row-reverse",
+        )}
+        {...hoverHandlers}
+      >
+        {/* Collapsed sidebar — always visible */}
+        <div
+          className={cn(
+            "w-14 flex flex-col items-center bg-accent",
+            panelBorder,
+          )}
+          data-testid="sidebar-collapsed"
+        >
+          <SidebarSyncBlock isExpanded={false} side={side} />
+          <SidebarFilterNav
+            isExpanded={false}
+            mode={mode}
+            activeFocusedGoalId={activeFocusedGoalId}
+            visibleFilterItems={visibleFilterItems}
+            onModeChange={onModeChange}
+            side={side}
+            sidebarBehaviorMode={sidebarBehaviorMode}
+            onSidebarBehaviorModeChange={onSidebarBehaviorModeChange}
+            isControlVisible={isControlVisible}
+          />
+        </div>
+        {/* Hover overlay — always in DOM, animated via transform */}
         <div
           ref={containerRef}
           className={cn(
@@ -182,10 +283,14 @@ export function Sidebar({
             isLeft ? "left-0" : "right-0",
             panelBorder,
           )}
+          style={{
+            transform: `translateX(${overlayTranslateX}px)`,
+            transition: `transform ${SIDEBAR_HOVER_TRANSITION_MS}ms ease-out`,
+          }}
           data-testid="sidebar-hover-expanded"
+          aria-hidden={!isHoverExpanded}
         >
           <SidebarSyncBlock isExpanded={true} side={side} />
-          {/* Implements FR6 of improve-sidebar-ux — nav click does NOT collapse */}
           <SidebarFilterNav
             isExpanded={true}
             mode={mode}
@@ -253,13 +358,9 @@ export function Sidebar({
         "flex flex-shrink-0",
         isLeft && "order-first flex-row-reverse",
       )}
-      {...(shouldAttachHoverHandlers ? hoverHandlers : {})}
     >
       <div
-        className={cn(
-          "w-14 flex flex-col items-center bg-accent overflow-hidden",
-          panelBorder,
-        )}
+        className={cn("w-14 flex flex-col items-center bg-accent", panelBorder)}
         data-testid="sidebar-collapsed"
       >
         <SidebarSyncBlock isExpanded={false} side={side} />

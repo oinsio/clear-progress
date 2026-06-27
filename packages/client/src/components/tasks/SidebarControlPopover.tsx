@@ -11,6 +11,8 @@ interface SidebarControlPopoverProps {
   onModeChange: (mode: SidebarMode) => void;
   isOpen: boolean;
   onClose: () => void;
+  isCollapsed?: boolean;
+  side?: "left" | "right";
 }
 
 /**
@@ -24,6 +26,8 @@ export function SidebarControlPopover({
   onModeChange,
   isOpen,
   onClose,
+  isCollapsed = false,
+  side = "right",
 }: SidebarControlPopoverProps) {
   const { t } = useTranslation();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -40,6 +44,22 @@ export function SidebarControlPopover({
       focusCurrentOption();
     }
   }, [isOpen, focusCurrentOption]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -83,8 +103,14 @@ export function SidebarControlPopover({
       aria-label={t("sidebar.control")}
       data-testid="sidebar-control-popover"
       onKeyDown={handleKeyDown}
-      className="absolute bottom-full left-0 mb-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+      className={cn(
+        "absolute bottom-full mb-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50",
+        isCollapsed && side === "right" ? "right-0" : "left-0",
+      )}
     >
+      <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+        {t("sidebar.control")}
+      </div>
       {SIDEBAR_MODES.map((mode, index) => {
         const isActive = mode === currentMode;
         return (

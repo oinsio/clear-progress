@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { GoalItem } from "@/components/goals/GoalItem";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
 import { ROUTES } from "@/constants";
@@ -18,11 +18,8 @@ import { useCategories } from "@/hooks/useCategories";
 import { useContexts } from "@/hooks/useContexts";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { useSearch } from "@/hooks/useSearch";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
 import { systemClock } from "@/lib/temporal";
 import {
   defaultIdeaService,
@@ -44,22 +41,9 @@ export default function SearchPage() {
   const { goals: allGoals } = useGoals();
   const { contexts } = useContexts();
   const { categories } = useCategories();
-  const { panelSide } = usePanelSide();
-  const { effectiveState, isNarrow, hasHover } = useSidebarState();
   const { isFocusMode, focusOpacity } = useFocusMode();
   const navigate = useNavigate();
-  const handleModeChange = useSidebarNavigation();
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
-  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
-
-  // FR17: Close drawer when transitioning from narrow to wide
-  useEffect(() => {
-    if (!isNarrow) {
-      setIsDrawerOpen(false);
-    }
-  }, [isNarrow]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -176,10 +160,7 @@ export default function SearchPage() {
   const hasQuery = searchQuery.length > 0;
 
   return (
-    <div
-      data-testid="search-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="search">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Search header */}
@@ -315,28 +296,6 @@ export default function SearchPage() {
             />
           ) : null;
         })()}
-
-      {/* FR8: Backdrop for drawer mode */}
-      {isNarrow && !hasHover && isDrawerOpen && (
-        <div
-          data-testid="sidebar-backdrop"
-          className="fixed inset-0 bg-black/40 z-10"
-          aria-label={t("filter.closeSidebar")}
-          role="button"
-          tabIndex={-1}
-          onClick={closeDrawer}
-        />
-      )}
-
-      {/* Right filter panel */}
-      <Sidebar
-        mode="search"
-        effectiveState={effectiveState}
-        isDrawerOpen={isDrawerOpen}
-        side={panelSide}
-        onAutoCollapse={handleAutoCollapse}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

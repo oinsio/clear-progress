@@ -1,8 +1,9 @@
 import { Clipboard, Cloud, Link, Monitor, Palette } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { AccountSyncSection } from "@/components/settings/AccountSyncSection";
 import { LookAndFeelSection } from "@/components/settings/LookAndFeelSection";
 import {
@@ -12,12 +13,8 @@ import {
 import { ShareAppSection } from "@/components/settings/ShareAppSection";
 import { TasksSection } from "@/components/settings/TasksSection";
 import { WorkspaceSection } from "@/components/settings/WorkspaceSection";
-import { Sidebar } from "@/components/tasks/Sidebar";
 import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
-import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
 import {
   clearOauthReturnFlag,
   isOauthReturn,
@@ -30,7 +27,6 @@ import {
  */
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const { effectiveState, isNarrow, hasHover } = useSidebarState();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -84,20 +80,6 @@ export default function SettingsPage() {
     }
   }, [accessToken, navigate]);
 
-  const { panelSide } = usePanelSide();
-  const handleModeChange = useSidebarNavigation();
-
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
-  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
-
-  // FR17: Close drawer when transitioning from narrow to wide
-  useEffect(() => {
-    if (!isNarrow) {
-      setIsDrawerOpen(false);
-    }
-  }, [isNarrow]);
-
   /** Implements FR13 of improve-sidebar-ux */
   const initialExpandedSection =
     (location.state as { expandSection?: string })?.expandSection ?? undefined;
@@ -130,10 +112,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div
-      data-testid="settings-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode={null}>
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto">
@@ -158,28 +137,6 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
-
-      {/* FR8: Backdrop for drawer mode */}
-      {isNarrow && !hasHover && isDrawerOpen && (
-        <div
-          data-testid="sidebar-backdrop"
-          className="fixed inset-0 bg-black/40 z-10"
-          aria-label={t("filter.closeSidebar")}
-          role="button"
-          tabIndex={-1}
-          onClick={closeDrawer}
-        />
-      )}
-
-      {/* Right panel — same as on main page */}
-      <Sidebar
-        mode={null}
-        effectiveState={effectiveState}
-        isDrawerOpen={isDrawerOpen}
-        side={panelSide}
-        onAutoCollapse={handleAutoCollapse}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

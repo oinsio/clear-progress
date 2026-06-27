@@ -6,17 +6,14 @@ import {
   Trash2,
 } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
-import { Sidebar } from "@/components/tasks/Sidebar";
 import { useDeletedEntities } from "@/hooks/useDeletedEntities";
-import { usePanelSide } from "@/hooks/usePanelSide";
 import { usePurge } from "@/hooks/usePurge";
 import { useRestoreEntity } from "@/hooks/useRestoreEntity";
 import { useSectionCollapse } from "@/hooks/useSectionCollapse";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
 import { cn } from "@/shared/lib/cn";
 
 const SECTION_KEY_TASKS = "deleted-tasks";
@@ -109,8 +106,6 @@ function DeletedSection<T extends { id: string }>({
 
 export default function DeletedPage() {
   const { t } = useTranslation();
-  const { panelSide } = usePanelSide();
-  const { effectiveState, isNarrow, hasHover } = useSidebarState();
   const {
     tasks,
     goals,
@@ -129,18 +124,7 @@ export default function DeletedPage() {
     restoreCategory,
     restoreChecklistItem,
   } = useRestoreEntity();
-  const handleModeChange = useSidebarNavigation();
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
-  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
-
-  // FR17: Close drawer when transitioning from narrow to wide
-  useEffect(() => {
-    if (!isNarrow) {
-      setIsDrawerOpen(false);
-    }
-  }, [isNarrow]);
   const { purge, isPurging } = usePurge();
   const [showPurgeDialog, setShowPurgeDialog] = useState(false);
   const [purgeError, setPurgeError] = useState<string | null>(null);
@@ -169,10 +153,7 @@ export default function DeletedPage() {
   };
 
   return (
-    <div
-      data-testid="deleted-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode={null}>
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2 bg-white">
           <div className="flex items-center gap-2">
@@ -440,27 +421,6 @@ export default function DeletedPage() {
         </main>
       </div>
 
-      {/* FR8: Backdrop for drawer mode */}
-      {isNarrow && !hasHover && isDrawerOpen && (
-        <div
-          data-testid="sidebar-backdrop"
-          className="fixed inset-0 bg-black/40 z-10"
-          aria-label={t("filter.closeSidebar")}
-          role="button"
-          tabIndex={-1}
-          onClick={closeDrawer}
-        />
-      )}
-
-      <Sidebar
-        mode={null}
-        effectiveState={effectiveState}
-        isDrawerOpen={isDrawerOpen}
-        side={panelSide}
-        onAutoCollapse={handleAutoCollapse}
-        onModeChange={handleModeChange}
-      />
-
       {showPurgeDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
@@ -508,6 +468,6 @@ export default function DeletedPage() {
           </div>
         </div>
       )}
-    </div>
+    </SidebarShell>
   );
 }

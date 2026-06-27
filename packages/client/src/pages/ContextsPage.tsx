@@ -14,7 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
@@ -22,8 +22,6 @@ import { useContexts } from "@/hooks/useContexts";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
@@ -104,10 +102,8 @@ function SortableContextItem({
 export default function ContextsPage() {
   const { t } = useTranslation();
   const { contexts, isLoading, createContext, reorderContexts } = useContexts();
-  const { panelSide } = usePanelSide();
   const navigate = useNavigate();
   const sensors = useDndSensors();
-  const { effectiveState, isNarrow, hasHover } = useSidebarState();
 
   const [contextTaskCounts, setContextTaskCounts] = useState<
     Record<string, number>
@@ -118,16 +114,6 @@ export default function ContextsPage() {
   useEffect(() => {
     void defaultTaskService.getContextTaskCounts().then(setContextTaskCounts);
   }, []);
-
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
-
-  // FR17: Close drawer when transitioning from narrow to wide
-  useEffect(() => {
-    if (!isNarrow) {
-      setIsDrawerOpen(false);
-    }
-  }, [isNarrow]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -160,9 +146,6 @@ export default function ContextsPage() {
     [activeContexts, reorderContexts],
   );
 
-  const handleModeChange = useSidebarNavigation();
-  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
-
   const handleSubmit = useCallback(
     (name: string) => {
       void createContext(name);
@@ -171,10 +154,7 @@ export default function ContextsPage() {
   );
 
   return (
-    <div
-      data-testid="contexts-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="contexts">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar
@@ -226,28 +206,6 @@ export default function ContextsPage() {
           </div>
         </main>
       </div>
-
-      {/* FR8: Backdrop for drawer mode */}
-      {isNarrow && !hasHover && isDrawerOpen && (
-        <div
-          data-testid="sidebar-backdrop"
-          className="fixed inset-0 bg-black/40 z-10"
-          aria-label={t("filter.closeSidebar")}
-          role="button"
-          tabIndex={-1}
-          onClick={closeDrawer}
-        />
-      )}
-
-      {/* Right filter panel */}
-      <Sidebar
-        mode="contexts"
-        effectiveState={effectiveState}
-        isDrawerOpen={isDrawerOpen}
-        side={panelSide}
-        onAutoCollapse={handleAutoCollapse}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }

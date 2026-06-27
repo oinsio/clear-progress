@@ -13,7 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CommandBar } from "@/components/command-bar";
-import { Sidebar } from "@/components/tasks/Sidebar";
+import { SidebarShell } from "@/components/layout/SidebarShell";
 import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
@@ -21,8 +21,6 @@ import { useCategories } from "@/hooks/useCategories";
 import { useDndSensors } from "@/hooks/useDndSensors";
 import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
-import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
 import { generateKeyBetween } from "@/services/SortOrderService";
 import { TaskService } from "@/services/TaskService";
 import { cn } from "@/shared/lib/cn";
@@ -104,7 +102,6 @@ export default function CategoriesPage() {
   const { t } = useTranslation();
   const { categories, isLoading, createCategory, reorderCategories } =
     useCategories();
-  const { panelSide } = usePanelSide();
   const navigate = useNavigate();
 
   const sensors = useDndSensors();
@@ -112,17 +109,6 @@ export default function CategoriesPage() {
   const [categoryTaskCounts, setCategoryTaskCounts] = useState<
     Record<string, number>
   >({});
-  const { effectiveState, isNarrow, hasHover } = useSidebarState();
-
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const closeDrawer = useCallback(() => setIsDrawerOpen(false), []);
-
-  // FR17: Close drawer when transitioning from narrow to wide
-  useEffect(() => {
-    if (!isNarrow) {
-      setIsDrawerOpen(false);
-    }
-  }, [isNarrow]);
 
   const activeCategories = categories.filter(
     (category) => !category.is_deleted,
@@ -163,9 +149,6 @@ export default function CategoriesPage() {
     [activeCategories, reorderCategories],
   );
 
-  const handleModeChange = useSidebarNavigation();
-  const handleAutoCollapse = isDrawerOpen ? closeDrawer : undefined;
-
   const handleSubmit = useCallback(
     (name: string) => {
       void createCategory(name);
@@ -174,10 +157,7 @@ export default function CategoriesPage() {
   );
 
   return (
-    <div
-      data-testid="categories-page"
-      className="relative flex flex-1 overflow-hidden bg-white"
-    >
+    <SidebarShell mode="categories">
       {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <CommandBar
@@ -229,28 +209,6 @@ export default function CategoriesPage() {
           </div>
         </main>
       </div>
-
-      {/* FR8: Backdrop for drawer mode */}
-      {isNarrow && !hasHover && isDrawerOpen && (
-        <div
-          data-testid="sidebar-backdrop"
-          className="fixed inset-0 bg-black/40 z-10"
-          aria-label={t("filter.closeSidebar")}
-          role="button"
-          tabIndex={-1}
-          onClick={closeDrawer}
-        />
-      )}
-
-      {/* Right filter panel — full height */}
-      <Sidebar
-        mode="categories"
-        effectiveState={effectiveState}
-        isDrawerOpen={isDrawerOpen}
-        side={panelSide}
-        onAutoCollapse={handleAutoCollapse}
-        onModeChange={handleModeChange}
-      />
-    </div>
+    </SidebarShell>
   );
 }
