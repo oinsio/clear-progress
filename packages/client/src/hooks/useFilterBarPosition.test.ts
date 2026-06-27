@@ -1,4 +1,5 @@
 // implements FR7 of improve-sidebar-ux
+// implements FR1, FR2, UX3 of fix-command-bar-position-drift
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_KEYS } from "@/constants";
@@ -66,5 +67,70 @@ describe("useFilterBarPosition", () => {
     const { result } = renderHook(() => useFilterBarPosition());
 
     expect(result.current.filterBarPosition).toBe("bottom");
+  });
+
+  it("should persist desktop default to localStorage on first visit", () => {
+    mockIsDesktop = true;
+
+    renderHook(() => useFilterBarPosition());
+
+    expect(localStorage.getItem(STORAGE_KEYS.FILTER_BAR_POSITION)).toBe("top");
+  });
+
+  it("should persist mobile default to localStorage on first visit", () => {
+    mockIsDesktop = false;
+
+    renderHook(() => useFilterBarPosition());
+
+    expect(localStorage.getItem(STORAGE_KEYS.FILTER_BAR_POSITION)).toBe(
+      "bottom",
+    );
+  });
+
+  it("should lock in platform default on first render so resize does not flip position", () => {
+    mockIsDesktop = true;
+
+    const { result, rerender } = renderHook(() => useFilterBarPosition());
+
+    expect(result.current.filterBarPosition).toBe("top");
+    expect(localStorage.getItem(STORAGE_KEYS.FILTER_BAR_POSITION)).toBe("top");
+
+    mockIsDesktop = false;
+    rerender();
+
+    expect(result.current.filterBarPosition).toBe("top");
+  });
+
+  it("should lock in mobile default when first opened on mobile", () => {
+    mockIsDesktop = false;
+
+    const { result, rerender } = renderHook(() => useFilterBarPosition());
+
+    expect(result.current.filterBarPosition).toBe("bottom");
+    expect(localStorage.getItem(STORAGE_KEYS.FILTER_BAR_POSITION)).toBe(
+      "bottom",
+    );
+
+    mockIsDesktop = true;
+    rerender();
+
+    expect(result.current.filterBarPosition).toBe("bottom");
+  });
+
+  it("should allow explicit user change to override locked-in value", () => {
+    mockIsDesktop = true;
+
+    const { result } = renderHook(() => useFilterBarPosition());
+
+    expect(result.current.filterBarPosition).toBe("top");
+
+    act(() => {
+      result.current.setFilterBarPosition("bottom");
+    });
+
+    expect(result.current.filterBarPosition).toBe("bottom");
+    expect(localStorage.getItem(STORAGE_KEYS.FILTER_BAR_POSITION)).toBe(
+      "bottom",
+    );
   });
 });

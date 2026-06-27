@@ -1,5 +1,6 @@
 // implements FR6, FR7 of localstorage-refactor
 // implements FR7 of improve-sidebar-ux
+// implements FR1, FR2 of fix-command-bar-position-drift
 import {
   DESKTOP_FILTER_BAR_POSITION,
   FILTER_BAR_POSITIONS,
@@ -20,6 +21,12 @@ export function useFilterBarPosition(): UseFilterBarPositionReturn {
   const platformDefault = isDesktop
     ? DESKTOP_FILTER_BAR_POSITION
     : MOBILE_FILTER_BAR_POSITION;
+
+  // Lock in the platform default on first visit so resizing the window
+  // does not flip the command bar to the other position's default.
+  if (localStorage.getItem(STORAGE_KEYS.FILTER_BAR_POSITION) === null) {
+    localStorage.setItem(STORAGE_KEYS.FILTER_BAR_POSITION, platformDefault);
+  }
 
   const [filterBarPosition, setFilterBarPosition] =
     usePreference<FilterBarPosition>({
