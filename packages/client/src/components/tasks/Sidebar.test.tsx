@@ -168,9 +168,10 @@ describe("Sidebar — layout states", () => {
       hoverHandlers: { onMouseEnter: vi.fn(), onMouseLeave: vi.fn() },
     });
     expect(screen.getByTestId("sidebar-collapsed")).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("sidebar-hover-expanded"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("sidebar-hover-expanded")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
   });
 
   it("should apply left side styles when side is left", () => {
