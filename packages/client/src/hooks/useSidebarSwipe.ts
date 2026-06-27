@@ -165,6 +165,7 @@ export function useSidebarSwipe({
     startYRef: React.MutableRefObject<number>,
     translateXRef: React.MutableRefObject<number>,
   ) {
+    // biome-ignore lint/correctness/useExhaustiveDependencies: nested hook pattern — refs are stable, isDesktop/side/sidebarRef are the real reactive deps from parent scope
     useEffect(() => {
       if (isDesktop) return;
 
@@ -197,7 +198,6 @@ export function useSidebarSwipe({
         document.removeEventListener("touchmove", handleTouchMove);
         document.removeEventListener("touchend", handleTouchEnd);
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isDesktop, side, sidebarRef]);
   }
 
