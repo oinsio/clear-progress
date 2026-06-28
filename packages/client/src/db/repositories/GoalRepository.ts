@@ -50,19 +50,19 @@ export class GoalRepository {
   }
 
   async getNeedingSync(): Promise<Goal[]> {
-    return db.goals.filter((goal) => goal.needsSync).toArray();
+    return db.goals.filter((goal) => goal.syncStatus === "pending").toArray();
   }
 
   async applyServerRecords(records: WireGoal[]): Promise<void> {
     await db.transaction("rw", db.goals, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.goals.get(serverRecord.id);
-        if (!localRecord?.needsSync) {
+        if (localRecord?.syncStatus !== "pending") {
           const goal: Goal = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,
             updated_at: serverRecord.updated_at as ISOTimestamp,
-            needsSync: false,
+            syncStatus: "synced" as const,
           };
           await db.goals.put(goal);
         }

@@ -50,19 +50,19 @@ export class IdeaRepository {
   }
 
   async getNeedingSync(): Promise<Idea[]> {
-    return db.ideas.filter((idea) => idea.needsSync).toArray();
+    return db.ideas.filter((idea) => idea.syncStatus === "pending").toArray();
   }
 
   async applyServerRecords(records: WireIdea[]): Promise<void> {
     await db.transaction("rw", db.ideas, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.ideas.get(serverRecord.id);
-        if (!localRecord?.needsSync) {
+        if (localRecord?.syncStatus !== "pending") {
           const idea: Idea = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,
             updated_at: serverRecord.updated_at as ISOTimestamp,
-            needsSync: false,
+            syncStatus: "synced" as const,
           };
           await db.ideas.put(idea);
         }

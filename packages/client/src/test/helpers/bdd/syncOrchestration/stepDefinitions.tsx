@@ -72,6 +72,7 @@ vi.mock("@/services/SyncService", () => {
     pull = mockPull;
     push = mockPush;
     resetAndPull = mockResetAndPull;
+    lastSyncAlerts: unknown[] = [];
   }
   return { SyncService: MockSyncService };
 });

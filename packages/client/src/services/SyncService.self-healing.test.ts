@@ -1,5 +1,31 @@
 // implements FR3, NFR-P1 of cascade-checklist-delete
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Skip Zod pre-validation — these tests use non-UUID IDs
+vi.mock("@/services/pushPreValidator", () => ({
+  preValidateRecords: (
+    tasks: unknown[],
+    goals: unknown[],
+    contexts: unknown[],
+    categories: unknown[],
+    checklistItems: unknown[],
+    ideas: unknown[],
+    attachments: unknown[],
+    settings: unknown[],
+  ) =>
+    Promise.resolve({
+      tasks,
+      goals,
+      contexts,
+      categories,
+      checklistItems,
+      ideas,
+      attachments,
+      settings,
+      alerts: [],
+    }),
+}));
+
 import { db } from "@/db/database";
 import {
   asMock,
@@ -43,52 +69,68 @@ describe("SyncService — self-healing orphan detection", () => {
     };
   }
 
+  async function executePush() {
+    const service = createService(ctx);
+    await service.push();
+  }
+
+  function getPushPayload() {
+    return asMock(ctx.mockSyncAdapter.push).mock.calls[0][0];
+  }
+
+  async function pushAndExpectAccepted(
+    task: ReturnType<typeof makeTask>,
+    validItem: ReturnType<typeof makeChecklistItem>,
+  ) {
+    setupPushResponse({
+      tasks: [{ id: task.id, status: "accepted" }],
+      checklist_items: [{ id: validItem.id, status: "accepted" }],
+    });
+
+    await executePush();
+
+    const pushPayload = getPushPayload();
+    expect(pushPayload.checklist_items).toHaveLength(1);
+    expect(pushPayload.checklist_items[0]).toMatchObject({ id: validItem.id });
+  }
+
   // implements FR3 of cascade-checklist-delete
   it("should remove orphaned checklist item from IndexedDB and exclude from push", async () => {
     const orphanItem = makeChecklistItem({
       id: "orphan-ci-1",
       task_id: "missing-task-id",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     setupOrphans([orphanItem]);
     await db.checklist_items.add(orphanItem);
 
-    const service = createService(ctx);
-    await service.push();
+    await executePush();
 
     const deletedItem = await db.checklist_items.get(orphanItem.id);
     expect(deletedItem).toBeUndefined();
 
-    expect(ctx.mockSyncAdapter.push).toHaveBeenCalledOnce();
-    const pushPayload = asMock(ctx.mockSyncAdapter.push).mock.calls[0][0];
-    expect(pushPayload.checklist_items).toHaveLength(0);
+    // No records left after orphan removal — push should not be called
+    expect(ctx.mockSyncAdapter.push).not.toHaveBeenCalled();
   });
 
   // implements FR3 of cascade-checklist-delete
   it("should preserve valid checklist items in push data", async () => {
-    const task = makeTask({ id: "existing-task-id", needsSync: true });
+    const task = makeTask({
+      id: "existing-task-id",
+      syncStatus: "pending" as const,
+    });
     const validItem = makeChecklistItem({
       id: "valid-ci-1",
       task_id: task.id,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     setupTaskWithItem(task, validItem);
     await db.tasks.add(task);
     await db.checklist_items.add(validItem);
 
-    setupPushResponse({
-      tasks: [{ id: task.id, status: "accepted" }],
-      checklist_items: [{ id: validItem.id, status: "accepted" }],
-    });
-
-    const service = createService(ctx);
-    await service.push();
-
-    const pushPayload = asMock(ctx.mockSyncAdapter.push).mock.calls[0][0];
-    expect(pushPayload.checklist_items).toHaveLength(1);
-    expect(pushPayload.checklist_items[0]).toMatchObject({ id: validItem.id });
+    await pushAndExpectAccepted(task, validItem);
 
     const itemInDb = await db.checklist_items.get(validItem.id);
     expect(itemInDb).toBeDefined();
@@ -99,13 +141,13 @@ describe("SyncService — self-healing orphan detection", () => {
     // Task exists in IndexedDB but does NOT need sync (not in push data)
     const existingTask = makeTask({
       id: "existing-task-not-in-push",
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
     // Checklist item references that task and DOES need sync
     const validItem = makeChecklistItem({
       id: "ci-with-existing-task",
       task_id: existingTask.id,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     // Only checklist item in push data, task is not in push
@@ -119,13 +161,12 @@ describe("SyncService — self-healing orphan detection", () => {
       checklist_items: [{ id: validItem.id, status: "accepted" }],
     });
 
-    const service = createService(ctx);
-    await service.push();
+    await executePush();
 
     const itemInDb = await db.checklist_items.get(validItem.id);
     expect(itemInDb).toBeDefined();
 
-    const pushPayload = asMock(ctx.mockSyncAdapter.push).mock.calls[0][0];
+    const pushPayload = getPushPayload();
     expect(pushPayload.checklist_items).toHaveLength(1);
     expect(pushPayload.checklist_items[0]).toMatchObject({
       id: validItem.id,
@@ -137,17 +178,17 @@ describe("SyncService — self-healing orphan detection", () => {
     const orphanItem1 = makeChecklistItem({
       id: "orphan-ci-batch-1",
       task_id: "missing-task-batch-1",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     const orphanItem2 = makeChecklistItem({
       id: "orphan-ci-batch-2",
       task_id: "missing-task-batch-2",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     const orphanItem3 = makeChecklistItem({
       id: "orphan-ci-batch-3",
       task_id: "missing-task-batch-3",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     setupOrphans([orphanItem1, orphanItem2, orphanItem3]);
@@ -155,8 +196,7 @@ describe("SyncService — self-healing orphan detection", () => {
 
     const bulkGetSpy = vi.spyOn(db.tasks, "bulkGet");
 
-    const service = createService(ctx);
-    await service.push();
+    await executePush();
 
     expect(bulkGetSpy).toHaveBeenCalledOnce();
     expect(bulkGetSpy).toHaveBeenCalledWith(
@@ -170,25 +210,30 @@ describe("SyncService — self-healing orphan detection", () => {
 
   // implements FR3 of cascade-checklist-delete
   it("should NOT call db.tasks.bulkGet when there are no checklist_items in push", async () => {
-    const task = makeTask({ id: "task-no-checklist", needsSync: true });
+    const task = makeTask({
+      id: "task-no-checklist",
+      syncStatus: "pending" as const,
+    });
 
     ctx.taskRepository = withNeedingSync(ctx.taskRepository, [task]);
 
     const bulkGetSpy = vi.spyOn(db.tasks, "bulkGet");
 
-    const service = createService(ctx);
-    await service.push();
+    await executePush();
 
     expect(bulkGetSpy).not.toHaveBeenCalled();
   });
 
   // implements FR3 of cascade-checklist-delete
   it("should NOT call db.checklist_items.bulkDelete when all task_ids exist in DB", async () => {
-    const task = makeTask({ id: "task-all-present", needsSync: true });
+    const task = makeTask({
+      id: "task-all-present",
+      syncStatus: "pending" as const,
+    });
     const checklistItem = makeChecklistItem({
       id: "ci-all-present",
       task_id: task.id,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     setupTaskWithItem(task, checklistItem);
@@ -202,12 +247,11 @@ describe("SyncService — self-healing orphan detection", () => {
 
     const bulkDeleteSpy = vi.spyOn(db.checklist_items, "bulkDelete");
 
-    const service = createService(ctx);
-    await service.push();
+    await executePush();
 
     expect(bulkDeleteSpy).not.toHaveBeenCalled();
 
-    const pushPayload = asMock(ctx.mockSyncAdapter.push).mock.calls[0][0];
+    const pushPayload = getPushPayload();
     expect(pushPayload.checklist_items).toHaveLength(1);
     expect(pushPayload.checklist_items[0]).toMatchObject({
       id: checklistItem.id,
@@ -216,11 +260,14 @@ describe("SyncService — self-healing orphan detection", () => {
 
   // implements FR3 of cascade-checklist-delete
   it("should NOT call db.tasks.bulkGet when all task_ids are already in push batch", async () => {
-    const task = makeTask({ id: "task-in-push-batch", needsSync: true });
+    const task = makeTask({
+      id: "task-in-push-batch",
+      syncStatus: "pending" as const,
+    });
     const checklistItem = makeChecklistItem({
       id: "ci-task-in-push-batch",
       task_id: task.id,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     setupTaskWithItem(task, checklistItem);
@@ -234,8 +281,7 @@ describe("SyncService — self-healing orphan detection", () => {
 
     const bulkGetSpy = vi.spyOn(db.tasks, "bulkGet");
 
-    const service = createService(ctx);
-    await service.push();
+    await executePush();
 
     // task_id === task.id is already in push batch → uniqueTaskIds is empty → bulkGet not called
     expect(bulkGetSpy).not.toHaveBeenCalled();
@@ -243,16 +289,19 @@ describe("SyncService — self-healing orphan detection", () => {
 
   // implements FR3 of cascade-checklist-delete
   it("should exclude orphan item from push payload while keeping valid item", async () => {
-    const task = makeTask({ id: "task-mixed-scenario", needsSync: true });
+    const task = makeTask({
+      id: "task-mixed-scenario",
+      syncStatus: "pending" as const,
+    });
     const validItem = makeChecklistItem({
       id: "valid-ci-mixed",
       task_id: task.id,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     const orphanItem = makeChecklistItem({
       id: "orphan-ci-mixed",
       task_id: "missing-task-id",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     await db.tasks.add(task);
@@ -266,17 +315,7 @@ describe("SyncService — self-healing orphan detection", () => {
     asMock(ctx.taskRepository.getById).mockResolvedValue(task);
     asMock(ctx.checklistRepository.getById).mockResolvedValue(validItem);
 
-    setupPushResponse({
-      tasks: [{ id: task.id, status: "accepted" }],
-      checklist_items: [{ id: validItem.id, status: "accepted" }],
-    });
-
-    const service = createService(ctx);
-    await service.push();
-
-    const pushPayload = asMock(ctx.mockSyncAdapter.push).mock.calls[0][0];
-    expect(pushPayload.checklist_items).toHaveLength(1);
-    expect(pushPayload.checklist_items[0]).toMatchObject({ id: validItem.id });
+    await pushAndExpectAccepted(task, validItem);
 
     const orphanInDb = await db.checklist_items.get(orphanItem.id);
     expect(orphanInDb).toBeUndefined();
@@ -290,12 +329,12 @@ describe("SyncService — self-healing orphan detection", () => {
     const orphan1 = makeChecklistItem({
       id: "orphan-warn-1",
       task_id: "missing-task-warn-1",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     const orphan2 = makeChecklistItem({
       id: "orphan-warn-2",
       task_id: "missing-task-warn-2",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     await db.checklist_items.bulkAdd([orphan1, orphan2]);
@@ -303,8 +342,7 @@ describe("SyncService — self-healing orphan detection", () => {
 
     const warnSpy = vi.spyOn(console, "warn");
 
-    const service = createService(ctx);
-    await service.push();
+    await executePush();
 
     expect(warnSpy).toHaveBeenCalledTimes(2);
     expect(warnSpy.mock.calls[0][0]).toContain(orphan1.id);
