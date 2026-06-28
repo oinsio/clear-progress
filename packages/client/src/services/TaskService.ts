@@ -270,6 +270,7 @@ export class TaskService {
   async softDelete(id: string): Promise<Task> {
     // Find all copies of this task
     const copies = await this.taskRepository.findByOriginalTaskId(id);
+    let promotedOriginalId = "";
 
     if (copies.length > 0) {
       // Find the first active copy (not deleted)
@@ -285,6 +286,7 @@ export class TaskService {
 
         // Clear original_task_id on the new original
         await this.update(newOriginal.id, { original_task_id: "" });
+        promotedOriginalId = newOriginal.id;
       }
     }
 
@@ -307,7 +309,12 @@ export class TaskService {
     }
 
     // Delete the original task
-    return this.update(id, { is_deleted: true });
+    // FR1 of fix-recurring-restore: record promoted copy ID
+    const deleteUpdate: Partial<Task> = { is_deleted: true };
+    if (promotedOriginalId) {
+      deleteUpdate.original_task_id = promotedOriginalId;
+    }
+    return this.update(id, deleteUpdate);
   }
 
   /** Implements FR15 of add-file-attachments */
@@ -330,6 +337,32 @@ export class TaskService {
       await this.attachmentRepository.restoreByEntityTypeAndId("task", id);
     }
 
+    // implements FR2, FR3, FR4, FR5 of fix-recurring-restore
+    const existingTask = await this.taskRepository.getById(id);
+    if (existingTask?.repeat_rule && existingTask.original_task_id) {
+      const promotedSuccessor = await this.taskRepository.getById(
+        existingTask.original_task_id,
+      );
+      const isSuccessorAlive =
+        promotedSuccessor && !promotedSuccessor.is_deleted;
+
+      if (isSuccessorAlive) {
+        // FR3: promoted successor is alive — clear repeat_rule
+        return this.update(id, {
+          is_deleted: false,
+          repeat_rule: "",
+          next_date: "",
+          appear_date: "",
+        });
+      }
+      // FR4: promoted successor is deleted or non-existent — restore as original
+      return this.update(id, {
+        is_deleted: false,
+        original_task_id: "",
+      });
+    }
+
+    // FR5: no repeat_rule or no original_task_id — restore without changes
     return this.update(id, { is_deleted: false });
   }
 
