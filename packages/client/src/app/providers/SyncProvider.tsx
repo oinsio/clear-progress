@@ -37,6 +37,7 @@ import {
 } from "@/services/defaultServices";
 import { setPreference } from "@/services/localPreferencesService";
 import type { SyncAlert } from "@/services/push-self-healing";
+import { RecurringTaskDeduplicator } from "@/services/RecurringTaskDeduplicator";
 import { SyncService } from "@/services/SyncService";
 import type { FullSyncStep, SyncStatus } from "@/types/common";
 import { toISOTimestamp } from "@/utils/dateHelpers";
@@ -67,6 +68,10 @@ const syncService = new SyncService(
   new IdeaRepository(),
   new SettingsRepository(),
   new AttachmentRepository(),
+  new RecurringTaskDeduplicator(
+    new TaskRepository(),
+    new ChecklistRepository(),
+  ),
 );
 
 function persistLastSync(timestamp: string): void {

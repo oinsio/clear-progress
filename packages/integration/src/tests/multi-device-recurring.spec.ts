@@ -154,6 +154,9 @@ test("Both complete same recurring offline → push both → consistent state", 
   // Push both completions sequentially to avoid server-side race conditions
   await triggerSyncAndWait(pageA);
   await triggerSyncAndWait(pageB);
+  // pageB's pull triggered dedup (soft-deleted duplicate locally).
+  // One more sync pushes the soft-delete to the server.
+  await triggerSyncAndWait(pageB);
 
   const { tasks } = await pullFromServer<RecurringPullResponse>(
     getCredentials(),
