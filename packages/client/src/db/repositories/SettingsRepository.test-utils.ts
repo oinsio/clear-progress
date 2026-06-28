@@ -12,6 +12,7 @@ export function buildSetting(overrides: Partial<Setting> = {}): Setting {
     updated_at: toISOTimestamp(
       Temporal.Instant.from("2026-01-01T00:00:00.000Z"),
     ),
+    syncStatus: "synced" as const,
     ...overrides,
   };
 }

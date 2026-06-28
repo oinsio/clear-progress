@@ -34,7 +34,7 @@ Feature: Attachment repository CRUD
     Given a saved attachment with known id exists
     When delete is called with that id
     Then the attachment has is_deleted true
-    And the attachment has needsSync true
+    And the attachment has syncStatus "pending"
 
   @add-file-attachments @FR5
   Scenario: Delete non-existent attachment is no-op

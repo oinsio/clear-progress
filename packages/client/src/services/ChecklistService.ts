@@ -43,7 +43,7 @@ export class ChecklistService {
       created_at: now,
       updated_at: now,
       revision: 0,
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     await this.checklistRepository.create(item);
     return item;
@@ -81,7 +81,7 @@ export class ChecklistService {
       ...item,
       sort_order: newSortOrder,
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     if (needsRebalancing(newSortOrder)) {
@@ -100,7 +100,7 @@ export class ChecklistService {
       ...item,
       sort_order: newKeys[index],
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     }));
     await this.checklistRepository.bulkUpsert(rebalancedItems);
   }
@@ -136,7 +136,7 @@ export class ChecklistService {
     const updatedItem: ChecklistItem = {
       ...candidateItem,
       updated_at: hasChanged ? toISOTimestamp() : existingItem.updated_at,
-      needsSync: hasChanged,
+      syncStatus: hasChanged ? ("pending" as const) : ("synced" as const),
     };
 
     await this.checklistRepository.update(updatedItem);

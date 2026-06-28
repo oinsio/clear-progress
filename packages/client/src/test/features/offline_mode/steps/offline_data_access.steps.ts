@@ -41,8 +41,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(persistedTask?.name).toBe("Offline task");
     });
 
-    And("the task has needsSync true", async (_ctx: TestContext) => {
-      expect(createdTask.needsSync).toBe(true);
+    And('the task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(createdTask.syncStatus).toBe("pending");
     });
   });
 
@@ -97,8 +97,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(persistedTask?.name).toBe("Updated task");
     });
 
-    And("the task has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedTask.needsSync).toBe(true);
+    And('the task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedTask.syncStatus).toBe("pending");
     });
   });
 
@@ -125,8 +125,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         expect(deletedTask.is_deleted).toBe(true);
       });
 
-      And("the task has needsSync true", async (_ctx: TestContext) => {
-        expect(deletedTask.needsSync).toBe(true);
+      And('the task has syncStatus "pending"', async (_ctx: TestContext) => {
+        expect(deletedTask.syncStatus).toBe("pending");
       });
     },
   );
@@ -154,12 +154,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        "the task still exists with needsSync true",
+        'the task still exists with syncStatus "pending"',
         async (_ctx: TestContext) => {
           const persistedTask = await db.tasks.get(createdTaskId);
           expect(persistedTask).toBeDefined();
           expect(persistedTask?.name).toBe("Persistent task");
-          expect(persistedTask?.needsSync).toBe(true);
+          expect(persistedTask?.syncStatus).toBe("pending");
         },
       );
     },

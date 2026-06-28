@@ -1,8 +1,15 @@
 // implements FR6, FR7 of localstorage-refactor
-import type { PushResponse, SyncAdapter } from "@clear-progress/contract";
+import type {
+  PullRequest,
+  PullResponse,
+  PushResponse,
+  SyncAdapter,
+} from "@clear-progress/contract";
 import {
+  MAX_PUSH_RETRY_COUNT,
   PUSH_CHUNK_SIZE,
   PUSH_RESULT_STATUS,
+  RECORD_SYNC_STATUS,
   STORAGE_KEYS,
   SYNC_META_KEYS,
 } from "@/constants";
@@ -33,9 +40,15 @@ import type {
   Task,
 } from "@/types/entities";
 import { normalizeSortOrder } from "@/utils/normalizeSortOrder";
+import type { SyncAlert } from "./push-self-healing";
+import { preValidateRecords } from "./pushPreValidator";
+import { handleServerRejection } from "./pushRejectionHandler";
 
 export class SyncService {
   private syncMutex: Promise<void> = Promise.resolve();
+
+  /** Alerts from the last push operation (healing corrections with data loss) */
+  lastSyncAlerts: SyncAlert[] = [];
 
   constructor(
     private readonly syncAdapter: SyncAdapter,
@@ -69,11 +82,13 @@ export class SyncService {
   }
 
   async push(force = false): Promise<void> {
+    this.lastSyncAlerts = [];
     return this.withLock(() => this._push(force));
   }
 
+  // implements FR5, FR6 of fix-pull-pagination
   private async _pull(): Promise<void> {
-    const sinceRevision = await this.syncMetaRepository.getValue(
+    let sinceRevision = await this.syncMetaRepository.getValue(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
     );
     let settingsUpdatedAt: string | undefined;
@@ -84,29 +99,70 @@ export class SyncService {
       settingsUpdatedAt = undefined;
     }
 
-    const pullResponse = await this.syncAdapter.pull({
-      since_revision: sinceRevision,
-      settings_updated_at: settingsUpdatedAt,
-    });
+    let isFirstIteration = true;
+    let pullResponse: PullResponse;
+    let cursors: PullRequest["cursors"];
 
-    if (!pullResponse.ok) {
-      throw new Error("Pull failed");
-    }
+    do {
+      pullResponse = await this.syncAdapter.pull({
+        since_revision: sinceRevision,
+        settings_updated_at: isFirstIteration ? settingsUpdatedAt : undefined,
+        cursors,
+      });
 
-    // Check purge_revision
-    const localPurgeRevision = await this.syncMetaRepository.getValue(
-      SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+      if (!pullResponse.ok) {
+        throw new Error("Pull failed");
+      }
+
+      // Check purge_revision only on first iteration
+      if (isFirstIteration) {
+        const localPurgeRevision = await this.syncMetaRepository.getValue(
+          SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+        );
+
+        if (pullResponse.purge_revision > localPurgeRevision) {
+          await this._purgeLocalDeletedRecords();
+          await this.syncMetaRepository.setValue(
+            SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
+            pullResponse.purge_revision,
+          );
+        }
+      }
+
+      await this._applyPullBatch(pullResponse);
+
+      // Update settings_updated_at if settings received
+      if (pullResponse.settings.length > 0) {
+        settingsUpdatedAt = this._computeMaxSettingsUpdatedAt(
+          pullResponse.settings,
+          settingsUpdatedAt,
+        );
+      }
+
+      sinceRevision = pullResponse.current_revision;
+      cursors = pullResponse.cursors;
+      isFirstIteration = false;
+    } while (pullResponse.has_more);
+
+    // Save revision only after all pages are fetched
+    await this.syncMetaRepository.setValue(
+      SYNC_META_KEYS.LAST_KNOWN_REVISION,
+      pullResponse.current_revision,
     );
 
-    if (pullResponse.purge_revision > localPurgeRevision) {
-      // Someone else called purge — delete local soft-deleted records
-      await this._purgeLocalDeletedRecords();
-      await this.syncMetaRepository.setValue(
-        SYNC_META_KEYS.LAST_KNOWN_PURGE_REVISION,
-        pullResponse.purge_revision,
-      );
+    // Persist settings_updated_at after pagination completes
+    if (settingsUpdatedAt) {
+      setPreference(STORAGE_KEYS.SETTINGS_UPDATED_AT, settingsUpdatedAt);
     }
 
+    // Notify about sync completion
+    window.dispatchEvent(new CustomEvent("sync_complete"));
+  }
+
+  // implements FR5 of fix-pull-pagination
+  private async _applyPullBatch(
+    pullResponse: Awaited<ReturnType<SyncAdapter["pull"]>>,
+  ): Promise<void> {
     // Normalize sort_order: server may send INTEGER, client expects string
     // Implements FR1 of fractional-sort-order
     const normalizedTasks = pullResponse.tasks.map(normalizeSortOrder);
@@ -176,46 +232,41 @@ export class SyncService {
           throw error;
         }),
     ]);
+  }
 
-    // Update settings_updated_at
+  // implements FR5 of fix-pull-pagination
+  private _computeMaxSettingsUpdatedAt(
+    settings: Array<{ updated_at: string }>,
+    currentMax: string | undefined,
+  ): string {
     // Use numeric comparison via Temporal.Instant.compare instead of
     // lexicographic comparison, since ISO 8601 strings can have different numbers
     // of decimal places (0 vs. 3), which breaks string comparison.
-    if (pullResponse.settings.length > 0) {
-      try {
-        const maxUpdatedAt = pullResponse.settings.reduce((max, setting) => {
-          if (!max) return setting.updated_at;
-          return Temporal.Instant.compare(
-            Temporal.Instant.from(setting.updated_at),
-            Temporal.Instant.from(max),
-          ) > 0
-            ? setting.updated_at
-            : max;
-        }, settingsUpdatedAt ?? "");
-        setPreference(STORAGE_KEYS.SETTINGS_UPDATED_AT, maxUpdatedAt);
-      } catch (temporalError) {
-        console.error(
-          "[SyncService] Temporal.Instant.from failed in settings_updated_at:",
-          temporalError,
-          {
-            settingsUpdatedAt,
-            settings: pullResponse.settings.map((s) => s.updated_at),
-          },
-        );
-        throw temporalError;
-      }
+    try {
+      return settings.reduce((max, setting) => {
+        if (!max) return setting.updated_at;
+        return Temporal.Instant.compare(
+          Temporal.Instant.from(setting.updated_at),
+          Temporal.Instant.from(max),
+        ) > 0
+          ? setting.updated_at
+          : max;
+      }, currentMax ?? "");
+    } catch (temporalError) {
+      console.error(
+        "[SyncService] Temporal.Instant.from failed in settings_updated_at:",
+        temporalError,
+        {
+          currentMax,
+          settings: settings.map((s) => s.updated_at),
+        },
+      );
+      throw temporalError;
     }
-
-    await this.syncMetaRepository.setValue(
-      SYNC_META_KEYS.LAST_KNOWN_REVISION,
-      pullResponse.current_revision,
-    );
-
-    // Notify about sync completion
-    window.dispatchEvent(new CustomEvent("sync_complete"));
   }
 
-  private async _push(force = false): Promise<void> {
+  // implements FR5 of fix-push-poison-pill
+  private async _push(force = false, retryCount = 0): Promise<void> {
     const [
       tasks,
       goals,
@@ -298,33 +349,8 @@ export class SyncService {
       }
     }
 
-    const sentTimestamps = new Map<string, string>([
-      ...tasks.map((task) => [task.id, task.updated_at] as [string, string]),
-      ...goals.map((goal) => [goal.id, goal.updated_at] as [string, string]),
-      ...contexts.map(
-        (context) => [context.id, context.updated_at] as [string, string],
-      ),
-      ...categories.map(
-        (category) => [category.id, category.updated_at] as [string, string],
-      ),
-      ...validChecklistItems.map(
-        (item) => [item.id, item.updated_at] as [string, string],
-      ),
-      ...ideas.map((idea) => [idea.id, idea.updated_at] as [string, string]),
-      ...attachments.map(
-        (attachment) =>
-          [attachment.id, attachment.updated_at] as [string, string],
-      ),
-    ]);
-
-    const stripDirty = <T extends { needsSync?: boolean }>(
-      records: T[],
-    ): Omit<T, "needsSync">[] =>
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      records.map(({ needsSync: _, ...rest }) => rest as Omit<T, "needsSync">);
-
-    // Split into chunks
-    const chunks = this._createPushChunks(
+    // implements FR5 of fix-push-poison-pill — Zod pre-validation
+    const preValidated = await preValidateRecords(
       tasks,
       goals,
       contexts,
@@ -333,9 +359,80 @@ export class SyncService {
       ideas,
       attachments,
       settings,
+      {
+        taskRepository: this.taskRepository,
+        goalRepository: this.goalRepository,
+        contextRepository: this.contextRepository,
+        categoryRepository: this.categoryRepository,
+        checklistRepository: this.checklistRepository,
+        ideaRepository: this.ideaRepository,
+        attachmentRepository: this.attachmentRepository,
+      },
+    );
+    this.lastSyncAlerts.push(...preValidated.alerts);
+
+    const sentTimestamps = new Map<string, string>([
+      ...preValidated.tasks.map(
+        (task) => [task.id, task.updated_at] as [string, string],
+      ),
+      ...preValidated.goals.map(
+        (goal) => [goal.id, goal.updated_at] as [string, string],
+      ),
+      ...preValidated.contexts.map(
+        (context) => [context.id, context.updated_at] as [string, string],
+      ),
+      ...preValidated.categories.map(
+        (category) => [category.id, category.updated_at] as [string, string],
+      ),
+      ...preValidated.checklistItems.map(
+        (item) => [item.id, item.updated_at] as [string, string],
+      ),
+      ...preValidated.ideas.map(
+        (idea) => [idea.id, idea.updated_at] as [string, string],
+      ),
+      ...preValidated.attachments.map(
+        (attachment) =>
+          [attachment.id, attachment.updated_at] as [string, string],
+      ),
+    ]);
+
+    const stripDirty = <T extends { syncStatus?: string }>(
+      records: T[],
+    ): Omit<T, "syncStatus">[] =>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      records.map(
+        ({ syncStatus: _, ...rest }) => rest as Omit<T, "syncStatus">,
+      );
+
+    // Check if anything left after pre-validation (force bypasses this check)
+    if (!force) {
+      const hasValidRecords =
+        preValidated.tasks.length > 0 ||
+        preValidated.goals.length > 0 ||
+        preValidated.contexts.length > 0 ||
+        preValidated.categories.length > 0 ||
+        preValidated.checklistItems.length > 0 ||
+        preValidated.ideas.length > 0 ||
+        preValidated.attachments.length > 0 ||
+        preValidated.settings.length > 0;
+
+      if (!hasValidRecords) return;
+    }
+
+    // Split into chunks
+    const chunks = this._createPushChunks(
+      preValidated.tasks,
+      preValidated.goals,
+      preValidated.contexts,
+      preValidated.categories,
+      preValidated.checklistItems,
+      preValidated.ideas,
+      preValidated.attachments,
+      preValidated.settings,
     );
 
     // Send chunks sequentially
+    let hasHealedRejections = false;
     for (const chunk of chunks) {
       const pushResponse = await this.syncAdapter.push({
         tasks: stripDirty(chunk.tasks) as Task[],
@@ -352,11 +449,17 @@ export class SyncService {
         throw new Error("Push failed");
       }
 
-      await this._applyPushResults(
+      const chunkHealedRejections = await this._applyPushResults(
         pushResponse.results,
         sentTimestamps,
         pushResponse.revision,
       );
+      if (chunkHealedRejections) hasHealedRejections = true;
+    }
+
+    // implements FR5 of fix-push-poison-pill — retry healed records
+    if (hasHealedRejections && retryCount < MAX_PUSH_RETRY_COUNT) {
+      await this._push(false, retryCount + 1);
     }
 
     // Do NOT update last_known_revision here. The subsequent _pull will set it
@@ -530,12 +633,13 @@ export class SyncService {
     return chunks;
   }
 
+  // implements FR5 of fix-push-poison-pill
   private async _applyPushResults(
     results: PushResponse["results"],
     sentTimestamps: Map<string, string>,
     pushRevision: number | undefined,
-  ): Promise<void> {
-    await Promise.all([
+  ): Promise<boolean> {
+    const healResults = await Promise.all([
       this._applyEntityPushResults(
         results.tasks ?? [],
         sentTimestamps,
@@ -580,12 +684,13 @@ export class SyncService {
       ),
       this._applySettingsPushResults(results.settings ?? []),
     ]);
+    return healResults.some(Boolean);
   }
 
   private async _applySettingsPushResults(
     results: PushResponse["results"]["settings"],
-  ): Promise<void> {
-    if (!results || results.length === 0) return;
+  ): Promise<boolean> {
+    if (!results || results.length === 0) return false;
 
     const acceptedKeys = results
       .filter(
@@ -598,12 +703,14 @@ export class SyncService {
     if (acceptedKeys.length > 0) {
       await this.settingsRepository.clearNeedsSyncByKey(acceptedKeys);
     }
+    return false;
   }
 
+  // implements FR5 of fix-push-poison-pill
   private async _applyEntityPushResults<
     T extends {
       id: string;
-      needsSync: boolean;
+      syncStatus: string;
       updated_at: string;
       revision: number;
     },
@@ -615,8 +722,10 @@ export class SyncService {
       update(record: T): Promise<void>;
     },
     pushRevision: number | undefined,
-  ): Promise<void> {
-    if (!results || results.length === 0) return;
+  ): Promise<boolean> {
+    if (!results || results.length === 0) return false;
+
+    let hasHealedRejections = false;
 
     for (const result of results) {
       if (
@@ -625,7 +734,7 @@ export class SyncService {
       ) {
         await repository.update({
           ...(result.server_record as unknown as T),
-          needsSync: false,
+          syncStatus: RECORD_SYNC_STATUS.SYNCED,
         });
         continue;
       }
@@ -643,10 +752,36 @@ export class SyncService {
         await repository.update({
           ...currentRecord,
           revision: pushRevision ?? currentRecord.revision,
-          needsSync: !timestampUnchanged,
+          syncStatus: timestampUnchanged
+            ? RECORD_SYNC_STATUS.SYNCED
+            : RECORD_SYNC_STATUS.PENDING,
         });
+        continue;
+      }
+
+      if (result.status === PUSH_RESULT_STATUS.REJECTED) {
+        const currentRecord = await repository.getById(result.id);
+        if (!currentRecord) continue;
+
+        const rejectionResult = handleServerRejection(result.reason);
+
+        if (rejectionResult.isHealable && rejectionResult.healedFields) {
+          await repository.update({
+            ...currentRecord,
+            ...rejectionResult.healedFields,
+            syncStatus: RECORD_SYNC_STATUS.PENDING,
+          } as T);
+          hasHealedRejections = true;
+        } else {
+          await repository.update({
+            ...currentRecord,
+            syncStatus: RECORD_SYNC_STATUS.REJECTED,
+          });
+        }
       }
     }
+
+    return hasHealedRejections;
   }
 
   async resetAndPull(): Promise<void> {
@@ -659,15 +794,21 @@ export class SyncService {
     // Reset settings_updated_at for a full settings pull
     removePreference(STORAGE_KEYS.SETTINGS_UPDATED_AT);
 
-    // 2. Mark all records as not-needsSync (so pull overwrites them)
-    await db.tasks.toCollection().modify({ needsSync: false });
-    await db.goals.toCollection().modify({ needsSync: false });
-    await db.contexts.toCollection().modify({ needsSync: false });
-    await db.categories.toCollection().modify({ needsSync: false });
-    await db.checklist_items.toCollection().modify({ needsSync: false });
-    await db.ideas.toCollection().modify({ needsSync: false });
-    await db.attachments.toCollection().modify({ needsSync: false });
-    await db.settings.toCollection().modify({ needsSync: false });
+    // 2. Mark all records as synced (so pull overwrites them)
+    await db.tasks.toCollection().modify({ syncStatus: "synced" as const });
+    await db.goals.toCollection().modify({ syncStatus: "synced" as const });
+    await db.contexts.toCollection().modify({ syncStatus: "synced" as const });
+    await db.categories
+      .toCollection()
+      .modify({ syncStatus: "synced" as const });
+    await db.checklist_items
+      .toCollection()
+      .modify({ syncStatus: "synced" as const });
+    await db.ideas.toCollection().modify({ syncStatus: "synced" as const });
+    await db.attachments
+      .toCollection()
+      .modify({ syncStatus: "synced" as const });
+    await db.settings.toCollection().modify({ syncStatus: "synced" as const });
 
     // 3. Fetch the full state from the server
     await this.pull();

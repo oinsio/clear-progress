@@ -19,7 +19,7 @@ describe("ContextService", () => {
         expect.objectContaining({
           id: context.id,
           sort_order: "a1",
-          needsSync: true,
+          syncStatus: "pending" as const,
         }),
       );
     });
@@ -101,7 +101,7 @@ describe("ContextService", () => {
       expect(rebalancedContexts).toHaveLength(2);
       for (const rebalancedContext of rebalancedContexts) {
         expect(typeof rebalancedContext.sort_order).toBe("string");
-        expect(rebalancedContext.needsSync).toBe(true);
+        expect(rebalancedContext.syncStatus).toBe("pending");
       }
     });
   });

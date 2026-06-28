@@ -39,7 +39,7 @@ const mockIdea: Idea = {
   created_at: toISOTimestamp(),
   updated_at: toISOTimestamp(),
   revision: 0,
-  needsSync: false,
+  syncStatus: "synced" as const,
 };
 
 describe("IdeaDetailPanel", () => {

@@ -26,6 +26,7 @@ type PullTask = {
 interface RecurringPullResponse {
   ok: boolean;
   tasks: PullTask[];
+  current_revision: number;
 }
 
 async function setFixedDailyRepeat(testPage: Page): Promise<void> {
@@ -55,31 +56,8 @@ async function createRecurringTask(
   await setFixedDailyRepeat(testPage);
 }
 
-const SYNC_UNTIL_VISIBLE_MAX_RETRIES = 3;
-const TASK_VISIBLE_TIMEOUT_MS = 3_000;
+const TASK_VISIBLE_TIMEOUT_MS = 15_000;
 const COMPLETE_SETTLE_MS = 300;
-
-/**
- * Syncs the page and waits for a task with the given name to appear in the UI.
- * Retries sync if the task is not visible after a short timeout — this handles
- * the case where the first sync completes before the server has processed the
- * push from the other page.
- */
-async function syncUntilTaskVisible(
-  testPage: Page,
-  taskName: string,
-): Promise<void> {
-  for (let attempt = 1; attempt <= SYNC_UNTIL_VISIBLE_MAX_RETRIES; attempt++) {
-    await triggerSyncAndWait(testPage);
-    const isVisible = await findTaskItem(testPage, taskName)
-      .waitFor({ state: "visible", timeout: TASK_VISIBLE_TIMEOUT_MS })
-      .then(() => true)
-      .catch(() => false);
-    if (isVisible) return;
-  }
-  // Final attempt — let it throw with a clear error
-  await findTaskItem(testPage, taskName).waitFor({ state: "visible" });
-}
 
 async function completeTask(testPage: Page, taskName: string): Promise<void> {
   await findTaskItem(testPage, taskName)
@@ -144,6 +122,13 @@ test("Both complete same recurring offline → push both → consistent state", 
   const pageA = getPageA();
   const pageB = getPageB();
   const conflictTaskName = `Recurring Conflict ${Date.now()}`;
+
+  // Establish baseline revision to avoid paginating entire history on pull
+  const baseline = await pullFromServer<RecurringPullResponse>(
+    getCredentials(),
+  );
+  const baselineRevision = baseline.current_revision;
+
   await createRecurringTask(pageA, conflictTaskName);
   await triggerSyncAndWait(pageA);
 
@@ -151,8 +136,15 @@ test("Both complete same recurring offline → push both → consistent state", 
   await pageB.goto("/tasks");
   await pageB.waitForSelector('[data-testid="active-tasks-page"]');
 
-  // Sync + wait for task to appear on pageB (retry sync if task not yet visible)
-  await syncUntilTaskVisible(pageB, conflictTaskName);
+  // Sync pageB — data is already on server (pageA synced above)
+  await triggerSyncAndWait(pageB);
+  // Reload to ensure React re-renders with fresh IndexedDB data
+  await pageB.reload();
+  await pageB.waitForSelector('[data-testid="active-tasks-page"]');
+  await findTaskItem(pageB, conflictTaskName).waitFor({
+    state: "visible",
+    timeout: TASK_VISIBLE_TIMEOUT_MS,
+  });
 
   // Both complete without syncing between them (parallel — different pages)
   await Promise.all([
@@ -165,6 +157,7 @@ test("Both complete same recurring offline → push both → consistent state", 
 
   const { tasks } = await pullFromServer<RecurringPullResponse>(
     getCredentials(),
+    baselineRevision,
   );
   const matching = tasks.filter(
     (t) => t.name === conflictTaskName && !t.is_deleted,
@@ -182,6 +175,14 @@ test("Both complete same recurring offline → push both → consistent state", 
 test("App A completes recurring → push → App B pulls → exactly 1 new occurrence", async () => {
   const pageA = getPageA();
   const dedupTaskName = `Recurring Dedup ${Date.now()}`;
+
+  // Establish baseline revision before creating the task to avoid
+  // paginating through the entire task history on pull
+  const baseline = await pullFromServer<RecurringPullResponse>(
+    getCredentials(),
+  );
+  const baselineRevision = baseline.current_revision;
+
   await createRecurringTask(pageA, dedupTaskName);
   await triggerSyncAndWait(pageA);
 
@@ -190,6 +191,7 @@ test("App A completes recurring → push → App B pulls → exactly 1 new occur
 
   const { tasks } = await pullFromServer<RecurringPullResponse>(
     getCredentials(),
+    baselineRevision,
   );
   const matching = tasks.filter(
     (t) => t.name === dedupTaskName && !t.is_deleted,
@@ -207,6 +209,11 @@ test("after_completion recurring → complete → next_date = completed_at + del
   const pageA = getPageA();
   const afterCompletionTaskName = `After Completion ${Date.now()}`;
   const delayDays = 3;
+
+  const baseline = await pullFromServer<RecurringPullResponse>(
+    getCredentials(),
+  );
+  const baselineRevision = baseline.current_revision;
 
   await createTask(pageA, afterCompletionTaskName);
   await openTaskDetail(pageA, afterCompletionTaskName);
@@ -237,6 +244,7 @@ test("after_completion recurring → complete → next_date = completed_at + del
 
   const { tasks } = await pullFromServer<RecurringPullResponse>(
     getCredentials(),
+    baselineRevision,
   );
   const matching = tasks.filter(
     (t) => t.name === afterCompletionTaskName && !t.is_deleted,
@@ -270,6 +278,12 @@ test("after_completion recurring → complete → next_date = completed_at + del
 test("recurring task after completion → next_date is today or in the future", async () => {
   const pageA = getPageA();
   const skipTaskName = `Recurring Skip ${Date.now()}`;
+
+  const baseline = await pullFromServer<RecurringPullResponse>(
+    getCredentials(),
+  );
+  const baselineRevision = baseline.current_revision;
+
   await createRecurringTask(pageA, skipTaskName);
   await triggerSyncAndWait(pageA);
 
@@ -278,6 +292,7 @@ test("recurring task after completion → next_date is today or in the future", 
 
   const { tasks } = await pullFromServer<RecurringPullResponse>(
     getCredentials(),
+    baselineRevision,
   );
   const matching = tasks.filter(
     (t) => t.name === skipTaskName && !t.is_deleted,

@@ -58,6 +58,7 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
             ok: true,
             current_revision: 5,
             purge_revision: 0,
+            has_more: false,
             server_time: "2025-01-15T10:30:00.000Z",
             tasks: [],
             goals: [],

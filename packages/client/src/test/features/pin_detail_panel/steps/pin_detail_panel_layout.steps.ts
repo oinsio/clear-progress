@@ -101,7 +101,7 @@ const sampleTask: Task = {
   updated_at: "2025-01-01T00:00:00.000Z",
   original_task_id: "",
   revision: 0,
-  needsSync: false,
+  syncStatus: "synced" as const,
 };
 
 const defaultProps = {

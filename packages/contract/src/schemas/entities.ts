@@ -10,21 +10,24 @@ import {
   UUIDSchema,
 } from "./primitives";
 
+// implements FR2 of fix-push-poison-pill
+export const UUIDOrEmptySchema = z.union([UUIDSchema, z.literal("")]);
+
 export const WireTaskSchema = z.object({
   id: UUIDSchema,
   name: z.string(),
   description: z.string(),
   box: BoxSchema,
-  goal_id: z.string(),
-  context_id: z.string(),
-  category_id: z.string(),
+  goal_id: UUIDOrEmptySchema, // implements FR2 of fix-push-poison-pill
+  context_id: UUIDOrEmptySchema, // implements FR2 of fix-push-poison-pill
+  category_id: UUIDOrEmptySchema, // implements FR2 of fix-push-poison-pill
   is_completed: z.boolean(),
   completed_at: ISOTimestampOrEmptySchema,
   repeat_rule: z.string(),
   is_hidden: z.boolean(),
   next_date: ISODateOrEmptySchema,
   appear_date: ISODateOrEmptySchema,
-  original_task_id: z.string(),
+  original_task_id: UUIDOrEmptySchema, // implements FR2 of fix-push-poison-pill
   sort_order: z.string(),
   is_deleted: z.boolean(),
   created_at: ISOTimestampSchema,

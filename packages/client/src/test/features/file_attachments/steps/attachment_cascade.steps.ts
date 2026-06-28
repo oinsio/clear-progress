@@ -38,7 +38,7 @@ function buildMockTask(id: string): Task {
     created_at: NOW,
     updated_at: NOW,
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
   } as Task;
 }
 
@@ -54,7 +54,7 @@ function buildMockGoal(id: string): Goal {
     created_at: NOW,
     updated_at: NOW,
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
   } as Goal;
 }
 
@@ -68,7 +68,7 @@ function buildMockIdea(id: string): Idea {
     created_at: NOW,
     updated_at: NOW,
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
   } as Idea;
 }
 

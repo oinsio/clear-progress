@@ -52,8 +52,8 @@ describeFeature(
         },
       );
 
-      And("the setting has needsSync true", async (_ctx: TestContext) => {
-        expect(storedSetting?.needsSync).toBe(true);
+      And('the setting has syncStatus "pending"', async (_ctx: TestContext) => {
+        expect(storedSetting?.syncStatus).toBe("pending");
       });
 
       And(
@@ -79,7 +79,7 @@ describeFeature(
             const setting = buildSetting({
               key: "accent_color",
               value: "green",
-              needsSync: false,
+              syncStatus: "synced" as const,
             });
             originalUpdatedAt = setting.updated_at;
             await db.settings.add(setting);
@@ -102,9 +102,12 @@ describeFeature(
           },
         );
 
-        And("the setting has needsSync true", async (_ctx: TestContext) => {
-          expect(storedSetting?.needsSync).toBe(true);
-        });
+        And(
+          'the setting has syncStatus "pending"',
+          async (_ctx: TestContext) => {
+            expect(storedSetting?.syncStatus).toBe("pending");
+          },
+        );
 
         And(
           "the setting has a refreshed updated_at timestamp",
@@ -127,7 +130,7 @@ describeFeature(
             const setting = buildSetting({
               key: "accent_color",
               value: "blue",
-              needsSync: false,
+              syncStatus: "synced" as const,
             });
             originalUpdatedAt = setting.updated_at;
             await db.settings.add(setting);

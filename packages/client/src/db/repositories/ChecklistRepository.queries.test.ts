@@ -195,9 +195,9 @@ describe("ChecklistRepository", () => {
   });
 
   describe("getNeedingSync", () => {
-    it("should return only items with needsSync true", async () => {
-      const syncItem = buildChecklistItem({ needsSync: true });
-      const noSyncItem = buildChecklistItem({ needsSync: false });
+    it("should return only items with syncStatus true", async () => {
+      const syncItem = buildChecklistItem({ syncStatus: "pending" as const });
+      const noSyncItem = buildChecklistItem({ syncStatus: "synced" as const });
       await db.checklist_items.bulkAdd([syncItem, noSyncItem]);
 
       const items = await getRepository().getNeedingSync();
@@ -207,7 +207,7 @@ describe("ChecklistRepository", () => {
     });
 
     it("should return empty array when no items need sync", async () => {
-      const item = buildChecklistItem({ needsSync: false });
+      const item = buildChecklistItem({ syncStatus: "synced" as const });
       await db.checklist_items.add(item);
 
       const items = await getRepository().getNeedingSync();
@@ -217,7 +217,7 @@ describe("ChecklistRepository", () => {
   });
 
   describe("applyServerRecords", () => {
-    it("should insert new server records with needsSync false", async () => {
+    it("should insert new server records with syncStatus false", async () => {
       const serverRecord = {
         id: crypto.randomUUID(),
         task_id: crypto.randomUUID(),
@@ -234,14 +234,14 @@ describe("ChecklistRepository", () => {
 
       const item = await db.checklist_items.get(serverRecord.id);
       expect(item).toBeDefined();
-      expect(item!.needsSync).toBe(false);
+      expect(item!.syncStatus).toBe("synced");
       expect(item!.name).toBe("Server Item");
     });
 
     it("should not overwrite local record that needs sync", async () => {
       const localItem = buildChecklistItem({
         name: "Local Version",
-        needsSync: true,
+        syncStatus: "pending" as const,
       });
       await db.checklist_items.add(localItem);
 
@@ -266,7 +266,7 @@ describe("ChecklistRepository", () => {
     it("should overwrite local record that does not need sync", async () => {
       const localItem = buildChecklistItem({
         name: "Old Version",
-        needsSync: false,
+        syncStatus: "synced" as const,
       });
       await db.checklist_items.add(localItem);
 
@@ -286,7 +286,7 @@ describe("ChecklistRepository", () => {
 
       const item = await db.checklist_items.get(localItem.id);
       expect(item!.name).toBe("Updated Server Version");
-      expect(item!.needsSync).toBe(false);
+      expect(item!.syncStatus).toBe("synced");
     });
   });
 });

@@ -57,7 +57,7 @@ export async function seedChecklistItemsWithOrder(
     await seedChecklistItem(checklistItemIds, names[i], {
       task_id: taskId,
       sort_order: keys[i],
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
   }
 }

@@ -30,11 +30,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       let originalUpdatedAt: string;
 
       Given(
-        'idea "Learn Rust" exists with needsSync false',
+        'idea "Learn Rust" exists with syncStatus "synced"',
         async (_ctx: TestContext) => {
           await seedIdea(ctx.ideaIds, "Learn Rust", {
             name: "Learn Rust",
-            needsSync: false,
+            syncStatus: "synced" as const,
           });
           const existingIdea = await getIdea(ctx.ideaIds, "Learn Rust");
           originalUpdatedAt = existingIdea.updated_at;
@@ -51,11 +51,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      Then("idea needsSync remains false", async (_ctx: TestContext) => {
+      Then('idea syncStatus remains "synced"', async (_ctx: TestContext) => {
         const idea = await db.ideas.get(
           getIdOrThrow(ctx.ideaIds, "Learn Rust"),
         );
-        expect(idea?.needsSync).toBe(false);
+        expect(idea?.syncStatus).toBe("synced");
       });
 
       And("idea updated_at is unchanged", async (_ctx: TestContext) => {
@@ -89,19 +89,19 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         await ctx.ideaService.reorderIdeas(ideaC.id, newKey);
       });
 
-      Then("idea A has needsSync false", async (_ctx: TestContext) => {
+      Then('idea A has syncStatus "synced"', async (_ctx: TestContext) => {
         const ideaA = await db.ideas.get(getIdOrThrow(ctx.ideaIds, "A"));
-        expect(ideaA?.needsSync).toBe(false);
+        expect(ideaA?.syncStatus).toBe("synced");
       });
 
-      And("idea B has needsSync false", async (_ctx: TestContext) => {
+      And('idea B has syncStatus "synced"', async (_ctx: TestContext) => {
         const ideaB = await db.ideas.get(getIdOrThrow(ctx.ideaIds, "B"));
-        expect(ideaB?.needsSync).toBe(false);
+        expect(ideaB?.syncStatus).toBe("synced");
       });
 
-      And("idea C has needsSync true", async (_ctx: TestContext) => {
+      And('idea C has syncStatus "pending"', async (_ctx: TestContext) => {
         const ideaC = await db.ideas.get(getIdOrThrow(ctx.ideaIds, "C"));
-        expect(ideaC?.needsSync).toBe(true);
+        expect(ideaC?.syncStatus).toBe("pending");
       });
     },
   );

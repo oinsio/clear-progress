@@ -6,6 +6,7 @@ export {
   createAuthenticatedPage,
 } from "./page-lifecycle.js";
 export type {
+  PushResponse,
   RefCountPullResponse,
   ServerCallCredentials,
 } from "./server-api.js";
@@ -14,6 +15,7 @@ export {
   getFileFromServer,
   pullFromServer,
   purgeOnServer,
+  pushToServer,
 } from "./server-api.js";
 export { triggerSyncAndWait } from "./sync-helpers.js";
 export {

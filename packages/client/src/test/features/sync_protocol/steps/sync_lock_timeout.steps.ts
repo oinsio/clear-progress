@@ -35,8 +35,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Server returns lock timeout error",
     ({ Given, When, Then, And }) => {
       const dirtyTasks = [
-        makeTask({ needsSync: true, name: "Task 1" }),
-        makeTask({ needsSync: true, name: "Task 2" }),
+        makeTask({ syncStatus: "pending" as const, name: "Task 1" }),
+        makeTask({ syncStatus: "pending" as const, name: "Task 2" }),
       ];
       let pushError: Error | null = null;
 
@@ -80,11 +80,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      And("dirty records retain needsSync true", async (_ctx: TestContext) => {
-        // Verify that update was NOT called to clear needsSync
-        // When lock timeout occurs, records should keep needsSync=true for retry
-        expect(repositories.taskRepository.update).not.toHaveBeenCalled();
-      });
+      And(
+        'dirty records retain syncStatus "pending"',
+        async (_ctx: TestContext) => {
+          // Verify that update was NOT called to clear syncStatus
+          // When lock timeout occurs, records should keep syncStatus=true for retry
+          expect(repositories.taskRepository.update).not.toHaveBeenCalled();
+        },
+      );
     },
   );
 
@@ -93,12 +96,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Client retries after lock timeout",
     ({ Given, When, Then, And }) => {
       const dirtyTasks = [
-        makeTask({ needsSync: true, name: "Task 1" }),
-        makeTask({ needsSync: true, name: "Task 2" }),
+        makeTask({ syncStatus: "pending" as const, name: "Task 1" }),
+        makeTask({ syncStatus: "pending" as const, name: "Task 2" }),
       ];
 
       Given(
-        "client has dirty records with needsSync true",
+        'client has dirty records with syncStatus "pending"',
         async (_ctx: TestContext) => {
           (
             repositories.taskRepository.getNeedingSync as ReturnType<

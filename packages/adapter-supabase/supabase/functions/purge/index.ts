@@ -21,7 +21,7 @@ type EntityTable = (typeof ENTITY_TABLES)[number];
 
 Deno.serve(
   createAuthHandler("POST", async ({ userId, accessToken, serviceClient }) => {
-    // Check initialized and get current purge_revision
+    // Check user is initialized (sync_meta rows exist)
     const { data: metaRows, error: metaError } = await serviceClient
       .from("sync_meta")
       .select("key, value")
@@ -38,46 +38,21 @@ Deno.serve(
       );
     }
 
-    const currentPurgeRevision =
-      metaRows.find(
-        (r: { key: string; value: number }) => r.key === "purge_revision",
-      )?.value ?? 0;
-
-    // Delete soft-deleted records from all entity tables in parallel
-    const deleteResults = await Promise.all(
-      ENTITY_TABLES.map((table) =>
-        serviceClient
-          .from(table)
-          .delete({ count: "exact" })
-          .eq("user_id", userId)
-          .eq("is_deleted", true),
-      ),
+    // Bump dependent records' revision, then hard-delete all soft-deleted records
+    // via atomic RPC (implements FR4 of fix-push-poison-pill)
+    const { data: purgeResult, error: purgeError } = await serviceClient.rpc(
+      "purge_deleted_records",
+      { p_user_id: userId },
     );
 
-    const deleteError = deleteResults.find(
-      (r: { error: unknown }) => r.error,
-    )?.error;
-    if (deleteError) {
-      return errorResponse(ErrorCode.INTERNAL_ERROR, deleteError.message, 500);
+    if (purgeError) {
+      return errorResponse(ErrorCode.INTERNAL_ERROR, purgeError.message, 500);
     }
 
-    const newPurgeRevision = currentPurgeRevision + 1;
-
-    const { error: updateError } = await serviceClient
-      .from("sync_meta")
-      .update({ value: newPurgeRevision })
-      .eq("user_id", userId)
-      .eq("key", "purge_revision");
-
-    if (updateError) {
-      return errorResponse(ErrorCode.INTERNAL_ERROR, updateError.message, 500);
-    }
+    const newPurgeRevision = purgeResult.purge_revision;
 
     const purgedCounts = Object.fromEntries(
-      ENTITY_TABLES.map((table, index) => [
-        table,
-        deleteResults[index].count ?? 0,
-      ]),
+      ENTITY_TABLES.map((table) => [table, purgeResult.purged[table] ?? 0]),
     ) as Record<EntityTable, number>;
 
     // Clean up orphaned files (no references in goals.cover_hash or attachments.data_hash)

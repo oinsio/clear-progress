@@ -97,14 +97,14 @@ describe("CategoryService", () => {
       );
     });
 
-    it("should set needsSync to true", async () => {
-      const category = buildCategory({ needsSync: false });
+    it("should set syncStatus to true", async () => {
+      const category = buildCategory({ syncStatus: "synced" as const });
       mockCategoryRepository = createMockCategoryRepository({
         getById: vi.fn().mockResolvedValue(category),
       });
       const categoryService = new CategoryService(mockCategoryRepository);
       const updated = await categoryService.update(category.id, "X");
-      expect(updated.needsSync).toBe(true);
+      expect(updated.syncStatus).toBe("pending");
     });
 
     it("should throw when category not found", async () => {

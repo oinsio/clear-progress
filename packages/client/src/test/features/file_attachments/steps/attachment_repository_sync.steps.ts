@@ -79,19 +79,21 @@ describeFeature(
       let result: Attachment[];
 
       Given(
-        "two attachments with needsSync true exist",
+        'two attachments with syncStatus "pending" exist',
         async (_ctx: TestContext) => {
           await db.attachments.bulkAdd([
-            buildAttachment({ needsSync: true }),
-            buildAttachment({ needsSync: true }),
+            buildAttachment({ syncStatus: "pending" as const }),
+            buildAttachment({ syncStatus: "pending" as const }),
           ]);
         },
       );
 
       And(
-        "one attachment with needsSync false exists",
+        'one attachment with syncStatus "synced" exists',
         async (_ctx: TestContext) => {
-          await db.attachments.add(buildAttachment({ needsSync: false }));
+          await db.attachments.add(
+            buildAttachment({ syncStatus: "synced" as const }),
+          );
         },
       );
 
@@ -104,7 +106,7 @@ describeFeature(
         async (_ctx: TestContext) => {
           expect(result).toHaveLength(2);
           for (const attachment of result) {
-            expect(attachment.needsSync).toBe(true);
+            expect(attachment.syncStatus).toBe("pending");
           }
         },
       );
@@ -127,12 +129,12 @@ describeFeature(
       );
 
       Then(
-        "both records are stored with needsSync false",
+        'both records are stored with syncStatus "synced"',
         async (_ctx: TestContext) => {
           const allAttachments = await repository.getAll();
           expect(allAttachments).toHaveLength(2);
           for (const attachment of allAttachments) {
-            expect(attachment.needsSync).toBe(false);
+            expect(attachment.syncStatus).toBe("synced");
           }
         },
       );
@@ -144,10 +146,10 @@ describeFeature(
         let localAttachment: Attachment;
 
         Given(
-          "a local attachment with needsSync true exists",
+          'a local attachment with syncStatus "pending" exists',
           async (_ctx: TestContext) => {
             localAttachment = buildAttachment({
-              needsSync: true,
+              syncStatus: "pending" as const,
               filename: "local-version.pdf",
             });
             await db.attachments.add(localAttachment);
@@ -170,7 +172,7 @@ describeFeature(
           async (_ctx: TestContext) => {
             const stored = await db.attachments.get(localAttachment.id);
             expect(stored?.filename).toBe("local-version.pdf");
-            expect(stored?.needsSync).toBe(true);
+            expect(stored?.syncStatus).toBe("pending");
           },
         );
       },

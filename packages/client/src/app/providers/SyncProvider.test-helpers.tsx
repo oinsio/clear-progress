@@ -76,6 +76,11 @@ export function SyncStatusDisplay() {
   return <div data-testid="status">{syncStatus}</div>;
 }
 
+export function LastSyncDisplay() {
+  const { lastSyncedAt } = useSync();
+  return <div data-testid="last-sync">{lastSyncedAt ?? ""}</div>;
+}
+
 export function SyncVersionDisplay() {
   const { syncVersion } = useSync();
   return <div data-testid="version">{syncVersion}</div>;

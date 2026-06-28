@@ -106,7 +106,7 @@ describe("SyncService — purge", () => {
           name: "Deleted Goal",
           is_deleted: true,
           revision: 1,
-          needsSync: false,
+          syncStatus: "synced",
         }),
     },
     {
@@ -118,7 +118,7 @@ describe("SyncService — purge", () => {
           name: "Deleted Context",
           is_deleted: true,
           revision: 1,
-          needsSync: false,
+          syncStatus: "synced",
         }),
     },
     {
@@ -130,7 +130,7 @@ describe("SyncService — purge", () => {
           name: "Deleted Category",
           is_deleted: true,
           revision: 1,
-          needsSync: false,
+          syncStatus: "synced",
         }),
     },
     {
@@ -143,7 +143,7 @@ describe("SyncService — purge", () => {
           name: "Deleted Item",
           is_deleted: true,
           revision: 1,
-          needsSync: false,
+          syncStatus: "synced",
         }),
     },
     {
@@ -155,7 +155,7 @@ describe("SyncService — purge", () => {
           name: "Deleted Idea",
           is_deleted: true,
           revision: 1,
-          needsSync: false,
+          syncStatus: "synced",
         }),
     },
   ])("should delete soft-deleted $entityName during purge", async ({

@@ -6,14 +6,14 @@ Feature: Categories Soft Delete
     Given active category "Work" exists
     When user soft-deletes category "Work"
     Then category "Work" has is_deleted true
-    And category "Work" has needsSync true
+    And category "Work" has syncStatus "pending"
 
   @add-context-category-specs @FR5
   Scenario: Restore a soft-deleted category
     Given soft-deleted category "Work" exists
     When user restores category "Work"
     Then category "Work" has is_deleted false
-    And category "Work" has needsSync true
+    And category "Work" has syncStatus "pending"
 
   @add-context-category-specs @FR4 @FR2
   Scenario: Soft-deleted category excluded from active list

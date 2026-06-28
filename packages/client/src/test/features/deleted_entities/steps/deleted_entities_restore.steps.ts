@@ -29,7 +29,7 @@ const feature = await loadFeature("../deleted_entities_restore.feature");
 
 type FeatureContext = Record<string, never>;
 
-type SoftDeletable = { id: string; is_deleted: boolean; needsSync: boolean };
+type SoftDeletable = { id: string; is_deleted: boolean; syncStatus: string };
 
 async function addDeletedEntity<T extends SoftDeletable>(
   table: EntityTable<T, "id">,
@@ -39,7 +39,7 @@ async function addDeletedEntity<T extends SoftDeletable>(
   const entity = factory({
     name,
     is_deleted: true,
-    needsSync: false,
+    syncStatus: "synced" as const,
   } as unknown as Partial<T>);
   await table.add(entity);
   return entity.id;
@@ -53,7 +53,7 @@ async function assertRestoredEntity<T extends SoftDeletable>(
     entityId as unknown as Parameters<typeof table.get>[0],
   );
   expect(restored?.is_deleted).toBe(false);
-  expect(restored?.needsSync).toBe(true);
+  expect(restored?.syncStatus).toBe("pending");
 }
 
 describeFeature(
@@ -90,7 +90,7 @@ describeFeature(
       });
 
       Then(
-        "the task has is_deleted false and needsSync true",
+        'the task has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           await assertRestoredEntity(db.tasks, taskId);
         },
@@ -116,13 +116,13 @@ describeFeature(
                 task_id: taskId,
                 name: "Brush teeth",
                 is_deleted: true,
-                needsSync: false,
+                syncStatus: "synced" as const,
               }),
               buildChecklistItem({
                 task_id: taskId,
                 name: "Make bed",
                 is_deleted: true,
-                needsSync: false,
+                syncStatus: "synced" as const,
               }),
             ]);
           },
@@ -173,7 +173,7 @@ describeFeature(
       });
 
       Then(
-        "the goal has is_deleted false and needsSync true",
+        'the goal has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           await assertRestoredEntity(db.goals, goalId);
         },
@@ -193,7 +193,7 @@ describeFeature(
       });
 
       Then(
-        "the context has is_deleted false and needsSync true",
+        'the context has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           await assertRestoredEntity(db.contexts, contextId);
         },
@@ -217,7 +217,7 @@ describeFeature(
       });
 
       Then(
-        "the category has is_deleted false and needsSync true",
+        'the category has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           await assertRestoredEntity(db.categories, categoryId);
         },
@@ -244,7 +244,7 @@ describeFeature(
       });
 
       Then(
-        "the idea has is_deleted false and needsSync true",
+        'the idea has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           await assertRestoredEntity(db.ideas, ideaId);
         },
@@ -264,7 +264,7 @@ describeFeature(
             task_id: taskForChecklist.id,
             name: "Step 1",
             is_deleted: true,
-            needsSync: false,
+            syncStatus: "synced" as const,
           });
           checklistItemId = item.id;
           await db.checklist_items.add(item);
@@ -276,7 +276,7 @@ describeFeature(
       });
 
       Then(
-        "the checklist item has is_deleted false and needsSync true",
+        'the checklist item has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           await assertRestoredEntity(db.checklist_items, checklistItemId);
         },

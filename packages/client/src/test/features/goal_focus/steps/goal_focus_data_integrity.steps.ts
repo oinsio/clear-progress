@@ -60,7 +60,7 @@ describeFeature(
         key,
         value,
         updated_at: toISOTimestamp(),
-        needsSync: false,
+        syncStatus: "synced" as const,
       });
     }
 
@@ -79,7 +79,8 @@ describeFeature(
       const setting2 = await settingsRepository.getByKey("focused_goal_2");
 
       const hasSyncFlag =
-        setting1?.needsSync === true || setting2?.needsSync === true;
+        setting1?.syncStatus === ("pending" as const) ||
+        setting2?.syncStatus === ("pending" as const);
       expect(hasSyncFlag).toBe(true);
     }
 
@@ -314,11 +315,11 @@ describeFeature(
       );
 
       And("sync occurs", async (_ctx: TestContext) => {
-        // Simulate push: collect settings with needsSync=true
+        // Simulate push: collect settings with syncStatus=true
         const needingSync = await settingsRepository.getNeedingSync();
         expect(needingSync.length).toBeGreaterThan(0);
 
-        // Simulate server accepting changes and clearing needsSync
+        // Simulate server accepting changes and clearing syncStatus
         const syncedKeys = needingSync.map((setting) => setting.key);
         await settingsRepository.clearNeedsSyncByKey(syncedKeys);
 
@@ -340,7 +341,7 @@ describeFeature(
               key,
               value,
               updated_at: toISOTimestamp(),
-              needsSync: false,
+              syncStatus: "synced" as const,
             });
           }
         },

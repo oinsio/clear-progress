@@ -26,12 +26,12 @@ describeFeature(
       let result: Setting[];
 
       Given(
-        "two settings have needsSync true and one has needsSync false",
+        'two settings have syncStatus "pending" and one has syncStatus "synced"',
         async (_ctx: TestContext) => {
           await db.settings.bulkAdd([
-            buildSetting({ key: "a", needsSync: true }),
-            buildSetting({ key: "b", needsSync: true }),
-            buildSetting({ key: "c", needsSync: false }),
+            buildSetting({ key: "a", syncStatus: "pending" as const }),
+            buildSetting({ key: "b", syncStatus: "pending" as const }),
+            buildSetting({ key: "c", syncStatus: "synced" as const }),
           ]);
         },
       );
@@ -41,10 +41,10 @@ describeFeature(
       });
 
       Then(
-        "only the two settings with needsSync true are returned",
+        'only the two settings with syncStatus "pending" are returned',
         async (_ctx: TestContext) => {
           expect(result).toHaveLength(2);
-          expect(result.every((setting) => setting.needsSync)).toBe(true);
+          expect(result.every((setting) => setting.syncStatus)).toBe(true);
         },
       );
     });
@@ -52,11 +52,17 @@ describeFeature(
     // @settings-specs-and-bdd @FR2
     f.Scenario("Clear sync flag by keys", ({ Given, When, Then, And }) => {
       Given(
-        'settings "accent_color" and "default_box" have needsSync true',
+        'settings "accent_color" and "default_box" have syncStatus "pending"',
         async (_ctx: TestContext) => {
           await db.settings.bulkAdd([
-            buildSetting({ key: "accent_color", needsSync: true }),
-            buildSetting({ key: "default_box", needsSync: true }),
+            buildSetting({
+              key: "accent_color",
+              syncStatus: "pending" as const,
+            }),
+            buildSetting({
+              key: "default_box",
+              syncStatus: "pending" as const,
+            }),
           ]);
         },
       );
@@ -68,16 +74,19 @@ describeFeature(
         },
       );
 
-      Then('"accent_color" has needsSync false', async (_ctx: TestContext) => {
-        const setting = await db.settings.get("accent_color");
-        expect(setting?.needsSync).toBe(false);
-      });
+      Then(
+        '"accent_color" has syncStatus "synced"',
+        async (_ctx: TestContext) => {
+          const setting = await db.settings.get("accent_color");
+          expect(setting?.syncStatus).toBe("synced");
+        },
+      );
 
       And(
-        '"default_box" still has needsSync true',
+        '"default_box" still has syncStatus "pending"',
         async (_ctx: TestContext) => {
           const setting = await db.settings.get("default_box");
-          expect(setting?.needsSync).toBe(true);
+          expect(setting?.syncStatus).toBe("pending");
         },
       );
     });

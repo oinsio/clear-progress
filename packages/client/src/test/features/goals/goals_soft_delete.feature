@@ -6,14 +6,14 @@ Feature: Goals Soft Delete
     Given active goal "Learn Rust" exists
     When user soft-deletes goal "Learn Rust"
     Then goal "Learn Rust" has is_deleted true
-    And goal "Learn Rust" has needsSync true
+    And goal "Learn Rust" has syncStatus "pending"
 
   @add-goals-specs @FR5
   Scenario: Restore a soft-deleted goal
     Given soft-deleted goal "Learn Rust" exists
     When user restores goal "Learn Rust"
     Then goal "Learn Rust" has is_deleted false
-    And goal "Learn Rust" has needsSync true
+    And goal "Learn Rust" has syncStatus "pending"
 
   @add-goals-specs @FR4 @FR2
   Scenario: Soft-deleted goal excluded from active list

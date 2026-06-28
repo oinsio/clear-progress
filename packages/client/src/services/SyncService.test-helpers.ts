@@ -4,6 +4,7 @@ import type {
   SyncAdapter,
 } from "@clear-progress/contract";
 import { vi } from "vitest";
+import { db } from "@/db/database";
 import type { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
@@ -41,6 +42,7 @@ export function makePullResponse(
     current_revision: 10,
     purge_revision: 0,
     server_time: "2026-03-04T11:00:00.000Z",
+    has_more: false,
     ...overrides,
   };
 }
@@ -113,7 +115,7 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: true,
+    syncStatus: "pending" as const,
     ...overrides,
   };
 }
@@ -130,7 +132,7 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: true,
+    syncStatus: "pending" as const,
     ...overrides,
   };
 }
@@ -145,7 +147,7 @@ export function makeIdea(overrides: Partial<Idea> = {}): Idea {
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: true,
+    syncStatus: "pending" as const,
     ...overrides,
   };
 }
@@ -159,7 +161,7 @@ export function makeContext(overrides: Partial<Context> = {}): Context {
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: true,
+    syncStatus: "pending" as const,
     ...overrides,
   };
 }
@@ -173,7 +175,7 @@ export function makeCategory(overrides: Partial<Category> = {}): Category {
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: true,
+    syncStatus: "pending" as const,
     ...overrides,
   };
 }
@@ -191,7 +193,7 @@ export function makeChecklistItem(
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: true,
+    syncStatus: "pending" as const,
     ...overrides,
   };
 }
@@ -212,7 +214,7 @@ export function makeAttachment(
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: true,
+    syncStatus: "pending" as const,
     ...overrides,
   };
 }
@@ -432,6 +434,8 @@ export const ENTITY_TEST_CASES: EntityTestCase[] = [
         ctx.checklistRepository,
         entities,
       );
+      // Add parent task to db to prevent orphan detection removal
+      void db.tasks.put(makeTask({ id: "t0", syncStatus: "synced" as const }));
     },
     getRepo: (ctx) =>
       ctx.checklistRepository as unknown as ReturnType<
@@ -457,7 +461,7 @@ export const ENTITY_TEST_CASES: EntityTestCase[] = [
       key: "theme",
       value: "dark",
       updated_at: toISOTimestamp(),
-      needsSync: true,
+      syncStatus: "pending" as const,
     }),
     setupRepo: (ctx, entities) => {
       ctx.settingsRepository = withNeedingSync(
@@ -524,7 +528,7 @@ export const ENTITY_TEST_CASES_WITH_REVISION: Array<{
       makeIdea({
         id: "i1",
         updated_at: "2026-01-01T10:00:00.000Z",
-        needsSync: true,
+        syncStatus: "pending" as const,
       }),
     payloadKey: "ideas",
     pushRevision: 12,

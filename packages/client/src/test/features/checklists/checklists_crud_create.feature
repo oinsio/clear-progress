@@ -8,7 +8,7 @@ Feature: Checklists CRUD — Create
     Then checklist item is persisted with name "Buy milk"
     And checklist item has is_completed false
     And checklist item has revision 0
-    And checklist item has needsSync true
+    And checklist item has syncStatus "pending"
     And checklist item has is_deleted false
 
   @add-checklist-specs @FR1

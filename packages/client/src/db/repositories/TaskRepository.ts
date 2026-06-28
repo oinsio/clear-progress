@@ -113,7 +113,7 @@ export class TaskRepository {
   }
 
   async getNeedingSync(): Promise<Task[]> {
-    return db.tasks.filter((task) => task.needsSync).toArray();
+    return db.tasks.filter((task) => task.syncStatus === "pending").toArray();
   }
 
   async getTasksToReveal(currentDate: string): Promise<Task[]> {
@@ -138,7 +138,7 @@ export class TaskRepository {
     await db.transaction("rw", db.tasks, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.tasks.get(serverRecord.id);
-        if (!localRecord?.needsSync) {
+        if (localRecord?.syncStatus !== "pending") {
           const sanitizedRecord: Task = {
             ...serverRecord,
             next_date: (sanitizeDateOnly(serverRecord.next_date) || "") as
@@ -150,7 +150,7 @@ export class TaskRepository {
             created_at: serverRecord.created_at as ISOTimestamp,
             updated_at: serverRecord.updated_at as ISOTimestamp,
             completed_at: serverRecord.completed_at as ISOTimestamp | "",
-            needsSync: false,
+            syncStatus: "synced" as const,
           };
           await db.tasks.put(sanitizedRecord);
         }

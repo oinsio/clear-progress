@@ -1,9 +1,11 @@
 import { CircleUser, RefreshCw } from "lucide-react";
 import type * as React from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useSync } from "@/app/providers/SyncProvider";
+import { ProjectPausedDialog } from "@/components/settings/ProjectPausedDialog";
 import { ROUTES, SETTINGS_SECTION_IDS } from "@/constants";
 import { useConnectionStatus } from "@/hooks/useConnectionStatus";
 import { cn } from "@/shared/lib/cn";
@@ -30,11 +32,24 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
   const isSyncing = connectionStatus === "syncing";
   const isOffline = connectionStatus === "offline";
   const hasServerError = connectionStatus === "error";
-  const hasSyncError = isOffline || hasServerError;
+  const isProjectPaused = connectionStatus === "project_paused";
+  const hasSyncError = isOffline || hasServerError || isProjectPaused;
   const needsSignIn =
     connectionStatus === "unauthorized" || connectionStatus === "no_auth";
   const isConfigured = connectionStatus !== "not_configured";
   const isLeft = side === "left";
+
+  // implements UX1 of fix-project-paused
+  const [isProjectPausedDialogOpen, setIsProjectPausedDialogOpen] =
+    useState(false);
+  const previousProjectPausedRef = useRef(false);
+
+  useEffect(() => {
+    if (isProjectPaused && !previousProjectPausedRef.current) {
+      setIsProjectPausedDialogOpen(true);
+    }
+    previousProjectPausedRef.current = isProjectPaused;
+  }, [isProjectPaused]);
 
   const handleSyncClick = (): void => {
     void pull();
@@ -58,20 +73,31 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
       ? t("sync.noConnection")
       : hasServerError
         ? t("sync.serverError")
-        : t("sync.synced");
+        : isProjectPaused
+          ? t("sync.projectPaused")
+          : t("sync.synced");
+
+  const projectPausedDialog = isProjectPausedDialogOpen ? (
+    <ProjectPausedDialog onClose={() => setIsProjectPausedDialogOpen(false)} />
+  ) : null;
 
   if (!isExpanded) {
-    return renderCollapsedButton({
-      needsSignIn,
-      isConfigured,
-      isSyncing,
-      hasSyncError,
-      userPicture,
-      onSyncClick: handleSyncClick,
-      onSignIn: handleSignIn,
-      onSettings: navigateToSettings,
-      t,
-    });
+    return (
+      <>
+        {renderCollapsedButton({
+          needsSignIn,
+          isConfigured,
+          isSyncing,
+          hasSyncError,
+          userPicture,
+          onSyncClick: handleSyncClick,
+          onSignIn: handleSignIn,
+          onSettings: navigateToSettings,
+          t,
+        })}
+        {projectPausedDialog}
+      </>
+    );
   }
 
   const accountButton = renderAccountButton(userPicture, navigateToSettings, t);
@@ -90,19 +116,22 @@ export function SidebarSyncBlock({ isExpanded, side }: SidebarSyncBlockProps) {
   });
 
   return (
-    <div className="flex items-center justify-between border-b border-white/20">
-      {isLeft ? (
-        <>
-          {accountButton}
-          {syncLoginButton}
-        </>
-      ) : (
-        <>
-          {syncLoginButton}
-          {accountButton}
-        </>
-      )}
-    </div>
+    <>
+      <div className="flex items-center justify-between border-b border-white/20">
+        {isLeft ? (
+          <>
+            {accountButton}
+            {syncLoginButton}
+          </>
+        ) : (
+          <>
+            {syncLoginButton}
+            {accountButton}
+          </>
+        )}
+      </div>
+      {projectPausedDialog}
+    </>
   );
 }
 

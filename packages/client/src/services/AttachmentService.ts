@@ -46,7 +46,7 @@ export class AttachmentService {
       created_at: now,
       updated_at: now,
       revision: 0,
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
 
     await this.attachmentRepository.save(attachment);

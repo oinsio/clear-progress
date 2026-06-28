@@ -71,7 +71,7 @@ export class TaskService {
       created_at: now,
       updated_at: now,
       revision: 0,
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     await this.taskRepository.create(task);
     return task;
@@ -97,7 +97,7 @@ export class TaskService {
     const updatedTask: Task = {
       ...candidateTask,
       updated_at: hasChanged ? toISOTimestamp() : existingTask.updated_at,
-      needsSync: hasChanged,
+      syncStatus: hasChanged ? ("pending" as const) : ("synced" as const),
     };
 
     await this.taskRepository.update(updatedTask);
@@ -244,7 +244,7 @@ export class TaskService {
         created_at: now,
         updated_at: now,
         revision: 0,
-        needsSync: true,
+        syncStatus: "pending" as const,
       };
       await this.checklistRepository.create(copiedItem);
     }
@@ -295,7 +295,7 @@ export class TaskService {
       const updatedItems = checklistItems.map((item) => ({
         ...item,
         is_deleted: true,
-        needsSync: true,
+        syncStatus: "pending" as const,
         updated_at: now,
       }));
       await this.checklistRepository.bulkUpsert(updatedItems);
@@ -319,7 +319,7 @@ export class TaskService {
       const updatedItems = checklistItems.map((item) => ({
         ...item,
         is_deleted: false,
-        needsSync: true,
+        syncStatus: "pending" as const,
         updated_at: now,
       }));
       await this.checklistRepository.bulkUpsert(updatedItems);
@@ -372,7 +372,7 @@ export class TaskService {
       ...task,
       sort_order: newSortOrder,
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     if (needsRebalancing(newSortOrder)) {
@@ -389,7 +389,7 @@ export class TaskService {
       ...task,
       sort_order: newKeys[index],
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     }));
     await this.taskRepository.bulkUpsert(rebalancedTasks);
   }

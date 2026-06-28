@@ -93,7 +93,7 @@ export function useChecklist(
     [checklistService, schedulePush],
   );
 
-  const hasUnsyncedItems = items.some((item) => item.needsSync);
+  const hasUnsyncedItems = items.some((item) => item.syncStatus !== "synced");
 
   const reload = useCallback(async () => {
     // liveQuery handles reactive updates automatically

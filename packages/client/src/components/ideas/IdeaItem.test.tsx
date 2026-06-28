@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { IdeaItem } from "./IdeaItem";
 
 vi.mock("react-i18next", () => ({
@@ -7,7 +7,6 @@ vi.mock("react-i18next", () => ({
     t: (key: string) => key,
   }),
 }));
-vi.mock("@/hooks/useIsUnsynced");
 vi.mock("@/hooks/usePanelSide");
 vi.mock("@/components/ui/DescriptionMarkdown", () => ({
   DescriptionMarkdown: ({
@@ -31,10 +30,8 @@ vi.mock("@/hooks/useAttachmentCount", () => ({
 }));
 
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 
-const mockUseIsUnsynced = vi.mocked(useIsUnsynced);
 const mockUsePanelSide = vi.mocked(usePanelSide);
 const mockUseAttachmentCount = vi.mocked(useAttachmentCount);
 
@@ -48,13 +45,12 @@ const createIdea = (overrides = {}) => ({
   created_at: "2025-01-01T00:00:00.000Z",
   updated_at: "2025-01-01T00:00:00.000Z",
   revision: 1,
-  needsSync: false,
+  syncStatus: "synced" as const,
   ...overrides,
 });
 
 describe("IdeaItem", () => {
   beforeEach(() => {
-    mockUseIsUnsynced.mockReturnValue(false);
     mockUsePanelSide.mockReturnValue({
       panelSide: "right",
       setPanelSide: vi.fn(),

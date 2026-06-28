@@ -5,7 +5,7 @@ Feature: Settings repository read
   Scenario: Get existing setting by key
     Given a setting with key "accent_color" and value "blue" exists
     When getByKey is called with "accent_color"
-    Then the full setting record is returned with key "accent_color", value "blue", updated_at, and needsSync
+    Then the full setting record is returned with key "accent_color", value "blue", updated_at, and syncStatus
 
   @settings-specs-and-bdd @FR1
   Scenario: Get value of existing setting

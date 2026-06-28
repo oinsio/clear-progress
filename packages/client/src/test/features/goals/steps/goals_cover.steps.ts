@@ -43,8 +43,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedGoal.cover_hash).toBe("abc123def456");
     });
 
-    And("goal has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedGoal.needsSync).toBe(true);
+    And('goal has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedGoal.syncStatus).toBe("pending");
     });
   });
 
@@ -72,8 +72,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedGoal.cover_hash).toBe("");
     });
 
-    And("goal has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedGoal.needsSync).toBe(true);
+    And('goal has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedGoal.syncStatus).toBe("pending");
     });
   });
 
@@ -102,8 +102,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedGoal.cover_hash).toBe("new_hash");
     });
 
-    And("goal has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedGoal.needsSync).toBe(true);
+    And('goal has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedGoal.syncStatus).toBe("pending");
     });
   });
 
@@ -112,11 +112,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let originalUpdatedAt: string;
 
     Given(
-      'goal with cover_hash "abc123" and needsSync false exists',
+      'goal with cover_hash "abc123" and syncStatus "synced" exists',
       async (_ctx: TestContext) => {
         await seedGoal(ctx.goalIds, "Test Goal", {
           cover_hash: "abc123",
-          needsSync: false,
+          syncStatus: "synced" as const,
         });
         const goal = await db.goals.get(getIdOrThrow(ctx.goalIds, "Test Goal"));
         expect(goal).toBeDefined();
@@ -133,9 +133,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    Then("goal needsSync remains false", async (_ctx: TestContext) => {
+    Then('goal syncStatus remains "synced"', async (_ctx: TestContext) => {
       const goal = await db.goals.get(getIdOrThrow(ctx.goalIds, "Test Goal"));
-      expect(goal?.needsSync).toBe(false);
+      expect(goal?.syncStatus).toBe("synced");
     });
 
     And("goal updated_at is unchanged", async (_ctx: TestContext) => {

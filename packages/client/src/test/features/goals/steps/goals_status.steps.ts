@@ -41,8 +41,8 @@ function defineStatusTransitionSteps(
     expect(updatedGoal.status).toBe(targetStatus);
   });
 
-  steps.And("goal has needsSync true", async (_ctx: TestContext) => {
-    expect(updatedGoal.needsSync).toBe(true);
+  steps.And('goal has syncStatus "pending"', async (_ctx: TestContext) => {
+    expect(updatedGoal.syncStatus).toBe("pending");
   });
 
   return { getUpdatedGoal: () => updatedGoal };
@@ -117,11 +117,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let originalUpdatedAt: string;
 
     Given(
-      'goal with status "in_progress" and needsSync false exists',
+      'goal with status "in_progress" and syncStatus "synced" exists',
       async (_ctx: TestContext) => {
         await seedGoal(ctx.goalIds, GOAL_NAME, {
           status: "in_progress",
-          needsSync: false,
+          syncStatus: "synced" as const,
         });
         const goal = await getGoal(ctx.goalIds, GOAL_NAME);
         originalUpdatedAt = goal.updated_at;
@@ -138,9 +138,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    Then("goal needsSync remains false", async (_ctx: TestContext) => {
+    Then('goal syncStatus remains "synced"', async (_ctx: TestContext) => {
       const goal = await getGoal(ctx.goalIds, GOAL_NAME);
-      expect(goal.needsSync).toBe(false);
+      expect(goal.syncStatus).toBe("synced");
     });
 
     And("goal updated_at is unchanged", async (_ctx: TestContext) => {

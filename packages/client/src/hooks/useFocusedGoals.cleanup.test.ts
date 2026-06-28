@@ -1,5 +1,5 @@
-import { renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { renderHook } from "@testing-library/react";
+import { describe, it, vi } from "vitest";
 import "fake-indexeddb/auto";
 import { SETTINGS_KEYS } from "@clear-progress/contract";
 import { useFocusedGoals } from "./useFocusedGoals";
@@ -24,19 +24,30 @@ vi.mock("@/app/providers/SyncProvider", () => ({
 describe("useFocusedGoals", () => {
   const deps = setupFocusedGoalsTests();
 
+  async function renderFocusedGoals(...goalIds: string[]) {
+    await setupFocusedGoals(
+      deps.goalRepo,
+      deps.settingsRepo,
+      goalIds[0],
+      goalIds[1],
+    );
+    const { result } = renderHook(() =>
+      useFocusedGoals(deps.settingsRepo, deps.goalRepo),
+    );
+    await waitForFocusedGoals(result, goalIds);
+    return result;
+  }
+
   describe("Auto-cleanup of invalid goals", () => {
     it("should remove soft-deleted goal from focus", async () => {
-      await setupFocusedGoals(deps.goalRepo, deps.settingsRepo, UUID_1, UUID_2);
-
-      const { result } = renderHook(() =>
-        useFocusedGoals(deps.settingsRepo, deps.goalRepo),
-      );
-
-      await waitForFocusedGoals(result, [UUID_1, UUID_2]);
+      const result = await renderFocusedGoals(UUID_1, UUID_2);
 
       // Soft-delete UUID_1
       await deps.goalRepo.update(
-        createGoal(UUID_1, { is_deleted: true, needsSync: true }),
+        createGoal(UUID_1, {
+          is_deleted: true,
+          syncStatus: "pending" as const,
+        }),
       );
 
       await waitForFocusedGoals(result, [UUID_2]);
@@ -44,65 +55,39 @@ describe("useFocusedGoals", () => {
       await expectSettingsValues(deps.settingsRepo, UUID_2, "");
     });
 
-    it("should remove completed goal from focus", async () => {
-      await setupFocusedGoals(deps.goalRepo, deps.settingsRepo, UUID_1);
+    it.each([
+      "completed",
+      "cancelled",
+    ] as const)("should remove %s goal from focus", async (status) => {
+      const result = await renderFocusedGoals(UUID_1);
 
-      const { result } = renderHook(() =>
-        useFocusedGoals(deps.settingsRepo, deps.goalRepo),
-      );
-
-      await waitForFocusedGoals(result, [UUID_1]);
-
-      // Complete UUID_1
       await deps.goalRepo.update(
-        createGoal(UUID_1, { status: "completed", needsSync: true }),
+        createGoal(UUID_1, {
+          status,
+          syncStatus: "pending" as const,
+        }),
       );
 
       await waitForFocusedGoals(result, []);
 
-      const value1 = await deps.settingsRepo.getValue(
-        SETTINGS_KEYS.FOCUSED_GOAL_1,
-      );
-      expect(value1).toBe("");
-    });
-
-    it("should remove cancelled goal from focus", async () => {
-      await setupFocusedGoals(deps.goalRepo, deps.settingsRepo, UUID_1);
-
-      const { result } = renderHook(() =>
-        useFocusedGoals(deps.settingsRepo, deps.goalRepo),
-      );
-
-      await waitForFocusedGoals(result, [UUID_1]);
-
-      // Cancel UUID_1
-      await deps.goalRepo.update(
-        createGoal(UUID_1, { status: "cancelled", needsSync: true }),
-      );
-
-      await waitForFocusedGoals(result, []);
-
-      const value1 = await deps.settingsRepo.getValue(
-        SETTINGS_KEYS.FOCUSED_GOAL_1,
-      );
-      expect(value1).toBe("");
+      await expectSettingsValues(deps.settingsRepo, "", "");
     });
 
     it("should remove both goals when both become invalid", async () => {
-      await setupFocusedGoals(deps.goalRepo, deps.settingsRepo, UUID_1, UUID_2);
-
-      const { result } = renderHook(() =>
-        useFocusedGoals(deps.settingsRepo, deps.goalRepo),
-      );
-
-      await waitForFocusedGoals(result, [UUID_1, UUID_2]);
+      const result = await renderFocusedGoals(UUID_1, UUID_2);
 
       // Delete both
       await deps.goalRepo.update(
-        createGoal(UUID_1, { is_deleted: true, needsSync: true }),
+        createGoal(UUID_1, {
+          is_deleted: true,
+          syncStatus: "pending" as const,
+        }),
       );
       await deps.goalRepo.update(
-        createGoal(UUID_2, { is_deleted: true, needsSync: true }),
+        createGoal(UUID_2, {
+          is_deleted: true,
+          syncStatus: "pending" as const,
+        }),
       );
 
       await waitForFocusedGoals(result, []);
@@ -150,17 +135,7 @@ describe("useFocusedGoals", () => {
 
       await waitForFocusedGoals(result, []);
 
-      // Wait for self-healing to complete
-      await waitFor(async () => {
-        const value1 = await deps.settingsRepo.getValue(
-          SETTINGS_KEYS.FOCUSED_GOAL_1,
-        );
-        const value2 = await deps.settingsRepo.getValue(
-          SETTINGS_KEYS.FOCUSED_GOAL_2,
-        );
-        expect(value1).toBe("");
-        expect(value2).toBe("");
-      });
+      await expectSettingsValues(deps.settingsRepo, "", "");
     });
 
     it("should clear only focused_goal_2 when it is corrupted", async () => {

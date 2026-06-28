@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { SYNC_INTERVAL_MS } from "@/constants";
+import { STORAGE_KEYS, SYNC_INTERVAL_MS } from "@/constants";
 
 vi.mock("@/app/providers/AuthProvider");
 vi.mock("@/services/SyncService");
@@ -10,11 +10,17 @@ import "@/test/helpers/mockRepositories";
 import { SyncProvider } from "./SyncProvider";
 import {
   FullSyncTrigger,
+  LastSyncDisplay,
   renderProvider,
   SyncStatusDisplay,
   setupBeforeEach,
 } from "./SyncProvider.test-helpers";
-import { mockFileSync, mockPull, mockPush } from "./SyncProvider.test-mocks";
+import {
+  mockFileSync,
+  mockInitializeLocalFiles,
+  mockPull,
+  mockPush,
+} from "./SyncProvider.test-mocks";
 
 beforeEach(() => setupBeforeEach());
 afterEach(() => vi.useRealTimers());
@@ -107,5 +113,24 @@ describe("SyncProvider — localStorage resilience", () => {
     await act(async () => {});
     expect(screen.getByTestId("status").textContent).toBe("idle");
     vi.restoreAllMocks();
+  });
+
+  it("should initialize lastSyncedAt from localStorage on mount", () => {
+    const storedTimestamp = "2026-06-01T10:00:00.000Z";
+    localStorage.setItem(STORAGE_KEYS.LAST_SYNC, storedTimestamp);
+    render(
+      <SyncProvider>
+        <LastSyncDisplay />
+      </SyncProvider>,
+    );
+    expect(screen.getByTestId("last-sync").textContent).toBe(storedTimestamp);
+  });
+});
+
+describe("SyncProvider — initialization", () => {
+  it("should call initializeLocalFiles on mount", async () => {
+    renderProvider();
+    await act(async () => {});
+    expect(mockInitializeLocalFiles).toHaveBeenCalledTimes(1);
   });
 });

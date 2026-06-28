@@ -1,4 +1,5 @@
 // implements spec-sync-protocol — conflict resolution (FR3)
+import "@/test/helpers/mockPushPreValidator";
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
@@ -35,7 +36,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       const task = makeTask({
         id: "t1",
         name: "Client version",
-        needsSync: true,
+        syncStatus: "pending" as const,
       });
       const serverTask = makeTask({
         id: "t1",
@@ -89,14 +90,17 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      And('local task "t1" has needsSync false', async (_ctx: TestContext) => {
-        expect(repositories.taskRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({
-            id: "t1",
-            needsSync: false,
-          }),
-        );
-      });
+      And(
+        'local task "t1" has syncStatus "synced"',
+        async (_ctx: TestContext) => {
+          expect(repositories.taskRepository.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+              id: "t1",
+              syncStatus: "synced" as const,
+            }),
+          );
+        },
+      );
     },
   );
 
@@ -105,7 +109,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     const goal = makeGoal({
       id: "g1",
       name: "Client goal",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     const serverGoal = makeGoal({
       id: "g1",
@@ -157,14 +161,17 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    And('local goal "g1" has needsSync false', async (_ctx: TestContext) => {
-      expect(repositories.goalRepository.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: "g1",
-          needsSync: false,
-        }),
-      );
-    });
+    And(
+      'local goal "g1" has syncStatus "synced"',
+      async (_ctx: TestContext) => {
+        expect(repositories.goalRepository.update).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: "g1",
+            syncStatus: "synced" as const,
+          }),
+        );
+      },
+    );
   });
 
   // @spec-sync-protocol @FR3
@@ -174,7 +181,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       const task = makeTask({
         id: "t1",
         name: "Original name",
-        needsSync: true,
+        syncStatus: "pending" as const,
       });
       const serverTask = makeTask({
         id: "t1",
@@ -226,11 +233,17 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      And('local task "t1" has needsSync false', async (_ctx: TestContext) => {
-        expect(repositories.taskRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ id: "t1", needsSync: false }),
-        );
-      });
+      And(
+        'local task "t1" has syncStatus "synced"',
+        async (_ctx: TestContext) => {
+          expect(repositories.taskRepository.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+              id: "t1",
+              syncStatus: "synced" as const,
+            }),
+          );
+        },
+      );
     },
   );
 
@@ -290,7 +303,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         id: "t1",
         name: "Local version",
         updated_at: "2026-05-13T10:00:00.000Z",
-        needsSync: false,
+        syncStatus: "synced" as const,
       });
       const serverTask = makeTask({
         id: "t1",
@@ -299,7 +312,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Given(
-        'client has task "t1" with updated_at "2026-05-13T10:00:00.000Z" and needsSync false',
+        'client has task "t1" with updated_at "2026-05-13T10:00:00.000Z" and syncStatus "synced"',
         async (_ctx: TestContext) => {
           (
             repositories.taskRepository.getById as ReturnType<typeof vi.fn>

@@ -8,7 +8,8 @@ export type ConnectionStatus =
   | "synced"
   | "offline"
   | "error"
-  | "unauthorized";
+  | "unauthorized"
+  | "project_paused";
 
 export function useConnectionStatus(): ConnectionStatus {
   const config = useConnectionConfig();
@@ -21,5 +22,6 @@ export function useConnectionStatus(): ConnectionStatus {
   if (syncStatus === "error") return "error";
   if (syncStatus === "unauthorized") return "unauthorized";
   if (syncStatus === "syncing") return "syncing";
+  if (syncStatus === "project_paused") return "project_paused";
   return "synced";
 }

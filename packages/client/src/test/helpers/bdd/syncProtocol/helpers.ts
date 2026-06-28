@@ -41,7 +41,7 @@ export function makeTask(overrides: Partial<Task> = {}): Task {
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
     ...overrides,
   };
 }
@@ -58,7 +58,7 @@ export function makeGoal(overrides: Partial<Goal> = {}): Goal {
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
     ...overrides,
   };
 }

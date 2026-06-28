@@ -215,13 +215,13 @@ describe("useAttachmentCount", () => {
         entity_type: TEST_ENTITY_TYPE,
         entity_id: TEST_ENTITY_ID,
         is_deleted: false,
-        needsSync: true,
+        syncStatus: "pending" as const,
       }),
       buildAttachment({
         entity_type: TEST_ENTITY_TYPE,
         entity_id: TEST_ENTITY_ID,
         is_deleted: false,
-        needsSync: false,
+        syncStatus: "synced",
       }),
     ]);
 
@@ -242,13 +242,13 @@ describe("useAttachmentCount", () => {
         entity_type: TEST_ENTITY_TYPE,
         entity_id: TEST_ENTITY_ID,
         is_deleted: false,
-        needsSync: false,
+        syncStatus: "synced",
       }),
       buildAttachment({
         entity_type: TEST_ENTITY_TYPE,
         entity_id: TEST_ENTITY_ID,
         is_deleted: false,
-        needsSync: false,
+        syncStatus: "synced",
       }),
     ]);
 

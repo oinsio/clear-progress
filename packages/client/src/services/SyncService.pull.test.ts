@@ -41,7 +41,7 @@ describe("SyncService — pull", () => {
   });
 
   it("should call applyServerRecords on all entity repositories", async () => {
-    const serverTasks = [makeTask({ needsSync: false })];
+    const serverTasks = [makeTask({ syncStatus: "synced" as const })];
     ctx.mockSyncAdapter = createMockSyncAdapter({
       pull: vi.fn().mockResolvedValue(
         makePullResponse({
@@ -80,7 +80,7 @@ describe("SyncService — pull", () => {
         key: "default_box",
         value: "inbox",
         updated_at: "2026-01-01T00:00:00.000Z",
-        needsSync: false,
+        syncStatus: "synced" as const,
       },
     ];
     ctx.mockSyncAdapter = createMockSyncAdapter({
@@ -133,7 +133,7 @@ describe("SyncService — pull", () => {
         name: "Deleted Task",
         is_deleted: true,
         revision: 1,
-        needsSync: false,
+        syncStatus: "synced" as const,
       }),
     );
     asMock(ctx.syncMetaRepository.getValue)
@@ -174,7 +174,7 @@ describe("SyncService — pull", () => {
         name: "Deleted",
         is_deleted: true,
         revision: 1,
-        needsSync: false,
+        syncStatus: "synced" as const,
       }),
     );
     const service = createService(ctx);
@@ -204,7 +204,7 @@ describe("SyncService — pull", () => {
     const serverTask = makeTask({
       id: "t-num",
       sort_order: 7 as unknown as string,
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
     ctx.mockSyncAdapter = createMockSyncAdapter({
       pull: vi.fn().mockResolvedValue(
@@ -228,7 +228,7 @@ describe("SyncService — pull", () => {
     const serverTask = makeTask({
       id: "t-str",
       sort_order: "a0" as unknown as string,
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
     ctx.mockSyncAdapter = createMockSyncAdapter({
       pull: vi.fn().mockResolvedValue(

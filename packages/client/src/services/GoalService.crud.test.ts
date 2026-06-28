@@ -97,14 +97,14 @@ describe("GoalService", () => {
       );
     });
 
-    it("should set needsSync to true", async () => {
-      const goal = buildGoal({ needsSync: false });
+    it("should set syncStatus to true", async () => {
+      const goal = buildGoal({ syncStatus: "synced" as const });
       mockGoalRepository = createMockGoalRepository({
         getById: vi.fn().mockResolvedValue(goal),
       });
       const goalService = new GoalService(mockGoalRepository);
       const updated = await goalService.update(goal.id, { name: "X" });
-      expect(updated.needsSync).toBe(true);
+      expect(updated.syncStatus).toBe("pending");
     });
 
     it("should throw when goal not found", async () => {

@@ -8,11 +8,15 @@ Read `uncommitted-files.md` and analyze each listed file via sub-agents — one 
 
 ## Steps
 
-### Step 1: Read the checklist
+### Step 1: Generate the checklist
+
+Run `./scripts/uncommitted-files.sh` to create or update `uncommitted-files.md` in the project root.
+
+### Step 2: Read the checklist
 
 Read `uncommitted-files.md`. Only process unchecked items (`[ ]`), skip `[x]`.
 
-### Step 2: Analyze files sequentially via sub-agents
+### Step 3: Analyze files sequentially via sub-agents
 
 For each unchecked file, launch a **foreground sub-agent** (Agent tool, subagent_type: general-purpose) with:
 
@@ -58,7 +62,7 @@ After each sub-agent completes:
 - Mark `[ ]` → `[x]` in `uncommitted-files.md`
 - Log result summary
 
-### Step 3: Final verification
+### Step 4: Final verification
 
 Run **sequentially** (wait for each before starting next):
 
@@ -68,7 +72,7 @@ Run **sequentially** (wait for each before starting next):
 
 Fix failures before proceeding to the next check.
 
-### Step 4: Report
+### Step 5: Report
 
 Summary:
 - Total files analyzed

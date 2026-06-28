@@ -7,7 +7,7 @@ Feature: Tasks CRUD
     Then task is persisted with name "Buy groceries"
     And task has box "inbox"
     And task has revision 0
-    And task has needsSync true
+    And task has syncStatus "pending"
     And task has is_deleted false
     And task has is_completed false
 
@@ -56,7 +56,7 @@ Feature: Tasks CRUD
     Given task "Buy groceries" exists in box "inbox"
     When user updates task name to "Buy vegetables"
     Then task name is "Buy vegetables"
-    And task has needsSync true
+    And task has syncStatus "pending"
     And task updated_at is refreshed
 
   @task-core-specs @FR1

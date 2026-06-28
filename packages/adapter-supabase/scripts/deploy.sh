@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # implements FR17, M4 of add-supabase-adapter
 # implements FR4 of add-file-attachments
 # Automates: migrations apply, Edge Functions deploy, Storage bucket creation
@@ -43,6 +43,13 @@ source "${ENV_FILE}"
 set +a
 
 log "Deploying to ${DEPLOY_ENV} environment..."
+
+# ---------------------------------------------------------------------------
+# 0. Generate wireSchemas.ts from contract package
+# ---------------------------------------------------------------------------
+
+log "Generating wireSchemas.ts from contract package..."
+bash "${SCRIPT_DIR}/generate-wire-schemas.sh"
 
 [[ -n "${SUPABASE_PROJECT_REF:-}" ]] || error "SUPABASE_PROJECT_REF is not set in .env"
 

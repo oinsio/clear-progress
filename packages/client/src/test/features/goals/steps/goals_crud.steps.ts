@@ -58,8 +58,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(createdGoal.revision).toBe(0);
     });
 
-    And("goal has needsSync true", async (_ctx: TestContext) => {
-      expect(createdGoal.needsSync).toBe(true);
+    And('goal has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(createdGoal.syncStatus).toBe("pending");
     });
 
     And("goal has is_deleted false", async (_ctx: TestContext) => {
@@ -263,8 +263,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedGoal.name).toBe("Learn Go");
     });
 
-    And("goal has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedGoal.needsSync).toBe(true);
+    And('goal has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedGoal.syncStatus).toBe("pending");
     });
 
     And("goal updated_at is refreshed", async (_ctx: TestContext) => {
@@ -294,8 +294,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedGoal.description).toBe("New");
     });
 
-    And("goal has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedGoal.needsSync).toBe(true);
+    And('goal has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedGoal.syncStatus).toBe("pending");
     });
   });
 

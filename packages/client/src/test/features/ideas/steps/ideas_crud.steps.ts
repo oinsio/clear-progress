@@ -46,8 +46,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(createdIdea.revision).toBe(0);
     });
 
-    And("idea has needsSync true", async (_ctx: TestContext) => {
-      expect(createdIdea.needsSync).toBe(true);
+    And('idea has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(createdIdea.syncStatus).toBe("pending");
     });
 
     And("idea has is_deleted false", async (_ctx: TestContext) => {
@@ -233,8 +233,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedIdea.name).toBe("Learn Go");
     });
 
-    And("idea has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedIdea.needsSync).toBe(true);
+    And('idea has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedIdea.syncStatus).toBe("pending");
     });
 
     And("idea updated_at is refreshed", async (_ctx: TestContext) => {
@@ -264,8 +264,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedIdea.description).toBe("New");
     });
 
-    And("idea has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedIdea.needsSync).toBe(true);
+    And('idea has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedIdea.syncStatus).toBe("pending");
     });
   });
 

@@ -12,7 +12,7 @@ export type {
   UploadFilesResponse,
 } from "./cover";
 export type { InitResponse, PingResponse } from "./ping";
-export type { PullRequest, PullResponse } from "./pull";
+export type { PullRequest, PullResponse, TableCursor } from "./pull";
 export type { PurgeResponse } from "./purge";
 export type {
   PushItemResult,

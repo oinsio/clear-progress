@@ -23,13 +23,13 @@ Feature: Task Boxes
     Given task "Buy groceries" exists in box "inbox"
     When user moves task to box "today"
     Then task has box "today"
-    And task has needsSync true
+    And task has syncStatus "pending"
 
   @task-core-specs @FR2
   Scenario: Move task to same box is no-op
-    Given task "Buy groceries" exists in box "inbox" with needsSync false
+    Given task "Buy groceries" exists in box "inbox" with syncStatus "synced"
     When user moves task to box "inbox"
-    Then task has needsSync false
+    Then task has syncStatus "synced"
     And task updated_at is unchanged
 
   @fractional-sort-order @FR4

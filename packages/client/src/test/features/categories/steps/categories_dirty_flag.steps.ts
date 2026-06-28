@@ -32,11 +32,11 @@ describeFeature(
         let originalUpdatedAt: string;
 
         Given(
-          'category "Work" exists with needsSync false',
+          'category "Work" exists with syncStatus "synced"',
           async (_ctx: TestContext) => {
             await seedCategory(ctx.categoryIds, "Work", {
               name: "Work",
-              needsSync: false,
+              syncStatus: "synced" as const,
             });
             const existingCategory = await getCategory(ctx.categoryIds, "Work");
             originalUpdatedAt = existingCategory.updated_at;
@@ -53,9 +53,12 @@ describeFeature(
           },
         );
 
-        Then("category needsSync remains false", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "Work", false);
-        });
+        Then(
+          'category syncStatus remains "synced"',
+          async (_ctx: TestContext) => {
+            await expectCategoryNeedsSync(ctx.categoryIds, "Work", "synced");
+          },
+        );
 
         And("category updated_at is unchanged", async (_ctx: TestContext) => {
           const category = await getCategory(ctx.categoryIds, "Work");
@@ -89,17 +92,23 @@ describeFeature(
           },
         );
 
-        Then("category A has needsSync false", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "A", false);
+        Then(
+          'category A has syncStatus "synced"',
+          async (_ctx: TestContext) => {
+            await expectCategoryNeedsSync(ctx.categoryIds, "A", "synced");
+          },
+        );
+
+        And('category B has syncStatus "synced"', async (_ctx: TestContext) => {
+          await expectCategoryNeedsSync(ctx.categoryIds, "B", "synced");
         });
 
-        And("category B has needsSync false", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "B", false);
-        });
-
-        And("category C has needsSync true", async (_ctx: TestContext) => {
-          await expectCategoryNeedsSync(ctx.categoryIds, "C", true);
-        });
+        And(
+          'category C has syncStatus "pending"',
+          async (_ctx: TestContext) => {
+            await expectCategoryNeedsSync(ctx.categoryIds, "C", "pending");
+          },
+        );
       },
     );
   },

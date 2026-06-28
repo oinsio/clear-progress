@@ -14,7 +14,7 @@ export const BASE_GOAL: Goal = {
   created_at: "2026-01-01T00:00:00.000Z" as Goal["created_at"],
   updated_at: "2026-01-01T00:00:00.000Z" as Goal["updated_at"],
   revision: 1,
-  needsSync: false,
+  syncStatus: "synced" as const,
 };
 
 export function createGoal(overrides: Partial<Goal> = {}): Goal {

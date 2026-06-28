@@ -61,19 +61,19 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         await moveIdeaBefore(ctx.ideaIds, ctx.ideaService, "C", "A");
       });
 
-      Then("idea C has needsSync true", async (_ctx: TestContext) => {
+      Then('idea C has syncStatus "pending"', async (_ctx: TestContext) => {
         const idea = await getIdea(ctx.ideaIds, "C");
-        expect(idea.needsSync).toBe(true);
+        expect(idea.syncStatus).toBe("pending");
       });
 
-      And("idea A has needsSync false", async (_ctx: TestContext) => {
+      And('idea A has syncStatus "synced"', async (_ctx: TestContext) => {
         const idea = await getIdea(ctx.ideaIds, "A");
-        expect(idea.needsSync).toBe(false);
+        expect(idea.syncStatus).toBe("synced");
       });
 
-      And("idea B has needsSync false", async (_ctx: TestContext) => {
+      And('idea B has syncStatus "synced"', async (_ctx: TestContext) => {
         const idea = await getIdea(ctx.ideaIds, "B");
-        expect(idea.needsSync).toBe(false);
+        expect(idea.syncStatus).toBe("synced");
       });
     },
   );

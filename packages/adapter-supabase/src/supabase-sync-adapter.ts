@@ -25,6 +25,7 @@ import {
   GetFileResponseSchema,
   InitResponseSchema,
   PingResponseSchema,
+  ProjectPausedError,
   PullResponseSchema,
   PurgeResponseSchema,
   PushResponseSchema,
@@ -35,6 +36,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ZodType } from "zod";
 
 const HTTP_STATUS_UNAUTHORIZED = 401;
+const HTTP_STATUS_PROJECT_PAUSED = 540;
 
 // implements FR8 of add-supabase-ui
 export class SupabaseSyncAdapter implements SyncAdapter {
@@ -56,6 +58,10 @@ export class SupabaseSyncAdapter implements SyncAdapter {
     if (error) {
       if (this.isAuthError(error)) {
         throw new ApiAuthError();
+      }
+      // implements FR1 of fix-project-paused
+      if (this.isProjectPaused(error)) {
+        throw new ProjectPausedError();
       }
       const errorMessage =
         typeof error === "object" && "message" in error
@@ -81,6 +87,17 @@ export class SupabaseSyncAdapter implements SyncAdapter {
       typeof context === "object" &&
       context !== null &&
       (context as Record<string, unknown>).status === HTTP_STATUS_UNAUTHORIZED
+    );
+  }
+
+  // implements FR1 of fix-project-paused
+  private isProjectPaused(error: unknown): boolean {
+    if (typeof error !== "object" || error === null) return false;
+    const context = (error as Record<string, unknown>).context;
+    return (
+      typeof context === "object" &&
+      context !== null &&
+      (context as Record<string, unknown>).status === HTTP_STATUS_PROJECT_PAUSED
     );
   }
 

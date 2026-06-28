@@ -7,7 +7,7 @@ Feature: Task Completion
     When user completes the task
     Then task has is_completed true
     And task has completed_at set to current timestamp
-    And task has needsSync true
+    And task has syncStatus "pending"
 
   @task-core-specs @FR3
   Scenario: Uncomplete a task
@@ -15,7 +15,7 @@ Feature: Task Completion
     When user uncompletes the task
     Then task has is_completed false
     And task has completed_at ""
-    And task has needsSync true
+    And task has syncStatus "pending"
 
   @task-core-specs @FR3
   Scenario: Complete nonexistent task throws error

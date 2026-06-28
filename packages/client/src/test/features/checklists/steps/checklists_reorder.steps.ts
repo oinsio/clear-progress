@@ -72,19 +72,19 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       givenItemsABCExist(Given);
       whenMoveCBeforeA(When);
 
-      Then('item "C" has needsSync true', async (_ctx: TestContext) => {
+      Then('item "C" has syncStatus "pending"', async (_ctx: TestContext) => {
         const item = await getChecklistItem(ctx.checklistItemIds, "C");
-        expect(item.needsSync).toBe(true);
+        expect(item.syncStatus).toBe("pending");
       });
 
-      And('item "A" has needsSync false', async (_ctx: TestContext) => {
+      And('item "A" has syncStatus "synced"', async (_ctx: TestContext) => {
         const item = await getChecklistItem(ctx.checklistItemIds, "A");
-        expect(item.needsSync).toBe(false);
+        expect(item.syncStatus).toBe("synced");
       });
 
-      And('item "B" has needsSync false', async (_ctx: TestContext) => {
+      And('item "B" has syncStatus "synced"', async (_ctx: TestContext) => {
         const item = await getChecklistItem(ctx.checklistItemIds, "B");
-        expect(item.needsSync).toBe(false);
+        expect(item.syncStatus).toBe("synced");
       });
     },
   );

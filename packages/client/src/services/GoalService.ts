@@ -44,7 +44,7 @@ export class GoalService {
       created_at: now,
       updated_at: now,
       revision: 0,
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     await this.goalRepository.create(goal);
     return goal;
@@ -70,7 +70,7 @@ export class GoalService {
     const updatedGoal: Goal = {
       ...candidateGoal,
       updated_at: hasChanged ? toISOTimestamp() : existingGoal.updated_at,
-      needsSync: hasChanged,
+      syncStatus: hasChanged ? ("pending" as const) : ("synced" as const),
     };
 
     await this.goalRepository.update(updatedGoal);
@@ -126,7 +126,7 @@ export class GoalService {
       ...goal,
       sort_order: newSortOrder,
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     if (needsRebalancing(newSortOrder)) {
@@ -145,7 +145,7 @@ export class GoalService {
       ...goal,
       sort_order: newKeys[index],
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     }));
     await this.goalRepository.bulkUpsert(rebalancedGoals);
   }

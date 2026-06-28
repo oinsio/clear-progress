@@ -55,8 +55,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(createdTask.revision).toBe(0);
     });
 
-    And("task has needsSync true", async (_ctx: TestContext) => {
-      expect(createdTask.needsSync).toBe(true);
+    And('task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(createdTask.syncStatus).toBe("pending");
     });
 
     And("task has is_deleted false", async (_ctx: TestContext) => {
@@ -277,8 +277,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedTask.name).toBe("Buy vegetables");
     });
 
-    And("task has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedTask.needsSync).toBe(true);
+    And('task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedTask.syncStatus).toBe("pending");
     });
 
     And("task updated_at is refreshed", async (_ctx: TestContext) => {

@@ -188,7 +188,7 @@ describeFeature(
       Given(
         "a saved attachment with known id exists",
         async (_ctx: TestContext) => {
-          const attachment = buildAttachment({ needsSync: false });
+          const attachment = buildAttachment({ syncStatus: "synced" as const });
           attachmentId = attachment.id;
           await db.attachments.add(attachment);
         },
@@ -203,10 +203,13 @@ describeFeature(
         expect(stored?.is_deleted).toBe(true);
       });
 
-      And("the attachment has needsSync true", async (_ctx: TestContext) => {
-        const stored = await db.attachments.get(attachmentId);
-        expect(stored?.needsSync).toBe(true);
-      });
+      And(
+        'the attachment has syncStatus "pending"',
+        async (_ctx: TestContext) => {
+          const stored = await db.attachments.get(attachmentId);
+          expect(stored?.syncStatus).toBe("pending");
+        },
+      );
     });
 
     f.Scenario("Delete non-existent attachment is no-op", ({ When, Then }) => {

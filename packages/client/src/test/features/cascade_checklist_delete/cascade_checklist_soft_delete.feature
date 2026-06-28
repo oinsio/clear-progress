@@ -6,9 +6,9 @@ Feature: Cascade Checklist Delete — Soft Delete
   Scenario: Soft-delete task cascades to its checklist items
     Given a task "T1" with checklist items "C1" and "C2"
     When user soft-deletes task "T1"
-    Then task "T1" has is_deleted true and needsSync true
-    And checklist item "C1" has is_deleted true and needsSync true
-    And checklist item "C2" has is_deleted true and needsSync true
+    Then task "T1" has is_deleted true and syncStatus "pending"
+    And checklist item "C1" has is_deleted true and syncStatus "pending"
+    And checklist item "C2" has is_deleted true and syncStatus "pending"
 
   @cascade-checklist-delete @FR1
   Scenario: Soft-delete task with no checklist items
@@ -21,5 +21,5 @@ Feature: Cascade Checklist Delete — Soft Delete
   Scenario: Soft-delete task with already-deleted checklist items
     Given a task "T1" with checklist item "C1" active and "C2" already deleted
     When user soft-deletes task "T1"
-    Then checklist item "C1" has is_deleted true and needsSync true
-    And checklist item "C2" has is_deleted true and needsSync true with updated updated_at
+    Then checklist item "C1" has is_deleted true and syncStatus "pending"
+    And checklist item "C2" has is_deleted true and syncStatus "pending" with updated updated_at

@@ -1,4 +1,5 @@
 // implements spec-sync-protocol — dirty flag lifecycle (FR4)
+import "@/test/helpers/mockPushPreValidator";
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
@@ -137,7 +138,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           updatedTask = {
             ...existingTask,
             updated_at: "2024-01-02T00:00:00.000Z",
-            needsSync: true,
+            syncStatus: "pending" as const,
             revision: 5,
           };
           changeResult = hasEntityChanged(existingTask, updatedTask);
@@ -154,7 +155,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Created result clears dirty flag when unchanged during push",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", needsSync: true });
+      const task = makeTask({ id: "t1", syncStatus: "pending" as const });
 
       Given("a dirty task was pushed", async (_ctx: TestContext) => {
         (
@@ -183,9 +184,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         await service.push();
       });
 
-      Then("needsSync is set to false", async (_ctx: TestContext) => {
+      Then('syncStatus is set to "synced"', async (_ctx: TestContext) => {
         expect(repositories.taskRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ id: "t1", needsSync: false }),
+          expect.objectContaining({ id: "t1", syncStatus: "synced" as const }),
         );
       });
     },
@@ -195,7 +196,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Accepted result keeps dirty flag when changed during push",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", needsSync: true });
+      const task = makeTask({ id: "t1", syncStatus: "pending" as const });
 
       Given("a dirty task was pushed", async (_ctx: TestContext) => {
         (
@@ -231,9 +232,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         await service.push();
       });
 
-      Then("needsSync remains true", async (_ctx: TestContext) => {
+      Then('syncStatus remains "pending"', async (_ctx: TestContext) => {
         expect(repositories.taskRepository.update).toHaveBeenCalledWith(
-          expect.objectContaining({ id: "t1", needsSync: true }),
+          expect.objectContaining({ id: "t1", syncStatus: "pending" as const }),
         );
       });
     },

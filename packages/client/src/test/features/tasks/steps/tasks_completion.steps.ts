@@ -51,8 +51,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    And("task has needsSync true", async (_ctx: TestContext) => {
-      expect(result.completed.needsSync).toBe(true);
+    And('task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(result.completed.syncStatus).toBe("pending");
     });
   });
 
@@ -85,8 +85,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(uncompleted.completed_at).toBe("");
     });
 
-    And("task has needsSync true", async (_ctx: TestContext) => {
-      expect(uncompleted.needsSync).toBe(true);
+    And('task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(uncompleted.syncStatus).toBe("pending");
     });
   });
 

@@ -50,19 +50,21 @@ export class ContextRepository {
   }
 
   async getNeedingSync(): Promise<Context[]> {
-    return db.contexts.filter((context) => context.needsSync).toArray();
+    return db.contexts
+      .filter((context) => context.syncStatus === "pending")
+      .toArray();
   }
 
   async applyServerRecords(records: WireContext[]): Promise<void> {
     await db.transaction("rw", db.contexts, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.contexts.get(serverRecord.id);
-        if (!localRecord?.needsSync) {
+        if (localRecord?.syncStatus !== "pending") {
           const context: Context = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,
             updated_at: serverRecord.updated_at as ISOTimestamp,
-            needsSync: false,
+            syncStatus: "synced" as const,
           };
           await db.contexts.put(context);
         }

@@ -11,9 +11,9 @@ Feature: Checklists — Reorder
   Scenario: Reorder marks moved item for sync
     Given checklist items "A", "B", "C" exist with ascending sort_order
     When user moves item "C" before item "A"
-    Then item "C" has needsSync true
-    And item "A" has needsSync false
-    And item "B" has needsSync false
+    Then item "C" has syncStatus "pending"
+    And item "A" has syncStatus "synced"
+    And item "B" has syncStatus "synced"
 
   @add-checklist-specs @FR5
   Scenario: Reorder throws for non-existent item

@@ -4,8 +4,8 @@ Feature: Custom accent color persistence
   @settings-specs-and-bdd @FR1 @FR5
   Scenario: Save custom accent colors
     When setCustomAccentColors is called with light "#ff0000" and dark "#00ff00"
-    Then the repository contains "custom_accent_light" set to "#ff0000" with needsSync true
-    And the repository contains "custom_accent_dark" set to "#00ff00" with needsSync true
+    Then the repository contains "custom_accent_light" set to "#ff0000" with syncStatus "pending"
+    And the repository contains "custom_accent_dark" set to "#00ff00" with syncStatus "pending"
     And localStorage cache has "custom_accent_light" as "#ff0000" and "custom_accent_dark" as "#00ff00"
 
   @settings-specs-and-bdd @FR1 @FR5

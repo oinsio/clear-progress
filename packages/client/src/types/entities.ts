@@ -10,7 +10,7 @@ export type ISOTimestamp = string & { readonly __brand: "ISOTimestamp" };
  */
 export type ISODate = string & { readonly __brand: "ISODate" };
 
-// Client entities (Wire types + needsSync field)
+// Client entities (Wire types + syncStatus field)
 export type {
   ClientAttachment as Attachment,
   ClientCategory as Category,

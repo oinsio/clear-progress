@@ -31,7 +31,7 @@ The `/init` Edge Function SHALL accept POST requests with valid Bearer token. It
 - **AND** response is `{ ok: true }`
 
 ### Requirement: Pull Edge Function
-The `/pull` Edge Function SHALL accept POST requests with `{ since_revision, settings_updated_at? }`. It SHALL return all records belonging to the authenticated user with `revision > since_revision`. Settings SHALL be filtered by `updated_at > settings_updated_at` when provided.
+The `/pull` Edge Function SHALL accept POST requests with `{ since_revision, settings_updated_at? }`. It SHALL return all records belonging to the authenticated user with `revision > since_revision`. Settings SHALL be filtered by `updated_at > settings_updated_at` when provided. The function SHALL use `select("*", { count: "exact" })` for all entity table queries, apply `.order("revision", { ascending: true }).order("id", { ascending: true })`, and support composite cursor pagination for truncated tables.
 
 #### Scenario: Incremental pull
 - **WHEN** user sends `{ since_revision: 5 }`
@@ -51,8 +51,38 @@ The `/pull` Edge Function SHALL accept POST requests with `{ since_revision, set
 - **THEN** TIMESTAMPTZ fields are serialized as ISO 8601 with Z suffix (`2025-01-15T10:30:00.000Z`)
 - **AND** DATE fields are serialized as `YYYY-MM-DD` (`2025-01-15`)
 
-### Requirement: Push Edge Function
-The `/push` Edge Function SHALL accept POST requests with entity arrays (tasks, goals, contexts, categories, ideas, checklist_items, settings). It SHALL validate the payload and delegate transactional logic to the PostgreSQL RPC function `push_records` via `supabase.rpc(...)`. The RPC function acquires a `FOR UPDATE` lock on the user's `next_revision` row in `sync_meta`, assigns the current revision to all accepted records, increments `next_revision`, and returns per-record results. The Edge Function formats the RPC response for the client.
+#### Scenario: Query includes count exact
+- **WHEN** pull Edge Function queries the tasks table
+- **THEN** the Supabase query uses `select("*", { count: "exact" })`
+- **AND** response includes both `data` and `count`
+
+#### Scenario: Query orders by revision then id ascending
+- **WHEN** pull Edge Function queries the tasks table
+- **THEN** the query includes `.order("revision", { ascending: true }).order("id", { ascending: true })`
+
+#### Scenario: Composite cursor filter used when cursor present in request
+- **WHEN** request includes `cursors: { tasks: { revision: 5, last_id: "abc" } }`
+- **THEN** tasks query uses `.or('revision.gt.5,and(revision.eq.5,id.gt.abc)')`
+- **AND** other tables without cursor use `.gt("revision", since_revision)`
+
+#### Scenario: has_more computed from any truncated table
+- **WHEN** tasks count is 1500 but data length is 1000
+- **AND** all other tables have count equal to data length
+- **THEN** `has_more` is `true`
+
+#### Scenario: Cursors returned for truncated tables only
+- **WHEN** tasks is truncated (count > data.length) with last row revision=5, id="xyz"
+- **AND** goals is not truncated
+- **THEN** response `cursors` contains `{ tasks: { revision: 5, last_id: "xyz" } }`
+- **AND** `cursors` does not contain `goals`
+
+#### Scenario: current_revision uses MIN of max revisions when truncated
+- **WHEN** tasks max revision in batch is 800, goals max revision is 600
+- **AND** `has_more` is `true`
+- **THEN** `current_revision` is 600
+
+### Requirement: Push Edge Function validates and logs rejected records
+The `/push` Edge Function SHALL accept POST requests with entity arrays (tasks, goals, contexts, categories, ideas, checklist_items, settings). It SHALL validate incoming records with Zod Wire schemas before passing to RPC. Records failing Zod validation SHALL be excluded from the RPC call and returned with `status: "rejected"`. All rejected records (Zod and RPC) SHALL be logged via `console.warn`. Valid records are delegated to the PostgreSQL RPC function `push_records` via `supabase.rpc(...)`. The RPC function acquires a `FOR UPDATE` lock on the user's `next_revision` row in `sync_meta`, assigns the current revision to all accepted records, increments `next_revision`, and returns per-record results. The Edge Function formats the RPC response for the client.
 
 #### Scenario: Push assigns revision atomically
 - **WHEN** user pushes 3 tasks
@@ -75,6 +105,19 @@ The `/push` Edge Function SHALL accept POST requests with entity arrays (tasks, 
 #### Scenario: Lock timeout
 - **WHEN** `FOR UPDATE` lock cannot be acquired within 10 seconds
 - **THEN** response is `{ ok: false, error: "SYNC_LOCK_TIMEOUT" }`
+
+#### Scenario: Zod-invalid record excluded from RPC
+- **WHEN** a task with `created_at = "invalid"` is received in push
+- **THEN** the task is NOT passed to `push_records` RPC
+- **AND** the task is returned with `status: "rejected"` and Zod error details
+
+#### Scenario: Valid records pass through to RPC
+- **WHEN** all records in push pass Zod validation
+- **THEN** all records are passed to `push_records` RPC
+
+#### Scenario: Rejected records are logged with details
+- **WHEN** 2 records are rejected (1 by Zod, 1 by RPC)
+- **THEN** Edge Function logs both rejections with user ID, entity type, record ID, and reason
 
 ### Requirement: Upload Cover Edge Function
 The `/upload-cover` Edge Function SHALL accept POST requests with `{ goal_id, filename, mime_type, data, data_hash }`. It SHALL check for hash deduplication, store the file in Supabase Storage at path `{user_id[0:2]}/{user_id}/{data_hash[0:2]}/{file_id}.{ext}`, and create a record in the `covers` table. The response SHALL return `data_hash` instead of `file_id`.

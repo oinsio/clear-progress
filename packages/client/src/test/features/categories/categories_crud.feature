@@ -6,7 +6,7 @@ Feature: Categories CRUD
     When user creates category "Work"
     Then category is persisted with name "Work"
     And category has revision 0
-    And category has needsSync true
+    And category has syncStatus "pending"
     And category has is_deleted false
 
   @add-context-category-specs @FR1
@@ -49,7 +49,7 @@ Feature: Categories CRUD
     Given category "Work" exists
     When user updates category name to "Personal"
     Then category name is "Personal"
-    And category has needsSync true
+    And category has syncStatus "pending"
     And category updated_at is refreshed
 
   @add-context-category-specs @FR3

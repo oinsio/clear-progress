@@ -7,7 +7,7 @@ Feature: Manual task hiding
     When user hides the task until "2027-06-01"
     Then task has is_hidden true
     And task has appear_date "2027-06-01"
-    And task has needsSync true
+    And task has syncStatus "pending"
 
   @hide-tasks @FR2
   Scenario: Unhide a manually hidden task
@@ -15,7 +15,7 @@ Feature: Manual task hiding
     When user unhides the task
     Then task has is_hidden false
     And task has appear_date ""
-    And task has needsSync true
+    And task has syncStatus "pending"
 
   @hide-tasks @FR5
   Scenario: Recurring task cannot be manually hidden

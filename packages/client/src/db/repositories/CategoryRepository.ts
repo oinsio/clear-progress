@@ -50,19 +50,21 @@ export class CategoryRepository {
   }
 
   async getNeedingSync(): Promise<Category[]> {
-    return db.categories.filter((category) => category.needsSync).toArray();
+    return db.categories
+      .filter((category) => category.syncStatus === "pending")
+      .toArray();
   }
 
   async applyServerRecords(records: WireCategory[]): Promise<void> {
     await db.transaction("rw", db.categories, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.categories.get(serverRecord.id);
-        if (!localRecord?.needsSync) {
+        if (localRecord?.syncStatus !== "pending") {
           const category: Category = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,
             updated_at: serverRecord.updated_at as ISOTimestamp,
-            needsSync: false,
+            syncStatus: "synced" as const,
           };
           await db.categories.put(category);
         }

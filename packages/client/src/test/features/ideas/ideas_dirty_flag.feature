@@ -4,15 +4,15 @@ Feature: Ideas Dirty Flag
 
   @add-ideas-specs @FR9
   Scenario: No-op update does not trigger sync
-    Given idea "Learn Rust" exists with needsSync false
+    Given idea "Learn Rust" exists with syncStatus "synced"
     When user updates idea name to "Learn Rust"
-    Then idea needsSync remains false
+    Then idea syncStatus remains "synced"
     And idea updated_at is unchanged
 
   @add-ideas-specs @FR10
   Scenario: Reorder marks only moved idea for sync
     Given ideas A, B, C with ascending sort_order
     When user moves idea C between A and B
-    Then idea A has needsSync false
-    And idea B has needsSync false
-    And idea C has needsSync true
+    Then idea A has syncStatus "synced"
+    And idea B has syncStatus "synced"
+    And idea C has syncStatus "pending"

@@ -46,10 +46,10 @@ export async function getCategory(
 export async function expectCategoryNeedsSync(
   categoryIds: Map<string, string>,
   name: string,
-  expectedNeedsSync: boolean,
+  expectedSyncStatus: string,
 ) {
   const category = await getCategory(categoryIds, name);
-  expect(category.needsSync).toBe(expectedNeedsSync);
+  expect(category.syncStatus).toBe(expectedSyncStatus);
 }
 
 export async function moveCategoryBefore(
@@ -74,7 +74,7 @@ export async function seedCategoriesWithOrder(
   for (let i = 0; i < names.length; i++) {
     await seedCategory(categoryIds, names[i], {
       sort_order: keys[i],
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
   }
 }

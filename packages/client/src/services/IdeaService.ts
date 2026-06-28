@@ -41,7 +41,7 @@ export class IdeaService {
       created_at: now,
       updated_at: now,
       revision: 0,
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     await this.ideaRepository.create(idea);
     return idea;
@@ -67,7 +67,7 @@ export class IdeaService {
     const updatedIdea: Idea = {
       ...candidateIdea,
       updated_at: hasChanged ? toISOTimestamp() : existingIdea.updated_at,
-      needsSync: hasChanged,
+      syncStatus: hasChanged ? ("pending" as const) : ("synced" as const),
     };
 
     await this.ideaRepository.update(updatedIdea);
@@ -116,7 +116,7 @@ export class IdeaService {
       ...idea,
       sort_order: newSortOrder,
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     if (needsRebalancing(newSortOrder)) {
@@ -135,7 +135,7 @@ export class IdeaService {
       ...idea,
       sort_order: newKeys[index],
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     }));
     await this.ideaRepository.bulkUpsert(rebalancedIdeas);
   }

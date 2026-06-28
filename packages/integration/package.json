@@ -4,9 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "pretest": "bash ../adapter-supabase/scripts/generate-wire-schemas.sh",
     "test": "playwright test",
-    "test:headed": "playwright test --headed",
-    "test:setup": "playwright test --project=setup"
+    "test:headed": "bash ../adapter-supabase/scripts/generate-wire-schemas.sh && playwright test --headed",
+    "test:setup": "bash ../adapter-supabase/scripts/generate-wire-schemas.sh && playwright test --project=setup"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",

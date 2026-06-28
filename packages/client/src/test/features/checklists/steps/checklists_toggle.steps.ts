@@ -37,7 +37,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             task_id: taskId,
             name: "Buy milk",
             is_completed: false,
-            needsSync: false,
+            syncStatus: "synced" as const,
             updated_at: "2025-01-01T00:00:00.000Z",
           });
           const seededItem = await getChecklistItem(
@@ -64,9 +64,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
 
       And(
-        'checklist item "Buy milk" has needsSync true',
+        'checklist item "Buy milk" has syncStatus "pending"',
         async (_ctx: TestContext) => {
-          expect(toggledItem.needsSync).toBe(true);
+          expect(toggledItem.syncStatus).toBe("pending");
         },
       );
 
@@ -93,7 +93,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             task_id: taskId,
             name: "Buy milk",
             is_completed: true,
-            needsSync: false,
+            syncStatus: "synced" as const,
             updated_at: "2025-01-01T00:00:00.000Z",
           });
           const seededItem = await getChecklistItem(
@@ -120,9 +120,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
 
       And(
-        'checklist item "Buy milk" has needsSync true',
+        'checklist item "Buy milk" has syncStatus "pending"',
         async (_ctx: TestContext) => {
-          expect(toggledItem.needsSync).toBe(true);
+          expect(toggledItem.syncStatus).toBe("pending");
         },
       );
 

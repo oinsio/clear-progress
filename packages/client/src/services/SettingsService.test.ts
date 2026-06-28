@@ -124,7 +124,7 @@ describe("SettingsService", () => {
       expect(dayBoundary).toBe(DEFAULT_DAY_BOUNDARY);
     });
 
-    it("should overwrite invalid value with default and needsSync true", async () => {
+    it("should overwrite invalid value with default and syncStatus true", async () => {
       mockSettingsRepository = createMockSettingsRepository({
         getValue: vi.fn().mockResolvedValue("abc"),
       });

@@ -7,7 +7,7 @@ Feature: AttachmentService CRUD
     And no existing attachments for task "task-1"
     When attachFile is called with a 1KB "report.pdf" for task "task-1"
     Then an attachment record is saved with hash "abc123", filename "report.pdf", sort_order 0
-    And the attachment is marked as needsSync true
+    And the attachment is marked as syncStatus "pending"
 
   @add-file-attachments @FR8
   Scenario: Sort order increments for subsequent attachments

@@ -105,7 +105,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
 
       Then(
-        'the repository is updated with value "00:00" and needsSync true',
+        'the repository is updated with value "00:00" and syncStatus "pending"',
         async (_ctx: TestContext) => {
           expect(returnedValue).toBe("00:00");
           expect(mockRepository.set).toHaveBeenCalledWith(

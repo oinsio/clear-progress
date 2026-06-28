@@ -56,8 +56,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         expect(updatedTask.appear_date).toBe("2027-06-01");
       });
 
-      And("task has needsSync true", async (_ctx: TestContext) => {
-        expect(updatedTask.needsSync).toBe(true);
+      And('task has syncStatus "pending"', async (_ctx: TestContext) => {
+        expect(updatedTask.syncStatus).toBe("pending");
       });
     },
   );
@@ -93,8 +93,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(updatedTask.appear_date).toBe("");
     });
 
-    And("task has needsSync true", async (_ctx: TestContext) => {
-      expect(updatedTask.needsSync).toBe(true);
+    And('task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(updatedTask.syncStatus).toBe("pending");
     });
   });
 

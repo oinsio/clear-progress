@@ -18,8 +18,8 @@ Feature: Cascade Checklist Delete — Self-Healing Before Push
 
   @cascade-checklist-delete @FR3
   Scenario: Self-healing with incremental push
-    Given a checklist item "C1" with needsSync true referencing task "T1"
-    And task "T1" exists in IndexedDB but has needsSync false
+    Given a checklist item "C1" with syncStatus "pending" referencing task "T1"
+    And task "T1" exists in IndexedDB but has syncStatus "synced"
     When incremental push is triggered
     Then checklist item "C1" is included in push data normally
 

@@ -36,8 +36,8 @@ describe("CategoryService", () => {
       expect(typeof createdCategory.sort_order).toBe("string");
     });
 
-    it("should create category with needsSync true", () => {
-      expect(createdCategory.needsSync).toBe(true);
+    it("should create category with syncStatus true", () => {
+      expect(createdCategory.syncStatus).toBe("pending");
     });
 
     it("should create category with revision 0", () => {

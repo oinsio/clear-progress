@@ -1,5 +1,31 @@
 import type { PushResponse } from "@clear-progress/contract";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Skip Zod pre-validation — these tests use non-UUID IDs
+vi.mock("@/services/pushPreValidator", () => ({
+  preValidateRecords: (
+    tasks: unknown[],
+    goals: unknown[],
+    contexts: unknown[],
+    categories: unknown[],
+    checklistItems: unknown[],
+    ideas: unknown[],
+    attachments: unknown[],
+    settings: unknown[],
+  ) =>
+    Promise.resolve({
+      tasks,
+      goals,
+      contexts,
+      categories,
+      checklistItems,
+      ideas,
+      attachments,
+      settings,
+      alerts: [],
+    }),
+}));
+
 import { db } from "@/db/database";
 import {
   asMock,
@@ -20,12 +46,12 @@ describe("SyncService — push results > accepted", () => {
     ctx = setupSyncTestContext();
     await db.tasks.clear();
     await db.checklist_items.clear();
-    await db.tasks.put(makeTask({ id: "t1", needsSync: false }));
+    await db.tasks.put(makeTask({ id: "t1", syncStatus: "synced" as const }));
   });
 
   it.each(
     ENTITY_TEST_CASES_WITH_REVISION,
-  )("should clear needsSync for accepted $entityName using pushRevision from response", async ({
+  )("should clear syncStatus for accepted $entityName using pushRevision from response", async ({
     getRepo,
     makeEntity,
     payloadKey,
@@ -54,18 +80,18 @@ describe("SyncService — push results > accepted", () => {
     expect(repository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: entity.id,
-        needsSync: false,
+        syncStatus: "synced" as const,
         revision: pushRevision,
       }),
     );
   });
 
   describe("created/accepted", () => {
-    it("should clear needsSync and set revision when updated_at is unchanged", async () => {
+    it("should clear syncStatus and set revision when updated_at is unchanged", async () => {
       const task = makeTask({
         id: "t1",
         updated_at: "2026-01-01T10:00:00.000Z",
-        needsSync: true,
+        syncStatus: "pending" as const,
       });
       asMock(ctx.taskRepository.getNeedingSync).mockResolvedValue([task]);
       asMock(ctx.taskRepository.getById).mockResolvedValue({
@@ -84,15 +110,19 @@ describe("SyncService — push results > accepted", () => {
       await service.push();
 
       expect(ctx.taskRepository.update).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "t1", needsSync: false, revision: 7 }),
+        expect.objectContaining({
+          id: "t1",
+          syncStatus: "synced" as const,
+          revision: 7,
+        }),
       );
     });
 
-    it("should keep needsSync and set revision when updated_at changed during push", async () => {
+    it("should keep syncStatus and set revision when updated_at changed during push", async () => {
       const task = makeTask({
         id: "t1",
         updated_at: "2026-01-01T10:00:00.000Z",
-        needsSync: true,
+        syncStatus: "pending" as const,
       });
       asMock(ctx.taskRepository.getNeedingSync).mockResolvedValue([task]);
       asMock(ctx.taskRepository.getById).mockResolvedValue({
@@ -111,7 +141,11 @@ describe("SyncService — push results > accepted", () => {
       await service.push();
 
       expect(ctx.taskRepository.update).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "t1", needsSync: true, revision: 8 }),
+        expect.objectContaining({
+          id: "t1",
+          syncStatus: "pending" as const,
+          revision: 8,
+        }),
       );
     });
   });

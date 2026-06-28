@@ -38,7 +38,7 @@ describe("useRestoreEntity", () => {
   });
 
   it("should restore a deleted task and schedule push", async () => {
-    const task = buildTask({ is_deleted: true, needsSync: false });
+    const task = buildTask({ is_deleted: true, syncStatus: "synced" as const });
     await db.tasks.add(task);
 
     const { result } = renderHook(() => useRestoreEntity());
@@ -53,7 +53,7 @@ describe("useRestoreEntity", () => {
   });
 
   it("should restore a deleted goal and schedule push", async () => {
-    const goal = buildGoal({ is_deleted: true, needsSync: false });
+    const goal = buildGoal({ is_deleted: true, syncStatus: "synced" as const });
     await db.goals.add(goal);
 
     const { result } = renderHook(() => useRestoreEntity());
@@ -68,7 +68,7 @@ describe("useRestoreEntity", () => {
   });
 
   it("should restore a deleted idea and schedule push", async () => {
-    const idea = buildIdea({ is_deleted: true, needsSync: false });
+    const idea = buildIdea({ is_deleted: true, syncStatus: "synced" as const });
     await db.ideas.add(idea);
 
     const { result } = renderHook(() => useRestoreEntity());
@@ -83,7 +83,10 @@ describe("useRestoreEntity", () => {
   });
 
   it("should restore a deleted context and schedule push", async () => {
-    const context = buildContext({ is_deleted: true, needsSync: false });
+    const context = buildContext({
+      is_deleted: true,
+      syncStatus: "synced" as const,
+    });
     await db.contexts.add(context);
 
     const { result } = renderHook(() => useRestoreEntity());
@@ -98,7 +101,10 @@ describe("useRestoreEntity", () => {
   });
 
   it("should restore a deleted category and schedule push", async () => {
-    const category = buildCategory({ is_deleted: true, needsSync: false });
+    const category = buildCategory({
+      is_deleted: true,
+      syncStatus: "synced" as const,
+    });
     await db.categories.add(category);
 
     const { result } = renderHook(() => useRestoreEntity());
@@ -118,7 +124,7 @@ describe("useRestoreEntity", () => {
     const item = buildChecklistItem({
       task_id: task.id,
       is_deleted: true,
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
     await db.checklist_items.add(item);
 

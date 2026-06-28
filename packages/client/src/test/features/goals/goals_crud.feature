@@ -9,7 +9,7 @@ Feature: Goals CRUD
     And goal has cover_hash ""
     And goal has status "planning"
     And goal has revision 0
-    And goal has needsSync true
+    And goal has syncStatus "pending"
     And goal has is_deleted false
 
   @add-goals-specs @FR1
@@ -63,7 +63,7 @@ Feature: Goals CRUD
     Given goal "Learn Rust" exists
     When user updates goal name to "Learn Go"
     Then goal name is "Learn Go"
-    And goal has needsSync true
+    And goal has syncStatus "pending"
     And goal updated_at is refreshed
 
   @add-goals-specs @FR3
@@ -71,7 +71,7 @@ Feature: Goals CRUD
     Given goal with description "Old" exists
     When user updates goal description to "New"
     Then goal description is "New"
-    And goal has needsSync true
+    And goal has syncStatus "pending"
 
   @add-goals-specs @FR3
   Scenario: Update nonexistent goal throws error

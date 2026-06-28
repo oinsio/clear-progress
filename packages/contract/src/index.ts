@@ -37,7 +37,7 @@ export type {
   WireSetting,
   WireTask,
 } from "./domain";
-export { ApiAuthError, ApiValidationError } from "./errors";
+export { ApiAuthError, ApiValidationError, ProjectPausedError } from "./errors";
 // Ports
 export type { SyncAdapter } from "./ports";
 // Protocol types
@@ -56,6 +56,7 @@ export type {
   PushRequest,
   PushResponse,
   PushSettingResult,
+  TableCursor,
   UploadFileBatchItem,
   UploadFileBatchResult,
   UploadFileRequest,
@@ -97,6 +98,7 @@ export {
   UploadFileBatchResultSchema,
   UploadFileResponseSchema,
   UploadFilesResponseSchema,
+  UUIDOrEmptySchema,
   UUIDSchema,
   WireAttachmentSchema,
   WireCategorySchema,

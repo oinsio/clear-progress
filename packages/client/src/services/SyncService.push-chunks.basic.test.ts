@@ -1,4 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Skip Zod pre-validation — these tests use non-UUID IDs
+vi.mock("@/services/pushPreValidator", () => ({
+  preValidateRecords: (
+    tasks: unknown[],
+    goals: unknown[],
+    contexts: unknown[],
+    categories: unknown[],
+    checklistItems: unknown[],
+    ideas: unknown[],
+    attachments: unknown[],
+    settings: unknown[],
+  ) =>
+    Promise.resolve({
+      tasks,
+      goals,
+      contexts,
+      categories,
+      checklistItems,
+      ideas,
+      attachments,
+      settings,
+      alerts: [],
+    }),
+}));
+
 import { db } from "@/db/database";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import {
@@ -120,7 +146,7 @@ describe("SyncService — push chunks — basic", () => {
     expectedIdOrKey,
   }) => {
     setup200Tasks();
-    await db.tasks.put(makeTask({ id: "t0", needsSync: false }));
+    await db.tasks.put(makeTask({ id: "t0", syncStatus: "synced" as const }));
     setupRepo(ctx, [makeEntity()]);
     const service = createService(ctx);
 
@@ -234,19 +260,19 @@ describe("SyncService — push chunks — basic", () => {
         key: "theme",
         value: "dark",
         updated_at: toISOTimestamp(),
-        needsSync: true,
+        syncStatus: "pending" as const,
       },
       {
         key: "lang",
         value: "en",
         updated_at: toISOTimestamp(),
-        needsSync: true,
+        syncStatus: "pending" as const,
       },
       {
         key: "tz",
         value: "UTC",
         updated_at: toISOTimestamp(),
-        needsSync: true,
+        syncStatus: "pending" as const,
       },
     ];
     ctx.taskRepository = withNeedingSync(ctx.taskRepository, tasks);

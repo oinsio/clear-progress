@@ -15,12 +15,12 @@ describe("SyncService — push results > settings", () => {
     ctx = setupSyncTestContext();
   });
 
-  it("should clear needsSync on settings after accepted push response", async () => {
+  it("should clear syncStatus on settings after accepted push response", async () => {
     const setting = {
       key: "accent_color",
       value: "green",
       updated_at: "",
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     asMock(ctx.settingsRepository.getNeedingSync).mockResolvedValue([setting]);
     ctx.mockSyncAdapter = createMockSyncAdapter({
@@ -42,12 +42,12 @@ describe("SyncService — push results > settings", () => {
     ]);
   });
 
-  it("should clear needsSync on settings after created push response", async () => {
+  it("should clear syncStatus on settings after created push response", async () => {
     const setting = {
       key: "default_box",
       value: "inbox",
       updated_at: "",
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     asMock(ctx.settingsRepository.getNeedingSync).mockResolvedValue([setting]);
     ctx.mockSyncAdapter = createMockSyncAdapter({
@@ -69,12 +69,12 @@ describe("SyncService — push results > settings", () => {
     ]);
   });
 
-  it("should NOT clear needsSync on settings with conflict status", async () => {
+  it("should NOT clear syncStatus on settings with conflict status", async () => {
     const setting = {
       key: "accent_color",
       value: "green",
       updated_at: "",
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     asMock(ctx.settingsRepository.getNeedingSync).mockResolvedValue([setting]);
     ctx.mockSyncAdapter = createMockSyncAdapter({

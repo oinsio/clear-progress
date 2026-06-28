@@ -543,7 +543,32 @@
     "noConnection": "No connection",
     "serverError": "Server error",
     "unauthorized": "Not authorized",
-    "ariaLabel": "Sync"
+    "projectPaused": "Project paused",
+    "ariaLabel": "Sync",
+    "alertTitle": "Sync issue",
+    "alertUnderstood": "Understood",
+    "fkCleared": "Link to {{entityType}} \"{{name}}\" was cleared because it couldn't sync",
+    "fkClearedAdvice": "Check {{entityType}} and re-link",
+    "checklistOrphaned": "Checklist item was deleted because the task couldn't sync",
+    "checklistOrphanedAdvice": "Check the task and add the item again",
+    "nameUntitled": "Record had no name — set to \"Untitled\"",
+    "nameUntitledAdvice": "Enter a name for the record",
+    "repeatRuleCorrupted": "Repeat rule was corrupted and has been reset",
+    "repeatRuleCorruptedAdvice": "Set up the repeat rule again",
+    "rejectedBox": "List value is not supported by server",
+    "rejectedBoxAdvice": "Edit the record and choose a valid value, or update the app",
+    "rejectedStatus": "Status value is not supported by server",
+    "rejectedStatusAdvice": "Edit the record and choose a valid value, or update the app",
+    "rejectedEntityType": "Attachment type is not supported by server",
+    "rejectedEntityTypeAdvice": "Edit the record and choose a valid value, or update the app",
+    "rejectedCorrupted": "Record is corrupted and cannot be synced",
+    "rejectedCorruptedAdvice": "Delete the record and create a new one"
+  },
+  "projectPausedDialog": {
+    "title": "Supabase Project Paused",
+    "message": "Your Supabase project has been paused due to inactivity. Open the Supabase Dashboard and restore the project. Sync will resume automatically.",
+    "openDashboard": "Open Dashboard",
+    "close": "Close"
   },
   "auth": {
     "signInButton": "Sign in with Google",

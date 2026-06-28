@@ -71,7 +71,7 @@ export function useGoalDetailState() {
     handleResizeMouseDown,
   } = usePanelSplit();
 
-  const isUnsynced = useIsUnsynced(goal ?? { needsSync: false });
+  const isUnsynced = useIsUnsynced(goal ?? { syncStatus: "synced" as const });
   const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
   const targetBox = useTargetBox(activeBox);
 

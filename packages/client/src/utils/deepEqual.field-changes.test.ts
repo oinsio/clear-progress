@@ -9,7 +9,7 @@ describe("hasEntityChanged", () => {
         name: "Task 1",
         description: "Old description",
         updated_at: "2024-01-01T00:00:00.000Z",
-        needsSync: false,
+        syncStatus: "synced" as const,
       };
 
       const updated = {
@@ -26,7 +26,7 @@ describe("hasEntityChanged", () => {
         name: "Task 1",
         description: "Description",
         updated_at: "2024-01-01T00:00:00.000Z",
-        needsSync: false,
+        syncStatus: "synced" as const,
       };
 
       const updated = {
@@ -37,19 +37,19 @@ describe("hasEntityChanged", () => {
     });
 
     it("should return false when only metadata fields change", () => {
-      const existing = {
+      const existing: Record<string, unknown> = {
         id: "1",
         name: "Task 1",
         description: "Description",
         updated_at: "2024-01-01T00:00:00.000Z",
-        needsSync: false,
+        syncStatus: "synced",
         revision: 0,
       };
 
-      const updated = {
+      const updated: Record<string, unknown> = {
         ...existing,
         updated_at: "2024-01-02T00:00:00.000Z",
-        needsSync: true,
+        syncStatus: "pending",
         revision: 1,
       };
 

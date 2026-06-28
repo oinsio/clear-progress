@@ -27,7 +27,7 @@ export class HiddenTaskService {
         ...task,
         is_hidden: false,
         updated_at: now,
-        needsSync: true,
+        syncStatus: "pending" as const,
       };
 
       await this.taskRepository.update(updatedTask);

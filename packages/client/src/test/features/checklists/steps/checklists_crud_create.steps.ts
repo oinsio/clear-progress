@@ -60,9 +60,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         expect(createdItem.revision).toBe(0);
       });
 
-      And("checklist item has needsSync true", async (_ctx: TestContext) => {
-        expect(createdItem.needsSync).toBe(true);
-      });
+      And(
+        'checklist item has syncStatus "pending"',
+        async (_ctx: TestContext) => {
+          expect(createdItem.syncStatus).toBe("pending");
+        },
+      );
 
       And("checklist item has is_deleted false", async (_ctx: TestContext) => {
         expect(createdItem.is_deleted).toBe(false);

@@ -24,14 +24,14 @@ describeFeature(
     // @settings-specs-and-bdd @FR3 @FR6
     f.Scenario("Accept newer server setting", ({ Given, When, Then, And }) => {
       Given(
-        'a local setting with key "accent_color", value "green", updated_at "2025-01-01T00:00:00.000Z", and needsSync false',
+        'a local setting with key "accent_color", value "green", updated_at "2025-01-01T00:00:00.000Z", and syncStatus "synced"',
         async (_ctx: TestContext) => {
           await db.settings.add(
             buildSetting({
               key: "accent_color",
               value: "green",
               updated_at: "2025-01-01T00:00:00.000Z",
-              needsSync: false,
+              syncStatus: "synced" as const,
             }),
           );
         },
@@ -59,9 +59,9 @@ describeFeature(
         },
       );
 
-      And("the setting has needsSync false", async (_ctx: TestContext) => {
+      And('the setting has syncStatus "synced"', async (_ctx: TestContext) => {
         const setting = await db.settings.get("accent_color");
-        expect(setting?.needsSync).toBe(false);
+        expect(setting?.syncStatus).toBe("synced");
       });
     });
 
@@ -70,13 +70,13 @@ describeFeature(
       "Skip server setting when local is dirty",
       ({ Given, When, Then, And }) => {
         Given(
-          'a local setting with key "accent_color", value "coral", and needsSync true',
+          'a local setting with key "accent_color", value "coral", and syncStatus "pending"',
           async (_ctx: TestContext) => {
             await db.settings.add(
               buildSetting({
                 key: "accent_color",
                 value: "coral",
-                needsSync: true,
+                syncStatus: "pending" as const,
               }),
             );
           },
@@ -104,10 +104,13 @@ describeFeature(
           },
         );
 
-        And("the setting has needsSync true", async (_ctx: TestContext) => {
-          const setting = await db.settings.get("accent_color");
-          expect(setting?.needsSync).toBe(true);
-        });
+        And(
+          'the setting has syncStatus "pending"',
+          async (_ctx: TestContext) => {
+            const setting = await db.settings.get("accent_color");
+            expect(setting?.syncStatus).toBe("pending");
+          },
+        );
       },
     );
 
@@ -123,7 +126,7 @@ describeFeature(
                 key: "accent_color",
                 value: "green",
                 updated_at: "2025-01-02T00:00:00.000Z",
-                needsSync: false,
+                syncStatus: "synced" as const,
               }),
             );
           },
@@ -189,10 +192,13 @@ describeFeature(
           },
         );
 
-        And("the setting has needsSync false", async (_ctx: TestContext) => {
-          const setting = await db.settings.get("default_box");
-          expect(setting?.needsSync).toBe(false);
-        });
+        And(
+          'the setting has syncStatus "synced"',
+          async (_ctx: TestContext) => {
+            const setting = await db.settings.get("default_box");
+            expect(setting?.syncStatus).toBe("synced");
+          },
+        );
       },
     );
 

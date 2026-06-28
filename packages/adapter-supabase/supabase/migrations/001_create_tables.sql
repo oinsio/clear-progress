@@ -92,8 +92,9 @@ CREATE TABLE IF NOT EXISTS attachments (
   revision    BIGINT      NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS idx_attachments_user_revision
-  ON attachments (user_id, revision);
+-- implements FR10, NFR-P2 of fix-pull-pagination: composite index for keyset pagination
+CREATE INDEX IF NOT EXISTS idx_attachments_user_revision_id
+  ON attachments (user_id, revision, id);
 
 CREATE INDEX IF NOT EXISTS idx_attachments_entity
   ON attachments (entity_type, entity_id);
@@ -110,7 +111,7 @@ CREATE TABLE IF NOT EXISTS contexts (
   updated_at TIMESTAMPTZ NOT NULL,
   revision   BIGINT      NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_contexts_user_revision ON contexts (user_id, revision);
+CREATE INDEX IF NOT EXISTS idx_contexts_user_revision_id ON contexts (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS categories (
   id         UUID        PRIMARY KEY,
@@ -122,7 +123,7 @@ CREATE TABLE IF NOT EXISTS categories (
   updated_at TIMESTAMPTZ NOT NULL,
   revision   BIGINT      NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_categories_user_revision ON categories (user_id, revision);
+CREATE INDEX IF NOT EXISTS idx_categories_user_revision_id ON categories (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS goals (
   id            UUID        PRIMARY KEY,
@@ -137,7 +138,7 @@ CREATE TABLE IF NOT EXISTS goals (
   updated_at    TIMESTAMPTZ NOT NULL,
   revision      BIGINT      NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_goals_user_revision ON goals (user_id, revision);
+CREATE INDEX IF NOT EXISTS idx_goals_user_revision_id ON goals (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS ideas (
   id          UUID        PRIMARY KEY,
@@ -150,7 +151,7 @@ CREATE TABLE IF NOT EXISTS ideas (
   updated_at  TIMESTAMPTZ NOT NULL,
   revision    BIGINT      NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_ideas_user_revision ON ideas (user_id, revision);
+CREATE INDEX IF NOT EXISTS idx_ideas_user_revision_id ON ideas (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS tasks (
   id               UUID        PRIMARY KEY,
@@ -174,7 +175,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at       TIMESTAMPTZ NOT NULL,
   revision         BIGINT      NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_tasks_user_revision ON tasks (user_id, revision);
+CREATE INDEX IF NOT EXISTS idx_tasks_user_revision_id ON tasks (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS checklist_items (
   id           UUID        PRIMARY KEY,
@@ -188,4 +189,4 @@ CREATE TABLE IF NOT EXISTS checklist_items (
   updated_at   TIMESTAMPTZ NOT NULL,
   revision     BIGINT      NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_checklist_items_user_revision ON checklist_items (user_id, revision);
+CREATE INDEX IF NOT EXISTS idx_checklist_items_user_revision_id ON checklist_items (user_id, revision, id);

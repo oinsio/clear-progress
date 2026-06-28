@@ -11,7 +11,7 @@ function normalizeValue(value: unknown): unknown {
 
 /**
  * Checks whether any significant fields of an entity have changed.
- * Ignores service fields (id, updated_at, created_at, needsSync, revision).
+ * Ignores service fields (id, updated_at, created_at, syncStatus, revision).
  * Normalizes empty values ("" and undefined are considered equal).
  *
  * @param existing - The existing entity
@@ -26,7 +26,7 @@ export function hasEntityChanged<T extends object>(
     "id",
     "updated_at",
     "created_at",
-    "needsSync",
+    "syncStatus",
     "revision",
   ],
 ): boolean {

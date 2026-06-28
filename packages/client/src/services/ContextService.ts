@@ -37,7 +37,7 @@ export class ContextService {
       created_at: now,
       updated_at: now,
       revision: 0,
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     await this.contextRepository.create(context);
     return context;
@@ -67,7 +67,7 @@ export class ContextService {
       ...context,
       sort_order: newSortOrder,
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     if (needsRebalancing(newSortOrder)) {
@@ -86,7 +86,7 @@ export class ContextService {
       ...context,
       sort_order: newKeys[index],
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     }));
     await this.contextRepository.bulkUpsert(rebalancedContexts);
   }
@@ -114,7 +114,7 @@ export class ContextService {
     const updatedContext: Context = {
       ...candidateContext,
       updated_at: hasChanged ? toISOTimestamp() : existingContext.updated_at,
-      needsSync: hasChanged,
+      syncStatus: hasChanged ? ("pending" as const) : ("synced" as const),
     };
 
     await this.contextRepository.update(updatedContext);

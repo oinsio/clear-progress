@@ -37,11 +37,14 @@ describeFeature(
         expect(persistedContext?.is_deleted).toBe(true);
       });
 
-      And('context "@home" has needsSync true', async (_ctx: TestContext) => {
-        const contextId = getIdOrThrow(ctx.contextIds, "@home");
-        const persistedContext = await db.contexts.get(contextId);
-        expect(persistedContext?.needsSync).toBe(true);
-      });
+      And(
+        'context "@home" has syncStatus "pending"',
+        async (_ctx: TestContext) => {
+          const contextId = getIdOrThrow(ctx.contextIds, "@home");
+          const persistedContext = await db.contexts.get(contextId);
+          expect(persistedContext?.syncStatus).toBe("pending");
+        },
+      );
     });
 
     // @add-context-category-specs @FR5
@@ -69,11 +72,14 @@ describeFeature(
           },
         );
 
-        And('context "@home" has needsSync true', async (_ctx: TestContext) => {
-          const contextId = getIdOrThrow(ctx.contextIds, "@home");
-          const persistedContext = await db.contexts.get(contextId);
-          expect(persistedContext?.needsSync).toBe(true);
-        });
+        And(
+          'context "@home" has syncStatus "pending"',
+          async (_ctx: TestContext) => {
+            const contextId = getIdOrThrow(ctx.contextIds, "@home");
+            const persistedContext = await db.contexts.get(contextId);
+            expect(persistedContext?.syncStatus).toBe("pending");
+          },
+        );
       },
     );
 

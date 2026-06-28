@@ -33,7 +33,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           task_id: taskId,
           name: "Buy milk",
           is_deleted: false,
-          needsSync: false,
+          syncStatus: "synced" as const,
         });
       },
     );
@@ -54,9 +54,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     );
 
     And(
-      'checklist item "Buy milk" has needsSync true',
+      'checklist item "Buy milk" has syncStatus "pending"',
       async (_ctx: TestContext) => {
-        expect(deletedItem.needsSync).toBe(true);
+        expect(deletedItem.syncStatus).toBe("pending");
       },
     );
   });
@@ -74,7 +74,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             task_id: taskId,
             name: "Buy milk",
             is_deleted: true,
-            needsSync: false,
+            syncStatus: "synced" as const,
           });
         },
       );
@@ -95,9 +95,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
 
       And(
-        'checklist item "Buy milk" has needsSync true',
+        'checklist item "Buy milk" has syncStatus "pending"',
         async (_ctx: TestContext) => {
-          expect(restoredItem.needsSync).toBe(true);
+          expect(restoredItem.syncStatus).toBe("pending");
         },
       );
     },

@@ -19,7 +19,7 @@ describe("CategoryService", () => {
         expect.objectContaining({
           id: category.id,
           sort_order: "a1",
-          needsSync: true,
+          syncStatus: "pending" as const,
         }),
       );
     });
@@ -101,7 +101,7 @@ describe("CategoryService", () => {
       expect(rebalancedCategories).toHaveLength(2);
       for (const rebalancedCategory of rebalancedCategories) {
         expect(typeof rebalancedCategory.sort_order).toBe("string");
-        expect(rebalancedCategory.needsSync).toBe(true);
+        expect(rebalancedCategory.syncStatus).toBe("pending");
       }
     });
   });

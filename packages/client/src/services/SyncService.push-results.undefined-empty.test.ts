@@ -1,4 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Skip Zod pre-validation — these tests use non-UUID IDs
+vi.mock("@/services/pushPreValidator", () => ({
+  preValidateRecords: (
+    tasks: unknown[],
+    goals: unknown[],
+    contexts: unknown[],
+    categories: unknown[],
+    checklistItems: unknown[],
+    ideas: unknown[],
+    attachments: unknown[],
+    settings: unknown[],
+  ) =>
+    Promise.resolve({
+      tasks,
+      goals,
+      contexts,
+      categories,
+      checklistItems,
+      ideas,
+      attachments,
+      settings,
+      alerts: [],
+    }),
+}));
+
 import {
   asMock,
   createMockSyncAdapter,
@@ -155,7 +181,7 @@ describe("SyncService — push results > empty array results", () => {
       key: "theme",
       value: "dark",
       updated_at: "",
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     asMock(ctx.settingsRepository.getNeedingSync).mockResolvedValue([setting]);
     ctx.mockSyncAdapter = createMockSyncAdapter({
@@ -173,7 +199,7 @@ describe("SyncService — push results > empty array results", () => {
       key: "theme",
       value: "dark",
       updated_at: "",
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     asMock(ctx.settingsRepository.getNeedingSync).mockResolvedValue([setting]);
     ctx.mockSyncAdapter = createMockSyncAdapter({

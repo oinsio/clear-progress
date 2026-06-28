@@ -39,26 +39,26 @@ describeFeature(
       );
 
       Then(
-        'the repository contains "custom_accent_light" set to "#ff0000" with needsSync true',
+        'the repository contains "custom_accent_light" set to "#ff0000" with syncStatus "pending"',
         async (_ctx: TestContext) => {
           const setting = await db.settings.get(
             STORAGE_KEYS.CUSTOM_ACCENT_LIGHT,
           );
           expect(setting).toBeDefined();
           expect(setting?.value).toBe("#ff0000");
-          expect(setting?.needsSync).toBe(true);
+          expect(setting?.syncStatus).toBe("pending");
         },
       );
 
       And(
-        'the repository contains "custom_accent_dark" set to "#00ff00" with needsSync true',
+        'the repository contains "custom_accent_dark" set to "#00ff00" with syncStatus "pending"',
         async (_ctx: TestContext) => {
           const setting = await db.settings.get(
             STORAGE_KEYS.CUSTOM_ACCENT_DARK,
           );
           expect(setting).toBeDefined();
           expect(setting?.value).toBe("#00ff00");
-          expect(setting?.needsSync).toBe(true);
+          expect(setting?.syncStatus).toBe("pending");
         },
       );
 

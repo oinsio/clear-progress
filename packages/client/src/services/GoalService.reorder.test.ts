@@ -19,7 +19,7 @@ describe("GoalService", () => {
         expect.objectContaining({
           id: goal.id,
           sort_order: "a1",
-          needsSync: true,
+          syncStatus: "pending" as const,
         }),
       );
     });
@@ -101,7 +101,7 @@ describe("GoalService", () => {
       expect(rebalancedGoals).toHaveLength(2);
       for (const rebalancedGoal of rebalancedGoals) {
         expect(typeof rebalancedGoal.sort_order).toBe("string");
-        expect(rebalancedGoal.needsSync).toBe(true);
+        expect(rebalancedGoal.syncStatus).toBe("pending");
       }
     });
   });

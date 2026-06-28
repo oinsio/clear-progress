@@ -56,7 +56,7 @@ export class AttachmentRepository {
     }
     await db.attachments.update(id, {
       is_deleted: true,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
   }
 
@@ -73,7 +73,7 @@ export class AttachmentRepository {
 
   async getNeedingSync(): Promise<Attachment[]> {
     return db.attachments
-      .filter((attachment) => attachment.needsSync)
+      .filter((attachment) => attachment.syncStatus === "pending")
       .toArray();
   }
 
@@ -88,7 +88,7 @@ export class AttachmentRepository {
     for (const attachment of attachments) {
       await db.attachments.update(attachment.id, {
         is_deleted: true,
-        needsSync: true,
+        syncStatus: "pending" as const,
         updated_at: now,
       });
     }
@@ -112,7 +112,7 @@ export class AttachmentRepository {
     for (const attachment of deletedAttachments) {
       await db.attachments.update(attachment.id, {
         is_deleted: false,
-        needsSync: true,
+        syncStatus: "pending" as const,
         updated_at: now,
       });
     }
@@ -131,12 +131,12 @@ export class AttachmentRepository {
     await db.transaction("rw", db.attachments, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.attachments.get(serverRecord.id);
-        if (!localRecord?.needsSync) {
+        if (localRecord?.syncStatus !== "pending") {
           const attachment: Attachment = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,
             updated_at: serverRecord.updated_at as ISOTimestamp,
-            needsSync: false,
+            syncStatus: "synced" as const,
           };
           await db.attachments.put(attachment);
         }

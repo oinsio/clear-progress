@@ -37,7 +37,7 @@ Feature: Day boundary validation and self-healing
   Scenario: Invalid value triggers self-healing write
     Given stored day boundary is "25:00"
     When the system reads the day boundary setting
-    Then the repository is updated with value "00:00" and needsSync true
+    Then the repository is updated with value "00:00" and syncStatus "pending"
 
   @day-boundary @FR12
   Scenario: Valid value passes through unchanged

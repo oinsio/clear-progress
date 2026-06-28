@@ -11,9 +11,9 @@ Feature: Ideas Ordering
   Scenario: Reorder marks moved idea for sync
     Given ideas A, B, C with ascending sort_order
     When user moves idea C before idea A
-    Then idea C has needsSync true
-    And idea A has needsSync false
-    And idea B has needsSync false
+    Then idea C has syncStatus "pending"
+    And idea A has syncStatus "synced"
+    And idea B has syncStatus "synced"
 
   @add-ideas-specs @FR6 @FR10
   Scenario: Reorder throws for non-existent idea

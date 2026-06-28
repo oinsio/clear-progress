@@ -5,7 +5,7 @@ Describes when and how the client triggers synchronization cycles. Does NOT cove
 ## Concepts
 
 - **Sync cycle**: a sequential execution of `push()` then `pull()`, followed by cover sync
-- **Sync status**: one of `idle`, `syncing`, `offline`, `error`, `unauthorized`
+- **Sync status**: one of `idle`, `syncing`, `offline`, `error`, `unauthorized`, `project_paused`
 - **Sync version**: React state counter incremented after each successful sync cycle. Used by UI hooks (useTasks, useGoals, etc.) to reactively reload data. Not related to the server revision — that is managed by SyncService internally as part of the sync protocol.
 - **Mutex**: only one sync cycle can run at a time; concurrent requests are dropped (not queued)
 
@@ -62,6 +62,7 @@ A sync cycle is **skipped** when:
 | Network error                 | Set status `error`, start ping interval                                     |
 | Auth error (1st..N-1 attempt) | Set status `unauthorized`, call `silentRefresh()`                           |
 | Auth error (Nth attempt)      | Set status `unauthorized`, call `signOut()`, dispatch `AUTH_REQUIRED_EVENT` |
+| ProjectPausedError            | Set status `project_paused`, do NOT start ping interval                     |
 | Cover sync error              | Logged, does not change sync status                                         |
 
 Where N = `MAX_SILENT_REFRESH_ATTEMPTS`. Counter resets after any successful sync.
@@ -101,3 +102,15 @@ SyncProvider.tsx SHALL reference sync-orchestration spec (triggers T1-T7, precon
 - **WHEN** a developer reads SyncProvider.tsx
 - **THEN** the file-level comment references sync-orchestration spec triggers T1-T7
 - **AND** the comment also references localstorage-refactor FR6, FR7 for localStorage integration
+
+### Requirement: Ping recovery interval does not start for project_paused
+When sync status becomes `"project_paused"`, the system SHALL NOT start the ping recovery interval. The periodic sync interval (every `SYNC_INTERVAL_MS`) SHALL continue running normally.
+
+#### Scenario: Ping interval not started when project paused
+- **WHEN** `syncStatus` becomes `"project_paused"`
+- **THEN** ping interval is NOT started
+- **AND** periodic sync interval continues
+
+#### Scenario: Ping interval still starts for error and offline
+- **WHEN** `syncStatus` becomes `"error"` or `"offline"`
+- **THEN** ping interval starts as before

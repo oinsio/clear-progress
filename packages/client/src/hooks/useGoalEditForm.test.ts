@@ -34,7 +34,7 @@ const DEFAULT_GOAL = {
   sort_order: "0",
   is_deleted: false,
   revision: 1,
-  needsSync: false,
+  syncStatus: "synced" as const,
   created_at: "2025-01-01T00:00:00.000Z",
   updated_at: "2025-01-01T00:00:00.000Z",
 };

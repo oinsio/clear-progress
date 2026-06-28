@@ -30,11 +30,11 @@ describeFeature(
         let originalUpdatedAt: string;
 
         Given(
-          'context "@home" exists with needsSync false',
+          'context "@home" exists with syncStatus "synced"',
           async (_ctx: TestContext) => {
             await seedContext(ctx.contextIds, "@home", {
               name: "@home",
-              needsSync: false,
+              syncStatus: "synced" as const,
             });
             const existingContext = await getContext(ctx.contextIds, "@home");
             originalUpdatedAt = existingContext.updated_at;
@@ -51,12 +51,15 @@ describeFeature(
           },
         );
 
-        Then("context needsSync remains false", async (_ctx: TestContext) => {
-          const context = await db.contexts.get(
-            getIdOrThrow(ctx.contextIds, "@home"),
-          );
-          expect(context?.needsSync).toBe(false);
-        });
+        Then(
+          'context syncStatus remains "synced"',
+          async (_ctx: TestContext) => {
+            const context = await db.contexts.get(
+              getIdOrThrow(ctx.contextIds, "@home"),
+            );
+            expect(context?.syncStatus).toBe("synced");
+          },
+        );
 
         And("context updated_at is unchanged", async (_ctx: TestContext) => {
           const context = await db.contexts.get(

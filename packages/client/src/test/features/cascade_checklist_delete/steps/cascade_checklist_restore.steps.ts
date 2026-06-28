@@ -47,33 +47,33 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        'task "T1" has is_deleted false and needsSync true',
+        'task "T1" has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           const task = await db.tasks.get(getIdOrThrow(ctx.taskIds, "T1"));
           expect(task?.is_deleted).toBe(false);
-          expect(task?.needsSync).toBe(true);
+          expect(task?.syncStatus).toBe("pending");
         },
       );
 
       And(
-        'checklist item "C1" has is_deleted false and needsSync true',
+        'checklist item "C1" has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           const item = await db.checklist_items.get(
             getIdOrThrow(ctx.checklistItemIds, "C1"),
           );
           expect(item?.is_deleted).toBe(false);
-          expect(item?.needsSync).toBe(true);
+          expect(item?.syncStatus).toBe("pending");
         },
       );
 
       And(
-        'checklist item "C2" has is_deleted false and needsSync true',
+        'checklist item "C2" has is_deleted false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           const item = await db.checklist_items.get(
             getIdOrThrow(ctx.checklistItemIds, "C2"),
           );
           expect(item?.is_deleted).toBe(false);
-          expect(item?.needsSync).toBe(true);
+          expect(item?.syncStatus).toBe("pending");
         },
       );
     },

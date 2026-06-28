@@ -40,11 +40,14 @@ describeFeature(
         expect(persistedCategory?.is_deleted).toBe(true);
       });
 
-      And('category "Work" has needsSync true', async (_ctx: TestContext) => {
-        const categoryId = getIdOrThrow(ctx.categoryIds, "Work");
-        const persistedCategory = await db.categories.get(categoryId);
-        expect(persistedCategory?.needsSync).toBe(true);
-      });
+      And(
+        'category "Work" has syncStatus "pending"',
+        async (_ctx: TestContext) => {
+          const categoryId = getIdOrThrow(ctx.categoryIds, "Work");
+          const persistedCategory = await db.categories.get(categoryId);
+          expect(persistedCategory?.syncStatus).toBe("pending");
+        },
+      );
     });
 
     // @add-context-category-specs @FR5
@@ -72,11 +75,14 @@ describeFeature(
           },
         );
 
-        And('category "Work" has needsSync true', async (_ctx: TestContext) => {
-          const categoryId = getIdOrThrow(ctx.categoryIds, "Work");
-          const persistedCategory = await db.categories.get(categoryId);
-          expect(persistedCategory?.needsSync).toBe(true);
-        });
+        And(
+          'category "Work" has syncStatus "pending"',
+          async (_ctx: TestContext) => {
+            const categoryId = getIdOrThrow(ctx.categoryIds, "Work");
+            const persistedCategory = await db.categories.get(categoryId);
+            expect(persistedCategory?.syncStatus).toBe("pending");
+          },
+        );
       },
     );
 

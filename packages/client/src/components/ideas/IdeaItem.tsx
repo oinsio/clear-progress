@@ -7,10 +7,13 @@ import { useTranslation } from "react-i18next";
 import { DescriptionMarkdown } from "@/components/ui/DescriptionMarkdown";
 import { ENTITY_TYPE } from "@/constants";
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { cn } from "@/shared/lib/cn";
 import type { Idea } from "@/types/entities";
+import {
+  getEffectiveSyncStatus,
+  getSyncStatusBorderClass,
+} from "@/utils/syncStatusBorder";
 
 interface IdeaItemProps {
   idea: Idea;
@@ -27,12 +30,14 @@ export function IdeaItem({
   dragHandle,
   onEdit,
 }: IdeaItemProps) {
-  const isIdeaUnsynced = useIsUnsynced(idea);
   const { hasUnsyncedAttachments } = useAttachmentCount(
     ENTITY_TYPE.IDEA,
     idea.id,
   );
-  const isUnsynced = isIdeaUnsynced || hasUnsyncedAttachments;
+  const effectiveSyncStatus = getEffectiveSyncStatus(
+    idea.syncStatus,
+    hasUnsyncedAttachments,
+  );
   const { panelSide } = usePanelSide();
   const { t } = useTranslation();
 
@@ -45,7 +50,7 @@ export function IdeaItem({
         panelSide === "left"
           ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50"
           : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
-        isUnsynced ? "border-l-amber-400" : "border-l-transparent",
+        getSyncStatusBorderClass(effectiveSyncStatus),
       )}
     >
       {/* Edit button */}

@@ -11,7 +11,7 @@ import { setupSingleDeviceTest, triggerSyncAndWait } from "../test-helpers.js";
 const { getPage } = setupSingleDeviceTest();
 
 // ---------------------------------------------------------------------------
-// Amber indicator uses needsSync — items created after sync retain indicator
+// Amber indicator uses syncStatus — items created after sync retain indicator
 // ---------------------------------------------------------------------------
 test("unsynced checklist item shows amber indicator until pushed", async () => {
   const page = getPage();

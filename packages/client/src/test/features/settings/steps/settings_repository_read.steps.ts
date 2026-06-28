@@ -32,7 +32,7 @@ describeFeature(
             buildSetting({
               key: "accent_color",
               value: "blue",
-              needsSync: false,
+              syncStatus: "synced" as const,
             }),
           );
         },
@@ -46,13 +46,13 @@ describeFeature(
       );
 
       Then(
-        'the full setting record is returned with key "accent_color", value "blue", updated_at, and needsSync',
+        'the full setting record is returned with key "accent_color", value "blue", updated_at, and syncStatus',
         async (_ctx: TestContext) => {
           expect(result).toBeDefined();
           expect(result?.key).toBe("accent_color");
           expect(result?.value).toBe("blue");
           expect(result?.updated_at).toBeDefined();
-          expect(result?.needsSync).toBeDefined();
+          expect(result?.syncStatus).toBeDefined();
         },
       );
     });
@@ -68,7 +68,7 @@ describeFeature(
             buildSetting({
               key: "default_box",
               value: "today",
-              needsSync: false,
+              syncStatus: "synced" as const,
             }),
           );
         },
@@ -145,17 +145,17 @@ describeFeature(
               buildSetting({
                 key: "accent_color",
                 value: "blue",
-                needsSync: false,
+                syncStatus: "synced" as const,
               }),
               buildSetting({
                 key: "default_box",
                 value: "today",
-                needsSync: false,
+                syncStatus: "synced" as const,
               }),
               buildSetting({
                 key: "language",
                 value: "en",
-                needsSync: false,
+                syncStatus: "synced" as const,
               }),
             ]);
           },

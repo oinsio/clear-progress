@@ -1,4 +1,5 @@
 // implements FR6 of add-file-attachments — attachment sync push/pull
+import "@/test/helpers/mockPushPreValidator";
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
@@ -36,8 +37,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Dirty attachments are included in push request",
     ({ Given, When, Then }) => {
       const dirtyAttachments = [
-        makeAttachment({ id: "att-1", needsSync: true }),
-        makeAttachment({ id: "att-2", needsSync: true }),
+        makeAttachment({ id: "att-1", syncStatus: "pending" as const }),
+        makeAttachment({ id: "att-2", syncStatus: "pending" as const }),
       ];
 
       Given("client has 2 dirty attachments", async (_ctx: TestContext) => {
@@ -71,9 +72,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @add-file-attachments @FR6
   f.Scenario(
-    "Push results clear needsSync on accepted attachments",
+    "Push results clear syncStatus on accepted attachments",
     ({ Given, And, When, Then }) => {
-      const attachment = makeAttachment({ id: "att-1", needsSync: true });
+      const attachment = makeAttachment({
+        id: "att-1",
+        syncStatus: "pending" as const,
+      });
 
       Given(
         'client has 1 dirty attachment with id "att-1"',
@@ -114,7 +118,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        'attachment "att-1" has needsSync false and revision 5',
+        'attachment "att-1" has syncStatus "synced" and revision 5',
         async (_ctx: TestContext) => {
           expect(
             (
@@ -126,7 +130,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           ).toHaveBeenCalledWith(
             expect.objectContaining({
               id: "att-1",
-              needsSync: false,
+              syncStatus: "synced" as const,
               revision: 5,
             }),
           );

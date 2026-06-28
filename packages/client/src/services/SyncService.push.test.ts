@@ -1,4 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Skip Zod pre-validation — these tests use non-UUID IDs
+vi.mock("@/services/pushPreValidator", () => ({
+  preValidateRecords: (
+    tasks: unknown[],
+    goals: unknown[],
+    contexts: unknown[],
+    categories: unknown[],
+    checklistItems: unknown[],
+    ideas: unknown[],
+    attachments: unknown[],
+    settings: unknown[],
+  ) =>
+    Promise.resolve({
+      tasks,
+      goals,
+      contexts,
+      categories,
+      checklistItems,
+      ideas,
+      attachments,
+      settings,
+      alerts: [],
+    }),
+}));
+
 import {
   asMock,
   createMockSyncAdapter,
@@ -23,8 +49,8 @@ describe("SyncService — push basics", () => {
   });
 
   it("should call getNeedingSync on all repositories", async () => {
-    const needsSyncTask = makeTask();
-    setupEntityForPush(ctx, "task", needsSyncTask);
+    const syncStatusTask = makeTask();
+    setupEntityForPush(ctx, "task", syncStatusTask);
     const service = createService(ctx);
 
     await service.push();
@@ -40,12 +66,12 @@ describe("SyncService — push basics", () => {
   // implements FR1 of spec-sync-protocol
   it("should collect all records when force = true", async () => {
     const allTasks = [
-      makeTask({ id: "t1", needsSync: true }),
-      makeTask({ id: "t2", needsSync: false }),
+      makeTask({ id: "t1", syncStatus: "pending" as const }),
+      makeTask({ id: "t2", syncStatus: "synced" as const }),
     ];
     const allGoals = [
-      makeGoal({ id: "g1", needsSync: true }),
-      makeGoal({ id: "g2", needsSync: false }),
+      makeGoal({ id: "g1", syncStatus: "pending" as const }),
+      makeGoal({ id: "g2", syncStatus: "synced" as const }),
     ];
     setupEmptyRepositories(ctx);
     ctx.taskRepository = withGetById(
@@ -81,7 +107,7 @@ describe("SyncService — push basics", () => {
     );
   });
 
-  it("should not call apiClient.push when no needsSync records exist", async () => {
+  it("should not call apiClient.push when no syncStatus records exist", async () => {
     const service = createService(ctx);
 
     await service.push();
@@ -89,23 +115,23 @@ describe("SyncService — push basics", () => {
     expect(ctx.mockSyncAdapter.push).not.toHaveBeenCalled();
   });
 
-  it("should strip needsSync from records before sending to apiClient", async () => {
-    const needsSyncTask = makeTask({ needsSync: true });
-    setupEntityForPush(ctx, "task", needsSyncTask);
+  it("should strip syncStatus from records before sending to apiClient", async () => {
+    const syncStatusTask = makeTask({ syncStatus: "pending" as const });
+    setupEntityForPush(ctx, "task", syncStatusTask);
     const service = createService(ctx);
 
     await service.push();
 
     const pushCall = getPushCallArg(ctx.mockSyncAdapter);
-    expect(pushCall.tasks[0].needsSync).toBeUndefined();
+    expect(pushCall.tasks[0].syncStatus).toBeUndefined();
   });
 
   it("should send goal cover_hash to server", async () => {
-    const needsSyncGoal = makeGoal({
+    const syncStatusGoal = makeGoal({
       cover_hash: "abc123hash",
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
-    setupEntityForPush(ctx, "goal", needsSyncGoal);
+    setupEntityForPush(ctx, "goal", syncStatusGoal);
     const service = createService(ctx);
 
     await service.push();
@@ -119,7 +145,7 @@ describe("SyncService — push basics", () => {
     const deletedTask = makeTask({
       id: "t1",
       is_deleted: true,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     setupEntityForPush(ctx, "task", deletedTask);
     const service = createService(ctx);
@@ -141,7 +167,7 @@ describe("SyncService — push basics", () => {
       setup: testCase.setupRepo,
       makeEntity: testCase.makeEntity,
     })),
-  )("should send push when only $entityName are needsSync", async ({
+  )("should send push when only $entityName are syncStatus", async ({
     setup,
     makeEntity,
   }) => {
@@ -154,9 +180,9 @@ describe("SyncService — push basics", () => {
   });
 
   it("should throw if push response is not ok", async () => {
-    const needsSyncTask = makeTask();
+    const syncStatusTask = makeTask();
     asMock(ctx.taskRepository.getNeedingSync).mockResolvedValue([
-      needsSyncTask,
+      syncStatusTask,
     ]);
     ctx.mockSyncAdapter = createMockSyncAdapter({
       push: vi.fn().mockResolvedValue({ ok: false, results: {} }),

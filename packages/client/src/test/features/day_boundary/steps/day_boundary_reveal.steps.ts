@@ -59,7 +59,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   async function assertTaskRevealed() {
     const task = await db.tasks.get(seededTaskId);
     expect(task?.is_hidden).toBe(false);
-    expect(task?.needsSync).toBe(true);
+    expect(task?.syncStatus).toBe("pending");
   }
 
   function computeNextBoundary() {

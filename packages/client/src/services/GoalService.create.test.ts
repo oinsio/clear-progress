@@ -45,8 +45,8 @@ describe("GoalService", () => {
       expect(typeof createdGoal.sort_order).toBe("string");
     });
 
-    it("should create goal with needsSync true", () => {
-      expect(createdGoal.needsSync).toBe(true);
+    it("should create goal with syncStatus true", () => {
+      expect(createdGoal.syncStatus).toBe("pending");
     });
 
     it("should create goal with revision 0", () => {

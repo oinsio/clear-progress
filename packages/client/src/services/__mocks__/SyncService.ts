@@ -8,4 +8,5 @@ export class SyncService {
   pull = mockPull;
   push = mockPush;
   resetAndPull = mockResetAndPull;
+  lastSyncAlerts: unknown[] = [];
 }

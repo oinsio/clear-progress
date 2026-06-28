@@ -25,7 +25,7 @@ function buildMockAttachment(overrides: Partial<Attachment> = {}): Attachment {
     created_at: now,
     updated_at: now,
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
     ...overrides,
   };
 }
@@ -111,10 +111,10 @@ describeFeature(
       );
 
       And(
-        "the attachment is marked as needsSync true",
+        'the attachment is marked as syncStatus "pending"',
         async (_ctx: TestContext) => {
           const saved = mockAttachmentRepo.save.mock.calls[0][0] as Attachment;
-          expect(saved.needsSync).toBe(true);
+          expect(saved.syncStatus).toBe("pending");
         },
       );
     });

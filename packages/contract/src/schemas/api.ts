@@ -44,6 +44,7 @@ export const PullResponseSchema = z.object({
   current_revision: z.number().int().nonnegative(),
   purge_revision: z.number().int().nonnegative(),
   server_time: ISOTimestampSchema,
+  has_more: z.boolean(), // implements FR4 of fix-pull-pagination
 });
 
 // --- Push ---

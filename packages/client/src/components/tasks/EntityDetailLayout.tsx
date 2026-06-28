@@ -40,7 +40,7 @@ interface EntityDetailLayoutI18nKeys {
 }
 
 export interface EntityDetailLayoutProps {
-  entity: { name: string; updated_at: string; needsSync: boolean } | undefined;
+  entity: { name: string; updated_at: string; syncStatus: string } | undefined;
   isLoading: boolean;
   tasks: Task[];
   goals: Goal[];
@@ -97,7 +97,7 @@ export function EntityDetailLayout({
     containerRef: splitContainerRef,
     handleResizeMouseDown,
   } = usePanelSplit();
-  const isUnsynced = useIsUnsynced(entity ?? { needsSync: false });
+  const isUnsynced = useIsUnsynced(entity ?? { syncStatus: "synced" as const });
   const { showHidden, toggleShowHidden } = useShowHidden();
   const [activeBox, setActiveBox] = useState<BoxFilter>(BOX_FILTER_ALL);
   const targetBox = useTargetBox(activeBox);

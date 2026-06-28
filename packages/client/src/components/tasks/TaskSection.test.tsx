@@ -38,7 +38,7 @@ const MOCK_TASK: Task = {
   appear_date: "",
   repeat_rule: "",
   checklist: [],
-  needsSync: false,
+  syncStatus: "synced" as const,
 } as unknown as Task;
 
 function createMockTasks(count: number): Task[] {

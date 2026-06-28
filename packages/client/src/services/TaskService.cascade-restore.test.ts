@@ -50,11 +50,11 @@ describe("TaskService.restore - cascade to checklist items", () => {
     expect(bulkUpsertArg).toHaveLength(2);
     expect(bulkUpsertArg[0]).toMatchObject({
       is_deleted: false,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     expect(bulkUpsertArg[1]).toMatchObject({
       is_deleted: false,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
   });
 

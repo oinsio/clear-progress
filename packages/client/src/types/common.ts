@@ -1,11 +1,4 @@
-export type Box = "inbox" | "today" | "week" | "later";
-
-export type GoalStatus =
-  | "planning"
-  | "in_progress"
-  | "paused"
-  | "completed"
-  | "cancelled";
+import type { Box } from "@clear-progress/contract";
 
 export type AccentColor =
   | "coral"
@@ -22,7 +15,8 @@ export type SyncStatus =
   | "syncing"
   | "error"
   | "offline"
-  | "unauthorized";
+  | "unauthorized"
+  | "project_paused";
 
 export type FullSyncStep =
   | "idle"
@@ -34,7 +28,8 @@ export type FullSyncStep =
   | "done"
   | "error";
 
-export type PushResultStatus = "created" | "accepted" | "conflict" | "rejected";
+// implements FR6 of fix-push-poison-pill
+export type RecordSyncStatus = "synced" | "pending" | "rejected";
 
 export type BoxFilter = Box | "all";
 
@@ -53,7 +48,10 @@ export type SidebarMode = "expanded" | "collapsed" | "expand-on-hover";
 export type SidebarEffectiveState = "expanded" | "collapsed" | "hover-ready";
 
 export type {
+  Box,
+  GoalStatus,
   MenuItemConfig,
   MenuMode,
+  PushResultStatus,
   RepeatRule,
 } from "@clear-progress/contract";
