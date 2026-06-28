@@ -111,6 +111,42 @@ System MUST find the next matching weekday from the weekdays list, respecting th
 - **WHEN** system calculates next date with weekly interval 1
 - **THEN** result is the nearest Monday on or after "2026-02-01"
 
+### Requirement: Weekly recurrence with multiple weekdays respects interval as week-level skip
+# implements FR5 of repeating-tasks-specs
+
+System MUST treat `interval` in weekly recurrence as the number of weeks between active periods, not as a gap between individual weekday occurrences. When `weekdays` contains multiple days, all matching days within the same ISO week SHALL fire before advancing to the next active week.
+
+The algorithm for `calculateNextDateWeekly` SHALL be:
+1. Compute `nextDay = previousNextDate + 1 day`
+2. Find all weekdays in the same ISO week as `nextDay` that are >= `nextDay`
+3. If any matching weekday exists in the current week, return the earliest one (no interval skip)
+4. If no matching weekday remains in the current week, advance to Monday of the next week, then skip `(interval - 1) * 7` days, and return the first matching weekday
+
+#### Scenario: Biweekly Mon+Wed fires both days in active week
+- **WHEN** rule is weekly, interval=2, weekdays=[1,3], previousNextDate="2026-06-01" (Monday)
+- **THEN** next date is "2026-06-03" (Wednesday of the same week)
+
+#### Scenario: Biweekly Mon+Wed skips to next active week after Wednesday
+- **WHEN** rule is weekly, interval=2, weekdays=[1,3], previousNextDate="2026-06-03" (Wednesday)
+- **THEN** next date is "2026-06-15" (Monday, two weeks later)
+
+#### Scenario: Chain of 6 completions for biweekly Mon+Wed
+- **WHEN** rule is weekly, interval=2, weekdays=[1,3], starting from previousNextDate="2026-06-01"
+- **THEN** the chain of next dates is: "2026-06-03", "2026-06-15", "2026-06-17", "2026-06-29", "2026-07-01", "2026-07-13"
+
+#### Scenario: Single weekday with interval > 1 unchanged
+- **WHEN** rule is weekly, interval=2, weekdays=[1], previousNextDate="2026-06-01" (Monday)
+- **THEN** next date is "2026-06-15" (Monday, two weeks later)
+
+### Requirement: Skip logic for weekly recurrence with multiple weekdays
+# implements FR6 of repeating-tasks-specs
+
+When skip logic is applied (previousNextDate is far in the past), the system MUST align to the correct active week and then apply the same two-step weekday selection (current week first, then advance). The period for skip calculation remains `7 * interval` days.
+
+#### Scenario: Skip aligns to active week for multi-weekday
+- **WHEN** rule is weekly, interval=2, weekdays=[1,3], previousNextDate="2026-04-06" (Monday), today is "2026-06-10" (Wednesday)
+- **THEN** next date is a Monday or Wednesday >= today, aligned to the correct biweekly cadence
+
 ### Requirement: System calculates next date for fixed monthly frequency
 # implements FR5 of repeating-tasks-specs
 
@@ -424,3 +460,144 @@ All numeric inputs in RepeatRuleSelector (interval, delay_days, day_of_month, da
 - **WHEN** user clears a numeric input field
 - **AND** user moves focus away (blur)
 - **THEN** the field restores the last valid value
+
+### Requirement: Test comments match actual day-of-week
+# implements FR4 of fix-date-and-weekly-bugs
+
+All date comments in skip-logic tests MUST accurately reflect the ISO day of week for the given date. Test expectations MUST be derived from independent date calculation, not from running the function under test.
+
+#### Scenario: Comment accuracy verification
+- **WHEN** test comment says "2026-05-10" is "Saturday"
+- **THEN** the comment is incorrect (2026-05-10 is Sunday) and MUST be fixed
+
+#### Scenario: Comment accuracy for 2026-04-18
+- **WHEN** test comment says "2026-04-18" is "Friday"
+- **THEN** the comment is incorrect (2026-04-18 is Saturday) and MUST be fixed
+
+#### Scenario: Comment accuracy for 2026-04-07
+- **WHEN** test comment says "2026-04-07" is "Monday"
+- **THEN** the comment is incorrect (2026-04-07 is Tuesday) and MUST be fixed
+
+### Requirement: System deduplicates recurring copies after pull
+# implements FR1, FR2 of dedup-recurring-after-pull
+
+After applying a pull batch, the system SHALL detect duplicate recurring copies — multiple non-completed, non-deleted tasks sharing the same `original_task_id`. Among duplicates, the system SHALL keep the winner by earliest `next_date`, tiebreak by lexicographically smallest `id`. Losers SHALL be soft-deleted with `syncStatus: "pending"`.
+
+#### Scenario: Two duplicates with same next_date — tiebreak by id
+- **GIVEN** task Copy-A (id="aaa...", original_task_id="root", next_date="2026-07-01") and Copy-B (id="bbb...", original_task_id="root", next_date="2026-07-01"), both non-completed, non-deleted
+- **WHEN** deduplication runs after pull
+- **THEN** Copy-A is kept (smaller id) and Copy-B is soft-deleted
+
+#### Scenario: Two duplicates with different next_date — earlier wins
+- **GIVEN** task Copy-A (original_task_id="root", next_date="2026-07-05") and Copy-B (original_task_id="root", next_date="2026-07-01"), both non-completed, non-deleted
+- **WHEN** deduplication runs after pull
+- **THEN** Copy-B is kept (earlier next_date) and Copy-A is soft-deleted
+
+#### Scenario: No duplicates — no action
+- **GIVEN** only one non-completed, non-deleted task per original_task_id
+- **WHEN** deduplication runs after pull
+- **THEN** no tasks are modified
+
+#### Scenario: Completed copies are excluded from dedup
+- **GIVEN** Copy-A (original_task_id="root", is_completed=true) and Copy-B (original_task_id="root", is_completed=false)
+- **WHEN** deduplication runs after pull
+- **THEN** no deduplication occurs (only one non-completed copy exists)
+
+#### Scenario: Deleted copies are excluded from dedup
+- **GIVEN** Copy-A (original_task_id="root", is_deleted=true) and Copy-B (original_task_id="root", is_deleted=false)
+- **WHEN** deduplication runs after pull
+- **THEN** no deduplication occurs (only one non-deleted copy exists)
+
+### Requirement: Deduplication cascades soft-delete to checklist items
+# implements FR3 of dedup-recurring-after-pull
+
+When a duplicate recurring copy is soft-deleted during deduplication, the system SHALL also soft-delete all checklist items belonging to that copy. Each cascaded checklist item SHALL have `is_deleted: true`, `syncStatus: "pending"`, and `updated_at` set to the current timestamp.
+
+#### Scenario: Duplicate with checklist items is soft-deleted
+- **GIVEN** Copy-B is a duplicate loser with checklist items C1 and C2
+- **WHEN** deduplication soft-deletes Copy-B
+- **THEN** C1 has is_deleted=true, syncStatus="pending"
+- **AND** C2 has is_deleted=true, syncStatus="pending"
+
+#### Scenario: Duplicate without checklist items is soft-deleted
+- **GIVEN** Copy-B is a duplicate loser with no checklist items
+- **WHEN** deduplication soft-deletes Copy-B
+- **THEN** only Copy-B is soft-deleted, no error occurs
+
+### Requirement: Deduplication runs before sync_complete event
+# implements FR4 of dedup-recurring-after-pull
+
+Deduplication SHALL execute after the pull batch is applied to IndexedDB but BEFORE the `sync_complete` event is dispatched. This ensures `revealHiddenTasks` (which listens to `sync_complete`) never sees duplicate copies.
+
+#### Scenario: Reveal sees clean data after dedup
+- **GIVEN** pull batch contains two duplicates with appear_date <= today
+- **WHEN** pull completes and sync_complete fires
+- **THEN** revealHiddenTasks reveals only one task (the winner)
+
+### Requirement: Deduplication is skipped when unnecessary
+# implements FR5 of dedup-recurring-after-pull
+
+Deduplication SHALL be skipped when the pull batch contains no tasks with non-empty `original_task_id`. This avoids unnecessary IndexedDB queries on normal pulls.
+
+#### Scenario: Pull with no recurring data skips dedup
+- **GIVEN** pull batch contains only tasks with original_task_id=""
+- **WHEN** pull completes
+- **THEN** deduplication query is not executed
+
+### Requirement: System preserves promotion link when soft-deleting a recurring original
+# implements FR1 of fix-recurring-restore
+
+When soft-deleting a task that has active copies (promotion occurs), the system SHALL set `original_task_id` of the deleted task to the ID of the promoted copy before marking `is_deleted: true`. This preserves the link between the deleted task and its promoted successor for potential restore.
+
+#### Scenario: softDelete records promoted copy ID in original_task_id
+- **GIVEN** task A (id="a", original_task_id="", repeat_rule="daily") with active copy B (original_task_id="a")
+- **WHEN** system soft-deletes task A
+- **THEN** task B has original_task_id="" (promoted to original)
+- **AND** task A has original_task_id="b" and is_deleted=true
+
+#### Scenario: softDelete without copies does not change original_task_id
+- **GIVEN** task A (id="a", original_task_id="", repeat_rule="daily") with no copies
+- **WHEN** system soft-deletes task A
+- **THEN** task A has original_task_id="" and is_deleted=true
+
+#### Scenario: softDelete of non-recurring task does not change original_task_id
+- **GIVEN** task A (id="a", original_task_id="", repeat_rule="") with no copies
+- **WHEN** system soft-deletes task A
+- **THEN** task A has original_task_id="" and is_deleted=true
+
+### Requirement: System prevents duplicate chains when restoring a recurring task
+# implements FR2, FR3, FR4, FR5 of fix-recurring-restore
+
+When restoring a soft-deleted task, the system SHALL check whether a promotion occurred (task has non-empty `original_task_id` AND non-empty `repeat_rule`). If the promoted successor is alive (exists and not deleted), the system SHALL clear `repeat_rule`, `next_date`, and `appear_date` on the restored task — it becomes a regular (non-recurring) task. If the promoted successor is deleted or does not exist, the system SHALL clear `original_task_id` and restore the task as a chain original with its `repeat_rule` intact.
+
+#### Scenario: Restore with active promoted successor clears repeat_rule
+- **GIVEN** deleted task A (original_task_id="b", repeat_rule="daily") and active task B (id="b", original_task_id="", repeat_rule="daily", is_deleted=false)
+- **WHEN** system restores task A
+- **THEN** task A has is_deleted=false, repeat_rule="", next_date="", appear_date=""
+- **AND** task A has original_task_id="b" (preserved as copy reference)
+
+#### Scenario: Restore with deleted promoted successor restores as original
+- **GIVEN** deleted task A (original_task_id="b", repeat_rule="daily") and deleted task B (id="b", is_deleted=true)
+- **WHEN** system restores task A
+- **THEN** task A has is_deleted=false, original_task_id="", repeat_rule="daily"
+
+#### Scenario: Restore with non-existent promoted successor restores as original
+- **GIVEN** deleted task A (original_task_id="b", repeat_rule="daily") and task B does not exist
+- **WHEN** system restores task A
+- **THEN** task A has is_deleted=false, original_task_id="", repeat_rule="daily"
+
+#### Scenario: Restore with hidden promoted successor clears repeat_rule
+- **GIVEN** deleted task A (original_task_id="b", repeat_rule="daily") and task B (id="b", is_hidden=true, is_deleted=false)
+- **WHEN** system restores task A
+- **THEN** task A has is_deleted=false, repeat_rule="", next_date="", appear_date=""
+
+#### Scenario: Restore task without repeat_rule is unchanged
+- **GIVEN** deleted task A (original_task_id="", repeat_rule="")
+- **WHEN** system restores task A
+- **THEN** task A has is_deleted=false (no other fields changed)
+
+#### Scenario: Restore copy (non-original) is unchanged
+- **GIVEN** deleted task B (original_task_id="a", repeat_rule="daily") where B was a copy (not promoted)
+- **AND** original_task_id was set before deletion (not by promotion)
+- **WHEN** system restores task B
+- **THEN** task B has is_deleted=false with original_task_id="a" and repeat_rule="daily" preserved

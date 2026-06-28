@@ -17,12 +17,15 @@ import { useCompletedTasks } from "@/hooks/useCompletedTasks";
 import { useContexts } from "@/hooks/useContexts";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
+import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { useShowHidden } from "@/hooks/useShowHidden";
 import { useTargetBox } from "@/hooks/useTargetBox";
 import { useTaskCompletion } from "@/hooks/useTaskCompletion";
 import { useTaskSelection } from "@/hooks/useTaskSelection";
 import { useTasks } from "@/hooks/useTasks";
+import { systemClock } from "@/lib/temporal";
 import type { BoxFilter } from "@/types/common";
+import { getLogicalDate } from "@/utils/getLogicalDate";
 
 export default function ActiveTasksPage() {
   const { t } = useTranslation();
@@ -111,15 +114,12 @@ export default function ActiveTasksPage() {
     onExpand: selection.handleTaskExpand,
   };
 
-  const todayCompleted = useMemo(
-    () =>
-      completedTasks.filter(
-        (task) =>
-          task.completed_at?.slice(0, 10) ===
-          new Date().toISOString().slice(0, 10),
-      ),
-    [completedTasks],
-  );
+  const todayCompleted = useMemo(() => {
+    const logicalToday = getLogicalDate(systemClock, getCachedDayBoundary());
+    return completedTasks.filter(
+      (task) => task.completed_at?.slice(0, 10) === logicalToday,
+    );
+  }, [completedTasks]);
 
   const sections = [
     {

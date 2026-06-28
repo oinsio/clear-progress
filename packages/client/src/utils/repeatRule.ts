@@ -40,6 +40,7 @@ function calculateNextDateDaily(
   return next.toString();
 }
 
+// implements FR2 of fix-date-and-weekly-bugs
 function findNextWeekday(
   startDate: Temporal.PlainDate,
   weekdays: number[],
@@ -47,22 +48,21 @@ function findNextWeekday(
 ): string {
   // weekdays: 1=Mon, 2=Tue, ..., 7=Sun (ISO 8601)
   const sortedWeekdays = [...weekdays].sort((a, b) => a - b);
-  // Skip (interval - 1) full weeks before starting the search
-  let current = startDate.add({ days: 7 * (interval - 1) });
+  const startDow = startDate.dayOfWeek;
 
-  for (let i = 0; i < 7; i++) {
-    const isoDay = current.dayOfWeek; // 1=Mon ... 7=Sun
-
-    if (sortedWeekdays.includes(isoDay)) {
-      return current.toString();
+  // Step 1: Check remaining weekdays in the current ISO week of startDate
+  for (const dow of sortedWeekdays) {
+    if (dow >= startDow) {
+      return startDate.add({ days: dow - startDow }).toString();
     }
-
-    current = current.add({ days: 1 });
   }
 
-  throw new Error(
-    `No matching weekday found in 7 days for weekdays: [${weekdays}]`,
-  );
+  // Step 2: No remaining weekdays this week → advance to next active week
+  const daysUntilNextMonday = 8 - startDow;
+  const activeMonday = startDate.add({
+    days: daysUntilNextMonday + 7 * (interval - 1),
+  });
+  return activeMonday.add({ days: sortedWeekdays[0] - 1 }).toString();
 }
 
 function calculateNextDateWeekly(
@@ -84,26 +84,40 @@ function calculateNextDateWeekly(
   const candidate = findNextWeekday(nextDay, weekdays, interval);
   const candidateDate = Temporal.PlainDate.from(candidate);
 
-  // Skip logic: if the date is in the past, jump to the nearest
-  // period aligned to the interval (analogous to daily/monthly/yearly skip logic).
-  // This prevents creating multiple missed copies during prolonged inactivity.
   if (Temporal.PlainDate.compare(candidateDate, today) < 0) {
-    const periodDays = 7 * interval;
-    const daysElapsed = nextDay.until(today, { largestUnit: "days" }).days;
-    const periodsToSkip = Math.floor(daysElapsed / periodDays);
-    const alignedStart = nextDay.add({ days: periodsToSkip * periodDays });
-    const alignedCandidate = findNextWeekday(alignedStart, weekdays, interval);
-    const alignedCandidateDate = Temporal.PlainDate.from(alignedCandidate);
+    // Align to Monday boundaries for correct multi-weekday skip logic
+    // implements FR3 of fix-date-and-weekly-bugs
+    const prevMonday = prev.subtract({ days: prev.dayOfWeek - 1 });
+    const todayMonday = today.subtract({ days: today.dayOfWeek - 1 });
+    const weeksBetween = prevMonday.until(todayMonday, {
+      largestUnit: "weeks",
+    }).weeks;
 
-    // If the aligned candidate is also in the past, advance to the next period
-    if (Temporal.PlainDate.compare(alignedCandidateDate, today) <= 0) {
-      return findNextWeekday(
-        alignedStart.add({ days: periodDays }),
-        weekdays,
-        interval,
-      );
+    // Find the active week >= today's week
+    const periodsToSkip = Math.ceil(weeksBetween / interval);
+    let alignedMonday = prevMonday.add({ weeks: periodsToSkip * interval });
+
+    const sortedWeekdays = [...weekdays].sort((a, b) => a - b);
+    const lastWeekdayInAlignedWeek = alignedMonday.add({
+      days: sortedWeekdays[sortedWeekdays.length - 1] - 1,
+    });
+
+    // If all weekdays in the aligned week are before today, advance one more period
+    if (Temporal.PlainDate.compare(lastWeekdayInAlignedWeek, today) < 0) {
+      alignedMonday = alignedMonday.add({ weeks: interval });
     }
-    return alignedCandidate;
+
+    // Find the first weekday >= today in the aligned active week
+    for (const dow of sortedWeekdays) {
+      const dayInWeek = alignedMonday.add({ days: dow - 1 });
+      if (Temporal.PlainDate.compare(dayInWeek, today) >= 0) {
+        return dayInWeek.toString();
+      }
+    }
+
+    // Fallback: next active week, first weekday
+    const nextActiveMonday = alignedMonday.add({ weeks: interval });
+    return nextActiveMonday.add({ days: sortedWeekdays[0] - 1 }).toString();
   }
 
   return candidate;

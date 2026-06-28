@@ -127,6 +127,54 @@ describe("calculateNextDate", () => {
     const nextDate = calculateNextDate(rule, completedAt, undefined, clock);
     expect(nextDate).toBe("2026-04-18");
   });
+
+  // implements FR2 of fix-date-and-weekly-bugs
+  it("should exhaust all weekdays in active week before skipping for biweekly Mon+Wed", () => {
+    const clock = fakeClock("2026-06-01T10:00:00Z"); // Monday
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 2,
+      weekdays: [1, 3], // Mon, Wed
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-06-01T10:00:00.000Z";
+
+    // Chain of 6 sequential completions
+    const dates: string[] = [];
+    let prevDate = "2026-06-01";
+    for (let i = 0; i < 6; i++) {
+      const next = calculateNextDate(rule, completedAt, prevDate, clock);
+      dates.push(next);
+      prevDate = next;
+    }
+
+    expect(dates).toEqual([
+      "2026-06-03", // Wed (same week)
+      "2026-06-15", // Mon (skip 1 week → next active week)
+      "2026-06-17", // Wed (same week)
+      "2026-06-29", // Mon (skip 1 week → next active week)
+      "2026-07-01", // Wed (same week)
+      "2026-07-13", // Mon (skip 1 week → next active week)
+    ]);
+  });
+
+  // implements FR2 of fix-date-and-weekly-bugs
+  it("should skip full interval for single weekday with interval > 1", () => {
+    const clock = fakeClock("2026-06-01T10:00:00Z");
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 2,
+      weekdays: [1], // Mon only
+      target_box: "today",
+      advance_days: 0,
+    };
+    const completedAt = "2026-06-01T10:00:00.000Z";
+    const next = calculateNextDate(rule, completedAt, "2026-06-01", clock);
+    expect(next).toBe("2026-06-15");
+  });
 });
 
 describe("calculateAppearDate", () => {
