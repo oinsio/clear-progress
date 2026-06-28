@@ -36,7 +36,7 @@ The server SHALL assign a single `revision` number to all accepted/created recor
 - **THEN** each receives a different `revision` value (no duplicates)
 
 ### Requirement: Push result statuses
-The server SHALL return a status for each pushed record: `created`, `accepted`, `conflict`, or `rejected`.
+The server SHALL return a status for each pushed record: `created`, `accepted`, `conflict`, or `rejected`. When status is `rejected`, the result SHALL include a `reason` string with structured format (e.g., `fk_violation:goal_id`, `check_violation:box`, `unique_violation`).
 
 #### Scenario: New record gets status created
 - **WHEN** server receives a record whose `id` does not exist on server
@@ -49,11 +49,21 @@ The server SHALL return a status for each pushed record: `created`, `accepted`, 
 #### Scenario: Updated record loses conflict by timestamp
 - **WHEN** client record has `updated_at` < server record's `updated_at`
 - **THEN** result status is `conflict`
-- **AND** result includes `server_record` with the server's current version
+- **AND** result includes `server_record` with server's version
 
 #### Scenario: Invalid record is rejected
 - **WHEN** server receives a record with invalid UUID, blank name, or invalid box value
 - **THEN** result status is `rejected` with `reason` describing the issue
+
+#### Scenario: Record with FK violation is rejected
+- **WHEN** a task references a non-existent goal via `goal_id`
+- **THEN** result status is `rejected`
+- **AND** result includes `reason: "fk_violation:goal_id"`
+
+#### Scenario: Record with CHECK violation is rejected
+- **WHEN** a task has an invalid `box` value
+- **THEN** result status is `rejected`
+- **AND** result includes `reason: "check_violation:box"`
 
 ### Requirement: Client applies push results
 After receiving push results, the client SHALL apply them according to status.
@@ -77,6 +87,19 @@ After receiving push results, the client SHALL apply them according to status.
 - **WHEN** push result is `rejected`
 - **THEN** local record is not changed
 - **AND** `needsSync` remains `true`
+
+### Requirement: Client handles rejected push results
+The client SHALL process `status: "rejected"` results from push. For healable rejections, the client SHALL apply self-healing, set `syncStatus: "pending"`, and retry (max 2 times). For unhealable rejections, the client SHALL set `syncStatus: "rejected"`. The `syncStatus` field replaces the previous `needsSync` boolean.
+
+#### Scenario: Healable rejection triggers self-heal and retry
+- **WHEN** server rejects a task with `reason: "fk_violation:goal_id"`
+- **THEN** client sets `goal_id = ""`, `syncStatus = "pending"`
+- **AND** retries push within same sync cycle
+
+#### Scenario: Unhealable rejection sets rejected status
+- **WHEN** server rejects a task with `reason: "check_violation:status"`
+- **THEN** client sets `syncStatus = "rejected"`
+- **AND** does not retry
 
 ### Requirement: Chunked push fills attachments after parent entities
 When push is split into chunks, attachments SHALL be filled after tasks, goals, and ideas in the chunk fill order: `contexts → categories → goals → ideas → tasks → checklist_items → attachments → settings`. This ensures parent entities land in the same or an earlier chunk than their attachments, preventing temporarily orphaned attachments on the server if a chunk fails mid-sequence. Implements FR6 of add-file-attachments, design decision D11.

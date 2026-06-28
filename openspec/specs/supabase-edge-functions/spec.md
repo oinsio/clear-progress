@@ -81,8 +81,8 @@ The `/pull` Edge Function SHALL accept POST requests with `{ since_revision, set
 - **AND** `has_more` is `true`
 - **THEN** `current_revision` is 600
 
-### Requirement: Push Edge Function
-The `/push` Edge Function SHALL accept POST requests with entity arrays (tasks, goals, contexts, categories, ideas, checklist_items, settings). It SHALL validate the payload and delegate transactional logic to the PostgreSQL RPC function `push_records` via `supabase.rpc(...)`. The RPC function acquires a `FOR UPDATE` lock on the user's `next_revision` row in `sync_meta`, assigns the current revision to all accepted records, increments `next_revision`, and returns per-record results. The Edge Function formats the RPC response for the client.
+### Requirement: Push Edge Function validates and logs rejected records
+The `/push` Edge Function SHALL accept POST requests with entity arrays (tasks, goals, contexts, categories, ideas, checklist_items, settings). It SHALL validate incoming records with Zod Wire schemas before passing to RPC. Records failing Zod validation SHALL be excluded from the RPC call and returned with `status: "rejected"`. All rejected records (Zod and RPC) SHALL be logged via `console.warn`. Valid records are delegated to the PostgreSQL RPC function `push_records` via `supabase.rpc(...)`. The RPC function acquires a `FOR UPDATE` lock on the user's `next_revision` row in `sync_meta`, assigns the current revision to all accepted records, increments `next_revision`, and returns per-record results. The Edge Function formats the RPC response for the client.
 
 #### Scenario: Push assigns revision atomically
 - **WHEN** user pushes 3 tasks
@@ -105,6 +105,19 @@ The `/push` Edge Function SHALL accept POST requests with entity arrays (tasks, 
 #### Scenario: Lock timeout
 - **WHEN** `FOR UPDATE` lock cannot be acquired within 10 seconds
 - **THEN** response is `{ ok: false, error: "SYNC_LOCK_TIMEOUT" }`
+
+#### Scenario: Zod-invalid record excluded from RPC
+- **WHEN** a task with `created_at = "invalid"` is received in push
+- **THEN** the task is NOT passed to `push_records` RPC
+- **AND** the task is returned with `status: "rejected"` and Zod error details
+
+#### Scenario: Valid records pass through to RPC
+- **WHEN** all records in push pass Zod validation
+- **THEN** all records are passed to `push_records` RPC
+
+#### Scenario: Rejected records are logged with details
+- **WHEN** 2 records are rejected (1 by Zod, 1 by RPC)
+- **THEN** Edge Function logs both rejections with user ID, entity type, record ID, and reason
 
 ### Requirement: Upload Cover Edge Function
 The `/upload-cover` Edge Function SHALL accept POST requests with `{ goal_id, filename, mime_type, data, data_hash }`. It SHALL check for hash deduplication, store the file in Supabase Storage at path `{user_id[0:2]}/{user_id}/{data_hash[0:2]}/{file_id}.{ext}`, and create a record in the `covers` table. The response SHALL return `data_hash` instead of `file_id`.
