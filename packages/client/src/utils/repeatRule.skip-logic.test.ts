@@ -30,7 +30,7 @@ describe("calculateNextDate skip logic", () => {
   });
 
   it("should skip past dates for weekly recurrence with multiple weekdays", () => {
-    const clock = fakeClock("2026-05-10T10:00:00Z"); // Saturday
+    const clock = fakeClock("2026-05-10T10:00:00Z"); // Sunday
     const rule: RepeatRule = {
       type: "fixed",
       frequency: "weekly",
@@ -39,7 +39,7 @@ describe("calculateNextDate skip logic", () => {
       target_box: "today",
       advance_days: 0,
     };
-    const previousNextDate = "2026-04-18"; // Friday, 3 weeks ago
+    const previousNextDate = "2026-04-18"; // Saturday, 3 weeks ago
     const completedAt = "2026-05-10T10:00:00.000Z";
 
     const nextDate = calculateNextDate(
@@ -54,7 +54,7 @@ describe("calculateNextDate skip logic", () => {
   });
 
   it("should skip past dates for weekly recurrence with interval > 1", () => {
-    const clock = fakeClock("2026-05-10T10:00:00Z"); // Saturday
+    const clock = fakeClock("2026-05-10T10:00:00Z"); // Sunday
     const rule: RepeatRule = {
       type: "fixed",
       frequency: "weekly",
@@ -63,7 +63,7 @@ describe("calculateNextDate skip logic", () => {
       target_box: "today",
       advance_days: 0,
     };
-    const previousNextDate = "2026-04-07"; // Monday, 5 weeks ago
+    const previousNextDate = "2026-04-07"; // Tuesday, ~5 weeks ago
     const completedAt = "2026-05-10T10:00:00.000Z";
 
     const nextDate = calculateNextDate(
@@ -269,6 +269,33 @@ describe("calculateNextDate skip logic", () => {
 
     // Should return May 20, 2026 (nearest date respecting interval=2)
     expect(nextDate).toBe("2026-05-20");
+  });
+
+  it("should skip to correct active week for multi-weekday with interval > 1", () => {
+    // implements FR3 of fix-date-and-weekly-bugs
+    const clock = fakeClock("2026-06-10T10:00:00Z"); // Wednesday
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 2,
+      weekdays: [1, 3], // Mon, Wed
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-04-06"; // Monday, ~9 weeks ago
+    const completedAt = "2026-06-10T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Active weeks from Apr 6: Apr 6-12, Apr 20-26, May 4-10, May 18-24, Jun 1-7, Jun 15-21
+    // Today Jun 10 is in skip week Jun 8-14 → next active week starts Jun 15
+    // First matching weekday >= today in active week: Mon Jun 15
+    expect(nextDate).toBe("2026-06-15");
   });
 
   it("should handle leap year for yearly recurrence (Feb 29)", () => {
