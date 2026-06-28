@@ -61,6 +61,7 @@ export async function waitForFocusedGoals(
 ): Promise<void> {
   await waitFor(
     () => {
+      expect(result.current.isLoading).toBe(false);
       expect(result.current.focusedGoalIds).toEqual(expectedIds);
     },
     { timeout: 3000 },
