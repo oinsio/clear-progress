@@ -28,7 +28,7 @@ const MOCK_ATTACHMENT_BASE: Omit<Attachment, "id" | "filename"> = {
   created_at: "2026-01-01T00:00:00.000Z" as Attachment["created_at"],
   updated_at: "2026-01-01T00:00:00.000Z" as Attachment["updated_at"],
   revision: 1,
-  needsSync: false,
+  syncStatus: "synced" as const,
 };
 
 function createAttachment(id: string, filename: string): Attachment {

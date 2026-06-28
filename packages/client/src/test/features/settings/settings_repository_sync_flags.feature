@@ -3,16 +3,16 @@ Feature: Settings repository sync flags
 
   @settings-specs-and-bdd @FR2
   Scenario: Get settings needing sync
-    Given two settings have needsSync true and one has needsSync false
+    Given two settings have syncStatus "pending" and one has syncStatus "synced"
     When getNeedingSync is called
-    Then only the two settings with needsSync true are returned
+    Then only the two settings with syncStatus "pending" are returned
 
   @settings-specs-and-bdd @FR2
   Scenario: Clear sync flag by keys
-    Given settings "accent_color" and "default_box" have needsSync true
+    Given settings "accent_color" and "default_box" have syncStatus "pending"
     When clearNeedsSyncByKey is called with keys ["accent_color"]
-    Then "accent_color" has needsSync false
-    And "default_box" still has needsSync true
+    Then "accent_color" has syncStatus "synced"
+    And "default_box" still has syncStatus "pending"
 
   @settings-specs-and-bdd @FR2
   Scenario: Filter settings by updated_at

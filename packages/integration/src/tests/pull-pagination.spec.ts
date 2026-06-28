@@ -47,6 +47,7 @@ function buildTestTasks(prefix: string, count: number) {
       repeat_rule: "",
       sort_order: "0",
       is_hidden: false,
+      original_task_id: "",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       version: 1,

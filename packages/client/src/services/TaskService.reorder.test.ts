@@ -17,7 +17,7 @@ describe("TaskService", () => {
         expect.objectContaining({
           id: task.id,
           sort_order: "a1",
-          needsSync: true,
+          syncStatus: "pending" as const,
         }),
       );
     });
@@ -94,7 +94,7 @@ describe("TaskService", () => {
       expect(rebalancedTasks).toHaveLength(2);
       for (const rebalancedTask of rebalancedTasks) {
         expect(typeof rebalancedTask.sort_order).toBe("string");
-        expect(rebalancedTask.needsSync).toBe(true);
+        expect(rebalancedTask.syncStatus).toBe("pending");
       }
     });
   });

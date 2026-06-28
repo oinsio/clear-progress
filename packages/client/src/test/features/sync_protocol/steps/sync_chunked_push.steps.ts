@@ -1,4 +1,5 @@
 // implements spec-sync-protocol FR16 — chunked push scenarios
+import "@/test/helpers/mockPushPreValidator";
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
@@ -38,7 +39,7 @@ describeFeature(
       "Push splits into chunks when exceeding limit",
       ({ Given, When, Then }) => {
         const dirtyTasks = Array.from({ length: 450 }, (_, i) =>
-          makeTask({ id: `t${i}`, needsSync: true }),
+          makeTask({ id: `t${i}`, syncStatus: "pending" as const }),
         );
 
         Given("client has 450 dirty tasks", async (_ctx: TestContext) => {
@@ -116,7 +117,7 @@ describeFeature(
       "Push within limit sends single request",
       ({ Given, When, Then }) => {
         const dirtyTasks = Array.from({ length: 150 }, (_, i) =>
-          makeTask({ id: `t${i}`, needsSync: true }),
+          makeTask({ id: `t${i}`, syncStatus: "pending" as const }),
         );
 
         Given("client has 150 dirty tasks", async (_ctx: TestContext) => {
@@ -154,7 +155,7 @@ describeFeature(
       "Chunk failure stops remaining chunks",
       ({ Given, And, When, Then }) => {
         const dirtyTasks = Array.from({ length: 450 }, (_, i) =>
-          makeTask({ id: `t${i}`, needsSync: true }),
+          makeTask({ id: `t${i}`, syncStatus: "pending" as const }),
         );
 
         Given("client has 450 dirty tasks", async (_ctx: TestContext) => {
@@ -201,9 +202,9 @@ describeFeature(
         });
 
         And(
-          "records from chunk 2 and 3 retain needsSync true",
+          'records from chunk 2 and 3 retain syncStatus "pending"',
           async (_ctx: TestContext) => {
-            // Chunk 1 (0-199) should have needsSync cleared
+            // Chunk 1 (0-199) should have syncStatus cleared
             const chunk1Updates = (
               repositories.taskRepository.update as ReturnType<typeof vi.fn>
             ).mock.calls.filter((call) => {
@@ -212,9 +213,9 @@ describeFeature(
               return taskIndex < 200;
             });
 
-            // Verify chunk 1: tasks were updated with needsSync: false
+            // Verify chunk 1: tasks were updated with syncStatus: "synced" as const
             for (const updateCall of chunk1Updates) {
-              expect(updateCall[0].needsSync).toBe(false);
+              expect(updateCall[0].syncStatus).toBe("synced");
             }
 
             // Chunk 2 (200-399) and chunk 3 (400-449) should NOT be updated
@@ -237,10 +238,10 @@ describeFeature(
       "Mixed entity types are counted together for chunking",
       ({ Given, When, Then }) => {
         const dirtyTasks = Array.from({ length: 150 }, (_, i) =>
-          makeTask({ id: `t${i}`, needsSync: true }),
+          makeTask({ id: `t${i}`, syncStatus: "pending" as const }),
         );
         const dirtyGoals = Array.from({ length: 100 }, (_, i) =>
-          makeGoal({ id: `g${i}`, needsSync: true }),
+          makeGoal({ id: `g${i}`, syncStatus: "pending" as const }),
         );
 
         Given(
@@ -298,7 +299,7 @@ describeFeature(
       "Chunk success clears dirty flags for accepted records",
       ({ Given, And, When, Then }) => {
         const dirtyTasks = Array.from({ length: 250 }, (_, i) =>
-          makeTask({ id: `t${i}`, needsSync: true }),
+          makeTask({ id: `t${i}`, syncStatus: "pending" as const }),
         );
 
         Given("client has 250 dirty tasks", async (_ctx: TestContext) => {
@@ -358,17 +359,17 @@ describeFeature(
         );
 
         And(
-          "all 250 tasks have needsSync false after push",
+          'all 250 tasks have syncStatus "synced" after push',
           async (_ctx: TestContext) => {
             const updateCalls = (
               repositories.taskRepository.update as ReturnType<typeof vi.fn>
             ).mock.calls;
 
-            // All 250 tasks should be updated with needsSync: false
+            // All 250 tasks should be updated with syncStatus: "synced" as const
             expect(updateCalls).toHaveLength(250);
 
             for (const call of updateCalls) {
-              expect(call[0].needsSync).toBe(false);
+              expect(call[0].syncStatus).toBe("synced");
             }
           },
         );

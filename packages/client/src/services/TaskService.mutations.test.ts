@@ -197,7 +197,7 @@ describe("TaskService", () => {
       const task = buildTask({
         box: "inbox",
         sort_order: "a0",
-        needsSync: false,
+        syncStatus: "synced" as const,
         updated_at: "2025-01-01T00:00:00.000Z",
       });
       const { taskService } = createTestContext({

@@ -7,7 +7,7 @@ Feature: Task Reorder
     And task B with sort_order "a1"
     When user reorders task A to sort_order "a2"
     Then A has sort_order "a2"
-    And A has needsSync true
+    And A has syncStatus "pending"
     And B has sort_order "a1"
 
   @fractional-sort-order @FR6

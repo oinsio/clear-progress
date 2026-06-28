@@ -31,7 +31,7 @@ export class SettingsRepository {
       key,
       value,
       updated_at: updatedAt,
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
 
     const result = ClientSettingSchema.safeParse(setting);
@@ -48,11 +48,13 @@ export class SettingsRepository {
   }
 
   async getNeedingSync(): Promise<Setting[]> {
-    return db.settings.filter((setting) => setting.needsSync).toArray();
+    return db.settings
+      .filter((setting) => setting.syncStatus === "pending")
+      .toArray();
   }
 
   async clearNeedsSyncByKey(keys: string[]): Promise<void> {
-    await db.settings.where("key").anyOf(keys).modify({ needsSync: false });
+    await db.settings.where("key").anyOf(keys).modify({ syncStatus: "synced" });
   }
 
   async bulkUpsert(settings: WireSetting[]): Promise<void> {
@@ -63,7 +65,7 @@ export class SettingsRepository {
 
     const settingsToUpsert = settings.filter((incoming) => {
       const existing = existingByKey.get(incoming.key);
-      if (existing?.needsSync) return false;
+      if (existing?.syncStatus === "pending") return false;
       return !existing || incoming.updated_at > existing.updated_at;
     });
 
@@ -71,7 +73,7 @@ export class SettingsRepository {
       const clientSettings = settingsToUpsert.map((s) => ({
         ...s,
         updated_at: s.updated_at as ISOTimestamp,
-        needsSync: false,
+        syncStatus: "synced" as const,
       }));
 
       for (const setting of clientSettings) {

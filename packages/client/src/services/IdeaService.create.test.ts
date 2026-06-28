@@ -40,8 +40,8 @@ describe("IdeaService", () => {
       expect(typeof createdIdea.sort_order).toBe("string");
     });
 
-    it("should create idea with needsSync true", () => {
-      expect(createdIdea.needsSync).toBe(true);
+    it("should create idea with syncStatus true", () => {
+      expect(createdIdea.syncStatus).toBe("pending");
     });
 
     it("should create idea with revision 0", () => {

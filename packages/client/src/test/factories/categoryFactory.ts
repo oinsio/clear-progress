@@ -17,7 +17,7 @@ export function buildCategory(overrides: Partial<Category> = {}): Category {
     created_at: now,
     updated_at: now,
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
     ...overrides,
   };
 }

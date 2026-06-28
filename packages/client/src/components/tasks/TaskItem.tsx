@@ -22,7 +22,6 @@ import {
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { useLongPress } from "@/hooks/useLongPress";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
@@ -31,6 +30,10 @@ import { cn } from "@/shared/lib/cn";
 import { formatAppearDate, formatCompletedAt } from "@/shared/lib/utils";
 import type { Box } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
+import {
+  getEffectiveSyncStatus,
+  getSyncStatusBorderClass,
+} from "@/utils/syncStatusBorder";
 import { TaskQuickActions } from "./TaskQuickActions";
 
 interface TaskItemProps {
@@ -75,9 +78,11 @@ export function TaskItem({
     ENTITY_TYPE.TASK,
     task.id,
   );
-  const isTaskUnsynced = useIsUnsynced(task);
-  const isUnsynced =
-    isTaskUnsynced || hasUnsyncedItems || hasUnsyncedAttachments;
+  const hasUnsyncedChildren = hasUnsyncedItems || hasUnsyncedAttachments;
+  const effectiveSyncStatus = getEffectiveSyncStatus(
+    task.syncStatus,
+    hasUnsyncedChildren,
+  );
   const isDesktop = useIsDesktop();
   const showCheckbox = useShowCheckbox();
   const { panelSide } = usePanelSide();
@@ -163,8 +168,8 @@ export function TaskItem({
         panelSide === "left"
           ? "border-b border-gray-100 border-l-2 transition-colors hover:bg-gray-50"
           : "border-b border-gray-100 border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
-        isUnsynced
-          ? "border-l-amber-400"
+        effectiveSyncStatus !== "synced"
+          ? getSyncStatusBorderClass(effectiveSyncStatus)
           : isSelected
             ? "border-l-accent"
             : "border-l-transparent",

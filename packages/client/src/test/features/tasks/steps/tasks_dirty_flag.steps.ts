@@ -30,10 +30,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       let updatedTask: Task;
 
       Given(
-        'task "Buy groceries" exists with needsSync false',
+        'task "Buy groceries" exists with syncStatus "synced"',
         async (_ctx: TestContext) => {
           await seedTask(ctx.taskIds, "Buy groceries", {
-            needsSync: false,
+            syncStatus: "synced" as const,
             updated_at: FIXED_UPDATED_AT,
           });
         },
@@ -49,8 +49,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      Then("task has needsSync true", async (_ctx: TestContext) => {
-        expect(updatedTask.needsSync).toBe(true);
+      Then('task has syncStatus "pending"', async (_ctx: TestContext) => {
+        expect(updatedTask.syncStatus).toBe("pending");
       });
 
       And("task updated_at is refreshed", async (_ctx: TestContext) => {
@@ -66,10 +66,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       let updatedTask: Task;
 
       Given(
-        'task "Buy groceries" exists with needsSync false',
+        'task "Buy groceries" exists with syncStatus "synced"',
         async (_ctx: TestContext) => {
           await seedTask(ctx.taskIds, "Buy groceries", {
-            needsSync: false,
+            syncStatus: "synced" as const,
             updated_at: FIXED_UPDATED_AT,
           });
         },
@@ -85,8 +85,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      Then("task has needsSync false", async (_ctx: TestContext) => {
-        expect(updatedTask.needsSync).toBe(false);
+      Then('task has syncStatus "synced"', async (_ctx: TestContext) => {
+        expect(updatedTask.syncStatus).toBe("synced");
       });
 
       And("task updated_at is unchanged", async (_ctx: TestContext) => {
@@ -109,18 +109,18 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    Then("task has needsSync true", async (_ctx: TestContext) => {
-      expect(createdTask.needsSync).toBe(true);
+    Then('task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(createdTask.syncStatus).toBe("pending");
     });
   });
 
   // @task-core-specs @FR1
   f.Scenario("Dirty flag on soft-delete", ({ Given, When, Then }) => {
     Given(
-      'task "Buy groceries" exists with needsSync false',
+      'task "Buy groceries" exists with syncStatus "synced"',
       async (_ctx: TestContext) => {
         await seedTask(ctx.taskIds, "Buy groceries", {
-          needsSync: false,
+          syncStatus: "synced" as const,
         });
       },
     );
@@ -131,20 +131,20 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
     });
 
-    Then("task has needsSync true", async (_ctx: TestContext) => {
+    Then('task has syncStatus "pending"', async (_ctx: TestContext) => {
       const task = await getTask(ctx.taskIds, "Buy groceries");
-      expect(task.needsSync).toBe(true);
+      expect(task.syncStatus).toBe("pending");
     });
   });
 
   // @task-core-specs @FR1
   f.Scenario("Dirty flag on restore", ({ Given, When, Then }) => {
     Given(
-      'soft-deleted task "Buy groceries" exists with needsSync false',
+      'soft-deleted task "Buy groceries" exists with syncStatus "synced"',
       async (_ctx: TestContext) => {
         await seedTask(ctx.taskIds, "Buy groceries", {
           is_deleted: true,
-          needsSync: false,
+          syncStatus: "synced" as const,
         });
       },
     );
@@ -153,9 +153,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       await ctx.taskService.restore(getIdOrThrow(ctx.taskIds, "Buy groceries"));
     });
 
-    Then("task has needsSync true", async (_ctx: TestContext) => {
+    Then('task has syncStatus "pending"', async (_ctx: TestContext) => {
       const task = await getTask(ctx.taskIds, "Buy groceries");
-      expect(task.needsSync).toBe(true);
+      expect(task.syncStatus).toBe("pending");
     });
   });
 
@@ -164,10 +164,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     let completionResult: { completed: Task; recurring: Task | null };
 
     Given(
-      'task "Buy groceries" exists with needsSync false',
+      'task "Buy groceries" exists with syncStatus "synced"',
       async (_ctx: TestContext) => {
         await seedTask(ctx.taskIds, "Buy groceries", {
-          needsSync: false,
+          syncStatus: "synced" as const,
           is_completed: false,
         });
       },
@@ -179,8 +179,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
     });
 
-    Then("task has needsSync true", async (_ctx: TestContext) => {
-      expect(completionResult.completed.needsSync).toBe(true);
+    Then('task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(completionResult.completed.syncStatus).toBe("pending");
     });
   });
 });

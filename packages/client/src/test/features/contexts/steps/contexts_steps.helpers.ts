@@ -51,7 +51,7 @@ export async function seedContextsWithOrder(
   for (let i = 0; i < names.length; i++) {
     await seedContext(contextIds, names[i], {
       sort_order: keys[i],
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
   }
 }

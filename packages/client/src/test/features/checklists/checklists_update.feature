@@ -6,14 +6,14 @@ Feature: Checklists — Update
     Given a checklist item "Buy milk" exists
     When user updates checklist item "Buy milk" name to "Buy oat milk"
     Then checklist item "Buy milk" has name "Buy oat milk"
-    And checklist item "Buy milk" has needsSync true
+    And checklist item "Buy milk" has syncStatus "pending"
     And checklist item "Buy milk" updated_at is refreshed
 
   @add-checklist-specs @FR3
   Scenario: No-op update does not trigger sync
-    Given a checklist item "Buy milk" exists with needsSync false
+    Given a checklist item "Buy milk" exists with syncStatus "synced"
     When user updates checklist item "Buy milk" name to "Buy milk"
-    Then checklist item "Buy milk" has needsSync false
+    Then checklist item "Buy milk" has syncStatus "synced"
     And checklist item "Buy milk" updated_at is unchanged
 
   @add-checklist-specs @FR3

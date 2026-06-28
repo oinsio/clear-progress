@@ -64,7 +64,7 @@ export async function seedIdeasWithOrder(
   for (let i = 0; i < names.length; i++) {
     await seedIdea(ideaIds, names[i], {
       sort_order: keys[i],
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
   }
 }

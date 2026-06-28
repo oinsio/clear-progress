@@ -55,8 +55,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(duplicatedTask.id).not.toBe(originalId);
     });
 
-    And("new task has needsSync true", async (_ctx: TestContext) => {
-      expect(duplicatedTask.needsSync).toBe(true);
+    And('new task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(duplicatedTask.syncStatus).toBe("pending");
     });
   });
 
@@ -87,7 +87,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             created_at: now,
             updated_at: now,
             revision: 0,
-            needsSync: false,
+            syncStatus: "synced" as const,
           } as ChecklistItem,
           {
             id: secondItemId,
@@ -99,7 +99,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             created_at: now,
             updated_at: now,
             revision: 0,
-            needsSync: false,
+            syncStatus: "synced" as const,
           } as ChecklistItem,
         ]);
       },

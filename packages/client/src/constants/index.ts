@@ -7,6 +7,7 @@ import type {
   Handedness,
   InterfaceScale,
   PanelSide,
+  RecordSyncStatus,
   SidebarMode,
 } from "@/types/common";
 
@@ -137,6 +138,9 @@ export const PING_INTERVAL_MS = 30 * 1000;
 export const MAX_SILENT_REFRESH_ATTEMPTS = 3;
 export const MAX_PING_ATTEMPTS = 20; // 10 minutes (20 × 30s)
 export const PUSH_CHUNK_SIZE = 200;
+
+// implements FR5 of fix-push-poison-pill
+export const MAX_PUSH_RETRY_COUNT = 2;
 
 export const BACKEND_CONNECTION_EVENT = "backend_connection_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
@@ -280,6 +284,13 @@ export const ENTITY_TYPE = {
   GOAL: "goal",
   IDEA: "idea",
 } as const;
+
+// implements FR6 of fix-push-poison-pill
+export const RECORD_SYNC_STATUS = {
+  SYNCED: "synced",
+  PENDING: "pending",
+  REJECTED: "rejected",
+} as const satisfies Record<string, RecordSyncStatus>;
 
 export const SYNCED_SETTING_KEYS = new Set([
   "accent_color",

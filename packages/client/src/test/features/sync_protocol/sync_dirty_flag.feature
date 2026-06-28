@@ -1,6 +1,6 @@
 Feature: Sync Protocol — Dirty Flag Lifecycle
   Implements spec-sync-protocol dirty flag scenarios: real changes set
-  needsSync, no-op changes preserve state, empty values are equal.
+  syncStatus, no-op changes preserve state, empty values are equal.
 
   @spec-sync-protocol @FR4
   Scenario: Real field change sets dirty flag
@@ -38,7 +38,7 @@ Feature: Sync Protocol — Dirty Flag Lifecycle
     And server returned created status
     And local task is unchanged during push
     When push results are applied
-    Then needsSync is set to false
+    Then syncStatus is set to "synced"
 
   @spec-sync-protocol @FR4
   Scenario: Accepted result keeps dirty flag when changed during push
@@ -46,4 +46,4 @@ Feature: Sync Protocol — Dirty Flag Lifecycle
     And server returned accepted status
     And local task changed during push
     When push results are applied
-    Then needsSync remains true
+    Then syncStatus remains "pending"

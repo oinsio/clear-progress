@@ -1,25 +1,25 @@
 Feature: Sync Protocol — Push
   Implements spec-sync-protocol push scenarios: collecting dirty records,
-  force push, stripping needsSync, and applying push results
+  force push, stripping syncStatus, and applying push results
   (created/accepted/conflict/rejected).
 
   @spec-sync-protocol @FR1
   Scenario: Regular push collects only dirty records
-    Given client has 5 tasks, 2 with needsSync true
+    Given client has 5 tasks, 2 with syncStatus "pending"
     When push is called
     Then PushRequest contains only those 2 dirty tasks
 
   @spec-sync-protocol @FR1
   Scenario: Force push collects all records
-    Given client has 5 tasks, 2 with needsSync true
+    Given client has 5 tasks, 2 with syncStatus "pending"
     When push with force is called
     Then PushRequest contains all 5 tasks
 
   @spec-sync-protocol @FR1
-  Scenario: needsSync is stripped from wire format
+  Scenario: syncStatus is stripped from wire format
     Given client has a dirty task
     When push is called
-    Then no record in PushRequest contains the needsSync field
+    Then no record in PushRequest contains the syncStatus field
 
   @spec-sync-protocol @FR1
   Scenario: Push skips when no dirty records exist
@@ -32,7 +32,7 @@ Feature: Sync Protocol — Push
     Given client has a dirty task with id "t1"
     And server will respond with status "created" for "t1" and revision 7
     When push is called
-    Then task "t1" has needsSync false and revision 7
+    Then task "t1" has syncStatus "synced" and revision 7
 
   @spec-sync-protocol @FR15
   Scenario: Accepted result keeps dirty flag when changed during push
@@ -40,7 +40,7 @@ Feature: Sync Protocol — Push
     And local task will change during push
     And server will respond with status "accepted" for "t1" and revision 8
     When push is called
-    Then task "t1" has needsSync true and revision 8
+    Then task "t1" has syncStatus "pending" and revision 8
 
   @spec-sync-protocol @FR3 @FR15
   Scenario: Conflict result overwrites local record with server version
@@ -48,7 +48,7 @@ Feature: Sync Protocol — Push
     And server will respond with conflict and server_record for "t1"
     When push is called
     Then task "t1" is overwritten with server record
-    And task "t1" has needsSync false
+    And task "t1" has syncStatus "synced"
 
   @spec-sync-protocol @FR15
   Scenario: Rejected result keeps record unchanged
@@ -59,7 +59,7 @@ Feature: Sync Protocol — Push
 
   @spec-sync-protocol @FR1
   Scenario: Force push sends records even when nothing is dirty
-    Given client has 3 tasks with needsSync false
+    Given client has 3 tasks with syncStatus "synced"
     When push with force is called
     Then PushRequest contains all 3 tasks
 

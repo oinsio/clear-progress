@@ -1,4 +1,5 @@
 // implements FR6 of add-file-attachments — attachment ordering in chunked push
+import "@/test/helpers/mockPushPreValidator";
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
@@ -37,14 +38,14 @@ describeFeature(
       "Attachments are placed after parent entities in chunk fill order",
       ({ Given, When, Then, And }) => {
         const dirtyTasks = Array.from({ length: 190 }, (_, i) =>
-          makeTask({ id: `t${i}`, needsSync: true }),
+          makeTask({ id: `t${i}`, syncStatus: "pending" as const }),
         );
         const dirtyAttachments = Array.from({ length: 20 }, (_, i) =>
           makeAttachment({
             id: `a${i}`,
             entity_type: "task",
             entity_id: `t${i % 190}`,
-            needsSync: true,
+            syncStatus: "pending" as const,
           }),
         );
 
@@ -109,14 +110,14 @@ describeFeature(
       "New entity and its attachment land in correct order",
       ({ Given, When, Then, And }) => {
         const dirtyGoals = Array.from({ length: 195 }, (_, i) =>
-          makeGoal({ id: `g${i}`, needsSync: true }),
+          makeGoal({ id: `g${i}`, syncStatus: "pending" as const }),
         );
         const dirtyAttachments = Array.from({ length: 10 }, (_, i) =>
           makeAttachment({
             id: `a${i}`,
             entity_type: "goal",
             entity_id: `g${i % 195}`,
-            needsSync: true,
+            syncStatus: "pending" as const,
           }),
         );
 

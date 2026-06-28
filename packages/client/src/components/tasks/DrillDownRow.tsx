@@ -9,6 +9,7 @@ interface DrillDownRowProps {
   hasValue: boolean;
   onClick: () => void;
   icon?: LucideIcon;
+  testId?: string;
 }
 
 export function DrillDownRow({
@@ -17,11 +18,13 @@ export function DrillDownRow({
   hasValue,
   onClick,
   icon: Icon,
+  testId,
 }: DrillDownRowProps) {
   return (
     <button
       type="button"
       onClick={onClick}
+      data-testid={testId}
       className="flex items-center justify-between w-full py-2.5 text-sm border-b border-gray-100"
     >
       <div className="flex items-center gap-1.5">

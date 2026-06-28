@@ -106,41 +106,44 @@ describe("TaskRepository", () => {
   });
 
   describe("getNeedingSync", () => {
-    it("should return only needsSync tasks", async () => {
-      const needsSyncTask = buildTask({ needsSync: true });
-      const cleanTask = buildTask({ needsSync: false });
-      await db.tasks.bulkAdd([needsSyncTask, cleanTask]);
+    it("should return only syncStatus tasks", async () => {
+      const syncStatusTask = buildTask({ syncStatus: "pending" as const });
+      const cleanTask = buildTask({ syncStatus: "synced" as const });
+      await db.tasks.bulkAdd([syncStatusTask, cleanTask]);
 
-      const needsSyncTasks = await getRepository().getNeedingSync();
-      expect(needsSyncTasks).toHaveLength(1);
-      expect(needsSyncTasks[0].id).toBe(needsSyncTask.id);
+      const syncStatusTasks = await getRepository().getNeedingSync();
+      expect(syncStatusTasks).toHaveLength(1);
+      expect(syncStatusTasks[0].id).toBe(syncStatusTask.id);
     });
 
-    it("should return empty array when no needsSync tasks exist", async () => {
-      const cleanTask = buildTask({ needsSync: false });
+    it("should return empty array when no syncStatus tasks exist", async () => {
+      const cleanTask = buildTask({ syncStatus: "synced" as const });
       await db.tasks.add(cleanTask);
 
-      const needsSyncTasks = await getRepository().getNeedingSync();
-      expect(needsSyncTasks).toEqual([]);
+      const syncStatusTasks = await getRepository().getNeedingSync();
+      expect(syncStatusTasks).toEqual([]);
     });
   });
 
   describe("applyServerRecords", () => {
-    it("should insert new records with needsSync = false", async () => {
-      const serverTask = buildTask({ needsSync: false, revision: 5 });
+    it("should insert new records with syncStatus = false", async () => {
+      const serverTask = buildTask({
+        syncStatus: "synced" as const,
+        revision: 5,
+      });
 
       await getRepository().applyServerRecords([serverTask]);
 
       const saved = await db.tasks.get(serverTask.id);
       expect(saved).toBeDefined();
-      expect(saved?.needsSync).toBe(false);
+      expect(saved?.syncStatus).toBe("synced");
       expect(saved?.revision).toBe(5);
     });
 
     it("should overwrite clean local records with server version", async () => {
       const localTask = buildTask({
         name: "local",
-        needsSync: false,
+        syncStatus: "synced" as const,
         revision: 1,
       });
       await db.tasks.add(localTask);
@@ -150,13 +153,13 @@ describe("TaskRepository", () => {
 
       const saved = await db.tasks.get(localTask.id);
       expect(saved?.name).toBe("server");
-      expect(saved?.needsSync).toBe(false);
+      expect(saved?.syncStatus).toBe("synced");
     });
 
-    it("should skip needsSync local records", async () => {
+    it("should skip syncStatus local records", async () => {
       const localTask = buildTask({
-        name: "local needsSync",
-        needsSync: true,
+        name: "local syncStatus",
+        syncStatus: "pending" as const,
         revision: 1,
       });
       await db.tasks.add(localTask);
@@ -165,8 +168,8 @@ describe("TaskRepository", () => {
       await getRepository().applyServerRecords([serverTask]);
 
       const saved = await db.tasks.get(localTask.id);
-      expect(saved?.name).toBe("local needsSync");
-      expect(saved?.needsSync).toBe(true);
+      expect(saved?.name).toBe("local syncStatus");
+      expect(saved?.syncStatus).toBe("pending");
     });
   });
 });

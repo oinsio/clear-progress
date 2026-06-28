@@ -41,7 +41,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         created_at: now,
         updated_at: now,
         revision: 0,
-        needsSync: false,
+        syncStatus: "synced" as const,
       });
     }
   }
@@ -63,9 +63,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(task.is_deleted).toBe(true);
     });
 
-    And("task has needsSync true", async (_ctx: TestContext) => {
+    And('task has syncStatus "pending"', async (_ctx: TestContext) => {
       const task = await getTask(ctx.taskIds, "Buy groceries");
-      expect(task.needsSync).toBe(true);
+      expect(task.syncStatus).toBe("pending");
     });
   });
 
@@ -87,9 +87,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(task.is_deleted).toBe(false);
     });
 
-    And("task has needsSync true", async (_ctx: TestContext) => {
+    And('task has syncStatus "pending"', async (_ctx: TestContext) => {
       const task = await getTask(ctx.taskIds, "Buy groceries");
-      expect(task.needsSync).toBe(true);
+      expect(task.syncStatus).toBe("pending");
     });
   });
 
@@ -112,7 +112,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        "all 3 checklist items have is_deleted true and needsSync true",
+        'all 3 checklist items have is_deleted true and syncStatus "pending"',
         async (_ctx: TestContext) => {
           const taskId = getIdOrThrow(ctx.taskIds, "Buy groceries");
           const items = await db.checklist_items
@@ -122,7 +122,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           expect(items).toHaveLength(CHECKLIST_ITEMS_COUNT);
           for (const item of items) {
             expect(item.is_deleted).toBe(true);
-            expect(item.needsSync).toBe(true);
+            expect(item.syncStatus).toBe("pending");
           }
         },
       );
@@ -146,7 +146,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     });
 
     Then(
-      "all 3 checklist items have is_deleted false and needsSync true",
+      'all 3 checklist items have is_deleted false and syncStatus "pending"',
       async (_ctx: TestContext) => {
         const taskId = getIdOrThrow(ctx.taskIds, "Buy groceries");
         const items = await db.checklist_items
@@ -156,7 +156,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         expect(items).toHaveLength(CHECKLIST_ITEMS_COUNT);
         for (const item of items) {
           expect(item.is_deleted).toBe(false);
-          expect(item.needsSync).toBe(true);
+          expect(item.syncStatus).toBe("pending");
         }
       },
     );

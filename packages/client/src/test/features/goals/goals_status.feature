@@ -6,7 +6,7 @@ Feature: Goals Status Management
     Given goal with status "planning" exists
     When user updates goal status to "in_progress"
     Then goal has status "in_progress"
-    And goal has needsSync true
+    And goal has syncStatus "pending"
     And goal updated_at is refreshed
 
   @add-goals-specs @FR8
@@ -14,18 +14,18 @@ Feature: Goals Status Management
     Given goal with status "completed" exists
     When user updates goal status to "in_progress"
     Then goal has status "in_progress"
-    And goal has needsSync true
+    And goal has syncStatus "pending"
 
   @add-goals-specs @FR8
   Scenario: Change status from cancelled to planning
     Given goal with status "cancelled" exists
     When user updates goal status to "planning"
     Then goal has status "planning"
-    And goal has needsSync true
+    And goal has syncStatus "pending"
 
   @add-goals-specs @FR8
   Scenario: No-op status update
-    Given goal with status "in_progress" and needsSync false exists
+    Given goal with status "in_progress" and syncStatus "synced" exists
     When user updates goal status to "in_progress"
-    Then goal needsSync remains false
+    Then goal syncStatus remains "synced"
     And goal updated_at is unchanged

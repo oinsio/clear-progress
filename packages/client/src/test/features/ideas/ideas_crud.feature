@@ -7,7 +7,7 @@ Feature: Ideas CRUD
     Then idea is persisted with name "Learn Rust"
     And idea has description ""
     And idea has revision 0
-    And idea has needsSync true
+    And idea has syncStatus "pending"
     And idea has is_deleted false
 
   @add-ideas-specs @FR1 @FR8
@@ -56,7 +56,7 @@ Feature: Ideas CRUD
     Given idea "Learn Rust" exists
     When user updates idea name to "Learn Go"
     Then idea name is "Learn Go"
-    And idea has needsSync true
+    And idea has syncStatus "pending"
     And idea updated_at is refreshed
 
   @add-ideas-specs @FR3
@@ -64,7 +64,7 @@ Feature: Ideas CRUD
     Given idea with description "Old" exists
     When user updates idea description to "New"
     Then idea description is "New"
-    And idea has needsSync true
+    And idea has syncStatus "pending"
 
   @add-ideas-specs @FR3
   Scenario: Update nonexistent idea throws error

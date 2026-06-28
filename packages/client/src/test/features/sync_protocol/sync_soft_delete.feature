@@ -5,7 +5,7 @@ Feature: Sync Protocol — Soft Delete and Purge
 
   @spec-sync-protocol @FR6
   Scenario: Deleted records are included in push
-    Given client has a task with is_deleted true and needsSync true
+    Given client has a task with is_deleted true and syncStatus "pending"
     When push is called
     Then PushRequest contains the deleted task
 
@@ -46,8 +46,8 @@ Feature: Sync Protocol — Soft Delete and Purge
     And task "t2" is hard-deleted
 
   @spec-sync-protocol @FR6 @FR14
-  Scenario: Full sync resets needsSync to false before pulling
-    Given client has task "t1" with needsSync true
+  Scenario: Full sync resets syncStatus to "synced" before pulling
+    Given client has task "t1" with syncStatus "pending"
     And server will respond to pull with tasks
     When resetAndPull is called
-    Then task "t1" has needsSync false before pull executes
+    Then task "t1" has syncStatus "synced" before pull executes

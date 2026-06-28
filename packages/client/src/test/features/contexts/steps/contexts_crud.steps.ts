@@ -48,8 +48,8 @@ describeFeature(
         expect(createdContext.revision).toBe(0);
       });
 
-      And("context has needsSync true", async (_ctx: TestContext) => {
-        expect(createdContext.needsSync).toBe(true);
+      And('context has syncStatus "pending"', async (_ctx: TestContext) => {
+        expect(createdContext.syncStatus).toBe("pending");
       });
 
       And("context has is_deleted false", async (_ctx: TestContext) => {
@@ -222,8 +222,8 @@ describeFeature(
         expect(updatedContext.name).toBe("@office");
       });
 
-      And("context has needsSync true", async (_ctx: TestContext) => {
-        expect(updatedContext.needsSync).toBe(true);
+      And('context has syncStatus "pending"', async (_ctx: TestContext) => {
+        expect(updatedContext.syncStatus).toBe("pending");
       });
 
       And("context updated_at is refreshed", async (_ctx: TestContext) => {

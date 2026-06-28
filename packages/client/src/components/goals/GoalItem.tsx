@@ -4,13 +4,16 @@ import defaultCoverSvg from "@/assets/default-goal-cover.svg";
 import { ENTITY_TYPE } from "@/constants";
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useFileUrl } from "@/hooks/useFileUrl";
-import { useIsUnsynced } from "@/hooks/useIsUnsynced";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { cn } from "@/shared/lib/cn";
 import { formatShortDateTime } from "@/shared/lib/utils";
 import type { GoalStatus } from "@/types/common";
 import type { Goal } from "@/types/entities";
+import {
+  getEffectiveSyncStatus,
+  getSyncStatusBorderClass,
+} from "@/utils/syncStatusBorder";
 import { GoalStatusBadge } from "./GoalStatusBadge";
 
 const FINISHED_GOAL_STATUSES = new Set<GoalStatus>(["completed", "cancelled"]);
@@ -34,13 +37,15 @@ export function GoalItem({
 }: GoalItemProps) {
   const { t } = useTranslation();
   const isFinished = FINISHED_GOAL_STATUSES.has(goal.status);
-  const isGoalUnsynced = useIsUnsynced(goal);
   /** Implements FR4 of fix-nonsync-indication-for-attachments */
   const { hasUnsyncedAttachments } = useAttachmentCount(
     ENTITY_TYPE.GOAL,
     goal.id,
   );
-  const isUnsynced = isGoalUnsynced || hasUnsyncedAttachments;
+  const effectiveSyncStatus = getEffectiveSyncStatus(
+    goal.syncStatus,
+    hasUnsyncedAttachments,
+  );
   const { panelSide } = usePanelSide();
   const { url: coverUrl } = useFileUrl(goal.cover_hash);
   return (
@@ -52,7 +57,7 @@ export function GoalItem({
         panelSide === "left"
           ? "flex items-center border-b border-gray-100 bg-white border-l-2 transition-colors hover:bg-gray-50"
           : "flex items-center border-b border-gray-100 bg-white border-l-[4px] md:border-l-2 transition-colors hover:bg-gray-50",
-        isUnsynced ? "border-l-amber-400" : "border-l-transparent",
+        getSyncStatusBorderClass(effectiveSyncStatus),
       )}
     >
       {/* Main clickable area */}

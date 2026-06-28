@@ -54,7 +54,7 @@ describe("HiddenTaskService", () => {
       created_at: "2026-04-15T10:00:00.000Z" as ISOTimestamp,
       updated_at: "2026-04-15T10:00:00.000Z" as ISOTimestamp,
       revision: 1,
-      needsSync: false,
+      syncStatus: "synced" as const,
     };
 
     (
@@ -72,7 +72,7 @@ describe("HiddenTaskService", () => {
       expect.objectContaining({
         id: "task-reveal-1",
         is_hidden: false,
-        needsSync: true,
+        syncStatus: "pending" as const,
       }),
     );
   });
@@ -134,7 +134,7 @@ describe("HiddenTaskService", () => {
         created_at: "2026-06-01T10:00:00.000Z" as ISOTimestamp,
         updated_at: "2026-06-01T10:00:00.000Z" as ISOTimestamp,
         revision: 1,
-        needsSync: false,
+        syncStatus: "synced" as const,
       };
 
       // logicalDate is 2026-06-08, appear_date is 2026-06-08 → should reveal
@@ -194,7 +194,7 @@ describe("HiddenTaskService", () => {
       created_at: "2026-04-15T10:00:00.000Z" as ISOTimestamp,
       updated_at: "2026-04-15T10:00:00.000Z" as ISOTimestamp,
       revision: 1,
-      needsSync: false,
+      syncStatus: "synced" as const,
     };
 
     (

@@ -19,7 +19,7 @@ describe("ChecklistService", () => {
         expect.objectContaining({
           id: item.id,
           sort_order: "a1",
-          needsSync: true,
+          syncStatus: "pending" as const,
         }),
       );
     });
@@ -100,7 +100,7 @@ describe("ChecklistService", () => {
       expect(rebalancedItems).toHaveLength(2);
       for (const rebalancedItem of rebalancedItems) {
         expect(typeof rebalancedItem.sort_order).toBe("string");
-        expect(rebalancedItem.needsSync).toBe(true);
+        expect(rebalancedItem.syncStatus).toBe("pending");
       }
     });
 

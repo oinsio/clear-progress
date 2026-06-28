@@ -36,11 +36,13 @@ async function seedTaskWithChecklistItem(
   taskIdMap: Map<string, string>,
   checklistIdMap: Map<string, string>,
   repos: ReturnType<typeof createMockRepositories>,
-  options: { taskNeedsSync: boolean } = { taskNeedsSync: true },
+  options: { taskSyncStatus: "synced" | "pending" } = {
+    taskSyncStatus: "pending",
+  },
 ) {
   const t1Id = crypto.randomUUID();
   taskIdMap.set("T1", t1Id);
-  const task = makeTask({ id: t1Id, needsSync: options.taskNeedsSync });
+  const task = makeTask({ id: t1Id, syncStatus: options.taskSyncStatus });
   await db.tasks.add(task);
 
   const c1Id = crypto.randomUUID();
@@ -48,11 +50,11 @@ async function seedTaskWithChecklistItem(
   const checklistItem = makeChecklistItem({
     id: c1Id,
     task_id: t1Id,
-    needsSync: true,
+    syncStatus: "pending" as const,
   });
   await db.checklist_items.add(checklistItem);
 
-  if (options.taskNeedsSync) {
+  if (options.taskSyncStatus === "pending") {
     mockFn(repos.taskRepository.getNeedingSync).mockResolvedValue([task]);
   }
   mockFn(repos.checklistRepository.getNeedingSync).mockResolvedValue([
@@ -96,7 +98,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           const orphanedItem = makeChecklistItem({
             id: c1Id,
             task_id: "T99",
-            needsSync: true,
+            syncStatus: "pending" as const,
           });
           await db.checklist_items.add(orphanedItem);
 
@@ -179,7 +181,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Self-healing with incremental push",
     ({ Given, When, Then, And }) => {
       Given(
-        'a checklist item "C1" with needsSync true referencing task "T1"',
+        'a checklist item "C1" with syncStatus "pending" referencing task "T1"',
         async (_ctx: TestContext) => {
           const t1Id = crypto.randomUUID();
           taskIds.set("T1", t1Id);
@@ -189,7 +191,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           const checklistItem = makeChecklistItem({
             id: c1Id,
             task_id: t1Id,
-            needsSync: true,
+            syncStatus: "pending" as const,
           });
           await db.checklist_items.add(checklistItem);
 
@@ -203,10 +205,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
 
       And(
-        'task "T1" exists in IndexedDB but has needsSync false',
+        'task "T1" exists in IndexedDB but has syncStatus "synced"',
         async (_ctx: TestContext) => {
           const t1Id = getIdOrThrow(taskIds, "T1");
-          const task = makeTask({ id: t1Id, needsSync: false });
+          const task = makeTask({ id: t1Id, syncStatus: "synced" as const });
           await db.tasks.add(task);
           // taskRepository.getNeedingSync returns [] (default mock) — task not in dirty set
         },

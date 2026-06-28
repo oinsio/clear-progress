@@ -21,19 +21,19 @@ function makeChecklistItem(
     created_at: toISOTimestamp(),
     updated_at: toISOTimestamp(),
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
     ...overrides,
   };
 }
 
-/** New logic: unsynced indicator uses needsSync flag */
-function isUnsynced(entity: { needsSync: boolean }): boolean {
-  return entity.needsSync;
+/** New logic: unsynced indicator uses syncStatus flag */
+function isUnsynced(entity: { syncStatus: string }): boolean {
+  return entity.syncStatus !== "synced";
 }
 
-/** New logic: hasUnsyncedItems uses needsSync */
+/** New logic: hasUnsyncedItems uses syncStatus */
 function computeHasUnsyncedItems(items: ChecklistItem[]): boolean {
-  return items.some((item) => item.needsSync);
+  return items.some((item) => item.syncStatus !== "synced");
 }
 
 type Context = {
@@ -61,12 +61,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @fix-sync-indicator-race @FR1
   f.Scenario(
-    "Entity with needsSync true shows as unsynced",
+    'Entity with syncStatus "pending" shows as unsynced',
     ({ Given, Then }) => {
       Given(
-        "an entity with needsSync set to true",
+        'an entity with syncStatus set to "pending"',
         async (_ctx: TestContext) => {
-          entity = makeTask({ needsSync: true });
+          entity = makeTask({ syncStatus: "pending" as const });
         },
       );
 
@@ -79,12 +79,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @fix-sync-indicator-race @FR1
   f.Scenario(
-    "Entity with needsSync false shows as synced",
+    'Entity with syncStatus "synced" shows as synced',
     ({ Given, Then }) => {
       Given(
-        "an entity with needsSync set to false",
+        'an entity with syncStatus set to "synced"',
         async (_ctx: TestContext) => {
-          entity = makeTask({ needsSync: false });
+          entity = makeTask({ syncStatus: "synced" as const });
         },
       );
 
@@ -100,19 +100,19 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Item created during sync retains unsynced indicator",
     ({ Given, And, Then }) => {
       Given(
-        "items A and B were collected for push with needsSync true",
+        'items A and B were collected for push with syncStatus "pending"',
         async (_ctx: TestContext) => {
-          makeTask({ id: "a", needsSync: true });
-          makeTask({ id: "b", needsSync: true });
+          makeTask({ id: "a", syncStatus: "pending" as const });
+          makeTask({ id: "b", syncStatus: "pending" as const });
         },
       );
 
       And(
-        "item C is created during the sync cycle with needsSync true",
+        'item C is created during the sync cycle with syncStatus "pending"',
         async (_ctx: TestContext) => {
           itemC = makeTask({
             id: "c",
-            needsSync: true,
+            syncStatus: "pending" as const,
             updated_at: "2026-05-29T10:00:05.000Z" as ISOTimestamp,
           });
         },
@@ -123,13 +123,13 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           // lastSyncedAt is set AFTER sync completes, e.g. "2026-05-29T10:00:10.000Z"
           // With old logic: itemC.updated_at < lastSyncedAt → falsely shows as synced
-          // With new logic: itemC.needsSync is still true → correctly shows as unsynced
+          // With new logic: itemC.syncStatus is still true → correctly shows as unsynced
           // lastSyncedAt would be "2026-05-29T10:00:10.000Z" — after item C's updated_at
         },
       );
 
       Then(
-        "item C is considered unsynced because needsSync is true",
+        'item C is considered unsynced because syncStatus is "pending"',
         async (_ctx: TestContext) => {
           unsyncedResult = isUnsynced(itemC);
           expect(unsyncedResult).toBe(true);
@@ -143,12 +143,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "One unsynced checklist item flags the task",
     ({ Given, Then }) => {
       Given(
-        "a task has 3 checklist items where 1 has needsSync true",
+        'a task has 3 checklist items where 1 has syncStatus "pending"',
         async (_ctx: TestContext) => {
           checklistItems = [
-            makeChecklistItem({ needsSync: false }),
-            makeChecklistItem({ needsSync: true }),
-            makeChecklistItem({ needsSync: false }),
+            makeChecklistItem({ syncStatus: "synced" as const }),
+            makeChecklistItem({ syncStatus: "pending" as const }),
+            makeChecklistItem({ syncStatus: "synced" as const }),
           ];
         },
       );
@@ -163,12 +163,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   // @fix-sync-indicator-race @FR3
   f.Scenario("All synced checklist items clear the flag", ({ Given, Then }) => {
     Given(
-      "a task has 3 checklist items all with needsSync false",
+      'a task has 3 checklist items all with syncStatus "synced"',
       async (_ctx: TestContext) => {
         checklistItems = [
-          makeChecklistItem({ needsSync: false }),
-          makeChecklistItem({ needsSync: false }),
-          makeChecklistItem({ needsSync: false }),
+          makeChecklistItem({ syncStatus: "synced" as const }),
+          makeChecklistItem({ syncStatus: "synced" as const }),
+          makeChecklistItem({ syncStatus: "synced" as const }),
         ];
       },
     );

@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { GripVertical } from "lucide-react";
 import type * as React from "react";
 import { useTranslation } from "react-i18next";
+import { RECORD_SYNC_STATUS } from "@/constants";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
 import { cn } from "@/shared/lib/cn";
 import type { ChecklistItem } from "@/types/entities";
@@ -82,7 +83,11 @@ export function SortableChecklistItem({
         <span
           className={cn(
             "w-0.5 h-5 rounded-sm transition-colors",
-            item.needsSync ? "bg-amber-400" : "bg-transparent",
+            item.syncStatus === RECORD_SYNC_STATUS.REJECTED
+              ? "bg-red-500"
+              : item.syncStatus === RECORD_SYNC_STATUS.PENDING
+                ? "bg-amber-400"
+                : "bg-transparent",
           )}
         />
         <button

@@ -40,16 +40,16 @@ function renderItem(
 // FR12, FR13, UX5 of task-detail-page-ui-improvements
 describe("AttachmentListItem sync indicator", () => {
   // FR12
-  it("should show amber stripe when attachment needsSync is true", () => {
-    const attachment = renderItem({ needsSync: true });
+  it("should show amber stripe when attachment syncStatus is true", () => {
+    const attachment = renderItem({ syncStatus: "pending" as const });
     const listItem = screen.getByTestId(`attachment-item-${attachment.id}`);
     expect(listItem.className).toContain("border-l-amber-400");
     expect(listItem.className).toContain("border-l-2");
   });
 
   // FR13
-  it("should show transparent stripe when attachment needsSync is false", () => {
-    const attachment = renderItem({ needsSync: false });
+  it("should show transparent stripe when attachment syncStatus is false", () => {
+    const attachment = renderItem({ syncStatus: "synced" as const });
     const listItem = screen.getByTestId(`attachment-item-${attachment.id}`);
     expect(listItem.className).toContain("border-l-transparent");
     expect(listItem.className).toContain("border-l-2");

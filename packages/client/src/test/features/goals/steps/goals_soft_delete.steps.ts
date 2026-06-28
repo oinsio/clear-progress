@@ -38,11 +38,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(persistedGoal?.is_deleted).toBe(true);
     });
 
-    And('goal "Learn Rust" has needsSync true', async (_ctx: TestContext) => {
-      const goalId = getIdOrThrow(ctx.goalIds, "Learn Rust");
-      const persistedGoal = await db.goals.get(goalId);
-      expect(persistedGoal?.needsSync).toBe(true);
-    });
+    And(
+      'goal "Learn Rust" has syncStatus "pending"',
+      async (_ctx: TestContext) => {
+        const goalId = getIdOrThrow(ctx.goalIds, "Learn Rust");
+        const persistedGoal = await db.goals.get(goalId);
+        expect(persistedGoal?.syncStatus).toBe("pending");
+      },
+    );
   });
 
   // @add-goals-specs @FR5
@@ -68,11 +71,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    And('goal "Learn Rust" has needsSync true', async (_ctx: TestContext) => {
-      const goalId = getIdOrThrow(ctx.goalIds, "Learn Rust");
-      const persistedGoal = await db.goals.get(goalId);
-      expect(persistedGoal?.needsSync).toBe(true);
-    });
+    And(
+      'goal "Learn Rust" has syncStatus "pending"',
+      async (_ctx: TestContext) => {
+        const goalId = getIdOrThrow(ctx.goalIds, "Learn Rust");
+        const persistedGoal = await db.goals.get(goalId);
+        expect(persistedGoal?.syncStatus).toBe("pending");
+      },
+    );
   });
 
   // @add-goals-specs @FR4 @FR2

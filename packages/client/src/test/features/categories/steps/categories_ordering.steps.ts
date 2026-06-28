@@ -79,19 +79,22 @@ describeFeature(
           },
         );
 
-        Then("category C has needsSync true", async (_ctx: TestContext) => {
-          const category = await getCategory(ctx.categoryIds, "C");
-          expect(category.needsSync).toBe(true);
-        });
+        Then(
+          'category C has syncStatus "pending"',
+          async (_ctx: TestContext) => {
+            const category = await getCategory(ctx.categoryIds, "C");
+            expect(category.syncStatus).toBe("pending");
+          },
+        );
 
-        And("category A has needsSync false", async (_ctx: TestContext) => {
+        And('category A has syncStatus "synced"', async (_ctx: TestContext) => {
           const category = await getCategory(ctx.categoryIds, "A");
-          expect(category.needsSync).toBe(false);
+          expect(category.syncStatus).toBe("synced");
         });
 
-        And("category B has needsSync false", async (_ctx: TestContext) => {
+        And('category B has syncStatus "synced"', async (_ctx: TestContext) => {
           const category = await getCategory(ctx.categoryIds, "B");
-          expect(category.needsSync).toBe(false);
+          expect(category.syncStatus).toBe("synced");
         });
       },
     );

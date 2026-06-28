@@ -116,10 +116,10 @@ describe("ChecklistService", () => {
       expect(repository.create).toHaveBeenCalledWith(item);
     });
 
-    it("should create item with needsSync true", async () => {
+    it("should create item with syncStatus true", async () => {
       const { service } = createService();
       const item = await service.create("task-1", "Do something");
-      expect(item.needsSync).toBe(true);
+      expect(item.syncStatus).toBe("pending");
     });
   });
 });

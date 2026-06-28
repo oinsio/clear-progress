@@ -4,6 +4,8 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import type { SyncAdapter } from "@clear-progress/contract";
 import { expect, type TestContext, vi } from "vitest";
 import { fakeClock } from "@/lib/temporal";
+
+import "@/test/helpers/mockPushPreValidator";
 import {
   createMockRepositories,
   createMockSyncAdapter,
@@ -39,12 +41,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Regular push collects only dirty records",
     ({ Given, When, Then }) => {
       const dirtyTasks = [
-        makeTask({ needsSync: true }),
-        makeTask({ needsSync: true }),
+        makeTask({ syncStatus: "pending" as const }),
+        makeTask({ syncStatus: "pending" as const }),
       ];
 
       Given(
-        "client has 5 tasks, 2 with needsSync true",
+        'client has 5 tasks, 2 with syncStatus "pending"',
         async (_ctx: TestContext) => {
           (
             repositories.taskRepository.getNeedingSync as ReturnType<
@@ -78,15 +80,15 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   // @spec-sync-protocol @FR1
   f.Scenario("Force push collects all records", ({ Given, When, Then }) => {
     const allTasks = [
-      makeTask({ needsSync: true }),
-      makeTask({ needsSync: true }),
-      makeTask({ needsSync: false }),
-      makeTask({ needsSync: false }),
-      makeTask({ needsSync: false }),
+      makeTask({ syncStatus: "pending" as const }),
+      makeTask({ syncStatus: "pending" as const }),
+      makeTask({ syncStatus: "synced" as const }),
+      makeTask({ syncStatus: "synced" as const }),
+      makeTask({ syncStatus: "synced" as const }),
     ];
 
     Given(
-      "client has 5 tasks, 2 with needsSync true",
+      'client has 5 tasks, 2 with syncStatus "pending"',
       async (_ctx: TestContext) => {
         mockAllRepositoriesGetAll(repositories, { tasks: allTasks });
         (
@@ -111,9 +113,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @spec-sync-protocol @FR1
   f.Scenario(
-    "needsSync is stripped from wire format",
+    "syncStatus is stripped from wire format",
     ({ Given, When, Then }) => {
-      const dirtyTask = makeTask({ needsSync: true });
+      const dirtyTask = makeTask({ syncStatus: "pending" as const });
 
       Given("client has a dirty task", async (_ctx: TestContext) => {
         (
@@ -130,12 +132,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        "no record in PushRequest contains the needsSync field",
+        "no record in PushRequest contains the syncStatus field",
         async (_ctx: TestContext) => {
           const pushCall = (syncAdapter.push as ReturnType<typeof vi.fn>).mock
             .calls[0][0];
           for (const task of pushCall.tasks) {
-            expect(task.needsSync).toBeUndefined();
+            expect(task.syncStatus).toBeUndefined();
           }
         },
       );
@@ -165,7 +167,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Created result clears dirty flag when unchanged during push",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", needsSync: true });
+      const task = makeTask({ id: "t1", syncStatus: "pending" as const });
 
       Given(
         'client has a dirty task with id "t1"',
@@ -203,12 +205,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        'task "t1" has needsSync false and revision 7',
+        'task "t1" has syncStatus "synced" and revision 7',
         async (_ctx: TestContext) => {
           expect(repositories.taskRepository.update).toHaveBeenCalledWith(
             expect.objectContaining({
               id: "t1",
-              needsSync: false,
+              syncStatus: "synced" as const,
               revision: 7,
             }),
           );
@@ -221,7 +223,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Accepted result keeps dirty flag when changed during push",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", needsSync: true });
+      const task = makeTask({ id: "t1", syncStatus: "pending" as const });
 
       Given(
         'client has a dirty task with id "t1"',
@@ -268,12 +270,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        'task "t1" has needsSync true and revision 8',
+        'task "t1" has syncStatus "pending" and revision 8',
         async (_ctx: TestContext) => {
           expect(repositories.taskRepository.update).toHaveBeenCalledWith(
             expect.objectContaining({
               id: "t1",
-              needsSync: true,
+              syncStatus: "pending" as const,
               revision: 8,
             }),
           );
@@ -289,7 +291,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       const task = makeTask({
         id: "t1",
         name: "Client version",
-        needsSync: true,
+        syncStatus: "pending" as const,
       });
       const serverTask = makeTask({
         id: "t1",
@@ -343,11 +345,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      And('task "t1" has needsSync false', async (_ctx: TestContext) => {
+      And('task "t1" has syncStatus "synced"', async (_ctx: TestContext) => {
         expect(repositories.taskRepository.update).toHaveBeenCalledWith(
           expect.objectContaining({
             id: "t1",
-            needsSync: false,
+            syncStatus: "synced" as const,
           }),
         );
       });
@@ -358,7 +360,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Rejected result keeps record unchanged",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", needsSync: true });
+      const task = makeTask({ id: "t1", syncStatus: "pending" as const });
 
       Given(
         'client has a dirty task with id "t1"',
@@ -400,13 +402,13 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "Force push sends records even when nothing is dirty",
     ({ Given, When, Then }) => {
       const allTasks = [
-        makeTask({ needsSync: false }),
-        makeTask({ needsSync: false }),
-        makeTask({ needsSync: false }),
+        makeTask({ syncStatus: "synced" as const }),
+        makeTask({ syncStatus: "synced" as const }),
+        makeTask({ syncStatus: "synced" as const }),
       ];
 
       Given(
-        "client has 3 tasks with needsSync false",
+        'client has 3 tasks with syncStatus "synced"',
         async (_ctx: TestContext) => {
           mockAllRepositoriesGetAll(repositories, { tasks: allTasks });
           (
@@ -434,7 +436,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Push with empty results array does not throw",
     ({ Given, And, When, Then }) => {
-      const task = makeTask({ id: "t1", needsSync: true });
+      const task = makeTask({ id: "t1", syncStatus: "pending" as const });
 
       Given(
         'client has a dirty task with id "t1"',
@@ -478,8 +480,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Push handles partial response with missing entity arrays",
     ({ Given, And, When, Then }) => {
-      const dirtyTask = makeTask({ needsSync: true });
-      const dirtyGoal = makeGoal({ needsSync: true });
+      const dirtyTask = makeTask({ syncStatus: "pending" as const });
+      const dirtyGoal = makeGoal({ syncStatus: "pending" as const });
 
       Given(
         "client has a dirty task and a dirty goal",

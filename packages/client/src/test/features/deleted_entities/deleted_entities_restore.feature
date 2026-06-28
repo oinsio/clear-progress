@@ -5,7 +5,7 @@ Feature: Deleted entities restore
   Scenario: Restore a deleted task
     Given a deleted task "Buy groceries" exists
     When the task is restored
-    Then the task has is_deleted false and needsSync true
+    Then the task has is_deleted false and syncStatus "pending"
 
   @deleted-entities-spec @FR2 @FR8
   Scenario: Restore a deleted task cascades to checklist items
@@ -18,28 +18,28 @@ Feature: Deleted entities restore
   Scenario: Restore a deleted goal
     Given a deleted goal "Learn TypeScript" exists
     When the goal is restored
-    Then the goal has is_deleted false and needsSync true
+    Then the goal has is_deleted false and syncStatus "pending"
 
   @deleted-entities-spec @FR2 @FR8
   Scenario: Restore a deleted context
     Given a deleted context "@home" exists
     When the context is restored
-    Then the context has is_deleted false and needsSync true
+    Then the context has is_deleted false and syncStatus "pending"
 
   @deleted-entities-spec @FR2 @FR8
   Scenario: Restore a deleted category
     Given a deleted category "Work" exists
     When the category is restored
-    Then the category has is_deleted false and needsSync true
+    Then the category has is_deleted false and syncStatus "pending"
 
   @swipeable-item @FR20
   Scenario: Restore a deleted idea
     Given a deleted idea "Research topic" exists
     When the idea is restored
-    Then the idea has is_deleted false and needsSync true
+    Then the idea has is_deleted false and syncStatus "pending"
 
   @deleted-entities-spec @FR2 @FR8
   Scenario: Restore a deleted checklist item
     Given a deleted checklist item "Step 1" exists
     When the checklist item is restored
-    Then the checklist item has is_deleted false and needsSync true
+    Then the checklist item has is_deleted false and syncStatus "pending"

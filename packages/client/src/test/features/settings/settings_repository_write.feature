@@ -6,7 +6,7 @@ Feature: Settings repository write
     Given no setting with key "accent_color" exists
     When set is called with key "accent_color" and value "blue"
     Then a new setting is created with key "accent_color" and value "blue"
-    And the setting has needsSync true
+    And the setting has syncStatus "pending"
     And the setting has a current updated_at timestamp
 
   @settings-specs-and-bdd @FR1 @FR5
@@ -14,7 +14,7 @@ Feature: Settings repository write
     Given a setting with key "accent_color" and value "green" exists
     When set is called with key "accent_color" and value "blue"
     Then the setting value is updated to "blue"
-    And the setting has needsSync true
+    And the setting has syncStatus "pending"
     And the setting has a refreshed updated_at timestamp
 
   @settings-specs-and-bdd @FR1 @FR5

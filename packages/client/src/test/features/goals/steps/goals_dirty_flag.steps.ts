@@ -30,11 +30,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       let originalUpdatedAt: string;
 
       Given(
-        'goal "Learn Rust" exists with needsSync false',
+        'goal "Learn Rust" exists with syncStatus "synced"',
         async (_ctx: TestContext) => {
           await seedGoal(ctx.goalIds, "Learn Rust", {
             name: "Learn Rust",
-            needsSync: false,
+            syncStatus: "synced" as const,
           });
           const existingGoal = await getGoal(ctx.goalIds, "Learn Rust");
           originalUpdatedAt = existingGoal.updated_at;
@@ -51,11 +51,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      Then("goal needsSync remains false", async (_ctx: TestContext) => {
+      Then('goal syncStatus remains "synced"', async (_ctx: TestContext) => {
         const goal = await db.goals.get(
           getIdOrThrow(ctx.goalIds, "Learn Rust"),
         );
-        expect(goal?.needsSync).toBe(false);
+        expect(goal?.syncStatus).toBe("synced");
       });
 
       And("goal updated_at is unchanged", async (_ctx: TestContext) => {
@@ -89,19 +89,19 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         await ctx.goalService.reorderGoals(goalC.id, newKey);
       });
 
-      Then("goal A has needsSync false", async (_ctx: TestContext) => {
+      Then('goal A has syncStatus "synced"', async (_ctx: TestContext) => {
         const goalA = await db.goals.get(getIdOrThrow(ctx.goalIds, "A"));
-        expect(goalA?.needsSync).toBe(false);
+        expect(goalA?.syncStatus).toBe("synced");
       });
 
-      And("goal B has needsSync false", async (_ctx: TestContext) => {
+      And('goal B has syncStatus "synced"', async (_ctx: TestContext) => {
         const goalB = await db.goals.get(getIdOrThrow(ctx.goalIds, "B"));
-        expect(goalB?.needsSync).toBe(false);
+        expect(goalB?.syncStatus).toBe("synced");
       });
 
-      And("goal C has needsSync true", async (_ctx: TestContext) => {
+      And('goal C has syncStatus "pending"', async (_ctx: TestContext) => {
         const goalC = await db.goals.get(getIdOrThrow(ctx.goalIds, "C"));
-        expect(goalC?.needsSync).toBe(true);
+        expect(goalC?.syncStatus).toBe("pending");
       });
     },
   );

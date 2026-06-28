@@ -1,3 +1,3 @@
-export function useIsUnsynced(entity: { needsSync: boolean }): boolean {
-  return entity.needsSync;
+export function useIsUnsynced(entity: { syncStatus: string }): boolean {
+  return entity.syncStatus !== "synced";
 }

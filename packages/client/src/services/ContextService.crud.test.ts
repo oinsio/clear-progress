@@ -97,14 +97,14 @@ describe("ContextService", () => {
       );
     });
 
-    it("should set needsSync to true", async () => {
-      const context = buildContext({ needsSync: false });
+    it("should set syncStatus to true", async () => {
+      const context = buildContext({ syncStatus: "synced" as const });
       mockContextRepository = createMockContextRepository({
         getById: vi.fn().mockResolvedValue(context),
       });
       const contextService = new ContextService(mockContextRepository);
       const updated = await contextService.update(context.id, "X");
-      expect(updated.needsSync).toBe(true);
+      expect(updated.syncStatus).toBe("pending");
     });
 
     it("should throw when context not found", async () => {

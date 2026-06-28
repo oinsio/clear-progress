@@ -40,7 +40,7 @@ describe("AttachmentService", () => {
   });
 
   describe("attachFile", () => {
-    // FR8: kills mutants 1 (body removed), 2 (is_deleted), 3 (needsSync), 4 (object literal)
+    // FR8: kills mutants 1 (body removed), 2 (is_deleted), 3 (syncStatus), 4 (object literal)
     it("returns attachment with correct fields", async () => {
       const file = createTestFile();
 
@@ -57,7 +57,7 @@ describe("AttachmentService", () => {
       expect(result.mime_type).toBe("application/pdf");
       expect(result.file_size).toBe(7); // "content".length
       expect(result.is_deleted).toBe(false);
-      expect(result.needsSync).toBe(true);
+      expect(result.syncStatus).toBe("pending");
       expect(typeof result.sort_order).toBe("string");
       expect(result.revision).toBe(0);
     });

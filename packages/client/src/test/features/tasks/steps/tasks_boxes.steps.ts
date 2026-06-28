@@ -130,8 +130,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(movedTask.box).toBe("today");
     });
 
-    And("task has needsSync true", async (_ctx: TestContext) => {
-      expect(movedTask.needsSync).toBe(true);
+    And('task has syncStatus "pending"', async (_ctx: TestContext) => {
+      expect(movedTask.syncStatus).toBe("pending");
     });
   });
 
@@ -141,11 +141,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     const fixedUpdatedAt = "2025-01-01T00:00:00.000Z";
 
     Given(
-      'task "Buy groceries" exists in box "inbox" with needsSync false',
+      'task "Buy groceries" exists in box "inbox" with syncStatus "synced"',
       async (_ctx: TestContext) => {
         await seedTask(ctx.taskIds, "Buy groceries", {
           box: "inbox",
-          needsSync: false,
+          syncStatus: "synced" as const,
           updated_at: fixedUpdatedAt,
         });
       },
@@ -158,8 +158,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
     });
 
-    Then("task has needsSync false", async (_ctx: TestContext) => {
-      expect(movedTask.needsSync).toBe(false);
+    Then('task has syncStatus "synced"', async (_ctx: TestContext) => {
+      expect(movedTask.syncStatus).toBe("synced");
     });
 
     And("task updated_at is unchanged", async (_ctx: TestContext) => {

@@ -36,8 +36,8 @@ describe("ContextService", () => {
       expect(typeof createdContext.sort_order).toBe("string");
     });
 
-    it("should create context with needsSync true", () => {
-      expect(createdContext.needsSync).toBe(true);
+    it("should create context with syncStatus true", () => {
+      expect(createdContext.syncStatus).toBe("pending");
     });
 
     it("should create context with revision 0", () => {

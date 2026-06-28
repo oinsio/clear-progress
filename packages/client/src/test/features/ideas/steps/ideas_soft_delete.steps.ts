@@ -35,11 +35,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(persistedIdea?.is_deleted).toBe(true);
     });
 
-    And('idea "Learn Rust" has needsSync true', async (_ctx: TestContext) => {
-      const ideaId = getIdOrThrow(ctx.ideaIds, "Learn Rust");
-      const persistedIdea = await db.ideas.get(ideaId);
-      expect(persistedIdea?.needsSync).toBe(true);
-    });
+    And(
+      'idea "Learn Rust" has syncStatus "pending"',
+      async (_ctx: TestContext) => {
+        const ideaId = getIdOrThrow(ctx.ideaIds, "Learn Rust");
+        const persistedIdea = await db.ideas.get(ideaId);
+        expect(persistedIdea?.syncStatus).toBe("pending");
+      },
+    );
   });
 
   // @add-ideas-specs @FR5
@@ -65,11 +68,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    And('idea "Learn Rust" has needsSync true', async (_ctx: TestContext) => {
-      const ideaId = getIdOrThrow(ctx.ideaIds, "Learn Rust");
-      const persistedIdea = await db.ideas.get(ideaId);
-      expect(persistedIdea?.needsSync).toBe(true);
-    });
+    And(
+      'idea "Learn Rust" has syncStatus "pending"',
+      async (_ctx: TestContext) => {
+        const ideaId = getIdOrThrow(ctx.ideaIds, "Learn Rust");
+        const persistedIdea = await db.ideas.get(ideaId);
+        expect(persistedIdea?.syncStatus).toBe("pending");
+      },
+    );
   });
 
   // @add-ideas-specs @FR4 @FR2

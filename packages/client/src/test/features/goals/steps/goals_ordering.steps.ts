@@ -61,16 +61,16 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         await moveGoalBefore(ctx.goalIds, ctx.goalService, "C", "A");
       });
 
-      Then("goal C has needsSync true", async (_ctx: TestContext) => {
-        await expectGoalNeedsSync(ctx.goalIds, "C", true);
+      Then('goal C has syncStatus "pending"', async (_ctx: TestContext) => {
+        await expectGoalNeedsSync(ctx.goalIds, "C", "pending");
       });
 
-      And("goal A has needsSync false", async (_ctx: TestContext) => {
-        await expectGoalNeedsSync(ctx.goalIds, "A", false);
+      And('goal A has syncStatus "synced"', async (_ctx: TestContext) => {
+        await expectGoalNeedsSync(ctx.goalIds, "A", "synced");
       });
 
-      And("goal B has needsSync false", async (_ctx: TestContext) => {
-        await expectGoalNeedsSync(ctx.goalIds, "B", false);
+      And('goal B has syncStatus "synced"', async (_ctx: TestContext) => {
+        await expectGoalNeedsSync(ctx.goalIds, "B", "synced");
       });
     },
   );

@@ -201,11 +201,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     ({ Given, When, Then }) => {
       const deletedTask = makeTask({
         is_deleted: true,
-        needsSync: true,
+        syncStatus: "pending" as const,
       });
 
       Given(
-        "client has a task with is_deleted true and needsSync true",
+        'client has a task with is_deleted true and syncStatus "pending"',
         async (_ctx: TestContext) => {
           (
             repositories.taskRepository.getNeedingSync as ReturnType<
@@ -315,7 +315,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             revision: 1,
             created_at: "2025-01-01T00:00:00.000Z",
             updated_at: "2025-01-01T00:00:00.000Z",
-            needsSync: false,
+            syncStatus: "synced" as const,
           });
           await db.contexts.put({
             id: contextId,
@@ -325,7 +325,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
             revision: 1,
             created_at: "2025-01-01T00:00:00.000Z",
             updated_at: "2025-01-01T00:00:00.000Z",
-            needsSync: false,
+            syncStatus: "synced" as const,
           });
         },
       );
@@ -428,18 +428,18 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @spec-sync-protocol @FR6
   f.Scenario(
-    "Full sync resets needsSync to false before pulling",
+    'Full sync resets syncStatus to "synced" before pulling',
     ({ Given, And, When, Then }) => {
       const taskId = crypto.randomUUID();
 
       Given(
-        'client has task "t1" with needsSync true',
+        'client has task "t1" with syncStatus "pending"',
         async (_ctx: TestContext) => {
           await db.tasks.put(
             makeTask({
               id: taskId,
               name: "t1",
-              needsSync: true,
+              syncStatus: "pending" as const,
               revision: 1,
             }),
           );
@@ -465,11 +465,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        'task "t1" has needsSync false before pull executes',
+        'task "t1" has syncStatus "synced" before pull executes',
         async (_ctx: TestContext) => {
           const task = await db.tasks.get(taskId);
           expect(task).toBeDefined();
-          expect(task?.needsSync).toBe(false);
+          expect(task?.syncStatus).toBe("synced");
         },
       );
     },

@@ -36,6 +36,7 @@ export type {
   WireTask,
 } from "./entities";
 export {
+  UUIDOrEmptySchema,
   WireAttachmentSchema,
   WireCategorySchema,
   WireChecklistItemSchema,

@@ -11,9 +11,9 @@ Feature: Contexts Ordering
   Scenario: Reorder marks moved context for sync
     Given contexts A, B, C with ascending sort_order
     When user moves context C before context A
-    Then context C has needsSync true
-    And context A has needsSync false
-    And context B has needsSync false
+    Then context C has syncStatus "pending"
+    And context A has syncStatus "synced"
+    And context B has syncStatus "synced"
 
   @add-context-category-specs @FR6
   Scenario: Reorder throws for non-existent context

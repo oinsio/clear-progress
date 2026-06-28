@@ -28,7 +28,7 @@ const createMockGoal = (id: string, name: string): Goal => ({
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z",
   revision: 1,
-  needsSync: false,
+  syncStatus: "synced" as const,
 });
 
 function renderDialog(

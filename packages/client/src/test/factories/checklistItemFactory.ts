@@ -21,7 +21,7 @@ export function buildChecklistItem(
     created_at: now,
     updated_at: now,
     revision: 0,
-    needsSync: false,
+    syncStatus: "synced" as const,
     ...overrides,
   };
 }

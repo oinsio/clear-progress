@@ -253,6 +253,7 @@ export function TaskDetailsTab({
           value={selectedGoalName}
           hasValue={!!selectedGoalId}
           onClick={() => onOpenSelector(SELECTOR_TYPE.GOAL)}
+          testId="task-detail-goal-select"
         />
       )}
 

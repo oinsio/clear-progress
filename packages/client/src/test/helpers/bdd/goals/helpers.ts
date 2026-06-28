@@ -54,7 +54,7 @@ export async function seedGoalsWithOrder(
   for (let i = 0; i < names.length; i++) {
     await seedGoal(goalIds, names[i], {
       sort_order: keys[i],
-      needsSync: false,
+      syncStatus: "synced" as const,
     });
   }
 }
@@ -79,10 +79,10 @@ export async function moveGoalBefore(
 export async function expectGoalNeedsSync(
   goalIds: Map<string, string>,
   name: string,
-  expectedNeedsSync: boolean,
+  expectedSyncStatus: string,
 ) {
   const goal = await getGoal(goalIds, name);
-  expect(goal.needsSync).toBe(expectedNeedsSync);
+  expect(goal.syncStatus).toBe(expectedSyncStatus);
 }
 
 export function expectTaskOrder(

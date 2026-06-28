@@ -36,6 +36,7 @@ import {
   defaultSyncAdapter,
 } from "@/services/defaultServices";
 import { setPreference } from "@/services/localPreferencesService";
+import type { SyncAlert } from "@/services/push-self-healing";
 import { SyncService } from "@/services/SyncService";
 import type { FullSyncStep, SyncStatus } from "@/types/common";
 import { toISOTimestamp } from "@/utils/dateHelpers";
@@ -44,6 +45,9 @@ interface SyncContextValue {
   syncStatus: SyncStatus;
   syncVersion: number;
   lastSyncedAt: string | null;
+  /** Implements FR7, FR8 of fix-push-poison-pill */
+  pendingSyncAlerts: SyncAlert[];
+  clearSyncAlerts: () => void;
   pull: () => Promise<void>;
   push: () => Promise<void>;
   schedulePush: () => void;
@@ -75,6 +79,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const { accessToken, signOut, silentRefresh } = useAuth();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncVersion, setSyncVersion] = useState(0);
+  /** Implements FR7, FR8 of fix-push-poison-pill */
+  const [pendingSyncAlerts, setPendingSyncAlerts] = useState<SyncAlert[]>([]);
+  const clearSyncAlerts = useCallback(() => setPendingSyncAlerts([]), []);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(() => {
     try {
       return localStorage.getItem(STORAGE_KEYS.LAST_SYNC);
@@ -110,6 +117,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const applySyncResult = useCallback(async (): Promise<void> => {
     console.log("[SyncProvider] applySyncResult: starting push");
     await syncService.push();
+    // implements FR7, FR8 of fix-push-poison-pill
+    if (syncService.lastSyncAlerts.length > 0) {
+      setPendingSyncAlerts((previous) => [
+        ...previous,
+        ...syncService.lastSyncAlerts,
+      ]);
+    }
     console.log("[SyncProvider] applySyncResult: push done, starting pull");
     await syncService.pull();
     console.log(
@@ -211,6 +225,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
         onProgress("push");
         await syncService.push(true);
+        // implements FR7, FR8 of fix-push-poison-pill
+        if (syncService.lastSyncAlerts.length > 0) {
+          setPendingSyncAlerts((previous) => [
+            ...previous,
+            ...syncService.lastSyncAlerts,
+          ]);
+        }
 
         onProgress("pull");
         await syncService.resetAndPull();
@@ -362,6 +383,8 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         syncStatus,
         syncVersion,
         lastSyncedAt,
+        pendingSyncAlerts,
+        clearSyncAlerts,
         pull: sync,
         push: sync,
         schedulePush,
@@ -379,6 +402,8 @@ const SYNC_FALLBACK: SyncContextValue = {
   syncStatus: "idle",
   syncVersion: 0,
   lastSyncedAt: null,
+  pendingSyncAlerts: [],
+  clearSyncAlerts: () => {},
   pull: SYNC_NOOP,
   push: SYNC_NOOP,
   schedulePush: () => {},

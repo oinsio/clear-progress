@@ -44,7 +44,7 @@ export class CategoryService {
       created_at: now,
       updated_at: now,
       revision: 0,
-      needsSync: true,
+      syncStatus: "pending" as const,
     };
     await this.categoryRepository.create(category);
     return category;
@@ -74,7 +74,7 @@ export class CategoryService {
       ...category,
       sort_order: newSortOrder,
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
 
     if (needsRebalancing(newSortOrder)) {
@@ -96,7 +96,7 @@ export class CategoryService {
       ...category,
       sort_order: newKeys[index],
       updated_at: now,
-      needsSync: true,
+      syncStatus: "pending" as const,
     }));
     await this.categoryRepository.bulkUpsert(rebalancedCategories);
   }
@@ -126,7 +126,7 @@ export class CategoryService {
       updated_at: hasChanged
         ? toISOTimestamp(this.clock)
         : existingCategory.updated_at,
-      needsSync: hasChanged,
+      syncStatus: hasChanged ? ("pending" as const) : ("synced" as const),
     };
 
     await this.categoryRepository.update(updatedCategory);

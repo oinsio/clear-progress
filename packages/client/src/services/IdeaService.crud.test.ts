@@ -97,14 +97,14 @@ describe("IdeaService", () => {
       );
     });
 
-    it("should set needsSync to true", async () => {
-      const idea = buildIdea({ needsSync: false });
+    it("should set syncStatus to true", async () => {
+      const idea = buildIdea({ syncStatus: "synced" as const });
       mockIdeaRepository = createMockIdeaRepository({
         getById: vi.fn().mockResolvedValue(idea),
       });
       const ideaService = new IdeaService(mockIdeaRepository);
       const updated = await ideaService.update(idea.id, { name: "X" });
-      expect(updated.needsSync).toBe(true);
+      expect(updated.syncStatus).toBe("pending");
     });
 
     it("should throw when idea not found", async () => {

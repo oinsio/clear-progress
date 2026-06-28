@@ -1,4 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Skip Zod pre-validation — these tests use non-UUID IDs
+vi.mock("@/services/pushPreValidator", () => ({
+  preValidateRecords: (
+    tasks: unknown[],
+    goals: unknown[],
+    contexts: unknown[],
+    categories: unknown[],
+    checklistItems: unknown[],
+    ideas: unknown[],
+    attachments: unknown[],
+    settings: unknown[],
+  ) =>
+    Promise.resolve({
+      tasks,
+      goals,
+      contexts,
+      categories,
+      checklistItems,
+      ideas,
+      attachments,
+      settings,
+      alerts: [],
+    }),
+}));
+
 import { PUSH_CHUNK_SIZE } from "@/constants";
 import { db } from "@/db/database";
 import { toISOTimestamp } from "@/utils/dateHelpers";
@@ -28,8 +54,10 @@ describe("SyncService — push chunks — overflow and ordering", () => {
     });
     await db.tasks.clear();
     await db.checklist_items.clear();
-    await db.tasks.put(makeTask({ id: "t0", needsSync: false }));
-    await db.tasks.put(makeTask({ id: "task-id", needsSync: false }));
+    await db.tasks.put(makeTask({ id: "t0", syncStatus: "synced" as const }));
+    await db.tasks.put(
+      makeTask({ id: "task-id", syncStatus: "synced" as const }),
+    );
   });
 
   function setupBaselineEntities() {
@@ -228,13 +256,13 @@ describe("SyncService — push chunks — overflow and ordering", () => {
             key: "theme",
             value: "dark",
             updated_at: toISOTimestamp(),
-            needsSync: true,
+            syncStatus: "pending" as const,
           },
           {
             key: "lang",
             value: "en",
             updated_at: toISOTimestamp(),
-            needsSync: true,
+            syncStatus: "pending" as const,
           },
         ]);
       },
@@ -248,13 +276,13 @@ describe("SyncService — push chunks — overflow and ordering", () => {
             key: "theme",
             value: "dark",
             updated_at: toISOTimestamp(),
-            needsSync: true,
+            syncStatus: "pending" as const,
           },
           {
             key: "lang",
             value: "en",
             updated_at: toISOTimestamp(),
-            needsSync: true,
+            syncStatus: "pending" as const,
           },
         ]);
       },
@@ -284,13 +312,13 @@ describe("SyncService — push chunks — overflow and ordering", () => {
         key: "theme",
         value: "dark",
         updated_at: toISOTimestamp(),
-        needsSync: true,
+        syncStatus: "pending" as const,
       },
       {
         key: "lang",
         value: "en",
         updated_at: toISOTimestamp(),
-        needsSync: true,
+        syncStatus: "pending" as const,
       },
     ]);
     const service = createService(ctx);

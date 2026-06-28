@@ -4,8 +4,8 @@ Feature: Contexts Dirty Flag
 
   @add-context-category-specs @FR3
   Scenario: No-op update does not trigger sync
-    Given context "@home" exists with needsSync false
+    Given context "@home" exists with syncStatus "synced"
     When user updates context name to "@home"
-    Then context needsSync remains false
+    Then context syncStatus remains "synced"
     And context updated_at is unchanged
 

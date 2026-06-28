@@ -167,7 +167,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           key: "default_box",
           value: "inbox",
           updated_at: "2026-04-10T00:00:00.000Z" as ISOTimestamp,
-          needsSync: false,
+          syncStatus: "synced" as const,
         },
       ];
 

@@ -84,19 +84,19 @@ describe("SettingsRepository", () => {
       expect(setting?.updated_at).not.toBe(oldTimestamp);
     });
 
-    it("should set needsSync to true when value changes", async () => {
+    it("should set syncStatus to true when value changes", async () => {
       await db.settings.add(
         buildSetting({
           key: "default_box",
           value: "inbox",
-          needsSync: false,
+          syncStatus: "synced" as const,
         }),
       );
 
       await getRepository().set("default_box", "today");
 
       const setting = await db.settings.get({ key: "default_box" });
-      expect(setting?.needsSync).toBe(true);
+      expect(setting?.syncStatus).toBe("pending");
     });
   });
 });

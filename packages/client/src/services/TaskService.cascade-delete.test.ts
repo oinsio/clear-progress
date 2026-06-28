@@ -38,11 +38,11 @@ describe("TaskService.softDelete - cascade to checklist items", () => {
     expect(bulkUpsertArg).toHaveLength(2);
     expect(bulkUpsertArg[0]).toMatchObject({
       is_deleted: true,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     expect(bulkUpsertArg[1]).toMatchObject({
       is_deleted: true,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
   });
 
@@ -63,13 +63,13 @@ describe("TaskService.softDelete - cascade to checklist items", () => {
     );
   });
 
-  it("should update already-deleted checklist items with needsSync and updated_at", async () => {
+  it("should update already-deleted checklist items with syncStatus and updated_at", async () => {
     const oldTimestamp = "2020-01-01T00:00:00.000Z";
     const task = buildTask({ id: "task-1" });
     const alreadyDeletedItem = buildChecklistItem({
       task_id: "task-1",
       is_deleted: true,
-      needsSync: false,
+      syncStatus: "synced" as const,
       updated_at: oldTimestamp,
     });
 
@@ -90,7 +90,7 @@ describe("TaskService.softDelete - cascade to checklist items", () => {
     ).mock.calls[0];
     expect(bulkUpsertArg[0]).toMatchObject({
       is_deleted: true,
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     expect(bulkUpsertArg[0].updated_at).not.toBe(oldTimestamp);
   });

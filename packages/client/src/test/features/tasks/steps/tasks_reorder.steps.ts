@@ -46,9 +46,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         expect(task.sort_order).toBe("a2");
       });
 
-      And("A has needsSync true", async (_ctx: TestContext) => {
+      And('A has syncStatus "pending"', async (_ctx: TestContext) => {
         const task = await getTask(ctx.taskIds, "A");
-        expect(task.needsSync).toBe(true);
+        expect(task.syncStatus).toBe("pending");
       });
 
       And('B has sort_order "a1"', async (_ctx: TestContext) => {
@@ -103,7 +103,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           const allTasks = await db.tasks.toArray();
           for (const task of allTasks) {
             expect(typeof task.sort_order).toBe("string");
-            expect(task.needsSync).toBe(true);
+            expect(task.syncStatus).toBe("pending");
           }
         },
       );

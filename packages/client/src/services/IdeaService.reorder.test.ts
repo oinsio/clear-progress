@@ -19,7 +19,7 @@ describe("IdeaService", () => {
         expect.objectContaining({
           id: idea.id,
           sort_order: "a1",
-          needsSync: true,
+          syncStatus: "pending" as const,
         }),
       );
     });
@@ -101,7 +101,7 @@ describe("IdeaService", () => {
       expect(rebalancedIdeas).toHaveLength(2);
       for (const rebalancedIdea of rebalancedIdeas) {
         expect(typeof rebalancedIdea.sort_order).toBe("string");
-        expect(rebalancedIdea.needsSync).toBe(true);
+        expect(rebalancedIdea.syncStatus).toBe("pending");
       }
     });
   });

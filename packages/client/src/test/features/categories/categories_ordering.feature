@@ -11,9 +11,9 @@ Feature: Categories Ordering
   Scenario: Reorder marks moved category for sync
     Given categories A, B, C with ascending sort_order
     When user moves category C before category A
-    Then category C has needsSync true
-    And category A has needsSync false
-    And category B has needsSync false
+    Then category C has syncStatus "pending"
+    And category A has syncStatus "synced"
+    And category B has syncStatus "synced"
 
   @add-context-category-specs @FR6
   Scenario: Reorder throws for non-existent category

@@ -114,7 +114,7 @@ describe("SyncService — resetAndPull", () => {
         return { id, record: makeIdea({ id, name: "Idea", revision: 1 }) };
       },
     },
-  ])("should mark all $entityName records as needsSync: false in db", async ({
+  ])('should mark all $entityName records as syncStatus: "synced" in db', async ({
     tableName,
     seedRecord,
   }) => {
@@ -125,21 +125,21 @@ describe("SyncService — resetAndPull", () => {
     await service.resetAndPull();
 
     const savedRecord = await db[tableName].get(id);
-    expect(savedRecord?.needsSync).toBe(false);
+    expect(savedRecord?.syncStatus).toBe("synced");
   });
 
-  it("should mark all settings as needsSync: false in db", async () => {
+  it('should mark all settings as syncStatus: "synced" in db', async () => {
     await db.settings.put({
       key: "accent_color",
       value: "green",
       updated_at: toISOTimestamp(),
-      needsSync: true,
+      syncStatus: "pending" as const,
     });
     const service = createService(ctx);
 
     await service.resetAndPull();
 
     const setting = await db.settings.get("accent_color");
-    expect(setting?.needsSync).toBe(false);
+    expect(setting?.syncStatus).toBe("synced");
   });
 });

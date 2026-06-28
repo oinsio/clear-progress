@@ -4,15 +4,15 @@ Feature: Goals Dirty Flag
 
   @add-goals-specs @FR9
   Scenario: No-op update does not trigger sync
-    Given goal "Learn Rust" exists with needsSync false
+    Given goal "Learn Rust" exists with syncStatus "synced"
     When user updates goal name to "Learn Rust"
-    Then goal needsSync remains false
+    Then goal syncStatus remains "synced"
     And goal updated_at is unchanged
 
   @add-goals-specs @FR10
   Scenario: Reorder marks only moved goal for sync
     Given goals A, B, C with ascending sort_order
     When user moves goal C between A and B
-    Then goal A has needsSync false
-    And goal B has needsSync false
-    And goal C has needsSync true
+    Then goal A has syncStatus "synced"
+    And goal B has syncStatus "synced"
+    And goal C has syncStatus "pending"

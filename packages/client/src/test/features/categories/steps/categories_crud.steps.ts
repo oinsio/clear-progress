@@ -48,8 +48,8 @@ describeFeature(
         expect(createdCategory.revision).toBe(0);
       });
 
-      And("category has needsSync true", async (_ctx: TestContext) => {
-        expect(createdCategory.needsSync).toBe(true);
+      And('category has syncStatus "pending"', async (_ctx: TestContext) => {
+        expect(createdCategory.syncStatus).toBe("pending");
       });
 
       And("category has is_deleted false", async (_ctx: TestContext) => {
@@ -220,8 +220,8 @@ describeFeature(
         expect(updatedCategory.name).toBe("Personal");
       });
 
-      And("category has needsSync true", async (_ctx: TestContext) => {
-        expect(updatedCategory.needsSync).toBe(true);
+      And('category has syncStatus "pending"', async (_ctx: TestContext) => {
+        expect(updatedCategory.syncStatus).toBe("pending");
       });
 
       And("category updated_at is refreshed", async (_ctx: TestContext) => {

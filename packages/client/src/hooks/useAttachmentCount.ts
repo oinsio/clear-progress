@@ -42,7 +42,9 @@ export function useAttachmentCount(
 
       const [count, unsyncedCount] = await Promise.all([
         baseQuery.count(),
-        baseQuery.filter((attachment) => attachment.needsSync).count(),
+        baseQuery
+          .filter((attachment) => attachment.syncStatus !== "synced")
+          .count(),
       ]);
 
       return { count, unsyncedCount };

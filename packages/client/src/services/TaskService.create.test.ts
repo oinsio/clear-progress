@@ -53,8 +53,8 @@ describe("TaskService", () => {
       expect(createdTask.is_hidden).toBe(false);
     });
 
-    it("should create task with needsSync true", () => {
-      expect(createdTask.needsSync).toBe(true);
+    it("should create task with syncStatus true", () => {
+      expect(createdTask.syncStatus).toBe("pending");
     });
 
     it("should create task with a string sort_order (fractional key)", () => {

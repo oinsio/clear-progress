@@ -9,11 +9,11 @@ Feature: Sync Protocol — Lock Timeout
     And server will return SYNC_LOCK_TIMEOUT error
     When push is called
     Then push fails with SYNC_LOCK_TIMEOUT error
-    And dirty records retain needsSync true
+    And dirty records retain syncStatus "pending"
 
   @spec-sync-protocol @FR17
   Scenario: Client retries after lock timeout
-    Given client has dirty records with needsSync true
+    Given client has dirty records with syncStatus "pending"
     And previous push failed with SYNC_LOCK_TIMEOUT
     When push is called again
     Then records are sent to server again

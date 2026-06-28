@@ -98,6 +98,7 @@ export {
   UploadFileBatchResultSchema,
   UploadFileResponseSchema,
   UploadFilesResponseSchema,
+  UUIDOrEmptySchema,
   UUIDSchema,
   WireAttachmentSchema,
   WireCategorySchema,

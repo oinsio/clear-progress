@@ -32,7 +32,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       await seedChecklistItem(ctx.checklistItemIds, "Buy milk", {
         task_id: taskId,
         name: "Buy milk",
-        needsSync: false,
+        syncStatus: "synced" as const,
         updated_at: "2025-01-01T00:00:00.000Z",
       });
       const seededItem = await getChecklistItem(
@@ -60,9 +60,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     );
 
     And(
-      'checklist item "Buy milk" has needsSync true',
+      'checklist item "Buy milk" has syncStatus "pending"',
       async (_ctx: TestContext) => {
-        expect(updatedItem.needsSync).toBe(true);
+        expect(updatedItem.syncStatus).toBe("pending");
       },
     );
 
@@ -82,12 +82,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       let updatedItem: ChecklistItem;
 
       Given(
-        'a checklist item "Buy milk" exists with needsSync false',
+        'a checklist item "Buy milk" exists with syncStatus "synced"',
         async (_ctx: TestContext) => {
           await seedChecklistItem(ctx.checklistItemIds, "Buy milk", {
             task_id: taskId,
             name: "Buy milk",
-            needsSync: false,
+            syncStatus: "synced" as const,
             updated_at: "2025-01-01T00:00:00.000Z",
           });
           const seededItem = await getChecklistItem(
@@ -109,9 +109,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
 
       Then(
-        'checklist item "Buy milk" has needsSync false',
+        'checklist item "Buy milk" has syncStatus "synced"',
         async (_ctx: TestContext) => {
-          expect(updatedItem.needsSync).toBe(false);
+          expect(updatedItem.syncStatus).toBe("synced");
         },
       );
 

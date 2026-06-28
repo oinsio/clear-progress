@@ -91,12 +91,12 @@ describe("TaskService", () => {
       expect(copiedItem.sort_order).toBe("a2");
     });
 
-    it("should copy checklist items with needsSync true", async () => {
+    it("should copy checklist items with syncStatus true", async () => {
       const { task, taskService, mockChecklistRepository } =
         setupRecurringTaskWithItem();
       await taskService.complete(task.id);
       const copiedItem = getCreatedItem(mockChecklistRepository);
-      expect(copiedItem.needsSync).toBe(true);
+      expect(copiedItem.syncStatus).toBe("pending");
     });
 
     it("should NOT copy checklist items when repeat_rule is empty", async () => {

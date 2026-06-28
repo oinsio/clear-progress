@@ -9,11 +9,11 @@ Feature: Attachment Sync
     Then the push request contains 2 attachments
 
   @add-file-attachments @FR6
-  Scenario: Push results clear needsSync on accepted attachments
+  Scenario: Push results clear syncStatus on accepted attachments
     Given client has 1 dirty attachment with id "att-1"
     And server accepts the attachment with revision 5
     When push is called
-    Then attachment "att-1" has needsSync false and revision 5
+    Then attachment "att-1" has syncStatus "synced" and revision 5
 
   @add-file-attachments @FR6
   Scenario: Pull response attachments are applied to local DB

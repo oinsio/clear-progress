@@ -6,7 +6,7 @@ Feature: Checklists — Toggle completion
     Given an incomplete checklist item "Buy milk" exists
     When user toggles checklist item "Buy milk"
     Then checklist item "Buy milk" has is_completed true
-    And checklist item "Buy milk" has needsSync true
+    And checklist item "Buy milk" has syncStatus "pending"
     And checklist item "Buy milk" updated_at is refreshed
 
   @add-checklist-specs @FR2
@@ -14,7 +14,7 @@ Feature: Checklists — Toggle completion
     Given a completed checklist item "Buy milk" exists
     When user toggles checklist item "Buy milk"
     Then checklist item "Buy milk" has is_completed false
-    And checklist item "Buy milk" has needsSync true
+    And checklist item "Buy milk" has syncStatus "pending"
     And checklist item "Buy milk" updated_at is refreshed
 
   @add-checklist-specs @FR2

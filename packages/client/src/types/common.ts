@@ -28,6 +28,9 @@ export type FullSyncStep =
   | "done"
   | "error";
 
+// implements FR6 of fix-push-poison-pill
+export type RecordSyncStatus = "synced" | "pending" | "rejected";
+
 export type BoxFilter = Box | "all";
 
 export type PanelSide = "left" | "right";

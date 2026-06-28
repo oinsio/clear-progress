@@ -6,9 +6,9 @@ Feature: Cascade Checklist Delete — Restore
   Scenario: Restore task restores all checklist items
     Given a deleted task "T1" with deleted checklist items "C1" and "C2"
     When user restores task "T1"
-    Then task "T1" has is_deleted false and needsSync true
-    And checklist item "C1" has is_deleted false and needsSync true
-    And checklist item "C2" has is_deleted false and needsSync true
+    Then task "T1" has is_deleted false and syncStatus "pending"
+    And checklist item "C1" has is_deleted false and syncStatus "pending"
+    And checklist item "C2" has is_deleted false and syncStatus "pending"
 
   @cascade-checklist-delete @FR2
   Scenario: Restore task with no checklist items

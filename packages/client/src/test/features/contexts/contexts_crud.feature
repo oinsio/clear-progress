@@ -6,7 +6,7 @@ Feature: Contexts CRUD
     When user creates context "@home"
     Then context is persisted with name "@home"
     And context has revision 0
-    And context has needsSync true
+    And context has syncStatus "pending"
     And context has is_deleted false
 
   @add-context-category-specs @FR1
@@ -49,7 +49,7 @@ Feature: Contexts CRUD
     Given context "@home" exists
     When user updates context name to "@office"
     Then context name is "@office"
-    And context has needsSync true
+    And context has syncStatus "pending"
     And context updated_at is refreshed
 
   @add-context-category-specs @FR3

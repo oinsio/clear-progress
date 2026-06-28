@@ -11,9 +11,9 @@ Feature: Goals Ordering
   Scenario: Reorder marks moved goal for sync
     Given goals A, B, C with ascending sort_order
     When user moves goal C before goal A
-    Then goal C has needsSync true
-    And goal A has needsSync false
-    And goal B has needsSync false
+    Then goal C has syncStatus "pending"
+    And goal A has syncStatus "synced"
+    And goal B has syncStatus "synced"
 
   @add-goals-specs @FR6 @FR10
   Scenario: Reorder throws for non-existent goal

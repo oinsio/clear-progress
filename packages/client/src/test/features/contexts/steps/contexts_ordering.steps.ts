@@ -79,19 +79,22 @@ describeFeature(
           },
         );
 
-        Then("context C has needsSync true", async (_ctx: TestContext) => {
-          const context = await getContext(ctx.contextIds, "C");
-          expect(context.needsSync).toBe(true);
-        });
+        Then(
+          'context C has syncStatus "pending"',
+          async (_ctx: TestContext) => {
+            const context = await getContext(ctx.contextIds, "C");
+            expect(context.syncStatus).toBe("pending");
+          },
+        );
 
-        And("context A has needsSync false", async (_ctx: TestContext) => {
+        And('context A has syncStatus "synced"', async (_ctx: TestContext) => {
           const context = await getContext(ctx.contextIds, "A");
-          expect(context.needsSync).toBe(false);
+          expect(context.syncStatus).toBe("synced");
         });
 
-        And("context B has needsSync false", async (_ctx: TestContext) => {
+        And('context B has syncStatus "synced"', async (_ctx: TestContext) => {
           const context = await getContext(ctx.contextIds, "B");
-          expect(context.needsSync).toBe(false);
+          expect(context.syncStatus).toBe("synced");
         });
       },
     );

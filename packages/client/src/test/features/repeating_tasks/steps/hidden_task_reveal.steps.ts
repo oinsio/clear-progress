@@ -48,11 +48,11 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then(
-        "task has is_hidden false and needsSync true",
+        'task has is_hidden false and syncStatus "pending"',
         async (_ctx: TestContext) => {
           const task = await db.tasks.get(seededTaskId);
           expect(task?.is_hidden).toBe(false);
-          expect(task?.needsSync).toBe(true);
+          expect(task?.syncStatus).toBe("pending");
         },
       );
     },

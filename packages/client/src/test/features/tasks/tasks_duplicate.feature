@@ -7,7 +7,7 @@ Feature: Task Duplicate
     When user duplicates the task
     Then a new task exists with name "Buy groceries" and description "weekly"
     And new task has a different id
-    And new task has needsSync true
+    And new task has syncStatus "pending"
 
   @task-core-specs @FR7
   Scenario: Duplicate copies checklist items

@@ -20,7 +20,7 @@ Feature: Sync Protocol — Chunked Push
     And chunk 2 will fail with network error
     When push is called
     Then only chunks 1 and 2 are sent
-    And records from chunk 2 and 3 retain needsSync true
+    And records from chunk 2 and 3 retain syncStatus "pending"
 
   @spec-sync-protocol @FR16
   Scenario: Mixed entity types are counted together for chunking
@@ -34,7 +34,7 @@ Feature: Sync Protocol — Chunked Push
     And all chunks will succeed
     When push is called
     Then 2 sequential push requests are sent
-    And all 250 tasks have needsSync false after push
+    And all 250 tasks have syncStatus "synced" after push
 
   @add-file-attachments @FR6
   Scenario: Attachments are placed after parent entities in chunk fill order
