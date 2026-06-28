@@ -167,7 +167,7 @@ test("Both complete same recurring offline → push both → consistent state", 
   const occurrences = matching.filter(
     (t) => !t.is_completed && t.original_task_id !== "",
   );
-  expect(occurrences.length).toBeGreaterThanOrEqual(1);
+  expect(occurrences).toHaveLength(1);
 });
 
 // --- 5.13.4 — App A completes → push → App B pulls → no duplicate ---------

@@ -25,6 +25,7 @@ export function createMockTaskRepository(
       applyServerRecords: vi.fn().mockResolvedValue(undefined),
       findHiddenRecurringTask: vi.fn().mockResolvedValue(undefined),
       findByOriginalTaskId: vi.fn().mockResolvedValue([]),
+      findDuplicateRecurringGroups: vi.fn().mockResolvedValue(new Map()),
     },
     overrides,
   );

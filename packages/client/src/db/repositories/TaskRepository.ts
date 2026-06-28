@@ -174,4 +174,27 @@ export class TaskRepository {
   async findByOriginalTaskId(originalTaskId: string): Promise<Task[]> {
     return db.tasks.where("original_task_id").equals(originalTaskId).toArray();
   }
+
+  /**
+   * Finds non-completed, non-deleted recurring copies for the given original_task_id values.
+   * Returns a Map grouped by original_task_id.
+   * Implements FR1 of dedup-recurring-after-pull.
+   */
+  async findDuplicateRecurringGroups(
+    originalTaskIds: string[],
+  ): Promise<Map<string, Task[]>> {
+    const tasks = await db.tasks
+      .where("original_task_id")
+      .anyOf(originalTaskIds)
+      .filter((task) => !task.is_completed && !task.is_deleted)
+      .toArray();
+
+    const groups = new Map<string, Task[]>();
+    for (const task of tasks) {
+      const existing = groups.get(task.original_task_id) ?? [];
+      existing.push(task);
+      groups.set(task.original_task_id, existing);
+    }
+    return groups;
+  }
 }

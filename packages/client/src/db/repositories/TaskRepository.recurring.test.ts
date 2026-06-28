@@ -131,6 +131,149 @@ describe("TaskRepository", () => {
     });
   });
 
+  // implements FR1 of dedup-recurring-after-pull
+  describe("findDuplicateRecurringGroups", () => {
+    const ORIGINAL_ID_1 = "11111111-1111-4111-a111-111111111111";
+    const ORIGINAL_ID_2 = "22222222-2222-4222-a222-222222222222";
+    const ORIGINAL_ID_3 = "33333333-3333-4333-a333-333333333333";
+
+    it("should return grouped tasks by original_task_id", async () => {
+      const copyA1 = buildTask({
+        id: "copy-a1",
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: false,
+        is_deleted: false,
+      });
+      const copyA2 = buildTask({
+        id: "copy-a2",
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: false,
+        is_deleted: false,
+      });
+      await db.tasks.bulkAdd([copyA1, copyA2]);
+
+      const groups = await getRepository().findDuplicateRecurringGroups([
+        ORIGINAL_ID_1,
+      ]);
+
+      expect(groups.size).toBe(1);
+      const group = groups.get(ORIGINAL_ID_1)!;
+      expect(group).toHaveLength(2);
+      expect(group.map((task) => task.id).sort()).toEqual([
+        "copy-a1",
+        "copy-a2",
+      ]);
+    });
+
+    it("should filter out completed tasks", async () => {
+      const activeTask = buildTask({
+        id: "active-1",
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: false,
+        is_deleted: false,
+      });
+      const completedTask = buildTask({
+        id: "completed-1",
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: true,
+        is_deleted: false,
+      });
+      await db.tasks.bulkAdd([activeTask, completedTask]);
+
+      const groups = await getRepository().findDuplicateRecurringGroups([
+        ORIGINAL_ID_1,
+      ]);
+
+      const group = groups.get(ORIGINAL_ID_1)!;
+      expect(group).toHaveLength(1);
+      expect(group[0].id).toBe("active-1");
+    });
+
+    it("should filter out deleted tasks", async () => {
+      const activeTask = buildTask({
+        id: "active-1",
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: false,
+        is_deleted: false,
+      });
+      const deletedTask = buildTask({
+        id: "deleted-1",
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: false,
+        is_deleted: true,
+      });
+      await db.tasks.bulkAdd([activeTask, deletedTask]);
+
+      const groups = await getRepository().findDuplicateRecurringGroups([
+        ORIGINAL_ID_1,
+      ]);
+
+      const group = groups.get(ORIGINAL_ID_1)!;
+      expect(group).toHaveLength(1);
+      expect(group[0].id).toBe("active-1");
+    });
+
+    it("should handle multiple groups independently", async () => {
+      const copyA1 = buildTask({
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: false,
+        is_deleted: false,
+      });
+      const copyA2 = buildTask({
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: false,
+        is_deleted: false,
+      });
+      const copyB1 = buildTask({
+        original_task_id: ORIGINAL_ID_2,
+        is_completed: false,
+        is_deleted: false,
+      });
+      const copyB2 = buildTask({
+        original_task_id: ORIGINAL_ID_2,
+        is_completed: false,
+        is_deleted: false,
+      });
+      await db.tasks.bulkAdd([copyA1, copyA2, copyB1, copyB2]);
+
+      const groups = await getRepository().findDuplicateRecurringGroups([
+        ORIGINAL_ID_1,
+        ORIGINAL_ID_2,
+      ]);
+
+      expect(groups.size).toBe(2);
+      expect(groups.get(ORIGINAL_ID_1)).toHaveLength(2);
+      expect(groups.get(ORIGINAL_ID_2)).toHaveLength(2);
+    });
+
+    it("should return empty map for IDs with no matches", async () => {
+      const groups = await getRepository().findDuplicateRecurringGroups([
+        ORIGINAL_ID_3,
+      ]);
+
+      expect(groups.size).toBe(0);
+    });
+
+    it("should return single copy per group when only one active copy exists", async () => {
+      const singleTask = buildTask({
+        id: "single-1",
+        original_task_id: ORIGINAL_ID_1,
+        is_completed: false,
+        is_deleted: false,
+      });
+      await db.tasks.add(singleTask);
+
+      const groups = await getRepository().findDuplicateRecurringGroups([
+        ORIGINAL_ID_1,
+      ]);
+
+      expect(groups.size).toBe(1);
+      const group = groups.get(ORIGINAL_ID_1)!;
+      expect(group).toHaveLength(1);
+      expect(group[0].id).toBe("single-1");
+    });
+  });
+
   describe("findByOriginalTaskId", () => {
     it("should find all copies by original_task_id", async () => {
       const originalTask = buildTask({

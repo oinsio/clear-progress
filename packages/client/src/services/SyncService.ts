@@ -43,6 +43,7 @@ import { normalizeSortOrder } from "@/utils/normalizeSortOrder";
 import type { SyncAlert } from "./push-self-healing";
 import { preValidateRecords } from "./pushPreValidator";
 import { handleServerRejection } from "./pushRejectionHandler";
+import type { RecurringTaskDeduplicator } from "./RecurringTaskDeduplicator";
 
 export class SyncService {
   private syncMutex: Promise<void> = Promise.resolve();
@@ -61,6 +62,7 @@ export class SyncService {
     private readonly ideaRepository: IdeaRepository,
     private readonly settingsRepository: SettingsRepository,
     private readonly attachmentRepository: AttachmentRepository,
+    private readonly recurringTaskDeduplicator?: RecurringTaskDeduplicator,
   ) {}
 
   private async withLock<T>(fn: () => Promise<T>): Promise<T> {
@@ -102,6 +104,8 @@ export class SyncService {
     let isFirstIteration = true;
     let pullResponse: PullResponse;
     let cursors: PullRequest["cursors"];
+    // Collect original_task_ids across all pages for dedup (FR4 of dedup-recurring-after-pull)
+    const pulledOriginalTaskIds: string[] = [];
 
     do {
       pullResponse = await this.syncAdapter.pull({
@@ -131,6 +135,13 @@ export class SyncService {
 
       await this._applyPullBatch(pullResponse);
 
+      // Collect original_task_ids from pull batch for dedup (FR4, FR5 of dedup-recurring-after-pull)
+      for (const task of pullResponse.tasks) {
+        if (task.original_task_id !== "") {
+          pulledOriginalTaskIds.push(task.original_task_id);
+        }
+      }
+
       // Update settings_updated_at if settings received
       if (pullResponse.settings.length > 0) {
         settingsUpdatedAt = this._computeMaxSettingsUpdatedAt(
@@ -153,6 +164,11 @@ export class SyncService {
     // Persist settings_updated_at after pagination completes
     if (settingsUpdatedAt) {
       setPreference(STORAGE_KEYS.SETTINGS_UPDATED_AT, settingsUpdatedAt);
+    }
+
+    // Deduplicate recurring copies before sync_complete (FR4 of dedup-recurring-after-pull)
+    if (this.recurringTaskDeduplicator && pulledOriginalTaskIds.length > 0) {
+      await this.recurringTaskDeduplicator.deduplicate(pulledOriginalTaskIds);
     }
 
     // Notify about sync completion
