@@ -20,24 +20,10 @@ export function serializeRepeatRule(rule: RepeatRule): string {
 
 function calculateNextDateDaily(
   interval: number,
-  previousNextDate: string,
+  _previousNextDate: string,
   clock: Clock = systemClock,
 ): string {
-  const prev = Temporal.PlainDate.from(previousNextDate);
-  let next = prev.add({ days: interval });
-
-  const today = clock.plainDateISO();
-  // Skip logic: if next_date ended up in the past (user did not open the app
-  // for several days), compute the nearest future date instead of creating multiple
-  // missed copies. This is an intentional architectural decision for the app.
-  // Details: .claude/docs/architecture/recurring-tasks-skip-logic.md
-  if (Temporal.PlainDate.compare(next, today) < 0) {
-    const totalDays = prev.until(today, { largestUnit: "days" }).days;
-    const periodsToSkip = Math.ceil(totalDays / interval);
-    next = prev.add({ days: periodsToSkip * interval });
-  }
-
-  return next.toString();
+  return clock.plainDateISO().add({ days: interval }).toString();
 }
 
 // implements FR2 of fix-date-and-weekly-bugs
@@ -193,7 +179,7 @@ function calculateNextDateYearly(
   });
 
   // If the date has already passed in the target year, advance to the next aligned year
-  if (Temporal.PlainDate.compare(candidate, today) < 0) {
+  if (Temporal.PlainDate.compare(candidate, today) <= 0) {
     const nextYear = targetYear + interval;
     const nextYearMonth = Temporal.PlainYearMonth.from({
       year: nextYear,

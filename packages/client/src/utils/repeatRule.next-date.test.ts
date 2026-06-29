@@ -22,7 +22,7 @@ describe("calculateNextDate", () => {
       clock,
     );
 
-    expect(nextDate).toBe("2026-04-16"); // today
+    expect(nextDate).toBe("2026-04-17"); // today + interval
   });
 
   it("should calculate next date for after_completion rule", () => {

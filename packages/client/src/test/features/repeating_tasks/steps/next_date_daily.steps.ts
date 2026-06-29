@@ -115,8 +115,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    Then('result is "2026-01-22"', (_ctx: TestContext) => {
-      expect(result).toBe("2026-01-22");
+    Then('result is "2026-01-23"', (_ctx: TestContext) => {
+      expect(result).toBe("2026-01-23");
     });
   });
 
@@ -150,8 +150,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       },
     );
 
-    Then('result is "2026-01-07"', (_ctx: TestContext) => {
-      expect(result).toBe("2026-01-07");
+    Then('result is "2026-01-10"', (_ctx: TestContext) => {
+      expect(result).toBe("2026-01-10");
     });
   });
 });

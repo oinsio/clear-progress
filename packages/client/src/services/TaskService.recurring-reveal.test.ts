@@ -31,6 +31,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
     expectedHidden: boolean,
     clock?: ReturnType<typeof fakeClock>,
     logicalDate?: string,
+    interval: number = 1,
   ) {
     const service = clock
       ? new TaskService(mockTaskRepository, mockChecklistRepository, clock)
@@ -39,7 +40,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
     const repeatRule = {
       type: "fixed" as const,
       frequency: "daily" as const,
-      interval: 1,
+      interval,
       target_box: "today" as const,
       advance_days: advanceDays,
     };
@@ -78,6 +79,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
     });
 
     it("should keep hidden clone hidden when appear_date in future", async () => {
+      // daily interval=1: next=today+1=Apr 21, appear=Apr 21-5=Apr 16 <= Apr 20 → revealed.
+      // Use interval=10 so next=Apr 30, appear=Apr 30-5=Apr 25 > Apr 20 → hidden.
       const clock = fakeClock("2026-04-20T10:00:00Z");
       await testHiddenFieldAfterComplete(
         "2026-05-01",
@@ -85,11 +88,21 @@ describe("TaskService - Recurring Tasks Integration", () => {
         5,
         true,
         clock,
+        undefined,
+        10,
       );
     });
 
     it("should reveal hidden clone when appear_date equals today", async () => {
-      await testHiddenFieldAfterComplete("2026-04-20", "2026-04-20", 0, false);
+      // daily interval=1: next=today+1=Apr 21, appear=Apr 21-1=Apr 20 = today → revealed.
+      const clock = fakeClock("2026-04-20T10:00:00Z");
+      await testHiddenFieldAfterComplete(
+        "2026-04-20",
+        "2026-04-20",
+        1,
+        false,
+        clock,
+      );
     });
 
     async function testHiddenFieldAfterCompleteWithExistingCopy(
@@ -100,6 +113,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       advanceDays: number,
       expectedHidden: boolean,
       clock?: ReturnType<typeof fakeClock>,
+      interval: number = 1,
     ) {
       const service = clock
         ? new TaskService(mockTaskRepository, mockChecklistRepository, clock)
@@ -108,7 +122,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       const repeatRule = {
         type: "fixed" as const,
         frequency: "daily" as const,
-        interval: 1,
+        interval,
         target_box: "today" as const,
         advance_days: advanceDays,
       };
@@ -161,6 +175,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
     });
 
     it("should keep updated hidden clone hidden when appear_date in future", async () => {
+      // interval=10: next=Apr 30, appear=Apr 30-5=Apr 25 > Apr 20 → hidden
       const clock = fakeClock("2026-04-20T10:00:00Z");
       await testHiddenFieldAfterCompleteWithExistingCopy(
         "2026-05-01",
@@ -170,6 +185,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
         5,
         true,
         clock,
+        10,
       );
     });
   });

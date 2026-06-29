@@ -17,10 +17,10 @@ Feature: Next Date Daily Calculation
   Scenario: Daily skip logic skips missed days
     Given previous next_date is "2026-01-10" and today is "2026-01-20"
     When system calculates next date with daily interval 3
-    Then result is "2026-01-22"
+    Then result is "2026-01-23"
 
   @repeating-tasks-specs @FR3
   Scenario: Daily skip logic exact alignment
     Given previous next_date is "2026-01-01" and today is "2026-01-07"
     When system calculates next date with daily interval 3
-    Then result is "2026-01-07"
+    Then result is "2026-01-10"

@@ -298,6 +298,104 @@ describe("calculateNextDate skip logic", () => {
     expect(nextDate).toBe("2026-06-15");
   });
 
+  // implements FR1, FR5 of fix-recurring-skip-logic
+  it("should skip past dates for daily recurrence with interval=1 when user was inactive", () => {
+    const clock = fakeClock("2026-04-16T10:00:00Z"); // April 16
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-04-10"; // 6 days ago
+    const completedAt = "2026-04-16T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Today is April 16, should return tomorrow April 17
+    expect(nextDate).toBe("2026-04-17");
+  });
+
+  // implements FR1, FR5 of fix-recurring-skip-logic
+  it("should skip past dates for daily recurrence with interval=3 when user was inactive", () => {
+    const clock = fakeClock("2026-04-20T10:00:00Z"); // April 20
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 3,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-04-10"; // 10 days ago
+    const completedAt = "2026-04-20T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // From Apr 10 with interval=3: Apr 13, 16, 19, 22 → but 22 > today
+    // Skip logic should land on Apr 23 (tomorrow=21, next aligned = 23)
+    expect(nextDate).toBe("2026-04-23");
+  });
+
+  // implements FR2, FR5 of fix-recurring-skip-logic
+  it("should handle early completion for daily recurrence", () => {
+    const clock = fakeClock("2026-07-03T10:00:00Z"); // July 3
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-07-05"; // scheduled for July 5, completed early
+    const completedAt = "2026-07-03T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Early completion: prev is in the future, next should be today+1 = July 4
+    expect(nextDate).toBe("2026-07-04");
+  });
+
+  // implements FR3 of fix-recurring-skip-logic
+  it("should skip to next year when skip result equals today for yearly recurrence", () => {
+    const clock = fakeClock("2026-03-15T10:00:00Z"); // March 15, 2026
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      month_and_day: { month: 3, day: 15 }, // March 15
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2024-03-15"; // 2 years ago
+    const completedAt = "2026-03-15T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Skip lands exactly on today (2026-03-15), should return strictly after today → 2027-03-15
+    expect(nextDate).toBe("2027-03-15");
+  });
+
   it("should handle leap year for yearly recurrence (Feb 29)", () => {
     const clock = fakeClock("2026-04-16T10:00:00Z"); // April 16, 2026 (non-leap year)
     const rule: RepeatRule = {
