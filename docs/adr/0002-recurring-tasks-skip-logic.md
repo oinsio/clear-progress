@@ -38,29 +38,31 @@ What should happen with recurring tasks when a user doesn't open the app for sev
 
 When completing a recurring task, `next_date` is calculated. If this date is in the past (due to prolonged inactivity), the system **skips** all intermediate recurrences and calculates the nearest future date.
 
+### Two Computation Models
+
+**Model A — "from today"** (daily, after_completion):
+`next_date = today + interval`. The user did the task today, the next one is N days from now. The original schedule is irrelevant — previous `next_date` is not used.
+
+**Model B — "by schedule"** (weekly, monthly, yearly):
+`next_date = nearest scheduled date strictly after today`. The interval rhythm is preserved from the original schedule. The system iterates forward from the previous date until it finds a date > today.
+
 ### Implementation
 
 Logic is in `packages/client/src/utils/repeatRule.ts`, function `calculateNextDateDaily()`:
 
 ```typescript
-if (Temporal.PlainDate.compare(next, today) < 0) {
-  const totalDays = prev.until(today, { largestUnit: "days" }).days;
-  const periodsToSkip = Math.ceil(totalDays / interval);
-  next = prev.add({ days: periodsToSkip * interval });
+function calculateNextDateDaily(interval, previousNextDate, clock) {
+  const today = clock.plainDateISO();
+  return today.add({ days: interval }).toString();
 }
 ```
 
-**Algorithm:**
-1. Calculate `next = prev + interval` (basic next recurrence)
-2. If `next < today` (date in the past):
-   - Calculate days from `prev` to `today`
-   - Calculate periods to skip: `Math.ceil(totalDays / interval)`
-   - Calculate new date: `prev + (periodsToSkip * interval)`
-3. Result: nearest date >= `today`
+**Algorithm (daily):**
+1. Return `today + interval`
 
 ### Examples
 
-#### Daily (every day)
+#### Daily (every day) — Model A
 
 ```
 Rule: { type: "fixed", frequency: "daily", interval: 1 }
@@ -68,19 +70,13 @@ Completed: 2026-04-10
 Today: 2026-04-16
 
 Calculation:
-- prev = 2026-04-10
-- next = 2026-04-11 (prev + 1 day)
-- next < today -> skip logic
-- totalDays = 6 (from April 10 to 16)
-- periodsToSkip = ceil(6 / 1) = 6
-- next = 2026-04-10 + 6 days = 2026-04-16
+- today = 2026-04-16
+- next = today + 1 = 2026-04-17
 
-But 2026-04-16 < today (today), so:
-- periodsToSkip = 7
-- next = 2026-04-17
+Result: 2026-04-17
 ```
 
-#### Daily (every 3 days)
+#### Daily (every 3 days) — Model A
 
 ```
 Rule: { type: "fixed", frequency: "daily", interval: 3 }
@@ -88,17 +84,13 @@ Completed: 2026-04-10
 Today: 2026-04-20
 
 Calculation:
-- prev = 2026-04-10
-- next = 2026-04-13 (prev + 3 days)
-- next < today -> skip logic
-- totalDays = 10
-- periodsToSkip = ceil(10 / 3) = 4
-- next = 2026-04-10 + (4 * 3) = 2026-04-22
+- today = 2026-04-20
+- next = today + 3 = 2026-04-23
 
-Skipped: April 13, 16, 19
+Result: 2026-04-23
 ```
 
-#### Weekly (every Monday and Wednesday)
+#### Weekly (every Monday and Wednesday) — Model B
 
 ```
 Rule: { type: "fixed", frequency: "weekly", interval: 1, weekdays: [1, 3] }
@@ -115,7 +107,7 @@ Calculation:
 Skipped: April 13, 15, 20
 ```
 
-#### Monthly (every 15th)
+#### Monthly (every 15th) — Model B
 
 ```
 Rule: { type: "fixed", frequency: "monthly", interval: 1, day_of_month: 15 }
@@ -131,7 +123,7 @@ Calculation:
 - Result: 2026-05-15
 ```
 
-#### After Completion (N days after completion)
+#### After Completion (N days after completion) — Model A
 
 ```
 Rule: { type: "after_completion", delay_days: 7 }
@@ -197,3 +189,4 @@ For `after_completion`, date is calculated from `completedAt`, not from `prev`. 
 ## Change History
 
 - **2026-04-16**: Created ADR based on date/time handling audit
+- **2026-06-29**: Updated daily examples to reflect Model A ("from today") computation; documented two computation models (FR4 of fix-recurring-skip-logic)
