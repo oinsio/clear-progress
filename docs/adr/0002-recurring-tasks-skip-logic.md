@@ -40,20 +40,21 @@ When completing a recurring task, `next_date` is calculated. If this date is in 
 
 ### Two Computation Models
 
-**Model A — "from today"** (daily, after_completion):
-`next_date = today + interval`. The user did the task today, the next one is N days from now. The original schedule is irrelevant — previous `next_date` is not used.
+**Model A — "from today"** (after_completion):
+`next_date = completedAt + delay_days`. The user did the task today, the next one is N days from the completion date. The original schedule is irrelevant — previous `next_date` is not used.
 
-**Model B — "by schedule"** (weekly, monthly, yearly):
-`next_date = nearest scheduled date strictly after today`. The interval rhythm is preserved from the original schedule. The system iterates forward from the previous date until it finds a date > today.
+**Model B — "by schedule"** (daily, weekly, monthly, yearly):
+`next_date = nearest scheduled date strictly after today`. The interval rhythm is preserved from the original schedule. The system iterates forward from the previous date until it finds a date > today. Early completion preserves the scheduled date.
 
 ### User Rationale
 
 The two models reflect fundamentally different user mental models:
 
-**Why daily uses "from today" (Model A):**
-- "Watering flowers" every 3 days: *"I already watered them today. They don't need watering for 3 days. Next time I need this task is in 3 days."* The user thinks in terms of cooldown from last execution, not calendar rhythm.
-- "Workout" every day: *"I worked out today, next one is tomorrow."* Even with early completion via advance_days, the user expects tomorrow — not the originally scheduled date.
-- "Haircut" every 30 days (after_completion): *"Got a haircut today, next one in 30 days."* The interval counts from when the action was actually performed.
+**Why daily uses "by schedule" (Model B):**
+- "Morning routine" every day: *"I have a daily rhythm. If I complete it early, the schedule stays the same — tomorrow is still tomorrow."* The user thinks in terms of calendar days, not cooldown.
+- "Workout" every day: *"I worked out today, next one is tomorrow. If I miss a few days, I don't want a backlog — just the next future day."* Calendar-aligned skip logic keeps things clean.
+- "Take vitamins" every 3 days: *"My schedule is Jul 1, Jul 4, Jul 7... If I complete early, the rhythm is preserved. If I miss days, skip to the next slot in my 3-day grid."* The interval grid is anchored to the schedule, not to the completion date.
+- "Haircut" every 30 days (after_completion): *"Got a haircut today, next one in 30 days."* The interval counts from when the action was actually performed — this is Model A.
 
 **Why weekly/monthly/yearly use "by schedule" (Model B):**
 - "Weekly report" every Monday: *"I did the report on Sunday for the past period. But I plan to keep doing reports on Mondays. Next one is Monday."* The user has a fixed calendar anchor.
@@ -62,7 +63,7 @@ The two models reflect fundamentally different user mental models:
 - "Mom's birthday" on March 15: *"I already congratulated her today, next year."* Annual events are fixed dates.
 
 **Early completion (advance_days) highlights the difference:**
-- Daily early completion: *"I started training earlier than planned, but my daily rhythm matters — did it today, next is tomorrow."* → `today + interval`
+- Daily early completion: *"I started training earlier than planned, but tomorrow's slot is still tomorrow. The schedule is preserved."* → schedule preserved
 - Weekly early completion: *"I did the report early on Saturday, but the next report is still Monday. So, this is reminder for me."* → schedule preserved
 - Monthly early completion: *"I paid rent early on the 12th, but July 15th hasn't arrived yet — I still need to pay, or remember about this."* → schedule preserved
 
@@ -71,51 +72,162 @@ The two models reflect fundamentally different user mental models:
 Logic is in `packages/client/src/utils/repeatRule.ts`, function `calculateNextDateDaily()`:
 
 ```typescript
-function calculateNextDateDaily(interval, previousNextDate, clock) {
+function calculateNextDateDaily(interval, previousNextDate, completedAtDate, clock) {
   const today = clock.plainDateISO();
-  return today.add({ days: interval }).toString();
+  const prev = Temporal.PlainDate.from(previousNextDate);
+  const completed = Temporal.PlainDate.from(completedAtDate);
+
+  // Early completion: schedule preserved
+  if (Temporal.PlainDate.compare(completed, prev) < 0) {
+    return previousNextDate;
+  }
+
+  // Advance from prev by interval, skip past dates
+  let candidate = prev.add({ days: interval });
+  while (Temporal.PlainDate.compare(candidate, today) <= 0) {
+    candidate = candidate.add({ days: interval });
+  }
+  return candidate.toString();
 }
 ```
 
 **Algorithm (daily):**
-1. Return `today + interval`
+1. If completed before `previousNextDate` (early completion) → return `previousNextDate` (schedule preserved)
+2. Compute `candidate = previousNextDate + interval`
+3. While `candidate <= today`, advance by `interval` (skip logic)
+4. Return the first `candidate > today`
 
 ### Examples
 
-#### Daily (every day), skip — Model A
+#### Daily (interval=1), on-time completion — Model B (#1)
 
 ```
-Task: "Workout", every day
+Task: "Morning routine", every day
 Rule: { type: "fixed", frequency: "daily", interval: 1 }
-prev: 2026-04-10, Today: 2026-04-16
+prev: 2026-07-01, completed: 2026-07-01, Today: 2026-07-01
 
-Rationale: "I worked out today. Next one is tomorrow."
-Calculation: today + 1 = 2026-04-17
-Result: 2026-04-17
+Calculation: candidate = 07-01 + 1 = 07-02, 07-02 > today → done
+Result: 2026-07-02
 ```
 
-#### Daily (every 3 days), skip — Model A
+#### Daily (interval=1), early completion — Model B (#2)
 
 ```
-Task: "Water flowers", every 3 days
+Task: "Morning routine", every day, advance_days=3
+Rule: { type: "fixed", frequency: "daily", interval: 1 }
+prev (next_date): 2026-07-02, completed: 2026-07-01, Today: 2026-07-01
+
+Rationale: "Completed early, but tomorrow's slot stays."
+Calculation: completed < prev → return prev as-is
+Result: 2026-07-02 (schedule preserved)
+```
+
+#### Daily (interval=1), late by 1 day — Model B (#3)
+
+```
+Task: "Morning routine", every day
+Rule: { type: "fixed", frequency: "daily", interval: 1 }
+prev: 2026-07-01, completed: 2026-07-02, Today: 2026-07-02
+
+Calculation: candidate = 07-01 + 1 = 07-02, 07-02 <= today → skip
+             candidate = 07-02 + 1 = 07-03, 07-03 > today → done
+Result: 2026-07-03
+```
+
+#### Daily (interval=1), long inactivity — Model B (#4)
+
+```
+Task: "Morning routine", every day
+Rule: { type: "fixed", frequency: "daily", interval: 1 }
+prev: 2026-07-01, completed: 2026-07-15, Today: 2026-07-15
+
+Calculation: candidate = 07-01 + 1 = 07-02 <= today → skip
+             ... (skip 07-03 through 07-15)
+             candidate = 07-15 + 1 = 07-16, 07-16 > today → done
+Result: 2026-07-16 (skipped 14 missed days)
+```
+
+#### Daily (interval=3), on-time completion — Model B (#5)
+
+```
+Task: "Take vitamins", every 3 days
 Rule: { type: "fixed", frequency: "daily", interval: 3 }
-prev: 2026-04-10, Today: 2026-04-20
+prev: 2026-07-01, completed: 2026-07-01, Today: 2026-07-01
 
-Rationale: "I already watered them. No watering needed for 3 days."
-Calculation: today + 3 = 2026-04-23
-Result: 2026-04-23 (NOT schedule-aligned 2026-04-22)
+Calculation: candidate = 07-01 + 3 = 07-04, 07-04 > today → done
+Result: 2026-07-04
 ```
 
-#### Daily, early completion via advance_days — Model A
+#### Daily (interval=3), early completion — Model B (#6)
 
 ```
-Task: "Workout", every day, advance_days=3
+Task: "Take vitamins", every 3 days, advance_days=3
+Rule: { type: "fixed", frequency: "daily", interval: 3 }
+prev (next_date): 2026-07-04, completed: 2026-07-02, Today: 2026-07-02
+
+Rationale: "Completed early, but my 3-day rhythm stays."
+Calculation: completed < prev → return prev as-is
+Result: 2026-07-04 (schedule preserved)
+```
+
+#### Daily (interval=3), late completion — Model B (#7)
+
+```
+Task: "Take vitamins", every 3 days
+Rule: { type: "fixed", frequency: "daily", interval: 3 }
+prev: 2026-07-01, completed: 2026-07-03, Today: 2026-07-03
+
+Calculation: candidate = 07-01 + 3 = 07-04, 07-04 > today → done
+Result: 2026-07-04 (candidate already in the future)
+```
+
+#### Daily (interval=3), long inactivity — Model B (#8)
+
+```
+Task: "Take vitamins", every 3 days
+Rule: { type: "fixed", frequency: "daily", interval: 3 }
+prev: 2026-07-01, completed: 2026-07-15, Today: 2026-07-15
+
+Calculation: candidate = 07-01 + 3 = 07-04 <= today → skip
+             candidate = 07-04 + 3 = 07-07 <= today → skip
+             candidate = 07-07 + 3 = 07-10 <= today → skip
+             candidate = 07-10 + 3 = 07-13 <= today → skip
+             candidate = 07-13 + 3 = 07-16, 07-16 > today → done
+Result: 2026-07-16 (skipped by 3-day grid)
+```
+
+#### Daily, nearest-match (interval=1) — rule creation (#9)
+
+```
+Task: "Workout", new rule created
 Rule: { type: "fixed", frequency: "daily", interval: 1 }
-prev (next_date): 2026-07-05, Today: 2026-07-03 (completed early)
+Today: 2026-07-01
 
-Rationale: "I started training earlier, but daily rhythm matters."
-Calculation: today + 1 = 2026-07-04
-Result: 2026-07-04 (ignores original schedule)
+Calculation: today + interval = 07-01 + 1 = 07-02
+Result: 2026-07-02
+```
+
+#### Daily, nearest-match (interval=3) — rule creation (#10)
+
+```
+Task: "Take vitamins", new rule created
+Rule: { type: "fixed", frequency: "daily", interval: 3 }
+Today: 2026-07-01
+
+Calculation: today + interval = 07-01 + 3 = 07-04
+Result: 2026-07-04
+```
+
+#### Daily, rule change — clean restart (#11)
+
+```
+Task: "Workout", interval changed
+Rule: { type: "fixed", frequency: "daily", interval: 2 } (changed)
+Today: 2026-07-03
+
+Rationale: "Interval changed — start fresh from today."
+Calculation: today + interval = 07-03 + 2 = 07-05
+Result: 2026-07-05 (clean restart, old schedule discarded)
 ```
 
 #### Weekly (every Monday), skip — Model B
@@ -323,3 +435,4 @@ When `day_of_month` exceeds days in the target month (e.g., 31 in February), the
 - **2026-04-16**: Created ADR based on date/time handling audit
 - **2026-06-29**: Updated daily examples to reflect Model A ("from today") computation; documented two computation models (FR4 of fix-recurring-skip-logic)
 - **2026-06-30**: Added user rationale section with real-world examples; added examples for early completion (advance_days) for all frequencies; added weekly/monthly/yearly skip examples; added clamping example (FR1-FR3 of add-recurring-edge-case-tests)
+- **2026-06-30**: Moved daily from Model A to Model B — daily now uses calendar-aligned schedule computation with early-completion preservation and skip logic, matching weekly/monthly/yearly; documented all 11 state transition scenarios; updated algorithm, rationale, and examples (FR6 of align-daily-to-calendar-rhythm)
