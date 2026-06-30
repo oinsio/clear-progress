@@ -62,35 +62,59 @@ System MUST serialize a RepeatRule to JSON string. System MUST format a human-re
 - **THEN** result uses i18n key "repeat.afterCompletion" with count 5
 
 ### Requirement: System calculates next date for fixed daily frequency
-# implements FR3 of repeating-tasks-specs, FR1, FR2 of fix-recurring-skip-logic
+# implements FR3 of repeating-tasks-specs, FR1, FR2 of fix-recurring-skip-logic, FR1, FR2, FR3 of align-daily-to-calendar-rhythm
 
-System MUST calculate `next_date` as `today + interval` for daily frequency, regardless of the previous next_date. This applies to all daily scenarios: normal completion, skip (user was inactive), and early completion (via advance_days). The previous next_date is not used in the calculation.
+System MUST calculate `next_date` for daily frequency by advancing from `previousNextDate` by `interval` days (calendar-aligned, Model B). Early completion MUST preserve the scheduled date. Skip logic MUST apply when the candidate is in the past — skip to the nearest future date aligned to the interval grid, strictly `> today`.
 
-This differs from weekly/monthly/yearly which use schedule-based computation. Daily tasks represent habits where the interval counts from the last execution date, not from an abstract schedule.
+This aligns daily with weekly/monthly/yearly: all fixed frequencies use schedule-based computation. The `after_completion` type remains the only "from today" model.
 
 #### Scenario: Daily interval 1 normal completion
-- **WHEN** previous next_date is "2026-01-15" and today is "2026-01-15"
-- **THEN** system calculates next date with daily interval 1 as "2026-01-16"
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-01" and completed_at date is "2026-07-01"
+- **THEN** system calculates next date with daily interval 1 as "2026-07-02"
+
+#### Scenario: Daily interval 1 early completion preserves schedule
+- **WHEN** previous next_date is "2026-07-02" and today is "2026-07-01" and completed_at date is "2026-07-01"
+- **THEN** system calculates next date with daily interval 1 as "2026-07-02" (schedule preserved)
+
+#### Scenario: Daily interval 1 late by 1 day skips to future
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-02" and completed_at date is "2026-07-02"
+- **THEN** system calculates next date with daily interval 1 as "2026-07-03" (07-02 is today, skip to 07-03)
+
+#### Scenario: Daily interval 1 long inactivity skips to tomorrow
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-15" and completed_at date is "2026-07-15"
+- **THEN** system calculates next date with daily interval 1 as "2026-07-16"
 
 #### Scenario: Daily interval 3 normal completion
-- **WHEN** previous next_date is "2026-01-15" and today is "2026-01-15"
-- **THEN** system calculates next date with daily interval 3 as "2026-01-18"
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-01" and completed_at date is "2026-07-01"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-04"
 
-#### Scenario: Daily skip logic — interval 1, inactive 6 days
-- **WHEN** previous next_date is "2026-04-10" and today is "2026-04-16"
-- **THEN** system calculates next date with daily interval 1 as "2026-04-17" (today + 1, not schedule-aligned 2026-04-16)
+#### Scenario: Daily interval 3 early completion preserves schedule
+- **WHEN** previous next_date is "2026-07-04" and today is "2026-07-02" and completed_at date is "2026-07-02"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-04" (schedule preserved)
 
-#### Scenario: Daily skip logic — interval 3, inactive 10 days
-- **WHEN** previous next_date is "2026-04-10" and today is "2026-04-20"
-- **THEN** system calculates next date with daily interval 3 as "2026-04-23" (today + 3, not schedule-aligned 2026-04-22)
+#### Scenario: Daily interval 3 late but candidate still in future
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-03" and completed_at date is "2026-07-03"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-04" (candidate > today)
 
-#### Scenario: Daily early completion via advance_days
-- **WHEN** previous next_date is "2026-07-05" and today is "2026-07-03" (task visible early due to advance_days)
-- **THEN** system calculates next date with daily interval 1 as "2026-07-04" (today + 1, ignores original schedule)
+#### Scenario: Daily interval 3 long inactivity skips by grid
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-15" and completed_at date is "2026-07-15"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-16" (grid: 01,04,07,10,13,16 — 16 > today)
 
-#### Scenario: Daily skip logic exact alignment — result still uses today
-- **WHEN** previous next_date is "2026-01-01" and today is "2026-01-07"
-- **THEN** system calculates next date with daily interval 3 as "2026-01-10" (today + 3, not schedule-aligned 2026-01-07)
+#### Scenario: Daily interval 3 long inactivity candidate equals today
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-16" and completed_at date is "2026-07-16"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-19" (grid: 01,04,...,16 — 16 <= today, next is 19)
+
+#### Scenario: Daily nearest-match on rule creation with interval 1
+- **WHEN** user creates a daily rule with interval 1 and today is "2026-07-01"
+- **THEN** system calculates next date as "2026-07-02" (today + interval)
+
+#### Scenario: Daily nearest-match on rule creation with interval 3
+- **WHEN** user creates a daily rule with interval 3 and today is "2026-07-01"
+- **THEN** system calculates next date as "2026-07-04" (today + interval)
+
+#### Scenario: Daily nearest-match on rule change resets rhythm
+- **WHEN** user changes daily interval from 1 to 2 and today is "2026-07-03"
+- **THEN** system calculates next date as "2026-07-05" (today + new interval, clean restart)
 
 ### Requirement: System calculates next date for fixed weekly frequency
 # implements FR4 of repeating-tasks-specs, FR1, FR2, FR5 of unify-next-date-calculation
