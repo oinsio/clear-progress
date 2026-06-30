@@ -2,6 +2,7 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
+import type { RecurringResult } from "@/services/TaskService";
 import {
   createScenarioContext,
   seedTask,
@@ -24,7 +25,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @task-core-specs @FR3
   f.Scenario("Complete a task", ({ Given, When, Then, And }) => {
-    let result: { completed: Task; recurring: Task | null };
+    let result: { completed: Task; recurringResult: RecurringResult };
 
     Given('active task "Buy groceries" exists', async (_ctx: TestContext) => {
       await seedTask(ctx.taskIds, "Buy groceries", {

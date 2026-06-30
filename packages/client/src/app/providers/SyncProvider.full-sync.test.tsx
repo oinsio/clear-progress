@@ -7,6 +7,7 @@ vi.mock("@/services/SyncService");
 vi.mock("@/services/defaultServices");
 import "@/test/helpers/mockRepositories";
 
+import { AlertProvider } from "./AlertProvider";
 import { SyncProvider } from "./SyncProvider";
 import {
   FullSyncTrigger,
@@ -29,10 +30,12 @@ describe("SyncProvider — triggerFullSync", () => {
     onProgress: (step: FullSyncStep) => void,
   ) {
     return render(
-      <SyncProvider>
-        <SyncVersionDisplay />
-        <FullSyncTrigger onProgress={onProgress} />
-      </SyncProvider>,
+      <AlertProvider>
+        <SyncProvider>
+          <SyncVersionDisplay />
+          <FullSyncTrigger onProgress={onProgress} />
+        </SyncProvider>
+      </AlertProvider>,
     );
   }
 

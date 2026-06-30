@@ -22,6 +22,12 @@ import {
   parseRepeatRule,
 } from "@/utils/repeatRule";
 
+/** Implements FR2 of detect-invalid-repeat-rule */
+export type RecurringResult =
+  | { status: "created"; task: Task }
+  | { status: "skipped_invalid_rule" }
+  | { status: "not_recurring" };
+
 export class TaskService {
   constructor(
     private readonly taskRepository: TaskRepository,
@@ -112,7 +118,7 @@ export class TaskService {
   async complete(
     id: string,
     logicalDate?: string,
-  ): Promise<{ completed: Task; recurring: Task | null }> {
+  ): Promise<{ completed: Task; recurringResult: RecurringResult }> {
     const existingTask = await this.taskRepository.getById(id);
     if (!existingTask) {
       throw new Error(`Task not found: ${id}`);
@@ -132,69 +138,85 @@ export class TaskService {
       });
     }
 
-    let recurringTask: Task | null = null;
-
-    if (existingTask.repeat_rule) {
-      try {
-        const rule = parseRepeatRule(existingTask.repeat_rule);
-        if (rule) {
-          // Calculate next_date and appear_date
-          const nextDate = calculateNextDate(
-            rule,
-            now,
-            existingTask.next_date || undefined,
-            this.clock,
-          );
-          const appearDate = calculateAppearDate(nextDate, rule.advance_days);
-
-          // Determine original_task_id for lookup
-          const searchId = existingTask.original_task_id || existingTask.id;
-
-          // Check whether such a hidden task already exists
-          const existingHiddenTask =
-            await this.taskRepository.findHiddenRecurringTask(searchId);
-
-          // Determine whether the clone should be revealed immediately
-          const today = logicalDate ?? this.clock.plainDateISO().toString();
-          const sanitizedAppearDate = sanitizeDateOnly(toISODate(appearDate));
-          const shouldReveal =
-            sanitizedAppearDate &&
-            Temporal.PlainDate.compare(
-              Temporal.PlainDate.from(sanitizedAppearDate),
-              Temporal.PlainDate.from(today),
-            ) <= 0;
-
-          if (existingHiddenTask) {
-            // Update the existing copy with all current fields
-            recurringTask = await this.update(existingHiddenTask.id, {
-              name: existingTask.name,
-              description: existingTask.description,
-              goal_id: existingTask.goal_id,
-              context_id: existingTask.context_id,
-              category_id: existingTask.category_id,
-              repeat_rule: existingTask.repeat_rule,
-              next_date: toISODate(nextDate),
-              appear_date: toISODate(appearDate),
-              box: rule.target_box,
-              is_hidden: !shouldReveal,
-            });
-          } else {
-            // Create a hidden clone only if one does not exist yet
-            recurringTask = await this.createRecurringCopy(existingTask, {
-              is_hidden: !shouldReveal,
-              next_date: toISODate(nextDate),
-              appear_date: toISODate(appearDate),
-              box: rule.target_box,
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Failed to create recurring task:", error);
-        // Do not interrupt task completion if clone creation failed
-      }
+    if (!existingTask.repeat_rule) {
+      return {
+        completed: finalCompletedTask,
+        recurringResult: { status: "not_recurring" },
+      };
     }
 
-    return { completed: finalCompletedTask, recurring: recurringTask };
+    try {
+      const rule = parseRepeatRule(existingTask.repeat_rule);
+      if (!rule) {
+        return {
+          completed: finalCompletedTask,
+          recurringResult: { status: "skipped_invalid_rule" },
+        };
+      }
+
+      // Calculate next_date and appear_date
+      const nextDate = calculateNextDate(
+        rule,
+        now,
+        existingTask.next_date || undefined,
+        this.clock,
+      );
+      const appearDate = calculateAppearDate(nextDate, rule.advance_days);
+
+      // Determine original_task_id for lookup
+      const searchId = existingTask.original_task_id || existingTask.id;
+
+      // Check whether such a hidden task already exists
+      const existingHiddenTask =
+        await this.taskRepository.findHiddenRecurringTask(searchId);
+
+      // Determine whether the clone should be revealed immediately
+      const today = logicalDate ?? this.clock.plainDateISO().toString();
+      const sanitizedAppearDate = sanitizeDateOnly(toISODate(appearDate));
+      const shouldReveal =
+        sanitizedAppearDate &&
+        Temporal.PlainDate.compare(
+          Temporal.PlainDate.from(sanitizedAppearDate),
+          Temporal.PlainDate.from(today),
+        ) <= 0;
+
+      let createdTask: Task;
+      if (existingHiddenTask) {
+        // Update the existing copy with all current fields
+        createdTask = await this.update(existingHiddenTask.id, {
+          name: existingTask.name,
+          description: existingTask.description,
+          goal_id: existingTask.goal_id,
+          context_id: existingTask.context_id,
+          category_id: existingTask.category_id,
+          repeat_rule: existingTask.repeat_rule,
+          next_date: toISODate(nextDate),
+          appear_date: toISODate(appearDate),
+          box: rule.target_box,
+          is_hidden: !shouldReveal,
+        });
+      } else {
+        // Create a hidden clone only if one does not exist yet
+        createdTask = await this.createRecurringCopy(existingTask, {
+          is_hidden: !shouldReveal,
+          next_date: toISODate(nextDate),
+          appear_date: toISODate(appearDate),
+          box: rule.target_box,
+        });
+      }
+
+      return {
+        completed: finalCompletedTask,
+        recurringResult: { status: "created", task: createdTask },
+      };
+    } catch (error) {
+      console.error("Failed to create recurring task:", error);
+      // Do not interrupt task completion if clone creation failed
+      return {
+        completed: finalCompletedTask,
+        recurringResult: { status: "skipped_invalid_rule" },
+      };
+    }
   }
 
   private async createRecurringCopy(

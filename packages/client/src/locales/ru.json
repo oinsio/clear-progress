@@ -362,6 +362,13 @@
   },
   "repeat": {
     "none": "Без повтора",
+    "ruleNotRecognized": "Правило не распознано",
+    "invalidRuleAlertTitle": "Проблема с повтором",
+    "invalidRuleAlertMessage": "Правило повтора не распознано, повторяющаяся копия не создана.",
+    "invalidRuleAlertFix": "Откройте задачу и настройте правило повтора заново.",
+    "invalidRulePullAlertTitle": "Обнаружены проблемы с повтором",
+    "invalidRulePullAlertMessage": "Некоторые задачи, полученные при синхронизации, имеют нераспознанные правила повтора.",
+    "invalidRulePullAlertFix": "Откройте эти задачи и настройте правила повтора заново.",
     "fixed": "По расписанию",
     "afterCompletion_one": "Через {{count}} день после завершения",
     "afterCompletion_few": "Через {{count}} дня после завершения",
@@ -560,6 +567,14 @@
     "rejectedEntityTypeAdvice": "Отредактируйте запись и выберите допустимое значение, или обновите приложение",
     "rejectedCorrupted": "Запись повреждена и не может быть синхронизирована",
     "rejectedCorruptedAdvice": "Удалите запись и создайте новую"
+  },
+  "alert": {
+    "counter": "{{current}}/{{total}}",
+    "next": "Далее",
+    "back": "Назад",
+    "positionNext": "Уведомление {{current}} из {{total}}, перейти к следующему",
+    "positionBack": "Уведомление {{current}} из {{total}}, вернуться к предыдущему",
+    "positionUnderstood": "Уведомление {{current}} из {{total}}, закрыть все"
   },
   "projectPausedDialog": {
     "title": "Проект Supabase приостановлен",

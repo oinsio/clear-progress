@@ -7,9 +7,10 @@ import { vi } from "vitest";
 // Re-export mocks from stepDefinitions to ensure they're applied before imports
 import "@/test/helpers/bdd/syncOrchestration/stepDefinitions.tsx";
 
+// Import components from the already-mocked modules via stepDefinitions
+import { AlertProvider } from "@/app/providers/AlertProvider";
 // Import mocked AuthProvider from the same module that's mocked in stepDefinitions
 import { AuthProvider } from "@/app/providers/AuthProvider";
-// Import components from the already-mocked modules via stepDefinitions
 import { SyncProvider, useSync } from "@/app/providers/SyncProvider";
 import {
   createBackgroundSteps,
@@ -115,10 +116,12 @@ describeFeature(
 
           const { unmount } = render(
             <AuthProvider>
-              <SyncProvider>
-                <SyncStatusDisplay />
-                <SyncMethodTrigger />
-              </SyncProvider>
+              <AlertProvider>
+                <SyncProvider>
+                  <SyncStatusDisplay />
+                  <SyncMethodTrigger />
+                </SyncProvider>
+              </AlertProvider>
             </AuthProvider>,
           );
           f.context.syncProviderUnmount = unmount;

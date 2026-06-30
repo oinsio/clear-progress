@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
 import { vi } from "vitest";
+import { AlertProvider } from "@/app/providers/AlertProvider";
 import { useAuth } from "@/app/providers/AuthProvider";
 import type { FullSyncStep } from "@/types/common";
 import { SyncProvider, useSync } from "./SyncProvider";
@@ -143,32 +144,40 @@ export function setNavigatorOnline() {
 
 export function renderProvider() {
   return render(
-    <SyncProvider>
-      <SyncStatusDisplay />
-    </SyncProvider>,
+    <AlertProvider>
+      <SyncProvider>
+        <SyncStatusDisplay />
+      </SyncProvider>
+    </AlertProvider>,
   );
 }
 
 export function renderProviderWithVersion() {
   return render(
-    <SyncProvider>
-      <SyncVersionDisplay />
-    </SyncProvider>,
+    <AlertProvider>
+      <SyncProvider>
+        <SyncVersionDisplay />
+      </SyncProvider>
+    </AlertProvider>,
   );
 }
 
 export function renderProviderWithMethod(method: "pull" | "push") {
   return render(
-    <SyncProvider>
-      <SyncMethodTrigger method={method} />
-    </SyncProvider>,
+    <AlertProvider>
+      <SyncProvider>
+        <SyncMethodTrigger method={method} />
+      </SyncProvider>
+    </AlertProvider>,
   );
 }
 
 export function renderProviderWithScheduler() {
   return render(
-    <SyncProvider>
-      <SchedulePushTrigger />
-    </SyncProvider>,
+    <AlertProvider>
+      <SyncProvider>
+        <SchedulePushTrigger />
+      </SyncProvider>
+    </AlertProvider>,
   );
 }

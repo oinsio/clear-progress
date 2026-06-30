@@ -9,6 +9,16 @@ import {
   taskService,
 } from "./useTasks.test-utils";
 
+const mockAddAlerts = vi.fn();
+
+vi.mock("@/app/providers/AlertProvider", () => ({
+  useAlerts: () => ({
+    alerts: [],
+    addAlerts: mockAddAlerts,
+    dismissAlerts: vi.fn(),
+  }),
+}));
+
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
     syncVersion: 0,
@@ -31,6 +41,7 @@ describe("useTasks — completeTask", () => {
   beforeEach(async () => {
     await clearDatabase();
     mockSchedulePush.mockClear();
+    mockAddAlerts.mockClear();
   });
 
   it("should mark task as completed when completeTask is called on incomplete task", async () => {
@@ -115,5 +126,33 @@ describe("useTasks — completeTask", () => {
     });
 
     expect(mockSchedulePush).toHaveBeenCalledTimes(1);
+  });
+
+  it("should add alert when completing task with invalid repeat rule", async () => {
+    const { result, task } = await setupHookWithOneTask({
+      is_completed: false,
+      repeat_rule: "invalid-json",
+    });
+
+    await act(async () => {
+      await result.current.completeTask(task.id);
+    });
+
+    expect(mockAddAlerts).toHaveBeenCalledWith([
+      { type: "repeat_rule_invalid", taskNames: [task.name] },
+    ]);
+  });
+
+  it("should not add alert when completing task without repeat rule", async () => {
+    const { result, task } = await setupHookWithOneTask({
+      is_completed: false,
+      repeat_rule: "",
+    });
+
+    await act(async () => {
+      await result.current.completeTask(task.id);
+    });
+
+    expect(mockAddAlerts).not.toHaveBeenCalled();
   });
 });

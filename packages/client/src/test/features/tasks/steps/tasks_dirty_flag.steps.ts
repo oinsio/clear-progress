@@ -2,6 +2,7 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
+import type { RecurringResult } from "@/services/TaskService";
 import {
   createScenarioContext,
   getTask,
@@ -161,7 +162,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
 
   // @task-core-specs @FR1
   f.Scenario("Dirty flag on complete", ({ Given, When, Then }) => {
-    let completionResult: { completed: Task; recurring: Task | null };
+    let completionResult: { completed: Task; recurringResult: RecurringResult };
 
     Given(
       'task "Buy groceries" exists with syncStatus "synced"',

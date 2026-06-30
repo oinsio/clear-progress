@@ -9,6 +9,15 @@ import {
 } from "./useTaskMutations.test-utils";
 
 const mockSchedulePush = vi.fn();
+const mockAddAlerts = vi.fn();
+
+vi.mock("@/app/providers/AlertProvider", () => ({
+  useAlerts: () => ({
+    alerts: [],
+    addAlerts: mockAddAlerts,
+    dismissAlerts: vi.fn(),
+  }),
+}));
 
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
@@ -40,6 +49,7 @@ describe("useTaskMutations > completeTask", () => {
   beforeEach(() => {
     ctx = createTestContext();
     mockSchedulePush.mockClear();
+    mockAddAlerts.mockClear();
   });
 
   describe("when task is found and not completed", () => {
@@ -120,9 +130,10 @@ describe("useTaskMutations > completeTask", () => {
       const task = buildTask({ is_completed: false, repeat_rule: "" });
       ctx = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
-        complete: vi
-          .fn()
-          .mockResolvedValue({ completed: task, recurring: null }),
+        complete: vi.fn().mockResolvedValue({
+          completed: task,
+          recurringResult: { status: "not_recurring" },
+        }),
       });
 
       const recurringId = await completeAndReturn(ctx, task.id);
@@ -138,14 +149,52 @@ describe("useTaskMutations > completeTask", () => {
       const recurringTask = buildTask({ id: "new-recurring-id" });
       ctx = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
-        complete: vi
-          .fn()
-          .mockResolvedValue({ completed: task, recurring: recurringTask }),
+        complete: vi.fn().mockResolvedValue({
+          completed: task,
+          recurringResult: { status: "created", task: recurringTask },
+        }),
       });
 
       const recurringId = await completeAndReturn(ctx, task.id);
 
       expect(recurringId).toBe("new-recurring-id");
+    });
+  });
+
+  describe("invalid repeat rule alert", () => {
+    it("should add alert when recurringResult status is skipped_invalid_rule", async () => {
+      const task = buildTask({
+        name: "Bad Rule Task",
+        is_completed: false,
+      });
+      ctx = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+        complete: vi.fn().mockResolvedValue({
+          completed: task,
+          recurringResult: { status: "skipped_invalid_rule" },
+        }),
+      });
+
+      await completeAndReturn(ctx, task.id);
+
+      expect(mockAddAlerts).toHaveBeenCalledWith([
+        { type: "repeat_rule_invalid", taskNames: ["Bad Rule Task"] },
+      ]);
+    });
+
+    it("should not add alert when recurringResult status is not_recurring", async () => {
+      const task = buildTask({ is_completed: false, repeat_rule: "" });
+      ctx = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+        complete: vi.fn().mockResolvedValue({
+          completed: task,
+          recurringResult: { status: "not_recurring" },
+        }),
+      });
+
+      await completeAndReturn(ctx, task.id);
+
+      expect(mockAddAlerts).not.toHaveBeenCalled();
     });
   });
 });

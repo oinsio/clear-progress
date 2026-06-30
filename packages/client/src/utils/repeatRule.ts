@@ -1,6 +1,7 @@
 import { type RepeatRule, RepeatRuleSchema } from "@clear-progress/contract";
 import type { TFunction } from "i18next";
 import { type Clock, systemClock, Temporal } from "@/lib/temporal";
+import type { Task } from "@/types/entities";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
 
 export function parseRepeatRule(json: string): RepeatRule | null {
@@ -12,6 +13,15 @@ export function parseRepeatRule(json: string): RepeatRule | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Returns true when a task has a non-empty repeat_rule that cannot be parsed.
+ *
+ * Implements FR1 of detect-invalid-repeat-rule
+ */
+export function isRepeatRuleInvalid(task: Pick<Task, "repeat_rule">): boolean {
+  return task.repeat_rule !== "" && parseRepeatRule(task.repeat_rule) === null;
 }
 
 export function serializeRepeatRule(rule: RepeatRule): string {

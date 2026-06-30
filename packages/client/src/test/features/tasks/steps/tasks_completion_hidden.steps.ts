@@ -2,6 +2,7 @@
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
+import type { RecurringResult } from "@/services/TaskService";
 import {
   createScenarioContext,
   seedTask,
@@ -24,7 +25,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Completing a manually hidden non-recurring task clears hide state",
     ({ Given, When, Then, And }) => {
-      let result: { completed: Task; recurring: Task | null };
+      let result: { completed: Task; recurringResult: RecurringResult };
 
       Given(
         'a hidden non-recurring task "Renew passport" with appear_date "2027-06-01"',
@@ -62,7 +63,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   f.Scenario(
     "Completing a recurring hidden task does not clear hide state",
     ({ Given, When, Then, And }) => {
-      let result: { completed: Task; recurring: Task | null };
+      let result: { completed: Task; recurringResult: RecurringResult };
 
       Given(
         'a hidden recurring task "Water plants" exists',
@@ -101,7 +102,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           // The recurring copy should exist and have its own is_hidden/appear_date
           // set by the recurring logic
-          expect(result.recurring).not.toBeNull();
+          expect(result.recurringResult.status).toBe("created");
           // We don't check exact values here because the recurring logic
           // computes them
         },

@@ -6,11 +6,22 @@ import { buildTask } from "@/test/factories/taskFactory";
 import { createMockTaskService } from "@/test/mocks/taskServiceMock";
 import { useTask } from "./useTask";
 
+const mockAddAlerts = vi.fn();
+
+vi.mock("@/app/providers/AlertProvider", () => ({
+  useAlerts: () => ({
+    alerts: [],
+    addAlerts: mockAddAlerts,
+    dismissAlerts: vi.fn(),
+  }),
+}));
+
 describe("useTask", () => {
   let mockTaskService: TaskService;
 
   beforeEach(() => {
     mockTaskService = createMockTaskService();
+    mockAddAlerts.mockClear();
   });
 
   it("should set isLoading to true on initial render", () => {
@@ -127,5 +138,45 @@ describe("useTask", () => {
     });
 
     expect(mockTaskService.update).not.toHaveBeenCalled();
+  });
+
+  it("should add alert when completing task with invalid repeat rule", async () => {
+    const task = buildTask({ name: "Detail Bad Rule" });
+    mockTaskService = createMockTaskService({
+      getById: vi.fn().mockResolvedValue(task),
+      complete: vi.fn().mockResolvedValue({
+        completed: task,
+        recurringResult: { status: "skipped_invalid_rule" },
+      }),
+    });
+    const { result } = renderHook(() => useTask(task.id, mockTaskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.completeTask();
+    });
+
+    expect(mockAddAlerts).toHaveBeenCalledWith([
+      { type: "repeat_rule_invalid", taskNames: ["Detail Bad Rule"] },
+    ]);
+  });
+
+  it("should not add alert when completing task with valid recurring result", async () => {
+    const task = buildTask();
+    mockTaskService = createMockTaskService({
+      getById: vi.fn().mockResolvedValue(task),
+      complete: vi.fn().mockResolvedValue({
+        completed: task,
+        recurringResult: { status: "not_recurring" },
+      }),
+    });
+    const { result } = renderHook(() => useTask(task.id, mockTaskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.completeTask();
+    });
+
+    expect(mockAddAlerts).not.toHaveBeenCalled();
   });
 });
