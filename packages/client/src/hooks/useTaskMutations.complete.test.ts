@@ -1,5 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockAddAlerts } from "@/app/providers/__mocks__/AlertProvider";
+import { mockSchedulePush } from "@/app/providers/__mocks__/SyncProvider";
 import { buildTask } from "@/test/factories/taskFactory";
 import type { Task } from "@/types/entities";
 import { useTaskMutations } from "./useTaskMutations";
@@ -8,26 +10,14 @@ import {
   type TestContext,
 } from "./useTaskMutations.test-utils";
 
-const mockSchedulePush = vi.fn();
-const mockAddAlerts = vi.fn();
-
-vi.mock("@/app/providers/AlertProvider", () => ({
-  useAlerts: () => ({
-    alerts: [],
-    addAlerts: mockAddAlerts,
-    dismissAlerts: vi.fn(),
-  }),
-}));
-
-vi.mock("@/app/providers/SyncProvider", () => ({
-  useSync: () => ({
-    syncVersion: 0,
-    syncStatus: "idle",
-    pull: vi.fn(),
-    push: vi.fn(),
-    schedulePush: mockSchedulePush,
-  }),
-}));
+vi.mock(
+  "@/app/providers/AlertProvider",
+  async () => import("@/app/providers/__mocks__/AlertProvider"),
+);
+vi.mock(
+  "@/app/providers/SyncProvider",
+  async () => import("@/app/providers/__mocks__/SyncProvider"),
+);
 
 async function completeAndReturn(
   ctx: TestContext,
