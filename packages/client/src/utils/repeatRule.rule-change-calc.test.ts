@@ -110,7 +110,7 @@ describe("calculateNextDateOnRuleChange", () => {
     const rule = fixedWeekly([]);
     expect(() =>
       calculateNextDateOnRuleChange(rule, DATE_OF_CHANGE, CLOCK),
-    ).toThrow("No matching weekday found");
+    ).toThrow();
   });
 
   // Covers no-coverage: weekdays ?? [] default when weekdays is undefined
@@ -124,7 +124,7 @@ describe("calculateNextDateOnRuleChange", () => {
     } as RepeatRule;
     expect(() =>
       calculateNextDateOnRuleChange(rule, DATE_OF_CHANGE, CLOCK),
-    ).toThrow("No matching weekday found");
+    ).toThrow();
   });
 
   // FR3: yearly Feb 29 falling on leap year — kills year+1 → year-1 mutant

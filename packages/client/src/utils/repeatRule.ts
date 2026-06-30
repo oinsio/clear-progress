@@ -66,21 +66,15 @@ function findNextWeekday(
   return activeMonday.add({ days: sortedWeekdays[0] - 1 }).toString();
 }
 
+// implements FR4 of unify-next-date-calculation — removed dead !previousNextDate branch
 function calculateNextDateWeekly(
   interval: number,
   weekdays: number[],
-  previousNextDate: string | undefined,
+  previousNextDate: string,
   completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
   const today = clock.plainDateISO();
-
-  if (!previousNextDate) {
-    // First creation: nearest day from weekdays[], starting from tomorrow
-    const tomorrow = today.add({ days: 1 });
-    return findNextWeekday(tomorrow, weekdays, interval);
-  }
-
   const prev = Temporal.PlainDate.from(previousNextDate);
 
   // Early completion: if completed before the scheduled date, preserve it
@@ -257,54 +251,173 @@ export function calculateNextDate(
     );
   }
 
-  // type === 'fixed'
+  // type === 'fixed' — implements FR2 of unify-next-date-calculation
   if (!rule.frequency) throw new Error("frequency required for fixed");
+
   if (!previousNextDate) {
-    // First creation: use completedAt as the base
-    previousNextDate = toPlainDate(completedAt, clock).toString();
-  } else {
-    previousNextDate = sanitizeDateOnly(previousNextDate) || previousNextDate;
+    // First creation: nearest future date matching the rule
+    return resolveNextFixedDate(rule, "", "nearest-match", clock);
+  }
+
+  // Subsequent completion: advance from the previous scheduled date
+  const sanitizedPreviousNextDate =
+    sanitizeDateOnly(previousNextDate) || previousNextDate;
+  const completedAtDate = toPlainDate(completedAt, clock);
+  return resolveNextFixedDate(
+    rule,
+    sanitizedPreviousNextDate,
+    "from-schedule",
+    clock,
+    completedAtDate,
+  );
+}
+
+// implements FR1 of unify-next-date-calculation
+type ResolveMode = "nearest-match" | "from-schedule";
+type FixedRule = Extract<RepeatRule, { type: "fixed" }>;
+
+/**
+ * Unified dispatcher for calculating next_date for fixed repeat rules.
+ *
+ * - nearest-match: find the nearest future date matching the rule (used on rule creation/change)
+ * - from-schedule: advance from anchor by schedule interval (used on task completion)
+ *
+ * Implements FR1, FR2, FR5 of unify-next-date-calculation
+ */
+export function resolveNextFixedDate(
+  rule: RepeatRule,
+  anchor: string,
+  mode: ResolveMode,
+  clock: Clock,
+  completedAtDate?: Temporal.PlainDate,
+): string {
+  if (rule.type !== "fixed") {
+    throw new Error("resolveNextFixedDate only supports fixed rules");
   }
 
   const interval = rule.interval ?? 1;
 
-  // Extract completedAt as a PlainDate for early-completion checks
-  const completedAtDate = toPlainDate(completedAt, clock);
+  if (mode === "nearest-match") {
+    return resolveNearestMatch(rule, clock, interval);
+  }
+
+  // from-schedule: delegate to existing frequency calculators
+  const effectiveCompletedAtDate =
+    completedAtDate ?? Temporal.PlainDate.from(anchor);
+  return resolveFromSchedule(
+    rule,
+    anchor,
+    effectiveCompletedAtDate,
+    interval,
+    clock,
+  );
+}
+
+function resolveNearestMatch(
+  rule: FixedRule,
+  clock: Clock,
+  interval: number,
+): string {
+  const today = clock.plainDateISO();
 
   switch (rule.frequency) {
     case "daily":
-      return calculateNextDateDaily(interval, previousNextDate, clock);
-    case "weekly":
-      if (!rule.weekdays || rule.weekdays.length === 0) {
-        throw new Error("weekdays required for weekly");
+      return today.add({ days: interval }).toString();
+
+    case "weekly": {
+      const weekdays = rule.weekdays ?? [];
+      const tomorrow = today.add({ days: 1 });
+      // nearest-match always uses interval=1 to find the closest matching day
+      const NEAREST_INTERVAL = 1;
+      return findNextWeekday(tomorrow, weekdays, NEAREST_INTERVAL);
+    }
+
+    case "monthly": {
+      const dayOfMonth = rule.day_of_month ?? 1;
+      const currentMonth = today.toPlainYearMonth();
+      const actualDay = Math.min(dayOfMonth, currentMonth.daysInMonth);
+      const candidate = currentMonth.toPlainDate({ day: actualDay });
+      if (Temporal.PlainDate.compare(candidate, today) > 0) {
+        return candidate.toString();
       }
+      const nextMonth = currentMonth.add({ months: 1 });
+      const nextActualDay = Math.min(dayOfMonth, nextMonth.daysInMonth);
+      return nextMonth.toPlainDate({ day: nextActualDay }).toString();
+    }
+
+    case "yearly": {
+      const { month, day } = rule.month_and_day ?? { month: 1, day: 1 };
+      const thisYearMonth = Temporal.PlainYearMonth.from({
+        year: today.year,
+        month,
+      });
+      const actualDay = Math.min(day, thisYearMonth.daysInMonth);
+      const candidate = Temporal.PlainDate.from({
+        year: today.year,
+        month,
+        day: actualDay,
+      });
+      if (Temporal.PlainDate.compare(candidate, today) > 0) {
+        return candidate.toString();
+      }
+      const nextYear = today.year + 1;
+      const nextYearMonth = Temporal.PlainYearMonth.from({
+        year: nextYear,
+        month,
+      });
+      const nextActualDay = Math.min(day, nextYearMonth.daysInMonth);
+      return Temporal.PlainDate.from({
+        year: nextYear,
+        month,
+        day: nextActualDay,
+      }).toString();
+    }
+
+    default:
+      throw new Error(`Unknown frequency: ${rule.frequency}`);
+  }
+}
+
+function resolveFromSchedule(
+  rule: FixedRule,
+  previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
+  interval: number,
+  clock: Clock,
+): string {
+  switch (rule.frequency) {
+    case "daily":
+      return calculateNextDateDaily(interval, previousNextDate, clock);
+    case "weekly": {
+      const weekdays = rule.weekdays ?? [];
       return calculateNextDateWeekly(
         interval,
-        rule.weekdays,
+        weekdays,
         previousNextDate,
         completedAtDate,
         clock,
       );
-    case "monthly":
-      if (!rule.day_of_month)
-        throw new Error("day_of_month required for monthly");
+    }
+    case "monthly": {
+      const dayOfMonth = rule.day_of_month ?? 1;
       return calculateNextDateMonthly(
         interval,
-        rule.day_of_month,
+        dayOfMonth,
         previousNextDate,
         completedAtDate,
         clock,
       );
-    case "yearly":
-      if (!rule.month_and_day)
-        throw new Error("month_and_day required for yearly");
+    }
+    case "yearly": {
+      const monthAndDay = rule.month_and_day ?? { month: 1, day: 1 };
       return calculateNextDateYearly(
         interval,
-        rule.month_and_day,
+        monthAndDay,
         previousNextDate,
         completedAtDate,
         clock,
       );
+    }
     default:
       throw new Error(`Unknown frequency: ${rule.frequency}`);
   }
