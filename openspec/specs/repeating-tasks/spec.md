@@ -93,9 +93,15 @@ This differs from weekly/monthly/yearly which use schedule-based computation. Da
 - **THEN** system calculates next date with daily interval 3 as "2026-01-10" (today + 3, not schedule-aligned 2026-01-07)
 
 ### Requirement: System calculates next date for fixed weekly frequency
-# implements FR4 of repeating-tasks-specs
+# implements FR4 of repeating-tasks-specs, FR1, FR2, FR5 of unify-next-date-calculation
 
-System MUST find the next matching weekday from the weekdays list, respecting the interval (every N weeks). Skip logic MUST align to the nearest future week period if the candidate is in the past. Weekdays use ISO 8601 (1=Monday, 7=Sunday).
+System MUST calculate `next_date` for weekly frequency using two modes:
+
+**Mode `nearest-match`** (first creation, rule change): System SHALL find the earliest weekday from the weekdays list that is strictly after today, scanning up to 7 days from tomorrow. The `interval` parameter SHALL NOT affect the first jump — it only defines the rhythm for subsequent completions. This ensures consistent behavior between first creation and rule change paths.
+
+**Mode `from-schedule`** (subsequent completions): System SHALL compute `nextDay = previousNextDate + 1`, find the next matching weekday respecting the interval (every N weeks). Skip logic SHALL align to the nearest future week period if the candidate is in the past. Weekdays use ISO 8601 (1=Monday, 7=Sunday). The two-step algorithm (current week first, then advance by interval) is unchanged.
+
+The dead branch `!previousNextDate` in `calculateNextDateWeekly` SHALL be removed — it is unreachable through the public API.
 
 #### Scenario: Weekly single weekday
 - **GIVEN** previous next_date is Monday "2026-01-05" and weekdays [1] (Monday) and today is "2026-01-05"
@@ -124,6 +130,30 @@ System MUST find the next matching weekday from the weekdays list, respecting th
 #### Scenario: Weekly early completion — biweekly rhythm preserved
 - **WHEN** previous next_date is "2026-07-06" (Monday) and weekdays [1] and today is "2026-07-04" (Saturday)
 - **THEN** system calculates next date with weekly interval 2 as "2026-07-06" (same as interval 1 — the next Monday from prev is still in the future, no interval skip needed)
+
+#### Scenario: Weekly nearest-match with interval 1
+- **WHEN** mode is `nearest-match`, today is "2026-05-31" (Sunday), weekdays=[1] (Monday), interval=1
+- **THEN** result is "2026-06-01" (nearest Monday)
+
+#### Scenario: Weekly nearest-match with interval 2 finds nearest day (bug fix)
+- **WHEN** mode is `nearest-match`, today is "2026-05-30" (Saturday), weekdays=[1] (Monday), interval=2
+- **THEN** result is "2026-06-01" (nearest Monday, NOT 2026-06-08)
+
+#### Scenario: Weekly nearest-match same result as rule change
+- **WHEN** mode is `nearest-match`, today is "2026-06-08" (Monday), weekdays=[5] (Friday), interval=3
+- **THEN** result is "2026-06-12" (nearest Friday, interval ignored for first jump)
+
+#### Scenario: Weekly from-schedule with interval 2 single weekday
+- **WHEN** mode is `from-schedule`, previousNextDate is "2026-06-01" (Monday), weekdays=[1], interval=2, today is "2026-06-01"
+- **THEN** result is "2026-06-15" (Monday two weeks later — interval respected)
+
+#### Scenario: Weekly from-schedule with interval 2 multiple weekdays same week
+- **WHEN** mode is `from-schedule`, previousNextDate is "2026-06-01" (Monday), weekdays=[1,3], interval=2, today is "2026-06-01"
+- **THEN** result is "2026-06-03" (Wednesday of same week — no interval skip within active week)
+
+#### Scenario: Weekly from-schedule skip logic
+- **WHEN** mode is `from-schedule`, previousNextDate is "2026-01-06", weekdays=[1], interval=1, today is "2026-02-01"
+- **THEN** result is the nearest Monday on or after "2026-02-01"
 
 ### Requirement: Weekly recurrence with multiple weekdays respects interval as week-level skip
 # implements FR5 of repeating-tasks-specs
@@ -381,9 +411,9 @@ When completing a repeating task, if a hidden recurring copy already exists (sam
 - **AND** no additional copy is created
 
 ### Requirement: System recalculates next_date when repeat rule changes
-# implements FR1 of repeating-task-rule-change
+# implements FR1 of repeating-task-rule-change, FR1, FR3 of unify-next-date-calculation
 
-When a user changes the repeat_rule of a task, the system MUST recalculate next_date from the date of the change (not from the old next_date). This ensures the new rhythm starts from the moment the user made the change. The system MUST also recalculate appear_date based on the new next_date and advance_days.
+When a user changes the repeat_rule of a task, the system MUST recalculate next_date using the `nearest-match` mode of the unified algorithm. The anchor date is the date of the change. This ensures identical behavior to first creation: the nearest future date matching the new rule is selected, regardless of interval. The system MUST also recalculate appear_date based on the new next_date and advance_days.
 
 #### Scenario: Daily interval change recalculates from date of change
 - **WHEN** task has daily interval=1 and next_date="2026-06-08"
@@ -415,6 +445,10 @@ When a user changes the repeat_rule of a task, the system MUST recalculate next_
 - **WHEN** task has weekly weekdays=[1] (Monday) and next_date="2026-06-08"
 - **AND** user changes weekdays to [5] (Friday) on "2026-06-08"
 - **THEN** next_date becomes "2026-06-12" (nearest Friday from change date)
+
+#### Scenario: Rule change to weekly with interval 2 finds nearest day
+- **WHEN** user changes to weekly weekdays=[3] (Wednesday), interval=2 on "2026-06-08" (Monday)
+- **THEN** next_date is "2026-06-10" (nearest Wednesday, same as first creation would produce)
 
 #### Scenario: Frequency change from weekly to daily
 - **WHEN** task has weekly weekdays=[1] and next_date="2026-06-08"
