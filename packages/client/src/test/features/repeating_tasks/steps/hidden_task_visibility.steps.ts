@@ -7,7 +7,7 @@ import { db } from "@/db/database";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { fakeClock } from "@/lib/temporal";
-import { TaskService } from "@/services/TaskService";
+import { type RecurringResult, TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
 import type { Task } from "@/types/entities";
 
@@ -17,9 +17,44 @@ const TASK_ID = "a0000000-0000-4000-8000-000000000010";
 
 type Context = Record<string, never>;
 
+async function setupRecurringTask(advanceDays: number): Promise<TaskService> {
+  const clock = fakeClock("2026-06-15T10:00:00Z");
+  const service = new TaskService(
+    new TaskRepository(),
+    new ChecklistRepository(),
+    clock,
+  );
+  const task = buildTask({
+    id: TASK_ID,
+    name: "Daily task",
+    box: "today",
+    repeat_rule: JSON.stringify({
+      type: "fixed",
+      frequency: "daily",
+      interval: 1,
+      target_box: "today",
+      advance_days: advanceDays,
+    }),
+    next_date: "2026-06-15",
+    appear_date: "2026-06-15",
+  });
+  await db.tasks.add(task);
+  return service;
+}
+
+function assertRecurringHidden(
+  recurringResult: RecurringResult,
+  expectedHidden: boolean,
+): void {
+  expect(recurringResult.status).toBe("created");
+  if (recurringResult.status === "created") {
+    expect(recurringResult.task.is_hidden).toBe(expectedHidden);
+  }
+}
+
 describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   let taskService: TaskService;
-  let completionResult: { completed: Task; recurring: Task | null };
+  let completionResult: { completed: Task; recurringResult: RecurringResult };
 
   f.BeforeEachScenario(async () => {
     await db.tasks.clear();
@@ -33,27 +68,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Given(
         'today is "2026-06-15" and advance_days is 0',
         async (_ctx: TestContext) => {
-          const clock = fakeClock("2026-06-15T10:00:00Z");
-          taskService = new TaskService(
-            new TaskRepository(),
-            new ChecklistRepository(),
-            clock,
-          );
-          const task = buildTask({
-            id: TASK_ID,
-            name: "Daily task",
-            box: "today",
-            repeat_rule: JSON.stringify({
-              type: "fixed",
-              frequency: "daily",
-              interval: 1,
-              target_box: "today",
-              advance_days: 0,
-            }),
-            next_date: "2026-06-15",
-            appear_date: "2026-06-15",
-          });
-          await db.tasks.add(task);
+          taskService = await setupRecurringTask(0);
         },
       );
 
@@ -62,8 +77,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then("copy has is_hidden true", (_ctx: TestContext) => {
-        expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring?.is_hidden).toBe(true);
+        assertRecurringHidden(completionResult.recurringResult, true);
       });
     },
   );
@@ -75,27 +89,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Given(
         'today is "2026-06-15" and advance_days is 1',
         async (_ctx: TestContext) => {
-          const clock = fakeClock("2026-06-15T10:00:00Z");
-          taskService = new TaskService(
-            new TaskRepository(),
-            new ChecklistRepository(),
-            clock,
-          );
-          const task = buildTask({
-            id: TASK_ID,
-            name: "Daily task",
-            box: "today",
-            repeat_rule: JSON.stringify({
-              type: "fixed",
-              frequency: "daily",
-              interval: 1,
-              target_box: "today",
-              advance_days: 1,
-            }),
-            next_date: "2026-06-15",
-            appear_date: "2026-06-15",
-          });
-          await db.tasks.add(task);
+          taskService = await setupRecurringTask(1);
         },
       );
 
@@ -104,8 +98,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then("copy has is_hidden false", (_ctx: TestContext) => {
-        expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring?.is_hidden).toBe(false);
+        assertRecurringHidden(completionResult.recurringResult, false);
       });
     },
   );
@@ -117,27 +110,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Given(
         'today is "2026-06-15" and advance_days is 5',
         async (_ctx: TestContext) => {
-          const clock = fakeClock("2026-06-15T10:00:00Z");
-          taskService = new TaskService(
-            new TaskRepository(),
-            new ChecklistRepository(),
-            clock,
-          );
-          const task = buildTask({
-            id: TASK_ID,
-            name: "Daily task",
-            box: "today",
-            repeat_rule: JSON.stringify({
-              type: "fixed",
-              frequency: "daily",
-              interval: 1,
-              target_box: "today",
-              advance_days: 5,
-            }),
-            next_date: "2026-06-15",
-            appear_date: "2026-06-15",
-          });
-          await db.tasks.add(task);
+          taskService = await setupRecurringTask(5);
         },
       );
 
@@ -146,8 +119,7 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then("copy has is_hidden false", (_ctx: TestContext) => {
-        expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring?.is_hidden).toBe(false);
+        assertRecurringHidden(completionResult.recurringResult, false);
       });
     },
   );
