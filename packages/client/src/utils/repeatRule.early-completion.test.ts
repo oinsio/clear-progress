@@ -27,8 +27,8 @@ describe("calculateNextDate early completion", () => {
       clock,
     );
 
-    // Early completion: prev is in the future, next should be today+1 = July 4
-    expect(nextDate).toBe("2026-07-04");
+    // Early completion: schedule preserved, return July 5
+    expect(nextDate).toBe("2026-07-05");
   });
 
   // @add-recurring-edge-case-tests @FR12

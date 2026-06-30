@@ -104,6 +104,32 @@ describe("calculateNextDate skip logic — weekly & daily", () => {
     expect(nextDate).toBe("2026-06-15");
   });
 
+  it("should correctly sort unsorted weekdays during skip logic", () => {
+    // Mutant killer: verifies sort comparator (a - b) not (a + b)
+    const clock = fakeClock("2026-06-10T10:00:00Z"); // Wednesday
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 2,
+      weekdays: [5, 1, 3], // Unsorted: Fri, Mon, Wed
+      target_box: "today",
+      advance_days: 0,
+    };
+    const previousNextDate = "2026-04-06"; // Monday, ~9 weeks ago
+    const completedAt = "2026-06-10T10:00:00.000Z";
+
+    const nextDate = calculateNextDate(
+      rule,
+      completedAt,
+      previousNextDate,
+      clock,
+    );
+
+    // Active weeks from Apr 6: ..., Jun 15-21
+    // Sorted weekdays [1,3,5] → first >= today in active week: Mon Jun 15
+    expect(nextDate).toBe("2026-06-15");
+  });
+
   // implements FR1, FR5 of fix-recurring-skip-logic
   it("should skip past dates for daily recurrence with interval=1 when user was inactive", () => {
     const clock = fakeClock("2026-04-16T10:00:00Z"); // April 16
@@ -148,8 +174,7 @@ describe("calculateNextDate skip logic — weekly & daily", () => {
       clock,
     );
 
-    // From Apr 10 with interval=3: Apr 13, 16, 19, 22 → but 22 > today
-    // Skip logic should land on Apr 23 (tomorrow=21, next aligned = 23)
-    expect(nextDate).toBe("2026-04-23");
+    // From Apr 10 with interval=3: Apr 13, 16, 19, 22 → 22 > today
+    expect(nextDate).toBe("2026-04-22");
   });
 });

@@ -35,10 +35,31 @@ function toPlainDate(isoInstant: string, clock: Clock): Temporal.PlainDate {
 
 function calculateNextDateDaily(
   interval: number,
-  _previousNextDate: string,
+  previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
-  return clock.plainDateISO().add({ days: interval }).toString();
+  const prev = Temporal.PlainDate.from(previousNextDate);
+
+  // Early completion: if completed before the scheduled date, preserve it (FR2)
+  if (Temporal.PlainDate.compare(completedAtDate, prev) < 0) {
+    return prev.toString();
+  }
+
+  const today = clock.plainDateISO();
+  let candidate = prev.add({ days: interval });
+
+  // Skip logic: if candidate <= today, skip to nearest future date on interval grid (FR3)
+  if (Temporal.PlainDate.compare(candidate, today) <= 0) {
+    const daysElapsed = prev.until(today, { largestUnit: "days" }).days;
+    const periodsToSkip = Math.ceil(daysElapsed / interval);
+    candidate = prev.add({ days: periodsToSkip * interval });
+    if (Temporal.PlainDate.compare(candidate, today) <= 0) {
+      candidate = candidate.add({ days: interval });
+    }
+  }
+
+  return candidate.toString();
 }
 
 // implements FR2 of fix-date-and-weekly-bugs
@@ -387,7 +408,12 @@ function resolveFromSchedule(
 ): string {
   switch (rule.frequency) {
     case "daily":
-      return calculateNextDateDaily(interval, previousNextDate, clock);
+      return calculateNextDateDaily(
+        interval,
+        previousNextDate,
+        completedAtDate,
+        clock,
+      );
     case "weekly": {
       const weekdays = rule.weekdays ?? [];
       return calculateNextDateWeekly(

@@ -13,21 +13,21 @@ paths:
 
 ## Two computation models
 
-### Model A: "from today" (daily, after_completion)
+### Model A: "from today" (after_completion)
 
 ```
-next_date = today + interval
+next_date = completedAt + delay_days
 ```
 
-Daily tasks and after_completion always count from today, regardless of the original schedule. The user did it today, the next one is N days from now.
+After_completion is the only "from today" model. It always counts from the completion date, regardless of the original schedule. The user completed it, the next one is `delay_days` from that moment.
 
-### Model B: "by schedule" (weekly, monthly, yearly)
+### Model B: "by schedule" (daily, weekly, monthly, yearly)
 
 ```
 next_date = nearest scheduled date strictly after today (> today)
 ```
 
-Weekly/monthly/yearly find the next occurrence from the fixed schedule that hasn't happened yet. The interval rhythm is preserved from the original schedule.
+Daily, weekly, monthly, and yearly all use schedule-based computation. They find the next occurrence from the fixed schedule that hasn't happened yet. The interval rhythm is preserved from the original schedule, with early-completion preservation and skip logic.
 
 ## What NOT to do
 
@@ -35,4 +35,3 @@ Weekly/monthly/yearly find the next occurrence from the fixed schedule that hasn
 - Do not show "missed N recurrences" notifications
 - Do not apply skip logic to `after_completion` rules
 - Do not use `>= today` for schedule-based frequencies — always strictly `> today`
-- Do not use schedule-aligned skip for daily — always `today + interval`
