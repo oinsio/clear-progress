@@ -1,4 +1,5 @@
 // implements FR6 of repeating-tasks-specs
+// implements FR6 of add-recurring-edge-case-tests
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
@@ -92,6 +93,47 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(result).toBe("2025-02-28");
     });
   });
+
+  // @add-recurring-edge-case-tests @FR6
+  f.Scenario(
+    "Yearly early completion keeps scheduled date",
+    ({ Given, When, Then }) => {
+      Given(
+        'previous next_date is "2026-12-25" with month 12 day 25 and today is "2026-12-20"',
+        (_ctx: TestContext) => {
+          previousNextDate = "2026-12-25";
+          todayISO = "2026-12-20";
+          month = 12;
+          day = 25;
+        },
+      );
+
+      When(
+        "system calculates next date with yearly interval 1",
+        (_ctx: TestContext) => {
+          const clock = fakeClock(`${todayISO}T12:00:00Z`);
+          const rule: RepeatRule = {
+            type: "fixed",
+            frequency: "yearly",
+            interval: 1,
+            month_and_day: { month, day },
+            target_box: "today",
+            advance_days: 0,
+          };
+          result = calculateNextDate(
+            rule,
+            `${todayISO}T12:00:00.000Z`,
+            previousNextDate,
+            clock,
+          );
+        },
+      );
+
+      Then('result is "2026-12-25"', (_ctx: TestContext) => {
+        expect(result).toBe("2026-12-25");
+      });
+    },
+  );
 
   // @repeating-tasks-specs @FR6
   f.Scenario("Yearly skip logic skips past years", ({ Given, When, Then }) => {

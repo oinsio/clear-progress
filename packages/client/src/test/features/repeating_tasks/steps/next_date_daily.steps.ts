@@ -1,4 +1,5 @@
 // implements FR3 of repeating-tasks-specs
+// implements FR7, FR8 of add-recurring-edge-case-tests
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
@@ -120,7 +121,45 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     });
   });
 
-  // @repeating-tasks-specs @FR3
+  // @add-recurring-edge-case-tests @FR7
+  f.Scenario(
+    "Daily early completion prev greater than today",
+    ({ Given, When, Then }) => {
+      Given(
+        'previous next_date is "2026-07-05" and today is "2026-07-03"',
+        (_ctx: TestContext) => {
+          previousNextDate = "2026-07-05";
+          todayISO = "2026-07-03";
+        },
+      );
+
+      When(
+        "system calculates next date with daily interval 1",
+        (_ctx: TestContext) => {
+          const clock = fakeClock(`${todayISO}T12:00:00Z`);
+          const rule: RepeatRule = {
+            type: "fixed",
+            frequency: "daily",
+            interval: 1,
+            target_box: "today",
+            advance_days: 0,
+          };
+          result = calculateNextDate(
+            rule,
+            `${todayISO}T12:00:00.000Z`,
+            previousNextDate,
+            clock,
+          );
+        },
+      );
+
+      Then('result is "2026-07-04"', (_ctx: TestContext) => {
+        expect(result).toBe("2026-07-04");
+      });
+    },
+  );
+
+  // @repeating-tasks-specs @FR3 @add-recurring-edge-case-tests @FR8
   f.Scenario("Daily skip logic exact alignment", ({ Given, When, Then }) => {
     Given(
       'previous next_date is "2026-01-01" and today is "2026-01-07"',

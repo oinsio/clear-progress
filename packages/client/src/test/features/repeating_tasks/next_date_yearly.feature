@@ -13,6 +13,12 @@ Feature: Next Date Yearly Calculation
     When system calculates next date with yearly interval 1
     Then result is "2025-02-28"
 
+  @add-recurring-edge-case-tests @FR6
+  Scenario: Yearly early completion keeps scheduled date
+    Given previous next_date is "2026-12-25" with month 12 day 25 and today is "2026-12-20"
+    When system calculates next date with yearly interval 1
+    Then result is "2026-12-25"
+
   @repeating-tasks-specs @FR6
   Scenario: Yearly skip logic skips past years
     Given previous next_date is "2024-06-15" with month 6 day 15 and today is "2027-01-01"

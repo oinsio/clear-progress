@@ -1,4 +1,5 @@
 // implements FR4 of repeating-tasks-specs
+// implements FR4 of add-recurring-edge-case-tests
 import type { FeatureDescriibeCallbackParams } from "@amiceli/vitest-cucumber";
 import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { expect, type TestContext } from "vitest";
@@ -126,6 +127,86 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       expect(result).toBe("2026-01-19");
     });
   });
+
+  // @add-recurring-edge-case-tests @FR4
+  f.Scenario(
+    "Weekly early completion preserves scheduled date",
+    ({ Given, When, Then }) => {
+      Given(
+        'previous next_date is "2026-07-06" with weekdays [1] and today is "2026-07-04"',
+        (_ctx: TestContext) => {
+          previousNextDate = "2026-07-06";
+          todayISO = "2026-07-04";
+          weekdays = [1];
+        },
+      );
+
+      When(
+        "system calculates next date with weekly interval 1",
+        (_ctx: TestContext) => {
+          const clock = fakeClock(`${todayISO}T12:00:00Z`);
+          const rule: RepeatRule = {
+            type: "fixed",
+            frequency: "weekly",
+            interval: 1,
+            weekdays,
+            target_box: "today",
+            advance_days: 0,
+          };
+          result = calculateNextDate(
+            rule,
+            `${todayISO}T12:00:00.000Z`,
+            previousNextDate,
+            clock,
+          );
+        },
+      );
+
+      Then('result is "2026-07-06"', (_ctx: TestContext) => {
+        expect(result).toBe("2026-07-06");
+      });
+    },
+  );
+
+  // @add-recurring-edge-case-tests @FR4
+  f.Scenario(
+    "Weekly early completion with interval 2 preserves scheduled date",
+    ({ Given, When, Then }) => {
+      Given(
+        'previous next_date is "2026-07-06" with weekdays [1] and today is "2026-07-04"',
+        (_ctx: TestContext) => {
+          previousNextDate = "2026-07-06";
+          todayISO = "2026-07-04";
+          weekdays = [1];
+        },
+      );
+
+      When(
+        "system calculates next date with weekly interval 2",
+        (_ctx: TestContext) => {
+          const clock = fakeClock(`${todayISO}T12:00:00Z`);
+          const rule: RepeatRule = {
+            type: "fixed",
+            frequency: "weekly",
+            interval: 2,
+            weekdays,
+            target_box: "today",
+            advance_days: 0,
+          };
+          result = calculateNextDate(
+            rule,
+            `${todayISO}T12:00:00.000Z`,
+            previousNextDate,
+            clock,
+          );
+        },
+      );
+
+      Then('result is "2026-07-06"', (_ctx: TestContext) => {
+        expect(result).toBe("2026-07-06");
+      });
+    },
+  );
 
   // @repeating-tasks-specs @FR4
   f.Scenario(

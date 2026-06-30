@@ -139,13 +139,17 @@ describe("calculateNextDate", () => {
       target_box: "today",
       advance_days: 0,
     };
-    const completedAt = "2026-06-01T10:00:00.000Z";
-
-    // Chain of 6 sequential completions
+    // Chain of 6 sequential completions — each completed on its scheduled date
     const dates: string[] = [];
     let prevDate = "2026-06-01";
     for (let i = 0; i < 6; i++) {
-      const next = calculateNextDate(rule, completedAt, prevDate, clock);
+      const iterationCompletedAt = `${prevDate}T10:00:00.000Z`;
+      const next = calculateNextDate(
+        rule,
+        iterationCompletedAt,
+        prevDate,
+        clock,
+      );
       dates.push(next);
       prevDate = next;
     }

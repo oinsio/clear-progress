@@ -19,7 +19,13 @@ Feature: Next Date Daily Calculation
     When system calculates next date with daily interval 3
     Then result is "2026-01-23"
 
-  @repeating-tasks-specs @FR3
+  @add-recurring-edge-case-tests @FR7
+  Scenario: Daily early completion prev greater than today
+    Given previous next_date is "2026-07-05" and today is "2026-07-03"
+    When system calculates next date with daily interval 1
+    Then result is "2026-07-04"
+
+  @repeating-tasks-specs @FR3 @add-recurring-edge-case-tests @FR8
   Scenario: Daily skip logic exact alignment
     Given previous next_date is "2026-01-01" and today is "2026-01-07"
     When system calculates next date with daily interval 3

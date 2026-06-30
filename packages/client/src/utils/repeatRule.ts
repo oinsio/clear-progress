@@ -18,6 +18,21 @@ export function serializeRepeatRule(rule: RepeatRule): string {
   return JSON.stringify(rule);
 }
 
+function resolveTimeZone(clock: Clock): string {
+  try {
+    return clock.timeZoneId();
+  } catch (error) {
+    console.error("Invalid timezone from system, falling back to UTC:", error);
+    return "UTC";
+  }
+}
+
+function toPlainDate(isoInstant: string, clock: Clock): Temporal.PlainDate {
+  const instant = Temporal.Instant.from(isoInstant);
+  const timeZone = resolveTimeZone(clock);
+  return instant.toZonedDateTimeISO(timeZone).toPlainDate();
+}
+
 function calculateNextDateDaily(
   interval: number,
   _previousNextDate: string,
@@ -55,6 +70,7 @@ function calculateNextDateWeekly(
   interval: number,
   weekdays: number[],
   previousNextDate: string | undefined,
+  completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
   const today = clock.plainDateISO();
@@ -66,6 +82,12 @@ function calculateNextDateWeekly(
   }
 
   const prev = Temporal.PlainDate.from(previousNextDate);
+
+  // Early completion: if completed before the scheduled date, preserve it
+  if (Temporal.PlainDate.compare(completedAtDate, prev) < 0) {
+    return prev.toString();
+  }
+
   const nextDay = prev.add({ days: 1 });
   const candidate = findNextWeekday(nextDay, weekdays, interval);
   const candidateDate = Temporal.PlainDate.from(candidate);
@@ -113,9 +135,16 @@ function calculateNextDateMonthly(
   interval: number,
   dayOfMonth: number,
   previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
   const prev = Temporal.PlainDate.from(previousNextDate);
+
+  // Early completion: if completed before the scheduled date, preserve it
+  if (Temporal.PlainDate.compare(completedAtDate, prev) < 0) {
+    return prev.toString();
+  }
+
   const today = clock.plainDateISO();
   const prevYearMonth = prev.toPlainYearMonth();
   let targetYearMonth = prevYearMonth.add({ months: interval });
@@ -151,9 +180,16 @@ function calculateNextDateYearly(
   interval: number,
   monthAndDay: { month: number; day: number },
   previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
   const prev = Temporal.PlainDate.from(previousNextDate);
+
+  // Early completion: if completed before the scheduled date, preserve it
+  if (Temporal.PlainDate.compare(completedAtDate, prev) < 0) {
+    return prev.toString();
+  }
+
   const today = clock.plainDateISO();
   let targetYear = prev.year + interval;
 
@@ -201,17 +237,7 @@ function calculateNextDateAfterCompletion(
   completedAt: string,
   clock: Clock = systemClock,
 ): string {
-  const completedInstant = Temporal.Instant.from(completedAt);
-  let timeZone: string;
-  try {
-    timeZone = clock.timeZoneId();
-  } catch (error) {
-    console.error("Invalid timezone from system, falling back to UTC:", error);
-    timeZone = "UTC";
-  }
-  const completedDate = completedInstant
-    .toZonedDateTimeISO(timeZone)
-    .toPlainDate();
+  const completedDate = toPlainDate(completedAt, clock);
   return completedDate.add({ days: delayDays }).toString();
 }
 
@@ -235,26 +261,15 @@ export function calculateNextDate(
   if (!rule.frequency) throw new Error("frequency required for fixed");
   if (!previousNextDate) {
     // First creation: use completedAt as the base
-    const completedInstant = Temporal.Instant.from(completedAt);
-    let timeZone: string;
-    try {
-      timeZone = clock.timeZoneId();
-    } catch (error) {
-      console.error(
-        "Invalid timezone from system, falling back to UTC:",
-        error,
-      );
-      timeZone = "UTC";
-    }
-    previousNextDate = completedInstant
-      .toZonedDateTimeISO(timeZone)
-      .toPlainDate()
-      .toString();
+    previousNextDate = toPlainDate(completedAt, clock).toString();
   } else {
     previousNextDate = sanitizeDateOnly(previousNextDate) || previousNextDate;
   }
 
   const interval = rule.interval ?? 1;
+
+  // Extract completedAt as a PlainDate for early-completion checks
+  const completedAtDate = toPlainDate(completedAt, clock);
 
   switch (rule.frequency) {
     case "daily":
@@ -267,6 +282,7 @@ export function calculateNextDate(
         interval,
         rule.weekdays,
         previousNextDate,
+        completedAtDate,
         clock,
       );
     case "monthly":
@@ -276,6 +292,7 @@ export function calculateNextDate(
         interval,
         rule.day_of_month,
         previousNextDate,
+        completedAtDate,
         clock,
       );
     case "yearly":
@@ -285,6 +302,7 @@ export function calculateNextDate(
         interval,
         rule.month_and_day,
         previousNextDate,
+        completedAtDate,
         clock,
       );
     default:
