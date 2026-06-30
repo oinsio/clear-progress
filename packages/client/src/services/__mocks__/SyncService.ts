@@ -9,4 +9,5 @@ export class SyncService {
   push = mockPush;
   resetAndPull = mockResetAndPull;
   lastSyncAlerts: unknown[] = [];
+  lastPulledTasks: unknown[] = [];
 }
