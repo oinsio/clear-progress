@@ -1,5 +1,7 @@
 # Clear Progress
 
+[![deploy](https://img.shields.io/github/actions/workflow/status/oinsio/clear-progress/deploy.yml?branch=main&label=deploy)](https://github.com/oinsio/clear-progress/actions/workflows/deploy.yml)
+
 [![en](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-red.svg)](README.ru.md)
 
