@@ -1,11 +1,18 @@
 import { REPEAT_RULE_LIMITS, type RepeatRule } from "@clear-progress/contract";
 import { ArrowLeft, ChevronDown, Inbox } from "lucide-react";
 import type React from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { systemClock } from "@/lib/temporal";
 import { cn } from "@/shared/lib/cn";
 import type { Box } from "@/types/common";
 import { getCurrentDateDefaults, getDaysInMonth } from "@/utils/dateHelpers";
+import {
+  calculateUpcomingDates,
+  formatUpcomingDate,
+  resolveNextFixedDate,
+  UPCOMING_DATES_COUNT,
+} from "@/utils/repeatRule";
 import { LaterBoxIcon, TodayBoxIcon, WeekBoxIcon } from "./BoxIcons";
 import { ClampedNumericInput } from "./ClampedNumericInput";
 
@@ -115,6 +122,53 @@ export function RepeatRuleSelector({
       advanceDays: value.advance_days,
     };
   });
+
+  /**
+   * Implements FR5, FR6, FR9 of show-upcoming-recurrences
+   */
+  const previewDates = useMemo(() => {
+    if (state.type !== "fixed" || !state.frequency) return [];
+    if (state.frequency === "weekly" && state.weekdays.length === 0) return [];
+
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: state.frequency,
+      interval: state.interval,
+      weekdays: state.frequency === "weekly" ? state.weekdays : undefined,
+      day_of_month:
+        state.frequency === "monthly" ? state.dayOfMonth : undefined,
+      month_and_day:
+        state.frequency === "yearly" ? state.monthAndDay : undefined,
+      target_box: state.targetBox,
+      advance_days: state.advanceDays,
+    };
+
+    try {
+      const firstDate = resolveNextFixedDate(
+        rule,
+        "",
+        "nearest-match",
+        systemClock,
+      );
+      return calculateUpcomingDates(
+        rule,
+        firstDate,
+        UPCOMING_DATES_COUNT,
+        systemClock,
+      );
+    } catch {
+      return [];
+    }
+  }, [
+    state.type,
+    state.frequency,
+    state.interval,
+    state.weekdays,
+    state.dayOfMonth,
+    state.monthAndDay,
+    state.targetBox,
+    state.advanceDays,
+  ]);
 
   const handleTypeSelect = useCallback((type: "fixed" | "after_completion") => {
     setState((prev) => ({
@@ -524,6 +578,33 @@ export function RepeatRuleSelector({
               </div>
             </div>
           )}
+
+          {/* Implements FR5, UX2, UX3, NFR-A2, NFR-R1 of show-upcoming-recurrences */}
+          <div
+            className={cn(
+              "overflow-hidden transition-all duration-200",
+              previewDates.length > 0
+                ? "max-h-40 opacity-100"
+                : "max-h-0 opacity-0",
+            )}
+          >
+            <div data-testid="upcoming-dates-preview">
+              <p className="text-xs text-gray-500 mb-1">
+                {t("repeat.upcomingDatesLabel")}
+              </p>
+              <ul className="text-xs text-gray-600 space-y-0.5">
+                {previewDates.map((date) => (
+                  <li key={date}>
+                    {formatUpcomingDate(
+                      date,
+                      state.frequency ?? "daily",
+                      systemClock,
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
 
           <button
             type="button"

@@ -452,7 +452,12 @@
     "yearlyDate": "{{count}} {{month}}",
     "confirmChangeTitle": "Изменение правила повтора",
     "confirmChangeMessage": "Следующая дата: {{nextDate}}",
-    "confirmChangeButton": "Сохранить"
+    "confirmChangeButton": "Сохранить",
+    "nextDateLabel": "Далее",
+    "nextDateAfterCompletion": "после завершения",
+    "upcomingDatesLabel": "Ближайшие даты",
+    "today": "сегодня",
+    "tomorrow": "завтра"
   },
   "taskEdit": {
     "name": "Редактировать задачу",

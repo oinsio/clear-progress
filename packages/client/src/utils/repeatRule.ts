@@ -513,8 +513,10 @@ export function formatRepeatRuleLabel(rule: RepeatRule, t: TFunction): string {
   }
 }
 
+export { formatNextDate, formatUpcomingDate } from "./formatRecurrenceDate";
 export {
   calculateNextDateOnRuleChange,
   computeRuleChangeUpdates,
   shouldRecalculateNextDate,
 } from "./repeatRuleChange";
+export { calculateUpcomingDates, UPCOMING_DATES_COUNT } from "./upcomingDates";

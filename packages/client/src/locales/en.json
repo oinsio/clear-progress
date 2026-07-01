@@ -455,7 +455,12 @@
     "yearlyDate_ordinal_other": "{{month}} {{count}}th",
     "confirmChangeTitle": "Repeat rule change",
     "confirmChangeMessage": "Next date: {{nextDate}}",
-    "confirmChangeButton": "Save"
+    "confirmChangeButton": "Save",
+    "nextDateLabel": "Next",
+    "nextDateAfterCompletion": "after completion",
+    "upcomingDatesLabel": "Upcoming dates",
+    "today": "today",
+    "tomorrow": "tomorrow"
   },
   "taskEdit": {
     "name": "Edit task",
