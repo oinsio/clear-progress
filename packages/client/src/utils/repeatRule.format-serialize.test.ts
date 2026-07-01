@@ -68,6 +68,19 @@ describe("formatRepeatRuleLabel", () => {
     expect(typeof label).toBe("string");
   });
 
+  it("should format fixed monthly rule", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "monthly",
+      interval: 1,
+      day_of_month: 15,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toBe(t("repeat.everyNMonths", { count: 1, day: 15 }));
+  });
+
   it("should format after_completion rule", () => {
     const rule: RepeatRule = {
       type: "after_completion",
@@ -148,6 +161,30 @@ describe("formatRepeatRuleLabel", () => {
     };
     const label = formatRepeatRuleLabel(rule, t);
     expect(label).toContain("May 3rd");
+  });
+
+  it("should format weekly rule without weekdays", () => {
+    const rule: RepeatRule = {
+      type: "fixed",
+      frequency: "weekly",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    };
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toBe(t("repeat.weekly"));
+  });
+
+  it("should format yearly rule without month_and_day as none", () => {
+    const rule = {
+      type: "fixed",
+      frequency: "yearly",
+      interval: 1,
+      target_box: "today",
+      advance_days: 0,
+    } as RepeatRule;
+    const label = formatRepeatRuleLabel(rule, t);
+    expect(label).toBe(t("repeat.none"));
   });
 
   it("should format yearly rule with ordinal 31st", async () => {

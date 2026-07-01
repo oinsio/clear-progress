@@ -51,6 +51,9 @@ export class SyncService {
   /** Alerts from the last push operation (healing corrections with data loss) */
   lastSyncAlerts: SyncAlert[] = [];
 
+  /** Tasks received during the last pull operation (for post-pull validation) */
+  lastPulledTasks: PullResponse["tasks"] = [];
+
   constructor(
     private readonly syncAdapter: SyncAdapter,
     private readonly syncMetaRepository: SyncMetaRepository,
@@ -90,6 +93,7 @@ export class SyncService {
 
   // implements FR5, FR6 of fix-pull-pagination
   private async _pull(): Promise<void> {
+    this.lastPulledTasks = [];
     let sinceRevision = await this.syncMetaRepository.getValue(
       SYNC_META_KEYS.LAST_KNOWN_REVISION,
     );
@@ -134,6 +138,9 @@ export class SyncService {
       }
 
       await this._applyPullBatch(pullResponse);
+
+      // Collect pulled tasks for post-pull validation (FR5 of detect-invalid-repeat-rule)
+      this.lastPulledTasks.push(...pullResponse.tasks);
 
       // Collect original_task_ids from pull batch for dedup (FR4, FR5 of dedup-recurring-after-pull)
       for (const task of pullResponse.tasks) {

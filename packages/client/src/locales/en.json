@@ -362,6 +362,13 @@
   },
   "repeat": {
     "none": "No repeat",
+    "ruleNotRecognized": "Rule not recognized",
+    "invalidRuleAlertTitle": "Repeat rule issue",
+    "invalidRuleAlertMessage": "The repeat rule could not be recognized, so no recurring copy was created.",
+    "invalidRuleAlertFix": "Open the task and reconfigure the repeat rule.",
+    "invalidRulePullAlertTitle": "Repeat rule issues found",
+    "invalidRulePullAlertMessage": "Some tasks received during sync have unrecognized repeat rules.",
+    "invalidRulePullAlertFix": "Open these tasks and reconfigure their repeat rules.",
     "fixed": "On schedule",
     "afterCompletion_one": "{{count}} day after completion",
     "afterCompletion_other": "{{count}} days after completion",
@@ -448,7 +455,12 @@
     "yearlyDate_ordinal_other": "{{month}} {{count}}th",
     "confirmChangeTitle": "Repeat rule change",
     "confirmChangeMessage": "Next date: {{nextDate}}",
-    "confirmChangeButton": "Save"
+    "confirmChangeButton": "Save",
+    "nextDateLabel": "Next",
+    "nextDateAfterCompletion": "after completion",
+    "upcomingDatesLabel": "Upcoming dates",
+    "today": "today",
+    "tomorrow": "tomorrow"
   },
   "taskEdit": {
     "name": "Edit task",
@@ -563,6 +575,14 @@
     "rejectedEntityTypeAdvice": "Edit the record and choose a valid value, or update the app",
     "rejectedCorrupted": "Record is corrupted and cannot be synced",
     "rejectedCorruptedAdvice": "Delete the record and create a new one"
+  },
+  "alert": {
+    "counter": "{{current}}/{{total}}",
+    "next": "Next",
+    "back": "Back",
+    "positionNext": "Alert {{current}} of {{total}}, go to next",
+    "positionBack": "Alert {{current}} of {{total}}, go to previous",
+    "positionUnderstood": "Alert {{current}} of {{total}}, dismiss all"
   },
   "projectPausedDialog": {
     "title": "Supabase Project Paused",

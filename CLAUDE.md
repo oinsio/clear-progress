@@ -13,11 +13,11 @@ IMPORTANT: Read existing code, tests, and patterns before generating new code.
 
 - **IDs**: UUID v4, generated client-side via `crypto.randomUUID()`
 - **Soft delete**: set `is_deleted = true`, never remove rows
-- **Versioning**: increment `version` (+1) on every change — used for sync
+- **Versioning**: `revision` is assigned by the server on push, never incremented client-side
 - **Timestamps** (created_at, updated_at, completed_at): ISO 8601 with Z suffix (`"2025-01-15T10:30:00.000Z"`)
 - **Date-only** (next_date, appear_date): ISO date format (`"2025-01-15"`)
 - **Empty optional fields**: use `""` (empty string), never `null` or `undefined`
-- **sort_order**: integer for manual ordering within lists
+- **sort_order**: string for lexicographic manual ordering within lists
 
 ## Testing
 

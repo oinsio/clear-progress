@@ -7,6 +7,15 @@ import { createMockTaskService } from "@/test/mocks/taskServiceMock";
 import { useInboxTasks } from "./useInboxTasks";
 
 const syncState = { version: 0 };
+const mockAddAlerts = vi.fn();
+
+vi.mock("@/app/providers/AlertProvider", () => ({
+  useAlerts: () => ({
+    alerts: [],
+    addAlerts: mockAddAlerts,
+    dismissAlerts: vi.fn(),
+  }),
+}));
 
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
@@ -24,6 +33,7 @@ describe("useInboxTasks", () => {
   beforeEach(() => {
     mockTaskService = createMockTaskService();
     syncState.version = 0;
+    mockAddAlerts.mockClear();
   });
 
   it("should set isLoading to true on initial render", () => {
@@ -145,16 +155,22 @@ describe("useInboxTasks", () => {
       serviceMethod: "complete" as const,
       hookAction: (hook: ReturnType<typeof useInboxTasks>, taskId: string) =>
         hook.completeTask(taskId),
+      mockReturnValue: {
+        completed: buildTask({ box: "inbox" }),
+        recurringResult: { status: "not_recurring" },
+      },
     },
     {
       label: "deleteTask",
       serviceMethod: "softDelete" as const,
       hookAction: (hook: ReturnType<typeof useInboxTasks>, taskId: string) =>
         hook.deleteTask(taskId),
+      mockReturnValue: undefined,
     },
   ])("should use updated service when $label is called after service changes", async ({
     serviceMethod,
     hookAction,
+    mockReturnValue,
   }) => {
     const task = buildTask({ box: "inbox" });
     const firstService = createMockTaskService({
@@ -162,7 +178,7 @@ describe("useInboxTasks", () => {
     });
     const secondService = createMockTaskService({
       getByBox: vi.fn().mockResolvedValue([task]),
-      [serviceMethod]: vi.fn().mockResolvedValue(undefined),
+      [serviceMethod]: vi.fn().mockResolvedValue(mockReturnValue),
     });
 
     const { result, rerender } = renderHook(
@@ -182,5 +198,45 @@ describe("useInboxTasks", () => {
       serviceMethod === "complete" ? [task.id, expect.any(String)] : [task.id];
     expect(secondService[serviceMethod]).toHaveBeenCalledWith(...expectedArgs);
     expect(firstService[serviceMethod]).not.toHaveBeenCalled();
+  });
+
+  it("should add alert when completing task with invalid repeat rule", async () => {
+    const task = buildTask({ box: "inbox", name: "Inbox Bad Rule" });
+    mockTaskService = createMockTaskService({
+      getByBox: vi.fn().mockResolvedValue([task]),
+      complete: vi.fn().mockResolvedValue({
+        completed: task,
+        recurringResult: { status: "skipped_invalid_rule" },
+      }),
+    });
+    const { result } = renderHook(() => useInboxTasks(mockTaskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.completeTask(task.id);
+    });
+
+    expect(mockAddAlerts).toHaveBeenCalledWith([
+      { type: "repeat_rule_invalid", taskNames: ["Inbox Bad Rule"] },
+    ]);
+  });
+
+  it("should not add alert when completing task with valid recurring result", async () => {
+    const task = buildTask({ box: "inbox" });
+    mockTaskService = createMockTaskService({
+      getByBox: vi.fn().mockResolvedValue([task]),
+      complete: vi.fn().mockResolvedValue({
+        completed: task,
+        recurringResult: { status: "not_recurring" },
+      }),
+    });
+    const { result } = renderHook(() => useInboxTasks(mockTaskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.completeTask(task.id);
+    });
+
+    expect(mockAddAlerts).not.toHaveBeenCalled();
   });
 });

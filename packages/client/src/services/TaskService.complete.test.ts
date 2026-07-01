@@ -30,43 +30,45 @@ describe("TaskService", () => {
       expect(completed.completed_at).not.toBe("");
     });
 
-    it("should return null for recurring when repeat_rule is empty", async () => {
+    it("should return not_recurring status when repeat_rule is empty", async () => {
       const task = buildTask({ repeat_rule: "" });
       const { taskService } = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
       });
-      const { recurring } = await taskService.complete(task.id);
-      expect(recurring).toBeNull();
+      const { recurringResult } = await taskService.complete(task.id);
+      expect(recurringResult.status).toBe("not_recurring");
     });
 
-    it("should return null for recurring when repeat_rule is invalid JSON", async () => {
+    it("should return skipped_invalid_rule status when repeat_rule is invalid JSON", async () => {
       const task = buildTask({ repeat_rule: "invalid json" });
       const { taskService } = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
       });
-      const { recurring } = await taskService.complete(task.id);
-      expect(recurring).toBeNull();
+      const { recurringResult } = await taskService.complete(task.id);
+      expect(recurringResult.status).toBe("skipped_invalid_rule");
     });
 
-    it("should return null for recurring when parseRepeatRule returns null", async () => {
+    it("should return skipped_invalid_rule status when parseRepeatRule returns null", async () => {
       const task = buildTask({
         repeat_rule: JSON.stringify({ invalid: "rule" }),
       });
       const { taskService } = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
       });
-      const { recurring } = await taskService.complete(task.id);
-      expect(recurring).toBeNull();
+      const { recurringResult } = await taskService.complete(task.id);
+      expect(recurringResult.status).toBe("skipped_invalid_rule");
     });
 
-    it("should return the new recurring task when repeat_rule is set", async () => {
+    it("should return created status with the new task when repeat_rule is valid", async () => {
       const task = buildTask({ repeat_rule: DAILY_REPEAT_RULE });
       const { taskService } = createTestContext({
         getById: vi.fn().mockResolvedValue(task),
       });
-      const { recurring } = await taskService.complete(task.id);
-      expect(recurring).not.toBeNull();
-      expect(recurring?.id).not.toBe(task.id);
+      const { recurringResult } = await taskService.complete(task.id);
+      expect(recurringResult.status).toBe("created");
+      if (recurringResult.status === "created") {
+        expect(recurringResult.task.id).not.toBe(task.id);
+      }
     });
 
     it("should NOT create a recurring copy when repeat_rule is empty", async () => {

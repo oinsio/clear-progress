@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useAlerts } from "@/app/providers/AlertProvider";
 import { systemClock } from "@/lib/temporal";
 import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
@@ -19,6 +20,7 @@ export function useTaskMutations(
   taskService: TaskService,
   onReload: () => Promise<void>,
 ): UseTaskMutationsReturn {
+  const { addAlerts } = useAlerts();
   const withSync = useSyncWrapper(onReload);
 
   return useMemo(
@@ -36,10 +38,21 @@ export function useTaskMutations(
               systemClock,
               getCachedDayBoundary(),
             );
-            const { recurring } = await taskService.complete(id, logicalDate);
+            const { recurringResult } = await taskService.complete(
+              id,
+              logicalDate,
+            );
+            if (recurringResult.status === "skipped_invalid_rule") {
+              addAlerts([
+                { type: "repeat_rule_invalid", taskNames: [task.name] },
+              ]);
+            }
             // Return ID only if the copy is NOT hidden
             recurringId =
-              recurring && !recurring.is_hidden ? recurring.id : null;
+              recurringResult.status === "created" &&
+              !recurringResult.task.is_hidden
+                ? recurringResult.task.id
+                : null;
           }
           return recurringId;
         });
@@ -57,6 +70,6 @@ export function useTaskMutations(
         return withSync(() => taskService.duplicate(id), false);
       },
     }),
-    [taskService, withSync],
+    [taskService, withSync, addAlerts],
   );
 }

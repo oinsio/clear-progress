@@ -25,6 +25,19 @@ const buildCompletedTask = (task: ReturnType<typeof buildTask>) =>
     completed_at: toISOTimestamp(),
   });
 
+const expectCreatedHiddenClone = (result: {
+  completed: { is_completed: boolean };
+  recurringResult: { status: string; task?: { is_hidden: boolean } };
+}) => {
+  expect(result.completed).toBeDefined();
+  expect(result.completed.is_completed).toBe(true);
+  expect(result.recurringResult.status).toBe("created");
+  expect(
+    result.recurringResult.status === "created" &&
+      result.recurringResult.task?.is_hidden,
+  ).toBe(true);
+};
+
 describe("TaskService - Recurring Tasks Integration", () => {
   let taskService: TaskService;
   let mockTaskRepository: TaskRepository;
@@ -71,7 +84,12 @@ describe("TaskService - Recurring Tasks Integration", () => {
         clock,
       );
 
-      const repeatRule = { ...DAILY_FIXED_RULE, advance_days: 10 };
+      // interval=15 ensures next=today+15=2026-05-05, appear=2026-05-05-10=2026-04-25 > today
+      const repeatRule = {
+        ...DAILY_FIXED_RULE,
+        interval: 15,
+        advance_days: 10,
+      };
 
       const existingTask = buildTask({
         id: "task-1",
@@ -88,8 +106,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         name: "Daily review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: true,
-        next_date: toISODate("2026-05-02"),
-        appear_date: toISODate("2026-04-22"),
+        next_date: toISODate("2026-05-05"),
+        appear_date: toISODate("2026-04-25"),
         box: "today",
       });
 
@@ -103,12 +121,15 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const result = await taskService.complete("task-1");
 
-      expect(result.completed).toBeDefined();
-      expect(result.completed.is_completed).toBe(true);
-      expect(result.recurring).toBeDefined();
-      expect(result.recurring?.is_hidden).toBe(true);
-      expect(result.recurring?.next_date).toBeTruthy();
-      expect(result.recurring?.appear_date).toBeTruthy();
+      expectCreatedHiddenClone(result);
+      expect(
+        result.recurringResult.status === "created" &&
+          result.recurringResult.task.next_date,
+      ).toBeTruthy();
+      expect(
+        result.recurringResult.status === "created" &&
+          result.recurringResult.task.appear_date,
+      ).toBeTruthy();
     });
 
     it("should not create clone when completing task without repeat_rule", async () => {
@@ -130,7 +151,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       expect(result.completed).toBeDefined();
       expect(result.completed.is_completed).toBe(true);
-      expect(result.recurring).toBeNull();
+      expect(result.recurringResult.status).toBe("not_recurring");
     });
 
     it("should handle after_completion type repeat_rule", async () => {
@@ -169,9 +190,15 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const result = await taskService.complete("task-1");
 
-      expect(result.recurring).toBeDefined();
-      expect(result.recurring?.is_hidden).toBe(true);
-      expect(result.recurring?.box).toBe("week");
+      expect(result.recurringResult.status).toBe("created");
+      expect(
+        result.recurringResult.status === "created" &&
+          result.recurringResult.task.is_hidden,
+      ).toBe(true);
+      expect(
+        result.recurringResult.status === "created" &&
+          result.recurringResult.task.box,
+      ).toBe("week");
     });
 
     it("should not fail completion if recurring copy creation fails", async () => {
@@ -198,19 +225,31 @@ describe("TaskService - Recurring Tasks Integration", () => {
       // Completion should succeed even if clone creation fails
       expect(result.completed).toBeDefined();
       expect(result.completed.is_completed).toBe(true);
-      expect(result.recurring).toBeNull();
+      expect(result.recurringResult.status).toBe("skipped_invalid_rule");
     });
   });
 
   describe("Completing hidden clone", () => {
     it("should create new hidden clone when completing a hidden task", async () => {
+      // Use fakeClock to avoid system-date dependency; advance_days=5 ensures
+      // appear_date is in the future (next Wed = Apr 22, appear = Apr 17 > Apr 14? no).
+      // Instead, use advance_days=0 and a weekly rule where next occurrence > today.
+      // clock=2026-04-14 (Tue), weekdays=[3,5] → next Wed = Apr 15, appear=Apr 15-5=Apr 10 < today.
+      // Better: clock=2026-04-14 (Tue), weekdays=[5] → next Fri = Apr 17 (future), advance_days=1 → appear Apr 16 > Apr 14 → hidden.
+      const clock = fakeClock("2026-04-14T10:00:00Z"); // Tuesday
+      taskService = new TaskService(
+        mockTaskRepository,
+        mockChecklistRepository,
+        clock,
+      );
+
       const repeatRule = {
         type: "fixed" as const,
         frequency: "weekly" as const,
         interval: 1,
-        weekdays: [1, 3, 5],
+        weekdays: [5], // Friday only
         target_box: "today" as const,
-        advance_days: 0,
+        advance_days: 1,
       };
 
       const hiddenTask = buildTask({
@@ -218,8 +257,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
         name: "Weekly review",
         repeat_rule: JSON.stringify(repeatRule),
         is_hidden: true,
-        next_date: toISODate("2026-04-14"),
-        appear_date: toISODate("2026-04-14"),
+        next_date: toISODate("2026-04-11"), // previous Friday
+        appear_date: toISODate("2026-04-10"),
       });
 
       const completedTask = buildCompletedTask(hiddenTask);
@@ -240,10 +279,8 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const result = await taskService.complete("task-2");
 
-      expect(result.completed).toBeDefined();
-      expect(result.completed.is_completed).toBe(true);
-      expect(result.recurring).toBeDefined();
-      expect(result.recurring?.is_hidden).toBe(true);
+      // next Fri = Apr 17, appear = Apr 17 - 1 = Apr 16 > Apr 14 (today) → hidden
+      expectCreatedHiddenClone(result);
     });
   });
 
@@ -294,7 +331,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
 
       const result = await taskService.complete("task-1");
 
-      expect(result.recurring).toBeDefined();
+      expect(result.recurringResult.status).toBe("created");
       expect(mockChecklistRepository.create).toHaveBeenCalled();
     });
   });

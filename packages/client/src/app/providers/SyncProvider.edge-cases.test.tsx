@@ -7,6 +7,7 @@ vi.mock("@/services/SyncService");
 vi.mock("@/services/defaultServices");
 import "@/test/helpers/mockRepositories";
 
+import { AlertProvider } from "./AlertProvider";
 import { SyncProvider } from "./SyncProvider";
 import {
   FullSyncTrigger,
@@ -65,10 +66,12 @@ describe("SyncProvider — sync mutex", () => {
     );
     const onProgress = vi.fn();
     render(
-      <SyncProvider>
-        <SyncStatusDisplay />
-        <FullSyncTrigger onProgress={onProgress} testId="full-sync-btn2" />
-      </SyncProvider>,
+      <AlertProvider>
+        <SyncProvider>
+          <SyncStatusDisplay />
+          <FullSyncTrigger onProgress={onProgress} testId="full-sync-btn2" />
+        </SyncProvider>
+      </AlertProvider>,
     );
     await act(async () => {});
     vi.clearAllMocks();
@@ -119,9 +122,11 @@ describe("SyncProvider — localStorage resilience", () => {
     const storedTimestamp = "2026-06-01T10:00:00.000Z";
     localStorage.setItem(STORAGE_KEYS.LAST_SYNC, storedTimestamp);
     render(
-      <SyncProvider>
-        <LastSyncDisplay />
-      </SyncProvider>,
+      <AlertProvider>
+        <SyncProvider>
+          <LastSyncDisplay />
+        </SyncProvider>
+      </AlertProvider>,
     );
     expect(screen.getByTestId("last-sync").textContent).toBe(storedTimestamp);
   });

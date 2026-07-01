@@ -1,6 +1,7 @@
 import { type RepeatRule, RepeatRuleSchema } from "@clear-progress/contract";
 import type { TFunction } from "i18next";
 import { type Clock, systemClock, Temporal } from "@/lib/temporal";
+import type { Task } from "@/types/entities";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
 
 export function parseRepeatRule(json: string): RepeatRule | null {
@@ -14,30 +15,61 @@ export function parseRepeatRule(json: string): RepeatRule | null {
   }
 }
 
+/**
+ * Returns true when a task has a non-empty repeat_rule that cannot be parsed.
+ *
+ * Implements FR1 of detect-invalid-repeat-rule
+ */
+export function isRepeatRuleInvalid(task: Pick<Task, "repeat_rule">): boolean {
+  return task.repeat_rule !== "" && parseRepeatRule(task.repeat_rule) === null;
+}
+
 export function serializeRepeatRule(rule: RepeatRule): string {
   return JSON.stringify(rule);
+}
+
+function resolveTimeZone(clock: Clock): string {
+  try {
+    return clock.timeZoneId();
+  } catch (error) {
+    console.error("Invalid timezone from system, falling back to UTC:", error);
+    return "UTC";
+  }
+}
+
+function toPlainDate(isoInstant: string, clock: Clock): Temporal.PlainDate {
+  const instant = Temporal.Instant.from(isoInstant);
+  const timeZone = resolveTimeZone(clock);
+  return instant.toZonedDateTimeISO(timeZone).toPlainDate();
 }
 
 function calculateNextDateDaily(
   interval: number,
   previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
   const prev = Temporal.PlainDate.from(previousNextDate);
-  let next = prev.add({ days: interval });
 
-  const today = clock.plainDateISO();
-  // Skip logic: if next_date ended up in the past (user did not open the app
-  // for several days), compute the nearest future date instead of creating multiple
-  // missed copies. This is an intentional architectural decision for the app.
-  // Details: .claude/docs/architecture/recurring-tasks-skip-logic.md
-  if (Temporal.PlainDate.compare(next, today) < 0) {
-    const totalDays = prev.until(today, { largestUnit: "days" }).days;
-    const periodsToSkip = Math.ceil(totalDays / interval);
-    next = prev.add({ days: periodsToSkip * interval });
+  // Early completion: if completed before the scheduled date, preserve it (FR2)
+  if (Temporal.PlainDate.compare(completedAtDate, prev) < 0) {
+    return prev.toString();
   }
 
-  return next.toString();
+  const today = clock.plainDateISO();
+  let candidate = prev.add({ days: interval });
+
+  // Skip logic: if candidate <= today, skip to nearest future date on interval grid (FR3)
+  if (Temporal.PlainDate.compare(candidate, today) <= 0) {
+    const daysElapsed = prev.until(today, { largestUnit: "days" }).days;
+    const periodsToSkip = Math.ceil(daysElapsed / interval);
+    candidate = prev.add({ days: periodsToSkip * interval });
+    if (Temporal.PlainDate.compare(candidate, today) <= 0) {
+      candidate = candidate.add({ days: interval });
+    }
+  }
+
+  return candidate.toString();
 }
 
 // implements FR2 of fix-date-and-weekly-bugs
@@ -65,21 +97,22 @@ function findNextWeekday(
   return activeMonday.add({ days: sortedWeekdays[0] - 1 }).toString();
 }
 
+// implements FR4 of unify-next-date-calculation — removed dead !previousNextDate branch
 function calculateNextDateWeekly(
   interval: number,
   weekdays: number[],
-  previousNextDate: string | undefined,
+  previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
   const today = clock.plainDateISO();
+  const prev = Temporal.PlainDate.from(previousNextDate);
 
-  if (!previousNextDate) {
-    // First creation: nearest day from weekdays[], starting from tomorrow
-    const tomorrow = today.add({ days: 1 });
-    return findNextWeekday(tomorrow, weekdays, interval);
+  // Early completion: if completed before the scheduled date, preserve it
+  if (Temporal.PlainDate.compare(completedAtDate, prev) < 0) {
+    return prev.toString();
   }
 
-  const prev = Temporal.PlainDate.from(previousNextDate);
   const nextDay = prev.add({ days: 1 });
   const candidate = findNextWeekday(nextDay, weekdays, interval);
   const candidateDate = Temporal.PlainDate.from(candidate);
@@ -127,9 +160,16 @@ function calculateNextDateMonthly(
   interval: number,
   dayOfMonth: number,
   previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
   const prev = Temporal.PlainDate.from(previousNextDate);
+
+  // Early completion: if completed before the scheduled date, preserve it
+  if (Temporal.PlainDate.compare(completedAtDate, prev) < 0) {
+    return prev.toString();
+  }
+
   const today = clock.plainDateISO();
   const prevYearMonth = prev.toPlainYearMonth();
   let targetYearMonth = prevYearMonth.add({ months: interval });
@@ -165,9 +205,16 @@ function calculateNextDateYearly(
   interval: number,
   monthAndDay: { month: number; day: number },
   previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
   clock: Clock = systemClock,
 ): string {
   const prev = Temporal.PlainDate.from(previousNextDate);
+
+  // Early completion: if completed before the scheduled date, preserve it
+  if (Temporal.PlainDate.compare(completedAtDate, prev) < 0) {
+    return prev.toString();
+  }
+
   const today = clock.plainDateISO();
   let targetYear = prev.year + interval;
 
@@ -193,7 +240,7 @@ function calculateNextDateYearly(
   });
 
   // If the date has already passed in the target year, advance to the next aligned year
-  if (Temporal.PlainDate.compare(candidate, today) < 0) {
+  if (Temporal.PlainDate.compare(candidate, today) <= 0) {
     const nextYear = targetYear + interval;
     const nextYearMonth = Temporal.PlainYearMonth.from({
       year: nextYear,
@@ -215,17 +262,7 @@ function calculateNextDateAfterCompletion(
   completedAt: string,
   clock: Clock = systemClock,
 ): string {
-  const completedInstant = Temporal.Instant.from(completedAt);
-  let timeZone: string;
-  try {
-    timeZone = clock.timeZoneId();
-  } catch (error) {
-    console.error("Invalid timezone from system, falling back to UTC:", error);
-    timeZone = "UTC";
-  }
-  const completedDate = completedInstant
-    .toZonedDateTimeISO(timeZone)
-    .toPlainDate();
+  const completedDate = toPlainDate(completedAt, clock);
   return completedDate.add({ days: delayDays }).toString();
 }
 
@@ -245,62 +282,178 @@ export function calculateNextDate(
     );
   }
 
-  // type === 'fixed'
+  // type === 'fixed' — implements FR2 of unify-next-date-calculation
   if (!rule.frequency) throw new Error("frequency required for fixed");
+
   if (!previousNextDate) {
-    // First creation: use completedAt as the base
-    const completedInstant = Temporal.Instant.from(completedAt);
-    let timeZone: string;
-    try {
-      timeZone = clock.timeZoneId();
-    } catch (error) {
-      console.error(
-        "Invalid timezone from system, falling back to UTC:",
-        error,
-      );
-      timeZone = "UTC";
-    }
-    previousNextDate = completedInstant
-      .toZonedDateTimeISO(timeZone)
-      .toPlainDate()
-      .toString();
-  } else {
-    previousNextDate = sanitizeDateOnly(previousNextDate) || previousNextDate;
+    // First creation: nearest future date matching the rule
+    return resolveNextFixedDate(rule, "", "nearest-match", clock);
+  }
+
+  // Subsequent completion: advance from the previous scheduled date
+  const sanitizedPreviousNextDate =
+    sanitizeDateOnly(previousNextDate) || previousNextDate;
+  const completedAtDate = toPlainDate(completedAt, clock);
+  return resolveNextFixedDate(
+    rule,
+    sanitizedPreviousNextDate,
+    "from-schedule",
+    clock,
+    completedAtDate,
+  );
+}
+
+// implements FR1 of unify-next-date-calculation
+type ResolveMode = "nearest-match" | "from-schedule";
+type FixedRule = Extract<RepeatRule, { type: "fixed" }>;
+
+/**
+ * Unified dispatcher for calculating next_date for fixed repeat rules.
+ *
+ * - nearest-match: find the nearest future date matching the rule (used on rule creation/change)
+ * - from-schedule: advance from anchor by schedule interval (used on task completion)
+ *
+ * Implements FR1, FR2, FR5 of unify-next-date-calculation
+ */
+export function resolveNextFixedDate(
+  rule: RepeatRule,
+  anchor: string,
+  mode: ResolveMode,
+  clock: Clock,
+  completedAtDate?: Temporal.PlainDate,
+): string {
+  if (rule.type !== "fixed") {
+    throw new Error("resolveNextFixedDate only supports fixed rules");
   }
 
   const interval = rule.interval ?? 1;
 
+  if (mode === "nearest-match") {
+    return resolveNearestMatch(rule, clock, interval);
+  }
+
+  // from-schedule: delegate to existing frequency calculators
+  const effectiveCompletedAtDate =
+    completedAtDate ?? Temporal.PlainDate.from(anchor);
+  return resolveFromSchedule(
+    rule,
+    anchor,
+    effectiveCompletedAtDate,
+    interval,
+    clock,
+  );
+}
+
+function resolveNearestMatch(
+  rule: FixedRule,
+  clock: Clock,
+  interval: number,
+): string {
+  const today = clock.plainDateISO();
+
   switch (rule.frequency) {
     case "daily":
-      return calculateNextDateDaily(interval, previousNextDate, clock);
-    case "weekly":
-      if (!rule.weekdays || rule.weekdays.length === 0) {
-        throw new Error("weekdays required for weekly");
+      return today.add({ days: interval }).toString();
+
+    case "weekly": {
+      const weekdays = rule.weekdays ?? [];
+      const tomorrow = today.add({ days: 1 });
+      // nearest-match always uses interval=1 to find the closest matching day
+      const NEAREST_INTERVAL = 1;
+      return findNextWeekday(tomorrow, weekdays, NEAREST_INTERVAL);
+    }
+
+    case "monthly": {
+      const dayOfMonth = rule.day_of_month ?? 1;
+      const currentMonth = today.toPlainYearMonth();
+      const actualDay = Math.min(dayOfMonth, currentMonth.daysInMonth);
+      const candidate = currentMonth.toPlainDate({ day: actualDay });
+      if (Temporal.PlainDate.compare(candidate, today) > 0) {
+        return candidate.toString();
       }
+      const nextMonth = currentMonth.add({ months: 1 });
+      const nextActualDay = Math.min(dayOfMonth, nextMonth.daysInMonth);
+      return nextMonth.toPlainDate({ day: nextActualDay }).toString();
+    }
+
+    case "yearly": {
+      const { month, day } = rule.month_and_day ?? { month: 1, day: 1 };
+      const thisYearMonth = Temporal.PlainYearMonth.from({
+        year: today.year,
+        month,
+      });
+      const actualDay = Math.min(day, thisYearMonth.daysInMonth);
+      const candidate = Temporal.PlainDate.from({
+        year: today.year,
+        month,
+        day: actualDay,
+      });
+      if (Temporal.PlainDate.compare(candidate, today) > 0) {
+        return candidate.toString();
+      }
+      const nextYear = today.year + 1;
+      const nextYearMonth = Temporal.PlainYearMonth.from({
+        year: nextYear,
+        month,
+      });
+      const nextActualDay = Math.min(day, nextYearMonth.daysInMonth);
+      return Temporal.PlainDate.from({
+        year: nextYear,
+        month,
+        day: nextActualDay,
+      }).toString();
+    }
+
+    default:
+      throw new Error(`Unknown frequency: ${rule.frequency}`);
+  }
+}
+
+function resolveFromSchedule(
+  rule: FixedRule,
+  previousNextDate: string,
+  completedAtDate: Temporal.PlainDate,
+  interval: number,
+  clock: Clock,
+): string {
+  switch (rule.frequency) {
+    case "daily":
+      return calculateNextDateDaily(
+        interval,
+        previousNextDate,
+        completedAtDate,
+        clock,
+      );
+    case "weekly": {
+      const weekdays = rule.weekdays ?? [];
       return calculateNextDateWeekly(
         interval,
-        rule.weekdays,
+        weekdays,
         previousNextDate,
+        completedAtDate,
         clock,
       );
-    case "monthly":
-      if (!rule.day_of_month)
-        throw new Error("day_of_month required for monthly");
+    }
+    case "monthly": {
+      const dayOfMonth = rule.day_of_month ?? 1;
       return calculateNextDateMonthly(
         interval,
-        rule.day_of_month,
+        dayOfMonth,
         previousNextDate,
+        completedAtDate,
         clock,
       );
-    case "yearly":
-      if (!rule.month_and_day)
-        throw new Error("month_and_day required for yearly");
+    }
+    case "yearly": {
+      const monthAndDay = rule.month_and_day ?? { month: 1, day: 1 };
       return calculateNextDateYearly(
         interval,
-        rule.month_and_day,
+        monthAndDay,
         previousNextDate,
+        completedAtDate,
         clock,
       );
+    }
     default:
       throw new Error(`Unknown frequency: ${rule.frequency}`);
   }
@@ -360,8 +513,10 @@ export function formatRepeatRuleLabel(rule: RepeatRule, t: TFunction): string {
   }
 }
 
+export { formatNextDate, formatUpcomingDate } from "./formatRecurrenceDate";
 export {
   calculateNextDateOnRuleChange,
   computeRuleChangeUpdates,
   shouldRecalculateNextDate,
 } from "./repeatRuleChange";
+export { calculateUpcomingDates, UPCOMING_DATES_COUNT } from "./upcomingDates";

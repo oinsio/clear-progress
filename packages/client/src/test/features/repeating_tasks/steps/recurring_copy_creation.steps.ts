@@ -7,7 +7,7 @@ import { db } from "@/db/database";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { fakeClock } from "@/lib/temporal";
-import { TaskService } from "@/services/TaskService";
+import { type RecurringResult, TaskService } from "@/services/TaskService";
 import { buildChecklistItem } from "@/test/factories/checklistItemFactory";
 import { buildTask } from "@/test/factories/taskFactory";
 import type { ChecklistItem, Task } from "@/types/entities";
@@ -33,7 +33,7 @@ type Context = Record<string, never>;
 
 describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   let taskService: TaskService;
-  let completionResult: { completed: Task; recurring: Task | null };
+  let completionResult: { completed: Task; recurringResult: RecurringResult };
   let taskA: Task;
   let copyB: Task;
   let copyC: Task;
@@ -75,30 +75,44 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Then(
         "a new task is created with same name and repeat_rule",
         (_ctx: TestContext) => {
-          expect(completionResult.recurring).not.toBeNull();
-          expect(completionResult.recurring?.name).toBe("Morning routine");
-          expect(completionResult.recurring?.repeat_rule).toBe(DAILY_RULE);
+          expect(completionResult.recurringResult.status).toBe("created");
+          if (completionResult.recurringResult.status === "created") {
+            expect(completionResult.recurringResult.task.name).toBe(
+              "Morning routine",
+            );
+            expect(completionResult.recurringResult.task.repeat_rule).toBe(
+              DAILY_RULE,
+            );
+          }
         },
       );
 
       And(
         "new task has a different ID and is_completed false",
         (_ctx: TestContext) => {
-          expect(completionResult.recurring?.id).not.toBe(TASK_A_ID);
-          expect(completionResult.recurring?.is_completed).toBe(false);
-          expect(completionResult.recurring?.completed_at).toBe("");
+          if (completionResult.recurringResult.status === "created") {
+            expect(completionResult.recurringResult.task.id).not.toBe(
+              TASK_A_ID,
+            );
+            expect(completionResult.recurringResult.task.is_completed).toBe(
+              false,
+            );
+            expect(completionResult.recurringResult.task.completed_at).toBe("");
+          }
         },
       );
 
       And(
         "new task has calculated next_date and appear_date",
         (_ctx: TestContext) => {
-          expect(completionResult.recurring?.next_date).toMatch(
-            /^\d{4}-\d{2}-\d{2}$/,
-          );
-          expect(completionResult.recurring?.appear_date).toMatch(
-            /^\d{4}-\d{2}-\d{2}$/,
-          );
+          if (completionResult.recurringResult.status === "created") {
+            expect(completionResult.recurringResult.task.next_date).toMatch(
+              /^\d{4}-\d{2}-\d{2}$/,
+            );
+            expect(completionResult.recurringResult.task.appear_date).toMatch(
+              /^\d{4}-\d{2}-\d{2}$/,
+            );
+          }
         },
       );
     },
@@ -128,7 +142,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         "user completes task A producing copy B",
         async (_ctx: TestContext) => {
           const resultA = await taskService.complete(TASK_CHAIN_ID);
-          copyB = resultA.recurring as NonNullable<typeof resultA.recurring>;
+          if (resultA.recurringResult.status !== "created")
+            throw new Error("Expected recurring copy");
+          copyB = resultA.recurringResult.task;
         },
       );
 
@@ -137,7 +153,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         async (_ctx: TestContext) => {
           await db.tasks.update(copyB.id, { is_hidden: false });
           const resultB = await taskService.complete(copyB.id);
-          copyC = resultB.recurring as NonNullable<typeof resultB.recurring>;
+          if (resultB.recurringResult.status !== "created")
+            throw new Error("Expected recurring copy");
+          copyC = resultB.recurringResult.task;
         },
       );
 
@@ -210,7 +228,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Then(
         "the recurring copy has 3 checklist items with new IDs",
         async (_ctx: TestContext) => {
-          const recurringId = completionResult.recurring?.id as string;
+          if (completionResult.recurringResult.status !== "created")
+            throw new Error("Expected recurring copy");
+          const recurringId = completionResult.recurringResult.task.id;
           copiedItems = await db.checklist_items
             .where("task_id")
             .equals(recurringId)

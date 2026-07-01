@@ -8,6 +8,14 @@ import {
   setupHookWithTwoTasks,
 } from "./useTasks.test-utils";
 
+vi.mock("@/app/providers/AlertProvider", () => ({
+  useAlerts: () => ({
+    alerts: [],
+    addAlerts: vi.fn(),
+    dismissAlerts: vi.fn(),
+  }),
+}));
+
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
     syncVersion: 0,

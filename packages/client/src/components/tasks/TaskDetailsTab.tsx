@@ -4,10 +4,15 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EditableDescription } from "@/components/ui/EditableDescription";
 import { useRepeatRuleChangeDialog } from "@/hooks/useRepeatRuleChangeDialog";
 import { useSettings } from "@/hooks/useSettings";
+import { systemClock } from "@/lib/temporal";
 import { cn } from "@/shared/lib/cn";
 import type { Box, RepeatRule } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
-import { formatRepeatRuleLabel } from "@/utils/repeatRule";
+import {
+  formatNextDate,
+  formatRepeatRuleLabel,
+  isRepeatRuleInvalid,
+} from "@/utils/repeatRule";
 import { DrillDownRow } from "./DrillDownRow";
 import { type SelectorOption, TaskDetailSelector } from "./TaskDetailSelector";
 import {
@@ -77,6 +82,9 @@ export function TaskDetailsTab({
   const { defaultBox } = useSettings();
   const DescriptionIcon = TASK_DETAIL_ICONS.description;
   const DuplicateIcon = TASK_DETAIL_ICONS.duplicate;
+
+  // Implements FR3, UX1 of detect-invalid-repeat-rule
+  const isInvalidRule = isRepeatRuleInvalid(task);
 
   // Implements FR6, UX1, UX2 of repeating-task-rule-change
   const {
@@ -281,13 +289,35 @@ export function TaskDetailsTab({
         icon={TASK_DETAIL_ICONS.repeat}
         label={t("taskEdit.fieldRepeat")}
         value={
-          selectedRepeatRule
-            ? formatRepeatRuleLabel(selectedRepeatRule, t)
-            : t("repeat.none")
+          isInvalidRule
+            ? t("repeat.ruleNotRecognized")
+            : selectedRepeatRule
+              ? formatRepeatRuleLabel(selectedRepeatRule, t)
+              : t("repeat.none")
         }
-        hasValue={!!selectedRepeatRule}
+        hasValue={!!selectedRepeatRule || isInvalidRule}
+        valueClassName={isInvalidRule ? "text-amber-600" : undefined}
         onClick={() => onOpenSelector(SELECTOR_TYPE.REPEAT)}
+        testId="repeat-rule-row"
       />
+
+      {task.repeat_rule && (
+        <p
+          className="text-xs text-gray-500 -mt-2 pl-10"
+          data-testid="next-date-line"
+        >
+          {t("repeat.nextDateLabel")}:{" "}
+          {task.next_date
+            ? formatNextDate(
+                task.next_date,
+                selectedRepeatRule?.type === "fixed"
+                  ? (selectedRepeatRule.frequency ?? "daily")
+                  : "daily",
+                systemClock,
+              )
+            : t("repeat.nextDateAfterCompletion")}
+        </p>
+      )}
 
       {!task.repeat_rule && (
         <DrillDownRow

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAlerts } from "@/app/providers/AlertProvider";
 import { useSync } from "@/app/providers/SyncProvider";
 import { BOX } from "@/constants";
 import { systemClock } from "@/lib/temporal";
@@ -21,6 +22,7 @@ export function useInboxTasks(
 ): UseInboxTasksReturn {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { addAlerts } = useAlerts();
   const { syncVersion, schedulePush } = useSync();
 
   const loadTasks = useCallback(async () => {
@@ -37,11 +39,19 @@ export function useInboxTasks(
   const completeTask = useCallback(
     async (id: string) => {
       const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
-      await taskService.complete(id, logicalDate);
+      const { completed, recurringResult } = await taskService.complete(
+        id,
+        logicalDate,
+      );
+      if (recurringResult.status === "skipped_invalid_rule") {
+        addAlerts([
+          { type: "repeat_rule_invalid", taskNames: [completed.name] },
+        ]);
+      }
       await loadTasks();
       schedulePush();
     },
-    [taskService, loadTasks, schedulePush],
+    [taskService, loadTasks, schedulePush, addAlerts],
   );
 
   const deleteTask = useCallback(

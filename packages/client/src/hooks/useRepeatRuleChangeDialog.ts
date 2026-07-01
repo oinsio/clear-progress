@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
 import type { RepeatRule } from "@/types/common";
 import type { Task } from "@/types/entities";
-import { serializeRepeatRule } from "@/utils/repeatRule";
+import { calculateAppearDate, serializeRepeatRule } from "@/utils/repeatRule";
 import {
+  calculateNextDateOnRuleChange,
   computeRuleChangeUpdates,
   shouldRecalculateNextDate,
 } from "@/utils/repeatRuleChange";
@@ -40,10 +41,16 @@ export function useRepeatRuleChangeDialog(
       }
 
       if (!oldRule || !task.next_date) {
+        const nextDate = calculateNextDateOnRuleChange(rule, "");
+        const appearDate = nextDate
+          ? calculateAppearDate(nextDate, rule.advance_days)
+          : "";
         setSelectedRepeatRule(rule);
         onCloseSelector();
         await onUpdate(task.id, {
           repeat_rule: serializeRepeatRule(rule),
+          next_date: nextDate,
+          appear_date: appearDate,
         });
         return;
       }

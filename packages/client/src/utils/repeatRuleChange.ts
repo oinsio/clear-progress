@@ -1,8 +1,8 @@
 // implements FR1, FR2, FR3, FR4, FR5, FR7 of repeating-task-rule-change
 
 import type { RepeatRule } from "@clear-progress/contract";
-import { type Clock, systemClock, Temporal } from "@/lib/temporal";
-import { calculateAppearDate } from "./repeatRule";
+import { type Clock, systemClock } from "@/lib/temporal";
+import { calculateAppearDate, resolveNextFixedDate } from "./repeatRule";
 
 /**
  * Returns true if the rule change requires recalculating next_date.
@@ -41,81 +41,19 @@ export function shouldRecalculateNextDate(
 
 /**
  * Calculates the nearest future date matching the new rule, starting from dateOfChange.
+ * Delegates to resolveNextFixedDate with mode="nearest-match".
  *
  * Implements FR1, FR2, FR3, FR7 of repeating-task-rule-change
+ * implements FR3 of unify-next-date-calculation
  */
 export function calculateNextDateOnRuleChange(
   newRule: RepeatRule,
   dateOfChange: string,
-  _clock: Clock = systemClock,
+  clock: Clock = systemClock,
 ): string {
   if (newRule.type === "after_completion") return "";
 
-  const today = Temporal.PlainDate.from(dateOfChange);
-  const interval = newRule.interval ?? 1;
-
-  switch (newRule.frequency) {
-    case "daily":
-      return today.add({ days: interval }).toString();
-
-    case "weekly": {
-      const weekdays = newRule.weekdays ?? [];
-      const sortedWeekdays = [...weekdays].sort((a, b) => a - b);
-      const tomorrow = today.add({ days: 1 });
-      for (let i = 0; i < 7; i++) {
-        const candidate = tomorrow.add({ days: i });
-        if (sortedWeekdays.includes(candidate.dayOfWeek)) {
-          return candidate.toString();
-        }
-      }
-      throw new Error(
-        `No matching weekday found for weekdays: [${newRule.weekdays}]`,
-      );
-    }
-
-    case "monthly": {
-      const dayOfMonth = newRule.day_of_month ?? 1;
-      const currentMonth = today.toPlainYearMonth();
-      const actualDay = Math.min(dayOfMonth, currentMonth.daysInMonth);
-      const candidate = currentMonth.toPlainDate({ day: actualDay });
-      if (Temporal.PlainDate.compare(candidate, today) > 0) {
-        return candidate.toString();
-      }
-      const nextMonth = currentMonth.add({ months: 1 });
-      const nextActualDay = Math.min(dayOfMonth, nextMonth.daysInMonth);
-      return nextMonth.toPlainDate({ day: nextActualDay }).toString();
-    }
-
-    case "yearly": {
-      const { month, day } = newRule.month_and_day ?? { month: 1, day: 1 };
-      const thisYearMonth = Temporal.PlainYearMonth.from({
-        year: today.year,
-        month,
-      });
-      const actualDay = Math.min(day, thisYearMonth.daysInMonth);
-      const candidate = Temporal.PlainDate.from({
-        year: today.year,
-        month,
-        day: actualDay,
-      });
-      if (Temporal.PlainDate.compare(candidate, today) > 0) {
-        return candidate.toString();
-      }
-      const nextYearMonth = Temporal.PlainYearMonth.from({
-        year: today.year + 1,
-        month,
-      });
-      const nextActualDay = Math.min(day, nextYearMonth.daysInMonth);
-      return Temporal.PlainDate.from({
-        year: today.year + 1,
-        month,
-        day: nextActualDay,
-      }).toString();
-    }
-
-    default:
-      throw new Error(`Unknown frequency: ${newRule.frequency}`);
-  }
+  return resolveNextFixedDate(newRule, dateOfChange, "nearest-match", clock);
 }
 
 /**

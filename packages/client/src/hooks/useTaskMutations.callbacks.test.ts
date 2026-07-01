@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockSchedulePush } from "@/app/providers/__mocks__/SyncProvider";
 import { BOX } from "@/constants";
 import type { TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
@@ -7,17 +8,14 @@ import { createMockTaskService } from "@/test/mocks/taskServiceMock";
 import { useTaskMutations } from "./useTaskMutations";
 import { createTestContext } from "./useTaskMutations.test-utils";
 
-const mockSchedulePush = vi.fn();
-
-vi.mock("@/app/providers/SyncProvider", () => ({
-  useSync: () => ({
-    syncVersion: 0,
-    syncStatus: "idle",
-    pull: vi.fn(),
-    push: vi.fn(),
-    schedulePush: mockSchedulePush,
-  }),
-}));
+vi.mock(
+  "@/app/providers/AlertProvider",
+  async () => import("@/app/providers/__mocks__/AlertProvider"),
+);
+vi.mock(
+  "@/app/providers/SyncProvider",
+  async () => import("@/app/providers/__mocks__/SyncProvider"),
+);
 
 describe("useTaskMutations > callback updates when dependencies change", () => {
   let mockTaskService: TaskService;

@@ -1,5 +1,6 @@
 import { liveQuery } from "dexie";
 import { useCallback, useEffect, useState } from "react";
+import { useAlerts } from "@/app/providers/AlertProvider";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useShowHidden } from "@/hooks/useShowHidden";
 import { systemClock } from "@/lib/temporal";
@@ -31,6 +32,7 @@ export function useTasks(
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { showHidden } = useShowHidden();
+  const { addAlerts } = useAlerts();
   const { schedulePush } = useSync();
 
   useEffect(() => {
@@ -64,14 +66,21 @@ export function useTasks(
         await taskService.noncomplete(id);
       } else {
         const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
-        const { recurring } = await taskService.complete(id, logicalDate);
+        const { recurringResult } = await taskService.complete(id, logicalDate);
+        if (recurringResult.status === "skipped_invalid_rule") {
+          addAlerts([{ type: "repeat_rule_invalid", taskNames: [task.name] }]);
+        }
         // Return ID only if the recurring copy is NOT hidden
-        recurringId = recurring && !recurring.is_hidden ? recurring.id : null;
+        recurringId =
+          recurringResult.status === "created" &&
+          !recurringResult.task.is_hidden
+            ? recurringResult.task.id
+            : null;
       }
       schedulePush();
       return recurringId;
     },
-    [taskService, schedulePush],
+    [taskService, schedulePush, addAlerts],
   );
 
   const deleteTask = useCallback(

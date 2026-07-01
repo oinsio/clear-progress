@@ -7,7 +7,7 @@ import { db } from "@/db/database";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { fakeClock } from "@/lib/temporal";
-import { TaskService } from "@/services/TaskService";
+import { type RecurringResult, TaskService } from "@/services/TaskService";
 import { buildTask } from "@/test/factories/taskFactory";
 import type { Task } from "@/types/entities";
 import { getLogicalDate } from "@/utils/getLogicalDate";
@@ -59,7 +59,7 @@ async function seedRecurringTask(
 async function completeTask(
   clockISO: string,
   logicalDate?: string,
-): Promise<{ completed: Task; recurring: Task | null }> {
+): Promise<{ completed: Task; recurringResult: RecurringResult }> {
   const clock = fakeClock(clockISO);
   const taskService = new TaskService(
     new TaskRepository(),
@@ -71,7 +71,7 @@ async function completeTask(
 
 describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   let logicalDate: string;
-  let completionResult: { completed: Task; recurring: Task | null };
+  let completionResult: { completed: Task; recurringResult: RecurringResult };
   let dayBoundary: string;
   let localTime: string;
   let localDate: string;
@@ -115,8 +115,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then("the recurring copy is hidden", (_ctx: TestContext) => {
-        expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring?.is_hidden).toBe(true);
+        expect(completionResult.recurringResult.status).toBe("created");
+        if (completionResult.recurringResult.status === "created") {
+          expect(completionResult.recurringResult.task.is_hidden).toBe(true);
+        }
       });
     },
   );
@@ -149,8 +151,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       });
 
       Then("the recurring copy is visible", (_ctx: TestContext) => {
-        expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring?.is_hidden).toBe(false);
+        expect(completionResult.recurringResult.status).toBe("created");
+        if (completionResult.recurringResult.status === "created") {
+          expect(completionResult.recurringResult.task.is_hidden).toBe(false);
+        }
       });
     },
   );
@@ -197,8 +201,10 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       );
 
       Then("the recurring copy is hidden", (_ctx: TestContext) => {
-        expect(completionResult.recurring).not.toBeNull();
-        expect(completionResult.recurring?.is_hidden).toBe(true);
+        expect(completionResult.recurringResult.status).toBe("created");
+        if (completionResult.recurringResult.status === "created") {
+          expect(completionResult.recurringResult.task.is_hidden).toBe(true);
+        }
       });
     },
   );
@@ -229,10 +235,12 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       Then(
         "the recurring copy visibility is determined by calendar date from clock",
         (_ctx: TestContext) => {
-          expect(completionResult.recurring).not.toBeNull();
+          expect(completionResult.recurringResult.status).toBe("created");
           // clock.plainDateISO() = "2026-01-15", appear_date = "2026-01-15"
           // shouldReveal: appear_date <= today → true → is_hidden = false
-          expect(completionResult.recurring?.is_hidden).toBe(false);
+          if (completionResult.recurringResult.status === "created") {
+            expect(completionResult.recurringResult.task.is_hidden).toBe(false);
+          }
         },
       );
     },

@@ -69,7 +69,8 @@ describe("TaskService - Rule Change then Complete", () => {
     await taskService.complete("task-1");
 
     const createdTask = getCreatedTask();
-    expect(createdTask?.next_date).toBe("2026-06-18");
+    // Daily with today+interval: 2026-06-08 + 5 = 2026-06-13
+    expect(createdTask?.next_date).toBe("2026-06-13");
   });
 
   it("should calculate next_date from updated rule when completed days later", async () => {
@@ -106,8 +107,8 @@ describe("TaskService - Rule Change then Complete", () => {
     await taskService.complete("task-1");
 
     const createdTask = getCreatedTask();
-    // next = 2026-06-13 + 5 = 2026-06-18, still in future from 2026-06-10
-    expect(createdTask?.next_date).toBe("2026-06-18");
+    // Daily Model B: completedAt (06-10) < prev (06-13) → early completion → schedule preserved
+    expect(createdTask?.next_date).toBe("2026-06-13");
   });
 
   it("should calculate next_date from completedAt when rule changed to after_completion", async () => {

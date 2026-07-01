@@ -175,3 +175,4 @@ docs/
 - [Как добавить новый адаптер бэкенда](docs/contributing/how-to-add-adapter.md)
 - [Модель данных и протокол синхронизации](docs/architecture/data-model-and-sync.md)
 - [Архитектурные решения (ADR)](docs/adr/)
+- [Спецификации продукта (OpenSpec)](openspec/specs/)

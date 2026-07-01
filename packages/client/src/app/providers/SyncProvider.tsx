@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useAlerts } from "@/app/providers/AlertProvider";
 import { useAuth } from "@/app/providers/AuthProvider";
 import {
   API_AUTH_ERROR_NAME,
@@ -36,19 +37,17 @@ import {
   defaultSyncAdapter,
 } from "@/services/defaultServices";
 import { setPreference } from "@/services/localPreferencesService";
-import type { SyncAlert } from "@/services/push-self-healing";
 import { RecurringTaskDeduplicator } from "@/services/RecurringTaskDeduplicator";
 import { SyncService } from "@/services/SyncService";
+import type { AppAlert } from "@/types/alerts";
 import type { FullSyncStep, SyncStatus } from "@/types/common";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import { filterTaskNamesWithInvalidRepeatRules } from "@/utils/repeatRuleValidation";
 
 interface SyncContextValue {
   syncStatus: SyncStatus;
   syncVersion: number;
   lastSyncedAt: string | null;
-  /** Implements FR7, FR8 of fix-push-poison-pill */
-  pendingSyncAlerts: SyncAlert[];
-  clearSyncAlerts: () => void;
   pull: () => Promise<void>;
   push: () => Promise<void>;
   schedulePush: () => void;
@@ -84,9 +83,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
   const { accessToken, signOut, silentRefresh } = useAuth();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncVersion, setSyncVersion] = useState(0);
-  /** Implements FR7, FR8 of fix-push-poison-pill */
-  const [pendingSyncAlerts, setPendingSyncAlerts] = useState<SyncAlert[]>([]);
-  const clearSyncAlerts = useCallback(() => setPendingSyncAlerts([]), []);
+  const { addAlerts } = useAlerts();
+  const addAlertsRef = useRef(addAlerts);
+  useEffect(() => {
+    addAlertsRef.current = addAlerts;
+  }, [addAlerts]);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(() => {
     try {
       return localStorage.getItem(STORAGE_KEYS.LAST_SYNC);
@@ -124,13 +125,26 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     await syncService.push();
     // implements FR7, FR8 of fix-push-poison-pill
     if (syncService.lastSyncAlerts.length > 0) {
-      setPendingSyncAlerts((previous) => [
-        ...previous,
-        ...syncService.lastSyncAlerts,
-      ]);
+      const syncAlerts: AppAlert[] = syncService.lastSyncAlerts.map(
+        (syncAlert) => ({
+          type: "sync" as const,
+          messageKey: syncAlert.messageKey,
+          params: syncAlert.params,
+        }),
+      );
+      addAlertsRef.current(syncAlerts);
     }
     console.log("[SyncProvider] applySyncResult: push done, starting pull");
     await syncService.pull();
+    // Implements FR5, FR9 of detect-invalid-repeat-rule
+    const invalidRuleTaskNames = filterTaskNamesWithInvalidRepeatRules(
+      syncService.lastPulledTasks,
+    );
+    if (invalidRuleTaskNames.length > 0) {
+      addAlertsRef.current([
+        { type: "repeat_rule_invalid", taskNames: invalidRuleTaskNames },
+      ]);
+    }
     console.log(
       "[SyncProvider] applySyncResult: pull done, starting file sync",
     );
@@ -232,10 +246,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         await syncService.push(true);
         // implements FR7, FR8 of fix-push-poison-pill
         if (syncService.lastSyncAlerts.length > 0) {
-          setPendingSyncAlerts((previous) => [
-            ...previous,
-            ...syncService.lastSyncAlerts,
-          ]);
+          const syncAlerts: AppAlert[] = syncService.lastSyncAlerts.map(
+            (syncAlert) => ({
+              type: "sync" as const,
+              messageKey: syncAlert.messageKey,
+              params: syncAlert.params,
+            }),
+          );
+          addAlertsRef.current(syncAlerts);
         }
 
         onProgress("pull");
@@ -388,8 +406,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         syncStatus,
         syncVersion,
         lastSyncedAt,
-        pendingSyncAlerts,
-        clearSyncAlerts,
         pull: sync,
         push: sync,
         schedulePush,
@@ -407,8 +423,6 @@ const SYNC_FALLBACK: SyncContextValue = {
   syncStatus: "idle",
   syncVersion: 0,
   lastSyncedAt: null,
-  pendingSyncAlerts: [],
-  clearSyncAlerts: () => {},
   pull: SYNC_NOOP,
   push: SYNC_NOOP,
   schedulePush: () => {},

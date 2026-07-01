@@ -62,34 +62,70 @@ System MUST serialize a RepeatRule to JSON string. System MUST format a human-re
 - **THEN** result uses i18n key "repeat.afterCompletion" with count 5
 
 ### Requirement: System calculates next date for fixed daily frequency
-# implements FR3 of repeating-tasks-specs
+# implements FR3 of repeating-tasks-specs, FR1, FR2 of fix-recurring-skip-logic, FR1, FR2, FR3 of align-daily-to-calendar-rhythm
 
-System MUST add interval days to previous next_date. If result is in the past (user was inactive), system MUST apply skip logic: compute nearest future date aligned to interval periods.
+System MUST calculate `next_date` for daily frequency by advancing from `previousNextDate` by `interval` days (calendar-aligned, Model B). Early completion MUST preserve the scheduled date. Skip logic MUST apply when the candidate is in the past — skip to the nearest future date aligned to the interval grid, strictly `> today`.
 
-#### Scenario: Daily interval 1 next day
-- **GIVEN** previous next_date is "2026-01-15" and today is "2026-01-15"
-- **WHEN** system calculates next date with daily interval 1
-- **THEN** result is "2026-01-16"
+This aligns daily with weekly/monthly/yearly: all fixed frequencies use schedule-based computation. The `after_completion` type remains the only "from today" model.
 
-#### Scenario: Daily interval 3
-- **GIVEN** previous next_date is "2026-01-15" and today is "2026-01-15"
-- **WHEN** system calculates next date with daily interval 3
-- **THEN** result is "2026-01-18"
+#### Scenario: Daily interval 1 normal completion
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-01" and completed_at date is "2026-07-01"
+- **THEN** system calculates next date with daily interval 1 as "2026-07-02"
 
-#### Scenario: Daily skip logic skips missed days
-- **GIVEN** previous next_date is "2026-01-10" and today is "2026-01-20"
-- **WHEN** system calculates next date with daily interval 3
-- **THEN** result is "2026-01-22" (next aligned date >= today)
+#### Scenario: Daily interval 1 early completion preserves schedule
+- **WHEN** previous next_date is "2026-07-02" and today is "2026-07-01" and completed_at date is "2026-07-01"
+- **THEN** system calculates next date with daily interval 1 as "2026-07-02" (schedule preserved)
 
-#### Scenario: Daily skip logic exact alignment
-- **GIVEN** previous next_date is "2026-01-01" and today is "2026-01-07"
-- **WHEN** system calculates next date with daily interval 3
-- **THEN** result is "2026-01-07" (exactly today, aligned to interval)
+#### Scenario: Daily interval 1 late by 1 day skips to future
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-02" and completed_at date is "2026-07-02"
+- **THEN** system calculates next date with daily interval 1 as "2026-07-03" (07-02 is today, skip to 07-03)
+
+#### Scenario: Daily interval 1 long inactivity skips to tomorrow
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-15" and completed_at date is "2026-07-15"
+- **THEN** system calculates next date with daily interval 1 as "2026-07-16"
+
+#### Scenario: Daily interval 3 normal completion
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-01" and completed_at date is "2026-07-01"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-04"
+
+#### Scenario: Daily interval 3 early completion preserves schedule
+- **WHEN** previous next_date is "2026-07-04" and today is "2026-07-02" and completed_at date is "2026-07-02"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-04" (schedule preserved)
+
+#### Scenario: Daily interval 3 late but candidate still in future
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-03" and completed_at date is "2026-07-03"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-04" (candidate > today)
+
+#### Scenario: Daily interval 3 long inactivity skips by grid
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-15" and completed_at date is "2026-07-15"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-16" (grid: 01,04,07,10,13,16 — 16 > today)
+
+#### Scenario: Daily interval 3 long inactivity candidate equals today
+- **WHEN** previous next_date is "2026-07-01" and today is "2026-07-16" and completed_at date is "2026-07-16"
+- **THEN** system calculates next date with daily interval 3 as "2026-07-19" (grid: 01,04,...,16 — 16 <= today, next is 19)
+
+#### Scenario: Daily nearest-match on rule creation with interval 1
+- **WHEN** user creates a daily rule with interval 1 and today is "2026-07-01"
+- **THEN** system calculates next date as "2026-07-02" (today + interval)
+
+#### Scenario: Daily nearest-match on rule creation with interval 3
+- **WHEN** user creates a daily rule with interval 3 and today is "2026-07-01"
+- **THEN** system calculates next date as "2026-07-04" (today + interval)
+
+#### Scenario: Daily nearest-match on rule change resets rhythm
+- **WHEN** user changes daily interval from 1 to 2 and today is "2026-07-03"
+- **THEN** system calculates next date as "2026-07-05" (today + new interval, clean restart)
 
 ### Requirement: System calculates next date for fixed weekly frequency
-# implements FR4 of repeating-tasks-specs
+# implements FR4 of repeating-tasks-specs, FR1, FR2, FR5 of unify-next-date-calculation
 
-System MUST find the next matching weekday from the weekdays list, respecting the interval (every N weeks). Skip logic MUST align to the nearest future week period if the candidate is in the past. Weekdays use ISO 8601 (1=Monday, 7=Sunday).
+System MUST calculate `next_date` for weekly frequency using two modes:
+
+**Mode `nearest-match`** (first creation, rule change): System SHALL find the earliest weekday from the weekdays list that is strictly after today, scanning up to 7 days from tomorrow. The `interval` parameter SHALL NOT affect the first jump — it only defines the rhythm for subsequent completions. This ensures consistent behavior between first creation and rule change paths.
+
+**Mode `from-schedule`** (subsequent completions): System SHALL compute `nextDay = previousNextDate + 1`, find the next matching weekday respecting the interval (every N weeks). Skip logic SHALL align to the nearest future week period if the candidate is in the past. Weekdays use ISO 8601 (1=Monday, 7=Sunday). The two-step algorithm (current week first, then advance by interval) is unchanged.
+
+The dead branch `!previousNextDate` in `calculateNextDateWeekly` SHALL be removed — it is unreachable through the public API.
 
 #### Scenario: Weekly single weekday
 - **GIVEN** previous next_date is Monday "2026-01-05" and weekdays [1] (Monday) and today is "2026-01-05"
@@ -109,6 +145,38 @@ System MUST find the next matching weekday from the weekdays list, respecting th
 #### Scenario: Weekly skip logic skips missed weeks
 - **GIVEN** previous next_date is "2026-01-06" and weekdays [1] (Monday) and today is "2026-02-01"
 - **WHEN** system calculates next date with weekly interval 1
+- **THEN** result is the nearest Monday on or after "2026-02-01"
+
+#### Scenario: Weekly early completion — next Monday still in future
+- **WHEN** previous next_date is "2026-07-06" (Monday) and weekdays [1] and today is "2026-07-04" (Saturday)
+- **THEN** system calculates next date with weekly interval 1 as "2026-07-06" (the scheduled Monday, still in future — task for current period not yet due)
+
+#### Scenario: Weekly early completion — biweekly rhythm preserved
+- **WHEN** previous next_date is "2026-07-06" (Monday) and weekdays [1] and today is "2026-07-04" (Saturday)
+- **THEN** system calculates next date with weekly interval 2 as "2026-07-06" (same as interval 1 — the next Monday from prev is still in the future, no interval skip needed)
+
+#### Scenario: Weekly nearest-match with interval 1
+- **WHEN** mode is `nearest-match`, today is "2026-05-31" (Sunday), weekdays=[1] (Monday), interval=1
+- **THEN** result is "2026-06-01" (nearest Monday)
+
+#### Scenario: Weekly nearest-match with interval 2 finds nearest day (bug fix)
+- **WHEN** mode is `nearest-match`, today is "2026-05-30" (Saturday), weekdays=[1] (Monday), interval=2
+- **THEN** result is "2026-06-01" (nearest Monday, NOT 2026-06-08)
+
+#### Scenario: Weekly nearest-match same result as rule change
+- **WHEN** mode is `nearest-match`, today is "2026-06-08" (Monday), weekdays=[5] (Friday), interval=3
+- **THEN** result is "2026-06-12" (nearest Friday, interval ignored for first jump)
+
+#### Scenario: Weekly from-schedule with interval 2 single weekday
+- **WHEN** mode is `from-schedule`, previousNextDate is "2026-06-01" (Monday), weekdays=[1], interval=2, today is "2026-06-01"
+- **THEN** result is "2026-06-15" (Monday two weeks later — interval respected)
+
+#### Scenario: Weekly from-schedule with interval 2 multiple weekdays same week
+- **WHEN** mode is `from-schedule`, previousNextDate is "2026-06-01" (Monday), weekdays=[1,3], interval=2, today is "2026-06-01"
+- **THEN** result is "2026-06-03" (Wednesday of same week — no interval skip within active week)
+
+#### Scenario: Weekly from-schedule skip logic
+- **WHEN** mode is `from-schedule`, previousNextDate is "2026-01-06", weekdays=[1], interval=1, today is "2026-02-01"
 - **THEN** result is the nearest Monday on or after "2026-02-01"
 
 ### Requirement: Weekly recurrence with multiple weekdays respects interval as week-level skip
@@ -172,25 +240,54 @@ System MUST advance by interval months to the specified day_of_month. If day_of_
 - **WHEN** system calculates next date with monthly interval 3
 - **THEN** result is "2026-07-15" (aligned to every-3-month period)
 
+#### Scenario: Monthly early completion — 15th not yet arrived
+- **WHEN** previous next_date is "2026-07-15" and day_of_month 15 and today is "2026-07-12"
+- **THEN** system calculates next date with monthly interval 1 as "2026-07-15" (15th has not arrived, task for current period still due)
+
+#### Scenario: Monthly early completion — 1st not yet arrived
+- **WHEN** previous next_date is "2026-08-01" and day_of_month 1 and today is "2026-07-28"
+- **THEN** system calculates next date with monthly interval 1 as "2026-08-01" (next month's 1st, still in future)
+
+#### Scenario: Monthly day=31 clamping chain — Feb then back to Mar
+- **WHEN** previous next_date is "2026-02-28" (clamped from day=31) and day_of_month 31 and today is "2026-02-28"
+- **THEN** system calculates next date with monthly interval 1 as "2026-03-31" (March has 31 days, return to original)
+
+#### Scenario: Monthly day=30 in February
+- **WHEN** previous next_date is "2026-01-30" and day_of_month 30 and today is "2026-01-30"
+- **THEN** system calculates next date with monthly interval 1 as "2026-02-28" (February 2026 has 28 days, clamp)
+
+#### Scenario: Monthly day=30 returns to 30 after February
+- **WHEN** previous next_date is "2026-02-28" (clamped from day=30) and day_of_month 30 and today is "2026-02-28"
+- **THEN** system calculates next date with monthly interval 1 as "2026-03-30" (March has 30+, return to original)
+
 ### Requirement: System calculates next date for fixed yearly frequency
-# implements FR6 of repeating-tasks-specs
+# implements FR6 of repeating-tasks-specs, FR3 of fix-recurring-skip-logic
 
-System MUST advance by interval years to the specified month_and_day. If target date is Feb 29 in a non-leap year, system MUST clamp to Feb 28. Skip logic MUST skip past years if target year is in the past.
+System MUST advance by interval years to the specified month_and_day. If day_of_month exceeds days in target month, system MUST clamp to last day (e.g., Feb 29 in non-leap year becomes Feb 28). Skip logic MUST skip past years if target year is in the past. If the calculated date equals today, system MUST advance by one more interval (strictly after today).
 
-#### Scenario: Yearly interval 1
-- **GIVEN** previous next_date is "2026-03-20" and month_and_day {month: 3, day: 20} and today is "2026-03-20"
-- **WHEN** system calculates next date with yearly interval 1
-- **THEN** result is "2027-03-20"
+#### Scenario: Yearly interval 1 normal completion
+- **WHEN** previous next_date is "2026-03-20" and month_and_day {month: 3, day: 20} and today is "2026-03-20"
+- **THEN** result is "2027-03-20" (today is the scheduled date, advance to next year)
 
 #### Scenario: Yearly Feb 29 in non-leap year
-- **GIVEN** previous next_date is "2024-02-29" and month_and_day {month: 2, day: 29} and today is "2024-02-29"
-- **WHEN** system calculates next date with yearly interval 1
-- **THEN** result is "2025-02-28" (2025 is not a leap year)
+- **WHEN** previous next_date is "2024-02-29" and month_and_day {month: 2, day: 29} and today is "2024-02-29"
+- **THEN** result is "2025-02-28" (2025 is not a leap year, clamp to 28)
 
 #### Scenario: Yearly skip logic skips past years
-- **GIVEN** previous next_date is "2024-06-15" and month_and_day {month: 6, day: 15} and today is "2027-01-01"
-- **WHEN** system calculates next date with yearly interval 1
+- **WHEN** previous next_date is "2024-06-15" and month_and_day {month: 6, day: 15} and today is "2027-01-01"
 - **THEN** result is "2027-06-15"
+
+#### Scenario: Yearly skip logic — today equals scheduled date
+- **WHEN** previous next_date is "2024-03-15" and month_and_day {month: 3, day: 15} and today is "2026-03-15"
+- **THEN** result is "2027-03-15" (today is the date, strictly after today means next year)
+
+#### Scenario: Yearly Feb 29 skip — non-leap year clamps and still strictly after today
+- **WHEN** previous next_date is "2024-02-29" and month_and_day {month: 2, day: 29} and today is "2026-04-16"
+- **THEN** result is "2027-02-28" (nearest future year, clamped)
+
+#### Scenario: Yearly early completion — scheduled date still in future
+- **WHEN** previous next_date is "2026-12-25" and month_and_day {month: 12, day: 25} and today is "2026-12-20"
+- **THEN** system calculates next date with yearly interval 1 as "2026-12-25" (Dec 25 not yet arrived)
 
 ### Requirement: System calculates next date for after_completion type
 # implements FR7 of repeating-tasks-specs
@@ -235,14 +332,38 @@ System MUST calculate appear_date as next_date minus advance_days. When advance_
 ### Requirement: System creates a recurring copy on task completion
 # implements FR9 of repeating-tasks-specs
 
-When a task with repeat_rule is completed, system MUST: calculate next_date, calculate appear_date, create a new task copy with new UUID, reset is_completed to false, clear completed_at, set original_task_id to the chain origin, copy checklist items with new IDs and reset is_completed, mark for sync.
+When a task with repeat_rule is completed, the system MUST: parse the repeat_rule, calculate next_date and appear_date, create or update a recurring copy. The `complete()` method SHALL return a `recurringResult` discriminated union instead of `recurring: Task | null`:
+- `{ status: 'created'; task: Task }` — copy created or updated successfully
+- `{ status: 'skipped_invalid_rule' }` — repeat_rule is non-empty but parsing failed, OR an exception occurred during copy creation
+- `{ status: 'not_recurring' }` — repeat_rule is empty
+
+The completion itself SHALL NOT be interrupted regardless of recurringResult status.
 
 #### Scenario: Complete repeating task creates a copy
-- **GIVEN** active task "Morning routine" with a daily repeat_rule
+- **GIVEN** active task "Morning routine" with a valid daily repeat_rule
 - **WHEN** user completes the task
 - **THEN** a new task is created with same name, box, description, repeat_rule
+- **AND** `recurringResult` has status "created" with the new task
 - **AND** new task has a different ID, is_completed false, completed_at empty
-- **AND** new task has calculated next_date and appear_date
+
+#### Scenario: Complete task with invalid repeat_rule returns skipped status
+- **GIVEN** active task "Morning routine" with repeat_rule `{"type":"unknown"}`
+- **WHEN** user completes the task
+- **THEN** the task is marked as completed
+- **AND** `recurringResult` has status "skipped_invalid_rule"
+- **AND** no recurring copy is created
+
+#### Scenario: Complete non-recurring task returns not_recurring status
+- **GIVEN** active task "Morning routine" with empty repeat_rule
+- **WHEN** user completes the task
+- **THEN** `recurringResult` has status "not_recurring"
+
+#### Scenario: Exception during copy creation returns skipped status
+- **GIVEN** active task with valid repeat_rule but copy creation fails with an error
+- **WHEN** user completes the task
+- **THEN** the task is marked as completed
+- **AND** `recurringResult` has status "skipped_invalid_rule"
+- **AND** the error is logged
 
 #### Scenario: Recurring copy preserves original_task_id chain
 - **GIVEN** task A (id="a", original_task_id="") is completed creating task B (original_task_id="a")
@@ -338,9 +459,9 @@ When completing a repeating task, if a hidden recurring copy already exists (sam
 - **AND** no additional copy is created
 
 ### Requirement: System recalculates next_date when repeat rule changes
-# implements FR1 of repeating-task-rule-change
+# implements FR1 of repeating-task-rule-change, FR1, FR3 of unify-next-date-calculation
 
-When a user changes the repeat_rule of a task, the system MUST recalculate next_date from the date of the change (not from the old next_date). This ensures the new rhythm starts from the moment the user made the change. The system MUST also recalculate appear_date based on the new next_date and advance_days.
+When a user changes the repeat_rule of a task, the system MUST recalculate next_date using the `nearest-match` mode of the unified algorithm. The anchor date is the date of the change. This ensures identical behavior to first creation: the nearest future date matching the new rule is selected, regardless of interval. The system MUST also recalculate appear_date based on the new next_date and advance_days.
 
 #### Scenario: Daily interval change recalculates from date of change
 - **WHEN** task has daily interval=1 and next_date="2026-06-08"
@@ -372,6 +493,10 @@ When a user changes the repeat_rule of a task, the system MUST recalculate next_
 - **WHEN** task has weekly weekdays=[1] (Monday) and next_date="2026-06-08"
 - **AND** user changes weekdays to [5] (Friday) on "2026-06-08"
 - **THEN** next_date becomes "2026-06-12" (nearest Friday from change date)
+
+#### Scenario: Rule change to weekly with interval 2 finds nearest day
+- **WHEN** user changes to weekly weekdays=[3] (Wednesday), interval=2 on "2026-06-08" (Monday)
+- **THEN** next_date is "2026-06-10" (nearest Wednesday, same as first creation would produce)
 
 #### Scenario: Frequency change from weekly to daily
 - **WHEN** task has weekly weekdays=[1] and next_date="2026-06-08"

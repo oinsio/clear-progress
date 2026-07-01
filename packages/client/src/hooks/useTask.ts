@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAlerts } from "@/app/providers/AlertProvider";
 import { systemClock } from "@/lib/temporal";
 import { defaultTaskService } from "@/services/defaultServices";
 import type { TaskService } from "@/services/TaskService";
@@ -21,6 +22,7 @@ export function useTask(
   id: string,
   taskService: TaskService = defaultTaskService,
 ): UseTaskReturn {
+  const { addAlerts } = useAlerts();
   const [task, setTask] = useState<Task | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -46,9 +48,15 @@ export function useTask(
   const completeTask = useCallback(async () => {
     if (!task) return;
     const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
-    await taskService.complete(task.id, logicalDate);
+    const { recurringResult } = await taskService.complete(
+      task.id,
+      logicalDate,
+    );
+    if (recurringResult.status === "skipped_invalid_rule") {
+      addAlerts([{ type: "repeat_rule_invalid", taskNames: [task.name] }]);
+    }
     await loadTask();
-  }, [taskService, task, loadTask]);
+  }, [taskService, task, loadTask, addAlerts]);
 
   const deleteTask = useCallback(async () => {
     if (!task) return;

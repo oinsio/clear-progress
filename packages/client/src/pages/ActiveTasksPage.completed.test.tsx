@@ -1,5 +1,6 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
+import { Temporal } from "@/lib/temporal";
 import {
   buildCompletedTasksHook,
   buildTask,
@@ -15,7 +16,8 @@ describe("ActiveTasksPage — completed tasks", () => {
 
   // FR-2: shows completed today section when there are completed tasks
   it("should show completed today section when completed tasks exist", () => {
-    const todayTimestamp = new Date().toISOString();
+    const todayDate = Temporal.Now.plainDateISO().toString();
+    const todayTimestamp = `${todayDate}T12:00:00.000Z`;
     const completedTasks = [
       buildTask({
         name: "Done task",
@@ -73,7 +75,8 @@ describe("ActiveTasksPage — completed tasks", () => {
 
   // FR-2: completed today section label is correct
   it("should render completed today section with correct label", () => {
-    const todayTimestamp = new Date().toISOString();
+    const todayDate = Temporal.Now.plainDateISO().toString();
+    const todayTimestamp = `${todayDate}T12:00:00.000Z`;
     const completedTasks = [
       buildTask({ is_completed: true, completed_at: todayTimestamp }),
     ];

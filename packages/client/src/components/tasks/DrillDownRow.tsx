@@ -10,6 +10,8 @@ interface DrillDownRowProps {
   onClick: () => void;
   icon?: LucideIcon;
   testId?: string;
+  /** Implements FR3, UX1 of detect-invalid-repeat-rule */
+  valueClassName?: string;
 }
 
 export function DrillDownRow({
@@ -19,6 +21,7 @@ export function DrillDownRow({
   onClick,
   icon: Icon,
   testId,
+  valueClassName,
 }: DrillDownRowProps) {
   return (
     <button
@@ -32,7 +35,11 @@ export function DrillDownRow({
         <span className="text-gray-500 font-medium">{label}</span>
       </div>
       <div className="flex items-center gap-1">
-        <span className={cn(hasValue ? "text-gray-800" : "text-gray-400")}>
+        <span
+          className={cn(
+            valueClassName ?? (hasValue ? "text-gray-800" : "text-gray-400"),
+          )}
+        >
           {value}
         </span>
         <ChevronRight className="w-4 h-4 text-gray-400" />

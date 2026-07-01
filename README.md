@@ -176,3 +176,4 @@ Integration tests spin up a full Supabase stack locally via Docker Compose (Test
 - [How to add a new backend adapter](docs/contributing/how-to-add-adapter.md)
 - [Data model and sync protocol](docs/architecture/data-model-and-sync.md)
 - [Architecture Decision Records](docs/adr/)
+- [Product specs (OpenSpec)](openspec/specs/)
