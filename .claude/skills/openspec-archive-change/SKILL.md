@@ -67,19 +67,19 @@ Archive a completed change in the experimental workflow.
 
 5. **Perform the archive**
 
+   Generate target path using current date, grouped by year and month: `openspec/changes/archive/YYYY/MM/YYYY-MM-DD-<change-name>`
+
    Create the archive directory if it doesn't exist:
    ```bash
-   mkdir -p openspec/changes/archive
+   mkdir -p openspec/changes/archive/YYYY/MM
    ```
-
-   Generate target name using current date: `YYYY-MM-DD-<change-name>`
 
    **Check if target already exists:**
    - If yes: Fail with error, suggest renaming existing archive or using different date
    - If no: Move the change directory to archive
 
    ```bash
-   mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
+   mv openspec/changes/<name> openspec/changes/archive/YYYY/MM/YYYY-MM-DD-<name>
    ```
 
 6. **Display summary**

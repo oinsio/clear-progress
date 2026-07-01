@@ -85,6 +85,7 @@ Active changes: `openspec/changes/`. Archived: `openspec/changes/archive/`. Stab
 | `test-planning.md`      | global                                  | Maximize automated tests in task decomposition            |
 | `tdd-workflow.md`       | global                                  | Red-Green-Refactor cycle, mutation testing thresholds     |
 | `proposal-format.md`    | `openspec/**/proposal.md`               | Required sections and format for PRD                      |
+| `archive-path.md`       | `openspec/changes/archive/**`           | Year/month grouping for archived changes                  |
 | `delta-specs.md`        | `openspec/**/specs/**`                  | Delta spec format with ADDED/MODIFIED/REMOVED             |
 | `design-decisions.md`   | `openspec/**/design.md`                 | When and how to write local ADR                           |
 | `gherkin.md`            | `**/features/**/*.feature`              | Intentions not clicks, tagging conventions                |
