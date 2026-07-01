@@ -1,11 +1,30 @@
 # Clear Progress
 
+[![deploy](https://img.shields.io/github/actions/workflow/status/oinsio/clear-progress/deploy.yml?branch=main&label=deploy)](https://github.com/oinsio/clear-progress/actions/workflows/deploy.yml)
+
 [![en](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-red.svg)](README.ru.md)
 
 Персональное приложение для управления задачами, целями и идеями. Создано для GTD и Джедайских техник пустого инбокса. Client-first PWA, работающее офлайн — данные хранятся на устройстве, с опциональной синхронизацией через собственный сервер Supabase.
 
 **[Открыть приложение](https://oinsio.github.io/clear-progress/)**
+
+<p align="center">
+  <img src="docs/screenshots/ru/goal.png" width="374" alt="Clear Progress — Просмотр цели">
+</p>
+
+## Содержание
+
+- [Возможности](#возможности)
+- [Настройка сервера (Supabase)](#настройка-сервера-supabase)
+- [Технологии](#технологии)
+- [Разработка](#разработка)
+  - [Требования](#требования)
+  - [Установка и запуск](#установка-и-запуск)
+  - [Сборка](#сборка)
+  - [Структура проекта](#структура-проекта)
+  - [Тестирование](#тестирование)
+  - [Документация](#документация)
 
 ## Возможности
 
@@ -19,6 +38,13 @@
 - **Синхронизация** — опциональная синхронизация между устройствами через собственный Supabase-сервер
 - **Два языка** — русский и английский интерфейс
 - **PWA** — устанавливается на телефон и компьютер
+
+<p>
+  <img src="docs/screenshots/ru/tasks.png" width="150" alt="Задачи">
+  <img src="docs/screenshots/ru/goal.png" width="150" alt="Цель">
+  <img src="docs/screenshots/ru/memos.png" width="150" alt="Заметки">
+  <img src="docs/screenshots/ru/settings.png" width="150" alt="Настройки">
+</p>
 
 ## Настройка сервера (Supabase)
 
