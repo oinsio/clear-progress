@@ -5,8 +5,24 @@
 
 Personal task, goal, and idea manager. Built for GTD and Jedi Empty Inbox techniques. Client-first PWA that works offline — your data stays on your device, with optional sync via your own Supabase server.
 
-**[Open the App](https://oinsio.github.io/clear-progress/)**  
+**[Open the App](https://oinsio.github.io/clear-progress/)**
 
+<p align="center">
+  <img src="docs/screenshots/en/goal.png" width="374" alt="Clear Progress — Goal view">
+</p>
+
+## Contents
+
+- [Features](#features)
+- [Setting Up Your Server (Supabase)](#setting-up-your-server-supabase)
+- [Tech Stack](#tech-stack)
+- [Development](#development)
+  - [Prerequisites](#prerequisites)
+  - [Install and Run](#install-and-run)
+  - [Build](#build)
+  - [Project Structure](#project-structure)
+  - [Testing](#testing)
+  - [Documentation](#documentation)
 
 ## Features
 
@@ -20,6 +36,13 @@ Personal task, goal, and idea manager. Built for GTD and Jedi Empty Inbox techni
 - **Sync** — optional sync between devices via your own Supabase backend
 - **Bilingual** — Russian and English interface
 - **PWA** — installable on mobile and desktop
+
+<p>
+  <img src="docs/screenshots/en/tasks.png" width="150" alt="Tasks">
+  <img src="docs/screenshots/en/goal.png" width="150" alt="Goal">
+  <img src="docs/screenshots/en/memos.png" width="150" alt="Memos">
+  <img src="docs/screenshots/en/settings.png" width="150" alt="Settings">
+</p>
 
 ## Setting Up Your Server (Supabase)
 
