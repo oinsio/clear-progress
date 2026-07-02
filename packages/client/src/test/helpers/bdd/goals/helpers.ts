@@ -72,7 +72,7 @@ export async function moveGoalBefore(
   const { generateKeyBetween } = await import("@/services/SortOrderService");
   const targetGoal = await getGoal(goalIds, beforeName);
   const movedGoal = await getGoal(goalIds, movedName);
-  const newKey = generateKeyBetween(null, String(targetGoal.sort_order));
+  const newKey = generateKeyBetween(String(targetGoal.sort_order), null);
   await goalService.reorderGoals(movedGoal.id, newKey);
 }
 

@@ -123,22 +123,24 @@ export default function ContextsPage() {
       const newIndex = activeContexts.findIndex((c) => c.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
-      // List is sorted ASC: index 0 = lowest key, last index = highest key
-      const lowerNeighbor =
-        newIndex > 0 ? String(activeContexts[newIndex - 1].sort_order) : null;
+      // List is sorted DESC: index 0 = highest key, last index = lowest key
+      // upper = higher key (lower index), lower = lower key (higher index)
       const upperNeighbor =
+        newIndex > 0 ? String(activeContexts[newIndex - 1].sort_order) : null;
+      const lowerNeighbor =
         newIndex < activeContexts.length - 1
           ? String(activeContexts[newIndex + 1].sort_order)
           : null;
 
-      const lowerKey =
+      // If moving down, the displaced item moves up, so neighbors shift
+      const upperKey =
         oldIndex < newIndex
           ? String(activeContexts[newIndex].sort_order)
-          : lowerNeighbor;
-      const upperKey =
+          : upperNeighbor;
+      const lowerKey =
         oldIndex > newIndex
           ? String(activeContexts[newIndex].sort_order)
-          : upperNeighbor;
+          : lowerNeighbor;
 
       const newSortOrder = generateKeyBetween(lowerKey, upperKey);
       void reorderContexts(String(active.id), newSortOrder);

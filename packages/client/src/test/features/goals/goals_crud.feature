@@ -44,7 +44,7 @@ Feature: Goals CRUD
   Scenario: List sorted by sort_order
     Given goals with sort_order 2, 0, 1
     When user requests all goals
-    Then goals are returned in order 0, 1, 2
+    Then goals are returned in order 2, 1, 0
 
   @add-goals-specs @FR2
   Scenario: Empty list

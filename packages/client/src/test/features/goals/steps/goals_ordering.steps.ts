@@ -33,14 +33,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      When("user moves goal C before goal A", async (_ctx: TestContext) => {
-        await moveGoalBefore(ctx.goalIds, ctx.goalService, "C", "A");
+      When("user moves goal A before goal C", async (_ctx: TestContext) => {
+        await moveGoalBefore(ctx.goalIds, ctx.goalService, "A", "C");
       });
 
-      Then("goals are ordered C, A, B", async (_ctx: TestContext) => {
+      Then("goals are ordered A, C, B", async (_ctx: TestContext) => {
         const allGoals = await ctx.goalService.getAll();
-        expect(allGoals[0].id).toBe(ctx.goalIds.get("C"));
-        expect(allGoals[1].id).toBe(ctx.goalIds.get("A"));
+        expect(allGoals[0].id).toBe(ctx.goalIds.get("A"));
+        expect(allGoals[1].id).toBe(ctx.goalIds.get("C"));
         expect(allGoals[2].id).toBe(ctx.goalIds.get("B"));
       });
     },
@@ -57,16 +57,16 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      When("user moves goal C before goal A", async (_ctx: TestContext) => {
-        await moveGoalBefore(ctx.goalIds, ctx.goalService, "C", "A");
+      When("user moves goal A before goal C", async (_ctx: TestContext) => {
+        await moveGoalBefore(ctx.goalIds, ctx.goalService, "A", "C");
       });
 
-      Then('goal C has syncStatus "pending"', async (_ctx: TestContext) => {
-        await expectGoalNeedsSync(ctx.goalIds, "C", "pending");
+      Then('goal A has syncStatus "pending"', async (_ctx: TestContext) => {
+        await expectGoalNeedsSync(ctx.goalIds, "A", "pending");
       });
 
-      And('goal A has syncStatus "synced"', async (_ctx: TestContext) => {
-        await expectGoalNeedsSync(ctx.goalIds, "A", "synced");
+      And('goal C has syncStatus "synced"', async (_ctx: TestContext) => {
+        await expectGoalNeedsSync(ctx.goalIds, "C", "synced");
       });
 
       And('goal B has syncStatus "synced"', async (_ctx: TestContext) => {

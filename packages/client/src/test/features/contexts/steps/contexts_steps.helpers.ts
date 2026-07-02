@@ -65,6 +65,6 @@ export async function moveContextBefore(
   const { generateKeyBetween } = await import("@/services/SortOrderService");
   const targetContext = await getContext(contextIds, beforeName);
   const movedContext = await getContext(contextIds, movedName);
-  const newKey = generateKeyBetween(null, String(targetContext.sort_order));
+  const newKey = generateKeyBetween(String(targetContext.sort_order), null);
   await contextService.reorderContexts(movedContext.id, newKey);
 }

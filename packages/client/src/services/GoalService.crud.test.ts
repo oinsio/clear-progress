@@ -20,7 +20,7 @@ describe("GoalService", () => {
       expect(goals).toEqual([]);
     });
 
-    it("should return goals sorted by sort_order ascending", async () => {
+    it("should return goals sorted by sort_order descending", async () => {
       const unsortedGoals = [
         buildGoal({ sort_order: "a2" }),
         buildGoal({ sort_order: "a0" }),
@@ -31,10 +31,10 @@ describe("GoalService", () => {
       });
       const goalService = new GoalService(mockGoalRepository);
       const goals = await goalService.getAll();
-      expect(String(goals[0].sort_order) < String(goals[1].sort_order)).toBe(
+      expect(String(goals[0].sort_order) > String(goals[1].sort_order)).toBe(
         true,
       );
-      expect(String(goals[1].sort_order) < String(goals[2].sort_order)).toBe(
+      expect(String(goals[1].sort_order) > String(goals[2].sort_order)).toBe(
         true,
       );
     });

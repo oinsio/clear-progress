@@ -61,7 +61,7 @@ export async function moveCategoryBefore(
   const { generateKeyBetween } = await import("@/services/SortOrderService");
   const targetCategory = await getCategory(categoryIds, beforeName);
   const movedCategory = await getCategory(categoryIds, movedName);
-  const newKey = generateKeyBetween(null, String(targetCategory.sort_order));
+  const newKey = generateKeyBetween(String(targetCategory.sort_order), null);
   await categoryService.reorderCategories(movedCategory.id, newKey);
 }
 

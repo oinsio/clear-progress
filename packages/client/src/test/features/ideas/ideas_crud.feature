@@ -37,7 +37,7 @@ Feature: Ideas CRUD
   Scenario: List sorted by sort_order
     Given ideas with sort_order 2, 0, 1
     When user requests all ideas
-    Then ideas are returned in order 0, 1, 2
+    Then ideas are returned in order 2, 1, 0
 
   @add-ideas-specs @FR2
   Scenario: Empty list

@@ -36,21 +36,21 @@ describeFeature(
         );
 
         When(
-          "user moves category C before category A",
+          "user moves category A before category C",
           async (_ctx: TestContext) => {
             await moveCategoryBefore(
               ctx.categoryIds,
               ctx.categoryService,
-              "C",
               "A",
+              "C",
             );
           },
         );
 
-        Then("categories are ordered C, A, B", async (_ctx: TestContext) => {
+        Then("categories are ordered A, C, B", async (_ctx: TestContext) => {
           const allCategories = await ctx.categoryService.getAll();
-          expect(allCategories[0].id).toBe(ctx.categoryIds.get("C"));
-          expect(allCategories[1].id).toBe(ctx.categoryIds.get("A"));
+          expect(allCategories[0].id).toBe(ctx.categoryIds.get("A"));
+          expect(allCategories[1].id).toBe(ctx.categoryIds.get("C"));
           expect(allCategories[2].id).toBe(ctx.categoryIds.get("B"));
         });
       },
@@ -68,27 +68,27 @@ describeFeature(
         );
 
         When(
-          "user moves category C before category A",
+          "user moves category A before category C",
           async (_ctx: TestContext) => {
             await moveCategoryBefore(
               ctx.categoryIds,
               ctx.categoryService,
-              "C",
               "A",
+              "C",
             );
           },
         );
 
         Then(
-          'category C has syncStatus "pending"',
+          'category A has syncStatus "pending"',
           async (_ctx: TestContext) => {
-            const category = await getCategory(ctx.categoryIds, "C");
+            const category = await getCategory(ctx.categoryIds, "A");
             expect(category.syncStatus).toBe("pending");
           },
         );
 
-        And('category A has syncStatus "synced"', async (_ctx: TestContext) => {
-          const category = await getCategory(ctx.categoryIds, "A");
+        And('category C has syncStatus "synced"', async (_ctx: TestContext) => {
+          const category = await getCategory(ctx.categoryIds, "C");
           expect(category.syncStatus).toBe("synced");
         });
 

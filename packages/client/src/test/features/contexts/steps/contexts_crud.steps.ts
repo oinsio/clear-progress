@@ -143,12 +143,12 @@ describeFeature(
       });
 
       Then(
-        "contexts are returned in order 0, 1, 2",
+        "contexts are returned in order 2, 1, 0",
         async (_ctx: TestContext) => {
           const sortOrders = returnedContexts.map(
             (context) => context.sort_order,
           );
-          expect(sortOrders).toEqual(["0", "1", "2"]);
+          expect(sortOrders).toEqual(["2", "1", "0"]);
         },
       );
     });

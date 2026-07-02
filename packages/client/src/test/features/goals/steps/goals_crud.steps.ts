@@ -197,9 +197,9 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       returnedGoals = await ctx.goalService.getAll();
     });
 
-    Then("goals are returned in order 0, 1, 2", async (_ctx: TestContext) => {
+    Then("goals are returned in order 2, 1, 0", async (_ctx: TestContext) => {
       const sortOrders = returnedGoals.map((goal) => goal.sort_order);
-      expect(sortOrders).toEqual(["0", "1", "2"]);
+      expect(sortOrders).toEqual(["2", "1", "0"]);
     });
   });
 
