@@ -30,7 +30,7 @@ Feature: Contexts CRUD
   Scenario: List sorted by sort_order
     Given contexts with sort_order 2, 0, 1
     When user requests all contexts
-    Then contexts are returned in order 0, 1, 2
+    Then contexts are returned in order 2, 1, 0
 
   @add-context-category-specs @FR2
   Scenario: Empty list

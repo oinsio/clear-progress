@@ -20,7 +20,7 @@ describe("CategoryService", () => {
       expect(categories).toEqual([]);
     });
 
-    it("should return categories sorted by sort_order ascending", async () => {
+    it("should return categories sorted by sort_order descending", async () => {
       const unsortedCategories = [
         buildCategory({ sort_order: "a2" }),
         buildCategory({ sort_order: "a0" }),
@@ -32,10 +32,10 @@ describe("CategoryService", () => {
       const categoryService = new CategoryService(mockCategoryRepository);
       const categories = await categoryService.getAll();
       expect(
-        String(categories[0].sort_order) < String(categories[1].sort_order),
+        String(categories[0].sort_order) > String(categories[1].sort_order),
       ).toBe(true);
       expect(
-        String(categories[1].sort_order) < String(categories[2].sort_order),
+        String(categories[1].sort_order) > String(categories[2].sort_order),
       ).toBe(true);
     });
 

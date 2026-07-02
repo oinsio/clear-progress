@@ -36,21 +36,21 @@ describeFeature(
         );
 
         When(
-          "user moves context C before context A",
+          "user moves context A before context C",
           async (_ctx: TestContext) => {
             await moveContextBefore(
               ctx.contextIds,
               ctx.contextService,
-              "C",
               "A",
+              "C",
             );
           },
         );
 
-        Then("contexts are ordered C, A, B", async (_ctx: TestContext) => {
+        Then("contexts are ordered A, C, B", async (_ctx: TestContext) => {
           const allContexts = await ctx.contextService.getAll();
-          expect(allContexts[0].id).toBe(ctx.contextIds.get("C"));
-          expect(allContexts[1].id).toBe(ctx.contextIds.get("A"));
+          expect(allContexts[0].id).toBe(ctx.contextIds.get("A"));
+          expect(allContexts[1].id).toBe(ctx.contextIds.get("C"));
           expect(allContexts[2].id).toBe(ctx.contextIds.get("B"));
         });
       },
@@ -68,27 +68,27 @@ describeFeature(
         );
 
         When(
-          "user moves context C before context A",
+          "user moves context A before context C",
           async (_ctx: TestContext) => {
             await moveContextBefore(
               ctx.contextIds,
               ctx.contextService,
-              "C",
               "A",
+              "C",
             );
           },
         );
 
         Then(
-          'context C has syncStatus "pending"',
+          'context A has syncStatus "pending"',
           async (_ctx: TestContext) => {
-            const context = await getContext(ctx.contextIds, "C");
+            const context = await getContext(ctx.contextIds, "A");
             expect(context.syncStatus).toBe("pending");
           },
         );
 
-        And('context A has syncStatus "synced"', async (_ctx: TestContext) => {
-          const context = await getContext(ctx.contextIds, "A");
+        And('context C has syncStatus "synced"', async (_ctx: TestContext) => {
+          const context = await getContext(ctx.contextIds, "C");
           expect(context.syncStatus).toBe("synced");
         });
 

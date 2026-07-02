@@ -51,7 +51,7 @@ export async function moveIdeaBefore(
   const { generateKeyBetween } = await import("@/services/SortOrderService");
   const targetIdea = await getIdea(ideaIds, beforeName);
   const movedIdea = await getIdea(ideaIds, movedName);
-  const newKey = generateKeyBetween(null, String(targetIdea.sort_order));
+  const newKey = generateKeyBetween(String(targetIdea.sort_order), null);
   await ideaService.reorderIdeas(movedIdea.id, newKey);
 }
 

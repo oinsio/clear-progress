@@ -114,23 +114,24 @@ export default function GoalsPage() {
       const newIndex = activeGoals.findIndex((goal) => goal.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
-      // List is sorted ASC: index 0 = lowest key, last index = highest key
-      const lowerNeighbor =
-        newIndex > 0 ? String(activeGoals[newIndex - 1].sort_order) : null;
+      // List is sorted DESC: index 0 = highest key, last index = lowest key
+      // upper = higher key (lower index), lower = lower key (higher index)
       const upperNeighbor =
+        newIndex > 0 ? String(activeGoals[newIndex - 1].sort_order) : null;
+      const lowerNeighbor =
         newIndex < activeGoals.length - 1
           ? String(activeGoals[newIndex + 1].sort_order)
           : null;
 
-      // When moving down, displaced item moves up, so neighbors shift
-      const lowerKey =
+      // If moving down, the displaced item moves up, so neighbors shift
+      const upperKey =
         oldIndex < newIndex
           ? String(activeGoals[newIndex].sort_order)
-          : lowerNeighbor;
-      const upperKey =
+          : upperNeighbor;
+      const lowerKey =
         oldIndex > newIndex
           ? String(activeGoals[newIndex].sort_order)
-          : upperNeighbor;
+          : lowerNeighbor;
 
       const newSortOrder = generateKeyBetween(lowerKey, upperKey);
       void reorderGoals(String(active.id), newSortOrder);

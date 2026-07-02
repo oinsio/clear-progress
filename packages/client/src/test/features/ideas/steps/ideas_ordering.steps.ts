@@ -33,14 +33,14 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      When("user moves idea C before idea A", async (_ctx: TestContext) => {
-        await moveIdeaBefore(ctx.ideaIds, ctx.ideaService, "C", "A");
+      When("user moves idea A before idea C", async (_ctx: TestContext) => {
+        await moveIdeaBefore(ctx.ideaIds, ctx.ideaService, "A", "C");
       });
 
-      Then("ideas are ordered C, A, B", async (_ctx: TestContext) => {
+      Then("ideas are ordered A, C, B", async (_ctx: TestContext) => {
         const allIdeas = await ctx.ideaService.getAll();
-        expect(allIdeas[0].id).toBe(ctx.ideaIds.get("C"));
-        expect(allIdeas[1].id).toBe(ctx.ideaIds.get("A"));
+        expect(allIdeas[0].id).toBe(ctx.ideaIds.get("A"));
+        expect(allIdeas[1].id).toBe(ctx.ideaIds.get("C"));
         expect(allIdeas[2].id).toBe(ctx.ideaIds.get("B"));
       });
     },
@@ -57,17 +57,17 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
         },
       );
 
-      When("user moves idea C before idea A", async (_ctx: TestContext) => {
-        await moveIdeaBefore(ctx.ideaIds, ctx.ideaService, "C", "A");
+      When("user moves idea A before idea C", async (_ctx: TestContext) => {
+        await moveIdeaBefore(ctx.ideaIds, ctx.ideaService, "A", "C");
       });
 
-      Then('idea C has syncStatus "pending"', async (_ctx: TestContext) => {
-        const idea = await getIdea(ctx.ideaIds, "C");
+      Then('idea A has syncStatus "pending"', async (_ctx: TestContext) => {
+        const idea = await getIdea(ctx.ideaIds, "A");
         expect(idea.syncStatus).toBe("pending");
       });
 
-      And('idea A has syncStatus "synced"', async (_ctx: TestContext) => {
-        const idea = await getIdea(ctx.ideaIds, "A");
+      And('idea C has syncStatus "synced"', async (_ctx: TestContext) => {
+        const idea = await getIdea(ctx.ideaIds, "C");
         expect(idea.syncStatus).toBe("synced");
       });
 

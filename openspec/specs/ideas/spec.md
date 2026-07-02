@@ -8,24 +8,24 @@ Lightweight capture and management of ideas with drag-and-drop ordering, inline 
 
 ### Requirement: User can create an idea
 
-User SHALL be able to create an idea by providing a name. System MUST generate a UUID v4 client-side, set `revision` to 0, `needsSync` to true, `is_deleted` to false, and `description` to empty string. The `sort_order` MUST default to the count of active ideas (appended to end). Timestamps `created_at` and `updated_at` MUST be set to current time in ISO 8601 with Z suffix.
+User SHALL be able to create an idea by providing a name. System MUST generate a UUID v4 client-side, set `revision` to 0, `needsSync` to true, `is_deleted` to false, and `description` to empty string. The `sort_order` MUST be generated via `generateTopKey()` — a fractional index key above the current maximum. Timestamps `created_at` and `updated_at` MUST be set to current time in ISO 8601 with Z suffix. Implements FR2, FR5 of desc-sort-order.
 
 #### Scenario: Create idea with name only
-- **WHEN** user creates an idea with name "Learn Rust"
-- **THEN** idea is persisted with name "Learn Rust", description "", revision 0, needsSync true, is_deleted false
+- **WHEN** user creates an idea with name "Voice UI for calendar"
+- **THEN** idea is created with the provided name, UUID v4 id, revision=0, needsSync=true, is_deleted=false
 
 #### Scenario: Create idea with name and description
 - **WHEN** user creates an idea with name "Learn Rust" and description "Systems programming"
 - **THEN** idea is persisted with both name and description preserved
 
-#### Scenario: Sort order defaults to end of list
-- **GIVEN** 3 active ideas exist
+#### Scenario: New idea sort_order above maximum
+- **GIVEN** 3 active ideas exist with sort keys "a0", "a1", "a2"
 - **WHEN** user creates a new idea
-- **THEN** new idea has sort_order = 3
+- **THEN** new idea has sort_order above "a2"
 
 #### Scenario: UUID generated client-side
 - **WHEN** user creates an idea
-- **THEN** idea.id is a valid UUID v4
+- **THEN** id is a valid UUID v4 generated via crypto.randomUUID()
 
 #### Scenario: Timestamps set on creation
 - **WHEN** user creates an idea
@@ -33,12 +33,12 @@ User SHALL be able to create an idea by providing a name. System MUST generate a
 
 ### Requirement: User can view active ideas
 
-User SHALL be able to view a list of active (non-deleted) ideas sorted by `sort_order` ascending. Soft-deleted ideas MUST NOT appear in the active list. Idea description in the list item SHALL preserve newline characters by applying `white-space: pre-line` CSS property. Implements FR3 of fix-newline-display.
+User SHALL be able to view a list of active (non-deleted) ideas sorted by `sort_order` descending (highest key first). Soft-deleted ideas MUST NOT appear in the active list. Idea description in the list item SHALL preserve newline characters by applying `white-space: pre-line` CSS property. Implements FR3 of fix-newline-display, FR2 of desc-sort-order.
 
-#### Scenario: List sorted by sort_order
-- **GIVEN** ideas exist with sort_order 2, 0, 1
+#### Scenario: List sorted by sort_order descending
+- **GIVEN** ideas exist with sort_order "a0", "a1", "a2"
 - **WHEN** user views the ideas list
-- **THEN** ideas are returned in order: sort_order 0, 1, 2
+- **THEN** ideas are returned in order: sort_order "a2", "a1", "a0"
 
 #### Scenario: Empty list
 - **GIVEN** no ideas exist
@@ -99,26 +99,22 @@ User SHALL be able to soft-delete an idea (sets `is_deleted` to true) and restor
 
 ### Requirement: User can reorder ideas
 
-User SHALL be able to reorder ideas via drag-and-drop. System MUST assign sequential `sort_order` values (0, 1, 2...) based on position. Only ideas whose `sort_order` actually changed MUST be marked for sync (`needsSync` = true). All changed ideas MUST share the same `updated_at` timestamp (batch operation). Empty array MUST be a no-op. If order is unchanged, no database write occurs.
+User SHALL be able to reorder ideas via drag-and-drop. System MUST use fractional indexing to generate a new `sort_order` key between neighbors. Only the dragged idea MUST be updated. The moved idea MUST be marked for sync (`needsSync` = true). Drag-and-drop neighbor logic MUST use DESC semantics: index 0 = highest key, last index = lowest key. Implements FR6, FR7 of desc-sort-order.
 
-#### Scenario: Reorder assigns sequential sort_order
-- **GIVEN** ideas A (sort_order=0), B (sort_order=1), C (sort_order=2)
-- **WHEN** user reorders to B, C, A
-- **THEN** B has sort_order=0, C has sort_order=1, A has sort_order=2
+#### Scenario: Reorder updates only dragged item
+- **GIVEN** ideas A, B, C sorted DESC
+- **WHEN** user drags C to position between A and B
+- **THEN** only C gets a new sort_order between A and B, A and B are unchanged
 
-#### Scenario: Only changed ideas marked for sync
-- **GIVEN** ideas A (sort_order=0), B (sort_order=1), C (sort_order=2)
-- **WHEN** user reorders to A, C, B
-- **THEN** A has needsSync=false (unchanged), C has needsSync=true, B has needsSync=true
+#### Scenario: Reorder marks moved item for sync
+- **GIVEN** ideas A, B, C sorted DESC
+- **WHEN** user drags C to a new position
+- **THEN** C has needsSync=true, A and B have unchanged needsSync
 
-#### Scenario: Empty reorder is no-op
-- **WHEN** user reorders with an empty array
-- **THEN** no database write occurs
-
-#### Scenario: Same order is no-op
-- **GIVEN** ideas A (sort_order=0), B (sort_order=1)
-- **WHEN** user reorders to A, B (same order)
-- **THEN** no database write occurs, no ideas marked for sync
+#### Scenario: Rebalancing with DESC sort
+- **GIVEN** ideas sorted DESC with a sort key exceeding rebalance threshold
+- **WHEN** rebalancing is triggered
+- **THEN** all ideas receive new evenly-distributed keys maintaining DESC visual order
 
 ### Requirement: User can search ideas
 

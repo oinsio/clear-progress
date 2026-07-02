@@ -1,7 +1,7 @@
 import type { ContextRepository } from "@/db/repositories/ContextRepository";
 import {
   compareSortKeys,
-  generateAppendKey,
+  generateTopKey,
   needsRebalancing,
   rebalanceKeys,
 } from "@/services/SortOrderService";
@@ -15,7 +15,7 @@ export class ContextService {
   async getAll(): Promise<Context[]> {
     const contexts = await this.contextRepository.getActive();
     return contexts.sort((contextA, contextB) =>
-      compareSortKeys(String(contextA.sort_order), String(contextB.sort_order)),
+      compareSortKeys(String(contextB.sort_order), String(contextA.sort_order)),
     );
   }
 
@@ -32,7 +32,7 @@ export class ContextService {
     const context: Context = {
       id: crypto.randomUUID(),
       name,
-      sort_order: generateAppendKey(existingKeys),
+      sort_order: generateTopKey(existingKeys),
       is_deleted: false,
       created_at: now,
       updated_at: now,
@@ -78,7 +78,7 @@ export class ContextService {
   private async rebalanceAllContexts(): Promise<void> {
     const contexts = await this.contextRepository.getActive();
     const sorted = contexts.sort((contextA, contextB) =>
-      compareSortKeys(String(contextA.sort_order), String(contextB.sort_order)),
+      compareSortKeys(String(contextB.sort_order), String(contextA.sort_order)),
     );
     const newKeys = rebalanceKeys(sorted.length);
     const now = toISOTimestamp();

@@ -20,7 +20,7 @@ describe("ContextService", () => {
       expect(contexts).toEqual([]);
     });
 
-    it("should return contexts sorted by sort_order ascending", async () => {
+    it("should return contexts sorted by sort_order descending", async () => {
       const unsortedContexts = [
         buildContext({ sort_order: "a2" }),
         buildContext({ sort_order: "a0" }),
@@ -32,10 +32,10 @@ describe("ContextService", () => {
       const contextService = new ContextService(mockContextRepository);
       const contexts = await contextService.getAll();
       expect(
-        String(contexts[0].sort_order) < String(contexts[1].sort_order),
+        String(contexts[0].sort_order) > String(contexts[1].sort_order),
       ).toBe(true);
       expect(
-        String(contexts[1].sort_order) < String(contexts[2].sort_order),
+        String(contexts[1].sort_order) > String(contexts[2].sort_order),
       ).toBe(true);
     });
 

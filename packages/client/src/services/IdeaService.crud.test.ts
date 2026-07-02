@@ -20,7 +20,7 @@ describe("IdeaService", () => {
       expect(ideas).toEqual([]);
     });
 
-    it("should return ideas sorted by sort_order ascending", async () => {
+    it("should return ideas sorted by sort_order descending", async () => {
       const unsortedIdeas = [
         buildIdea({ sort_order: "a2" }),
         buildIdea({ sort_order: "a0" }),
@@ -31,10 +31,10 @@ describe("IdeaService", () => {
       });
       const ideaService = new IdeaService(mockIdeaRepository);
       const ideas = await ideaService.getAll();
-      expect(String(ideas[0].sort_order) < String(ideas[1].sort_order)).toBe(
+      expect(String(ideas[0].sort_order) > String(ideas[1].sort_order)).toBe(
         true,
       );
-      expect(String(ideas[1].sort_order) < String(ideas[2].sort_order)).toBe(
+      expect(String(ideas[1].sort_order) > String(ideas[2].sort_order)).toBe(
         true,
       );
     });

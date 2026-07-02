@@ -3,7 +3,7 @@ import type { AttachmentRepository } from "@/db/repositories/AttachmentRepositor
 import type { GoalRepository } from "@/db/repositories/GoalRepository";
 import {
   compareSortKeys,
-  generateAppendKey,
+  generateTopKey,
   needsRebalancing,
   rebalanceKeys,
 } from "@/services/SortOrderService";
@@ -21,7 +21,7 @@ export class GoalService {
   async getAll(): Promise<Goal[]> {
     const goals = await this.goalRepository.getActive();
     return goals.sort((goalA, goalB) =>
-      compareSortKeys(String(goalA.sort_order), String(goalB.sort_order)),
+      compareSortKeys(String(goalB.sort_order), String(goalA.sort_order)),
     );
   }
 
@@ -37,7 +37,7 @@ export class GoalService {
       description: "",
       cover_hash: "",
       status: "planning",
-      sort_order: generateAppendKey(existingKeys),
+      sort_order: generateTopKey(existingKeys),
       ...partialGoal,
       id: crypto.randomUUID(),
       is_deleted: false,
@@ -137,7 +137,7 @@ export class GoalService {
   private async rebalanceAllGoals(): Promise<void> {
     const goals = await this.goalRepository.getActive();
     const sorted = goals.sort((goalA, goalB) =>
-      compareSortKeys(String(goalA.sort_order), String(goalB.sort_order)),
+      compareSortKeys(String(goalB.sort_order), String(goalA.sort_order)),
     );
     const newKeys = rebalanceKeys(sorted.length);
     const now = toISOTimestamp();

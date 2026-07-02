@@ -3,7 +3,7 @@ import type { IdeaRepository } from "@/db/repositories/IdeaRepository";
 import { Temporal } from "@/lib/temporal";
 import {
   compareSortKeys,
-  generateAppendKey,
+  generateTopKey,
   needsRebalancing,
   rebalanceKeys,
 } from "@/services/SortOrderService";
@@ -20,7 +20,7 @@ export class IdeaService {
   async getAll(): Promise<Idea[]> {
     const ideas = await this.ideaRepository.getActive();
     return ideas.sort((ideaA, ideaB) =>
-      compareSortKeys(String(ideaA.sort_order), String(ideaB.sort_order)),
+      compareSortKeys(String(ideaB.sort_order), String(ideaA.sort_order)),
     );
   }
 
@@ -33,7 +33,7 @@ export class IdeaService {
     const existingKeys = existingIdeas.map((idea) => String(idea.sort_order));
     const now = toISOTimestamp();
     const idea: Idea = {
-      sort_order: generateAppendKey(existingKeys),
+      sort_order: generateTopKey(existingKeys),
       ...partialIdea,
       id: crypto.randomUUID(),
       description: partialIdea.description ?? "",
@@ -127,7 +127,7 @@ export class IdeaService {
   private async rebalanceAllIdeas(): Promise<void> {
     const ideas = await this.ideaRepository.getActive();
     const sorted = ideas.sort((ideaA, ideaB) =>
-      compareSortKeys(String(ideaA.sort_order), String(ideaB.sort_order)),
+      compareSortKeys(String(ideaB.sort_order), String(ideaA.sort_order)),
     );
     const newKeys = rebalanceKeys(sorted.length);
     const now = toISOTimestamp();

@@ -1,10 +1,4 @@
-# Capability: Categories
-
-## Purpose
-
-Task categories for thematic grouping of tasks. Categories are a flat list with manual sort order and cross-device sync.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: User can create a category
 
@@ -23,10 +17,6 @@ User SHALL be able to create a category by providing a name. System MUST generat
 - **WHEN** user creates a category
 - **THEN** id is a valid UUID v4 generated via crypto.randomUUID()
 
-#### Scenario: Timestamps set on creation
-- **WHEN** user creates a category
-- **THEN** created_at and updated_at are equal and in ISO 8601 format with Z suffix
-
 ### Requirement: User can view active categories
 
 User SHALL be able to view a list of active (non-deleted) categories sorted by `sort_order` descending (highest key first). Soft-deleted categories MUST NOT appear in the active list. Implements FR4 of desc-sort-order.
@@ -37,51 +27,9 @@ User SHALL be able to view a list of active (non-deleted) categories sorted by `
 - **THEN** categories are returned in order: sort_order "a2", "a1", "a0"
 
 #### Scenario: Empty list
-- **GIVEN** no categories exist
+- **GIVEN** no active categories exist
 - **WHEN** user views the categories list
-- **THEN** an empty array is returned
-
-#### Scenario: Soft-deleted categories excluded
-- **GIVEN** 2 active categories and 1 soft-deleted category exist
-- **WHEN** user views the categories list
-- **THEN** only 2 active categories are returned
-
-### Requirement: User can update a category
-
-User SHALL be able to update category name. System MUST use smart dirty flag: if the update contains identical data to the current state, `needsSync` MUST NOT be set and `updated_at` MUST NOT change. If data actually changed, `needsSync` MUST be set to true and `updated_at` MUST be refreshed. The `id` field MUST never change.
-
-#### Scenario: Update category name
-- **GIVEN** category "Work" exists
-- **WHEN** user updates name to "Personal"
-- **THEN** category name is "Personal", needsSync is true, updated_at is refreshed
-
-#### Scenario: No-op update does not trigger sync
-- **GIVEN** category "Work" exists with needsSync false
-- **WHEN** user updates name to "Work" (same value)
-- **THEN** needsSync remains false, updated_at is unchanged
-
-#### Scenario: Update nonexistent category throws error
-- **WHEN** user attempts to update a category with a nonexistent ID
-- **THEN** system throws error "Category not found"
-
-### Requirement: User can soft-delete and restore a category
-
-User SHALL be able to soft-delete a category (sets `is_deleted` to true) and restore it (sets `is_deleted` to false). Both operations MUST mark the category for sync.
-
-#### Scenario: Soft-delete a category
-- **GIVEN** active category "Work" exists
-- **WHEN** user soft-deletes the category
-- **THEN** is_deleted is true, needsSync is true
-
-#### Scenario: Restore a soft-deleted category
-- **GIVEN** soft-deleted category "Work" exists
-- **WHEN** user restores the category
-- **THEN** is_deleted is false, needsSync is true
-
-#### Scenario: Soft-deleted category excluded from active list
-- **GIVEN** category "Work" is soft-deleted
-- **WHEN** user views the categories list
-- **THEN** "Work" does not appear
+- **THEN** empty list is returned
 
 ### Requirement: User can reorder categories
 

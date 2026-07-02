@@ -1,10 +1,4 @@
-# Capability: Contexts
-
-## Purpose
-
-Contexts for task filtering by location or situation (@home, @work, @errands). Contexts are a flat list with manual sort order and cross-device sync.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: User can create a context
 
@@ -23,10 +17,6 @@ User SHALL be able to create a context by providing a name. System MUST generate
 - **WHEN** user creates a context
 - **THEN** id is a valid UUID v4 generated via crypto.randomUUID()
 
-#### Scenario: Timestamps set on creation
-- **WHEN** user creates a context
-- **THEN** created_at and updated_at are equal and in ISO 8601 format with Z suffix
-
 ### Requirement: User can view active contexts
 
 User SHALL be able to view a list of active (non-deleted) contexts sorted by `sort_order` descending (highest key first). Soft-deleted contexts MUST NOT appear in the active list. Implements FR3 of desc-sort-order.
@@ -37,51 +27,9 @@ User SHALL be able to view a list of active (non-deleted) contexts sorted by `so
 - **THEN** contexts are returned in order: sort_order "a2", "a1", "a0"
 
 #### Scenario: Empty list
-- **GIVEN** no contexts exist
+- **GIVEN** no active contexts exist
 - **WHEN** user views the contexts list
-- **THEN** an empty array is returned
-
-#### Scenario: Soft-deleted contexts excluded
-- **GIVEN** 2 active contexts and 1 soft-deleted context exist
-- **WHEN** user views the contexts list
-- **THEN** only 2 active contexts are returned
-
-### Requirement: User can update a context
-
-User SHALL be able to update context name. System MUST use smart dirty flag: if the update contains identical data to the current state, `needsSync` MUST NOT be set and `updated_at` MUST NOT change. If data actually changed, `needsSync` MUST be set to true and `updated_at` MUST be refreshed. The `id` field MUST never change.
-
-#### Scenario: Update context name
-- **GIVEN** context "@home" exists
-- **WHEN** user updates name to "@office"
-- **THEN** context name is "@office", needsSync is true, updated_at is refreshed
-
-#### Scenario: No-op update does not trigger sync
-- **GIVEN** context "@home" exists with needsSync false
-- **WHEN** user updates name to "@home" (same value)
-- **THEN** needsSync remains false, updated_at is unchanged
-
-#### Scenario: Update nonexistent context throws error
-- **WHEN** user attempts to update a context with a nonexistent ID
-- **THEN** system throws error "Context not found"
-
-### Requirement: User can soft-delete and restore a context
-
-User SHALL be able to soft-delete a context (sets `is_deleted` to true) and restore it (sets `is_deleted` to false). Both operations MUST mark the context for sync.
-
-#### Scenario: Soft-delete a context
-- **GIVEN** active context "@home" exists
-- **WHEN** user soft-deletes the context
-- **THEN** is_deleted is true, needsSync is true
-
-#### Scenario: Restore a soft-deleted context
-- **GIVEN** soft-deleted context "@home" exists
-- **WHEN** user restores the context
-- **THEN** is_deleted is false, needsSync is true
-
-#### Scenario: Soft-deleted context excluded from active list
-- **GIVEN** context "@home" is soft-deleted
-- **WHEN** user views the contexts list
-- **THEN** "@home" does not appear
+- **THEN** empty list is returned
 
 ### Requirement: User can reorder contexts
 

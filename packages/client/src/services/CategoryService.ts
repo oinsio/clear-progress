@@ -2,7 +2,7 @@ import type { CategoryRepository } from "@/db/repositories/CategoryRepository";
 import { type Clock, systemClock } from "@/lib/temporal";
 import {
   compareSortKeys,
-  generateAppendKey,
+  generateTopKey,
   needsRebalancing,
   rebalanceKeys,
 } from "@/services/SortOrderService";
@@ -20,8 +20,8 @@ export class CategoryService {
     const categories = await this.categoryRepository.getActive();
     return categories.sort((categoryA, categoryB) =>
       compareSortKeys(
-        String(categoryA.sort_order),
         String(categoryB.sort_order),
+        String(categoryA.sort_order),
       ),
     );
   }
@@ -39,7 +39,7 @@ export class CategoryService {
     const category: Category = {
       id: crypto.randomUUID(),
       name,
-      sort_order: generateAppendKey(existingKeys),
+      sort_order: generateTopKey(existingKeys),
       is_deleted: false,
       created_at: now,
       updated_at: now,
@@ -86,8 +86,8 @@ export class CategoryService {
     const categories = await this.categoryRepository.getActive();
     const sorted = categories.sort((categoryA, categoryB) =>
       compareSortKeys(
-        String(categoryA.sort_order),
         String(categoryB.sort_order),
+        String(categoryA.sort_order),
       ),
     );
     const newKeys = rebalanceKeys(sorted.length);
