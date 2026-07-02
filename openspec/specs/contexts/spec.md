@@ -8,20 +8,20 @@ Contexts for task filtering by location or situation (@home, @work, @errands). C
 
 ### Requirement: User can create a context
 
-User SHALL be able to create a context by providing a name. System MUST generate a UUID v4 client-side, set `revision` to 0, `needsSync` to true, `is_deleted` to false. The `sort_order` MUST default to the count of active contexts (appended to end). Timestamps `created_at` and `updated_at` MUST be set to current time in ISO 8601 with Z suffix.
+User SHALL be able to create a context by providing a name. System MUST generate a UUID v4 client-side, set `revision` to 0, `needsSync` to true, `is_deleted` to false. The `sort_order` MUST be generated via `generateTopKey()` — a fractional index key above the current maximum. Timestamps `created_at` and `updated_at` MUST be set to current time in ISO 8601 with Z suffix. Implements FR3, FR5 of desc-sort-order.
 
 #### Scenario: Create context with name
 - **WHEN** user creates a context with name "@home"
-- **THEN** context is persisted with name "@home", revision 0, needsSync true, is_deleted false
+- **THEN** context is created with the provided name, UUID v4 id, revision=0, needsSync=true, is_deleted=false
 
-#### Scenario: Sort order defaults to end of list
-- **GIVEN** 3 active contexts exist
+#### Scenario: New context sort_order above maximum
+- **GIVEN** 3 active contexts exist with sort keys "a0", "a1", "a2"
 - **WHEN** user creates a new context
-- **THEN** new context has sort_order = 3
+- **THEN** new context has sort_order above "a2"
 
 #### Scenario: UUID generated client-side
 - **WHEN** user creates a context
-- **THEN** context.id is a valid UUID v4
+- **THEN** id is a valid UUID v4 generated via crypto.randomUUID()
 
 #### Scenario: Timestamps set on creation
 - **WHEN** user creates a context
@@ -29,12 +29,12 @@ User SHALL be able to create a context by providing a name. System MUST generate
 
 ### Requirement: User can view active contexts
 
-User SHALL be able to view a list of active (non-deleted) contexts sorted by `sort_order` ascending. Soft-deleted contexts MUST NOT appear in the active list.
+User SHALL be able to view a list of active (non-deleted) contexts sorted by `sort_order` descending (highest key first). Soft-deleted contexts MUST NOT appear in the active list. Implements FR3 of desc-sort-order.
 
-#### Scenario: List sorted by sort_order
-- **GIVEN** contexts exist with sort_order 2, 0, 1
+#### Scenario: List sorted by sort_order descending
+- **GIVEN** contexts exist with sort_order "a0", "a1", "a2"
 - **WHEN** user views the contexts list
-- **THEN** contexts are returned in order: sort_order 0, 1, 2
+- **THEN** contexts are returned in order: sort_order "a2", "a1", "a0"
 
 #### Scenario: Empty list
 - **GIVEN** no contexts exist
@@ -85,23 +85,19 @@ User SHALL be able to soft-delete a context (sets `is_deleted` to true) and rest
 
 ### Requirement: User can reorder contexts
 
-User SHALL be able to reorder contexts via drag-and-drop. System MUST assign sequential `sort_order` values (0, 1, 2...) based on position. Only contexts whose `sort_order` actually changed MUST be marked for sync (`needsSync` = true). All changed contexts MUST share the same `updated_at` timestamp (batch operation). Empty array MUST be a no-op. If order is unchanged, no database write occurs.
+User SHALL be able to reorder contexts via drag-and-drop. System MUST use fractional indexing to generate a new `sort_order` key between neighbors. Only the dragged context MUST be updated. The moved context MUST be marked for sync (`needsSync` = true). Drag-and-drop neighbor logic MUST use DESC semantics: index 0 = highest key, last index = lowest key. Implements FR6, FR7 of desc-sort-order.
 
-#### Scenario: Reorder assigns sequential sort_order
-- **GIVEN** contexts A (sort_order=0), B (sort_order=1), C (sort_order=2)
-- **WHEN** user reorders to B, C, A
-- **THEN** B has sort_order=0, C has sort_order=1, A has sort_order=2
+#### Scenario: Reorder updates only dragged item
+- **GIVEN** contexts A, B, C sorted DESC
+- **WHEN** user drags C to position between A and B
+- **THEN** only C gets a new sort_order between A and B, A and B are unchanged
 
-#### Scenario: Only changed contexts marked for sync
-- **GIVEN** contexts A (sort_order=0), B (sort_order=1), C (sort_order=2)
-- **WHEN** user reorders to A, C, B
-- **THEN** A has needsSync=false (unchanged), C has needsSync=true, B has needsSync=true
+#### Scenario: Reorder marks moved item for sync
+- **GIVEN** contexts A, B, C sorted DESC
+- **WHEN** user drags C to a new position
+- **THEN** C has needsSync=true, A and B have unchanged needsSync
 
-#### Scenario: Empty reorder is no-op
-- **WHEN** user reorders with an empty array
-- **THEN** no database write occurs
-
-#### Scenario: Same order is no-op
-- **GIVEN** contexts A (sort_order=0), B (sort_order=1)
-- **WHEN** user reorders to A, B (same order)
-- **THEN** no database write occurs, no contexts marked for sync
+#### Scenario: Rebalancing with DESC sort
+- **GIVEN** contexts sorted DESC with a sort key exceeding rebalance threshold
+- **WHEN** rebalancing is triggered
+- **THEN** all contexts receive new evenly-distributed keys maintaining DESC visual order

@@ -8,20 +8,20 @@ Task categories for thematic grouping of tasks. Categories are a flat list with 
 
 ### Requirement: User can create a category
 
-User SHALL be able to create a category by providing a name. System MUST generate a UUID v4 client-side, set `revision` to 0, `needsSync` to true, `is_deleted` to false. The `sort_order` MUST default to the count of active categories (appended to end). Timestamps `created_at` and `updated_at` MUST be set to current time in ISO 8601 with Z suffix.
+User SHALL be able to create a category by providing a name. System MUST generate a UUID v4 client-side, set `revision` to 0, `needsSync` to true, `is_deleted` to false. The `sort_order` MUST be generated via `generateTopKey()` — a fractional index key above the current maximum. Timestamps `created_at` and `updated_at` MUST be set to current time in ISO 8601 with Z suffix. Implements FR4, FR5 of desc-sort-order.
 
 #### Scenario: Create category with name
-- **WHEN** user creates a category with name "Work"
-- **THEN** category is persisted with name "Work", revision 0, needsSync true, is_deleted false
+- **WHEN** user creates a category with name "Health"
+- **THEN** category is created with the provided name, UUID v4 id, revision=0, needsSync=true, is_deleted=false
 
-#### Scenario: Sort order defaults to end of list
-- **GIVEN** 3 active categories exist
+#### Scenario: New category sort_order above maximum
+- **GIVEN** 3 active categories exist with sort keys "a0", "a1", "a2"
 - **WHEN** user creates a new category
-- **THEN** new category has sort_order = 3
+- **THEN** new category has sort_order above "a2"
 
 #### Scenario: UUID generated client-side
 - **WHEN** user creates a category
-- **THEN** category.id is a valid UUID v4
+- **THEN** id is a valid UUID v4 generated via crypto.randomUUID()
 
 #### Scenario: Timestamps set on creation
 - **WHEN** user creates a category
@@ -29,12 +29,12 @@ User SHALL be able to create a category by providing a name. System MUST generat
 
 ### Requirement: User can view active categories
 
-User SHALL be able to view a list of active (non-deleted) categories sorted by `sort_order` ascending. Soft-deleted categories MUST NOT appear in the active list.
+User SHALL be able to view a list of active (non-deleted) categories sorted by `sort_order` descending (highest key first). Soft-deleted categories MUST NOT appear in the active list. Implements FR4 of desc-sort-order.
 
-#### Scenario: List sorted by sort_order
-- **GIVEN** categories exist with sort_order 2, 0, 1
+#### Scenario: List sorted by sort_order descending
+- **GIVEN** categories exist with sort_order "a0", "a1", "a2"
 - **WHEN** user views the categories list
-- **THEN** categories are returned in order: sort_order 0, 1, 2
+- **THEN** categories are returned in order: sort_order "a2", "a1", "a0"
 
 #### Scenario: Empty list
 - **GIVEN** no categories exist
@@ -85,23 +85,19 @@ User SHALL be able to soft-delete a category (sets `is_deleted` to true) and res
 
 ### Requirement: User can reorder categories
 
-User SHALL be able to reorder categories via drag-and-drop. System MUST assign sequential `sort_order` values (0, 1, 2...) based on position. Only categories whose `sort_order` actually changed MUST be marked for sync (`needsSync` = true). All changed categories MUST share the same `updated_at` timestamp (batch operation). Empty array MUST be a no-op. If order is unchanged, no database write occurs.
+User SHALL be able to reorder categories via drag-and-drop. System MUST use fractional indexing to generate a new `sort_order` key between neighbors. Only the dragged category MUST be updated. The moved category MUST be marked for sync (`needsSync` = true). Drag-and-drop neighbor logic MUST use DESC semantics: index 0 = highest key, last index = lowest key. Implements FR6, FR7 of desc-sort-order.
 
-#### Scenario: Reorder assigns sequential sort_order
-- **GIVEN** categories A (sort_order=0), B (sort_order=1), C (sort_order=2)
-- **WHEN** user reorders to B, C, A
-- **THEN** B has sort_order=0, C has sort_order=1, A has sort_order=2
+#### Scenario: Reorder updates only dragged item
+- **GIVEN** categories A, B, C sorted DESC
+- **WHEN** user drags C to position between A and B
+- **THEN** only C gets a new sort_order between A and B, A and B are unchanged
 
-#### Scenario: Only changed categories marked for sync
-- **GIVEN** categories A (sort_order=0), B (sort_order=1), C (sort_order=2)
-- **WHEN** user reorders to A, C, B
-- **THEN** A has needsSync=false (unchanged), C has needsSync=true, B has needsSync=true
+#### Scenario: Reorder marks moved item for sync
+- **GIVEN** categories A, B, C sorted DESC
+- **WHEN** user drags C to a new position
+- **THEN** C has needsSync=true, A and B have unchanged needsSync
 
-#### Scenario: Empty reorder is no-op
-- **WHEN** user reorders with an empty array
-- **THEN** no database write occurs
-
-#### Scenario: Same order is no-op
-- **GIVEN** categories A (sort_order=0), B (sort_order=1)
-- **WHEN** user reorders to A, B (same order)
-- **THEN** no database write occurs, no categories marked for sync
+#### Scenario: Rebalancing with DESC sort
+- **GIVEN** categories sorted DESC with a sort key exceeding rebalance threshold
+- **WHEN** rebalancing is triggered
+- **THEN** all categories receive new evenly-distributed keys maintaining DESC visual order
