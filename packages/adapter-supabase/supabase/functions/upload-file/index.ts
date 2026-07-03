@@ -8,6 +8,7 @@ import {
   buildStoragePath,
   ErrorCode,
   FILES_BUCKET,
+  MAX_ATTACHMENT_SIZE_BYTES,
 } from "../_shared/constants.ts";
 import { detectMimeType } from "../_shared/detectMimeType.ts";
 import {
@@ -62,6 +63,14 @@ Deno.serve(
         );
       } catch {
         return errorResponse(ErrorCode.INVALID_PAYLOAD, "Invalid base64 data");
+      }
+
+      // Validate file size (FR9, FR11 of attachment-drag-and-drop)
+      if (fileBytes.length > MAX_ATTACHMENT_SIZE_BYTES) {
+        return errorResponse(
+          ErrorCode.FILE_TOO_LARGE,
+          "File exceeds maximum allowed size",
+        );
       }
 
       // Detect MIME type from file content (FR8 of fix-file-mime-detection)

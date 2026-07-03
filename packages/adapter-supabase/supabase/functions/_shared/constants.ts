@@ -62,3 +62,7 @@ export const FILE_MAGIC_BYTES: Record<string, number[][]> = {
 // Duplicated from @clear-progress/contract
 // Source: packages/contract/src/constants.ts — TEXT_PLAIN_NULL_CHECK_BYTES
 export const TEXT_PLAIN_NULL_CHECK_BYTES = 8192;
+
+// Duplicated from @clear-progress/contract (not importable in Deno edge functions)
+// Source: packages/contract/src/constants.ts — MAX_ATTACHMENT_SIZE_BYTES
+export const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB

@@ -102,9 +102,11 @@ export const UploadFileResponseSchema = z.object({
 export const UploadFileBatchResultSchema = z.object({
   local_id: z.string(),
   goal_id: z.string(),
+  ok: z.boolean(),
   data_hash: z.string().optional(),
   reused: z.boolean().optional(),
   error: z.string().optional(),
+  error_code: z.string().optional(),
 });
 
 /** Implements FR4 of add-file-attachments */

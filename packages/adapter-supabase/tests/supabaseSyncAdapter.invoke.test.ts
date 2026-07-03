@@ -144,7 +144,12 @@ describe("SupabaseSyncAdapter with SupabaseClient", () => {
           data: {
             ok: true,
             results: [
-              { local_id: "local-1", goal_id: "goal-1", data_hash: "hash123" },
+              {
+                local_id: "local-1",
+                goal_id: "goal-1",
+                ok: true,
+                data_hash: "hash123",
+              },
             ],
           },
           error: null,

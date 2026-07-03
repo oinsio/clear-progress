@@ -638,6 +638,10 @@
       "errorSize": "File is too large (max 5 MB)",
       "errorType": "This file type is not supported",
       "errorUnrecognized": "Could not determine file format"
+    },
+    "dropZone": {
+      "hint": "Drop files here",
+      "rejected": "Rejected: {{filenames}}"
     }
   },
   "confirmDialog": {

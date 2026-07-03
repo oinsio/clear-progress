@@ -1,12 +1,9 @@
-import {
-  ALLOWED_FILE_MIME_TYPES,
-  detectMimeType,
-  MAX_ATTACHMENT_SIZE_BYTES,
-} from "@clear-progress/contract";
+import { ALLOWED_FILE_MIME_TYPES } from "@clear-progress/contract";
 import { Paperclip } from "lucide-react";
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { validateFile } from "@/utils/validateFile";
 
 const ACCEPT_STRING = ALLOWED_FILE_MIME_TYPES.join(",");
 
@@ -17,8 +14,6 @@ interface AttachFileButtonProps {
   isDisabled?: boolean;
   className?: string;
 }
-
-const TEXT_MIME_TYPES = ["text/plain", "text/markdown"] as const;
 
 /** Implements FR1, FR2, FR3 of add-file-attachments */
 export function AttachFileButton({
@@ -46,7 +41,7 @@ export function AttachFileButton({
     inputRef.current?.click();
   }, []);
 
-  /** Implements FR7 of fix-file-mime-detection */
+  /** Implements FR7 of fix-file-mime-detection, FR5 of attachment-drag-and-drop */
   const handleFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -56,32 +51,15 @@ export function AttachFileButton({
 
       if (!file) return;
 
-      const buffer = await file.arrayBuffer();
-      const detectedType = detectMimeType(buffer);
+      const validationResult = await validateFile(file);
 
-      let effectiveType: string;
-      if (detectedType !== null) {
-        effectiveType = detectedType;
-      } else if ((TEXT_MIME_TYPES as readonly string[]).includes(file.type)) {
-        effectiveType = file.type;
-      } else {
-        showError(t("attachment.attach.errorUnrecognized"));
-        return;
-      }
-
-      const allowedTypes: readonly string[] = ALLOWED_FILE_MIME_TYPES;
-      if (!allowedTypes.includes(effectiveType)) {
-        showError(t("attachment.attach.errorType"));
-        return;
-      }
-
-      if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
-        showError(t("attachment.attach.errorSize"));
+      if (!validationResult.valid) {
+        showError(t(validationResult.errorKey));
         return;
       }
 
       setErrorMessage("");
-      onFileSelected(file);
+      onFileSelected(validationResult.file);
     },
     [onFileSelected, showError, t],
   );

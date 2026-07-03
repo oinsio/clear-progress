@@ -234,6 +234,14 @@ export async function purgeOnServer(
   };
 }
 
+// Re-export upload helpers from dedicated module
+export type {
+  UploadFileBatchResultItem,
+  UploadFileResponse,
+  UploadFilesResponse,
+} from "./upload-api.js";
+export { uploadFilesToServer, uploadFileToServer } from "./upload-api.js";
+
 /**
  * Pulls data from server and finds the first non-deleted attachment
  * belonging to a task identified by name.

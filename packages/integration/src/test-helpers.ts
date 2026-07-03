@@ -9,6 +9,9 @@ export type {
   PushResponse,
   RefCountPullResponse,
   ServerCallCredentials,
+  UploadFileBatchResultItem,
+  UploadFileResponse,
+  UploadFilesResponse,
 } from "./server-api.js";
 export {
   findServerAttachmentForTask,
@@ -16,6 +19,8 @@ export {
   pullFromServer,
   purgeOnServer,
   pushToServer,
+  uploadFilesToServer,
+  uploadFileToServer,
 } from "./server-api.js";
 export { triggerSyncAndWait } from "./sync-helpers.js";
 export {
