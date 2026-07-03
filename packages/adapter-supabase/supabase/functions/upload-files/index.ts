@@ -12,6 +12,7 @@ import {
   buildStoragePath,
   ErrorCode,
   FILES_BUCKET,
+  MAX_ATTACHMENT_SIZE_BYTES,
 } from "../_shared/constants.ts";
 import { detectMimeType } from "../_shared/detectMimeType.ts";
 import {
@@ -39,6 +40,7 @@ interface FileResult {
   data_hash?: string;
   reused?: boolean;
   error?: string;
+  error_code?: string;
 }
 
 function isValidFileItem(item: unknown): item is FileItem {
@@ -69,6 +71,18 @@ async function processSingleFile(
       goal_id: item.goal_id,
       ok: false,
       error: "Invalid base64 data",
+      error_code: ErrorCode.INVALID_PAYLOAD,
+    };
+  }
+
+  // Validate file size (FR10, FR11 of attachment-drag-and-drop)
+  if (fileBytes.length > MAX_ATTACHMENT_SIZE_BYTES) {
+    return {
+      local_id: item.local_id,
+      goal_id: item.goal_id,
+      ok: false,
+      error: "File exceeds maximum allowed size",
+      error_code: ErrorCode.FILE_TOO_LARGE,
     };
   }
 
@@ -86,6 +100,7 @@ async function processSingleFile(
         goal_id: item.goal_id,
         ok: false,
         error: "File content does not match declared MIME type",
+        error_code: ErrorCode.INVALID_FILE_CONTENT,
       };
     }
     effectiveMimeType = item.mime_type;
@@ -95,6 +110,7 @@ async function processSingleFile(
       goal_id: item.goal_id,
       ok: false,
       error: "File content does not match declared MIME type",
+      error_code: ErrorCode.INVALID_FILE_CONTENT,
     };
   }
 
@@ -105,6 +121,7 @@ async function processSingleFile(
       goal_id: item.goal_id,
       ok: false,
       error: `MIME type not allowed: ${effectiveMimeType}`,
+      error_code: ErrorCode.INVALID_MIME_TYPE,
     };
   }
 
@@ -123,6 +140,7 @@ async function processSingleFile(
       goal_id: item.goal_id,
       ok: false,
       error: lookupError.message,
+      error_code: ErrorCode.INTERNAL_ERROR,
     };
   }
 
@@ -155,6 +173,7 @@ async function processSingleFile(
       goal_id: item.goal_id,
       ok: false,
       error: uploadError.message,
+      error_code: ErrorCode.INTERNAL_ERROR,
     };
   }
 
@@ -174,6 +193,7 @@ async function processSingleFile(
       goal_id: item.goal_id,
       ok: false,
       error: insertError.message,
+      error_code: ErrorCode.INTERNAL_ERROR,
     };
   }
 
@@ -229,6 +249,7 @@ Deno.serve(
             goal_id: goalId,
             ok: false,
             error: "Invalid file item: missing required fields",
+            error_code: ErrorCode.INVALID_PAYLOAD,
           });
         }
         return processSingleFile(item, userId, accessToken);

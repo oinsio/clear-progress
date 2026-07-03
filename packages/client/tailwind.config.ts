@@ -1,5 +1,6 @@
 import typography from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 import animate from "tailwindcss-animate";
 
 const config: Config = {
@@ -34,7 +35,13 @@ const config: Config = {
       },
     },
   },
-  plugins: [animate, typography],
+  plugins: [
+    animate,
+    typography,
+    plugin(({ addVariant }) => {
+      addVariant("pointer-fine", "@media (pointer: fine)");
+    }),
+  ],
 };
 
 export default config;

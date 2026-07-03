@@ -1,4 +1,4 @@
-/** Implements UX1, UX2, UX4, FR5 of add-file-attachments */
+/** Implements UX1, UX2, UX4, FR5 of add-file-attachments, FR6 of attachment-drag-and-drop */
 
 import type { EntityType } from "@clear-progress/contract";
 import { useCallback, useState } from "react";
@@ -10,6 +10,7 @@ import type { Attachment } from "@/types/entities";
 import { AttachFileButton } from "./AttachFileButton";
 import { AttachmentList } from "./AttachmentList";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { FileDropZone } from "./FileDropZone";
 
 interface EntityAttachmentsProps {
   entityType: EntityType;
@@ -17,7 +18,7 @@ interface EntityAttachmentsProps {
   i18nPrefix: string;
 }
 
-/** Implements UX1, UX2, UX4, FR5 of add-file-attachments */
+/** Implements UX1, UX2, UX4, FR5 of add-file-attachments, FR6 of attachment-drag-and-drop */
 export function EntityAttachments({
   entityType,
   entityId,
@@ -32,6 +33,16 @@ export function EntityAttachments({
   const handleFileSelected = useCallback(
     async (file: File) => {
       await defaultAttachmentService.attachFile(file, entityType, entityId);
+      schedulePush();
+    },
+    [entityType, entityId, schedulePush],
+  );
+
+  const handleFilesAccepted = useCallback(
+    async (files: File[]) => {
+      for (const file of files) {
+        await defaultAttachmentService.attachFile(file, entityType, entityId);
+      }
       schedulePush();
     },
     [entityType, entityId, schedulePush],
@@ -61,7 +72,7 @@ export function EntityAttachments({
   }, []);
 
   return (
-    <>
+    <FileDropZone onFilesAccepted={handleFilesAccepted}>
       {attachments.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-4">
           {t(`${i18nPrefix}.empty`)}
@@ -88,6 +99,6 @@ export function EntityAttachments({
           onCancel={handleDeleteCancel}
         />
       )}
-    </>
+    </FileDropZone>
   );
 }

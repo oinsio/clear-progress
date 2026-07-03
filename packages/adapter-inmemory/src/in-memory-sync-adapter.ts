@@ -429,7 +429,9 @@ export class InMemorySyncAdapter implements SyncAdapter {
         return {
           local_id: file.local_id,
           goal_id: file.goal_id,
+          ok: false,
           error: `Invalid mime type: ${file.mime_type}`,
+          error_code: "INVALID_MIME_TYPE",
         };
       }
 
@@ -437,6 +439,7 @@ export class InMemorySyncAdapter implements SyncAdapter {
       return {
         local_id: file.local_id,
         goal_id: file.goal_id,
+        ok: true,
         data_hash: file.data_hash,
         reused,
       };
