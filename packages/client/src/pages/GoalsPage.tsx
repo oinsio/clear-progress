@@ -11,7 +11,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Check, GripVertical, Pause, Play, Target } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { CommandBarFilterItem } from "@/components/command-bar";

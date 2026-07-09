@@ -6,21 +6,13 @@ import {
 } from "@testing-library/react/pure";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CommandBarFilterConfig } from "@/components/command-bar";
 import { CommandBarFilter } from "../CommandBarFilter";
+import {
+  createFilterConfig,
+  DEFAULT_FILTER_ITEMS,
+} from "./CommandBar.test-utils";
 
 // implements FR5, FR6, FR8, FR9 of command-bar
-
-function createFilterConfig(
-  overrides?: Partial<CommandBarFilterConfig>,
-): CommandBarFilterConfig {
-  return {
-    boxes: ["today", "week", "later", "all"],
-    activeBox: "today",
-    onBoxChange: vi.fn(),
-    ...overrides,
-  };
-}
 
 describe("CommandBarFilter — mutation coverage", () => {
   let onExpandedChange: ReturnType<typeof vi.fn>;
@@ -55,7 +47,7 @@ describe("CommandBarFilter — mutation coverage", () => {
     it("should show active box icon in collapsed state", () => {
       const { container } = render(
         React.createElement(CommandBarFilter, {
-          config: createFilterConfig({ activeBox: "week" }),
+          config: createFilterConfig({ activeValue: "week" }),
           isExpanded: false,
           onExpandedChange,
         }),
@@ -96,16 +88,9 @@ describe("CommandBarFilter — mutation coverage", () => {
 
   describe("expanded state", () => {
     it("should render all box filter buttons when expanded", () => {
-      const boxes: CommandBarFilterConfig["boxes"] = [
-        "today",
-        "week",
-        "later",
-        "all",
-      ];
-
       const { container } = render(
         React.createElement(CommandBarFilter, {
-          config: createFilterConfig({ boxes }),
+          config: createFilterConfig(),
           isExpanded: true,
           onExpandedChange,
         }),
@@ -114,9 +99,9 @@ describe("CommandBarFilter — mutation coverage", () => {
       const filterArea = within(container).getByTestId(
         "command-bar-filter-area",
       );
-      for (const box of boxes) {
+      for (const item of DEFAULT_FILTER_ITEMS) {
         expect(
-          within(filterArea).getByTestId(`box-filter-${box}`),
+          within(filterArea).getByTestId(`box-filter-${item.value}`),
         ).toBeDefined();
       }
     });
@@ -135,7 +120,7 @@ describe("CommandBarFilter — mutation coverage", () => {
       ).toBeNull();
     });
 
-    it("should call onBoxChange and collapse when a box is selected", () => {
+    it("should call onChange and collapse when a box is selected", () => {
       const filterConfig = createFilterConfig();
 
       const { container } = render(
@@ -149,7 +134,7 @@ describe("CommandBarFilter — mutation coverage", () => {
       const weekButton = within(container).getByTestId("box-filter-week");
       fireEvent.click(weekButton);
 
-      expect(filterConfig.onBoxChange).toHaveBeenCalledWith("week");
+      expect(filterConfig.onChange).toHaveBeenCalledWith("week");
       expect(onExpandedChange).toHaveBeenCalledWith(false);
     });
 
@@ -171,7 +156,7 @@ describe("CommandBarFilter — mutation coverage", () => {
     it("should highlight active box with accent colors", () => {
       const { container } = render(
         React.createElement(CommandBarFilter, {
-          config: createFilterConfig({ activeBox: "today" }),
+          config: createFilterConfig({ activeValue: "today" }),
           isExpanded: true,
           onExpandedChange,
         }),

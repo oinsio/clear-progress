@@ -11,30 +11,15 @@ import React from "react";
 import { expect, type TestContext, vi } from "vitest";
 import type { CommandBarFilterConfig } from "@/components/command-bar";
 import { CommandBar } from "@/components/command-bar";
+import {
+  createFilterConfig,
+  PLACEHOLDER_TEXT,
+  StubIcon,
+} from "@/test/mocks/commandBarMocks";
 
 const feature = await loadFeature("../command_bar_filter.feature");
 
 type FeatureContext = Record<string, never>;
-
-const PLACEHOLDER_TEXT = "Add a task...";
-
-function StubIcon({ className }: { className?: string }) {
-  return React.createElement("svg", {
-    className,
-    "data-testid": "stub-entity-icon",
-  });
-}
-
-function createFilterConfig(
-  overrides?: Partial<CommandBarFilterConfig>,
-): CommandBarFilterConfig {
-  return {
-    boxes: ["today", "week", "later", "all"],
-    activeBox: "today",
-    onBoxChange: vi.fn(),
-    ...overrides,
-  };
-}
 
 function renderWithFilter(filterConfig: CommandBarFilterConfig) {
   return render(
@@ -65,7 +50,7 @@ describeFeature(
       );
 
       And('active box is "today"', (_ctx: TestContext) => {
-        expect(filterConfig.activeBox).toBe("today");
+        expect(filterConfig.activeValue).toBe("today");
       });
     });
 
@@ -110,9 +95,9 @@ describeFeature(
           const filterArea = within(container).getByTestId(
             "command-bar-filter-area",
           );
-          for (const box of filterConfig.boxes) {
+          for (const item of filterConfig.items) {
             expect(
-              within(filterArea).getByTestId(`box-filter-${box}`),
+              within(filterArea).getByTestId(`box-filter-${item.value}`),
             ).toBeDefined();
           }
         });
@@ -145,7 +130,7 @@ describeFeature(
         });
 
         And('onBoxChange is called with "week"', (_ctx: TestContext) => {
-          expect(filterConfig.onBoxChange).toHaveBeenCalledWith("week");
+          expect(filterConfig.onChange).toHaveBeenCalledWith("week");
         });
       },
     );
@@ -178,7 +163,7 @@ describeFeature(
         });
 
         And("active box value is preserved", (_ctx: TestContext) => {
-          expect(filterConfig.onBoxChange).not.toHaveBeenCalled();
+          expect(filterConfig.onChange).not.toHaveBeenCalled();
         });
       },
     );
