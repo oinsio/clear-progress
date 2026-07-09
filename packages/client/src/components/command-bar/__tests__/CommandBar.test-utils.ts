@@ -3,6 +3,7 @@ import { vi } from "vitest";
 import type {
   CommandBarEyeToggleConfig,
   CommandBarFilterConfig,
+  CommandBarFilterItem,
 } from "@/components/command-bar";
 
 export const mockUseHandedness = vi.fn();
@@ -17,13 +18,24 @@ export function StubIcon({ className }: { className?: string }) {
   });
 }
 
+function StubFilterIcon({ className }: { className?: string }) {
+  return React.createElement("span", { className });
+}
+
+const DEFAULT_FILTER_ITEMS: CommandBarFilterItem[] = [
+  { value: "today", icon: StubFilterIcon, label: "Today" },
+  { value: "week", icon: StubFilterIcon, label: "Week" },
+  { value: "later", icon: StubFilterIcon, label: "Later" },
+  { value: "all", icon: StubFilterIcon, label: "All" },
+];
+
 export function createFilterConfig(
   overrides?: Partial<CommandBarFilterConfig>,
 ): CommandBarFilterConfig {
   return {
-    boxes: ["today", "week", "later", "all"],
-    activeBox: "today",
-    onBoxChange: vi.fn(),
+    items: DEFAULT_FILTER_ITEMS,
+    activeValue: "today",
+    onChange: vi.fn(),
     ...overrides,
   };
 }

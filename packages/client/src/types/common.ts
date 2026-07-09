@@ -39,6 +39,8 @@ export type ColorScheme = "system" | "light" | "dark";
 
 export type FilterBarPosition = "top" | "bottom";
 
+export type GoalFilter = "active" | "paused" | "finished" | "all";
+
 export type InterfaceScale = "small" | "normal" | "large" | "xLarge";
 
 export type Handedness = "right" | "left";

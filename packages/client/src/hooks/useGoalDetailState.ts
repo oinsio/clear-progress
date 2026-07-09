@@ -155,8 +155,8 @@ export function useGoalDetailState() {
     [createTask],
   );
 
-  const handleBoxChange = useCallback((box: BoxFilter) => {
-    setActiveBox(box);
+  const handleBoxChange = useCallback((value: string) => {
+    setActiveBox(value as BoxFilter);
   }, []);
 
   const handleCommandBarSubmit = useCallback(

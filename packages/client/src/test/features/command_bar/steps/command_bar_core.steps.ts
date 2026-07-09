@@ -12,6 +12,7 @@ import { expect, type TestContext, vi } from "vitest";
 import type {
   CommandBarEyeToggleConfig,
   CommandBarFilterConfig,
+  CommandBarFilterItem,
 } from "@/components/command-bar";
 import { CommandBar } from "@/components/command-bar";
 
@@ -112,10 +113,19 @@ describeFeature(
         When(
           "CommandBar receives filter, eyeToggle, entityIcon, placeholder, and onSubmit",
           (_ctx: TestContext) => {
+            function StubFilterIcon({ className }: { className?: string }) {
+              return React.createElement("span", { className });
+            }
+            const filterItems: CommandBarFilterItem[] = [
+              { value: "today", icon: StubFilterIcon, label: "Today" },
+              { value: "week", icon: StubFilterIcon, label: "Week" },
+              { value: "later", icon: StubFilterIcon, label: "Later" },
+              { value: "all", icon: StubFilterIcon, label: "All" },
+            ];
             const filterConfig: CommandBarFilterConfig = {
-              boxes: ["today", "week", "later", "all"],
-              activeBox: "today",
-              onBoxChange: vi.fn(),
+              items: filterItems,
+              activeValue: "today",
+              onChange: vi.fn(),
             };
             const eyeToggleConfig: CommandBarEyeToggleConfig = {
               isVisible: true,

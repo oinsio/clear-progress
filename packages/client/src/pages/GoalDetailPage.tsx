@@ -4,28 +4,61 @@
  * Implements FR1-FR5 of goal-detail-card-refactor.
  * Implements FR4, FR5, FR6 of extend-pin-to-entity-pages.
  */
-import { ArrowLeft, CheckSquare, Pin } from "lucide-react";
+import { ArrowLeft, CheckSquare, Inbox, Pin } from "lucide-react";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import type { CommandBarFilterItem } from "@/components/command-bar";
 import { CommandBar } from "@/components/command-bar";
 import { FocusGoalReplacementDialog } from "@/components/goals/FocusGoalReplacementDialog";
 import { GoalCardEditMode } from "@/components/goals/GoalCardEditMode";
 import { GoalCardViewMode } from "@/components/goals/GoalCardViewMode";
 import { SidebarShell } from "@/components/layout/SidebarShell";
+import {
+  AllBoxesIcon,
+  LaterBoxIcon,
+  TodayBoxIcon,
+  WeekBoxIcon,
+} from "@/components/tasks/BoxIcons";
 import { BoxSectionList } from "@/components/tasks/BoxSectionList";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
-import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER, ROUTES } from "@/constants";
+import {
+  BOX_FILTER_ALL,
+  BOX_FILTER_I18N_KEYS,
+  FULL_BOX_FILTER_ORDER,
+  ROUTES,
+} from "@/constants";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useGoalDetailState } from "@/hooks/useGoalDetailState";
 import { cn } from "@/shared/lib/cn";
-import type { Box } from "@/types/common";
+import type { Box, BoxFilter } from "@/types/common";
 import type { Goal } from "@/types/entities";
 
+const BOX_FILTER_ICONS: Record<BoxFilter, CommandBarFilterItem["icon"]> = {
+  today: TodayBoxIcon,
+  week: WeekBoxIcon,
+  later: LaterBoxIcon,
+  all: AllBoxesIcon,
+  inbox: Inbox,
+};
+
 export default function GoalDetailPage() {
+  const { t } = useTranslation();
   const state = useGoalDetailState();
   const { isDetailPanelPinned } = useDetailPanelPinned();
 
   const showDetailColumn =
     state.isDesktop && (isDetailPanelPinned || state.selectedTask);
+
+  const boxFilterItems: CommandBarFilterItem[] = useMemo(
+    () =>
+      FULL_BOX_FILTER_ORDER.map((box) => ({
+        value: box,
+        icon: BOX_FILTER_ICONS[box],
+        label: t(BOX_FILTER_I18N_KEYS[box]),
+      })),
+    [t],
+  );
 
   if (!state.isLoading && !state.goal) {
     return (
@@ -65,9 +98,9 @@ export default function GoalDetailPage() {
         >
           <CommandBar
             filter={{
-              boxes: FULL_BOX_FILTER_ORDER,
-              activeBox: state.activeBox,
-              onBoxChange: state.handleBoxChange,
+              items: boxFilterItems,
+              activeValue: state.activeBox,
+              onChange: state.handleBoxChange,
             }}
             eyeToggle={{
               isVisible: state.showHidden,

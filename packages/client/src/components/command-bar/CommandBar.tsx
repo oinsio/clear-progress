@@ -7,17 +7,22 @@ import { useFilterBarPosition } from "@/hooks/useFilterBarPosition";
 import { useHandedness } from "@/hooks/useHandedness";
 import { useTextareaAutoGrow } from "@/hooks/useTextareaAutoGrow";
 import { cn } from "@/shared/lib/cn";
-import type { BoxFilter } from "@/types/common";
 import { CommandBarFilter } from "./CommandBarFilter";
 
 /**
  * Implements FR1, FR2, FR3, FR4, FR11, FR13, FR14, FR15, FR20, FR21 of command-bar.
  */
 
+export interface CommandBarFilterItem {
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}
+
 export interface CommandBarFilterConfig {
-  boxes: BoxFilter[];
-  activeBox: BoxFilter;
-  onBoxChange: (box: BoxFilter) => void;
+  items: CommandBarFilterItem[];
+  activeValue: string;
+  onChange: (value: string) => void;
 }
 
 export interface CommandBarEyeToggleConfig {

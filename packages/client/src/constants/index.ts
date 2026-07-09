@@ -4,6 +4,8 @@ import type {
   BoxFilter,
   ColorScheme,
   FilterBarPosition,
+  GoalFilter,
+  GoalStatus,
   Handedness,
   InterfaceScale,
   PanelSide,
@@ -175,6 +177,7 @@ export const STORAGE_KEYS = {
   ONBOARDING_SHOWN: "onboarding_shown",
   DETAIL_PANEL_PINNED: "detail_panel_pinned",
   SIDEBAR_MODE: "sidebar_mode",
+  GOAL_FILTER: "goal_filter",
 } as const;
 
 export const DEFAULT_FOCUS_OPACITY = 30;
@@ -222,10 +225,7 @@ export const SWIPE_VERTICAL_CANCEL_PX = 10;
 export const LONG_PRESS_THRESHOLD_MS = 500;
 export const LONG_PRESS_MOVE_THRESHOLD_PX = 10;
 
-export const GOAL_STATUS_SORT_ORDER: Record<
-  import("@/types/common").GoalStatus,
-  number
-> = {
+export const GOAL_STATUS_SORT_ORDER: Record<GoalStatus, number> = {
   in_progress: 0,
   planning: 1,
   paused: 2,
@@ -298,3 +298,38 @@ export const SYNCED_SETTING_KEYS = new Set([
   "default_box",
   "day_boundary",
 ]);
+
+export const FINISHED_GOAL_STATUSES = new Set<GoalStatus>([
+  "completed",
+  "cancelled",
+]);
+
+export const GOAL_FILTER_OPTIONS: GoalFilter[] = [
+  "active",
+  "paused",
+  "finished",
+  "all",
+];
+
+export const DEFAULT_GOAL_FILTER: GoalFilter = "all";
+
+export const GOAL_FILTER_STATUS_MAP: Record<GoalFilter, GoalStatus[]> = {
+  active: ["planning", "in_progress"],
+  paused: ["paused"],
+  finished: ["completed", "cancelled"],
+  all: ["planning", "in_progress", "paused", "completed", "cancelled"],
+};
+
+export const GOAL_FILTER_ORDER: GoalFilter[] = [
+  "active",
+  "paused",
+  "finished",
+  "all",
+];
+
+export const GOAL_FILTER_EMPTY_MESSAGE_KEYS: Record<GoalFilter, string> = {
+  active: "goal.emptyActive",
+  paused: "goal.emptyPaused",
+  finished: "goal.emptyFinished",
+  all: "goal.empty",
+};

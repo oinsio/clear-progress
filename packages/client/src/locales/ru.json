@@ -139,7 +139,16 @@
       "confirmDeleteButton": "Удалить"
     },
     "expandDetails": "Развернуть детали",
-    "collapseDetails": "Свернуть детали"
+    "collapseDetails": "Свернуть детали",
+    "emptyActive": "Нет активных целей",
+    "emptyPaused": "Нет целей на паузе",
+    "emptyFinished": "Нет завершённых целей"
+  },
+  "goalFilter": {
+    "active": "Активные",
+    "paused": "На паузе",
+    "finished": "Завершённые",
+    "all": "Все"
   },
   "focusGoalReplacementDialog": {
     "title": "Заменить цель в фокусе",
