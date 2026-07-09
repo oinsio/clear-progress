@@ -3,14 +3,26 @@
  * Implements FR2 of refactor-task-pages.
  * Implements FR20 of command-bar.
  */
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, Inbox } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { CommandBarFilterItem } from "@/components/command-bar";
 import { CommandBar } from "@/components/command-bar";
+import {
+  AllBoxesIcon,
+  LaterBoxIcon,
+  TodayBoxIcon,
+  WeekBoxIcon,
+} from "@/components/tasks/BoxIcons";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskPageLayout } from "@/components/tasks/TaskPageLayout";
 import { TaskSection } from "@/components/tasks/TaskSection";
-import { BOX, BOX_FILTER_ALL, TASK_BOX_FILTER_ORDER } from "@/constants";
+import {
+  BOX,
+  BOX_FILTER_ALL,
+  BOX_FILTER_I18N_KEYS,
+  TASK_BOX_FILTER_ORDER,
+} from "@/constants";
 import { useActiveTaskHandlers } from "@/hooks/useActiveTaskHandlers";
 import { useCategories } from "@/hooks/useCategories";
 import { useCompletedTasks } from "@/hooks/useCompletedTasks";
@@ -26,6 +38,14 @@ import { useTasks } from "@/hooks/useTasks";
 import { systemClock } from "@/lib/temporal";
 import type { BoxFilter } from "@/types/common";
 import { getLogicalDate } from "@/utils/getLogicalDate";
+
+const BOX_FILTER_ICONS: Record<BoxFilter, CommandBarFilterItem["icon"]> = {
+  today: TodayBoxIcon,
+  week: WeekBoxIcon,
+  later: LaterBoxIcon,
+  all: AllBoxesIcon,
+  inbox: Inbox,
+};
 
 export default function ActiveTasksPage() {
   const { t } = useTranslation();
@@ -80,9 +100,17 @@ export default function ActiveTasksPage() {
     afterComplete: reloadCompleted,
   });
 
-  const handleBoxChange = useCallback((box: BoxFilter) => {
-    setActiveBox(box);
+  const handleBoxChange = useCallback((value: string) => {
+    setActiveBox(value as BoxFilter);
   }, []);
+
+  const boxFilterItems: CommandBarFilterItem[] = TASK_BOX_FILTER_ORDER.map(
+    (box) => ({
+      value: box,
+      icon: BOX_FILTER_ICONS[box],
+      label: t(BOX_FILTER_I18N_KEYS[box]),
+    }),
+  );
 
   const effectiveBox = targetBox === BOX.INBOX ? BOX.TODAY : targetBox;
 
@@ -163,9 +191,9 @@ export default function ActiveTasksPage() {
         commandBar={
           <CommandBar
             filter={{
-              boxes: TASK_BOX_FILTER_ORDER,
-              activeBox,
-              onBoxChange: handleBoxChange,
+              items: boxFilterItems,
+              activeValue: activeBox,
+              onChange: handleBoxChange,
             }}
             eyeToggle={{
               isVisible: showHidden,

@@ -1,22 +1,19 @@
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import defaultCoverSvg from "@/assets/default-goal-cover.svg";
-import { ENTITY_TYPE } from "@/constants";
+import { ENTITY_TYPE, FINISHED_GOAL_STATUSES } from "@/constants";
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useFileUrl } from "@/hooks/useFileUrl";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { cn } from "@/shared/lib/cn";
 import { formatShortDateTime } from "@/shared/lib/utils";
-import type { GoalStatus } from "@/types/common";
 import type { Goal } from "@/types/entities";
 import {
   getEffectiveSyncStatus,
   getSyncStatusBorderClass,
 } from "@/utils/syncStatusBorder";
 import { GoalStatusBadge } from "./GoalStatusBadge";
-
-const FINISHED_GOAL_STATUSES = new Set<GoalStatus>(["completed", "cancelled"]);
 
 interface GoalItemProps {
   goal: Goal;

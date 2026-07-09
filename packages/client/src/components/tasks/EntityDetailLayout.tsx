@@ -2,19 +2,31 @@ import {
   ArrowLeft,
   Check,
   CheckSquare,
+  Inbox,
   Pencil,
   Pin,
   Trash2,
 } from "lucide-react";
 import type { ComponentType } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import type { CommandBarFilterItem } from "@/components/command-bar";
 import { CommandBar } from "@/components/command-bar";
 import { SidebarShell } from "@/components/layout/SidebarShell";
+import {
+  AllBoxesIcon,
+  LaterBoxIcon,
+  TodayBoxIcon,
+  WeekBoxIcon,
+} from "@/components/tasks/BoxIcons";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { TaskList } from "@/components/tasks/TaskList";
-import { BOX_FILTER_ALL, FULL_BOX_FILTER_ORDER } from "@/constants";
+import {
+  BOX_FILTER_ALL,
+  BOX_FILTER_I18N_KEYS,
+  FULL_BOX_FILTER_ORDER,
+} from "@/constants";
 import { useDetailPanelPinned } from "@/hooks/useDetailPanelPinned";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
@@ -29,6 +41,14 @@ import type { Box, BoxFilter } from "@/types/common";
 import type { Category, Context, Goal, Task } from "@/types/entities";
 import { BoxSectionList } from "./BoxSectionList";
 import type { SidebarMode } from "./Sidebar";
+
+const BOX_FILTER_ICONS: Record<BoxFilter, CommandBarFilterItem["icon"]> = {
+  today: TodayBoxIcon,
+  week: WeekBoxIcon,
+  later: LaterBoxIcon,
+  all: AllBoxesIcon,
+  inbox: Inbox,
+};
 
 interface EntityDetailLayoutI18nKeys {
   back: string;
@@ -159,9 +179,19 @@ export function EntityDetailLayout({
 
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
 
-  const handleBoxChange = useCallback((box: BoxFilter) => {
-    setActiveBox(box);
+  const handleBoxChange = useCallback((value: string) => {
+    setActiveBox(value as BoxFilter);
   }, []);
+
+  const boxFilterItems: CommandBarFilterItem[] = useMemo(
+    () =>
+      FULL_BOX_FILTER_ORDER.map((box) => ({
+        value: box,
+        icon: BOX_FILTER_ICONS[box],
+        label: t(BOX_FILTER_I18N_KEYS[box]),
+      })),
+    [t],
+  );
 
   const handleCommandBarSubmit = useCallback(
     (name: string) => {
@@ -202,9 +232,9 @@ export function EntityDetailLayout({
         >
           <CommandBar
             filter={{
-              boxes: FULL_BOX_FILTER_ORDER,
-              activeBox,
-              onBoxChange: handleBoxChange,
+              items: boxFilterItems,
+              activeValue: activeBox,
+              onChange: handleBoxChange,
             }}
             eyeToggle={{
               isVisible: showHidden,

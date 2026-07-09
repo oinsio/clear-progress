@@ -4,12 +4,14 @@ import { describeFeature, loadFeature } from "@amiceli/vitest-cucumber";
 import { cleanup, render, within } from "@testing-library/react/pure";
 import React from "react";
 import { expect, type TestContext, vi } from "vitest";
-import type {
-  CommandBarEyeToggleConfig,
-  CommandBarFilterConfig,
-} from "@/components/command-bar";
 import { CommandBar } from "@/components/command-bar";
+import { createEyeToggleConfig } from "@/components/command-bar/__tests__/CommandBar.test-utils";
 import { COMMAND_BAR_STACKED_CLASS } from "@/constants";
+import {
+  createFilterConfig,
+  PLACEHOLDER_TEXT,
+  StubIcon,
+} from "@/test/mocks/commandBarMocks";
 
 const mockUseHandedness = vi.fn();
 
@@ -20,30 +22,6 @@ vi.mock("@/hooks/useHandedness", () => ({
 const feature = await loadFeature("../command_bar_handedness.feature");
 
 type FeatureContext = Record<string, never>;
-
-const PLACEHOLDER_TEXT = "Add a task...";
-
-function StubIcon({ className }: { className?: string }) {
-  return React.createElement("svg", {
-    className,
-    "data-testid": "stub-entity-icon",
-  });
-}
-
-function createFilterConfig(): CommandBarFilterConfig {
-  return {
-    boxes: ["today", "week", "later", "all"],
-    activeBox: "today",
-    onBoxChange: vi.fn(),
-  };
-}
-
-function createEyeToggleConfig(): CommandBarEyeToggleConfig {
-  return {
-    isVisible: true,
-    onToggle: vi.fn(),
-  };
-}
 
 describeFeature(
   feature,
