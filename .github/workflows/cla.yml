@@ -28,7 +28,7 @@ jobs:
           allowlist: "dependabot[bot],renovate[bot],github-actions[bot]"
           custom-notsigned-prcomment: >
             Thank you for your contribution! Before we can merge this PR,
-            you need to sign our [Contributor License Agreement](CLA.md).
+            you need to sign our [Contributor License Agreement](https://github.com/oinsio/clear-progress/blob/main/CLA.md).
             Please reply with the following to accept:
 
 
