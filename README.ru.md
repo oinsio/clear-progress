@@ -202,3 +202,14 @@ docs/
 - [Модель данных и протокол синхронизации](docs/architecture/data-model-and-sync.md)
 - [Архитектурные решения (ADR)](docs/adr/)
 - [Спецификации продукта (OpenSpec)](openspec/specs/)
+
+## Лицензия
+
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-purple)](LICENSE)
+
+Бесплатно для личного и некоммерческого использования. Для коммерческого использования необходима отдельная лицензия — см. [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md).
+
+- [LICENSE](LICENSE) — полный текст лицензии
+- [NOTICE](NOTICE) — копирайт и раскрытие использования ИИ
+- [CLA.md](CLA.md) — лицензионное соглашение для контрибьюторов
+- [CONTRIBUTING.md](CONTRIBUTING.md) — как внести вклад

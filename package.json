@@ -1,6 +1,7 @@
 {
   "name": "clear-progress",
   "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @clear-progress/client dev",

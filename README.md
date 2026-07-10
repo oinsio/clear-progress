@@ -202,3 +202,14 @@ Integration tests spin up a full Supabase stack locally via Docker Compose (Test
 - [Data model and sync protocol](docs/architecture/data-model-and-sync.md)
 - [Architecture Decision Records](docs/adr/)
 - [Product specs (OpenSpec)](openspec/specs/)
+
+## License
+
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-purple)](LICENSE)
+
+Free for personal and other noncommercial use. Commercial use requires a separate license — see [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md).
+
+- [LICENSE](LICENSE) — full license text
+- [NOTICE](NOTICE) — copyright and AI assistance disclosure
+- [CLA.md](CLA.md) — Contributor License Agreement
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to contribute
