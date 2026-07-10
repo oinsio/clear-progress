@@ -1,6 +1,7 @@
 # Clear Progress
 
 [![deploy](https://img.shields.io/github/actions/workflow/status/oinsio/clear-progress/deploy.yml?branch=main&label=deploy)](https://github.com/oinsio/clear-progress/actions/workflows/deploy.yml)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-purple)](LICENSE)
 
 [![en](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-red.svg)](README.ru.md)
@@ -25,6 +26,7 @@
   - [Структура проекта](#структура-проекта)
   - [Тестирование](#тестирование)
   - [Документация](#документация)
+- [Лицензия](#лицензия)
 
 ## Возможности
 
@@ -204,8 +206,6 @@ docs/
 - [Спецификации продукта (OpenSpec)](openspec/specs/)
 
 ## Лицензия
-
-[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-purple)](LICENSE)
 
 Бесплатно для личного и некоммерческого использования. Для коммерческого использования необходима отдельная лицензия — см. [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md).
 

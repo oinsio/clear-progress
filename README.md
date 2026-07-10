@@ -1,6 +1,7 @@
 # Clear Progress
 
 [![deploy](https://img.shields.io/github/actions/workflow/status/oinsio/clear-progress/deploy.yml?branch=main&label=deploy)](https://github.com/oinsio/clear-progress/actions/workflows/deploy.yml)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-purple)](LICENSE)
 
 [![en](https://img.shields.io/badge/lang-en-blue.svg)](README.md)
 [![ru](https://img.shields.io/badge/lang-ru-red.svg)](README.ru.md)
@@ -25,6 +26,7 @@ Personal task, goal, and idea manager. Built for GTD and Jedi Empty Inbox techni
   - [Project Structure](#project-structure)
   - [Testing](#testing)
   - [Documentation](#documentation)
+- [License](#license)
 
 ## Features
 
@@ -204,8 +206,6 @@ Integration tests spin up a full Supabase stack locally via Docker Compose (Test
 - [Product specs (OpenSpec)](openspec/specs/)
 
 ## License
-
-[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-purple)](LICENSE)
 
 Free for personal and other noncommercial use. Commercial use requires a separate license — see [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md).
 
