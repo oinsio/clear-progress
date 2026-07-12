@@ -130,7 +130,7 @@ describe("isWhitelisted", () => {
     [true, "repeat.month12"],
     [true, "repeat.monthGenitive1"],
     [false, "_meta.name"],
-    [false, "sync.alert.some_key"],
+    [true, "sync.alert.some_key"],
     [false, "task.cancel"],
     [false, "repeat.monthAndDay"],
     [false, "repeat.weekday8"],

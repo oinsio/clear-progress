@@ -46,6 +46,11 @@ export const WHITELIST: ReadonlyArray<{ pattern: RegExp; reason: string }> = [
     // biome-ignore lint/suspicious/noTemplateCurlyInString: describes a template pattern, not a real template
     reason: "t(`repeat.monthGenitive${m}`)",
   },
+  // healingRules.ts — messageKey: "sync.alert.*"
+  {
+    pattern: /^sync\.alert\./,
+    reason: "healingRules.ts messageKey",
+  },
 ];
 
 export function isWhitelisted(baseKey: string): boolean {

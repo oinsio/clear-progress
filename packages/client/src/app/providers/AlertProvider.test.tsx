@@ -10,7 +10,10 @@ function createWrapper() {
   };
 }
 
-const syncAlert: AppAlert = { type: "sync", messageKey: "sync.error" };
+const syncAlert: AppAlert = {
+  type: "sync",
+  messageKey: "sync.alert.repeat_rule_reset",
+};
 const repeatAlert: AppAlert = {
   type: "repeat_rule_invalid",
   taskNames: ["Task A"],
@@ -68,7 +71,7 @@ describe("AlertProvider", () => {
   it("should maintain insertion order within same alert type", () => {
     const syncAlert2: AppAlert = {
       type: "sync",
-      messageKey: "sync.conflict",
+      messageKey: "sync.alert.name_set_untitled",
     };
     const { result } = renderHook(() => useAlerts(), {
       wrapper: createWrapper(),

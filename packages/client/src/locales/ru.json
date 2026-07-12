@@ -6,15 +6,6 @@
     "baseLanguage": "ru",
     "emoji": "🇷🇺"
   },
-  "nav": {
-    "inbox": "Входящие",
-    "today": "Сегодня",
-    "tasks": "Задачи",
-    "goals": "Цели",
-    "ideas": "Идеи",
-    "search": "Поиск",
-    "ariaLabel": "Навигация"
-  },
   "box": {
     "inbox": "Входящие",
     "today": "Сегодня",
@@ -23,8 +14,6 @@
     "all": "Все"
   },
   "task": {
-    "addPlaceholder": "Задача в «{{box}}»",
-    "searchPlaceholder": "Поиск задач...",
     "empty": "Нет задач",
     "emptyCompleted": "Завершённых задач нет",
     "emptyInbox": "Задач нет",
@@ -47,12 +36,8 @@
     "selectDate": "Выбрать дату",
     "cancel": "Отмена",
     "drag": "Перетащить задачу",
-    "add": "Добавить задачу",
     "appearDate": "Появится {{date}}",
-    "newName": "Новая задача",
     "namePlaceholder": "Название задачи...",
-    "create": "Создать",
-    "createLabel": "Создать задачу",
     "completedToday": "Завершено: Сегодня {{time}}",
     "completedYesterday": "Завершено: Вчера {{time}}",
     "completedDate": "Завершено: {{date}} {{time}}",
@@ -62,12 +47,6 @@
     "yesterday": "Вчера",
     "tabs": {
       "attachments": "Вложения"
-    },
-    "attachments": {
-      "empty": "Нет вложений",
-      "confirmDelete": "Удалить это вложение?",
-      "confirmDeleteMessage": "Это действие нельзя отменить.",
-      "confirmDeleteButton": "Удалить"
     }
   },
   "section": {
@@ -90,11 +69,7 @@
     "descriptionLabel": "Описание",
     "statusLabel": "Статус",
     "cancel": "Отмена",
-    "close": "Закрыть",
     "drag": "Перетащить цель",
-    "add": "Добавить цель",
-    "addTask": "Добавить задачу",
-    "taskPlaceholder": "Название задачи...",
     "completedSection": "Выполненные ({{count}})",
     "showCompleted": "Показать выполненные",
     "hideCompleted": "Скрыть выполненные",
@@ -113,12 +88,8 @@
       "errorType": "Выберите изображение",
       "errorUnrecognized": "Не удалось определить формат файла. Возможно, файл повреждён.",
       "errorNetwork": "Не удалось загрузить. Файл сохранён локально и будет загружен при восстановлении соединения.",
-      "uploadError": "Не удалось загрузить обложку. Попробуйте ещё раз.",
-      "viewFull": "Просмотреть обложку",
-      "closeLightbox": "Закрыть просмотр обложки"
+      "viewFull": "Просмотреть обложку"
     },
-    "expandDescription": "Развернуть описание",
-    "collapseDescription": "Свернуть описание",
     "editName": "Редактировать цель",
     "save": "Сохранить",
     "delete": "Удалить",
@@ -131,12 +102,6 @@
     "tabs": {
       "details": "Детали",
       "attachments": "Вложения"
-    },
-    "attachments": {
-      "empty": "Нет вложений",
-      "confirmDelete": "Удалить это вложение?",
-      "confirmDeleteMessage": "Это действие нельзя отменить.",
-      "confirmDeleteButton": "Удалить"
     },
     "expandDetails": "Развернуть детали",
     "collapseDetails": "Свернуть детали",
@@ -158,43 +123,23 @@
   },
   "idea": {
     "pageName": "Идеи",
-    "add": "Добавить идею",
     "namePlaceholder": "Название идеи",
     "descriptionPlaceholder": "Описание идеи",
     "empty": "Нет идей",
     "drag": "Перетащить идею",
-    "editName": "Редактировать идею",
     "edit": "Редактировать",
     "nameLabel": "Название",
     "descriptionLabel": "Описание",
-    "save": "Сохранить",
-    "delete": "Удалить",
-    "cancel": "Отмена",
     "close": "Закрыть",
     "deleteLabel": "Удалить идею",
-    "saveLabel": "Сохранить изменения",
-    "cancelLabel": "Отменить изменения",
     "deleteConfirmName": "Удалить идею?",
     "deleteConfirmCancel": "Отмена",
-    "deleteConfirmOk": "Удалить",
-    "addTask": "Добавить задачу",
-    "taskPlaceholder": "Название задачи...",
-    "attachments": {
-      "empty": "Нет вложений",
-      "confirmDelete": "Удалить это вложение?",
-      "confirmDeleteMessage": "Это действие нельзя отменить.",
-      "confirmDeleteButton": "Удалить"
-    }
+    "deleteConfirmOk": "Удалить"
   },
   "context": {
     "empty": "Нет ни одного контекста",
-    "namePlaceholder": "Название контекста...",
-    "nameLabel": "Название контекста",
-    "taskPlaceholder": "Название задачи...",
     "taskCount": "Задач:",
     "drag": "Перетащить контекст",
-    "add": "Добавить контекст",
-    "addTask": "Добавить задачу",
     "back": "Назад",
     "notFound": "Контекст не найден",
     "editName": "Редактировать контекст",
@@ -203,13 +148,8 @@
   },
   "category": {
     "empty": "Нет ни одной категории",
-    "namePlaceholder": "Название категории...",
-    "nameLabel": "Название категории",
-    "taskPlaceholder": "Название задачи...",
     "taskCount": "Задач:",
     "drag": "Перетащить категорию",
-    "add": "Добавить категорию",
-    "addTask": "Добавить задачу",
     "back": "Назад",
     "notFound": "Категория не найдена",
     "editName": "Редактировать категорию",
@@ -239,13 +179,11 @@
     "ideas": "Идеи",
     "tasks": "Задачи",
     "completed": "Завершённые",
-    "close": "Закрыть панель",
     "open": "Открыть панель",
     "closeSidebar": "Закрыть боковую панель",
     "search": "Поиск",
     "memos": "Памятки",
-    "deleted": "Удалённое",
-    "showHidden": "Показать скрытые задачи"
+    "deleted": "Удалённое"
   },
   "settings": {
     "name": "Настройки",
@@ -255,10 +193,7 @@
     "language": "Язык",
     "panelLeft": "Слева",
     "panelRight": "Справа",
-    "panelAlwaysOpen": "Всегда раскрыта",
     "focusMode": "Режим фокуса",
-    "focusWeaker": "Слабее",
-    "focusStronger": "Сильнее",
     "filterBarPosition": "Расположение фильтра",
     "filterBarBottom": "Снизу",
     "filterBarTop": "Сверху",
@@ -269,14 +204,6 @@
     "loginAriaLabel": "Настроить сервер",
     "settingsAriaLabel": "Настройки",
     "avatarAlt": "Аватар пользователя",
-    "syncSection": "Синхронизация",
-    "syncConnected": "Подключено",
-    "syncNoAuth": "Подключено (требуется вход)",
-    "syncNotConnected": "Не подключено",
-    "syncConfigure": "Настроить",
-    "syncConnect": "Подключить",
-    "syncDisconnect": "Отключить от аккаунта",
-    "fullSync": "Полная синхронизация",
     "fullSyncConfirmName": "Запустить полную синхронизацию?",
     "fullSyncConfirmDescription": "Все данные будут синхронизированы между устройством и сервером. Конфликты разрешаются по времени последнего изменения.",
     "fullSyncStepReuploadFiles": "Перезагрузка файлов на сервер",
@@ -309,7 +236,6 @@
     "dayBoundaryHours": "Часы",
     "dayBoundaryMinutes": "Минуты",
     "dayBoundaryDescription": "Время начала Вашего дня. Отложенные на завтра задачи появятся в это время.",
-    "detailPanelPinned": "Закрепить панель задачи",
     "pinDetailPanel": "Закрепить панель задачи",
     "unpinDetailPanel": "Открепить панель задачи",
     "sections": {
@@ -334,15 +260,12 @@
       "connectionError": "Ошибка подключения. Проверьте URL и попробуйте снова.",
       "disconnect": "Отключить",
       "fullSync": "Полная синхронизация",
-      "initError": "Ошибка инициализации.",
-      "initializing": "Инициализация...",
       "noProviders": "OAuth-провайдеры не настроены. Включите провайдеры в панели Supabase.",
       "oauthProvider": "OAuth провайдер",
       "projectUrl": "URL или ID проекта Supabase",
       "projectUrlDescription": "Введите URL или ID проекта из Supabase Dashboard.",
       "projectUrlPlaceholder": "https://xxxxx.supabase.co или ID проекта",
       "signInRequired": "Требуется вход",
-      "timeoutError": "Время подключения истекло.",
       "title": "Сервер",
       "typeSupabase": "Supabase",
       "emailLabel": "Адрес электронной почты",
@@ -469,8 +392,6 @@
     "tomorrow": "завтра"
   },
   "taskEdit": {
-    "name": "Редактировать задачу",
-    "close": "Закрыть",
     "back": "Назад",
     "tabDetails": "Детали",
     "tabChecklist": "Чек-лист",
@@ -488,11 +409,6 @@
     "activeSection": "Активно ({{count}})",
     "doneSection": "Готово ({{count}})",
     "delete": "Удалить",
-    "cancel": "Отмена",
-    "save": "Сохранить",
-    "deleteLabel": "Удалить задачу",
-    "cancelLabel": "Отмена",
-    "saveLabel": "Сохранить",
     "deleteConfirmName": "Удалить задачу?",
     "deleteConfirmCancel": "Отмена",
     "deleteConfirmOk": "Удалить",
@@ -517,8 +433,6 @@
     "dark": "Тёмная"
   },
   "taskDetail": {
-    "empty": "Выберите задачу",
-    "emptyHint": "Нажмите на задачу, чтобы открыть детали",
     "emptyState": "Выберите задачу для просмотра деталей",
     "pin": "Закрепить панель задачи",
     "unpin": "Открепить панель задачи",
@@ -543,7 +457,6 @@
     "checklists": "Чек-листы",
     "ideas": "Идеи",
     "checklistParent": "Задача: {{task}}",
-    "restore": "Восстановить",
     "restoreAriaLabel": "Восстановить {{name}}",
     "purgeButton": "Очистить навсегда",
     "purgeConfirmName": "Удалить навсегда?",
@@ -551,7 +464,6 @@
     "purgeConfirmCount": "Будет удалено: {{tasks}} задач, {{goals}} целей, {{contexts}} контекстов, {{categories}} категорий, {{checklist_items}} пунктов чек-листа, {{ideas}} идей",
     "purgeCancel": "Отмена",
     "purgeConfirm": "Удалить навсегда",
-    "purgeSuccess": "Удалено: {{tasks}} задач, {{goals}} целей, {{contexts}} контекстов, {{categories}} категорий, {{checklist_items}} пунктов чек-листа, {{ideas}} идей",
     "purgeError": "Не удалось очистить записи",
     "purgingInProgress": "Удаление..."
   },
@@ -560,27 +472,15 @@
     "synced": "Обновлено",
     "noConnection": "Нет связи",
     "serverError": "Ошибка сервера",
-    "unauthorized": "Нет доступа",
     "projectPaused": "Проект приостановлен",
     "ariaLabel": "Обновить",
     "alertTitle": "Проблема синхронизации",
     "alertUnderstood": "Понятно",
-    "fkCleared": "Связь с {{entityType}} \"{{name}}\" была удалена, так как не удалось синхронизировать",
-    "fkClearedAdvice": "Проверьте {{entityType}} и свяжите заново",
-    "checklistOrphaned": "Пункт чек-листа был удалён, так как задача не синхронизировалась",
-    "checklistOrphanedAdvice": "Проверьте задачу и добавьте пункт заново",
-    "nameUntitled": "У записи не было названия — установлено \"Без названия\"",
-    "nameUntitledAdvice": "Введите название записи",
-    "repeatRuleCorrupted": "Правило повтора было повреждено и сброшено",
-    "repeatRuleCorruptedAdvice": "Настройте правило повтора заново",
-    "rejectedBox": "Значение списка не поддерживается сервером",
-    "rejectedBoxAdvice": "Отредактируйте запись и выберите допустимое значение, или обновите приложение",
-    "rejectedStatus": "Значение статуса не поддерживается сервером",
-    "rejectedStatusAdvice": "Отредактируйте запись и выберите допустимое значение, или обновите приложение",
-    "rejectedEntityType": "Тип вложения не поддерживается сервером",
-    "rejectedEntityTypeAdvice": "Отредактируйте запись и выберите допустимое значение, или обновите приложение",
-    "rejectedCorrupted": "Запись повреждена и не может быть синхронизирована",
-    "rejectedCorruptedAdvice": "Удалите запись и создайте новую"
+    "alert": {
+      "repeat_rule_reset": "Правило повтора было повреждено и сброшено. Настройте правило повтора заново.",
+      "name_set_untitled": "У записи не было названия — установлено \"Без названия\". Введите название записи.",
+      "checklist_item_deleted": "Пункт чек-листа был удалён, так как задача не синхронизировалась. Проверьте задачу и добавьте пункт заново."
+    }
   },
   "alert": {
     "counter": "{{current}}/{{total}}",
@@ -597,13 +497,7 @@
     "close": "Закрыть"
   },
   "auth": {
-    "signInButton": "Войти через Google",
-    "signOutButton": "Выйти",
-    "signedInAs": "Вы вошли как {{email}}",
-    "errorSignIn": "Не удалось войти. Попробуйте ещё раз.",
-    "sessionExpired": "Сессия истекла. Войдите снова для синхронизации.",
-    "accountSection": "Аккаунт",
-    "signInRequired": "Войдите в Google, чтобы инициализировать хранилище."
+    "signInButton": "Войти через Google"
   },
   "error": {
     "title": "Что-то пошло не так",
@@ -626,6 +520,10 @@
     "create": "Создать"
   },
   "attachment": {
+    "empty": "Нет вложений",
+    "confirmDelete": "Удалить это вложение?",
+    "confirmDeleteMessage": "Это действие нельзя отменить.",
+    "confirmDeleteButton": "Удалить",
     "list": {
       "preview": "Предпросмотр {{filename}}",
       "download": "Скачать {{filename}}",
@@ -656,7 +554,6 @@
   "share": {
     "title": "Поделиться приложением",
     "description": "Расскажите друзьям о Clear Progress",
-    "button": "Поделиться",
     "copyLinkButton": "Скопировать ссылку",
     "inviteMessage": "Попробуй Clear Progress — приложение для работы с задачами, целями и идеями!",
     "linkCopied": "Ссылка скопирована в буфер обмена",
@@ -664,9 +561,7 @@
     "ok": "ОК"
   },
   "pwa": {
-    "appUpdated": "Приложение обновлено",
     "newVersionAvailable": "Доступна новая версия",
-    "ok": "ОК",
     "update": "Обновить"
   },
   "onboarding": {
