@@ -46,6 +46,32 @@ export const WHITELIST: ReadonlyArray<{ pattern: RegExp; reason: string }> = [
     // biome-ignore lint/suspicious/noTemplateCurlyInString: describes a template pattern, not a real template
     reason: "t(`repeat.monthGenitive${m}`)",
   },
+  // LookAndFeelSection.tsx — t(`theme.${scheme}`)
+  {
+    pattern: oneOf("theme.", ["light", "dark", "system"]),
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: describes a template pattern, not a real template
+    reason: "t(`theme.${scheme}`)",
+  },
+  // AccentColorSection.tsx — t(`color.${color}`)
+  {
+    pattern: oneOf("color.", [
+      "blue",
+      "coral",
+      "green",
+      "indigo",
+      "orange",
+      "purple",
+      "yellow",
+    ]),
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: describes a template pattern, not a real template
+    reason: "t(`color.${color}`)",
+  },
+  // GoalsPage.tsx — t(`goalFilter.${filter}`)
+  {
+    pattern: oneOf("goalFilter.", ["all", "active", "paused", "finished"]),
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: describes a template pattern, not a real template
+    reason: "t(`goalFilter.${filter}`)",
+  },
   // healingRules.ts — messageKey: "sync.alert.*"
   {
     pattern: /^sync\.alert\./,

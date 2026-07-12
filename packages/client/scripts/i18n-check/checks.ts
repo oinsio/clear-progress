@@ -6,11 +6,15 @@ function matchesDynamicPrefix(key: string, prefixes: Set<string>): boolean {
   for (const prefix of prefixes) {
     if (!key.startsWith(prefix)) continue;
     const rest = key.slice(prefix.length);
-    // `commandBar.placeholder.${box}` -> prefix ends with dot: rest has no dots
-    if (prefix.endsWith(".") && rest.length > 0 && !rest.includes("."))
+    if (prefix.endsWith(".")) {
+      // Umbrella prefix for an entire namespace ("repeat.") is dangerous:
+      // it hides dead single-segment keys. Require >= 2 named segments.
+      const named = prefix.slice(0, -1);
+      if (!named.includes(".")) continue;
+      if (rest.length > 0 && !rest.includes(".")) return true;
+    } else if (/^\d+$/.test(rest)) {
       return true;
-    // `repeat.month${m}` -> prefix without dot: rest is digits-only
-    if (!prefix.endsWith(".") && /^\d+$/.test(rest)) return true;
+    }
   }
   return false;
 }
@@ -40,7 +44,8 @@ export function checkUnused(
 ): CheckError[] {
   const errors: CheckError[] = [];
   for (const baseKey of enLocale.baseKeys) {
-    if (scan.literalKeys.has(baseKey)) continue;
+    if (scan.literalKeys.has(baseKey) && !scan.literalKeysTestOnly.has(baseKey))
+      continue;
     if (isWhitelisted(baseKey)) continue;
     if (matchesDynamicPrefix(baseKey, scan.dynamicPrefixes)) continue;
     const isTestOnly = scan.literalKeysTestOnly.has(baseKey);

@@ -179,7 +179,6 @@
     "daily": "Каждый день",
     "weekdays": "По будням",
     "weekly": "По дням недели",
-    "weeklyDays": "По {{days}}",
     "monthly": "Каждый месяц",
     "dayOfMonthLabel_ordinal_other": "Каждое {{count}}-е число месяца"
   },

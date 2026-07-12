@@ -76,6 +76,14 @@ describe("checkUnused", () => {
     expect(checkUnused(enLocale, scan)).toEqual([]);
   });
 
+  it("should report key as unused when single-segment dotted prefix is used", () => {
+    const enLocale = makeLocale("en", ["repeat.frequency"]);
+    const scan = makeScan({ dynamicPrefixes: new Set(["repeat."]) });
+    const errors = checkUnused(enLocale, scan);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].key).toBe("repeat.frequency");
+  });
+
   it("should report key when dynamic prefix with dot matches but rest contains dot", () => {
     const enLocale = makeLocale("en", ["goal.status.sub.deep"]);
     const scan = makeScan({ dynamicPrefixes: new Set(["goal.status."]) });
@@ -109,17 +117,17 @@ describe("checkUnused", () => {
     expect(checkUnused(enLocale, makeScan())).toEqual([]);
   });
 
-  it("should report repeat.monthAndDay as unused — rest 'AndDay' is not digits-only", () => {
-    const enLocale = makeLocale("en", ["repeat.monthAndDay"]);
-    const scan = makeScan({ dynamicPrefixes: new Set(["repeat.month"]) });
+  it("should report fx.monthAndDay as unused — rest 'AndDay' is not digits-only", () => {
+    const enLocale = makeLocale("en", ["fx.monthAndDay"]);
+    const scan = makeScan({ dynamicPrefixes: new Set(["fx.month"]) });
     expect(checkUnused(enLocale, scan)).toEqual([
-      expect.objectContaining({ kind: "unused", key: "repeat.monthAndDay" }),
+      expect.objectContaining({ kind: "unused", key: "fx.monthAndDay" }),
     ]);
   });
 
   it("should report key when rest starts with digit but has letters", () => {
-    const enLocale = makeLocale("en", ["repeat.month1abc"]);
-    const scan = makeScan({ dynamicPrefixes: new Set(["repeat.month"]) });
+    const enLocale = makeLocale("en", ["fx.month1abc"]);
+    const scan = makeScan({ dynamicPrefixes: new Set(["fx.month"]) });
     expect(checkUnused(enLocale, scan)).toHaveLength(1);
   });
 
@@ -139,7 +147,10 @@ describe("checkUnused", () => {
 
   it("should report test-only key as unused with test-only detail", () => {
     const enLocale = makeLocale("en", ["task.testKey"]);
-    const scan = makeScan({ literalKeysTestOnly: new Set(["task.testKey"]) });
+    const scan = makeScan({
+      literalKeys: new Set(["task.testKey"]),
+      literalKeysTestOnly: new Set(["task.testKey"]),
+    });
     const errors = checkUnused(enLocale, scan);
     expect(errors).toEqual([
       {
