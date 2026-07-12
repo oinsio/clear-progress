@@ -60,6 +60,16 @@ The existing `repeat.` whitelist entry already covers `[daily, weekly, monthly, 
 
 **Rationale**: These are legitimate runtime-dynamic keys. The whitelist self-validation (FR8 in spec) ensures they stay fresh.
 
+### D5: Semantic fixture isolation instead of blanket namespace ban
+
+**Decision**: The fixture-isolation requirement forbids only fixtures that coincide (after `toBaseKey` normalization) with keys actually present in `en.json`. Fixtures under real namespaces that don't match any live key (e.g., `"repeat.frequency"` after it was deleted) are permitted. An automated test enforces this, with an explicit allow-list for fixtures that must use live keys to verify the real WHITELIST.
+
+**Alternatives considered**:
+- (a) Blanket ban on real namespaces in all fixtures — too strict, forces renaming negative-test fixtures like `"repeat.frequency"` which are more readable with realistic names, and breaks whitelist verification tests.
+- (b) Semantic isolation via `toBaseKey` collision check — **chosen**. Precisely targets the dangerous case (fixture masking a live key) while allowing harmless realistic fixtures.
+
+**Rationale**: The structural guarantee (after the `checkUnused` fix, test-only keys are reported as unused) means realistic-looking fixtures that don't match live keys cannot cause false negatives. The automated test prevents drift as new keys are added to `en.json`.
+
 ## Risks / Trade-offs
 
 - **[Risk] False positives after tightening** — If undiscovered single-segment dynamic namespaces exist in code, they will trigger spurious `unused` errors. → **Mitigation**: Grep for `` `[a-zA-Z]+\.\$\{` `` patterns in `src/` before removing keys. The table of namespaces was verified on the branch.

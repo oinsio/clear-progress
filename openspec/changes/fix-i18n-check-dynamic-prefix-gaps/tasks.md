@@ -30,11 +30,18 @@
 - [x] 5.1 Remove `.skip` and TODO comment from `i18n-check.project.test.ts`
 - [x] 5.2 Run `pnpm vitest run` scoped to `i18n-check.project.test` — verify it passes (not skipped)
 
-## 6. Verification
+## 6. Fixture isolation hardening (FR5 refinement)
 
-- [x] 6.1 Run `pnpm test` — all green
-- [x] 6.2 Run `pnpm lint` and `pnpm typecheck` — all green
-- [x] 6.3 Run `pnpm build` — successful
-- [x] 6.4 Smoke test: add `"repeat.zzzDead": "test"` to `en.json` and `ru.json`, run `pnpm i18n:check` — expect unused error, then revert (UX2)
-- [x] 6.5 Grep `src/test/i18n-check/*.test.ts` for fixture keys matching real namespaces — expect none (FR5)
-- [x] 6.6 Mutation testing: run Stryker scoped to `scripts/i18n-check/checks.ts` — target >= 95% (M4)
+- [x] 6.1 Reword fixture-isolation requirement in delta spec: forbid only keys coinciding with live en.json (not entire namespaces); allow WHITELIST-verifying fixtures via explicit allow-list
+- [x] 6.2 Add automated fixture-isolation test (`i18n-check.fixtures.test.ts`): scans tool test files, asserts no fixture string matches a live base key unless in ALLOWED_LIVE_FIXTURES
+- [x] 6.3 Rename remaining live-key fixtures (~43 occurrences) to `fx.*`; keep only `repeat.daily`, `repeat.weekday3`, `repeat.month12`, `repeat.monthGenitive1` (verify real WHITELIST)
+- [x] 6.4 Verify all i18n-check tests pass (80/80 green)
+
+## 7. Verification
+
+- [x] 7.1 Run `pnpm test` — all green
+- [x] 7.2 Run `pnpm lint` and `pnpm typecheck` — all green
+- [x] 7.3 Run `pnpm build` — successful
+- [x] 7.4 Smoke test: add `"repeat.zzzDead": "test"` to `en.json` and `ru.json`, run `pnpm i18n:check` — expect unused error, then revert (UX2)
+- [x] 7.5 Grep `src/test/i18n-check/*.test.ts` for fixture keys matching real namespaces — expect none (FR5)
+- [x] 7.6 Mutation testing: run Stryker scoped to `scripts/i18n-check/checks.ts` — target >= 95% (M4)

@@ -28,12 +28,12 @@ describe("isTestFile", () => {
 
 describe("scanSources", () => {
   const topLevelNamespaces = new Set([
-    "task",
-    "filter",
+    "fx",
     "goal",
+    "nav",
     "repeat",
     "sync",
-    "nav",
+    "task",
   ]);
   let tempDirectory: string;
 
@@ -54,24 +54,21 @@ describe("scanSources", () => {
   }
 
   it("should detect literal key in double quotes", () => {
-    const file = writeTempFile("src/app.ts", 't("task.cancel")');
+    const file = writeTempFile("src/app.ts", 't("fx.cancel")');
     const scanResult = scanSources([file], topLevelNamespaces);
-    expect(scanResult.literalKeys).toContain("task.cancel");
+    expect(scanResult.literalKeys).toContain("fx.cancel");
   });
 
   it("should detect literal key in backticks", () => {
-    const file = writeTempFile("src/app.ts", "t(`task.cancel`)");
+    const file = writeTempFile("src/app.ts", "t(`fx.cancel`)");
     const scanResult = scanSources([file], topLevelNamespaces);
-    expect(scanResult.literalKeys).toContain("task.cancel");
+    expect(scanResult.literalKeys).toContain("fx.cancel");
   });
 
   it("should detect key from labelKey pattern", () => {
-    const file = writeTempFile(
-      "src/app.ts",
-      'labelKey: "filter.focused_goals"',
-    );
+    const file = writeTempFile("src/app.ts", 'labelKey: "fx.focused_goals"');
     const scanResult = scanSources([file], topLevelNamespaces);
-    expect(scanResult.literalKeys).toContain("filter.focused_goals");
+    expect(scanResult.literalKeys).toContain("fx.focused_goals");
   });
 
   it("should detect dynamic prefix from template literal", () => {

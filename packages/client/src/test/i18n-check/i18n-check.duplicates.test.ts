@@ -15,27 +15,27 @@ function makeLocale(code: string, flat: Record<string, string>): LocaleData {
 describe("findDuplicateGroups", () => {
   it("should group keys with same value in both en and ru", () => {
     const enLocale = makeLocale("en", {
-      "task.cancel": "Cancel",
-      "goal.cancel": "Cancel",
+      "fx.cancel": "Cancel",
+      "fx.goalCancel": "Cancel",
     });
     const ruLocale = makeLocale("ru", {
-      "task.cancel": "Отмена",
-      "goal.cancel": "Отмена",
+      "fx.cancel": "Отмена",
+      "fx.goalCancel": "Отмена",
     });
 
     const groups = findDuplicateGroups(enLocale, ruLocale);
 
-    expect(groups.get("cancel")).toEqual(["task.cancel", "goal.cancel"]);
+    expect(groups.get("cancel")).toEqual(["fx.cancel", "fx.goalCancel"]);
   });
 
   it("should not group month/monthGenitive with same en but different ru", () => {
     const enLocale = makeLocale("en", {
-      "repeat.month4": "April",
-      "repeat.monthGenitive4": "April",
+      "fx.month4": "April",
+      "fx.monthGenitive4": "April",
     });
     const ruLocale = makeLocale("ru", {
-      "repeat.month4": "апрель",
-      "repeat.monthGenitive4": "апреля",
+      "fx.month4": "апрель",
+      "fx.monthGenitive4": "апреля",
     });
 
     const groups = findDuplicateGroups(enLocale, ruLocale);
@@ -60,12 +60,12 @@ describe("findDuplicateGroups", () => {
 
   it("should return empty map when no duplicates exist", () => {
     const enLocale = makeLocale("en", {
-      "task.cancel": "Cancel",
-      "goal.save": "Save",
+      "fx.cancel": "Cancel",
+      "fx.save": "Save",
     });
     const ruLocale = makeLocale("ru", {
-      "task.cancel": "Отмена",
-      "goal.save": "Сохранить",
+      "fx.cancel": "Отмена",
+      "fx.save": "Сохранить",
     });
 
     const groups = findDuplicateGroups(enLocale, ruLocale);

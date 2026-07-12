@@ -56,17 +56,15 @@ describe("flatten", () => {
 
 describe("toBaseKey", () => {
   it("should strip plural suffix _few", () => {
-    expect(toBaseKey("repeat.everyNDays_few")).toBe("repeat.everyNDays");
+    expect(toBaseKey("fx.everyNDays_few")).toBe("fx.everyNDays");
   });
 
   it("should strip ordinal suffix _ordinal_two", () => {
-    expect(toBaseKey("repeat.yearlyDate_ordinal_two")).toBe(
-      "repeat.yearlyDate",
-    );
+    expect(toBaseKey("fx.yearlyDate_ordinal_two")).toBe("fx.yearlyDate");
   });
 
   it("should preserve underscore in non-plural word", () => {
-    expect(toBaseKey("filter.focused_goals")).toBe("filter.focused_goals");
+    expect(toBaseKey("fx.focused_goals")).toBe("fx.focused_goals");
   });
 
   it("should only strip suffix at end — not in middle of key", () => {
@@ -131,7 +129,7 @@ describe("isWhitelisted", () => {
     [true, "repeat.monthGenitive1"],
     [false, "_meta.name"],
     [true, "sync.alert.some_key"],
-    [false, "task.cancel"],
+    [false, "fx.cancel"],
     [false, "repeat.monthAndDay"],
     [false, "repeat.weekday8"],
     [false, "repeat.month0"],

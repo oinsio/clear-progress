@@ -5,12 +5,12 @@ import { makeLocale, makeScan } from "./checks-helpers";
 describe("checkUndefined", () => {
   it("should report error with correct detail when key is missing from en.json", () => {
     const enLocale = makeLocale("en", []);
-    const scan = makeScan({ literalKeys: new Set(["task.cancel"]) });
+    const scan = makeScan({ literalKeys: new Set(["fx.cancel"]) });
     const errors = checkUndefined(enLocale, scan);
     expect(errors).toEqual([
       {
         kind: "undefined",
-        key: "task.cancel",
+        key: "fx.cancel",
         detail: "used in production code but missing from en.json",
       },
     ]);
@@ -32,8 +32,8 @@ describe("checkUndefined", () => {
   });
 
   it("should not report error when key is present in en.json", () => {
-    const enLocale = makeLocale("en", ["task.cancel"]);
-    const scan = makeScan({ literalKeys: new Set(["task.cancel"]) });
+    const enLocale = makeLocale("en", ["fx.cancel"]);
+    const scan = makeScan({ literalKeys: new Set(["fx.cancel"]) });
     expect(checkUndefined(enLocale, scan)).toEqual([]);
   });
 
@@ -65,14 +65,14 @@ describe("checkUnused", () => {
   });
 
   it("should not report error when key is matched by literal key", () => {
-    const enLocale = makeLocale("en", ["task.cancel"]);
-    const scan = makeScan({ literalKeys: new Set(["task.cancel"]) });
+    const enLocale = makeLocale("en", ["fx.cancel"]);
+    const scan = makeScan({ literalKeys: new Set(["fx.cancel"]) });
     expect(checkUnused(enLocale, scan)).toEqual([]);
   });
 
   it("should not report error when key is matched by dynamic prefix ending with dot", () => {
-    const enLocale = makeLocale("en", ["goal.status.in_progress"]);
-    const scan = makeScan({ dynamicPrefixes: new Set(["goal.status."]) });
+    const enLocale = makeLocale("en", ["fx.status.in_progress"]);
+    const scan = makeScan({ dynamicPrefixes: new Set(["fx.status."]) });
     expect(checkUnused(enLocale, scan)).toEqual([]);
   });
 

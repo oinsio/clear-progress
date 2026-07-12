@@ -71,12 +71,27 @@ Keys found ONLY in test files SHALL be reported as unused with detail "found ONL
 
 ### Requirement: Test fixture isolation from production scan
 
-Test fixtures within `src/test/i18n-check/` SHALL use a synthetic namespace prefix (e.g., `fx.`) for all string keys that would otherwise collide with real top-level namespaces in `en.json`. This prevents test code from accidentally masking dead production keys during the unused key check.
+Fixture strings in the i18n-check tool's own test files SHALL NOT be able to
+affect real-project check results. Specifically, no string fixture in
+`src/test/i18n-check/*.test.ts` may coincide (after plural/ordinal
+normalization via `toBaseKey`) with a key present in `en.json`. Fixture
+strings under real namespaces that do NOT correspond to existing keys are
+permitted (e.g., negative-test fixtures like `"repeat.frequency"` for a
+deleted key), because `checkUnused` treats test-only literals as unused
+candidates and `checkUndefined` ignores test-only literals — such fixtures
+cannot shield or falsely flag anything.
 
-#### Scenario: No fixture key collides with real namespace
-- **WHEN** scanning `src/test/i18n-check/*.test.ts` for string literals matching `en.json` top-level namespaces
-- **THEN** no fixture key has a first segment matching any real namespace (e.g., no `repeat.*`, `task.*`, `goal.*` fixture strings)
+Exception: fixtures that verify real WHITELIST behavior (e.g., `isWhitelisted("repeat.daily")`)
+are permitted to use live keys, documented in an explicit allow-list with justification.
 
-#### Scenario: Fixture uses synthetic namespace
-- **WHEN** a test needs a fixture key resembling `repeat.monthAndDay`
-- **THEN** it uses `fx.monthAndDay` instead, with a corresponding synthetic locale map
+#### Scenario: Fixture coinciding with a live key is forbidden
+- **WHEN** `en.json` contains `task.cancel` and a tool test file contains the string `"task.cancel"`
+- **THEN** the fixture-isolation test fails, naming the file and the offending string
+
+#### Scenario: Fixture under a real namespace but absent from en.json is allowed
+- **WHEN** `en.json` does not contain `repeat.frequency` and a tool test file contains the string `"repeat.frequency"`
+- **THEN** the fixture-isolation test passes
+
+#### Scenario: Whitelisted fixture for WHITELIST verification is allowed
+- **WHEN** a test verifies `isWhitelisted("repeat.daily")` against the real WHITELIST
+- **THEN** `"repeat.daily"` is permitted via the explicit allow-list with a comment justifying its presence

@@ -4,13 +4,13 @@ import { makeLocale } from "./checks-helpers";
 
 describe("checkParity", () => {
   it("should report key present in en but missing in ru with correct detail", () => {
-    const enLocale = makeLocale("en", ["task.cancel", "task.save"]);
+    const enLocale = makeLocale("en", ["fx.cancel", "task.save"]);
     const ruLocale = makeLocale("ru", ["task.save"]);
     const errors = checkParity(enLocale, ruLocale);
     expect(errors).toEqual([
       {
         kind: "parity",
-        key: "task.cancel",
+        key: "fx.cancel",
         detail: "present in en, missing in ru",
       },
     ]);
@@ -30,8 +30,8 @@ describe("checkParity", () => {
   });
 
   it("should report no errors when both locales have the same keys", () => {
-    const enLocale = makeLocale("en", ["task.save", "task.cancel"]);
-    const ruLocale = makeLocale("ru", ["task.save", "task.cancel"]);
+    const enLocale = makeLocale("en", ["task.save", "fx.cancel"]);
+    const ruLocale = makeLocale("ru", ["task.save", "fx.cancel"]);
     expect(checkParity(enLocale, ruLocale)).toEqual([]);
   });
 });
