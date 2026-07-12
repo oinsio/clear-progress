@@ -10,7 +10,9 @@ import { loadLocale, toBaseKey } from "../../../scripts/i18n-check";
  * Implements FR2 of fix-i18n-check-dynamic-prefix-gaps (fixture isolation).
  */
 const ALLOWED_LIVE_FIXTURES = new Set<string>([
-  // i18n-check.unit.test.ts: isWhitelisted() verifies real WHITELIST entries
+  // i18n-check.unit.test.ts: isWhitelisted() verifies real WHITELIST entries.
+  // "repeat.daily" is also used in i18n-check.checks.test.ts to verify that
+  // checkUndefined (line 21) and checkUnused (line 116) respect the real WHITELIST.
   "repeat.daily",
   "repeat.weekday3",
   "repeat.month12",
