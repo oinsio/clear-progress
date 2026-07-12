@@ -13,16 +13,16 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
-    "test:bdd:gen": "npx bddgen -c playwright.bdd.config.ts",
-    "test:bdd": "npx bddgen -c playwright.bdd.config.ts && playwright test -c playwright.bdd.config.ts",
-    "test:bdd:a11y": "npx bddgen --tags '@NFR-A1 or @NFR-A2 or @NFR-A3' -c playwright.bdd.config.ts && playwright test -c playwright.bdd.config.ts",
-    "test:bdd:responsive": "npx bddgen --tags '@NFR-R1' -c playwright.bdd.config.ts && playwright test -c playwright.bdd.config.ts",
+    "test:bdd:gen": "bddgen -c playwright.bdd.config.ts",
+    "test:bdd": "bddgen -c playwright.bdd.config.ts && playwright test -c playwright.bdd.config.ts",
+    "test:bdd:a11y": "bddgen --tags '@NFR-A1 or @NFR-A2 or @NFR-A3' -c playwright.bdd.config.ts && playwright test -c playwright.bdd.config.ts",
+    "test:bdd:responsive": "bddgen --tags '@NFR-R1' -c playwright.bdd.config.ts && playwright test -c playwright.bdd.config.ts",
     "test:e2e": "playwright test",
     "test:all": "pnpm test && pnpm test:bdd && pnpm test:e2e",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "typecheck": "tsc --noEmit",
-    "i18n:check": "npx tsx scripts/i18n-check/cli.ts"
+    "i18n:check": "tsx scripts/i18n-check/cli.ts"
   },
   "dependencies": {
     "@clear-progress/adapter-supabase": "workspace:*",
