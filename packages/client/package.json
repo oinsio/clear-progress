@@ -21,7 +21,8 @@
     "test:all": "pnpm test && pnpm test:bdd && pnpm test:e2e",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "i18n:check": "npx tsx scripts/i18n-check/cli.ts"
   },
   "dependencies": {
     "@clear-progress/adapter-supabase": "workspace:*",

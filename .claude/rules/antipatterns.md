@@ -11,7 +11,7 @@
 ## Code antipatterns
 
 - **Direct imports from sibling module internals** — only through `index.ts`. Enforce with linter.
-- **Files over 400 lines** — bad for AI context. Split into smaller units.
+- **Files over 200 lines** — bad for AI context. Split into smaller units.
 
 ## UI antipatterns
 
