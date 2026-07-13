@@ -65,7 +65,15 @@ Rule of thumb fixed with the user: jokes live in statuses, empty states, and con
 
 Direct address uses capitalized «Вы»/«Ваш» (formal address to the user). Ellipses in placeholders follow base style (`...`).
 
-### D5: Phrase inventory location
+### D5: Per-entity plural keys for purge counts (FR9)
+
+The old `deleted.purgeConfirmCount` interpolated six counts into one string, so i18next could not pluralize any of them («1 озарений»). Chosen fix: six per-entity keys (`deleted.purgeCountTasks`…`deleted.purgeCountIdeas`) with CLDR plural forms; `DeletedPage` composes them with `join(", ")` and passes the list as `{{items}}` into `deleted.purgeConfirmCount`. Alternatives rejected: i18next `intervalPlural` plugin (new dependency for one string), formatting in code without i18n keys (breaks locale theming — house needs «пациентов», not «задач»).
+
+### D6: Dialect plural rules resolve through baseLanguage (FR10)
+
+`Intl.PluralRules("house")` silently resolves to root rules (every count → `other`), so i18next never looks up `_one`/`_few`/`_many` keys for the house code and drops to the ru fallback with ru words. Fix: after `i18n.init()`, wrap `services.pluralResolver.getRule` to map the code through `getLocaleByCode(code)?.baseLanguage`. Alternatives rejected: renaming the locale to a valid tag `ru-house` (breaks the stored language preference, filename/`_meta.code` contract, and every "house" reference), dialect files using only `_other` forms (cannot decline at all).
+
+### D7: Phrase inventory location
 
 The normative key-by-key inventory lives in `specs/house-locale/spec.md` (single source of truth for implementation and tests). design.md holds only the rules that generated it, so future keys can be derived without re-deciding.
 
