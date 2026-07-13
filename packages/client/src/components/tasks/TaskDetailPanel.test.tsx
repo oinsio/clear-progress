@@ -170,7 +170,7 @@ describe("TaskDetailPanel compact tabs", () => {
   it("should show label text on the active details tab", () => {
     render(<TaskDetailPanel {...DEFAULT_PROPS} />);
     const detailsTab = screen.getByTestId("tab-details");
-    expect(detailsTab).toHaveTextContent("taskEdit.tabDetails");
+    expect(detailsTab).toHaveTextContent("common.details");
   });
 
   // FR2: Inactive tabs show icon only (no label)
@@ -184,7 +184,7 @@ describe("TaskDetailPanel compact tabs", () => {
   it("should hide label text on inactive attachments tab", () => {
     render(<TaskDetailPanel {...DEFAULT_PROPS} />);
     const attachmentsTab = screen.getByTestId("tab-attachments");
-    expect(attachmentsTab).not.toHaveTextContent("task.tabs.attachments");
+    expect(attachmentsTab).not.toHaveTextContent("common.attachments");
   });
 
   // FR1: When switching tabs, new active shows label
@@ -199,7 +199,7 @@ describe("TaskDetailPanel compact tabs", () => {
     render(<TaskDetailPanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByTestId("tab-checklist"));
     const detailsTab = screen.getByTestId("tab-details");
-    expect(detailsTab).not.toHaveTextContent("taskEdit.tabDetails");
+    expect(detailsTab).not.toHaveTextContent("common.details");
   });
 
   // FR1: Active tab has flex-1 class
@@ -267,7 +267,7 @@ describe("TaskDetailPanel compact tabs", () => {
     render(<TaskDetailPanel {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByTestId("tab-attachments"));
     const attachmentsTab = screen.getByTestId("tab-attachments");
-    expect(attachmentsTab).toHaveTextContent("task.tabs.attachments");
+    expect(attachmentsTab).toHaveTextContent("common.attachments");
     expect(attachmentsTab).toHaveTextContent("5");
     const badge = attachmentsTab.querySelector("[aria-label]");
     expect(badge).not.toBeNull();

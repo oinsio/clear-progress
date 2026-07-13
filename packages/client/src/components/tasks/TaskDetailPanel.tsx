@@ -186,7 +186,7 @@ export function TaskDetailPanel({
           <button
             type="button"
             onClick={onClose}
-            aria-label={t("taskDetail.close")}
+            aria-label={t("common.close")}
             data-testid="detail-panel-close"
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
@@ -198,7 +198,7 @@ export function TaskDetailPanel({
       {/* Name field */}
       <div className="px-4 pt-3 pb-2 flex-shrink-0">
         <label className="text-xs font-medium text-gray-500 mb-1 block">
-          {t("taskEdit.fieldName")}
+          {t("common.name")}
         </label>
         <textarea
           ref={nameTextareaRef}
@@ -226,7 +226,7 @@ export function TaskDetailPanel({
           )}
         >
           <DetailsTabIcon className="w-4 h-4" aria-hidden="true" />
-          {activeTab === ACTIVE_TAB.DETAILS && t("taskEdit.tabDetails")}
+          {activeTab === ACTIVE_TAB.DETAILS && t("common.details")}
         </button>
         <button
           type="button"
@@ -265,7 +265,7 @@ export function TaskDetailPanel({
           )}
         >
           <AttachmentsTabIcon className="w-4 h-4" aria-hidden="true" />
-          {activeTab === ACTIVE_TAB.ATTACHMENTS && t("task.tabs.attachments")}
+          {activeTab === ACTIVE_TAB.ATTACHMENTS && t("common.attachments")}
           {attachmentCount > 0 && (
             <span
               className="text-xs"
@@ -340,7 +340,7 @@ export function TaskDetailPanel({
               onClick={() => setIsConfirmingDelete(false)}
               className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              {t("taskEdit.deleteConfirmCancel")}
+              {t("common.cancel")}
             </button>
             <button
               type="button"
@@ -348,7 +348,7 @@ export function TaskDetailPanel({
               onClick={() => onDelete(task.id)}
               className="flex-1 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
             >
-              {t("taskEdit.deleteConfirmOk")}
+              {t("common.delete")}
             </button>
           </div>
         </div>

@@ -76,7 +76,7 @@ describe("ServerOAuthProviders", () => {
       />,
     );
     expect(screen.getByTestId("server-oauth-cancel").textContent).toBe(
-      "settings.server.cancel",
+      "common.cancel",
     );
   });
 

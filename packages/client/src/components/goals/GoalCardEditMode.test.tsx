@@ -97,7 +97,7 @@ describe("GoalCardEditMode compact tabs", () => {
   it("should show label text on the active details tab", () => {
     render(<GoalCardEditMode {...DEFAULT_PROPS} />);
     const detailsTab = screen.getByTestId("goal-tab-details");
-    expect(detailsTab).toHaveTextContent("goal.tabs.details");
+    expect(detailsTab).toHaveTextContent("common.details");
   });
 
   // FR5: Inactive details tab hides label text
@@ -105,7 +105,7 @@ describe("GoalCardEditMode compact tabs", () => {
     render(<GoalCardEditMode {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByTestId("goal-tab-attachments"));
     const detailsTab = screen.getByTestId("goal-tab-details");
-    expect(detailsTab).not.toHaveTextContent("goal.tabs.details");
+    expect(detailsTab).not.toHaveTextContent("common.details");
   });
 
   // FR5: Active attachments tab shows label text
@@ -113,14 +113,14 @@ describe("GoalCardEditMode compact tabs", () => {
     render(<GoalCardEditMode {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByTestId("goal-tab-attachments"));
     const attachmentsTab = screen.getByTestId("goal-tab-attachments");
-    expect(attachmentsTab).toHaveTextContent("goal.tabs.attachments");
+    expect(attachmentsTab).toHaveTextContent("common.attachments");
   });
 
   // FR5: Inactive attachments tab hides label text
   it("should hide label text on inactive attachments tab", () => {
     render(<GoalCardEditMode {...DEFAULT_PROPS} />);
     const attachmentsTab = screen.getByTestId("goal-tab-attachments");
-    expect(attachmentsTab).not.toHaveTextContent("goal.tabs.attachments");
+    expect(attachmentsTab).not.toHaveTextContent("common.attachments");
   });
 
   // FR4: Attachments tab shows count badge when count > 0 (both active and inactive)
@@ -181,7 +181,7 @@ describe("GoalCardEditMode compact tabs", () => {
     render(<GoalCardEditMode {...DEFAULT_PROPS} />);
     fireEvent.click(screen.getByTestId("goal-tab-attachments"));
     const attachmentsTab = screen.getByTestId("goal-tab-attachments");
-    expect(attachmentsTab).toHaveTextContent("goal.tabs.attachments");
+    expect(attachmentsTab).toHaveTextContent("common.attachments");
     expect(attachmentsTab).toHaveTextContent("5");
     const badge = attachmentsTab.querySelector("[aria-label]");
     expect(badge).not.toBeNull();

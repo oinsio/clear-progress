@@ -82,3 +82,99 @@ export const WHITELIST: ReadonlyArray<{ pattern: RegExp; reason: string }> = [
 export function isWhitelisted(baseKey: string): boolean {
   return WHITELIST.some((entry) => entry.pattern.test(baseKey));
 }
+
+/**
+ * Duplicate groups where ALL keys match a pattern are suppressed from output.
+ * Implements FR4, FR5 of deduplicate-i18n-common-keys.
+ */
+export const DUPLICATE_WHITELIST: ReadonlyArray<{
+  pattern: RegExp;
+  reason: string;
+}> = [
+  // FR4 of deduplicate-i18n-common-keys: domain navigation terms
+  {
+    pattern: /^(box|section|filter)\.inbox$/,
+    reason: "domain navigation term: inbox",
+  },
+  {
+    pattern: /^(box|section|task|repeat)\.today$/,
+    reason: "domain navigation term: today",
+  },
+  {
+    pattern: /^(box|section)\.later$/,
+    reason: "domain navigation term: later",
+  },
+  {
+    pattern: /^(box|goalFilter)\.all$/,
+    reason: "domain navigation term: all",
+  },
+  {
+    pattern: /^(task\.yesterday|section\.completedYesterday)$/,
+    reason: "domain navigation term: yesterday",
+  },
+  {
+    pattern: /^((search|filter|deleted)\.tasks|settings\.sections\.tasks)$/,
+    reason: "domain navigation term: tasks",
+  },
+  {
+    pattern: /^(search|filter|deleted)\.goals$/,
+    reason: "domain navigation term: goals",
+  },
+  {
+    pattern: /^((search|filter|deleted)\.ideas|idea\.pageName)$/,
+    reason: "domain navigation term: ideas",
+  },
+  {
+    pattern: /^(filter|deleted)\.contexts$/,
+    reason: "domain navigation term: contexts",
+  },
+  {
+    pattern: /^(filter|deleted)\.categories$/,
+    reason: "domain navigation term: categories",
+  },
+  {
+    pattern: /^(filter\.memos|memo\.pageName)$/,
+    reason: "domain navigation term: memos",
+  },
+  {
+    pattern: /^(filter\.deleted|deleted\.pageName)$/,
+    reason: "domain navigation term: deleted",
+  },
+  // FR5 of deduplicate-i18n-common-keys: semantic pair patterns
+  {
+    pattern: /^settings\.(name|settingsAriaLabel)$/,
+    reason: "semantic pair: display label vs aria label",
+  },
+  {
+    pattern: /^settings\.(login|loginAriaLabel)$/,
+    reason: "semantic pair: display label vs aria label",
+  },
+  {
+    pattern: /^(settings\.pinDetailPanel|taskDetail\.pin)$/,
+    reason: "semantic pair: settings toggle vs panel button",
+  },
+  {
+    pattern: /^(settings\.unpinDetailPanel|taskDetail\.unpin)$/,
+    reason: "semantic pair: settings toggle vs panel button",
+  },
+  {
+    pattern: /^settings\.(syncIndicator|syncLegend)$/,
+    reason: "semantic pair: status indicator vs legend label",
+  },
+  {
+    pattern: /^settings\.server\.(connectSupabase|typeSupabase)$/,
+    reason: "semantic pair: connect button vs provider type label",
+  },
+  {
+    pattern: /^(settings\.disconnectConfirm|settings\.server\.disconnect)$/,
+    reason: "semantic pair: confirm action vs server disconnect",
+  },
+  {
+    pattern: /^(goal\.status|goalFilter)\.paused$/,
+    reason: "semantic pair: entity status vs filter label",
+  },
+];
+
+export function isDuplicateWhitelisted(key: string): boolean {
+  return DUPLICATE_WHITELIST.some((entry) => entry.pattern.test(key));
+}

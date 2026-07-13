@@ -11,12 +11,12 @@ import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import type { Box } from "@/types/common";
 
 const CATEGORY_I18N_KEYS = {
-  back: "category.back",
+  back: "common.back",
   name: "selector.category",
   notFound: "category.notFound",
   deleteLabel: "category.deleteLabel",
   editName: "category.editName",
-  saveName: "category.saveName",
+  saveName: "common.saveName",
 } as const;
 
 export default function CategoryDetailPage() {

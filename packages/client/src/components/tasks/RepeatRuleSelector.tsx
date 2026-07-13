@@ -328,7 +328,7 @@ export function RepeatRuleSelector({
             type="button"
             data-testid="repeat-back"
             onClick={handleBack}
-            aria-label={t("taskEdit.back")}
+            aria-label={t("common.back")}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
@@ -378,7 +378,7 @@ export function RepeatRuleSelector({
             type="button"
             data-testid="repeat-back"
             onClick={handleBack}
-            aria-label={t("taskEdit.back")}
+            aria-label={t("common.back")}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
@@ -616,7 +616,7 @@ export function RepeatRuleSelector({
             }
             className="w-full py-2.5 text-sm text-white bg-accent rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {t("repeat.next")}
+            {t("common.next")}
           </button>
         </div>
       </div>
@@ -632,7 +632,7 @@ export function RepeatRuleSelector({
             type="button"
             data-testid="repeat-back"
             onClick={handleBack}
-            aria-label={t("taskEdit.back")}
+            aria-label={t("common.back")}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />
@@ -665,7 +665,7 @@ export function RepeatRuleSelector({
             onClick={handleAfterCompletionParamsNext}
             className="w-full py-2.5 text-sm text-white bg-accent rounded-xl hover:opacity-90 transition-opacity"
           >
-            {t("repeat.next")}
+            {t("common.next")}
           </button>
         </div>
       </div>
@@ -681,7 +681,7 @@ export function RepeatRuleSelector({
             type="button"
             data-testid="repeat-back"
             onClick={handleBack}
-            aria-label={t("taskEdit.back")}
+            aria-label={t("common.back")}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />

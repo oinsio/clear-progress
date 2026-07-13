@@ -10,7 +10,7 @@ import { findDuplicateGroups } from "./duplicates";
 import { flatten, toBaseKeySet } from "./flatten";
 import { scanSources } from "./scan";
 import type { CheckError, FlatMap, LocaleData } from "./types";
-import { WHITELIST } from "./whitelist";
+import { DUPLICATE_WHITELIST, WHITELIST } from "./whitelist";
 
 const CLIENT_ROOT = process.cwd();
 const LOCALES_DIR = join(CLIENT_ROOT, "src/locales");
@@ -51,23 +51,38 @@ function collectSourceFiles(directory: string): string[] {
   return results;
 }
 
-function validateWhitelist(
-  enBaseKeys: Set<string>,
-  enFlat: FlatMap,
+function validateWhitelistEntries(
+  entries: ReadonlyArray<{ pattern: RegExp; reason: string }>,
+  allKeys: string[],
+  label: string,
 ): CheckError[] {
-  const allKeys = [...enBaseKeys, ...Object.keys(enFlat)];
   const errors: CheckError[] = [];
-  for (const entry of WHITELIST) {
+  for (const entry of entries) {
     const hasMatch = allKeys.some((key) => entry.pattern.test(key));
     if (!hasMatch) {
       errors.push({
         kind: "unused",
         key: entry.pattern.source,
-        detail: `stale whitelist pattern: ${entry.reason}`,
+        detail: `stale ${label} pattern: ${entry.reason}`,
       });
     }
   }
   return errors;
+}
+
+function validateWhitelists(
+  enBaseKeys: Set<string>,
+  enFlat: FlatMap,
+): CheckError[] {
+  const allKeys = [...enBaseKeys, ...Object.keys(enFlat)];
+  return [
+    ...validateWhitelistEntries(WHITELIST, allKeys, "whitelist"),
+    ...validateWhitelistEntries(
+      DUPLICATE_WHITELIST,
+      allKeys,
+      "duplicate whitelist",
+    ),
+  ];
 }
 
 export interface CheckResult {
@@ -96,7 +111,7 @@ export function runAllChecks(): CheckResult {
     ...checkUndefined(enLocale, scanResult),
     ...checkUnused(enLocale, scanResult),
     ...checkParity(enLocale, ruLocale),
-    ...validateWhitelist(enLocale.baseKeys, enLocale.flat),
+    ...validateWhitelists(enLocale.baseKeys, enLocale.flat),
   ];
 
   for (const locale of locales.values()) {

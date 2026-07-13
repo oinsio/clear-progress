@@ -182,7 +182,7 @@ export default function DeletedPage() {
           <div className="xl:max-w-3xl xl:mx-auto">
             {isLoading && (
               <p className="text-sm text-gray-400 text-center py-16">
-                {t("deleted.loading")}
+                {t("common.loading")}
               </p>
             )}
 
@@ -452,7 +452,7 @@ export default function DeletedPage() {
                 }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                {t("deleted.purgeCancel")}
+                {t("common.cancel")}
               </button>
               <button
                 type="button"

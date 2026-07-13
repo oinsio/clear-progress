@@ -196,7 +196,7 @@ export function ConfirmFullSyncDialog({
               onClick={handleClose}
               className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
             >
-              {t("settings.fullSyncClose")}
+              {t("common.close")}
             </button>
           ) : (
             <>
@@ -206,7 +206,7 @@ export function ConfirmFullSyncDialog({
                 disabled={isInProgress}
                 className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-40"
               >
-                {t("settings.fullSyncCancel")}
+                {t("common.cancel")}
               </button>
               <button
                 data-testid="full-sync-start-btn"

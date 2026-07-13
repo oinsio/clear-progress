@@ -81,7 +81,7 @@ function SortableContextItem({
         <span className="text-gray-800 text-sm">{context.name}</span>
         {taskCount > 0 && (
           <span className="block text-xs text-gray-400 mt-0.5">
-            {t("context.taskCount")} {taskCount}
+            {t("common.taskCount")} {taskCount}
           </span>
         )}
       </button>

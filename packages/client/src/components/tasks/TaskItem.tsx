@@ -354,11 +354,11 @@ export function TaskItem({
           <div className="flex gap-3">
             <button
               type="button"
-              aria-label={t("task.cancel")}
+              aria-label={t("common.cancel")}
               onClick={handleRestoreCancel}
               className="text-sm text-gray-500"
             >
-              {t("task.cancel")}
+              {t("common.cancel")}
             </button>
             <button
               type="button"

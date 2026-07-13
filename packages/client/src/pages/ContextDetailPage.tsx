@@ -11,12 +11,12 @@ import { useSidebarNavigation } from "@/hooks/useSidebarNavigation";
 import type { Box } from "@/types/common";
 
 const CONTEXT_I18N_KEYS = {
-  back: "context.back",
+  back: "common.back",
   name: "selector.context",
   notFound: "context.notFound",
   deleteLabel: "context.deleteLabel",
   editName: "context.editName",
-  saveName: "context.saveName",
+  saveName: "common.saveName",
 } as const;
 
 export default function ContextDetailPage() {

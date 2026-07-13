@@ -16,7 +16,7 @@ export function IdeaAttachmentsSection({
   return (
     <div>
       <label className="text-xs font-medium text-gray-500 mb-1 block">
-        {t("task.tabs.attachments")}
+        {t("common.attachments")}
       </label>
 
       <EntityAttachments entityType={ENTITY_TYPE.IDEA} entityId={ideaId} />

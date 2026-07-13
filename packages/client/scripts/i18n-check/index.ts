@@ -16,4 +16,9 @@ export type {
   LocaleData,
   ScanResult,
 } from "./types";
-export { isWhitelisted, WHITELIST } from "./whitelist";
+export {
+  DUPLICATE_WHITELIST,
+  isDuplicateWhitelisted,
+  isWhitelisted,
+  WHITELIST,
+} from "./whitelist";

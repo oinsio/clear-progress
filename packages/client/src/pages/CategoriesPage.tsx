@@ -80,7 +80,7 @@ function SortableCategoryItem({
         <span className="text-gray-800 text-sm">{category.name}</span>
         {taskCount > 0 && (
           <span className="block text-xs text-gray-400 mt-0.5">
-            {t("category.taskCount")} {taskCount}
+            {t("common.taskCount")} {taskCount}
           </span>
         )}
       </button>

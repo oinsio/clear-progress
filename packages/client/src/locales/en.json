@@ -6,6 +6,20 @@
     "baseLanguage": "en",
     "emoji": "🇺🇸"
   },
+  "common": {
+    "cancel": "Cancel",
+    "back": "Back",
+    "delete": "Delete",
+    "close": "Close",
+    "next": "Next",
+    "save": "Save",
+    "loading": "Loading...",
+    "name": "Name",
+    "taskCount": "Tasks:",
+    "details": "Details",
+    "attachments": "Attachments",
+    "saveName": "Save name"
+  },
   "box": {
     "inbox": "Inbox",
     "today": "Today",
@@ -34,7 +48,6 @@
     "restore": "Restore",
     "restoreConfirm": "Restore task?",
     "selectDate": "Select date",
-    "cancel": "Cancel",
     "drag": "Drag task",
     "appearDate": "Will appear on {{date}}",
     "namePlaceholder": "Task name...",
@@ -44,10 +57,7 @@
     "today": "Today",
     "unhide": "Unhide",
     "unhideTask": "Unhide task",
-    "yesterday": "Yesterday",
-    "tabs": {
-      "attachments": "Attachments"
-    }
+    "yesterday": "Yesterday"
   },
   "section": {
     "inbox": "Inbox",
@@ -65,10 +75,8 @@
     "empty": "No goals yet",
     "namePlaceholder": "Goal name",
     "descriptionPlaceholder": "Add description",
-    "nameLabel": "Name",
     "descriptionLabel": "Description",
     "statusLabel": "Status",
-    "cancel": "Cancel",
     "drag": "Drag goal",
     "completedSection": "Completed ({{count}})",
     "showCompleted": "Show completed",
@@ -91,18 +99,10 @@
       "viewFull": "View cover image"
     },
     "editName": "Edit goal",
-    "save": "Save",
-    "delete": "Delete",
-    "back": "Back",
     "notFound": "Goal not found",
     "deleteConfirmName": "Delete goal?",
-    "taskCount": "Tasks:",
     "addToFocus": "Add to focus",
     "removeFromFocus": "Remove from focus",
-    "tabs": {
-      "details": "Details",
-      "attachments": "Attachments"
-    },
     "expandDetails": "Expand details",
     "collapseDetails": "Collapse details",
     "emptyActive": "No active goals",
@@ -118,8 +118,7 @@
   "focusGoalReplacementDialog": {
     "title": "Replace focused goal",
     "message": "You already have 2 focused goals. Which one would you like to replace?",
-    "replaceGoal": "Replace {{goalName}}",
-    "cancel": "Cancel"
+    "replaceGoal": "Replace {{goalName}}"
   },
   "idea": {
     "pageName": "Ideas",
@@ -128,33 +127,23 @@
     "empty": "No ideas",
     "drag": "Drag idea",
     "edit": "Edit",
-    "nameLabel": "Name",
     "descriptionLabel": "Description",
-    "close": "Close",
     "deleteLabel": "Delete idea",
-    "deleteConfirmName": "Delete idea?",
-    "deleteConfirmCancel": "Cancel",
-    "deleteConfirmOk": "Delete"
+    "deleteConfirmName": "Delete idea?"
   },
   "context": {
     "empty": "No contexts yet",
-    "taskCount": "Tasks:",
     "drag": "Drag context",
-    "back": "Back",
     "notFound": "Context not found",
     "editName": "Edit context",
-    "deleteLabel": "Delete context",
-    "saveName": "Save name"
+    "deleteLabel": "Delete context"
   },
   "category": {
     "empty": "No categories yet",
-    "taskCount": "Tasks:",
     "drag": "Drag category",
-    "back": "Back",
     "notFound": "Category not found",
     "editName": "Edit category",
-    "deleteLabel": "Delete category",
-    "saveName": "Save name"
+    "deleteLabel": "Delete category"
   },
   "search": {
     "placeholder": "Tasks, goals and ideas...",
@@ -213,13 +202,10 @@
     "fullSyncStepDownloadFiles": "Downloading files from server",
     "fullSyncSuccess": "Sync complete",
     "fullSyncError": "Sync failed",
-    "fullSyncCancel": "Cancel",
-    "fullSyncClose": "Close",
     "fullSyncStart": "Sync",
     "disconnectConfirmName": "Disconnect sync?",
     "disconnectConfirmDescription": "The app will stop syncing with the server. Local data will be preserved.",
     "disconnectConfirm": "Disconnect",
-    "disconnectCancel": "Cancel",
     "theme": "Theme",
     "interfaceScale": "Interface Size",
     "scale": {
@@ -251,7 +237,6 @@
       "anonKey": "Anon Key",
       "anonKeyDescription": "Find the Anon Key in your Supabase Dashboard under Settings → API.",
       "anonKeyPlaceholder": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "cancel": "Cancel",
       "chooseAuthMethod": "Choose a sign-in method to continue.",
       "chooseBackendHint": "Choose a server for syncing your data.",
       "connect": "Connect",
@@ -275,7 +260,6 @@
       "verify": "Verify",
       "resend": "Resend",
       "resendCountdown": "Resend ({{time}})",
-      "back": "Back",
       "otpErrorInvalid": "Invalid or expired code",
       "otpErrorNetwork": "Network error. Please try again.",
       "otpErrorRateLimit": "Too many attempts. Please wait.",
@@ -343,7 +327,6 @@
     "everyNMonths_other": "Every {{count}} months (day {{day}})",
     "everyNYears_one": "Every {{count}} year ({{date}})",
     "everyNYears_other": "Every {{count}} years ({{date}})",
-    "next": "Next",
     "apply": "Apply",
     "month1": "January",
     "month2": "February",
@@ -380,21 +363,18 @@
     "yearlyDate_ordinal_other": "{{month}} {{count}}th",
     "confirmChangeTitle": "Repeat rule change",
     "confirmChangeMessage": "Next date: {{nextDate}}",
-    "confirmChangeButton": "Save",
-    "nextDateLabel": "Next",
+    "confirmChangeButton": "Change",
+    "nextDateLabel": "Next date",
     "nextDateAfterCompletion": "after completion",
     "upcomingDatesLabel": "Upcoming dates",
     "today": "today",
     "tomorrow": "tomorrow"
   },
   "taskEdit": {
-    "back": "Back",
-    "tabDetails": "Details",
     "tabChecklist": "Checklist",
     "tabChecklistProgress": "Checklist ({{completed}}/{{total}})",
     "checklistBadgeAriaLabel": "{{completed}} of {{total}} completed",
     "attachmentsBadgeAriaLabel": "{{count}} attachments",
-    "fieldName": "Name",
     "fieldDescription": "Description",
     "fieldBox": "Box",
     "fieldRepeat": "Repeat",
@@ -404,10 +384,7 @@
     "newChecklistItemPlaceholder": "Enter new item...",
     "activeSection": "Active ({{count}})",
     "doneSection": "Done ({{count}})",
-    "delete": "Delete",
     "deleteConfirmName": "Delete task?",
-    "deleteConfirmCancel": "Cancel",
-    "deleteConfirmOk": "Delete",
     "checkItemMark": "Check: {{name}}",
     "checkItemUnmark": "Uncheck: {{name}}",
     "checkItemDelete": "Delete: {{name}}",
@@ -432,18 +409,15 @@
     "emptyState": "Select a task to see its details",
     "pin": "Pin detail panel",
     "unpin": "Unpin detail panel",
-    "delete": "Delete task",
-    "close": "Close"
+    "delete": "Delete task"
   },
   "memo": {
     "pageName": "Memos",
     "empty": "No memos",
-    "notFound": "Memo not found",
-    "back": "Back"
+    "notFound": "Memo not found"
   },
   "deleted": {
     "pageName": "Deleted",
-    "loading": "Loading...",
     "empty": "No deleted records",
     "sectionEmpty": "Nothing deleted",
     "tasks": "Tasks",
@@ -458,7 +432,6 @@
     "purgeConfirmName": "Delete Forever?",
     "purgeConfirmMessage": "This action cannot be undone. All deleted records will be permanently removed from the server and all devices.",
     "purgeConfirmCount": "Will delete: {{tasks}} tasks, {{goals}} goals, {{contexts}} contexts, {{categories}} categories, {{checklist_items}} checklist items, {{ideas}} ideas",
-    "purgeCancel": "Cancel",
     "purgeConfirm": "Delete Forever",
     "purgeError": "Failed to purge records",
     "purgingInProgress": "Purging..."
@@ -480,8 +453,6 @@
   },
   "alert": {
     "counter": "{{current}}/{{total}}",
-    "next": "Next",
-    "back": "Back",
     "positionNext": "Alert {{current}} of {{total}}, go to next",
     "positionBack": "Alert {{current}} of {{total}}, go to previous",
     "positionUnderstood": "Alert {{current}} of {{total}}, dismiss all"
@@ -489,8 +460,7 @@
   "projectPausedDialog": {
     "title": "Supabase Project Paused",
     "message": "Your Supabase project has been paused due to inactivity. Open the Supabase Dashboard and restore the project. Sync will resume automatically.",
-    "openDashboard": "Open Dashboard",
-    "close": "Close"
+    "openDashboard": "Open Dashboard"
   },
   "auth": {
     "signInButton": "Sign in with Google"
@@ -519,7 +489,6 @@
     "empty": "No attachments",
     "confirmDelete": "Delete this attachment?",
     "confirmDeleteMessage": "This action cannot be undone.",
-    "confirmDeleteButton": "Delete",
     "list": {
       "preview": "Preview {{filename}}",
       "download": "Download {{filename}}",
@@ -530,7 +499,6 @@
       "close": "Close preview",
       "previewNotAvailable": "Preview is not available for this file type",
       "download": "Download",
-      "loading": "Loading...",
       "loadError": "Failed to load file"
     },
     "attach": {
@@ -543,9 +511,6 @@
       "hint": "Drop files here",
       "rejected": "Rejected: {{filenames}}"
     }
-  },
-  "confirmDialog": {
-    "cancel": "Cancel"
   },
   "share": {
     "title": "Share app",

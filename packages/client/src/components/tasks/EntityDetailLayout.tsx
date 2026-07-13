@@ -398,7 +398,7 @@ export function EntityDetailLayout({
                     className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
                     data-testid={`${testIdPrefix}-delete-cancel-btn`}
                   >
-                    {t("task.cancel")}
+                    {t("common.cancel")}
                   </button>
                   <button
                     type="button"
@@ -406,7 +406,7 @@ export function EntityDetailLayout({
                     className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors"
                     data-testid={`${testIdPrefix}-delete-confirm-btn`}
                   >
-                    {t("taskEdit.delete")}
+                    {t("common.delete")}
                   </button>
                 </div>
               </div>

@@ -29,7 +29,6 @@
     "noncomplete": "Рецидив",
     "restore": "Реанимировать",
     "restoreConfirm": "Реанимировать задачу?",
-    "cancel": "Пусть умирает",
     "drag": "В другую палату",
     "namePlaceholder": "Название страдания..."
   },
@@ -49,10 +48,8 @@
     "empty": "Никаких иллюзий. Молодец.",
     "namePlaceholder": "Название иллюзии",
     "descriptionPlaceholder": "Подробности страдания",
-    "nameLabel": "Иллюзия",
     "descriptionLabel": "Детали",
     "statusLabel": "Стадия",
-    "cancel": "Забить",
     "drag": "В другое отделение",
     "completedSection": "Выжившие ({{count}})",
     "showCompleted": "Показать выживших",
@@ -74,12 +71,8 @@
       "errorNetwork": "Связь оборвалась. Но файл запомнил, загружу потом."
     },
     "editName": "Редактировать иллюзию",
-    "save": "Применить",
-    "delete": "Ампутировать",
-    "back": "Назад",
     "notFound": "Иллюзия испарилась",
-    "deleteConfirmName": "Ампутировать цель?",
-    "taskCount": "Страданий:"
+    "deleteConfirmName": "Ампутировать цель?"
   },
   "idea": {
     "pageName": "Бредовые идеи",
@@ -89,23 +82,17 @@
   },
   "context": {
     "empty": "Контекстов нет. Значит, вы работаете везде и нигде. Классика.",
-    "taskCount": "Страданий:",
     "drag": "Сменить место преступления",
-    "back": "Назад",
     "notFound": "Контекст испарился",
     "editName": "Переименовать место катастрофы",
-    "deleteLabel": "Ликвидировать контекст",
-    "saveName": "Зафиксировать"
+    "deleteLabel": "Ликвидировать контекст"
   },
   "category": {
     "empty": "Категорий нет. Беспорядок — тоже система.",
-    "taskCount": "Страданий:",
     "drag": "Переложить ответственность",
-    "back": "Назад",
     "notFound": "Категория бесследно пропала",
     "editName": "Отредактировать сферу самообмана",
-    "deleteLabel": "Ампутировать категорию",
-    "saveName": "Зафиксировать"
+    "deleteLabel": "Ампутировать категорию"
   },
   "search": {
     "placeholder": "Симптомы и иллюзии...",
@@ -153,13 +140,10 @@
     "fullSyncStepDownloadFiles": "Навязчивые идеи из облака",
     "fullSyncSuccess": "Синхронизация завершена. Редкий успех.",
     "fullSyncError": "Ошибка синхронизации. Не удивительно.",
-    "fullSyncCancel": "Отмена",
-    "fullSyncClose": "Закрыть",
     "fullSyncStart": "Синхронизировать",
     "disconnectConfirmName": "Отключить синхронизацию?",
     "disconnectConfirmDescription": "Приложение перестанет синхронизироваться с сервером. Локальные данные сохранятся.",
     "disconnectConfirm": "Отключить",
-    "disconnectCancel": "Отмена",
     "theme": "Атмосфера страданий",
     "menuOrder": "Пункты диагностики",
     "menuOrderHint": "Тащите. Выключайте. Хаус одобряет.",
@@ -183,13 +167,10 @@
     "dayOfMonthLabel_ordinal_other": "Каждое {{count}}-е число месяца"
   },
   "taskEdit": {
-    "back": "Назад",
-    "tabDetails": "Детали",
     "tabChecklist": "Чек-лист",
     "tabChecklistProgress": "Чек-лист ({{completed}}/{{total}})",
     "checklistBadgeAriaLabel": "{{completed}} из {{total}} выполнено",
     "attachmentsBadgeAriaLabel": "{{count}} вложений",
-    "fieldName": "Название",
     "fieldDescription": "Заметки",
     "fieldBox": "Палата",
     "fieldRepeat": "Повтор",
@@ -198,10 +179,7 @@
     "newChecklistItemPlaceholder": "Введите новый пункт...",
     "activeSection": "Активно ({{count}})",
     "doneSection": "Готово ({{count}})",
-    "delete": "Удалить",
     "deleteConfirmName": "Удалить страдание?",
-    "deleteConfirmCancel": "Отмена",
-    "deleteConfirmOk": "Удалить",
     "checkItemMark": "Отметить: {{name}}",
     "checkItemUnmark": "Снять отметку: {{name}}",
     "checkItemDelete": "Удалить: {{name}}"
@@ -221,12 +199,10 @@
     "dark": "Привычный мрак"
   },
   "taskDetail": {
-    "delete": "Ампутировать",
-    "close": "Выйти из палаты"
+    "delete": "Ампутировать"
   },
   "deleted": {
     "pageName": "Морг",
-    "loading": "Ищем тела...",
     "empty": "Никто не умер. Подозрительно.",
     "sectionEmpty": "Пусто. Редкость.",
     "tasks": "Страдания",

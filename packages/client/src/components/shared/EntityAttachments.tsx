@@ -91,7 +91,7 @@ export function EntityAttachments({
         <ConfirmDialog
           title={t("attachment.confirmDelete")}
           message={t("attachment.confirmDeleteMessage")}
-          confirmLabel={t("attachment.confirmDeleteButton")}
+          confirmLabel={t("common.delete")}
           variant="danger"
           onConfirm={() => void handleDeleteConfirm()}
           onCancel={handleDeleteCancel}

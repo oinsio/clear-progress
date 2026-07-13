@@ -6,6 +6,20 @@
     "baseLanguage": "ru",
     "emoji": "🇷🇺"
   },
+  "common": {
+    "cancel": "Отмена",
+    "back": "Назад",
+    "delete": "Удалить",
+    "close": "Закрыть",
+    "next": "Далее",
+    "save": "Сохранить",
+    "loading": "Загрузка...",
+    "name": "Название",
+    "taskCount": "Задач:",
+    "details": "Детали",
+    "attachments": "Вложения",
+    "saveName": "Сохранить название"
+  },
   "box": {
     "inbox": "Входящие",
     "today": "Сегодня",
@@ -34,7 +48,6 @@
     "restore": "Вернуть",
     "restoreConfirm": "Вернуть задачу?",
     "selectDate": "Выбрать дату",
-    "cancel": "Отмена",
     "drag": "Перетащить задачу",
     "appearDate": "Появится {{date}}",
     "namePlaceholder": "Название задачи...",
@@ -44,10 +57,7 @@
     "today": "Сегодня",
     "unhide": "Показать",
     "unhideTask": "Показать задачу",
-    "yesterday": "Вчера",
-    "tabs": {
-      "attachments": "Вложения"
-    }
+    "yesterday": "Вчера"
   },
   "section": {
     "inbox": "Входящие",
@@ -65,10 +75,8 @@
     "empty": "Нет ни одной цели",
     "namePlaceholder": "Название цели",
     "descriptionPlaceholder": "Добавить описание",
-    "nameLabel": "Название",
     "descriptionLabel": "Описание",
     "statusLabel": "Статус",
-    "cancel": "Отмена",
     "drag": "Перетащить цель",
     "completedSection": "Выполненные ({{count}})",
     "showCompleted": "Показать выполненные",
@@ -91,18 +99,10 @@
       "viewFull": "Просмотреть обложку"
     },
     "editName": "Редактировать цель",
-    "save": "Сохранить",
-    "delete": "Удалить",
-    "back": "Назад",
     "notFound": "Цель не найдена",
     "deleteConfirmName": "Удалить цель?",
-    "taskCount": "Задач:",
     "addToFocus": "Добавить в фокус",
     "removeFromFocus": "Убрать из фокуса",
-    "tabs": {
-      "details": "Детали",
-      "attachments": "Вложения"
-    },
     "expandDetails": "Развернуть детали",
     "collapseDetails": "Свернуть детали",
     "emptyActive": "Нет активных целей",
@@ -118,8 +118,7 @@
   "focusGoalReplacementDialog": {
     "title": "Заменить цель в фокусе",
     "message": "У вас уже 2 цели в фокусе. Какую заменить?",
-    "replaceGoal": "Заменить {{goalName}}",
-    "cancel": "Отмена"
+    "replaceGoal": "Заменить {{goalName}}"
   },
   "idea": {
     "pageName": "Идеи",
@@ -128,33 +127,23 @@
     "empty": "Нет идей",
     "drag": "Перетащить идею",
     "edit": "Редактировать",
-    "nameLabel": "Название",
     "descriptionLabel": "Описание",
-    "close": "Закрыть",
     "deleteLabel": "Удалить идею",
-    "deleteConfirmName": "Удалить идею?",
-    "deleteConfirmCancel": "Отмена",
-    "deleteConfirmOk": "Удалить"
+    "deleteConfirmName": "Удалить идею?"
   },
   "context": {
     "empty": "Нет ни одного контекста",
-    "taskCount": "Задач:",
     "drag": "Перетащить контекст",
-    "back": "Назад",
     "notFound": "Контекст не найден",
     "editName": "Редактировать контекст",
-    "deleteLabel": "Удалить контекст",
-    "saveName": "Сохранить название"
+    "deleteLabel": "Удалить контекст"
   },
   "category": {
     "empty": "Нет ни одной категории",
-    "taskCount": "Задач:",
     "drag": "Перетащить категорию",
-    "back": "Назад",
     "notFound": "Категория не найдена",
     "editName": "Редактировать категорию",
-    "deleteLabel": "Удалить категорию",
-    "saveName": "Сохранить название"
+    "deleteLabel": "Удалить категорию"
   },
   "search": {
     "placeholder": "Задачи, цели и идеи...",
@@ -213,13 +202,10 @@
     "fullSyncStepDownloadFiles": "Загрузка файлов с сервера",
     "fullSyncSuccess": "Синхронизация завершена",
     "fullSyncError": "Ошибка синхронизации",
-    "fullSyncCancel": "Отмена",
-    "fullSyncClose": "Закрыть",
     "fullSyncStart": "Синхронизировать",
     "disconnectConfirmName": "Отключить синхронизацию?",
     "disconnectConfirmDescription": "Приложение перестанет синхронизироваться с сервером. Локальные данные сохранятся.",
     "disconnectConfirm": "Отключить",
-    "disconnectCancel": "Отмена",
     "theme": "Тема",
     "interfaceScale": "Размер интерфейса",
     "scale": {
@@ -251,7 +237,6 @@
       "anonKey": "Anon Key",
       "anonKeyDescription": "Anon Key можно найти в Supabase Dashboard: Settings → API.",
       "anonKeyPlaceholder": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "cancel": "Отмена",
       "chooseAuthMethod": "Выберите способ входа для продолжения.",
       "chooseBackendHint": "Выберите сервер для синхронизации данных.",
       "connect": "Подключить",
@@ -275,7 +260,6 @@
       "verify": "Подтвердить",
       "resend": "Отправить повторно",
       "resendCountdown": "Повторно ({{time}})",
-      "back": "Назад",
       "otpErrorInvalid": "Неверный или просроченный код",
       "otpErrorNetwork": "Ошибка сети. Попробуйте снова.",
       "otpErrorRateLimit": "Слишком много попыток. Подождите.",
@@ -347,7 +331,6 @@
     "everyNYears_one": "Каждый {{count}} год ({{date}})",
     "everyNYears_few": "Каждые {{count}} года ({{date}})",
     "everyNYears_many": "Каждые {{count}} лет ({{date}})",
-    "next": "Далее",
     "apply": "Применить",
     "month1": "Январь",
     "month2": "Февраль",
@@ -377,21 +360,18 @@
     "yearlyDate": "{{count}} {{month}}",
     "confirmChangeTitle": "Изменение правила повтора",
     "confirmChangeMessage": "Следующая дата: {{nextDate}}",
-    "confirmChangeButton": "Сохранить",
-    "nextDateLabel": "Далее",
+    "confirmChangeButton": "Изменить",
+    "nextDateLabel": "Следующая дата",
     "nextDateAfterCompletion": "после завершения",
     "upcomingDatesLabel": "Ближайшие даты",
     "today": "сегодня",
     "tomorrow": "завтра"
   },
   "taskEdit": {
-    "back": "Назад",
-    "tabDetails": "Детали",
     "tabChecklist": "Чек-лист",
     "tabChecklistProgress": "Чек-лист ({{completed}}/{{total}})",
     "checklistBadgeAriaLabel": "{{completed}} из {{total}} выполнено",
     "attachmentsBadgeAriaLabel": "{{count}} вложений",
-    "fieldName": "Название",
     "fieldDescription": "Заметки",
     "fieldBox": "Коробочка",
     "fieldRepeat": "Повтор",
@@ -401,10 +381,7 @@
     "newChecklistItemPlaceholder": "Введите новый пункт...",
     "activeSection": "Активно ({{count}})",
     "doneSection": "Готово ({{count}})",
-    "delete": "Удалить",
     "deleteConfirmName": "Удалить задачу?",
-    "deleteConfirmCancel": "Отмена",
-    "deleteConfirmOk": "Удалить",
     "checkItemMark": "Отметить: {{name}}",
     "checkItemUnmark": "Снять отметку: {{name}}",
     "checkItemDelete": "Удалить: {{name}}",
@@ -429,18 +406,15 @@
     "emptyState": "Выберите задачу для просмотра деталей",
     "pin": "Закрепить панель задачи",
     "unpin": "Открепить панель задачи",
-    "delete": "Удалить задачу",
-    "close": "Закрыть"
+    "delete": "Удалить задачу"
   },
   "memo": {
     "pageName": "Памятки",
     "empty": "Нет памяток",
-    "notFound": "Памятка не найдена",
-    "back": "Назад"
+    "notFound": "Памятка не найдена"
   },
   "deleted": {
     "pageName": "Удалённое",
-    "loading": "Загрузка...",
     "empty": "Удалённых записей нет",
     "sectionEmpty": "Нет удалённых",
     "tasks": "Задачи",
@@ -455,7 +429,6 @@
     "purgeConfirmName": "Удалить навсегда?",
     "purgeConfirmMessage": "Это действие нельзя отменить. Все удалённые записи будут удалены с сервера и со всех устройств.",
     "purgeConfirmCount": "Будет удалено: {{tasks}} задач, {{goals}} целей, {{contexts}} контекстов, {{categories}} категорий, {{checklist_items}} пунктов чек-листа, {{ideas}} идей",
-    "purgeCancel": "Отмена",
     "purgeConfirm": "Удалить навсегда",
     "purgeError": "Не удалось очистить записи",
     "purgingInProgress": "Удаление..."
@@ -477,8 +450,6 @@
   },
   "alert": {
     "counter": "{{current}}/{{total}}",
-    "next": "Далее",
-    "back": "Назад",
     "positionNext": "Уведомление {{current}} из {{total}}, перейти к следующему",
     "positionBack": "Уведомление {{current}} из {{total}}, вернуться к предыдущему",
     "positionUnderstood": "Уведомление {{current}} из {{total}}, закрыть все"
@@ -486,8 +457,7 @@
   "projectPausedDialog": {
     "title": "Проект Supabase приостановлен",
     "message": "Ваш проект Supabase был приостановлен из-за отсутствия активности. Откройте панель управления Supabase и восстановите проект. Синхронизация возобновится автоматически.",
-    "openDashboard": "Открыть панель управления",
-    "close": "Закрыть"
+    "openDashboard": "Открыть панель управления"
   },
   "auth": {
     "signInButton": "Войти через Google"
@@ -516,7 +486,6 @@
     "empty": "Нет вложений",
     "confirmDelete": "Удалить это вложение?",
     "confirmDeleteMessage": "Это действие нельзя отменить.",
-    "confirmDeleteButton": "Удалить",
     "list": {
       "preview": "Предпросмотр {{filename}}",
       "download": "Скачать {{filename}}",
@@ -527,7 +496,6 @@
       "close": "Закрыть предпросмотр",
       "previewNotAvailable": "Предпросмотр недоступен для этого типа файла",
       "download": "Скачать",
-      "loading": "Загрузка...",
       "loadError": "Не удалось загрузить файл"
     },
     "attach": {
@@ -540,9 +508,6 @@
       "hint": "Перетащите файлы сюда",
       "rejected": "Отклонены: {{filenames}}"
     }
-  },
-  "confirmDialog": {
-    "cancel": "Отмена"
   },
   "share": {
     "title": "Поделиться приложением",

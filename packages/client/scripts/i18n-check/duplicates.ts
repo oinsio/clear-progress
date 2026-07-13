@@ -1,4 +1,5 @@
 import type { LocaleData } from "./types";
+import { isDuplicateWhitelisted } from "./whitelist";
 
 /** Groups of keys whose values match in both en and ru. */
 export function findDuplicateGroups(
@@ -26,7 +27,10 @@ export function findDuplicateGroups(
     );
 
     if (ruValues.size === 1 && !ruValues.has(undefined as unknown as string)) {
-      result.set(value, keys);
+      const isAllWhitelisted = keys.every(isDuplicateWhitelisted);
+      if (!isAllWhitelisted) {
+        result.set(value, keys);
+      }
     }
   }
 
