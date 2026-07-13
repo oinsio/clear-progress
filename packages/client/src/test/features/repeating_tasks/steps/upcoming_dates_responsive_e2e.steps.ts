@@ -4,13 +4,8 @@ import { createBdd } from "playwright-bdd";
 
 const { Given, Then } = createBdd();
 
-const DEFAULT_VIEWPORT_HEIGHT = 812;
 const ELEMENT_TIMEOUT_MS = 5000;
 const TASK_NAME = "Test recurring task";
-
-Given("viewport is {int}px wide", async ({ page }, width: number) => {
-  await page.setViewportSize({ width, height: DEFAULT_VIEWPORT_HEIGHT });
-});
 
 Given("user opens the repeat rule selector for a task", async ({ page }) => {
   await page.goto("/tasks");

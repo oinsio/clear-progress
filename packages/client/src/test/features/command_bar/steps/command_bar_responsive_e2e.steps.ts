@@ -5,16 +5,11 @@ import { createBdd } from "playwright-bdd";
 const { Given, Then } = createBdd();
 
 const COMMAND_BAR_TIMEOUT_MS = 3000;
-const DEFAULT_VIEWPORT_HEIGHT = 812;
 const OVERLAP_TOLERANCE_PX = 1;
 
 // ============================================================================
 // Background steps
 // ============================================================================
-
-Given("viewport is {int}px wide", async ({ page }, width: number) => {
-  await page.setViewportSize({ width, height: DEFAULT_VIEWPORT_HEIGHT });
-});
 
 Given("user is on a page with CommandBar", async ({ page }) => {
   await page.goto("/tasks");
