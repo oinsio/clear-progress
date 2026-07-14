@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "code": "ru-project",
+    "name": "Russian (project)",
+    "nativeName": "Русский (проект)",
+    "baseLanguage": "ru",
+    "emoji": "🇷🇺"
+  },
+  "task": {
+    "selectGoal": "Выбрать проект"
+  },
+  "goal": {
+    "pageName": "Мои проекты",
+    "empty": "Нет ни одного проекта",
+    "namePlaceholder": "Название проекта",
+    "drag": "Перетащить проект",
+    "editName": "Редактировать проект",
+    "notFound": "Проект не найден",
+    "deleteConfirmName": "Удалить проект?",
+    "emptyActive": "Нет активных проектов",
+    "emptyPaused": "Нет проектов на паузе",
+    "emptyFinished": "Нет завершённых проектов"
+  },
+  "focusGoalReplacementDialog": {
+    "title": "Заменить проект в фокусе",
+    "message": "У вас уже 2 проекта в фокусе. Какой заменить?"
+  },
+  "search": {
+    "placeholder": "Задачи, проекты и идеи...",
+    "goals": "Проекты"
+  },
+  "filter": {
+    "goals": "Проекты",
+    "focused_goals": "Фокус на проектах"
+  },
+  "selector": {
+    "goal": "Проект",
+    "noGoal": "Без проекта"
+  },
+  "deleted": {
+    "goals": "Проекты",
+    "purgeCountGoals_one": "{{count}} проект",
+    "purgeCountGoals_few": "{{count}} проекта",
+    "purgeCountGoals_many": "{{count}} проектов"
+  },
+  "commandBar": {
+    "placeholder": {
+      "goal": "Новый проект..."
+    }
+  },
+  "share": {
+    "inviteMessage": "Попробуй Clear Progress — приложение для работы с задачами, проектами и идеями!"
+  },
+  "onboarding": {
+    "goalDescription": "Выполните задачи ниже, чтобы познакомиться с основными возможностями приложения. После ознакомления удалите этот проект.",
+    "dialogBody": "Хотите начать с ознакомительного проекта? Мы создадим проект с задачами, которые помогут освоить основные возможности приложения."
+  }
+}

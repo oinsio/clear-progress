@@ -62,6 +62,13 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "startrek",
   );
 
+  // @add-project-locales @FR4
+  definePurgeCountScenario(
+    "Russian project dialect purge counts agree with numbers",
+    'locale is "ru-project"',
+    "ru-project",
+  );
+
   // @rework-house-locale @FR9
   definePurgeCountScenario(
     "English purge counts agree with numbers",

@@ -453,7 +453,7 @@
     "synced": "Synced",
     "noConnection": "No connection",
     "serverError": "Server error",
-    "projectPaused": "Project paused",
+    "projectPaused": "Supabase paused",
     "ariaLabel": "Sync",
     "alertTitle": "Sync issue",
     "alertUnderstood": "Understood",

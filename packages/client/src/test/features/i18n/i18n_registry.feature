@@ -12,10 +12,10 @@ Feature: Locale registry
   @add-i18n-specs @FR7
   Scenario: Locales sorted by English name
     When locale registry is loaded
-    Then locales are ordered as "Dr. House", "English", "Russian", "Star Trek"
+    Then locales are ordered as "Dr. House", "English", "English (project)", "Russian", "Russian (project)", "Star Trek"
 
   @add-i18n-specs @FR8 @FR9
   Scenario: Only valid locales are registered
     When locale registry is loaded
-    Then exactly 4 locales are registered
+    Then exactly 6 locales are registered
     And every locale has complete metadata

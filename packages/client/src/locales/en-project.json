@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "code": "en-project",
+    "name": "English (project)",
+    "nativeName": "English (project)",
+    "baseLanguage": "en",
+    "emoji": "🇺🇸"
+  },
+  "task": {
+    "selectGoal": "Select project"
+  },
+  "goal": {
+    "pageName": "My Projects",
+    "empty": "No projects yet",
+    "namePlaceholder": "Project name",
+    "drag": "Drag project",
+    "editName": "Edit project",
+    "notFound": "Project not found",
+    "deleteConfirmName": "Delete project?",
+    "emptyActive": "No active projects",
+    "emptyPaused": "No paused projects",
+    "emptyFinished": "No finished projects"
+  },
+  "focusGoalReplacementDialog": {
+    "title": "Replace focused project",
+    "message": "You already have 2 focused projects. Which one would you like to replace?"
+  },
+  "search": {
+    "placeholder": "Tasks, projects and ideas...",
+    "goals": "Projects"
+  },
+  "filter": {
+    "goals": "Projects",
+    "focused_goals": "Focused Projects"
+  },
+  "selector": {
+    "goal": "Project",
+    "noGoal": "No project"
+  },
+  "deleted": {
+    "goals": "Projects",
+    "purgeCountGoals_one": "{{count}} project",
+    "purgeCountGoals_other": "{{count}} projects"
+  },
+  "commandBar": {
+    "placeholder": {
+      "goal": "New project..."
+    }
+  },
+  "share": {
+    "inviteMessage": "Try Clear Progress — an app for managing tasks, projects, and ideas!"
+  },
+  "onboarding": {
+    "goalDescription": "Complete the tasks below to learn the core features of the app. After you're done, delete this project.",
+    "dialogBody": "Would you like to start with an onboarding project? We'll create a project with tasks to help you learn the app's core features."
+  }
+}

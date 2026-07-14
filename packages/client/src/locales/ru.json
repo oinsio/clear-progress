@@ -456,7 +456,7 @@
     "synced": "Обновлено",
     "noConnection": "Нет связи",
     "serverError": "Ошибка сервера",
-    "projectPaused": "Проект приостановлен",
+    "projectPaused": "Supabase приостановлен",
     "ariaLabel": "Обновить",
     "alertTitle": "Проблема синхронизации",
     "alertUnderstood": "Понятно",

@@ -61,19 +61,22 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
   );
 
   // @add-i18n-specs @FR7
+  // verifies UX1 of add-project-locales — dialects sort directly after their base languages
   f.Scenario("Locales sorted by English name", ({ When, Then }) => {
     When("locale registry is loaded", (_ctx: TestContext) => {
       // Already loaded
     });
 
     Then(
-      'locales are ordered as "Dr. House", "English", "Russian", "Star Trek"',
+      'locales are ordered as "Dr. House", "English", "English (project)", "Russian", "Russian (project)", "Star Trek"',
       (_ctx: TestContext) => {
         const localeNames = locales.map((locale) => locale.name);
         expect(localeNames).toEqual([
           "Dr. House",
           "English",
+          "English (project)",
           "Russian",
+          "Russian (project)",
           "Star Trek",
         ]);
       },
@@ -86,8 +89,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       // Already loaded
     });
 
-    Then("exactly 4 locales are registered", (_ctx: TestContext) => {
-      expect(locales).toHaveLength(4);
+    Then("exactly 6 locales are registered", (_ctx: TestContext) => {
+      expect(locales).toHaveLength(6);
     });
 
     And("every locale has complete metadata", (_ctx: TestContext) => {

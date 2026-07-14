@@ -47,6 +47,16 @@ Feature: Purge count grammatical agreement
       | deleted.purgeCountCategories     | 5     | 5 отсеков   |
       | deleted.purgeCountChecklistItems | 2     | 2 директивы |
 
+  @add-project-locales @FR4
+  Scenario: Russian project dialect purge counts agree with numbers
+    Given locale is "ru-project"
+    Then purge counts render as:
+      | key                     | count | text       |
+      | deleted.purgeCountGoals | 1     | 1 проект   |
+      | deleted.purgeCountGoals | 2     | 2 проекта  |
+      | deleted.purgeCountGoals | 5     | 5 проектов |
+      | deleted.purgeCountGoals | 21    | 21 проект  |
+
   @rework-house-locale @FR9
   Scenario: English purge counts agree with numbers
     Given locale is "en"
