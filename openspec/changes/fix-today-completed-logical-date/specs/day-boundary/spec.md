@@ -48,6 +48,11 @@ The system SHALL provide a `getLogicalDate(clock, dayBoundary)` function that re
 - **AND** task was completed at 2026-06-10T01:00:00Z (local 21:00 June 9)
 - **THEN** todayCompleted includes the task even though the UTC date of `completed_at` is June 10
 
+#### Scenario: todayCompleted includes post-boundary completion whose UTC date is yesterday (custom boundary)
+- **WHEN** user timezone is UTC+5, day boundary is "04:00", current UTC time is 2026-06-10T07:00:00Z (local 12:00 June 10 — after boundary, logical day is June 10)
+- **AND** task was completed at 2026-06-09T23:30:00Z (local 04:30 June 10 — after the 04:00 boundary, UTC date June 9)
+- **THEN** todayCompleted includes the task (completed after the June 10 logical day started at 04:00 local, even though the UTC date of `completed_at` is June 9)
+
 #### Scenario: todayCompleted respects custom day boundary
 - **WHEN** user timezone is UTC+5, day boundary is "04:00", current UTC time is 2026-06-09T21:30:00Z (local 02:30 June 10 — before boundary, logical day is June 9)
 - **AND** task was completed at 2026-06-09T05:00:00Z (local 10:00 June 9)

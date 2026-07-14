@@ -1,4 +1,17 @@
 import { vi } from "vitest";
+import { DEFAULT_DAY_BOUNDARY } from "@/constants";
+
+/**
+ * Shared mutable state behind the `@/hooks/useSettings` mock below.
+ * Test setups (e.g. activeTasksPage.testSetup) mutate these fields to
+ * control what the page under test sees; defaults match the previous
+ * hardcoded mock values, so importers that never touch this state keep
+ * the exact same behavior.
+ */
+export const settingsMockState = {
+  defaultBox: "today",
+  dayBoundary: DEFAULT_DAY_BOUNDARY,
+};
 
 vi.mock("@/hooks/useShowHidden", () => ({
   useShowHidden: () => ({
@@ -9,13 +22,15 @@ vi.mock("@/hooks/useShowHidden", () => ({
 
 vi.mock("@/hooks/useSettings", () => ({
   useSettings: () => ({
-    defaultBox: "today",
+    get defaultBox() {
+      return settingsMockState.defaultBox;
+    },
     accentColor: "green",
     isLoading: false,
     setDefaultBox: vi.fn(),
     setAccentColor: vi.fn(),
   }),
-  getCachedDayBoundary: () => "00:00",
+  getCachedDayBoundary: () => settingsMockState.dayBoundary,
 }));
 
 vi.mock("@/hooks/useFilterBarPosition", () => ({

@@ -10,36 +10,74 @@ import {
 } from "@/test/builders/hookBuilders";
 import { buildTask } from "@/test/factories/taskFactory";
 import "@/test/mocks/taskPageMocks";
+import { DEFAULT_DAY_BOUNDARY } from "@/constants";
 import { useCategories } from "@/hooks/useCategories";
 import { useCompletedTasks } from "@/hooks/useCompletedTasks";
 import { useContexts } from "@/hooks/useContexts";
 import { useGoals } from "@/hooks/useGoals";
 import { useTasks } from "@/hooks/useTasks";
+import { type Clock, fakeClock } from "@/lib/temporal";
+import { settingsMockState } from "@/test/mocks/settingsMocks";
 import ActiveTasksPage from "./ActiveTasksPage";
 
+/**
+ * `defaultBox` and `dayBoundary` delegate to `settingsMockState`, the state
+ * behind the `@/hooks/useSettings` mock registered by settingsMocks (imported
+ * via taskPageMocks). A local `vi.mock("@/hooks/useSettings")` here would be
+ * silently overridden by that registration and never reach the page.
+ */
 export const pageConfig = {
   filterBarPosition: "bottom",
-  defaultBox: "today",
+  get defaultBox() {
+    return settingsMockState.defaultBox;
+  },
+  set defaultBox(box: string) {
+    settingsMockState.defaultBox = box;
+  },
+  get dayBoundary() {
+    return settingsMockState.dayBoundary;
+  },
+  set dayBoundary(boundary: string) {
+    settingsMockState.dayBoundary = boundary;
+  },
 };
+
+const clockState = vi.hoisted(() => ({
+  fakeClockOverride: null as Clock | null,
+}));
+
+vi.mock("@/lib/temporal", async (importOriginal) => {
+  const actualTemporal =
+    await importOriginal<typeof import("@/lib/temporal")>();
+  const resolveClock = () =>
+    clockState.fakeClockOverride ?? actualTemporal.systemClock;
+  return {
+    ...actualTemporal,
+    systemClock: {
+      instant: () => resolveClock().instant(),
+      plainDateISO: () => resolveClock().plainDateISO(),
+      timeZoneId: () => resolveClock().timeZoneId(),
+    } satisfies Clock,
+  };
+});
+
+/**
+ * Makes the page's `systemClock` import resolve to a fixed instant
+ * in the given timezone. Reset via `resetFakeClock()` or `resetDefaultMocks()`.
+ */
+export function setFakeClock(isoTimestamp: string, timeZone?: string) {
+  clockState.fakeClockOverride = fakeClock(isoTimestamp, timeZone);
+}
+
+export function resetFakeClock() {
+  clockState.fakeClockOverride = null;
+}
 
 vi.mock("@/hooks/useFilterBarPosition", () => ({
   useFilterBarPosition: () => ({
     filterBarPosition: pageConfig.filterBarPosition,
     setFilterBarPosition: vi.fn(),
   }),
-}));
-
-vi.mock("@/hooks/useSettings", () => ({
-  useSettings: () => ({
-    get defaultBox() {
-      return pageConfig.defaultBox;
-    },
-    accentColor: "green",
-    isLoading: false,
-    setDefaultBox: vi.fn(),
-    setAccentColor: vi.fn(),
-  }),
-  getCachedDayBoundary: () => "00:00",
 }));
 
 vi.mock("@/hooks/useHandedness", () => ({
@@ -89,6 +127,8 @@ export function setupAllBoxTasks() {
 export function resetDefaultMocks() {
   pageConfig.defaultBox = "today";
   pageConfig.filterBarPosition = "bottom";
+  pageConfig.dayBoundary = DEFAULT_DAY_BOUNDARY;
+  resetFakeClock();
   mockUseTasks.mockReturnValue(buildTasksHook());
   mockUseGoals.mockReturnValue(buildGoalsHook());
   mockUseContexts.mockReturnValue(buildContextsHook());

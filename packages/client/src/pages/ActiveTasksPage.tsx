@@ -35,9 +35,8 @@ import { useTargetBox } from "@/hooks/useTargetBox";
 import { useTaskCompletion } from "@/hooks/useTaskCompletion";
 import { useTaskSelection } from "@/hooks/useTaskSelection";
 import { useTasks } from "@/hooks/useTasks";
-import { systemClock } from "@/lib/temporal";
+import { groupCompletedTasks } from "@/shared/lib/utils";
 import type { BoxFilter } from "@/types/common";
-import { getLogicalDate } from "@/utils/getLogicalDate";
 
 const BOX_FILTER_ICONS: Record<BoxFilter, CommandBarFilterItem["icon"]> = {
   today: TodayBoxIcon,
@@ -142,12 +141,13 @@ export default function ActiveTasksPage() {
     onExpand: selection.handleTaskExpand,
   };
 
-  const todayCompleted = useMemo(() => {
-    const logicalToday = getLogicalDate(systemClock, getCachedDayBoundary());
-    return completedTasks.filter(
-      (task) => task.completed_at?.slice(0, 10) === logicalToday,
-    );
-  }, [completedTasks]);
+  /** Implements FR1, FR2 of fix-today-completed-logical-date */
+  const todayCompleted = useMemo(
+    () =>
+      groupCompletedTasks(completedTasks, undefined, getCachedDayBoundary())
+        .todayTasks,
+    [completedTasks],
+  );
 
   const sections = [
     {
