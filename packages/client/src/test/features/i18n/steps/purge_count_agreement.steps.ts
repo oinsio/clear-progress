@@ -55,6 +55,13 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
     "house",
   );
 
+  // @add-startrek-locale @FR6
+  definePurgeCountScenario(
+    "Star Trek locale purge counts agree with numbers",
+    'locale is "startrek"',
+    "startrek",
+  );
+
   // @rework-house-locale @FR9
   definePurgeCountScenario(
     "English purge counts agree with numbers",

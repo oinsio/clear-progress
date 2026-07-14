@@ -30,6 +30,23 @@ Feature: Purge count grammatical agreement
       | deleted.purgeCountIdeas          | 1     | 1 озарение   |
       | deleted.purgeCountContexts       | 4     | 4 контекста  |
 
+  @add-startrek-locale @FR6
+  Scenario: Star Trek locale purge counts agree with numbers
+    Given locale is "startrek"
+    Then purge counts render as:
+      | key                              | count | text        |
+      | deleted.purgeCountTasks          | 1     | 1 задание   |
+      | deleted.purgeCountTasks          | 2     | 2 задания   |
+      | deleted.purgeCountTasks          | 5     | 5 заданий   |
+      | deleted.purgeCountTasks          | 21    | 21 задание  |
+      | deleted.purgeCountIdeas          | 1     | 1 мир       |
+      | deleted.purgeCountIdeas          | 2     | 2 мира      |
+      | deleted.purgeCountIdeas          | 5     | 5 миров     |
+      | deleted.purgeCountIdeas          | 21    | 21 мир      |
+      | deleted.purgeCountGoals          | 2     | 2 миссии    |
+      | deleted.purgeCountCategories     | 5     | 5 отсеков   |
+      | deleted.purgeCountChecklistItems | 2     | 2 директивы |
+
   @rework-house-locale @FR9
   Scenario: English purge counts agree with numbers
     Given locale is "en"

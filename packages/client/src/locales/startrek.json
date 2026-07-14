@@ -1,0 +1,300 @@
+{
+  "_meta": {
+    "code": "startrek",
+    "name": "Star Trek",
+    "nativeName": "Звёздный путь",
+    "baseLanguage": "ru",
+    "emoji": "🖖"
+  },
+  "common": {
+    "delete": "За борт",
+    "loading": "Выходим на варп...",
+    "taskCount": "Заданий:",
+    "attachments": "Голозаписи"
+  },
+  "box": {
+    "inbox": "Первый контакт",
+    "today": "Прямо по курсу",
+    "week": "Ближний космос",
+    "later": "Глубокий космос",
+    "all": "Вся галактика"
+  },
+  "task": {
+    "empty": "Заданий нет. Сенсоры чисты, капитан.",
+    "emptyCompleted": "Ни одного выполненного задания. Занятно.",
+    "emptyInbox": "Новых контактов нет. Эфир чист.",
+    "emptyToday": "По курсу чисто. Идём на крейсерской.",
+    "noTasksPrompt": "Заданий нет. Экипаж ждёт приказов.",
+    "editDescription": "Дополнить журнал",
+    "hide": "Включить маскировку",
+    "hideTask": "Замаскировать задание",
+    "hideUntil": "Под маскировкой до",
+    "unhide": "Снять маскировку",
+    "unhideTask": "Снять маскировку с задания",
+    "selectGoal": "Приписать к миссии",
+    "moveToBox": "Проложить другой курс",
+    "selectCategory": "Направить в отсек",
+    "fullEdit": "Полная диагностика",
+    "complete": "Задание выполнено",
+    "noncomplete": "Возобновить задание",
+    "restore": "Поднять на борт",
+    "restoreConfirm": "Поднять задание на борт?",
+    "selectDate": "Назначить звёздную дату",
+    "drag": "Сменить курс задания",
+    "appearDate": "Снимет маскировку {{date}}",
+    "namePlaceholder": "Суть задания, капитан?..",
+    "completedToday": "Выполнено: сегодня {{time}}",
+    "completedYesterday": "Выполнено: вчера {{time}}",
+    "completedDate": "Выполнено: {{date}} {{time}}"
+  },
+  "section": {
+    "inbox": "Первый контакт",
+    "today": "Прямо по курсу",
+    "week": "Ближний космос",
+    "later": "Глубокий космос",
+    "completedToday": "В журнале сегодня",
+    "completedYesterday": "В журнале вчера",
+    "completedWeek": "Записи за 7 дней",
+    "completedMonth": "Записи за месяц",
+    "completedEarlier": "Давние записи"
+  },
+  "goal": {
+    "pageName": "Миссии",
+    "empty": "Миссий нет. Флот ждёт Ваших приказов, капитан.",
+    "namePlaceholder": "Цель миссии?..",
+    "descriptionPlaceholder": "План полёта...",
+    "descriptionLabel": "План полёта",
+    "statusLabel": "Фаза",
+    "drag": "Перетащить миссию",
+    "completedSection": "В журнале ({{count}})",
+    "showCompleted": "Открыть журнал миссий",
+    "hideCompleted": "Закрыть журнал миссий",
+    "status": {
+      "planning": "Прокладываем курс",
+      "in_progress": "В пути",
+      "paused": "Стандартная орбита",
+      "completed": "Миссия выполнена",
+      "cancelled": "Отозвана Флотом"
+    },
+    "cover": {
+      "choose": "Голозапись на обложку",
+      "remove": "Убрать голозапись",
+      "uploading": "Проецирую голограмму...",
+      "errorSize": "Голозапись слишком тяжёлая (макс. 2 МБ)",
+      "errorType": "Это не голозапись",
+      "errorUnrecognized": "Голопроектор не распознал формат",
+      "errorNetwork": "Канал потерян. Голозапись сохранена, передам, когда восстановится связь.",
+      "viewFull": "Развернуть голограмму"
+    },
+    "editName": "Уточнить миссию",
+    "notFound": "Миссия не найдена. Сенсоры молчат.",
+    "deleteConfirmName": "Миссию за борт?",
+    "addToFocus": "На экран!",
+    "removeFromFocus": "Убрать с экрана",
+    "emptyActive": "Активных миссий нет. Двигатели остывают.",
+    "emptyPaused": "Ни одной миссии на орбите.",
+    "emptyFinished": "Журнал миссий пуст."
+  },
+  "goalFilter": {
+    "active": "В пути",
+    "paused": "На орбите",
+    "finished": "Выполненные"
+  },
+  "focusGoalReplacementDialog": {
+    "title": "Заменить миссию на экране",
+    "message": "На экране уже две миссии. Какую убрать?"
+  },
+  "idea": {
+    "pageName": "Новые миры",
+    "namePlaceholder": "Какой мир открылся?..",
+    "descriptionPlaceholder": "Что показали сенсоры?..",
+    "empty": "Неизведанных миров нет. Пока.",
+    "drag": "Перетащить мир",
+    "deleteLabel": "Покинуть орбиту",
+    "deleteConfirmName": "Покинуть орбиту этого мира?"
+  },
+  "category": {
+    "empty": "Отсеков нет. Гуляем по пустому кораблю.",
+    "drag": "Перенести отсек",
+    "notFound": "Отсек не найден. На схеме корабля его нет.",
+    "editName": "Переименовать отсек",
+    "deleteLabel": "Задраить отсек"
+  },
+  "search": {
+    "placeholder": "Сканировать...",
+    "tasks": "Задания",
+    "goals": "Миссии",
+    "ideas": "Новые миры",
+    "noResults": "Сенсоры ничего не обнаружили. Крайне нелогично.",
+    "emptyQuery": "Задайте параметры сканирования"
+  },
+  "filter": {
+    "inbox": "Первый контакт",
+    "categories": "Отсеки",
+    "goals": "Миссии",
+    "focused_goals": "На экране",
+    "ideas": "Новые миры",
+    "tasks": "Задания",
+    "completed": "Журнал миссий",
+    "search": "Сканирование",
+    "memos": "Журнал капитана",
+    "deleted": "За бортом"
+  },
+  "settings": {
+    "name": "Машинное отделение",
+    "defaultBox": "Курс по умолчанию",
+    "fullSyncConfirmName": "Начать полную сверку данных?",
+    "fullSyncConfirmDescription": "Корабль и звёздная база сверят все записи. При расхождении верим тому, кто говорил последним.",
+    "fullSyncStepReuploadFiles": "Заново передаю голозаписи на базу",
+    "fullSyncStepUploadFiles": "Передаю новые голозаписи",
+    "fullSyncStepPush": "Отправляю телеметрию на базу",
+    "fullSyncStepPull": "Принимаю данные с базы",
+    "fullSyncStepDownloadFiles": "Принимаю голозаписи с базы",
+    "fullSyncSuccess": "Сверка завершена. Все системы в норме.",
+    "fullSyncError": "Сверка не удалась. Инженерный разбирается.",
+    "fullSyncStart": "Полная сверка данных",
+    "disconnectConfirmName": "Отключить телеметрию?",
+    "disconnectConfirmDescription": "Корабль перестанет выходить на связь с базой. Все записи останутся у Вас на борту.",
+    "menuOrderHint": "Тащите, чтобы изменить порядок. Выключенное исчезает с панели. Компьютер не возражает.",
+    "dayBoundary": "Начало вахты",
+    "dayBoundaryDescription": "Время начала Вашей вахты. Отложенные на завтра задания поступают в этот час.",
+    "sections": {
+      "tasks": "Задания",
+      "accountSync": "Связь со звёздной базой"
+    }
+  },
+  "selector": {
+    "goal": "Миссия",
+    "category": "Отсек",
+    "hide": "Маскировка",
+    "noGoal": "Вне миссий",
+    "noCategory": "Вне отсеков"
+  },
+  "repeat": {
+    "none": "Разовое задание"
+  },
+  "taskEdit": {
+    "tabChecklist": "Директивы",
+    "tabChecklistProgress": "Директивы ({{completed}}/{{total}})",
+    "fieldDescription": "Журнал",
+    "fieldBox": "Курс",
+    "fieldRepeat": "Патруль",
+    "descriptionPlaceholder": "Дополнить журнал...",
+    "newChecklistItemPlaceholder": "Новая директива...",
+    "activeSection": "К исполнению ({{count}})",
+    "doneSection": "Исполнено ({{count}})",
+    "deleteConfirmName": "Задание за борт?",
+    "duplicateButton": "Реплицировать задание"
+  },
+  "theme": {
+    "system": "По корабельному времени",
+    "light": "Свет звёзд",
+    "dark": "Открытый космос"
+  },
+  "taskDetail": {
+    "emptyState": "Выберите задание для доклада",
+    "delete": "За борт"
+  },
+  "memo": {
+    "pageName": "Журнал капитана",
+    "empty": "Записей нет. Звёздная дата не ждёт.",
+    "notFound": "В журнале такой записи нет."
+  },
+  "deleted": {
+    "pageName": "За бортом",
+    "empty": "За бортом чисто. Никого не теряли, капитан.",
+    "sectionEmpty": "Пусто. Космос как космос.",
+    "tasks": "Задания",
+    "goals": "Миссии",
+    "categories": "Отсеки",
+    "checklists": "Директивы",
+    "ideas": "Новые миры",
+    "checklistParent": "Задание: {{task}}",
+    "restoreAriaLabel": "Поднять на борт {{name}}",
+    "purgeButton": "Отпустить в дрейф",
+    "purgeConfirmName": "Отпустить всё в дрейф?",
+    "purgeConfirmMessage": "Обратной дороги нет: вулканцы никогда не блефуют. Записи исчезнут с сервера и со всех Ваших устройств.",
+    "purgeConfirmCount": "В дрейф уйдёт: {{items}}",
+    "purgeCountTasks_one": "{{count}} задание",
+    "purgeCountTasks_few": "{{count}} задания",
+    "purgeCountTasks_many": "{{count}} заданий",
+    "purgeCountGoals_one": "{{count}} миссия",
+    "purgeCountGoals_few": "{{count}} миссии",
+    "purgeCountGoals_many": "{{count}} миссий",
+    "purgeCountCategories_one": "{{count}} отсек",
+    "purgeCountCategories_few": "{{count}} отсека",
+    "purgeCountCategories_many": "{{count}} отсеков",
+    "purgeCountChecklistItems_one": "{{count}} директива",
+    "purgeCountChecklistItems_few": "{{count}} директивы",
+    "purgeCountChecklistItems_many": "{{count}} директив",
+    "purgeCountIdeas_one": "{{count}} мир",
+    "purgeCountIdeas_few": "{{count}} мира",
+    "purgeCountIdeas_many": "{{count}} миров",
+    "purgeConfirm": "Отпустить в дрейф",
+    "purgeError": "Не вышло. Они всё ещё за бортом.",
+    "purgingInProgress": "Отпускаю в дрейф..."
+  },
+  "sync": {
+    "syncing": "Передаю телеметрию...",
+    "synced": "Телеметрия принята",
+    "noConnection": "Канал потерян",
+    "serverError": "Сбой на приёмнике",
+    "projectPaused": "Передача приостановлена",
+    "alertTitle": "Сбой канала"
+  },
+  "error": {
+    "title": "Щиты пробиты",
+    "description": "Неизвестная аномалия. Инженерный рекомендует перезапуск варп-ядра.",
+    "reload": "Перезапустить ядро"
+  },
+  "commandBar": {
+    "placeholder": {
+      "inbox": "Кто на связи?..",
+      "today": "Что прямо по курсу?..",
+      "week": "В ближний космос...",
+      "later": "В глубокий космос...",
+      "goal": "Новая миссия...",
+      "idea": "Новый мир...",
+      "category": "Новый отсек..."
+    },
+    "filterByBox": "Фильтр по курсу",
+    "toggleHiddenItems": "Показать/скрыть замаскированное"
+  },
+  "attachment": {
+    "empty": "Голозаписей нет. Голопалуба пустует.",
+    "confirmDelete": "Стереть голозапись?",
+    "confirmDeleteMessage": "Голозаписи не восстанавливаются.",
+    "lightbox": {
+      "previewNotAvailable": "Голопроектор такое не выведет. Скачивайте.",
+      "loadError": "Голозапись не загрузилась. Проектор барахлит."
+    },
+    "attach": {
+      "button": "Прикрепить голозапись",
+      "errorSize": "Голозапись слишком тяжёлая (макс. 5 МБ)",
+      "errorType": "Голопроектор такой формат не примет",
+      "errorUnrecognized": "Голопроектор не распознал формат"
+    },
+    "dropZone": {
+      "hint": "Телепортируйте голозаписи сюда"
+    }
+  },
+  "share": {
+    "inviteMessage": "Космос — последний рубеж. Прокрастинация — нет. Попробуй Clear Progress!"
+  },
+  "pwa": {
+    "newVersionAvailable": "Новая версия. Сопротивление бесполезно."
+  },
+  "onboarding": {
+    "goalName": "Пройти Академию Звёздного флота",
+    "goalDescription": "Выполните задания ниже. Когда освоитесь — доложите о выполнении миссии.",
+    "task1Name": "Проведите по заданию вправо или отметьте галочкой — задание выполнено",
+    "task2Name": "Нажмите на задание для быстрой корректировки",
+    "task3Name": "Нажмите на задание и держите — откроется полная диагностика",
+    "task4Name": "Загляните в Машинное отделение в боковой панели",
+    "task5Name": "Включите нужные пункты меню в Машинном отделении",
+    "dialogTitle": "Добро пожаловать на борт «Энтерпрайза»",
+    "dialogBody": "Начнём с учебной миссии? Создадим миссию с заданиями, на которых можно освоить основные манёвры.",
+    "dialogAccept": "Вперёд!",
+    "dialogDecline": "Я уже капитан"
+  }
+}
