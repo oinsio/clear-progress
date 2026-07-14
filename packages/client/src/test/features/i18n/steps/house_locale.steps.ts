@@ -6,95 +6,19 @@ import { expect, type TestContext } from "vitest";
 import houseLocale from "@/locales/house.json";
 import ruLocale from "@/locales/ru.json";
 import { HOUSE_LOCALE_INVENTORY } from "./house_locale.inventory";
+import {
+  ACCESSIBILITY_ONLY_KEYS,
+  ACCESSIBILITY_ONLY_PREFIXES,
+  extractPlaceholders,
+  flattenLocale,
+  isForbiddenKey,
+  LOWERCASE_ADDRESS_REGEX,
+  REPAIR_AND_CONFIG_KEYS,
+  REPAIR_AND_CONFIG_PREFIXES,
+  withoutMetaKeys,
+} from "./locale_content.helpers";
 
 const feature = await loadFeature("../house_locale.feature");
-
-const META_KEY_PREFIX = "_meta.";
-
-// FR4: accessibility-only keys that must fall back to the base locale.
-// Exception (allowed to be themed): deleted.restoreAriaLabel.
-const ACCESSIBILITY_ONLY_PREFIXES = ["alert.", "attachment.list."];
-const ACCESSIBILITY_ONLY_KEYS = [
-  "attachment.lightbox.dialogLabel",
-  "attachment.lightbox.close",
-  "taskEdit.checkItemMark",
-  "taskEdit.checkItemUnmark",
-  "taskEdit.checkItemDelete",
-  "taskEdit.dragChecklist",
-  "taskEdit.checklistBadgeAriaLabel",
-  "taskEdit.attachmentsBadgeAriaLabel",
-  "settings.menuOrderDragHandle",
-  "settings.menuOrderToggle",
-  "settings.settingsAriaLabel",
-  "settings.loginAriaLabel",
-  "settings.avatarAlt",
-  "sync.ariaLabel",
-  "filter.closeSidebar",
-];
-
-// FR5: data-repair and configuration instructions that must stay literal.
-const REPAIR_AND_CONFIG_PREFIXES = [
-  "sync.alert.",
-  "settings.server.",
-  "projectPausedDialog.",
-  "auth.",
-  "sidebar.",
-];
-const REPAIR_AND_CONFIG_KEYS = [
-  "repeat.ruleNotRecognized",
-  "repeat.invalidRuleAlertTitle",
-  "repeat.invalidRuleAlertMessage",
-  "repeat.invalidRuleAlertFix",
-];
-
-const PLACEHOLDER_REGEX = /\{\{(\w+)\}\}/g;
-
-// FR8: lowercase standalone «вы»/«ваш» forms are forbidden.
-const LOWERCASE_ADDRESS_REGEX =
-  /(?<![а-яёА-ЯЁ])(вы|вас|вам|вами|ваш|ваша|ваше|ваши|вашу|вашего|вашей|ваших|вашем|вашим)(?![а-яё])/u;
-
-function flattenLocale(
-  localeObject: Record<string, unknown>,
-  prefix = "",
-): Record<string, string> {
-  const flatMap: Record<string, string> = {};
-  for (const [key, value] of Object.entries(localeObject)) {
-    const fullKey = prefix ? `${prefix}.${key}` : key;
-    if (typeof value === "object" && value !== null) {
-      Object.assign(
-        flatMap,
-        flattenLocale(value as Record<string, unknown>, fullKey),
-      );
-    } else {
-      flatMap[fullKey] = String(value);
-    }
-  }
-  return flatMap;
-}
-
-function withoutMetaKeys(
-  flatMap: Record<string, string>,
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(flatMap).filter(([key]) => !key.startsWith(META_KEY_PREFIX)),
-  );
-}
-
-function extractPlaceholders(value: string): string[] {
-  return [...value.matchAll(PLACEHOLDER_REGEX)]
-    .map((placeholderMatch) => placeholderMatch[1])
-    .sort();
-}
-
-function isForbiddenKey(
-  key: string,
-  exactKeys: string[],
-  prefixes: string[],
-): boolean {
-  return (
-    exactKeys.includes(key) || prefixes.some((prefix) => key.startsWith(prefix))
-  );
-}
 
 type LocaleValueRow = { key: string; value: string };
 type Context = Record<string, never>;
