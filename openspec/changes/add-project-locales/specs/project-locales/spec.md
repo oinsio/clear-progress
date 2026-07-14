@@ -18,7 +18,7 @@ Content rules for the twin GTD-terminology dialect locales `packages/client/src/
 
 ### Requirement: Override set is exactly the term-mentioning keys (FR2)
 
-The override set of each dialect SHALL be exactly the base keys whose value matches the term regex — `/\bgoals?\b/i` for `en.json`, `/\bцел(ь|ью|и|ей|ям|ями|ях)\b/i` for `ru.json` — as enumerated by the normative inventories below. Placeholder names such as `{{goalName}}` do not match (word boundary) and SHALL NOT trigger an override by themselves.
+The override set of each dialect SHALL be exactly the base keys whose value matches the term regex — `/\bgoals?\b/i` for `en.json`, `/(?<![а-яёА-ЯЁ])цел(ь|ью|и|ей|ям|ями|ях)(?![а-яё])/iu` for `ru.json` — as enumerated by the normative inventories below. The Russian regex uses Cyrillic-aware lookaround boundaries because JavaScript `\b` is ASCII-only and never matches around Cyrillic (matching the existing `LOWERCASE_ADDRESS_REGEX` convention in `locale_content.helpers.ts`). Placeholder names such as `{{goalName}}` do not match (word boundary) and SHALL NOT trigger an override by themselves.
 
 #### Scenario: Inventory matches the derivation rule
 - **WHEN** the term regex is applied to every value of the base file
