@@ -6,14 +6,19 @@
     "baseLanguage": "en",
     "emoji": "🇺🇸"
   },
-  "nav": {
-    "inbox": "Inbox",
-    "today": "Today",
-    "tasks": "Tasks",
-    "goals": "Goals",
-    "ideas": "Ideas",
-    "search": "Search",
-    "ariaLabel": "Navigation"
+  "common": {
+    "cancel": "Cancel",
+    "back": "Back",
+    "delete": "Delete",
+    "close": "Close",
+    "next": "Next",
+    "save": "Save",
+    "loading": "Loading...",
+    "name": "Name",
+    "taskCount": "Tasks:",
+    "details": "Details",
+    "attachments": "Attachments",
+    "saveName": "Save name"
   },
   "box": {
     "inbox": "Inbox",
@@ -23,8 +28,6 @@
     "all": "All"
   },
   "task": {
-    "addPlaceholder": "Task in «{{box}}»",
-    "searchPlaceholder": "Search tasks...",
     "empty": "No tasks",
     "emptyCompleted": "No completed tasks",
     "emptyInbox": "No tasks",
@@ -45,30 +48,16 @@
     "restore": "Restore",
     "restoreConfirm": "Restore task?",
     "selectDate": "Select date",
-    "cancel": "Cancel",
     "drag": "Drag task",
-    "add": "Add task",
     "appearDate": "Will appear on {{date}}",
-    "newName": "New task",
     "namePlaceholder": "Task name...",
-    "create": "Create",
-    "createLabel": "Create task",
     "completedToday": "Completed: Today {{time}}",
     "completedYesterday": "Completed: Yesterday {{time}}",
     "completedDate": "Completed: {{date}} {{time}}",
     "today": "Today",
     "unhide": "Unhide",
     "unhideTask": "Unhide task",
-    "yesterday": "Yesterday",
-    "tabs": {
-      "attachments": "Attachments"
-    },
-    "attachments": {
-      "empty": "No attachments",
-      "confirmDelete": "Delete this attachment?",
-      "confirmDeleteMessage": "This action cannot be undone.",
-      "confirmDeleteButton": "Delete"
-    }
+    "yesterday": "Yesterday"
   },
   "section": {
     "inbox": "Inbox",
@@ -86,15 +75,9 @@
     "empty": "No goals yet",
     "namePlaceholder": "Goal name",
     "descriptionPlaceholder": "Add description",
-    "nameLabel": "Name",
     "descriptionLabel": "Description",
     "statusLabel": "Status",
-    "cancel": "Cancel",
-    "close": "Close",
     "drag": "Drag goal",
-    "add": "Add goal",
-    "addTask": "Add task",
-    "taskPlaceholder": "Task name...",
     "completedSection": "Completed ({{count}})",
     "showCompleted": "Show completed",
     "hideCompleted": "Hide completed",
@@ -113,31 +96,13 @@
       "errorType": "Please select an image",
       "errorUnrecognized": "Could not determine file format. The file may be corrupted.",
       "errorNetwork": "Upload failed. The file is saved locally and will be uploaded when connection is restored.",
-      "uploadError": "Failed to upload cover. Please try again.",
-      "viewFull": "View cover image",
-      "closeLightbox": "Close cover preview"
+      "viewFull": "View cover image"
     },
-    "expandDescription": "Expand description",
-    "collapseDescription": "Collapse description",
     "editName": "Edit goal",
-    "save": "Save",
-    "delete": "Delete",
-    "back": "Back",
     "notFound": "Goal not found",
     "deleteConfirmName": "Delete goal?",
-    "taskCount": "Tasks:",
     "addToFocus": "Add to focus",
     "removeFromFocus": "Remove from focus",
-    "tabs": {
-      "details": "Details",
-      "attachments": "Attachments"
-    },
-    "attachments": {
-      "empty": "No attachments",
-      "confirmDelete": "Delete this attachment?",
-      "confirmDeleteMessage": "This action cannot be undone.",
-      "confirmDeleteButton": "Delete"
-    },
     "expandDetails": "Expand details",
     "collapseDetails": "Collapse details",
     "emptyActive": "No active goals",
@@ -153,68 +118,32 @@
   "focusGoalReplacementDialog": {
     "title": "Replace focused goal",
     "message": "You already have 2 focused goals. Which one would you like to replace?",
-    "replaceGoal": "Replace {{goalName}}",
-    "cancel": "Cancel"
+    "replaceGoal": "Replace {{goalName}}"
   },
   "idea": {
     "pageName": "Ideas",
-    "add": "Add idea",
     "namePlaceholder": "Idea name",
     "descriptionPlaceholder": "Idea description",
     "empty": "No ideas",
     "drag": "Drag idea",
-    "editName": "Edit idea",
     "edit": "Edit",
-    "nameLabel": "Name",
     "descriptionLabel": "Description",
-    "save": "Save",
-    "delete": "Delete",
-    "cancel": "Cancel",
-    "close": "Close",
     "deleteLabel": "Delete idea",
-    "saveLabel": "Save changes",
-    "cancelLabel": "Cancel changes",
-    "deleteConfirmName": "Delete idea?",
-    "deleteConfirmCancel": "Cancel",
-    "deleteConfirmOk": "Delete",
-    "addTask": "Add task",
-    "taskPlaceholder": "Task name...",
-    "attachments": {
-      "empty": "No attachments",
-      "confirmDelete": "Delete this attachment?",
-      "confirmDeleteMessage": "This action cannot be undone.",
-      "confirmDeleteButton": "Delete"
-    }
+    "deleteConfirmName": "Delete idea?"
   },
   "context": {
     "empty": "No contexts yet",
-    "namePlaceholder": "Context name...",
-    "nameLabel": "Context name",
-    "taskPlaceholder": "Task name...",
-    "taskCount": "Tasks:",
     "drag": "Drag context",
-    "add": "Add context",
-    "addTask": "Add task",
-    "back": "Back",
     "notFound": "Context not found",
     "editName": "Edit context",
-    "deleteLabel": "Delete context",
-    "saveName": "Save name"
+    "deleteLabel": "Delete context"
   },
   "category": {
     "empty": "No categories yet",
-    "namePlaceholder": "Category name...",
-    "nameLabel": "Category name",
-    "taskPlaceholder": "Task name...",
-    "taskCount": "Tasks:",
     "drag": "Drag category",
-    "add": "Add category",
-    "addTask": "Add task",
-    "back": "Back",
     "notFound": "Category not found",
     "editName": "Edit category",
-    "deleteLabel": "Delete category",
-    "saveName": "Save name"
+    "deleteLabel": "Delete category"
   },
   "search": {
     "placeholder": "Tasks, goals and ideas...",
@@ -239,13 +168,11 @@
     "ideas": "Ideas",
     "tasks": "Tasks",
     "completed": "Completed",
-    "close": "Close panel",
     "open": "Open panel",
     "closeSidebar": "Close sidebar",
     "search": "Search",
     "memos": "Memos",
-    "deleted": "Deleted",
-    "showHidden": "Show hidden tasks"
+    "deleted": "Deleted"
   },
   "settings": {
     "name": "Settings",
@@ -255,10 +182,7 @@
     "language": "Language",
     "panelLeft": "Left",
     "panelRight": "Right",
-    "panelAlwaysOpen": "Always expanded",
     "focusMode": "Focus mode",
-    "focusWeaker": "Weaker",
-    "focusStronger": "Stronger",
     "filterBarPosition": "Filter position",
     "filterBarBottom": "Bottom",
     "filterBarTop": "Top",
@@ -269,14 +193,6 @@
     "loginAriaLabel": "Configure server",
     "settingsAriaLabel": "Settings",
     "avatarAlt": "User avatar",
-    "syncSection": "Sync",
-    "syncConnected": "Connected",
-    "syncNoAuth": "Connected (sign in required)",
-    "syncNotConnected": "Not connected",
-    "syncConfigure": "Configure",
-    "syncConnect": "Connect",
-    "syncDisconnect": "Disconnect",
-    "fullSync": "Full sync",
     "fullSyncConfirmName": "Start full sync?",
     "fullSyncConfirmDescription": "All data will be synced between your device and the server. Conflicts are resolved by last-modified time.",
     "fullSyncStepReuploadFiles": "Re-uploading files to server",
@@ -286,13 +202,10 @@
     "fullSyncStepDownloadFiles": "Downloading files from server",
     "fullSyncSuccess": "Sync complete",
     "fullSyncError": "Sync failed",
-    "fullSyncCancel": "Cancel",
-    "fullSyncClose": "Close",
     "fullSyncStart": "Sync",
     "disconnectConfirmName": "Disconnect sync?",
     "disconnectConfirmDescription": "The app will stop syncing with the server. Local data will be preserved.",
     "disconnectConfirm": "Disconnect",
-    "disconnectCancel": "Cancel",
     "theme": "Theme",
     "interfaceScale": "Interface Size",
     "scale": {
@@ -309,7 +222,6 @@
     "dayBoundaryHours": "Hours",
     "dayBoundaryMinutes": "Minutes",
     "dayBoundaryDescription": "Time when your day starts. Tasks deferred to tomorrow will appear at this time.",
-    "detailPanelPinned": "Pin detail panel",
     "pinDetailPanel": "Pin detail panel",
     "unpinDetailPanel": "Unpin detail panel",
     "sections": {
@@ -325,7 +237,6 @@
       "anonKey": "Anon Key",
       "anonKeyDescription": "Find the Anon Key in your Supabase Dashboard under Settings → API.",
       "anonKeyPlaceholder": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "cancel": "Cancel",
       "chooseAuthMethod": "Choose a sign-in method to continue.",
       "chooseBackendHint": "Choose a server for syncing your data.",
       "connect": "Connect",
@@ -334,15 +245,12 @@
       "connectionError": "Connection failed. Check URL and try again.",
       "disconnect": "Disconnect",
       "fullSync": "Full sync",
-      "initError": "Initialization failed.",
-      "initializing": "Initializing...",
       "noProviders": "No OAuth providers configured. Enable providers in your Supabase Dashboard.",
       "oauthProvider": "OAuth provider",
       "projectUrl": "Supabase Project URL or ID",
       "projectUrlDescription": "Enter the Project URL or ID from your Supabase Dashboard.",
       "projectUrlPlaceholder": "https://xxxxx.supabase.co or project ID",
       "signInRequired": "Sign-in required",
-      "timeoutError": "Connection timed out.",
       "title": "Server",
       "typeSupabase": "Supabase",
       "emailLabel": "Email address",
@@ -352,7 +260,6 @@
       "verify": "Verify",
       "resend": "Resend",
       "resendCountdown": "Resend ({{time}})",
-      "back": "Back",
       "otpErrorInvalid": "Invalid or expired code",
       "otpErrorNetwork": "Network error. Please try again.",
       "otpErrorRateLimit": "Too many attempts. Please wait.",
@@ -375,14 +282,9 @@
     "invalidRuleAlertTitle": "Repeat rule issue",
     "invalidRuleAlertMessage": "The repeat rule could not be recognized, so no recurring copy was created.",
     "invalidRuleAlertFix": "Open the task and reconfigure the repeat rule.",
-    "invalidRulePullAlertTitle": "Repeat rule issues found",
-    "invalidRulePullAlertMessage": "Some tasks received during sync have unrecognized repeat rules.",
-    "invalidRulePullAlertFix": "Open these tasks and reconfigure their repeat rules.",
     "fixed": "On schedule",
     "afterCompletion_one": "{{count}} day after completion",
     "afterCompletion_other": "{{count}} days after completion",
-    "frequency": "Frequency",
-    "interval": "Interval",
     "intervalDays_one": "Interval: {{count}} day",
     "intervalDays_other": "Interval: {{count}} days",
     "intervalWeeks_one": "Interval: {{count}} week",
@@ -401,7 +303,6 @@
     "dayOfMonthLabel_ordinal_two": "Day {{count}}nd of every month",
     "dayOfMonthLabel_ordinal_few": "Day {{count}}rd of every month",
     "dayOfMonthLabel_ordinal_other": "Day {{count}}th of every month",
-    "monthAndDay": "Date",
     "month": "Month",
     "delayDays": "Days after",
     "targetBox": "Put to",
@@ -426,8 +327,6 @@
     "everyNMonths_other": "Every {{count}} months (day {{day}})",
     "everyNYears_one": "Every {{count}} year ({{date}})",
     "everyNYears_other": "Every {{count}} years ({{date}})",
-    "weeklyDays": "On {{days}}",
-    "next": "Next",
     "apply": "Apply",
     "month1": "January",
     "month2": "February",
@@ -464,23 +363,18 @@
     "yearlyDate_ordinal_other": "{{month}} {{count}}th",
     "confirmChangeTitle": "Repeat rule change",
     "confirmChangeMessage": "Next date: {{nextDate}}",
-    "confirmChangeButton": "Save",
-    "nextDateLabel": "Next",
+    "confirmChangeButton": "Change",
+    "nextDateLabel": "Next date",
     "nextDateAfterCompletion": "after completion",
     "upcomingDatesLabel": "Upcoming dates",
     "today": "today",
     "tomorrow": "tomorrow"
   },
   "taskEdit": {
-    "name": "Edit task",
-    "close": "Close",
-    "back": "Back",
-    "tabDetails": "Details",
     "tabChecklist": "Checklist",
     "tabChecklistProgress": "Checklist ({{completed}}/{{total}})",
     "checklistBadgeAriaLabel": "{{completed}} of {{total}} completed",
     "attachmentsBadgeAriaLabel": "{{count}} attachments",
-    "fieldName": "Name",
     "fieldDescription": "Description",
     "fieldBox": "Box",
     "fieldRepeat": "Repeat",
@@ -490,15 +384,7 @@
     "newChecklistItemPlaceholder": "Enter new item...",
     "activeSection": "Active ({{count}})",
     "doneSection": "Done ({{count}})",
-    "delete": "Delete",
-    "cancel": "Cancel",
-    "save": "Save",
-    "deleteLabel": "Delete task",
-    "cancelLabel": "Cancel",
-    "saveLabel": "Save",
     "deleteConfirmName": "Delete task?",
-    "deleteConfirmCancel": "Cancel",
-    "deleteConfirmOk": "Delete",
     "checkItemMark": "Check: {{name}}",
     "checkItemUnmark": "Uncheck: {{name}}",
     "checkItemDelete": "Delete: {{name}}",
@@ -520,23 +406,18 @@
     "dark": "Dark"
   },
   "taskDetail": {
-    "empty": "Select a task",
-    "emptyHint": "Click on a task to view its details",
     "emptyState": "Select a task to see its details",
     "pin": "Pin detail panel",
     "unpin": "Unpin detail panel",
-    "delete": "Delete task",
-    "close": "Close"
+    "delete": "Delete task"
   },
   "memo": {
     "pageName": "Memos",
     "empty": "No memos",
-    "notFound": "Memo not found",
-    "back": "Back"
+    "notFound": "Memo not found"
   },
   "deleted": {
     "pageName": "Deleted",
-    "loading": "Loading...",
     "empty": "No deleted records",
     "sectionEmpty": "Nothing deleted",
     "tasks": "Tasks",
@@ -546,15 +427,24 @@
     "checklists": "Checklists",
     "ideas": "Ideas",
     "checklistParent": "Task: {{task}}",
-    "restore": "Restore",
     "restoreAriaLabel": "Restore {{name}}",
     "purgeButton": "Purge Forever",
     "purgeConfirmName": "Delete Forever?",
     "purgeConfirmMessage": "This action cannot be undone. All deleted records will be permanently removed from the server and all devices.",
-    "purgeConfirmCount": "Will delete: {{tasks}} tasks, {{goals}} goals, {{contexts}} contexts, {{categories}} categories, {{checklist_items}} checklist items, {{ideas}} ideas",
-    "purgeCancel": "Cancel",
+    "purgeConfirmCount": "Will delete: {{items}}",
+    "purgeCountTasks_one": "{{count}} task",
+    "purgeCountTasks_other": "{{count}} tasks",
+    "purgeCountGoals_one": "{{count}} goal",
+    "purgeCountGoals_other": "{{count}} goals",
+    "purgeCountContexts_one": "{{count}} context",
+    "purgeCountContexts_other": "{{count}} contexts",
+    "purgeCountCategories_one": "{{count}} category",
+    "purgeCountCategories_other": "{{count}} categories",
+    "purgeCountChecklistItems_one": "{{count}} checklist item",
+    "purgeCountChecklistItems_other": "{{count}} checklist items",
+    "purgeCountIdeas_one": "{{count}} idea",
+    "purgeCountIdeas_other": "{{count}} ideas",
     "purgeConfirm": "Delete Forever",
-    "purgeSuccess": "Deleted: {{tasks}} tasks, {{goals}} goals, {{contexts}} contexts, {{categories}} categories, {{checklist_items}} checklist items, {{ideas}} ideas",
     "purgeError": "Failed to purge records",
     "purgingInProgress": "Purging..."
   },
@@ -563,32 +453,18 @@
     "synced": "Synced",
     "noConnection": "No connection",
     "serverError": "Server error",
-    "unauthorized": "Not authorized",
-    "projectPaused": "Project paused",
+    "projectPaused": "Supabase paused",
     "ariaLabel": "Sync",
     "alertTitle": "Sync issue",
     "alertUnderstood": "Understood",
-    "fkCleared": "Link to {{entityType}} \"{{name}}\" was cleared because it couldn't sync",
-    "fkClearedAdvice": "Check {{entityType}} and re-link",
-    "checklistOrphaned": "Checklist item was deleted because the task couldn't sync",
-    "checklistOrphanedAdvice": "Check the task and add the item again",
-    "nameUntitled": "Record had no name — set to \"Untitled\"",
-    "nameUntitledAdvice": "Enter a name for the record",
-    "repeatRuleCorrupted": "Repeat rule was corrupted and has been reset",
-    "repeatRuleCorruptedAdvice": "Set up the repeat rule again",
-    "rejectedBox": "List value is not supported by server",
-    "rejectedBoxAdvice": "Edit the record and choose a valid value, or update the app",
-    "rejectedStatus": "Status value is not supported by server",
-    "rejectedStatusAdvice": "Edit the record and choose a valid value, or update the app",
-    "rejectedEntityType": "Attachment type is not supported by server",
-    "rejectedEntityTypeAdvice": "Edit the record and choose a valid value, or update the app",
-    "rejectedCorrupted": "Record is corrupted and cannot be synced",
-    "rejectedCorruptedAdvice": "Delete the record and create a new one"
+    "alert": {
+      "repeat_rule_reset": "Repeat rule was corrupted and has been reset. Set up the repeat rule again.",
+      "name_set_untitled": "Record had no name — set to \"Untitled\". Enter a name for the record.",
+      "checklist_item_deleted": "Checklist item was deleted because the task couldn't sync. Check the task and add the item again."
+    }
   },
   "alert": {
     "counter": "{{current}}/{{total}}",
-    "next": "Next",
-    "back": "Back",
     "positionNext": "Alert {{current}} of {{total}}, go to next",
     "positionBack": "Alert {{current}} of {{total}}, go to previous",
     "positionUnderstood": "Alert {{current}} of {{total}}, dismiss all"
@@ -596,17 +472,10 @@
   "projectPausedDialog": {
     "title": "Supabase Project Paused",
     "message": "Your Supabase project has been paused due to inactivity. Open the Supabase Dashboard and restore the project. Sync will resume automatically.",
-    "openDashboard": "Open Dashboard",
-    "close": "Close"
+    "openDashboard": "Open Dashboard"
   },
   "auth": {
-    "signInButton": "Sign in with Google",
-    "signOutButton": "Sign out",
-    "signedInAs": "Signed in as {{email}}",
-    "errorSignIn": "Failed to sign in. Please try again.",
-    "sessionExpired": "Session expired. Sign in again to sync.",
-    "accountSection": "Account",
-    "signInRequired": "Sign in with Google to initialize storage."
+    "signInButton": "Sign in with Google"
   },
   "error": {
     "title": "Something went wrong",
@@ -629,6 +498,9 @@
     "create": "Create"
   },
   "attachment": {
+    "empty": "No attachments",
+    "confirmDelete": "Delete this attachment?",
+    "confirmDeleteMessage": "This action cannot be undone.",
     "list": {
       "preview": "Preview {{filename}}",
       "download": "Download {{filename}}",
@@ -639,7 +511,6 @@
       "close": "Close preview",
       "previewNotAvailable": "Preview is not available for this file type",
       "download": "Download",
-      "loading": "Loading...",
       "loadError": "Failed to load file"
     },
     "attach": {
@@ -653,13 +524,9 @@
       "rejected": "Rejected: {{filenames}}"
     }
   },
-  "confirmDialog": {
-    "cancel": "Cancel"
-  },
   "share": {
     "title": "Share app",
     "description": "Tell your friends about Clear Progress",
-    "button": "Share",
     "copyLinkButton": "Copy link",
     "inviteMessage": "Try Clear Progress — an app for managing tasks, goals, and ideas!",
     "linkCopied": "Link copied to clipboard",
@@ -667,9 +534,7 @@
     "ok": "OK"
   },
   "pwa": {
-    "appUpdated": "App updated",
     "newVersionAvailable": "New version available",
-    "ok": "OK",
     "update": "Update"
   },
   "onboarding": {

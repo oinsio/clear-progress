@@ -115,7 +115,7 @@ export default function GoalDetailPage() {
           <header className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
             <button
               type="button"
-              aria-label={state.t("goal.back")}
+              aria-label={state.t("common.back")}
               onClick={() => state.navigate(ROUTES.GOALS)}
               className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             >

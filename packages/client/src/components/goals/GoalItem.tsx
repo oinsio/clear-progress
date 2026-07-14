@@ -88,7 +88,7 @@ export function GoalItem({
               data-testid="goal-task-count"
               className="text-xs text-gray-400 mt-0.5 block"
             >
-              {t("goal.taskCount")} {taskCount}
+              {t("common.taskCount")} {taskCount}
             </span>
           )}
           {isFinished && goal.updated_at && (

@@ -44,7 +44,7 @@ export function ConfirmDisconnectDialog({
             onClick={onClose}
             className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
           >
-            {t("settings.disconnectCancel")}
+            {t("common.cancel")}
           </button>
           <button
             data-testid="disconnect-confirm-btn"

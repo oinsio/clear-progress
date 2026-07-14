@@ -198,7 +198,7 @@ describe("ServerSupabaseForm", () => {
     renderForm();
     expect(screen.getByText("settings.server.projectUrl")).toBeInTheDocument();
     expect(screen.getByText("settings.server.anonKey")).toBeInTheDocument();
-    expect(screen.getByText("settings.server.cancel")).toBeInTheDocument();
+    expect(screen.getByText("common.cancel")).toBeInTheDocument();
     expect(screen.getByText("settings.server.connect")).toBeInTheDocument();
   });
 

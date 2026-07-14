@@ -72,5 +72,26 @@ export function getBaseLanguageCodes(): string[] {
   return Array.from(new Set(locales.map((locale) => locale.baseLanguage)));
 }
 
+type PluralRuleResolver = {
+  getRule: (code: string, options?: Record<string, unknown>) => unknown;
+};
+
+/**
+ * Implements FR10 of rework-house-locale.
+ * Dialect codes (e.g. "house") are not valid BCP 47 languages, so
+ * Intl.PluralRules degrades them to root rules where every count is "other",
+ * making plural overrides in dialect files unreachable. Resolve plural rules
+ * through the dialect's base language instead.
+ */
+export function applyDialectPluralRules(i18nInstance: {
+  services: { pluralResolver?: PluralRuleResolver };
+}): void {
+  const pluralResolver = i18nInstance.services.pluralResolver;
+  if (!pluralResolver) return;
+  const resolveRuleByCode = pluralResolver.getRule.bind(pluralResolver);
+  pluralResolver.getRule = (code, options) =>
+    resolveRuleByCode(getLocaleByCode(code)?.baseLanguage ?? code, options);
+}
+
 export type { LocaleMeta };
 export { localeResources, locales };

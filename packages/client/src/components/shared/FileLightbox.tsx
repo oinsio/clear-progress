@@ -176,11 +176,7 @@ function PdfPreview({ url }: { url: string }) {
       <Document
         file={url}
         onLoadSuccess={onDocumentLoadSuccess}
-        loading={
-          <div className="p-8 text-gray-500">
-            {t("attachment.lightbox.loading")}
-          </div>
-        }
+        loading={<div className="p-8 text-gray-500">{t("common.loading")}</div>}
         error={
           <div className="p-8 text-red-600">
             {t("attachment.lightbox.loadError")}
@@ -232,7 +228,7 @@ function TextPreview({ url }: { url: string }) {
   if (isLoading) {
     return (
       <div className="rounded-lg bg-white p-8 text-gray-500">
-        {t("attachment.lightbox.loading")}
+        {t("common.loading")}
       </div>
     );
   }

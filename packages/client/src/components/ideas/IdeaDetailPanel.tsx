@@ -87,7 +87,7 @@ export function IdeaDetailPanel({
         <button
           type="button"
           onClick={onClose}
-          aria-label={t("idea.close")}
+          aria-label={t("common.close")}
           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
         >
           <X className="w-[1.125rem] h-[1.125rem]" />
@@ -100,7 +100,7 @@ export function IdeaDetailPanel({
           {/* Name */}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">
-              {t("idea.nameLabel")}
+              {t("common.name")}
             </label>
             <textarea
               ref={nameTextareaRef}
@@ -149,19 +149,19 @@ export function IdeaDetailPanel({
               type="button"
               data-testid="idea-detail-delete-cancel"
               onClick={handleDeleteCancel}
-              aria-label={t("idea.deleteConfirmCancel")}
+              aria-label={t("common.cancel")}
               className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              {t("idea.deleteConfirmCancel")}
+              {t("common.cancel")}
             </button>
             <button
               type="button"
               data-testid="idea-detail-delete-confirm-btn"
               onClick={handleDeleteConfirm}
-              aria-label={t("idea.deleteConfirmOk")}
+              aria-label={t("common.delete")}
               className="flex-1 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
             >
-              {t("idea.deleteConfirmOk")}
+              {t("common.delete")}
             </button>
           </div>
         </div>

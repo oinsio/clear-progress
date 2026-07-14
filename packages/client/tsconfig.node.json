@@ -27,6 +27,7 @@
     "vite.config.ts",
     "tailwind.config.ts",
     "postcss.config.js",
-    "stryker.config.mjs"
+    "stryker.config.mjs",
+    "scripts"
   ]
 }

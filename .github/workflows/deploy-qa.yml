@@ -50,6 +50,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check i18n
+        run: pnpm i18n:check
+
       - name: Lint
         run: pnpm lint
 

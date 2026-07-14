@@ -114,7 +114,7 @@ When a locale has `baseLanguage` different from its `code`, i18next fallback SHA
 
 ### Requirement: Translation files are complete
 
-Every translation key present in any locale file MUST exist in all other locale files (excluding `_meta`). Nested keys are compared structurally.
+Every translation key present in any locale file MUST exist in all other locale files (excluding `_meta`). Nested keys are compared structurally. Additionally, every key referenced by production code via `t()` or `messageKey` MUST exist in all locale files.
 
 #### Scenario: All keys present in both locales
 - **GIVEN** ru.json has keys "nav.inbox", "nav.goals"
@@ -125,6 +125,55 @@ Every translation key present in any locale file MUST exist in all other locale 
 - **GIVEN** ru.json has key "nav.inbox"
 - **AND** en.json does not have key "nav.inbox"
 - **THEN** translation completeness check fails listing "nav.inbox" as missing in en
+
+#### Scenario: Self-healing alert keys exist in all locales
+- **WHEN** `healingRules.ts` references `sync.alert.repeat_rule_reset`, `sync.alert.name_set_untitled`, `sync.alert.checklist_item_deleted`
+- **THEN** all three keys SHALL exist in `en.json` and `ru.json`
+- **AND** each key SHALL contain a human-readable message describing what the self-healing action did
+
+#### Scenario: No unused keys remain in locale files
+- **WHEN** running `i18n:check`
+- **THEN** zero `unused` errors SHALL be reported
+- **AND** zero `override-orphans` errors SHALL be reported for `house.json`
+
+### Requirement: Common namespace for shared UI labels
+
+Locale files SHALL contain a `common` top-level namespace with shared UI labels that are used identically across multiple domain namespaces. Components SHALL reference `common.*` keys instead of duplicating the same label under each domain namespace.
+
+The `common` namespace SHALL include at minimum: `cancel`, `back`, `delete`, `close`, `next`, `save`, `loading`, `name`, `taskCount`, `details`, `attachments`.
+
+#### Scenario: Component uses common.cancel instead of domain-specific key
+- **WHEN** a component needs a "Cancel" button label
+- **THEN** it SHALL use `t("common.cancel")` instead of a domain-specific key like `t("goal.cancel")`
+
+#### Scenario: Common keys exist in all locale files
+- **WHEN** `en.json` contains `common.cancel`
+- **THEN** `ru.json` SHALL also contain `common.cancel` with the corresponding translation
+
+#### Scenario: Domain-specific keys replaced by common keys are removed
+- **WHEN** `common.cancel` is defined
+- **THEN** keys `task.cancel`, `goal.cancel`, `focusGoalReplacementDialog.cancel`, `idea.deleteConfirmCancel`, `settings.fullSyncCancel`, `settings.disconnectCancel`, `settings.server.cancel`, `taskEdit.deleteConfirmCancel`, `deleted.purgeCancel`, `confirmDialog.cancel` SHALL NOT exist in locale files
+
+#### Scenario: saveName keys replaced by common.saveName
+- **WHEN** `common.saveName` is defined
+- **THEN** keys `context.saveName` and `category.saveName` SHALL NOT exist in locale files
+- **AND** `EntityDetailLayout` consumers (`ContextDetailPage`, `CategoryDetailPage`) SHALL pass `"common.saveName"` via `i18nKeys.saveName`
+
+### Requirement: Dialect locales inherit base language plural rules
+
+Dialect locales (where `_meta.baseLanguage` differs from the locale code) SHALL select CLDR plural forms using the plural rules of their base language. Dialect codes are not valid BCP 47 languages, so `Intl.PluralRules` would otherwise degrade them to root rules where every count maps to `other`, making plural overrides in dialect files unreachable. The rule applies both to keys overridden in the dialect file and to keys resolved via fallback. # implements FR10 of rework-house-locale
+
+#### Scenario: Dialect plural override uses base language forms
+- **WHEN** translating a key overridden in "house" (baseLanguage "ru") with count 21
+- **THEN** the `_one` form of the house override is used (e.g. «21 пациент»)
+
+#### Scenario: Dialect fallback keys keep base language plural forms
+- **WHEN** translating a key absent from "house" (e.g. `repeat.intervalDays`) with count 3 in locale "house"
+- **THEN** the Russian `_few` form is used («Интервал: 3 дня»)
+
+#### Scenario: Base locales are unaffected
+- **WHEN** translating a plural key in locale "ru" or "en"
+- **THEN** plural forms are selected by that locale's own rules
 
 ### Requirement: Pluralization follows CLDR rules
 
@@ -166,3 +215,15 @@ System SHALL provide utility functions: `getLocaleByCode(code)` returns locale m
 - **GIVEN** locales with baseLanguage "en", "ru", "ru"
 - **WHEN** calling getBaseLanguageCodes
 - **THEN** returns ["en", "ru"] (deduplicated)
+
+### Requirement: Locale consistency is enforced automatically
+
+The i18n system SHALL include an automated consistency check that runs as part of the test suite (`pnpm test`) and detects undefined keys, unused keys, parity violations, and override orphans. The check SHALL be available as a standalone command (`pnpm i18n:check`).
+
+#### Scenario: CI catches locale drift
+- **WHEN** a developer pushes code that references a key not present in `en.json`
+- **THEN** the test suite fails with a descriptive error identifying the missing key
+
+#### Scenario: Standalone check command
+- **WHEN** a developer runs `pnpm i18n:check` in the client package
+- **THEN** the script validates locale consistency and reports results

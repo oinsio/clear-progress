@@ -28,7 +28,7 @@ export function ProjectPausedDialog({ onClose }: ProjectPausedDialogProps) {
       title={t("projectPausedDialog.title")}
       message={t("projectPausedDialog.message")}
       confirmLabel={t("projectPausedDialog.openDashboard")}
-      cancelLabel={t("projectPausedDialog.close")}
+      cancelLabel={t("common.close")}
       onConfirm={handleOpenDashboard}
       onCancel={onClose}
     />

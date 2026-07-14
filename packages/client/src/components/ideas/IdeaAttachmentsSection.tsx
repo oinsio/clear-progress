@@ -3,8 +3,6 @@ import { useTranslation } from "react-i18next";
 import { ENTITY_TYPE } from "@/constants";
 import { EntityAttachments } from "../shared/EntityAttachments";
 
-const I18N_PREFIX = "idea.attachments";
-
 interface IdeaAttachmentsSectionProps {
   ideaId: string;
 }
@@ -18,14 +16,10 @@ export function IdeaAttachmentsSection({
   return (
     <div>
       <label className="text-xs font-medium text-gray-500 mb-1 block">
-        {t("task.tabs.attachments")}
+        {t("common.attachments")}
       </label>
 
-      <EntityAttachments
-        entityType={ENTITY_TYPE.IDEA}
-        entityId={ideaId}
-        i18nPrefix={I18N_PREFIX}
-      />
+      <EntityAttachments entityType={ENTITY_TYPE.IDEA} entityId={ideaId} />
     </div>
   );
 }

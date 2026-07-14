@@ -20,7 +20,7 @@ describe("MarkdownPreview", () => {
 
     render(<MarkdownPreview url="blob:test" />);
 
-    expect(screen.getByText("attachment.lightbox.loading")).toBeInTheDocument();
+    expect(screen.getByText("common.loading")).toBeInTheDocument();
   });
 
   it("should show error state when fetch fails", async () => {

@@ -65,7 +65,7 @@ function buildProps(
     backRoute: "/contexts",
     testIdPrefix: "context",
     i18nKeys: {
-      back: "context.back",
+      back: "common.back",
       name: "context.name",
       notFound: "context.notFound",
       deleteLabel: "context.deleteLabel",

@@ -110,7 +110,7 @@ export function ServerSupabaseForm({
           onClick={onCancel}
           className="flex-1 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
         >
-          {t("settings.server.cancel")}
+          {t("common.cancel")}
         </button>
         <button
           data-testid="server-supabase-connect"

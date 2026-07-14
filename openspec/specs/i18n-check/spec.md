@@ -1,0 +1,253 @@
+# Capability: i18n-check
+
+## Purpose
+
+Automated locale consistency checking: flatten locale JSON, scan source files for key usage, detect undefined keys, unused keys, parity violations, override orphans, duplicate values, and whitelist self-validation. Provides CLI interface for standalone and CI usage.
+
+## Requirements
+
+### Requirement: Flatten locale JSON and normalize plural keys
+
+The system SHALL flatten nested locale JSON objects into dot-separated key-value maps. The system SHALL normalize i18next plural suffixes (`_one`, `_two`, `_few`, `_many`, `_other`, `_zero`) and ordinal suffixes (`_ordinal_one`, etc.) to produce base keys for comparison.
+
+#### Scenario: Nested JSON is flattened correctly
+- **WHEN** a locale JSON contains `{ "task": { "cancel": "Cancel" } }`
+- **THEN** the flat map contains key `"task.cancel"` with value `"Cancel"`
+
+#### Scenario: Plural suffix is stripped to produce base key
+- **WHEN** a flat key is `"repeat.everyNDays_few"`
+- **THEN** the base key is `"repeat.everyNDays"`
+
+#### Scenario: Ordinal suffix is stripped to produce base key
+- **WHEN** a flat key is `"repeat.yearlyDate_ordinal_two"`
+- **THEN** the base key is `"repeat.yearlyDate"`
+
+#### Scenario: Underscore in key name is preserved
+- **WHEN** a flat key is `"filter.focused_goals"`
+- **THEN** the base key is `"filter.focused_goals"` (unchanged, since `_goals` is not a CLDR plural form)
+
+### Requirement: Scan source files for literal keys and dynamic prefixes
+
+The system SHALL scan TypeScript/TSX source files and extract:
+1. Literal keys: dot-separated identifiers in quotes/backticks that match a top-level namespace from `en.json`
+2. Dynamic prefixes: template literal content before `${...}` that contains at least one dot and matches a top-level namespace
+
+The system SHALL classify keys by file type (production vs test) based on path patterns.
+
+The system SHALL NOT include keys from the i18n-check tool's own test fixtures in production scan results. Test fixtures SHALL use synthetic namespaces (e.g., `fx.`) that do not exist in `en.json`.
+
+#### Scenario: Literal key in production file is detected
+- **WHEN** a production file contains `t("task.cancel")`
+- **THEN** `"task.cancel"` appears in `literalKeys` and NOT in `literalKeysTestOnly`
+
+#### Scenario: Literal key only in test file is flagged as test-only
+- **WHEN** a test file contains `"task.cancel"` and no production file references it
+- **THEN** `"task.cancel"` appears in `literalKeysTestOnly`
+
+#### Scenario: Dynamic prefix is extracted from template literal
+- **WHEN** a source file contains `` t(`goal.status.${status}`) ``
+- **THEN** `"goal.status."` appears in `dynamicPrefixes`
+
+#### Scenario: Non-i18n dotted string is filtered out by namespace check
+- **WHEN** a source file contains `"package.json"` and `"package"` is not a top-level namespace in `en.json`
+- **THEN** `"package.json"` is NOT included in scan results
+
+#### Scenario: Test fixture with synthetic namespace is excluded
+- **WHEN** a test file contains `"fx.monthAndDay"` and `"fx"` is not a top-level namespace in `en.json`
+- **THEN** `"fx.monthAndDay"` is NOT included in scan results
+
+### Requirement: Detect undefined keys (FR1)
+
+The system SHALL report an error of kind `undefined` for every literal key found in production source code that does not exist as a base key in `en.json` and is not covered by a whitelist pattern.
+
+#### Scenario: Key used in code but missing from en.json
+- **WHEN** production code references `"sync.alert.repeat_rule_reset"` and this base key is absent from `en.json`
+- **THEN** an error `{ kind: "undefined", key: "sync.alert.repeat_rule_reset" }` is reported
+
+#### Scenario: Key only in test file does not trigger undefined error
+- **WHEN** `"fake.test.key"` appears only in a test file and is absent from `en.json`
+- **THEN** no `undefined` error is reported for this key
+
+#### Scenario: Key referenced via messageKey variable is covered by whitelist
+- **WHEN** `healingRules.ts` assigns `messageKey: "sync.alert.repeat_rule_reset"` and the whitelist contains a pattern matching `sync.alert.*`
+- **THEN** no `undefined` error is reported for this key (assuming the key exists in `en.json`)
+
+### Requirement: Detect unused keys (FR2)
+
+The system SHALL report an error of kind `unused` for every base key in `en.json` that is:
+- Not found as a literal key in any production source file (keys found ONLY in test files do not count as "found")
+- Not matched by any dynamic prefix (with conservative rest-character validation)
+- Not matched by any whitelist pattern
+
+Dynamic prefix matching for dotted prefixes (ending with `.`) SHALL require the prefix to contain >= 2 named segments (i.e., at least one dot before the trailing dot). Single-segment dotted prefixes (e.g., `repeat.`) SHALL NOT protect keys from being reported as unused — their enum values must be covered by explicit whitelist entries instead.
+
+Non-dotted prefixes SHALL continue to match when the rest is digits-only (e.g., `repeat.month` protects `repeat.month7`).
+
+Keys found ONLY in test files SHALL be reported as unused with detail "found ONLY in tests — likely a dead key".
+
+#### Scenario: Key in en.json not referenced anywhere
+- **WHEN** `en.json` contains key `"nav.oldFeature"` and no source file references it
+- **THEN** an error `{ kind: "unused", key: "nav.oldFeature" }` is reported
+
+#### Scenario: Key matched by multi-segment dynamic prefix is not reported unused
+- **WHEN** `en.json` contains `"goal.status.in_progress"` and source has `` `goal.status.${status}` ``
+- **THEN** no `unused` error is reported (prefix `"goal.status."` has 2 segments, rest `"in_progress"` has no dots)
+
+#### Scenario: Single-segment dotted prefix does NOT protect keys
+- **WHEN** `en.json` contains `"repeat.frequency"` and source has `` `repeat.${freq}` `` producing prefix `"repeat."`
+- **THEN** an `unused` error IS reported for `"repeat.frequency"` (prefix has only 1 named segment)
+
+#### Scenario: Key with shared non-dotted prefix but non-digit rest is still reported
+- **WHEN** `en.json` contains `"repeat.monthAndDay"` and prefix `"repeat.month"` exists from `` `repeat.month${m}` ``
+- **THEN** an `unused` error IS reported (rest `"AndDay"` is not digits-only)
+
+#### Scenario: Whitelisted key is not reported unused regardless of prefix rules
+- **WHEN** `en.json` contains `"repeat.daily"` and whitelist has a `oneOf("repeat.", ["daily", ...])` pattern
+- **THEN** no `unused` error is reported
+
+#### Scenario: Key found only in test files is reported as unused
+- **WHEN** `en.json` contains `"repeat.monthAndDay"` and it appears only in test files (not in production code)
+- **THEN** an error `{ kind: "unused", key: "repeat.monthAndDay", detail: "found ONLY in tests — likely a dead key" }` is reported
+
+### Requirement: Detect locale parity violations (FR3)
+
+The system SHALL report an error of kind `parity` for every base key that exists in `en.json` but not in `ru.json`, or vice versa.
+
+#### Scenario: Key in en missing from ru
+- **WHEN** base key `"feature.new"` exists in `en.json` but not in `ru.json`
+- **THEN** an error `{ kind: "parity", key: "feature.new", detail: "present in en, missing in ru" }` is reported
+
+#### Scenario: Key in ru missing from en
+- **WHEN** base key `"legacy.removed"` exists in `ru.json` but not in `en.json`
+- **THEN** an error `{ kind: "parity", key: "legacy.removed", detail: "present in ru, missing in en" }` is reported
+
+### Requirement: Detect override orphan keys (FR4)
+
+The system SHALL report an error of kind `override-orphans` for every base key in an override locale (where `_meta.baseLanguage` differs from locale code) that does not exist in its base locale, excluding `_meta.*` keys.
+
+#### Scenario: Override key absent from base locale
+- **WHEN** `house.json` has `_meta.baseLanguage: "ru"` and contains key `"repeat.day1"` which is absent from `ru.json`
+- **THEN** an error `{ kind: "override-orphans", key: "repeat.day1" }` is reported
+
+#### Scenario: _meta keys are excluded from orphan check
+- **WHEN** `house.json` contains `"_meta.baseLanguage"` and `"_meta.name"`
+- **THEN** no `override-orphans` error is reported for these keys
+
+### Requirement: Report duplicate values (FR5)
+
+The system SHALL always report groups of keys that have identical values in both `en.json` and `ru.json` as candidates for deduplication, UNLESS all keys in the group are covered by a duplicate-whitelist entry. This report is printed on every run (informational, does not cause a non-zero exit code).
+
+Groups where every key matches a duplicate-whitelist pattern SHALL be suppressed from the output.
+
+#### Scenario: Keys with same value in both locales are grouped
+- **WHEN** `en.json` has `"task.cancel": "Cancel"` and `"goal.cancel": "Cancel"`, and `ru.json` has both as `"Отмена"`
+- **AND** neither key is in the duplicate whitelist
+- **THEN** a duplicate group `["task.cancel", "goal.cancel"]` is reported
+
+#### Scenario: Keys with same en value but different ru values are not grouped
+- **WHEN** `en.json` has `"repeat.month4": "April"` and `"repeat.monthGenitive4": "April"`, but `ru.json` has `"апрель"` and `"апреля"`
+- **THEN** no duplicate group is reported for these keys
+
+#### Scenario: Whitelisted duplicate group is suppressed
+- **WHEN** `en.json` has `"box.inbox": "Inbox"` and `"filter.inbox": "Inbox"` with identical RU values
+- **AND** both keys match a duplicate-whitelist pattern
+- **THEN** no duplicate group is reported for these keys
+
+### Requirement: Duplicate whitelist for intentional duplicates
+
+The system SHALL support a duplicate-value whitelist — a set of key patterns that are expected to have duplicate values across namespaces. The whitelist SHALL be defined in `whitelist.ts` alongside the existing unused-key whitelist.
+
+Whitelisted categories:
+1. **Domain navigation terms**: keys across `box`, `section`, `filter`, `search`, `deleted`, `task`, `repeat`, `goalFilter`, `idea.pageName`, `memo.pageName`, `settings.sections` that share values for the same domain concept
+2. **Semantic pairs**: keys with different UI roles (display label vs ariaLabel, indicator vs legend, button label vs type label) that happen to share the same text
+
+#### Scenario: Domain term duplicate is whitelisted
+- **WHEN** `box.inbox` and `filter.inbox` both have value "Inbox"/"Входящие"
+- **THEN** both keys match a duplicate-whitelist pattern and the group is suppressed
+
+#### Scenario: Semantic pair duplicate is whitelisted
+- **WHEN** `settings.name` and `settings.settingsAriaLabel` both have value "Settings"/"Настройки"
+- **THEN** both keys match a duplicate-whitelist pattern and the group is suppressed
+
+#### Scenario: Non-whitelisted duplicate is still reported
+- **WHEN** two keys have identical values but are not in the duplicate whitelist
+- **THEN** the duplicate group is reported as before
+
+### Requirement: Duplicate whitelist self-validation
+
+The system SHALL verify that every duplicate-whitelist pattern matches at least one existing key in `en.json`. A pattern that matches zero keys SHALL be reported as an error, consistent with the existing unused-key whitelist validation (FR8).
+
+#### Scenario: Stale duplicate-whitelist pattern triggers error
+- **WHEN** a duplicate-whitelist pattern matches zero keys in `en.json`
+- **THEN** an error is reported indicating the whitelist entry is stale
+
+### Requirement: Whitelist self-validation (FR8)
+
+The system SHALL verify that every whitelist pattern matches at least one existing key in `en.json`. A pattern that matches zero keys SHALL be reported as an error.
+
+#### Scenario: Stale whitelist pattern triggers error
+- **WHEN** a whitelist pattern `/^legacy\./` matches zero keys in `en.json`
+- **THEN** an error is reported indicating the whitelist entry is stale
+
+#### Scenario: sync.alert whitelist pattern is valid
+- **WHEN** the whitelist contains pattern `^sync\.alert\.` and `en.json` contains `sync.alert.repeat_rule_reset`
+- **THEN** no stale whitelist error is reported
+
+### Requirement: CI enforcement of locale consistency
+
+The CI pipeline SHALL run `i18n:check` before building. Any `undefined`, `unused`, `parity`, or `override-orphans` error SHALL cause the CI job to fail, preventing deployment of code with locale drift.
+
+#### Scenario: CI blocks deploy when undefined key exists
+- **WHEN** a PR introduces code referencing a key not present in `en.json`
+- **AND** CI runs `i18n:check`
+- **THEN** the CI job exits with code 1 and the PR cannot be merged
+
+#### Scenario: CI passes when all locale checks are clean
+- **WHEN** all locale keys are consistent
+- **AND** CI runs `i18n:check`
+- **THEN** the CI job exits with code 0
+
+### Requirement: CLI interface (UX1-UX3)
+
+The system SHALL provide a CLI entrypoint that:
+- Exits with code 1 when any check error is found
+- Exits with code 0 when no errors are found
+- Prints each error as `[kind] key — detail`
+- Prints summary count on failure
+- Prints `i18n-check: OK` on success
+- Always prints the duplicates report (informational section after errors)
+
+#### Scenario: Errors found — exit code 1
+- **WHEN** the check finds 3 errors
+- **THEN** CLI prints 3 error lines, a summary `i18n-check: 3 errors`, and exits with code 1
+
+#### Scenario: No errors — exit code 0
+- **WHEN** the check finds 0 errors
+- **THEN** CLI prints `i18n-check: OK` and exits with code 0
+
+### Requirement: Test fixture isolation from production scan
+
+Fixture strings in the i18n-check tool's own test files SHALL NOT be able to
+affect real-project check results. Specifically, no string fixture in
+`src/test/i18n-check/*.test.ts` may coincide (after plural/ordinal
+normalization via `toBaseKey`) with a key present in `en.json`. Fixture
+strings under real namespaces that do NOT correspond to existing keys are
+permitted (e.g., negative-test fixtures like `"repeat.frequency"` for a
+deleted key), because `checkUnused` treats test-only literals as unused
+candidates and `checkUndefined` ignores test-only literals — such fixtures
+cannot shield or falsely flag anything.
+
+Exception: fixtures that verify real WHITELIST behavior (e.g., `isWhitelisted("repeat.daily")`)
+are permitted to use live keys, documented in an explicit allow-list with justification.
+
+#### Scenario: Fixture coinciding with a live key is forbidden
+- **WHEN** `en.json` contains `task.cancel` and a tool test file contains the string `"task.cancel"`
+- **THEN** the fixture-isolation test fails, naming the file and the offending string
+
+#### Scenario: Fixture under a real namespace but absent from en.json is allowed
+- **WHEN** `en.json` does not contain `repeat.frequency` and a tool test file contains the string `"repeat.frequency"`
+- **THEN** the fixture-isolation test passes
+
+#### Scenario: Whitelisted fixture for WHITELIST verification is allowed
+- **WHEN** a test verifies `isWhitelisted("repeat.daily")` against the real WHITELIST
+- **THEN** `"repeat.daily"` is permitted via the explicit allow-list with a comment justifying its presence

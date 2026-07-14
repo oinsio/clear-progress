@@ -47,20 +47,38 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
           expect(locale?.emoji).toBe("🏥");
         },
       );
+
+      And(
+        'locale "startrek" has name "Star Trek" and emoji "🖖"',
+        (_ctx: TestContext) => {
+          const locale = getLocaleByCode("startrek");
+          expect(locale).toBeDefined();
+          expect(locale?.name).toBe("Star Trek");
+          expect(locale?.emoji).toBe("🖖");
+        },
+      );
     },
   );
 
   // @add-i18n-specs @FR7
+  // verifies UX1 of add-project-locales — dialects sort directly after their base languages
   f.Scenario("Locales sorted by English name", ({ When, Then }) => {
     When("locale registry is loaded", (_ctx: TestContext) => {
       // Already loaded
     });
 
     Then(
-      'locales are ordered as "Dr. House", "English", "Russian"',
+      'locales are ordered as "Dr. House", "English", "English (project)", "Russian", "Russian (project)", "Star Trek"',
       (_ctx: TestContext) => {
         const localeNames = locales.map((locale) => locale.name);
-        expect(localeNames).toEqual(["Dr. House", "English", "Russian"]);
+        expect(localeNames).toEqual([
+          "Dr. House",
+          "English",
+          "English (project)",
+          "Russian",
+          "Russian (project)",
+          "Star Trek",
+        ]);
       },
     );
   });
@@ -71,8 +89,8 @@ describeFeature(feature, (f: FeatureDescriibeCallbackParams<Context>) => {
       // Already loaded
     });
 
-    Then("exactly 3 locales are registered", (_ctx: TestContext) => {
-      expect(locales).toHaveLength(3);
+    Then("exactly 6 locales are registered", (_ctx: TestContext) => {
+      expect(locales).toHaveLength(6);
     });
 
     And("every locale has complete metadata", (_ctx: TestContext) => {

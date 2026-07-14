@@ -49,7 +49,7 @@ export function ConfirmDialog({
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
-  const resolvedCancelLabel = cancelLabel ?? t("confirmDialog.cancel");
+  const resolvedCancelLabel = cancelLabel ?? t("common.cancel");
 
   useEffect(() => {
     cancelButtonRef.current?.focus();

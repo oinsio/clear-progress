@@ -38,11 +38,15 @@ When `syncStatus` is `"project_paused"`, the system SHALL display a `ProjectPaus
 - **AND** periodic sync continues to run in background
 
 ### Requirement: Sidebar shows project paused status
-When `syncStatus` is `"project_paused"`, the sidebar sync block SHALL display a "Project paused" status indicator.
+When `syncStatus` is `"project_paused"`, the sidebar sync block SHALL display a "Supabase paused" status indicator (`sync.projectPaused`: "Supabase paused" in `en.json`, «Supabase приостановлен» in `ru.json`).
 
 #### Scenario: Sidebar displays paused status
 - **WHEN** `syncStatus` is `"project_paused"`
-- **THEN** sidebar sync block shows "Project paused" text with appropriate icon
+- **THEN** sidebar sync block shows "Supabase paused" text with appropriate icon
+
+#### Scenario: Dialog wording unchanged
+- **WHEN** the paused-status wording is updated
+- **THEN** `projectPausedDialog.*` and `settings.server.*` values remain byte-identical to before
 
 ### Requirement: Sync automatically recovers after project restore
 After the user restores the project via Supabase Dashboard, the periodic auto-sync (running every `SYNC_INTERVAL_MS`) SHALL automatically detect that the project is alive and return `syncStatus` to `"idle"`.

@@ -154,7 +154,7 @@ describe("IdeaDetailPanel", () => {
       />,
     );
 
-    const closeButton = screen.getByLabelText("idea.close");
+    const closeButton = screen.getByLabelText("common.close");
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalled();

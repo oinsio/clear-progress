@@ -119,7 +119,10 @@ global.URL.revokeObjectURL = vi.fn();
 
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { localeResources } from "@/services/localeRegistry";
+import {
+  applyDialectPluralRules,
+  localeResources,
+} from "@/services/localeRegistry";
 
 void i18n.use(initReactI18next).init({
   resources: localeResources,
@@ -127,6 +130,8 @@ void i18n.use(initReactI18next).init({
   fallbackLng: "ru",
   interpolation: { escapeValue: false },
 });
+
+applyDialectPluralRules(i18n);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());

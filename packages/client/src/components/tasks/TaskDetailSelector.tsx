@@ -112,7 +112,7 @@ export function TaskDetailSelector({
         <button
           type="button"
           onClick={onClose}
-          aria-label={t("taskEdit.back")}
+          aria-label={t("common.back")}
           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
         >
           <ArrowLeft className="w-[1.125rem] h-[1.125rem]" />

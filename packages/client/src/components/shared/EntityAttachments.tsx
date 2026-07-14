@@ -15,14 +15,12 @@ import { FileDropZone } from "./FileDropZone";
 interface EntityAttachmentsProps {
   entityType: EntityType;
   entityId: string;
-  i18nPrefix: string;
 }
 
 /** Implements UX1, UX2, UX4, FR5 of add-file-attachments, FR6 of attachment-drag-and-drop */
 export function EntityAttachments({
   entityType,
   entityId,
-  i18nPrefix,
 }: EntityAttachmentsProps) {
   const { t } = useTranslation();
   const { schedulePush } = useSync();
@@ -75,7 +73,7 @@ export function EntityAttachments({
     <FileDropZone onFilesAccepted={handleFilesAccepted}>
       {attachments.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-4">
-          {t(`${i18nPrefix}.empty`)}
+          {t("attachment.empty")}
         </p>
       ) : (
         <AttachmentList
@@ -91,9 +89,9 @@ export function EntityAttachments({
 
       {deletingAttachment && (
         <ConfirmDialog
-          title={t(`${i18nPrefix}.confirmDelete`)}
-          message={t(`${i18nPrefix}.confirmDeleteMessage`)}
-          confirmLabel={t(`${i18nPrefix}.confirmDeleteButton`)}
+          title={t("attachment.confirmDelete")}
+          message={t("attachment.confirmDeleteMessage")}
+          confirmLabel={t("common.delete")}
           variant="danger"
           onConfirm={() => void handleDeleteConfirm()}
           onCancel={handleDeleteCancel}

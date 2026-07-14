@@ -129,7 +129,7 @@ export function ServerOAuthProviders({
           onClick={onCancel}
           className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300"
         >
-          {t("settings.server.cancel")}
+          {t("common.cancel")}
         </button>
       )}
     </div>

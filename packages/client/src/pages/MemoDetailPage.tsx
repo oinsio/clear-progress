@@ -28,7 +28,7 @@ export default function MemoDetailPage() {
             type="button"
             onClick={() => navigate(ROUTES.MEMOS)}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label={t("memo.back")}
+            aria-label={t("common.back")}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>

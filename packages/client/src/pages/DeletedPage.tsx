@@ -182,7 +182,7 @@ export default function DeletedPage() {
           <div className="xl:max-w-3xl xl:mx-auto">
             {isLoading && (
               <p className="text-sm text-gray-400 text-center py-16">
-                {t("deleted.loading")}
+                {t("common.loading")}
               </p>
             )}
 
@@ -432,12 +432,18 @@ export default function DeletedPage() {
             </p>
             <div className="text-sm text-gray-600 mb-6">
               {t("deleted.purgeConfirmCount", {
-                tasks: tasks.length,
-                goals: goals.length,
-                contexts: contexts.length,
-                categories: categories.length,
-                checklist_items: checklistItems.length,
-                ideas: ideas.length,
+                items: [
+                  t("deleted.purgeCountTasks", { count: tasks.length }),
+                  t("deleted.purgeCountGoals", { count: goals.length }),
+                  t("deleted.purgeCountContexts", { count: contexts.length }),
+                  t("deleted.purgeCountCategories", {
+                    count: categories.length,
+                  }),
+                  t("deleted.purgeCountChecklistItems", {
+                    count: checklistItems.length,
+                  }),
+                  t("deleted.purgeCountIdeas", { count: ideas.length }),
+                ].join(", "),
               })}
             </div>
             {purgeError && (
@@ -452,7 +458,7 @@ export default function DeletedPage() {
                 }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                {t("deleted.purgeCancel")}
+                {t("common.cancel")}
               </button>
               <button
                 type="button"

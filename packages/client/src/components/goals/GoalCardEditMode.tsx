@@ -84,7 +84,7 @@ export function GoalCardEditMode({
         />
         <div className="flex-1">
           <label htmlFor="goal-edit-name" className="sr-only">
-            {t("goal.nameLabel")}
+            {t("common.name")}
           </label>
           <textarea
             ref={editNameTextareaRef}
@@ -113,7 +113,7 @@ export function GoalCardEditMode({
           )}
         >
           <TAB_ICONS.details className="w-4 h-4" aria-hidden="true" />
-          {activeTab === GOAL_EDIT_TAB.DETAILS && t("goal.tabs.details")}
+          {activeTab === GOAL_EDIT_TAB.DETAILS && t("common.details")}
         </button>
         <button
           type="button"
@@ -127,8 +127,7 @@ export function GoalCardEditMode({
           )}
         >
           <TAB_ICONS.attachments className="w-4 h-4" aria-hidden="true" />
-          {activeTab === GOAL_EDIT_TAB.ATTACHMENTS &&
-            t("goal.tabs.attachments")}
+          {activeTab === GOAL_EDIT_TAB.ATTACHMENTS && t("common.attachments")}
           {attachmentCount > 0 && (
             <span
               className="text-xs"
@@ -172,29 +171,29 @@ export function GoalCardEditMode({
         <button
           type="button"
           onClick={onDeleteRequest}
-          aria-label={t("goal.delete")}
+          aria-label={t("common.delete")}
           data-testid="goal-delete-button"
           className="flex-1 py-2.5 text-sm text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
         >
-          {t("goal.delete")}
+          {t("common.delete")}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          aria-label={t("goal.cancel")}
+          aria-label={t("common.cancel")}
           className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
         >
-          {t("goal.cancel")}
+          {t("common.cancel")}
         </button>
         <button
           type="button"
           onClick={onSave}
           disabled={!canSave}
-          aria-label={t("goal.save")}
+          aria-label={t("common.save")}
           data-testid="goal-save-button"
           className="flex-1 py-2.5 text-sm text-white bg-accent rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {isSaving ? t("goal.cover.uploading") : t("goal.save")}
+          {isSaving ? t("goal.cover.uploading") : t("common.save")}
         </button>
       </div>
 
@@ -213,19 +212,19 @@ export function GoalCardEditMode({
               type="button"
               data-testid="goal-delete-cancel"
               onClick={onDeleteCancel}
-              aria-label={t("goal.cancel")}
+              aria-label={t("common.cancel")}
               className="flex-1 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              {t("goal.cancel")}
+              {t("common.cancel")}
             </button>
             <button
               type="button"
               data-testid="goal-delete-confirm-btn"
               onClick={onDeleteConfirm}
-              aria-label={t("goal.delete")}
+              aria-label={t("common.delete")}
               className="flex-1 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
             >
-              {t("goal.delete")}
+              {t("common.delete")}
             </button>
           </div>
         </div>

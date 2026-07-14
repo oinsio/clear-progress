@@ -196,7 +196,7 @@ export function AlertOverlay() {
               })}
               className={BUTTON_STYLE}
             >
-              {t("alert.back")}
+              {t("common.back")}
             </button>
           )}
           {!isLast && (
@@ -211,7 +211,7 @@ export function AlertOverlay() {
               })}
               className={BUTTON_STYLE}
             >
-              {t("alert.next")}
+              {t("common.next")}
             </button>
           )}
           {isLast && (

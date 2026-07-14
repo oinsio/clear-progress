@@ -43,7 +43,7 @@ export function MarkdownPreview({ url }: MarkdownPreviewProps) {
   if (isLoading) {
     return (
       <div className="rounded-lg bg-white p-8 text-gray-500">
-        {t("attachment.lightbox.loading")}
+        {t("common.loading")}
       </div>
     );
   }

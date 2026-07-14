@@ -13,13 +13,12 @@ vi.mock("react-i18next", () => mockReactI18next());
 
 const SYNC_ALERT: AppAlert = {
   type: "sync",
-  messageKey: "sync.fkCleared",
-  params: { entityType: "goal", name: "My Goal" },
+  messageKey: "sync.alert.repeat_rule_reset",
 };
 
 const SYNC_ALERT_2: AppAlert = {
   type: "sync",
-  messageKey: "sync.nameUntitled",
+  messageKey: "sync.alert.name_set_untitled",
 };
 
 const REPEAT_ALERT: AppAlert = {
@@ -264,7 +263,7 @@ describe("AlertOverlay", () => {
     it("should render sync alert message for sync type", () => {
       renderWithAlerts([SYNC_ALERT]);
       const message = screen.getByTestId("alert-message");
-      expect(message).toHaveTextContent("sync.fkCleared");
+      expect(message).toHaveTextContent("sync.alert.repeat_rule_reset");
     });
 
     it("should render title for repeat_rule_invalid type", () => {
