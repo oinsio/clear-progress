@@ -5,8 +5,10 @@ import {
   buildCompletedTasksHook,
   buildTask,
   mockUseCompletedTasks,
+  pageConfig,
   renderPage,
   resetDefaultMocks,
+  setFakeClock,
 } from "./activeTasksPage.testSetup";
 
 describe("ActiveTasksPage — completed tasks", () => {
@@ -71,6 +73,106 @@ describe("ActiveTasksPage — completed tasks", () => {
     );
     renderPage();
     expect(screen.queryByText(/No date task/)).not.toBeInTheDocument();
+  });
+
+  // FR1 of fix-today-completed-logical-date: completion day is derived from the
+  // completed_at instant in the user's timezone, never from a UTC date slice
+  it("should show early-morning completion in completed today when its UTC date is yesterday", () => {
+    // Arrange: UTC+5 (Asia/Almaty), now 2026-06-09T21:30:00Z = 02:30 June 10 local,
+    // day boundary "00:00" (default); task completed 21:00Z June 9 = 02:00 June 10 local
+    setFakeClock("2026-06-09T21:30:00Z", "Asia/Almaty");
+    const completedTasks = [
+      buildTask({
+        name: "Early morning task",
+        is_completed: true,
+        completed_at: "2026-06-09T21:00:00.000Z",
+      }),
+    ];
+    mockUseCompletedTasks.mockReturnValue(
+      buildCompletedTasksHook({ completedTasks }),
+    );
+    // Act
+    renderPage();
+    // Assert: task belongs to logical today (June 10 local) despite UTC date June 9
+    expect(screen.getByText(/Early morning task/)).toBeInTheDocument();
+  });
+
+  // FR1 of fix-today-completed-logical-date: completion day is derived from the
+  // completed_at instant in the user's timezone, never from a UTC date slice
+  it("should show evening completion in completed today when its UTC date is tomorrow", () => {
+    // Arrange: UTC-4 (America/New_York, summer), now 2026-06-10T01:30:00Z = 21:30 June 9 local,
+    // day boundary "00:00" (default); task completed 01:00Z June 10 = 21:00 June 9 local
+    setFakeClock("2026-06-10T01:30:00Z", "America/New_York");
+    const completedTasks = [
+      buildTask({
+        name: "Evening task",
+        is_completed: true,
+        completed_at: "2026-06-10T01:00:00.000Z",
+      }),
+    ];
+    mockUseCompletedTasks.mockReturnValue(
+      buildCompletedTasksHook({ completedTasks }),
+    );
+    // Act
+    renderPage();
+    // Assert: task belongs to logical today (June 9 local) despite UTC date June 10
+    expect(screen.getByText(/Evening task/)).toBeInTheDocument();
+  });
+
+  // FR1 of fix-today-completed-logical-date: completion day is derived from the
+  // completed_at instant compared against the logical day start at the custom
+  // day boundary, never from a UTC date slice
+  it("should show post-boundary completion in completed today when custom boundary applies and its UTC date is yesterday", () => {
+    // Arrange: UTC+5 (Asia/Almaty), day boundary "04:00",
+    // now 2026-06-10T07:00:00Z = 12:00 June 10 local — after the boundary,
+    // so the logical day is June 10;
+    // task completed 23:30Z June 9 = 04:30 June 10 local — after the June 10
+    // logical day started at 04:00 local, while the UTC date of completed_at
+    // is still June 9
+    pageConfig.dayBoundary = "04:00";
+    setFakeClock("2026-06-10T07:00:00Z", "Asia/Almaty");
+    const completedTasks = [
+      buildTask({
+        name: "Post-boundary task",
+        is_completed: true,
+        completed_at: "2026-06-09T23:30:00.000Z",
+      }),
+    ];
+    mockUseCompletedTasks.mockReturnValue(
+      buildCompletedTasksHook({ completedTasks }),
+    );
+    // Act
+    renderPage();
+    // Assert: task belongs to logical today (June 10) despite UTC date June 9
+    expect(screen.getByText(/Post-boundary task/)).toBeInTheDocument();
+  });
+
+  // FR1 of fix-today-completed-logical-date: green-only regression guard —
+  // expected to pass both before and after the implementation fix; pins that
+  // the custom day boundary shifts logical "today" for the completed section
+  // (fails if pageConfig.dayBoundary stops reaching the page)
+  it("should show daytime completion in completed today when custom boundary keeps logical day on previous date", () => {
+    // Arrange: UTC+5 (Asia/Almaty), day boundary "04:00",
+    // now 2026-06-09T21:30:00Z = 02:30 June 10 local — before the boundary,
+    // so the logical day is still June 9;
+    // task completed 05:00Z June 9 = 10:00 June 9 local,
+    // after the June 9 logical day started at 04:00 local
+    pageConfig.dayBoundary = "04:00";
+    setFakeClock("2026-06-09T21:30:00Z", "Asia/Almaty");
+    const completedTasks = [
+      buildTask({
+        name: "Daytime task",
+        is_completed: true,
+        completed_at: "2026-06-09T05:00:00.000Z",
+      }),
+    ];
+    mockUseCompletedTasks.mockReturnValue(
+      buildCompletedTasksHook({ completedTasks }),
+    );
+    // Act
+    renderPage();
+    // Assert: task belongs to logical today (June 9) under the "04:00" boundary
+    expect(screen.getByText(/Daytime task/)).toBeInTheDocument();
   });
 
   // FR-2: completed today section label is correct
