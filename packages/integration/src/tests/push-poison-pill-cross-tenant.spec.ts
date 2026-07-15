@@ -40,6 +40,11 @@ interface CrossTenantPullResponse {
   ok: boolean;
   contexts: Array<{ id: string; name: string; is_deleted: boolean }>;
   tasks: Array<{ id: string; goal_id: string; is_deleted: boolean }>;
+  checklist_items: Array<{
+    id: string;
+    task_id: string;
+    is_deleted: boolean;
+  }>;
 }
 
 test.describe.configure({ mode: "serial" });
@@ -129,6 +134,82 @@ test("user B task referencing user A's goal → fk_violation:goal_id → self-he
   expect(healedTask?.is_deleted).toBe(false);
 });
 
+// implements U1, U2, FR1, FR5 of fix-checklist-fk-self-heal
+//
+// This test verifies the SERVER BACKSTOP contract only. The genuine, end-to-end
+// self-heal of an orphaned checklist item is entirely CLIENT-SIDE and is already
+// covered elsewhere:
+//   - SyncService removes orphans before push (cascade-checklist-delete FR3) —
+//     `cascade_checklist_self_healing.feature`
+//   - on a server rejection, the client soft-deletes + retries (fix-push-poison-pill
+//     FR5) — `pushRejectionHandler.test.ts`, `SyncService.self-healing.test.ts`
+//
+// The server never stores a checklist item whose task_id dangles: the composite
+// NOT NULL FK `checklist_items_task_id_fkey` is enforced on INSERT regardless of
+// `is_deleted`. So a tombstone re-push that still carries the foreign task_id is
+// rejected again — it does NOT settle server-side. This change's contribution is
+// only that the backstop reason is now the healable `task_id` (was the unhealable
+// `items_task_id`), so the client CAN self-heal when the backstop is hit.
+test("user B checklist item referencing user A's task → backstop rejects fk_violation:task_id, even soft-deleted", async () => {
+  // 1. User A creates a task (the owner the checklist item will point to).
+  const userATaskId = randomUUID();
+  const taskPush = (await pushToServer(
+    userA,
+    buildTaskPayload({ id: userATaskId, name: `Task A ${Date.now()}` }),
+  )) as unknown as CrossTenantPushResponse;
+  expect(taskPush.results.tasks?.[0]?.status).toBe("created");
+
+  // 2. User B pushes a checklist item referencing user A's task (cross-tenant
+  //    ref — the task does not exist for user B → FK violation). The backstop
+  //    now returns the HEALABLE reason `task_id` (this change), not the old
+  //    unhealable `items_task_id`.
+  const checklistItemId = randomUUID();
+  const rejectedPush = (await pushToServer(
+    userB,
+    buildChecklistPayload(checklistItemId, userATaskId, "Item B"),
+  )) as unknown as CrossTenantPushResponse;
+  const rejectedResult = rejectedPush.results.checklist_items?.find(
+    (result) => result.id === checklistItemId,
+  );
+  expect(rejectedResult?.status).toBe("rejected");
+  expect(rejectedResult?.reason).toBe("fk_violation:task_id");
+
+  // 3. The client heals `task_id` rejections by setting is_deleted: true
+  //    (DELETE_FK_FIELDS in pushRejectionHandler). Re-push the SAME item as a
+  //    tombstone, still carrying the foreign task_id. The FK is enforced on the
+  //    INSERT regardless of is_deleted, so the server rejects it AGAIN — the
+  //    dangling orphan is never persisted. (In the real client the item is then
+  //    hard-deleted before the next push by SyncService's orphan removal.)
+  const tombstonePush = buildChecklistPayload(
+    checklistItemId,
+    userATaskId,
+    "Item B",
+  );
+  const [tombstoneItem] = tombstonePush.checklist_items as Record<
+    string,
+    unknown
+  >[];
+  if (tombstoneItem) {
+    tombstoneItem.is_deleted = true;
+  }
+  const tombstoneResult = (
+    (await pushToServer(
+      userB,
+      tombstonePush,
+    )) as unknown as CrossTenantPushResponse
+  ).results.checklist_items?.find((result) => result.id === checklistItemId);
+  expect(tombstoneResult?.status).toBe("rejected");
+  expect(tombstoneResult?.reason).toBe("fk_violation:task_id");
+
+  // 4. Pull user B's data — the orphaned checklist item was never stored
+  //    server-side (neither the original nor the tombstone push settled).
+  const pullB = await pullFromServer<CrossTenantPullResponse>(userB);
+  const persistedItem = pullB.checklist_items.find(
+    (item) => item.id === checklistItemId,
+  );
+  expect(persistedItem).toBeUndefined();
+});
+
 test("cross-tenant references are rejected with the correct fk_violation field for every FK", async () => {
   // User A creates a goal, a context, a category, and a task.
   const userAGoalId2 = randomUUID();
@@ -163,14 +244,8 @@ test("cross-tenant references are rejected with the correct fk_violation field f
   // encodes the FK field, which proves the corresponding constraint NAME
   // (tasks_context_id_fkey, tasks_category_id_fkey, tasks_goal_id_fkey,
   // checklist_items_task_id_fkey). Verifies FR4 / task 2.2 behaviorally.
-  //
-  // NOTE on the checklist case: the push RPC derives the field via the regexp
-  // `^.*?_(.+?)_fkey$`. The table name `checklist_items` itself contains an
-  // underscore, so that regexp yields `items_task_id` (not `task_id`) from
-  // `checklist_items_task_id_fkey`. This is pre-existing behavior — the old
-  // inline FK auto-generated the identical constraint name — and is therefore
-  // unchanged by this change (FR6). The `items_task_id` reason still uniquely
-  // confirms the constraint name is `checklist_items_task_id_fkey`.
+  // The checklist case yields `fk_violation:task_id`, which uniquely confirms
+  // the constraint name is `checklist_items_task_id_fkey`.
   const [ctxId, catId, goalId, itemId] = [
     randomUUID(),
     randomUUID(),
@@ -216,7 +291,7 @@ test("cross-tenant references are rejected with the correct fk_violation field f
     {
       entity: "checklist_items",
       id: itemId,
-      reason: "fk_violation:items_task_id",
+      reason: "fk_violation:task_id",
       payload: buildChecklistPayload(itemId, userATaskId, "Item"),
     },
   ];

@@ -14,8 +14,10 @@ The `push_records` RPC SHALL derive the structured rejection reason `fk_violatio
 - **WHEN** a `tasks` insert violates `tasks_goal_id_fkey`, `tasks_context_id_fkey`, or `tasks_category_id_fkey`
 - **THEN** `push_records` returns `reason: "fk_violation:goal_id"`, `"fk_violation:context_id"`, or `"fk_violation:category_id"` respectively
 
-#### Scenario: Orphaned checklist item self-heals end-to-end
+#### Scenario: Orphaned checklist item is healable (server backstop) and self-heals client-side
 - **WHEN** the client pushes a checklist item whose `task_id` references a task that does not exist on the server (purged or foreign)
-- **THEN** the server rejects it with `reason: "fk_violation:task_id"`
-- **AND** the client sets `is_deleted = true`, `syncStatus: "pending"`, and retries
-- **AND** the retried push settles (the orphaned checklist item is soft-deleted, not left permanently rejected)
+- **THEN** the server backstop rejects it with the healable `reason: "fk_violation:task_id"` (not the unhealable `"fk_violation:items_task_id"`)
+- **AND** the client recognizes `task_id` as a delete-FK field, sets `is_deleted = true`, `syncStatus: "pending"`, and retries
+- **AND** because the composite NOT NULL FK is enforced on INSERT regardless of `is_deleted`, the server never persists the dangling orphan — the item is instead removed client-side (SyncService orphan removal hard-deletes it before the next push, per cascade-checklist-delete FR3), so it is not left permanently `rejected`
+
+Note: the end-to-end client-side heal is covered by `cascade_checklist_self_healing.feature`, `pushRejectionHandler.test.ts`, and `SyncService.self-healing.test.ts`. This change only corrects the server backstop's reason string, verified by the integration assertions above.
