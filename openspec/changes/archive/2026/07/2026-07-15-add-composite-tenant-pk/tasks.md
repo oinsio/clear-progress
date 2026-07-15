@@ -24,4 +24,4 @@
 
 ## 5. Manual follow-up (user)
 
-- [ ] 5.1 Recreate environments manually: `bash scripts/reset.sh dev|qa` (+ the prod project if needed) — outside the agent's scope
+- [x] 5.1 Recreate environments manually: `bash scripts/reset.sh dev|qa` (+ the prod project if needed) — outside the agent's scope
