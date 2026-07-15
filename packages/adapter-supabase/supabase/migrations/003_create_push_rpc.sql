@@ -102,7 +102,7 @@ BEGIN
                               v_constraint_name = CONSTRAINT_NAME,
                               v_message = MESSAGE_TEXT;
       v_rejection_reason := CASE v_sqlstate
-        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*?_(.+?)_fkey$', '\1')
+        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*_([a-z]+_id)_fkey$', '\1')
         WHEN '23514' THEN 'check_violation:' || v_constraint_name
         WHEN '23505' THEN 'unique_violation'
         ELSE v_message
@@ -151,7 +151,7 @@ BEGIN
                               v_constraint_name = CONSTRAINT_NAME,
                               v_message = MESSAGE_TEXT;
       v_rejection_reason := CASE v_sqlstate
-        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*?_(.+?)_fkey$', '\1')
+        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*_([a-z]+_id)_fkey$', '\1')
         WHEN '23514' THEN 'check_violation:' || v_constraint_name
         WHEN '23505' THEN 'unique_violation'
         ELSE v_message
@@ -204,7 +204,7 @@ BEGIN
                               v_constraint_name = CONSTRAINT_NAME,
                               v_message = MESSAGE_TEXT;
       v_rejection_reason := CASE v_sqlstate
-        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*?_(.+?)_fkey$', '\1')
+        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*_([a-z]+_id)_fkey$', '\1')
         WHEN '23514' THEN 'check_violation:' || v_constraint_name
         WHEN '23505' THEN 'unique_violation'
         ELSE v_message
@@ -253,7 +253,7 @@ BEGIN
                               v_constraint_name = CONSTRAINT_NAME,
                               v_message = MESSAGE_TEXT;
       v_rejection_reason := CASE v_sqlstate
-        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*?_(.+?)_fkey$', '\1')
+        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*_([a-z]+_id)_fkey$', '\1')
         WHEN '23514' THEN 'check_violation:' || v_constraint_name
         WHEN '23505' THEN 'unique_violation'
         ELSE v_message
@@ -324,7 +324,7 @@ BEGIN
                               v_constraint_name = CONSTRAINT_NAME,
                               v_message = MESSAGE_TEXT;
       v_rejection_reason := CASE v_sqlstate
-        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*?_(.+?)_fkey$', '\1')
+        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*_([a-z]+_id)_fkey$', '\1')
         WHEN '23514' THEN 'check_violation:' || v_constraint_name
         WHEN '23505' THEN 'unique_violation'
         ELSE v_message
@@ -376,7 +376,7 @@ BEGIN
                               v_constraint_name = CONSTRAINT_NAME,
                               v_message = MESSAGE_TEXT;
       v_rejection_reason := CASE v_sqlstate
-        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*?_(.+?)_fkey$', '\1')
+        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*_([a-z]+_id)_fkey$', '\1')
         WHEN '23514' THEN 'check_violation:' || v_constraint_name
         WHEN '23505' THEN 'unique_violation'
         ELSE v_message
@@ -432,7 +432,7 @@ BEGIN
                               v_constraint_name = CONSTRAINT_NAME,
                               v_message = MESSAGE_TEXT;
       v_rejection_reason := CASE v_sqlstate
-        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*?_(.+?)_fkey$', '\1')
+        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*_([a-z]+_id)_fkey$', '\1')
         WHEN '23514' THEN 'check_violation:' || v_constraint_name
         WHEN '23505' THEN 'unique_violation'
         ELSE v_message
@@ -472,7 +472,7 @@ BEGIN
                               v_constraint_name = CONSTRAINT_NAME,
                               v_message = MESSAGE_TEXT;
       v_rejection_reason := CASE v_sqlstate
-        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*?_(.+?)_fkey$', '\1')
+        WHEN '23503' THEN 'fk_violation:' || regexp_replace(v_constraint_name, '^.*_([a-z]+_id)_fkey$', '\1')
         WHEN '23514' THEN 'check_violation:' || v_constraint_name
         WHEN '23505' THEN 'unique_violation'
         ELSE v_message

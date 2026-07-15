@@ -1,5 +1,15 @@
 // implements FR6 of add-supabase-integration-tests
 // Barrel re-export — actual code lives in focused modules.
+
+export { createIsolatedUser } from "./cross-tenant-helpers.js";
+export {
+  buildCategoryPayload,
+  buildChecklistPayload,
+  buildContextPayload,
+  buildGoalPayload,
+  buildTaskPayload,
+  type TaskPayloadOptions,
+} from "./cross-tenant-payloads.js";
 export type { AuthenticatedContext } from "./page-lifecycle.js";
 export {
   closeAuthenticatedPage,

@@ -77,7 +77,7 @@ CREATE INDEX IF NOT EXISTS idx_files_user_hash ON files (user_id, data_hash);
 -- ─── Attachments table (FR5 of add-file-attachments) ────────────────────────
 
 CREATE TABLE IF NOT EXISTS attachments (
-  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  id          UUID        NOT NULL DEFAULT gen_random_uuid(),
   user_id     UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   entity_type TEXT        NOT NULL CHECK (entity_type IN ('task', 'goal', 'idea')),
   entity_id   UUID        NOT NULL,
@@ -89,7 +89,8 @@ CREATE TABLE IF NOT EXISTS attachments (
   is_deleted  BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ NOT NULL,
   updated_at  TIMESTAMPTZ NOT NULL,
-  revision    BIGINT      NOT NULL DEFAULT 0
+  revision    BIGINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, id)
 );
 
 -- implements FR10, NFR-P2 of fix-pull-pagination: composite index for keyset pagination
@@ -102,31 +103,33 @@ CREATE INDEX IF NOT EXISTS idx_attachments_entity
 -- ─── Entity tables (dependency order for FK constraints, FR18) ────────────────
 
 CREATE TABLE IF NOT EXISTS contexts (
-  id         UUID        PRIMARY KEY,
+  id         UUID        NOT NULL,
   user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name       TEXT        NOT NULL,
   sort_order TEXT        NOT NULL DEFAULT '0',
   is_deleted BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
-  revision   BIGINT      NOT NULL DEFAULT 0
+  revision   BIGINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, id)
 );
 CREATE INDEX IF NOT EXISTS idx_contexts_user_revision_id ON contexts (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS categories (
-  id         UUID        PRIMARY KEY,
+  id         UUID        NOT NULL,
   user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name       TEXT        NOT NULL,
   sort_order TEXT        NOT NULL DEFAULT '0',
   is_deleted BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
-  revision   BIGINT      NOT NULL DEFAULT 0
+  revision   BIGINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, id)
 );
 CREATE INDEX IF NOT EXISTS idx_categories_user_revision_id ON categories (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS goals (
-  id            UUID        PRIMARY KEY,
+  id            UUID        NOT NULL,
   user_id       UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name          TEXT        NOT NULL,
   description   TEXT        NOT NULL DEFAULT '',
@@ -136,12 +139,13 @@ CREATE TABLE IF NOT EXISTS goals (
   is_deleted    BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at    TIMESTAMPTZ NOT NULL,
   updated_at    TIMESTAMPTZ NOT NULL,
-  revision      BIGINT      NOT NULL DEFAULT 0
+  revision      BIGINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, id)
 );
 CREATE INDEX IF NOT EXISTS idx_goals_user_revision_id ON goals (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS ideas (
-  id          UUID        PRIMARY KEY,
+  id          UUID        NOT NULL,
   user_id     UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name        TEXT        NOT NULL,
   description TEXT        NOT NULL DEFAULT '',
@@ -149,19 +153,20 @@ CREATE TABLE IF NOT EXISTS ideas (
   is_deleted  BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ NOT NULL,
   updated_at  TIMESTAMPTZ NOT NULL,
-  revision    BIGINT      NOT NULL DEFAULT 0
+  revision    BIGINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, id)
 );
 CREATE INDEX IF NOT EXISTS idx_ideas_user_revision_id ON ideas (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS tasks (
-  id               UUID        PRIMARY KEY,
+  id               UUID        NOT NULL,
   user_id          UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name             TEXT        NOT NULL,
   description      TEXT        NOT NULL DEFAULT '',
   box              TEXT        NOT NULL CHECK (box IN ('inbox', 'today', 'week', 'later')),
-  goal_id          UUID        REFERENCES goals(id) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
-  context_id       UUID        REFERENCES contexts(id) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
-  category_id      UUID        REFERENCES categories(id) ON DELETE SET NULL DEFERRABLE INITIALLY DEFERRED,
+  goal_id          UUID,
+  context_id       UUID,
+  category_id      UUID,
   is_completed     BOOLEAN     NOT NULL DEFAULT FALSE,
   completed_at     TIMESTAMPTZ,
   repeat_rule      JSONB,
@@ -173,20 +178,26 @@ CREATE TABLE IF NOT EXISTS tasks (
   is_deleted       BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at       TIMESTAMPTZ NOT NULL,
   updated_at       TIMESTAMPTZ NOT NULL,
-  revision         BIGINT      NOT NULL DEFAULT 0
+  revision         BIGINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, id),
+  CONSTRAINT tasks_goal_id_fkey FOREIGN KEY (user_id, goal_id) REFERENCES goals (user_id, id) ON DELETE SET NULL (goal_id) DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT tasks_context_id_fkey FOREIGN KEY (user_id, context_id) REFERENCES contexts (user_id, id) ON DELETE SET NULL (context_id) DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT tasks_category_id_fkey FOREIGN KEY (user_id, category_id) REFERENCES categories (user_id, id) ON DELETE SET NULL (category_id) DEFERRABLE INITIALLY DEFERRED
 );
 CREATE INDEX IF NOT EXISTS idx_tasks_user_revision_id ON tasks (user_id, revision, id);
 
 CREATE TABLE IF NOT EXISTS checklist_items (
-  id           UUID        PRIMARY KEY,
+  id           UUID        NOT NULL,
   user_id      UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  task_id      UUID        NOT NULL REFERENCES tasks(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+  task_id      UUID        NOT NULL,
   name         TEXT        NOT NULL,
   is_completed BOOLEAN     NOT NULL DEFAULT FALSE,
   sort_order   TEXT        NOT NULL DEFAULT '0',
   is_deleted   BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at   TIMESTAMPTZ NOT NULL,
   updated_at   TIMESTAMPTZ NOT NULL,
-  revision     BIGINT      NOT NULL DEFAULT 0
+  revision     BIGINT      NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, id),
+  CONSTRAINT checklist_items_task_id_fkey FOREIGN KEY (user_id, task_id) REFERENCES tasks (user_id, id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
 );
 CREATE INDEX IF NOT EXISTS idx_checklist_items_user_revision_id ON checklist_items (user_id, revision, id);

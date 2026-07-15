@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
-import { DB_NAME, RECORD_SYNC_STATUS } from "@/constants";
+import { DB_NAME } from "@/constants";
 import type {
   Attachment,
   Category,
@@ -13,7 +13,7 @@ import type {
   SyncMeta,
   Task,
 } from "@/types/entities";
-import { DB_SCHEMA_V1, DB_SCHEMA_V2 } from "./schema";
+import { DB_SCHEMA } from "./schema";
 
 export class ClearProgressDatabase extends Dexie {
   tasks!: EntityTable<Task, "id">;
@@ -30,35 +30,7 @@ export class ClearProgressDatabase extends Dexie {
 
   constructor() {
     super(DB_NAME);
-    this.version(1).stores(DB_SCHEMA_V1);
-
-    // implements FR6 of fix-push-poison-pill
-    this.version(2)
-      .stores(DB_SCHEMA_V2)
-      .upgrade(async (transaction) => {
-        const entityTables = [
-          "tasks",
-          "goals",
-          "contexts",
-          "categories",
-          "checklist_items",
-          "ideas",
-          "attachments",
-          "settings",
-        ] as const;
-
-        for (const tableName of entityTables) {
-          await transaction
-            .table(tableName)
-            .toCollection()
-            .modify((record: Record<string, unknown>) => {
-              record.syncStatus = record.needsSync
-                ? RECORD_SYNC_STATUS.PENDING
-                : RECORD_SYNC_STATUS.SYNCED;
-              delete record.needsSync;
-            });
-        }
-      });
+    this.version(1).stores(DB_SCHEMA);
   }
 }
 
