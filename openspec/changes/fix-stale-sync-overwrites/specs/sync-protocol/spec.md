@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Pull protects local dirty records
-# implements FR5 of fix-stale-sync-overwrites
+Implements FR5 of fix-stale-sync-overwrites.
 
 When applying server records from pull, the client SHALL compare timestamps for records that have `syncStatus = "pending"`: the server record SHALL overwrite the local pending record only when the server record's `updated_at` is strictly newer than the local `updated_at` (last-write-wins, mirroring push conflict resolution). When the local `updated_at` is equal or newer, the local pending record SHALL be preserved and pushed in the next sync. Records with `syncStatus = "synced"` or `"rejected"` SHALL be overwritten by the server version as before. Every overwrite of a pending record SHALL be logged with entity type, record id, and both timestamps.
 

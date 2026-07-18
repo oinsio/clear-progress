@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Lazy rebalancing when key exceeds threshold
-# implements FR4 of fix-stale-sync-overwrites (was: FR9 of fractional-sort-order)
+Implements FR4 of fix-stale-sync-overwrites (was: FR9 of fractional-sort-order).
 
 When a newly generated sort_order key exceeds 10 characters, the system MUST rebalance all tasks in the same box with evenly distributed keys preserving current display order. Rebalanced tasks SHALL be marked `syncStatus = "pending"` but their `updated_at` SHALL NOT be modified — rebalancing is a system-derived mutation, and refreshing the timestamps would let a stale device overwrite newer content of every task in the box via whole-record last-write-wins. Only the task the user actually dragged SHALL get a refreshed `updated_at` (in `reorderTasks`).
 

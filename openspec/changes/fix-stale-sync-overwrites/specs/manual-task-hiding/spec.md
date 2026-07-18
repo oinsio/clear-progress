@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Hidden tasks auto-reveal on appear date
-# implements FR1 of fix-stale-sync-overwrites (was: FR7, FR8 of hide-tasks)
+Implements FR1 of fix-stale-sync-overwrites (was: FR7, FR8 of hide-tasks).
 
 The system SHALL automatically set `is_hidden = false` when `appear_date <= logicalDate`. The task SHALL remain in its original box. Auto-reveal SHALL set `syncStatus = "pending"` but SHALL NOT modify `updated_at` — it is a system-derived transition, not a user edit; the timestamp stays at the last real user edit so a stale device cannot win last-write-wins against newer edits from another device.
 
@@ -16,9 +16,9 @@ The system SHALL automatically set `is_hidden = false` when `appear_date <= logi
 ## ADDED Requirements
 
 ### Requirement: Manual unhide before appear date is a synced user edit
-# implements FR2 of fix-stale-sync-overwrites
+Implements FR2 of fix-stale-sync-overwrites.
 
-When the user manually unhides a task before its `appear_date`, the system SHALL treat it as a regular user edit: set `is_hidden = false`, clear `appear_date`, refresh `updated_at`, and set `syncStatus = "pending"`. The manual unhide SHALL propagate to other devices via ordinary push/pull and SHALL win last-write-wins against any older state of the record. Manual hide (setting `is_hidden = true` with an `appear_date`) SHALL behave symmetrically as a user edit.
+When the user manually unhides a manually hidden task before its `appear_date`, the system SHALL treat it as a regular user edit: set `is_hidden = false`, clear `appear_date`, refresh `updated_at`, and set `syncStatus = "pending"`. The manual unhide SHALL propagate to other devices via ordinary push/pull and SHALL win last-write-wins against any older state of the record. Manual hide (setting `is_hidden = true` with an `appear_date`) SHALL behave symmetrically as a user edit. This applies to non-recurring tasks only — recurring tasks expose no manual hide/unhide controls (see "Hide action excluded for recurring tasks"); hidden recurring copies are governed solely by system auto-reveal.
 
 ```mermaid
 sequenceDiagram
