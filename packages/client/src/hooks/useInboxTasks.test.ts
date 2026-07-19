@@ -200,13 +200,38 @@ describe("useInboxTasks", () => {
     expect(firstService[serviceMethod]).not.toHaveBeenCalled();
   });
 
-  it("should add alert when completing task with invalid repeat rule", async () => {
-    const task = buildTask({ box: "inbox", name: "Inbox Bad Rule" });
+  it.each([
+    {
+      label: "invalid repeat rule",
+      taskName: "Inbox Bad Rule",
+      recurringStatus: "skipped_invalid_rule" as const,
+      expectedAlerts: [
+        { type: "repeat_rule_invalid", taskNames: ["Inbox Bad Rule"] },
+      ],
+    },
+    {
+      label: "valid recurring result",
+      taskName: "Inbox Task",
+      recurringStatus: "not_recurring" as const,
+      expectedAlerts: null,
+    },
+    {
+      label: "error_creating_copy recurring result",
+      taskName: "Inbox Copy Error",
+      recurringStatus: "error_creating_copy" as const,
+      expectedAlerts: null,
+    },
+  ])("should add alert only when completing task with $label", async ({
+    taskName,
+    recurringStatus,
+    expectedAlerts,
+  }) => {
+    const task = buildTask({ box: "inbox", name: taskName });
     mockTaskService = createMockTaskService({
       getByBox: vi.fn().mockResolvedValue([task]),
       complete: vi.fn().mockResolvedValue({
         completed: task,
-        recurringResult: { status: "skipped_invalid_rule" },
+        recurringResult: { status: recurringStatus },
       }),
     });
     const { result } = renderHook(() => useInboxTasks(mockTaskService));
@@ -216,27 +241,10 @@ describe("useInboxTasks", () => {
       await result.current.completeTask(task.id);
     });
 
-    expect(mockAddAlerts).toHaveBeenCalledWith([
-      { type: "repeat_rule_invalid", taskNames: ["Inbox Bad Rule"] },
-    ]);
-  });
-
-  it("should not add alert when completing task with valid recurring result", async () => {
-    const task = buildTask({ box: "inbox" });
-    mockTaskService = createMockTaskService({
-      getByBox: vi.fn().mockResolvedValue([task]),
-      complete: vi.fn().mockResolvedValue({
-        completed: task,
-        recurringResult: { status: "not_recurring" },
-      }),
-    });
-    const { result } = renderHook(() => useInboxTasks(mockTaskService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    await act(async () => {
-      await result.current.completeTask(task.id);
-    });
-
-    expect(mockAddAlerts).not.toHaveBeenCalled();
+    if (expectedAlerts) {
+      expect(mockAddAlerts).toHaveBeenCalledWith(expectedAlerts);
+    } else {
+      expect(mockAddAlerts).not.toHaveBeenCalled();
+    }
   });
 });

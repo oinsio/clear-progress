@@ -6,6 +6,7 @@ import { buildTask } from "@/test/factories/taskFactory";
 import { useTasks } from "./useTasks";
 import {
   clearDatabase,
+  expectNoTasksAfterLoading,
   mockSchedulePush,
   setupHookWithOneTask,
   taskService,
@@ -30,9 +31,11 @@ vi.mock("@/app/providers/SyncProvider", () => ({
   }),
 }));
 
+let mockShowHidden = false;
+
 vi.mock("@/hooks/useShowHidden", () => ({
   useShowHidden: () => ({
-    showHidden: false,
+    showHidden: mockShowHidden,
     toggleShowHidden: vi.fn(),
   }),
 }));
@@ -41,6 +44,7 @@ describe("useTasks — loading and filtering", () => {
   beforeEach(async () => {
     await clearDatabase();
     mockSchedulePush.mockClear();
+    mockShowHidden = false;
   });
 
   it("should set isLoading to true on initial render", () => {
@@ -66,16 +70,12 @@ describe("useTasks — loading and filtering", () => {
 
   it("should not return tasks from other boxes", async () => {
     await db.tasks.add(buildTask({ box: "inbox" }));
-    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.tasks).toHaveLength(0);
+    await expectNoTasksAfterLoading();
   });
 
   it("should not return deleted tasks", async () => {
     await db.tasks.add(buildTask({ box: "today", is_deleted: true }));
-    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.tasks).toHaveLength(0);
+    await expectNoTasksAfterLoading();
   });
 
   it("should reactively update when a task is written to DB externally", async () => {
@@ -89,5 +89,18 @@ describe("useTasks — loading and filtering", () => {
     });
 
     await waitFor(() => expect(result.current.tasks).toHaveLength(1));
+  });
+
+  it("should not return hidden tasks when showHidden is false", async () => {
+    await db.tasks.add(buildTask({ box: "today", is_hidden: true }));
+    await expectNoTasksAfterLoading();
+  });
+
+  it("should return hidden tasks when showHidden is true", async () => {
+    mockShowHidden = true;
+    await db.tasks.add(buildTask({ box: "today", is_hidden: true }));
+    const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.tasks).toHaveLength(1);
   });
 });

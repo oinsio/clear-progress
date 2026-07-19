@@ -38,3 +38,9 @@ export async function clearDatabase() {
   await db.tasks.clear();
   await db.checklist_items.clear();
 }
+
+export async function expectNoTasksAfterLoading() {
+  const { result } = renderHook(() => useTasks(BOX.TODAY, taskService));
+  await waitFor(() => expect(result.current.isLoading).toBe(false));
+  expect(result.current.tasks).toHaveLength(0);
+}
