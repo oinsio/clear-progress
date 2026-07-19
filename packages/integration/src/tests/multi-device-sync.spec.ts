@@ -3,14 +3,16 @@ import { expect, type Page, test } from "@playwright/test";
 import {
   createCategory,
   createGoal,
-  createTask,
-  deleteTaskFromDetail,
   navigateToCategories,
   navigateToGoals,
   openGoalDetail,
+} from "../page-goal-category-actions.js";
+import {
+  createTask,
+  deleteTaskFromDetail,
   openTaskDetail,
   updateTaskName,
-} from "../page-actions.js";
+} from "../page-task-actions.js";
 import {
   closeAuthenticatedPage,
   createAuthenticatedPage,

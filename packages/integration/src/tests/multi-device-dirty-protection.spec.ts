@@ -1,6 +1,10 @@
 // implements FR15 of add-supabase-integration-tests
 import { expect, test } from "@playwright/test";
-import { createTask, openTaskDetail, updateTaskName } from "../page-actions.js";
+import {
+  createTask,
+  openTaskDetail,
+  updateTaskName,
+} from "../page-task-actions.js";
 import {
   pullFromServer,
   setupTwoDeviceTest,

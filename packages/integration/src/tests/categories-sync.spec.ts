@@ -6,7 +6,7 @@ import {
   navigateToCategories,
   openCategoryDetail,
   updateCategoryName,
-} from "../page-actions.js";
+} from "../page-goal-category-actions.js";
 import {
   pullFromServer,
   setupSingleDeviceTest,

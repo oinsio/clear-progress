@@ -48,14 +48,14 @@ Consequence accepted: when a rebalanced record loses push LWW to a newer server 
 
 Winner selection is unchanged (earliest `next_date`, tiebreak by `id`). The winner record is then merged:
 
-| Fields                                                            | Source copy                                      |
-|-------------------------------------------------------------------|--------------------------------------------------|
-| `next_date`, `appear_date`, `is_hidden` (always as a triple)      | earliest `next_date`                             |
-| `name`, `description`, `goal_id`, `context_id`, `category_id`     | freshest `updated_at`                            |
-| `box`, `sort_order` (as a pair — sort keys are per-box grids)     | freshest `updated_at`                            |
-| `id`, `created_at`, `revision` (identity/bookkeeping)             | winner's own                                     |
-| `updated_at`                                                      | freshest copy's value — **not** refreshed to now |
-| `repeat_rule` differs between copies                              | freshest copy wins **wholesale**, dates included |
+| Fields                                                                               | Source copy                                      |
+|--------------------------------------------------------------------------------------|--------------------------------------------------|
+| `next_date`, `appear_date`, `is_hidden` (always as a triple)                         | earliest `next_date`                             |
+| `name`, `description`, `goal_id`, `context_id`, `category_id`                        | freshest `updated_at`                            |
+| `box`, `sort_order` (as a pair — sort keys are per-box grids)                        | freshest `updated_at`                            |
+| `id`, `created_at`, `revision` (identity/bookkeeping)                                | winner's own                                     |
+| `updated_at`                                                                         | freshest copy's value — **not** refreshed to now |
+| `repeat_rule` differs between the schedule winner and the freshest-`updated_at` copy | freshest copy wins **wholesale**, dates included |
 
 `is_hidden` travels with the schedule triple because it is derived from that copy's `appear_date` (hidden iff not yet due); pairing it with another copy's dates would break reveal timing. `sort_order` travels with `box` because sort keys only order within a box. Completion fields need no rule: every copy in a duplicate group is non-completed by the group filter.
 

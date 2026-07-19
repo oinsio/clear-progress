@@ -22,6 +22,7 @@ services:
             - Authorization
             - apikey
             - x-client-info
+            - x-supabase-api-version
 
   - name: rest-v1
     url: http://rest:3000
@@ -40,6 +41,7 @@ services:
             - Authorization
             - apikey
             - x-client-info
+            - x-supabase-api-version
             - Prefer
 
   - name: storage-v1
@@ -59,6 +61,7 @@ services:
             - Authorization
             - apikey
             - x-client-info
+            - x-supabase-api-version
 
   - name: functions-v1
     url: http://edge-functions:9000
@@ -77,3 +80,4 @@ services:
             - Authorization
             - apikey
             - x-client-info
+            - x-supabase-api-version

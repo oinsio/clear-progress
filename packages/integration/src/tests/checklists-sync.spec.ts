@@ -1,10 +1,7 @@
 // implements FR6, FR8 of add-supabase-integration-tests
 import { expect, test } from "@playwright/test";
-import {
-  createTask,
-  openTaskDetail,
-  switchToChecklistTab,
-} from "../page-actions.js";
+import { switchToChecklistTab } from "../page-checklist-actions.js";
+import { createTask, openTaskDetail } from "../page-task-actions.js";
 import {
   pullFromServer,
   setupSingleDeviceTest,

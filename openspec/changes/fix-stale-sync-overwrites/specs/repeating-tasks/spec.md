@@ -46,7 +46,7 @@ The winner SHALL be merged, not kept verbatim:
 - Content fields (`name`, `description`, `goal_id`, `context_id`, `category_id`) and the pair `box` + `sort_order` (sort keys only order within a box) SHALL be taken from the copy with the freshest `updated_at`.
 - Identity fields (`id`, `created_at`, `revision`) SHALL stay the winner's own. Completion fields need no merge rule: every copy in a duplicate group is non-completed by the group filter.
 - The merged winner's `updated_at` SHALL equal the freshest copy's `updated_at`; deduplication SHALL NOT refresh it to the current time. The winner SHALL be written with `syncStatus: "pending"` only when the merge actually changed it; an already-optimal winner is not rewritten.
-- When `repeat_rule` differs between copies, the copy with the freshest `updated_at` SHALL win wholesale (all fields including `next_date` and `appear_date`), because a rule change recomputes its dates under the new rule.
+- When `repeat_rule` differs between the schedule winner and the freshest-`updated_at` copy, the copy with the freshest `updated_at` SHALL win wholesale (all fields including `next_date` and `appear_date`), because a rule change recomputes its dates under the new rule.
 
 Merge semantics apply identically to both recurring models (`fixed` and `after_completion`); the earliest-`next_date` winner rule for schedules is unchanged, and for `after_completion` any suboptimal winner self-corrects at the next completion because its next date derives only from the new `completed_at`.
 

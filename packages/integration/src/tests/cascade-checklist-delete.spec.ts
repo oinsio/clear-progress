@@ -2,11 +2,13 @@
 import { expect, test } from "@playwright/test";
 import {
   addChecklistItem,
+  switchToChecklistTab,
+} from "../page-checklist-actions.js";
+import {
   createTask,
   deleteTaskFromDetail,
   openTaskDetail,
-  switchToChecklistTab,
-} from "../page-actions.js";
+} from "../page-task-actions.js";
 import {
   pullFromServer,
   setupSingleDeviceTest,

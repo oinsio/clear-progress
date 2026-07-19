@@ -2,7 +2,7 @@
 // Test: rejected → red border → edit → amber → sync → transparent
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
-import { openTaskDetail, updateTaskName } from "../page-actions.js";
+import { openTaskDetail, updateTaskName } from "../page-task-actions.js";
 import { setupSingleDeviceTest, triggerSyncAndWait } from "../test-helpers.js";
 
 const DEXIE_DB_NAME = "clear-progress";

@@ -3,11 +3,10 @@
 import { expect, test } from "@playwright/test";
 import {
   createGoal,
-  createTask,
   navigateToGoals,
   openGoalDetail,
-  openTaskDetail,
-} from "../page-actions.js";
+} from "../page-goal-category-actions.js";
+import { createTask, openTaskDetail } from "../page-task-actions.js";
 import {
   pullFromServer,
   purgeOnServer,

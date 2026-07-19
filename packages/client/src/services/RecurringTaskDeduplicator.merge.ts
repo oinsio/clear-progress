@@ -1,3 +1,4 @@
+import { Temporal } from "@/lib/temporal";
 import type { Task } from "@/types/entities";
 
 /**
@@ -33,7 +34,10 @@ const MERGE_RELEVANT_FIELDS = [
  */
 function findFreshestUpdatedAtCopy(copies: Task[]): Task {
   return copies.reduce((freshest, candidate) =>
-    candidate.updated_at.localeCompare(freshest.updated_at) > 0
+    Temporal.Instant.compare(
+      Temporal.Instant.from(candidate.updated_at),
+      Temporal.Instant.from(freshest.updated_at),
+    ) > 0
       ? candidate
       : freshest,
   );

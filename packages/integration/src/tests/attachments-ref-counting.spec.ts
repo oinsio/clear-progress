@@ -4,13 +4,14 @@
 import { expect, test } from "@playwright/test";
 import {
   attachFileToEntity,
-  createGoal,
-  createTask,
   deleteFirstAttachment,
+} from "../page-attachment-actions.js";
+import {
+  createGoal,
   navigateToGoals,
   openGoalDetail,
-  openTaskDetail,
-} from "../page-actions.js";
+} from "../page-goal-category-actions.js";
+import { createTask, openTaskDetail } from "../page-task-actions.js";
 import {
   createMinimalPng,
   getFileFromServer,

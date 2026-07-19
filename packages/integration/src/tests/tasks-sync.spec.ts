@@ -5,7 +5,7 @@ import {
   deleteTaskFromDetail,
   openTaskDetail,
   updateTaskName,
-} from "../page-actions.js";
+} from "../page-task-actions.js";
 import {
   pullFromServer,
   setupSingleDeviceTest,

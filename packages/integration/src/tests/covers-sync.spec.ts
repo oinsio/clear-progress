@@ -4,7 +4,7 @@ import {
   createGoal,
   navigateToGoals,
   openGoalDetail,
-} from "../page-actions.js";
+} from "../page-goal-category-actions.js";
 import {
   createMinimalPng,
   getFileFromServer,

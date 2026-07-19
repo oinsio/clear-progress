@@ -2,7 +2,7 @@
 // Integration tests for attachment sync between devices.
 // Tasks 13.3-13.7 from add-file-attachments change.
 import { expect, test } from "@playwright/test";
-import { createTask, openTaskDetail } from "../page-actions.js";
+import { createTask, openTaskDetail } from "../page-task-actions.js";
 import {
   createMinimalPng,
   pullFromServer,

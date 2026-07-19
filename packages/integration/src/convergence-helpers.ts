@@ -123,6 +123,13 @@ export async function dumpServerState(
  * Asserts that device A, device B, and the server all hold an identical set
  * of records for the given entity table — the NFR-REL1 convergence check.
  * Call after both devices have completed a push+pull cycle.
+ *
+ * `recordFilter` scopes the comparison to the records a test actually touched.
+ * The backend user is shared across the whole integration suite, so unrelated
+ * records accumulate — and a clock-advanced device legitimately reveals OTHER
+ * specs' hidden occurrences whose `appear_date` falls on the faked date. Those
+ * are harness noise, not a convergence failure of the scenario under test;
+ * filtering by (e.g.) task name keeps the assertion about this test's records.
  * Implements NFR-REL1 of fix-stale-sync-overwrites.
  */
 export async function assertConverged(
@@ -130,6 +137,7 @@ export async function assertConverged(
   pageB: Page,
   credentials: ServerCallCredentials,
   entityKey: ConvergenceEntityKey,
+  recordFilter: (record: EntityRecord) => boolean = () => true,
 ): Promise<void> {
   const [deviceAState, deviceBState, serverState] = await Promise.all([
     dumpDeviceState(pageA, entityKey),
@@ -137,6 +145,10 @@ export async function assertConverged(
     dumpServerState(credentials, entityKey),
   ]);
 
-  expect(deviceAState).toEqual(serverState);
-  expect(deviceBState).toEqual(serverState);
+  expect(deviceAState.filter(recordFilter)).toEqual(
+    serverState.filter(recordFilter),
+  );
+  expect(deviceBState.filter(recordFilter)).toEqual(
+    serverState.filter(recordFilter),
+  );
 }

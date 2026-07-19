@@ -5,7 +5,7 @@ import {
   deleteGoalFromDetail,
   navigateToGoals,
   openGoalDetail,
-} from "../page-actions.js";
+} from "../page-goal-category-actions.js";
 import {
   pullFromServer,
   setupSingleDeviceTest,
