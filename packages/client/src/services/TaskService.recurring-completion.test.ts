@@ -201,6 +201,7 @@ describe("TaskService - Recurring Tasks Integration", () => {
       ).toBe("week");
     });
 
+    // implements FR2 of fix-recurring-completion-error-masking
     it("should not fail completion if recurring copy creation fails", async () => {
       const existingTask = buildTask({
         id: "task-1",
@@ -227,7 +228,10 @@ describe("TaskService - Recurring Tasks Integration", () => {
       // Completion should succeed even if clone creation fails
       expect(result.completed).toBeDefined();
       expect(result.completed.is_completed).toBe(true);
-      expect(result.recurringResult.status).toBe("skipped_invalid_rule");
+      // A copy-creation exception is a distinct status from a genuinely
+      // unparseable rule (FR1, FR2) — it must not be mislabeled as
+      // skipped_invalid_rule, which would falsely blame the repeat rule.
+      expect(result.recurringResult.status).toBe("error_creating_copy");
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to create recurring task:",
         cloneCreationError,

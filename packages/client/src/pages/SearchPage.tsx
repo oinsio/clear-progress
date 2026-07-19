@@ -20,6 +20,7 @@ import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
 import { useSearch } from "@/hooks/useSearch";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
+import { useTaskCompletionAlerts } from "@/hooks/useTaskCompletionAlerts";
 import { systemClock } from "@/lib/temporal";
 import {
   defaultIdeaService,
@@ -42,6 +43,7 @@ export default function SearchPage() {
   const { contexts } = useContexts();
   const { categories } = useCategories();
   const { isFocusMode, focusOpacity } = useFocusMode();
+  const { raiseCompletionAlerts } = useTaskCompletionAlerts();
   const navigate = useNavigate();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,11 +78,16 @@ export default function SearchPage() {
         await defaultTaskService.noncomplete(id);
       } else {
         const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
-        await defaultTaskService.complete(id, logicalDate);
+        const { recurringResult } = await defaultTaskService.complete(
+          id,
+          logicalDate,
+        );
+        // implements FR5, FR6, U3 of fix-recurring-completion-error-masking
+        raiseCompletionAlerts(recurringResult, task.name);
       }
       if (searchQuery) void search(searchQuery);
     },
-    [searchQuery, search],
+    [searchQuery, search, raiseCompletionAlerts],
   );
 
   const handleUpdateTask = useCallback(

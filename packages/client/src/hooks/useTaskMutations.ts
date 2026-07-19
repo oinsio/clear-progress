@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useAlerts } from "@/app/providers/AlertProvider";
 import { systemClock } from "@/lib/temporal";
 import type { TaskService } from "@/services/TaskService";
 import type { Box } from "@/types/common";
@@ -7,6 +6,7 @@ import type { Task } from "@/types/entities";
 import { getLogicalDate } from "@/utils/getLogicalDate";
 import { useSyncWrapper } from "./useMutationHelpers";
 import { getCachedDayBoundary } from "./useSettings";
+import { useTaskCompletionAlerts } from "./useTaskCompletionAlerts";
 
 export interface UseTaskMutationsReturn {
   completeTask: (id: string) => Promise<string | null>;
@@ -20,7 +20,7 @@ export function useTaskMutations(
   taskService: TaskService,
   onReload: () => Promise<void>,
 ): UseTaskMutationsReturn {
-  const { addAlerts } = useAlerts();
+  const { raiseCompletionAlerts } = useTaskCompletionAlerts();
   const withSync = useSyncWrapper(onReload);
 
   return useMemo(
@@ -42,11 +42,8 @@ export function useTaskMutations(
               id,
               logicalDate,
             );
-            if (recurringResult.status === "skipped_invalid_rule") {
-              addAlerts([
-                { type: "repeat_rule_invalid", taskNames: [task.name] },
-              ]);
-            }
+            // implements FR3, FR5 of fix-recurring-completion-error-masking
+            raiseCompletionAlerts(recurringResult, task.name);
             // Return ID only if the copy is NOT hidden
             recurringId =
               recurringResult.status === "created" &&
@@ -70,6 +67,6 @@ export function useTaskMutations(
         return withSync(() => taskService.duplicate(id), false);
       },
     }),
-    [taskService, withSync, addAlerts],
+    [taskService, withSync, raiseCompletionAlerts],
   );
 }

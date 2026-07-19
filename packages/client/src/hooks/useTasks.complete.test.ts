@@ -84,6 +84,26 @@ describe("useTasks — completeTask", () => {
     expect(recurringId).toBeNull();
   });
 
+  it("should return recurring task id when task creates a visible copy", async () => {
+    const { result, task } = await setupHookWithOneTask({
+      is_completed: false,
+      repeat_rule: JSON.stringify({
+        type: "fixed",
+        frequency: "daily",
+        interval: 1,
+        target_box: "today",
+        advance_days: 1,
+      }),
+    });
+
+    let recurringId: string | null = null;
+    await act(async () => {
+      recurringId = await result.current.completeTask(task.id);
+    });
+
+    expect(recurringId).not.toBeNull();
+  });
+
   it("should not return recurring task id when task creates hidden copy", async () => {
     const { result, task } = await setupHookWithOneTask({
       is_completed: false,
@@ -154,5 +174,30 @@ describe("useTasks — completeTask", () => {
     });
 
     expect(mockAddAlerts).not.toHaveBeenCalled();
+  });
+
+  it("should not add repeat_rule_invalid alert when recurringResult status is error_creating_copy", async () => {
+    const { result, task } = await setupHookWithOneTask({
+      is_completed: false,
+      repeat_rule: JSON.stringify({
+        type: "fixed",
+        frequency: "daily",
+        interval: 1,
+        target_box: "today",
+        advance_days: 0,
+      }),
+    });
+    vi.spyOn(taskService, "complete").mockResolvedValueOnce({
+      completed: task,
+      recurringResult: { status: "error_creating_copy" },
+    });
+
+    await act(async () => {
+      await result.current.completeTask(task.id);
+    });
+
+    expect(mockAddAlerts).not.toHaveBeenCalledWith([
+      { type: "repeat_rule_invalid", taskNames: [task.name] },
+    ]);
   });
 });

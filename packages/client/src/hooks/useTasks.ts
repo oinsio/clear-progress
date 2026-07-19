@@ -1,6 +1,5 @@
 import { liveQuery } from "dexie";
 import { useCallback, useEffect, useState } from "react";
-import { useAlerts } from "@/app/providers/AlertProvider";
 import { useSync } from "@/app/providers/SyncProvider";
 import { useShowHidden } from "@/hooks/useShowHidden";
 import { systemClock } from "@/lib/temporal";
@@ -11,6 +10,7 @@ import type { Task } from "@/types/entities";
 import { getLogicalDate } from "@/utils/getLogicalDate";
 
 import { getCachedDayBoundary } from "./useSettings";
+import { useTaskCompletionAlerts } from "./useTaskCompletionAlerts";
 
 export interface UseTasksReturn {
   tasks: Task[];
@@ -32,7 +32,7 @@ export function useTasks(
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { showHidden } = useShowHidden();
-  const { addAlerts } = useAlerts();
+  const { raiseCompletionAlerts } = useTaskCompletionAlerts();
   const { schedulePush } = useSync();
 
   useEffect(() => {
@@ -67,9 +67,8 @@ export function useTasks(
       } else {
         const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
         const { recurringResult } = await taskService.complete(id, logicalDate);
-        if (recurringResult.status === "skipped_invalid_rule") {
-          addAlerts([{ type: "repeat_rule_invalid", taskNames: [task.name] }]);
-        }
+        // implements FR3, FR5 of fix-recurring-completion-error-masking
+        raiseCompletionAlerts(recurringResult, task.name);
         // Return ID only if the recurring copy is NOT hidden
         recurringId =
           recurringResult.status === "created" &&
@@ -80,7 +79,7 @@ export function useTasks(
       schedulePush();
       return recurringId;
     },
-    [taskService, schedulePush, addAlerts],
+    [taskService, schedulePush, raiseCompletionAlerts],
   );
 
   const deleteTask = useCallback(

@@ -22,10 +22,14 @@ import {
   parseRepeatRule,
 } from "@/utils/repeatRule";
 
-/** Implements FR2 of detect-invalid-repeat-rule */
+/**
+ * Implements FR2 of detect-invalid-repeat-rule.
+ * implements FR1, FR2, FR4 of fix-recurring-completion-error-masking
+ */
 export type RecurringResult =
   | { status: "created"; task: Task }
   | { status: "skipped_invalid_rule" }
+  | { status: "error_creating_copy" }
   | { status: "not_recurring" };
 
 export class TaskService {
@@ -211,10 +215,14 @@ export class TaskService {
       };
     } catch (error) {
       console.error("Failed to create recurring task:", error);
-      // Do not interrupt task completion if clone creation failed
+      // Do not interrupt task completion if clone creation failed.
+      // implements FR1, FR2 of fix-recurring-completion-error-masking:
+      // this exception happened after the rule parsed successfully, so it
+      // must not be mislabeled as skipped_invalid_rule (reserved for a
+      // genuinely unparseable rule, handled by the `if (!rule)` return above).
       return {
         completed: finalCompletedTask,
-        recurringResult: { status: "skipped_invalid_rule" },
+        recurringResult: { status: "error_creating_copy" },
       };
     }
   }
