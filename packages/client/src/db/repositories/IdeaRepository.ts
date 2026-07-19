@@ -2,6 +2,9 @@ import type { WireIdea } from "@clear-progress/contract";
 import { ClientIdeaSchema } from "@/schemas/entities";
 import type { Idea, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
+import { shouldOverwritePendingLocalRecord } from "./applyServerRecordLww";
+
+const IDEA_ENTITY_NAME = "idea";
 
 export class IdeaRepository {
   async getAll(): Promise<Idea[]> {
@@ -53,11 +56,26 @@ export class IdeaRepository {
     return db.ideas.filter((idea) => idea.syncStatus === "pending").toArray();
   }
 
+  /**
+   * Implements FR5 of fix-stale-sync-overwrites.
+   * A local `pending` record is overwritten only when the server record's
+   * `updated_at` is strictly newer (LWW pull protection). Local records with
+   * any other syncStatus, or no local record at all, are always overwritten.
+   */
   async applyServerRecords(records: WireIdea[]): Promise<void> {
     await db.transaction("rw", db.ideas, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.ideas.get(serverRecord.id);
-        if (localRecord?.syncStatus !== "pending") {
+        const shouldWrite =
+          localRecord?.syncStatus !== "pending" ||
+          shouldOverwritePendingLocalRecord({
+            entityName: IDEA_ENTITY_NAME,
+            id: serverRecord.id,
+            localUpdatedAt: localRecord.updated_at,
+            serverUpdatedAt: serverRecord.updated_at,
+          });
+
+        if (shouldWrite) {
           const idea: Idea = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,
