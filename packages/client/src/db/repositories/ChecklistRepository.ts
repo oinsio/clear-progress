@@ -2,6 +2,9 @@ import type { WireChecklistItem } from "@clear-progress/contract";
 import { ClientChecklistItemSchema } from "@/schemas/entities";
 import type { ChecklistItem, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
+import { shouldOverwritePendingLocalRecord } from "./applyServerRecordLww";
+
+const CHECKLIST_ITEM_ENTITY_NAME = "checklist item";
 
 export class ChecklistRepository {
   async getAll(): Promise<ChecklistItem[]> {
@@ -72,11 +75,26 @@ export class ChecklistRepository {
       .toArray();
   }
 
+  /**
+   * Implements FR5 of fix-stale-sync-overwrites.
+   * A local `pending` record is overwritten only when the server record's
+   * `updated_at` is strictly newer (LWW pull protection). Local records with
+   * any other syncStatus, or no local record at all, are always overwritten.
+   */
   async applyServerRecords(records: WireChecklistItem[]): Promise<void> {
     await db.transaction("rw", db.checklist_items, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.checklist_items.get(serverRecord.id);
-        if (localRecord?.syncStatus !== "pending") {
+        const shouldWrite =
+          localRecord?.syncStatus !== "pending" ||
+          shouldOverwritePendingLocalRecord({
+            entityName: CHECKLIST_ITEM_ENTITY_NAME,
+            id: serverRecord.id,
+            localUpdatedAt: localRecord.updated_at,
+            serverUpdatedAt: serverRecord.updated_at,
+          });
+
+        if (shouldWrite) {
           const item: ChecklistItem = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,

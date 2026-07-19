@@ -30,6 +30,16 @@ describe("TaskService", () => {
       expect(completed.completed_at).not.toBe("");
     });
 
+    it("should throw an error naming the missing task id when task is not found", async () => {
+      const missingTaskId = "missing-task-id";
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(undefined),
+      });
+      await expect(taskService.complete(missingTaskId)).rejects.toThrow(
+        `Task not found: ${missingTaskId}`,
+      );
+    });
+
     it("should return not_recurring status when repeat_rule is empty", async () => {
       const task = buildTask({ repeat_rule: "" });
       const { taskService } = createTestContext({

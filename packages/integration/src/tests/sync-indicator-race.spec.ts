@@ -2,10 +2,9 @@
 import { expect, test } from "@playwright/test";
 import {
   addChecklistItem,
-  createTask,
-  openTaskDetail,
   switchToChecklistTab,
-} from "../page-actions.js";
+} from "../page-checklist-actions.js";
+import { createTask, openTaskDetail } from "../page-task-actions.js";
 import { setupSingleDeviceTest, triggerSyncAndWait } from "../test-helpers.js";
 
 const { getPage } = setupSingleDeviceTest();

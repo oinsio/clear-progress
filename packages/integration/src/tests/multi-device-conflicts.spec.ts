@@ -2,14 +2,16 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import {
   createGoal,
-  createTask,
-  deleteTaskFromDetail,
   navigateToGoals,
   openGoalDetail,
-  openTaskDetail,
   updateGoalName,
+} from "../page-goal-category-actions.js";
+import {
+  createTask,
+  deleteTaskFromDetail,
+  openTaskDetail,
   updateTaskName,
-} from "../page-actions.js";
+} from "../page-task-actions.js";
 import {
   pullFromServer,
   setupTwoDeviceTest,

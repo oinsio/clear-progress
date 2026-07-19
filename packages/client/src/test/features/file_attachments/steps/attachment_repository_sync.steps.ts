@@ -5,15 +5,24 @@ import type { WireAttachment } from "@clear-progress/contract";
 import { expect, type TestContext } from "vitest";
 import { db } from "@/db/database";
 import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
+import { Temporal } from "@/lib/temporal";
 import { buildAttachment } from "@/test/factories/attachmentFactory";
 import type { Attachment } from "@/types/entities";
+import { toISOTimestamp } from "@/utils/dateHelpers";
 
 const feature = await loadFeature("../attachment_repository_sync.feature");
+
+// FR5 of fix-stale-sync-overwrites: strictly before any `buildAttachment()`
+// call in this suite, so a server record built with this timestamp is never
+// strictly newer than a local pending record.
+const OLDER_THAN_LOCAL_ATTACHMENT_TIMESTAMP = toISOTimestamp(
+  Temporal.Instant.from("2020-01-01T00:00:00.000Z"),
+);
 
 function buildWireAttachment(
   overrides: Partial<WireAttachment> = {},
 ): WireAttachment {
-  const now = new Date().toISOString();
+  const now = toISOTimestamp();
   return {
     id: crypto.randomUUID(),
     entity_type: "task",
@@ -159,9 +168,14 @@ describeFeature(
         When(
           "applyServerRecords is called with a record having the same id",
           async (_ctx: TestContext) => {
+            // FR5 of fix-stale-sync-overwrites: a pending local record is only
+            // preserved when the server record is not strictly newer, so the
+            // server record here is given an older updated_at than the local
+            // pending record to deterministically exercise that branch.
             const serverRecord = buildWireAttachment({
               id: localAttachment.id,
               filename: "server-version.pdf",
+              updated_at: OLDER_THAN_LOCAL_ATTACHMENT_TIMESTAMP,
             });
             await repository.applyServerRecords([serverRecord]);
           },

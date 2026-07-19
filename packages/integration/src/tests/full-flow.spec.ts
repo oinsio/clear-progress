@@ -3,20 +3,22 @@ import { expect, test } from "@playwright/test";
 import {
   createCategory,
   createGoal,
-  createTask,
   deleteCategoryFromDetail,
   deleteGoalFromDetail,
-  deleteTaskFromDetail,
-  findTaskItem,
   navigateToCategories,
   navigateToGoals,
   openCategoryDetail,
   openGoalDetail,
-  openTaskDetail,
   updateCategoryName,
   updateGoalName,
+} from "../page-goal-category-actions.js";
+import {
+  createTask,
+  deleteTaskFromDetail,
+  findTaskItem,
+  openTaskDetail,
   updateTaskName,
-} from "../page-actions.js";
+} from "../page-task-actions.js";
 import {
   pullFromServer,
   setupSingleDeviceTest,

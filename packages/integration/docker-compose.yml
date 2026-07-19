@@ -54,7 +54,12 @@ services:
       GOTRUE_JWT_ADMIN_ROLES: service_role
       GOTRUE_JWT_AUD: authenticated
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
-      GOTRUE_JWT_EXP: "3600"
+      # 7-day access tokens: multi-device stale-sync tests fast-forward a
+      # device's browser clock up to ~2 days to simulate reconnecting later.
+      # A 1-hour token would appear expired after that jump and trigger a
+      # refresh, which races/fails under the faked clock. A token that outlasts
+      # the jump is never refreshed, keeping those tests deterministic.
+      GOTRUE_JWT_EXP: "604800"
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_MAILER_AUTOCONFIRM: "true"
       GOTRUE_SMTP_HOST: ""

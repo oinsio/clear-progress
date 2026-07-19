@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, test } from "@playwright/test";
-import { createTask, openTaskDetail } from "../page-actions.js";
+import { createTask, openTaskDetail } from "../page-task-actions.js";
 import {
   getFileFromServer,
   pullFromServer,

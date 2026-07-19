@@ -169,46 +169,4 @@ describe("HiddenTaskService", () => {
       );
     });
   });
-
-  it("should update updated_at timestamp when revealing", async () => {
-    const clock = fakeClock("2026-04-16T10:30:00Z");
-    service = new HiddenTaskService(mockTaskRepository, clock);
-
-    const hiddenTask: Task = {
-      id: "task-timestamp-1",
-      name: "Hidden task",
-      description: "",
-      box: "today",
-      goal_id: "",
-      context_id: "",
-      category_id: "",
-      is_completed: false,
-      completed_at: "" as ISOTimestamp,
-      repeat_rule: "",
-      is_hidden: true,
-      next_date: "" as ISODate,
-      appear_date: "2026-04-16" as ISODate,
-      original_task_id: "",
-      sort_order: "0",
-      is_deleted: false,
-      created_at: "2026-04-15T10:00:00.000Z" as ISOTimestamp,
-      updated_at: "2026-04-15T10:00:00.000Z" as ISOTimestamp,
-      revision: 1,
-      syncStatus: "synced" as const,
-    };
-
-    (
-      mockTaskRepository.getTasksToReveal as ReturnType<typeof vi.fn>
-    ).mockResolvedValue([hiddenTask]);
-    (mockTaskRepository.update as ReturnType<typeof vi.fn>).mockResolvedValue(
-      undefined,
-    );
-
-    const revealed = await service.revealHiddenTasks();
-
-    expect(revealed[0].updated_at).toMatch(
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-    );
-    expect(revealed[0].updated_at).not.toBe("2026-04-15T10:00:00.000Z");
-  });
 });

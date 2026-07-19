@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { BOX } from "@/constants";
-import { Temporal } from "@/lib/temporal";
+import { fakeClock, Temporal } from "@/lib/temporal";
 import { buildTask } from "@/test/factories/taskFactory";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { createTestContext } from "./TaskService-test-utils";
@@ -28,6 +28,124 @@ describe("TaskService", () => {
       await expect(taskService.update("task-123", {})).rejects.toThrow(
         "task-123",
       );
+    });
+  });
+
+  describe("manual hide via update", () => {
+    // Characterization tests: FR2 of fix-stale-sync-overwrites requires manual
+    // hide to remain a regular user edit. These document EXISTING behavior
+    // that must NOT change.
+    it("should refresh updated_at to now when manually hiding a task", async () => {
+      const staleTimestamp = toISOTimestamp(
+        fakeClock("2025-01-01T00:00:00.000Z"),
+      );
+      const task = buildTask({
+        is_hidden: false,
+        appear_date: "",
+        updated_at: staleTimestamp,
+      });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+
+      const hidden = await taskService.update(task.id, {
+        is_hidden: true,
+        appear_date: "2026-08-01",
+      });
+
+      expect(hidden.updated_at).not.toBe(staleTimestamp);
+    });
+
+    it("should set appear_date to the given value when manually hiding a task", async () => {
+      const task = buildTask({ is_hidden: false, appear_date: "" });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+
+      const hidden = await taskService.update(task.id, {
+        is_hidden: true,
+        appear_date: "2026-08-01",
+      });
+
+      expect(hidden.appear_date).toBe("2026-08-01");
+      expect(hidden.is_hidden).toBe(true);
+    });
+
+    it("should set syncStatus to pending when manually hiding a task", async () => {
+      const task = buildTask({
+        is_hidden: false,
+        appear_date: "",
+        syncStatus: "synced" as const,
+      });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+
+      const hidden = await taskService.update(task.id, {
+        is_hidden: true,
+        appear_date: "2026-08-01",
+      });
+
+      expect(hidden.syncStatus).toBe("pending");
+    });
+  });
+
+  describe("manual unhide via update", () => {
+    // Characterization tests: FR2 of fix-stale-sync-overwrites requires manual
+    // unhide to remain a regular user edit. These document EXISTING behavior
+    // that must NOT change.
+    it("should refresh updated_at to now when manually unhiding a task", async () => {
+      const staleTimestamp = toISOTimestamp(
+        fakeClock("2025-01-01T00:00:00.000Z"),
+      );
+      const task = buildTask({
+        is_hidden: true,
+        appear_date: "2026-08-01",
+        updated_at: staleTimestamp,
+      });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+
+      const unhidden = await taskService.update(task.id, {
+        is_hidden: false,
+        appear_date: "",
+      });
+
+      expect(unhidden.updated_at).not.toBe(staleTimestamp);
+    });
+
+    it("should clear appear_date to empty string when manually unhiding a task", async () => {
+      const task = buildTask({ is_hidden: true, appear_date: "2026-08-01" });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+
+      const unhidden = await taskService.update(task.id, {
+        is_hidden: false,
+        appear_date: "",
+      });
+
+      expect(unhidden.appear_date).toBe("");
+      expect(unhidden.is_hidden).toBe(false);
+    });
+
+    it("should set syncStatus to pending when manually unhiding a task", async () => {
+      const task = buildTask({
+        is_hidden: true,
+        appear_date: "2026-08-01",
+        syncStatus: "synced" as const,
+      });
+      const { taskService } = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+      });
+
+      const unhidden = await taskService.update(task.id, {
+        is_hidden: false,
+        appear_date: "",
+      });
+
+      expect(unhidden.syncStatus).toBe("pending");
     });
   });
 

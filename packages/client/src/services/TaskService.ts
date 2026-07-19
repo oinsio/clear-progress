@@ -431,11 +431,18 @@ export class TaskService {
     });
 
     if (needsRebalancing(newSortOrder)) {
-      await this.rebalanceBox(task.box);
+      await this.rebalanceBox(task.box, taskId);
     }
   }
 
-  private async rebalanceBox(box: Box): Promise<void> {
+  /**
+   * Implements FR4 of fix-stale-sync-overwrites.
+   * Assigns fresh sort_order keys and syncStatus "pending" to every task
+   * in the box without touching their updated_at, since rebalancing is a
+   * system-initiated reshuffle, not a user edit. The dragged task (already
+   * refreshed by reorderTasks) keeps its freshly refreshed updated_at.
+   */
+  private async rebalanceBox(box: Box, draggedTaskId: string): Promise<void> {
     const tasks = await this.taskRepository.getByBox(box);
     const sorted = this.sortBySortOrder(tasks);
     const newKeys = rebalanceKeys(sorted.length);
@@ -443,7 +450,7 @@ export class TaskService {
     const rebalancedTasks = sorted.map((task, index) => ({
       ...task,
       sort_order: newKeys[index],
-      updated_at: now,
+      updated_at: task.id === draggedTaskId ? now : task.updated_at,
       syncStatus: "pending" as const,
     }));
     await this.taskRepository.bulkUpsert(rebalancedTasks);

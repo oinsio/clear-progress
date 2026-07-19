@@ -5,6 +5,9 @@ import type { Box } from "@/types/common";
 import type { ISODate, ISOTimestamp, Task } from "@/types/entities";
 import { sanitizeDateOnly } from "@/utils/dateHelpers";
 import { db } from "../database";
+import { shouldOverwritePendingLocalRecord } from "./applyServerRecordLww";
+
+const TASK_ENTITY_NAME = "task";
 
 export class TaskRepository {
   async getAll(): Promise<Task[]> {
@@ -134,11 +137,26 @@ export class TaskRepository {
       .toArray();
   }
 
+  /**
+   * Implements FR5 of fix-stale-sync-overwrites.
+   * A local `pending` record is overwritten only when the server record's
+   * `updated_at` is strictly newer (LWW pull protection). Local records with
+   * any other syncStatus, or no local record at all, are always overwritten.
+   */
   async applyServerRecords(records: WireTask[]): Promise<void> {
     await db.transaction("rw", db.tasks, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.tasks.get(serverRecord.id);
-        if (localRecord?.syncStatus !== "pending") {
+        const shouldWrite =
+          localRecord?.syncStatus !== "pending" ||
+          shouldOverwritePendingLocalRecord({
+            entityName: TASK_ENTITY_NAME,
+            id: serverRecord.id,
+            localUpdatedAt: localRecord.updated_at,
+            serverUpdatedAt: serverRecord.updated_at,
+          });
+
+        if (shouldWrite) {
           const sanitizedRecord: Task = {
             ...serverRecord,
             next_date: (sanitizeDateOnly(serverRecord.next_date) || "") as

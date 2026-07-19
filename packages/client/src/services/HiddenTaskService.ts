@@ -1,7 +1,6 @@
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { type Clock, systemClock } from "@/lib/temporal";
 import type { ISODate, Task } from "@/types/entities";
-import { toISOTimestamp } from "@/utils/dateHelpers";
 
 export class HiddenTaskService {
   constructor(
@@ -9,7 +8,10 @@ export class HiddenTaskService {
     private readonly clock: Clock = systemClock,
   ) {}
 
-  /** Implements FR4 of day-boundary */
+  /**
+   * Implements FR1 of fix-stale-sync-overwrites (preserves updated_at on reveal).
+   * Implements FR4 of day-boundary (current-date resolution for reveal check).
+   */
   async revealHiddenTasks(logicalDate?: ISODate): Promise<Task[]> {
     const currentDate = logicalDate ?? this.clock.plainDateISO().toString();
     const tasksToReveal =
@@ -19,14 +21,12 @@ export class HiddenTaskService {
       return [];
     }
 
-    const now = toISOTimestamp(this.clock);
     const revealedTasks: Task[] = [];
 
     for (const task of tasksToReveal) {
       const updatedTask: Task = {
         ...task,
         is_hidden: false,
-        updated_at: now,
         syncStatus: "pending" as const,
       };
 

@@ -6,15 +6,14 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
+import { attachFileToEntity } from "../page-attachment-actions.js";
 import {
-  attachFileToEntity,
   createGoal,
-  createTask,
   navigateToGoals,
   openGoalDetail,
-  openTaskDetail,
   uploadCoverToGoal,
-} from "../page-actions.js";
+} from "../page-goal-category-actions.js";
+import { createTask, openTaskDetail } from "../page-task-actions.js";
 import {
   findServerAttachmentForTask,
   getFileFromServer,

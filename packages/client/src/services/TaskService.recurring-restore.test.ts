@@ -4,7 +4,11 @@ import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { buildTask } from "@/test/factories/taskFactory";
 import type { Task } from "@/types/entities";
 import type { TaskService } from "./TaskService";
-import { createTestContext } from "./TaskService-test-utils";
+import {
+  createTestContext,
+  mockGetByIdFromMap,
+  mockUpdateRecording,
+} from "./TaskService-test-utils";
 
 describe("TaskService - Recurring Restore (fix-recurring-restore)", () => {
   let taskService: TaskService;
@@ -32,20 +36,15 @@ describe("TaskService - Recurring Restore (fix-recurring-restore)", () => {
         is_deleted: false,
       });
 
-      const updates: Record<string, Task> = {};
-
-      mockTaskRepository.getById = vi.fn().mockImplementation(async (id) => {
-        if (id === "a") return updates.a ?? originalTask;
-        if (id === "b") return updates.b ?? activeCopy;
-        return undefined;
-      });
+      const updates = mockUpdateRecording(mockTaskRepository);
+      mockGetByIdFromMap(
+        mockTaskRepository,
+        { a: originalTask, b: activeCopy },
+        updates,
+      );
       mockTaskRepository.findByOriginalTaskId = vi
         .fn()
         .mockResolvedValue([activeCopy]);
-      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
-        updates[task.id] = task;
-        return task;
-      });
 
       await taskService.softDelete("a");
 
@@ -62,14 +61,9 @@ describe("TaskService - Recurring Restore (fix-recurring-restore)", () => {
         repeat_rule: "daily",
       });
 
-      const updates: Record<string, Task> = {};
-
-      mockTaskRepository.getById = vi.fn().mockResolvedValue(originalTask);
+      const updates = mockUpdateRecording(mockTaskRepository);
+      mockGetByIdFromMap(mockTaskRepository, { a: originalTask }, updates);
       mockTaskRepository.findByOriginalTaskId = vi.fn().mockResolvedValue([]);
-      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
-        updates[task.id] = task;
-        return task;
-      });
 
       await taskService.softDelete("a");
 
@@ -93,14 +87,8 @@ describe("TaskService - Recurring Restore (fix-recurring-restore)", () => {
     function setupRestoreMocks(
       tasks: Record<string, Task>,
     ): Record<string, Task> {
-      const updates: Record<string, Task> = {};
-      mockTaskRepository.getById = vi.fn().mockImplementation(async (id) => {
-        return updates[id] ?? tasks[id] ?? undefined;
-      });
-      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
-        updates[task.id] = task;
-        return task;
-      });
+      const updates = mockUpdateRecording(mockTaskRepository);
+      mockGetByIdFromMap(mockTaskRepository, tasks, updates);
       return updates;
     }
 
