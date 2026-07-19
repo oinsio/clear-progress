@@ -16,7 +16,6 @@ function createMockRepository(): SettingsRepository {
     getByKey: vi.fn(),
     getValue: vi.fn(),
     set: vi.fn(),
-    getChangedSince: vi.fn(),
     getNeedingSync: vi.fn(),
     clearNeedsSyncByKey: vi.fn(),
     bulkUpsert: vi.fn(),

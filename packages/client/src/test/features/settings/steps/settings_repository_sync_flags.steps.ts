@@ -90,51 +90,5 @@ describeFeature(
         },
       );
     });
-
-    // @settings-specs-and-bdd @FR2
-    f.Scenario(
-      "Filter settings by updated_at",
-      ({ Given, And, When, Then }) => {
-        let result: Setting[];
-
-        Given(
-          'setting A has updated_at "2025-01-01T00:00:00.000Z"',
-          async (_ctx: TestContext) => {
-            await db.settings.add(
-              buildSetting({
-                key: "a",
-                updated_at: "2025-01-01T00:00:00.000Z",
-              }),
-            );
-          },
-        );
-
-        And(
-          'setting B has updated_at "2025-01-02T00:00:00.000Z"',
-          async (_ctx: TestContext) => {
-            await db.settings.add(
-              buildSetting({
-                key: "b",
-                updated_at: "2025-01-02T00:00:00.000Z",
-              }),
-            );
-          },
-        );
-
-        When(
-          'getChangedSince is called with "2025-01-01T00:00:00.000Z"',
-          async (_ctx: TestContext) => {
-            result = await repository.getChangedSince(
-              "2025-01-01T00:00:00.000Z",
-            );
-          },
-        );
-
-        Then("only setting B is returned", async (_ctx: TestContext) => {
-          expect(result).toHaveLength(1);
-          expect(result[0].key).toBe("b");
-        });
-      },
-    );
   },
 );

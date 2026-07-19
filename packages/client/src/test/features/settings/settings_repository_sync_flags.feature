@@ -13,10 +13,3 @@ Feature: Settings repository sync flags
     When clearNeedsSyncByKey is called with keys ["accent_color"]
     Then "accent_color" has syncStatus "synced"
     And "default_box" still has syncStatus "pending"
-
-  @settings-specs-and-bdd @FR2
-  Scenario: Filter settings by updated_at
-    Given setting A has updated_at "2025-01-01T00:00:00.000Z"
-    And setting B has updated_at "2025-01-02T00:00:00.000Z"
-    When getChangedSince is called with "2025-01-01T00:00:00.000Z"
-    Then only setting B is returned

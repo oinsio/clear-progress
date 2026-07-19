@@ -48,10 +48,6 @@ export class IdeaRepository {
     await db.ideas.bulkPut(ideas);
   }
 
-  async getChangedSince(since: string): Promise<Idea[]> {
-    return db.ideas.where("updated_at").above(since).toArray();
-  }
-
   async getNeedingSync(): Promise<Idea[]> {
     return db.ideas.filter((idea) => idea.syncStatus === "pending").toArray();
   }
