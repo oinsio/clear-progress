@@ -4,13 +4,16 @@
 import { expect, test } from "@playwright/test";
 import {
   attachFileToEntity,
-  createGoal,
-  createTask,
   deleteFirstAttachment,
+} from "../page-attachment-actions.js";
+import {
+  createGoal,
   navigateToGoals,
   openGoalDetail,
-  openTaskDetail,
-} from "../page-actions.js";
+  removeCoverFromGoal,
+  uploadCoverToGoal,
+} from "../page-goal-category-actions.js";
+import { createTask, openTaskDetail } from "../page-task-actions.js";
 import {
   createMinimalPng,
   getFileFromServer,
@@ -33,32 +36,22 @@ test("14.12: two goals same cover -> remove one -> file stays -> remove both -> 
   const goalNameY = `Cover Goal Y ${Date.now()}`;
 
   // Create two goals with the same cover image
-  await navigateToGoals(page);
-  await createGoal(page, goalNameX);
-  await openGoalDetail(page, goalNameX);
-  await page.getByTestId("edit-goal-button").click();
-  await page.getByTestId("cover-file-input").setInputFiles({
+  const sharedCoverFile = {
     name: "cover-shared.png",
     mimeType: "image/png",
     buffer: pngBuffer,
-  });
-  await page.getByTestId("cover-preview-img").waitFor({ state: "visible" });
-  await page.getByTestId("goal-save-button").click();
-  await page.getByTestId("edit-goal-button").waitFor({ state: "visible" });
+  };
+
+  await navigateToGoals(page);
+  await createGoal(page, goalNameX);
+  await openGoalDetail(page, goalNameX);
+  await uploadCoverToGoal(page, sharedCoverFile);
   await triggerSyncAndWait(page);
 
   await navigateToGoals(page);
   await createGoal(page, goalNameY);
   await openGoalDetail(page, goalNameY);
-  await page.getByTestId("edit-goal-button").click();
-  await page.getByTestId("cover-file-input").setInputFiles({
-    name: "cover-shared.png",
-    mimeType: "image/png",
-    buffer: pngBuffer,
-  });
-  await page.getByTestId("cover-preview-img").waitFor({ state: "visible" });
-  await page.getByTestId("goal-save-button").click();
-  await page.getByTestId("edit-goal-button").waitFor({ state: "visible" });
+  await uploadCoverToGoal(page, sharedCoverFile);
   await triggerSyncAndWait(page);
 
   // Get the cover hash
@@ -73,10 +66,7 @@ test("14.12: two goals same cover -> remove one -> file stays -> remove both -> 
   // Remove cover from goal X
   await navigateToGoals(page);
   await openGoalDetail(page, goalNameX);
-  await page.getByTestId("edit-goal-button").click();
-  await page.getByTestId("cover-remove-button").click();
-  await page.getByTestId("goal-save-button").click();
-  await page.getByTestId("edit-goal-button").waitFor({ state: "visible" });
+  await removeCoverFromGoal(page);
   await triggerSyncAndWait(page);
 
   // File stays — goal Y still references it
@@ -87,10 +77,7 @@ test("14.12: two goals same cover -> remove one -> file stays -> remove both -> 
   // Remove cover from goal Y
   await navigateToGoals(page);
   await openGoalDetail(page, goalNameY);
-  await page.getByTestId("edit-goal-button").click();
-  await page.getByTestId("cover-remove-button").click();
-  await page.getByTestId("goal-save-button").click();
-  await page.getByTestId("edit-goal-button").waitFor({ state: "visible" });
+  await removeCoverFromGoal(page);
   await triggerSyncAndWait(page);
 
   // File gone immediately — covers don't go through soft-delete, 0 refs

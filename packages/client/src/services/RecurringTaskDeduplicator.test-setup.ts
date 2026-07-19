@@ -1,9 +1,10 @@
 // implements FR3 of fix-stale-sync-overwrites
-import { beforeEach } from "vitest";
+import { beforeEach, expect } from "vitest";
 import { db } from "@/db/database";
 import { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { fakeClock } from "@/lib/temporal";
+import type { Task } from "@/types/entities";
 import { RecurringTaskDeduplicator } from "./RecurringTaskDeduplicator";
 
 // This must remain a THIRD distinct timestamp from every copy's updated_at
@@ -36,6 +37,29 @@ export function createRecurringTaskDeduplicatorMergeSetup(): {
   return {
     getDeduplicator: () => deduplicator,
   };
+}
+
+// The freshest-updated_at copy across the merge scenarios always carries
+// this name/description, so the merged survivor's content must match it.
+export const FRESH_CONTENT_NAME = "Fresh name";
+export const FRESH_CONTENT_DESCRIPTION = "Fresh description";
+
+/**
+ * Asserts the FR3 merge invariant shared by the schedule-and-box and
+ * wholesale-repeat-rule scenarios: the schedule triple (next_date +
+ * appear_date + is_hidden) stays coupled to the schedule winner's own copy,
+ * while name/description merge from the freshest-updated_at copy.
+ * Implements FR3 of fix-stale-sync-overwrites.
+ */
+export function expectScheduleTripleWithFreshContent(
+  survivor: Task | undefined,
+  scheduleTriple: { nextDate: string; appearDate: string; isHidden: boolean },
+): void {
+  expect(survivor?.next_date).toBe(scheduleTriple.nextDate);
+  expect(survivor?.appear_date).toBe(scheduleTriple.appearDate);
+  expect(survivor?.is_hidden).toBe(scheduleTriple.isHidden);
+  expect(survivor?.name).toBe(FRESH_CONTENT_NAME);
+  expect(survivor?.description).toBe(FRESH_CONTENT_DESCRIPTION);
 }
 
 // Deterministic UUIDs for predictable winner-by-schedule ordering, shared

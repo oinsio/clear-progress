@@ -1,20 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ChecklistRepository } from "@/db/repositories/ChecklistRepository";
 import type { TaskRepository } from "@/db/repositories/TaskRepository";
-import { createMockChecklistRepository } from "@/test/factories/checklistRepositoryFactory";
 import { buildTask } from "@/test/factories/taskFactory";
-import { createMockTaskRepository } from "@/test/mocks/taskRepositoryMock";
-import { TaskService } from "./TaskService";
+import type { Task } from "@/types/entities";
+import type { TaskService } from "./TaskService";
+import {
+  createTestContext,
+  mockGetByIdFromMap,
+  mockUpdateRecording,
+} from "./TaskService-test-utils";
 
 describe("TaskService - Recurring Tasks Integration", () => {
   let taskService: TaskService;
   let mockTaskRepository: TaskRepository;
-  let mockChecklistRepository: ChecklistRepository;
 
   beforeEach(() => {
-    mockTaskRepository = createMockTaskRepository();
-    mockChecklistRepository = createMockChecklistRepository();
-    taskService = new TaskService(mockTaskRepository, mockChecklistRepository);
+    const context = createTestContext();
+    taskService = context.taskService;
+    mockTaskRepository = context.mockTaskRepository;
     vi.clearAllMocks();
   });
 
@@ -40,21 +42,15 @@ describe("TaskService - Recurring Tasks Integration", () => {
         is_deleted: false,
       });
 
-      const updates: Record<string, ReturnType<typeof buildTask>> = {};
-
-      mockTaskRepository.getById = vi.fn().mockImplementation(async (id) => {
-        if (id === "task-1") return originalTask;
-        if (id === "task-2") return copy1;
-        if (id === "task-3") return copy2;
-        return undefined;
+      const updates = mockUpdateRecording(mockTaskRepository);
+      mockGetByIdFromMap(mockTaskRepository, {
+        "task-1": originalTask,
+        "task-2": copy1,
+        "task-3": copy2,
       });
       mockTaskRepository.findByOriginalTaskId = vi
         .fn()
         .mockResolvedValue([copy1, copy2]);
-      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
-        updates[task.id] = task;
-        return task;
-      });
 
       await taskService.softDelete("task-1");
 
@@ -73,18 +69,14 @@ describe("TaskService - Recurring Tasks Integration", () => {
         original_task_id: "",
       });
 
-      let deletedTask: ReturnType<typeof buildTask> | null = null;
-      mockTaskRepository.getById = vi.fn().mockResolvedValue(originalTask);
+      const updates = mockUpdateRecording(mockTaskRepository);
+      mockGetByIdFromMap(mockTaskRepository, { "task-1": originalTask });
       mockTaskRepository.findByOriginalTaskId = vi.fn().mockResolvedValue([]);
-      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
-        deletedTask = task;
-        return task;
-      });
 
       await taskService.softDelete("task-1");
 
-      expect(deletedTask).toBeDefined();
-      expect(deletedTask).toMatchObject({ is_deleted: true });
+      expect(updates["task-1"]).toBeDefined();
+      expect(updates["task-1"]).toMatchObject({ is_deleted: true });
     });
 
     it("should skip deleted copies when reassigning", async () => {
@@ -108,26 +100,74 @@ describe("TaskService - Recurring Tasks Integration", () => {
         is_deleted: false,
       });
 
-      const updates: Record<string, ReturnType<typeof buildTask>> = {};
-
-      mockTaskRepository.getById = vi.fn().mockImplementation(async (id) => {
-        if (id === "task-1") return originalTask;
-        if (id === "task-2") return deletedCopy;
-        if (id === "task-3") return activeCopy;
-        return undefined;
+      const updates = mockUpdateRecording(mockTaskRepository);
+      mockGetByIdFromMap(mockTaskRepository, {
+        "task-1": originalTask,
+        "task-2": deletedCopy,
+        "task-3": activeCopy,
       });
       mockTaskRepository.findByOriginalTaskId = vi
         .fn()
         .mockResolvedValue([deletedCopy, activeCopy]);
-      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
-        updates[task.id] = task;
-        return task;
-      });
 
       await taskService.softDelete("task-1");
 
       expect(updates["task-3"].original_task_id).toBe("");
       expect(updates["task-2"].original_task_id).toBe("task-3");
+    });
+
+    // Guards `if (copy.id !== newOriginal.id)`: the reassignment loop must
+    // skip the new-original's own entry inside `copies` and never call
+    // update() for it there — it is updated separately afterward (to clear
+    // its own original_task_id). A mutant that turns the guard into `if
+    // (true)` would call update() for newOriginal.id twice with different
+    // original_task_id payloads; asserting the exact call count/args (not
+    // just the final overwritten state) catches that extra call.
+    it("should call update exactly once per copy, skipping the new original inside the reassignment loop", async () => {
+      const originalTask = buildTask({
+        id: "task-1",
+        name: "Original",
+        original_task_id: "",
+      });
+
+      const copy1 = buildTask({
+        id: "task-2",
+        name: "Copy 1 (becomes new original)",
+        original_task_id: "task-1",
+        is_deleted: false,
+      });
+
+      const copy2 = buildTask({
+        id: "task-3",
+        name: "Copy 2",
+        original_task_id: "task-1",
+        is_deleted: false,
+      });
+
+      mockGetByIdFromMap(mockTaskRepository, {
+        "task-1": originalTask,
+        "task-2": copy1,
+        "task-3": copy2,
+      });
+      mockTaskRepository.findByOriginalTaskId = vi
+        .fn()
+        .mockResolvedValue([copy1, copy2]);
+      const updateSpy = vi.fn().mockImplementation(async (task: Task) => task);
+      mockTaskRepository.update = updateSpy;
+
+      await taskService.softDelete("task-1");
+
+      const updateCallsForNewOriginal = updateSpy.mock.calls.filter(
+        ([task]) => task.id === "task-2",
+      );
+      expect(updateCallsForNewOriginal).toHaveLength(1);
+      expect(updateCallsForNewOriginal[0][0].original_task_id).toBe("");
+
+      const updateCallsForOtherCopy = updateSpy.mock.calls.filter(
+        ([task]) => task.id === "task-3",
+      );
+      expect(updateCallsForOtherCopy).toHaveLength(1);
+      expect(updateCallsForOtherCopy[0][0].original_task_id).toBe("task-2");
     });
   });
 
@@ -153,21 +193,15 @@ describe("TaskService - Recurring Tasks Integration", () => {
         is_deleted: true,
       });
 
-      const updates: Record<string, ReturnType<typeof buildTask>> = {};
-
-      mockTaskRepository.getById = vi.fn().mockImplementation(async (id) => {
-        if (id === "task-1") return originalTask;
-        if (id === "task-2") return deletedCopy1;
-        if (id === "task-3") return deletedCopy2;
-        return undefined;
+      const updates = mockUpdateRecording(mockTaskRepository);
+      mockGetByIdFromMap(mockTaskRepository, {
+        "task-1": originalTask,
+        "task-2": deletedCopy1,
+        "task-3": deletedCopy2,
       });
       mockTaskRepository.findByOriginalTaskId = vi
         .fn()
         .mockResolvedValue([deletedCopy1, deletedCopy2]);
-      mockTaskRepository.update = vi.fn().mockImplementation(async (task) => {
-        updates[task.id] = task;
-        return task;
-      });
 
       await taskService.softDelete("task-1");
 

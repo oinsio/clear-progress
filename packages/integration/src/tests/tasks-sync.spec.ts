@@ -11,6 +11,7 @@ import {
   setupSingleDeviceTest,
   triggerSyncAndWait,
 } from "../test-helpers.js";
+import { createRecurringTask } from "./stale-recurring-helpers.js";
 
 const { getPage, getCredentials } = setupSingleDeviceTest();
 
@@ -114,36 +115,8 @@ test("create recurring task → push → verify repeat rule persisted", async ()
   const page = getPage();
   const recurringTaskName = `Recurring Task ${Date.now()}`;
 
-  // Create a new task and open detail panel
-  await createTask(page, recurringTaskName);
-  await openTaskDetail(page, recurringTaskName);
-
-  // Open the Repeat selector — the DrillDownRow button contains label "Repeat"
-  await page
-    .getByTestId("task-detail-panel")
-    .getByRole("button", { name: /Repeat/ })
-    .click();
-
-  // Select "Fixed" repeat type — wait for it to appear first
-  await page.getByTestId("repeat-type-fixed").waitFor({ state: "visible" });
-  await page.getByTestId("repeat-type-fixed").click();
-
-  // Choose daily frequency — wait for frequency options to render
-  await page
-    .getByTestId("repeat-frequency-daily")
-    .waitFor({ state: "visible" });
-  await page.getByTestId("repeat-frequency-daily").click();
-
-  // Proceed to placement step
-  await page.getByTestId("repeat-fixed-next").waitFor({ state: "visible" });
-  await page.getByTestId("repeat-fixed-next").click();
-
-  // Apply the repeat rule (saves and closes selector)
-  await page.getByTestId("repeat-apply").waitFor({ state: "visible" });
-  await page.getByTestId("repeat-apply").click();
-
-  // Wait for the repeat selector to close — indicates save completed
-  await page.getByTestId("repeat-apply").waitFor({ state: "hidden" });
+  // Create a task and set up a daily `fixed` repeat rule
+  await createRecurringTask(page, recurringTaskName);
 
   // Trigger sync to push the recurring task to the server
   await triggerSyncAndWait(page);

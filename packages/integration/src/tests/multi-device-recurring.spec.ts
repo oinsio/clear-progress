@@ -1,11 +1,17 @@
 // implements FR14 of add-supabase-integration-tests
-import { expect, type Page, test } from "@playwright/test";
-import { createTask, findTaskItem, openTaskDetail } from "../page-actions.js";
+import { expect, test } from "@playwright/test";
+import { findTaskItem } from "../page-task-actions.js";
 import {
   pullFromServer,
   setupTwoDeviceTest,
   triggerSyncAndWait,
 } from "../test-helpers.js";
+import {
+  completeTask,
+  createAfterCompletionRecurringTask,
+  createRecurringTask,
+  TASK_VISIBLE_TIMEOUT_MS,
+} from "./stale-recurring-helpers.js";
 
 const { getPageA, getPageB, getCredentials } = setupTwoDeviceTest();
 
@@ -27,45 +33,6 @@ interface RecurringPullResponse {
   ok: boolean;
   tasks: PullTask[];
   current_revision: number;
-}
-
-async function setFixedDailyRepeat(testPage: Page): Promise<void> {
-  await testPage
-    .getByTestId("task-detail-panel")
-    .getByRole("button", { name: /Repeat/ })
-    .click();
-  await testPage.getByTestId("repeat-type-fixed").waitFor({ state: "visible" });
-  await testPage.getByTestId("repeat-type-fixed").click();
-  await testPage
-    .getByTestId("repeat-frequency-daily")
-    .waitFor({ state: "visible" });
-  await testPage.getByTestId("repeat-frequency-daily").click();
-  await testPage.getByTestId("repeat-fixed-next").waitFor({ state: "visible" });
-  await testPage.getByTestId("repeat-fixed-next").click();
-  await testPage.getByTestId("repeat-apply").waitFor({ state: "visible" });
-  await testPage.getByTestId("repeat-apply").click();
-  await testPage.getByTestId("repeat-apply").waitFor({ state: "hidden" });
-}
-
-async function createRecurringTask(
-  testPage: Page,
-  taskName: string,
-): Promise<void> {
-  await createTask(testPage, taskName);
-  await openTaskDetail(testPage, taskName);
-  await setFixedDailyRepeat(testPage);
-}
-
-const TASK_VISIBLE_TIMEOUT_MS = 15_000;
-const COMPLETE_SETTLE_MS = 300;
-
-async function completeTask(testPage: Page, taskName: string): Promise<void> {
-  await findTaskItem(testPage, taskName)
-    .getByRole("button", { name: /Complete task/i })
-    .click();
-  // Recurring tasks create a new occurrence with the same name immediately,
-  // so we cannot wait for the task item to become hidden.
-  await testPage.waitForTimeout(COMPLETE_SETTLE_MS);
 }
 
 // State carried between sequential tests
@@ -218,29 +185,12 @@ test("after_completion recurring → complete → next_date = completed_at + del
   );
   const baselineRevision = baseline.current_revision;
 
-  await createTask(pageA, afterCompletionTaskName);
-  await openTaskDetail(pageA, afterCompletionTaskName);
-
   // Set repeat: After Completion > 3 days
-  await pageA
-    .getByTestId("task-detail-panel")
-    .getByRole("button", { name: /Repeat/ })
-    .click();
-  await pageA
-    .getByTestId("repeat-type-after-completion")
-    .waitFor({ state: "visible" });
-  await pageA.getByTestId("repeat-type-after-completion").click();
-  await pageA
-    .getByTestId("repeat-delay-days-input")
-    .waitFor({ state: "visible" });
-  await pageA.getByTestId("repeat-delay-days-input").fill(String(delayDays));
-  await pageA
-    .getByTestId("repeat-after-completion-next")
-    .waitFor({ state: "visible" });
-  await pageA.getByTestId("repeat-after-completion-next").click();
-  await pageA.getByTestId("repeat-apply").waitFor({ state: "visible" });
-  await pageA.getByTestId("repeat-apply").click();
-  await pageA.getByTestId("repeat-apply").waitFor({ state: "hidden" });
+  await createAfterCompletionRecurringTask(
+    pageA,
+    afterCompletionTaskName,
+    delayDays,
+  );
 
   await completeTask(pageA, afterCompletionTaskName);
   await triggerSyncAndWait(pageA);

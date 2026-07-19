@@ -18,14 +18,13 @@ import {
   buildInboxTaskPayload,
   type RebalancePullResponse,
 } from "./stale-rebalance-helpers.js";
+import { TASK_VISIBLE_TIMEOUT_MS } from "./stale-recurring-helpers.js";
 
 const { getPageA, getPageB, getCredentials } = setupTwoDeviceTest();
 
 // Mirrors SORT_ORDER_REBALANCE_THRESHOLD in packages/client/src/constants/index.ts
 // (integration tests never import client internals — see module boundary rule).
 const SORT_ORDER_REBALANCE_THRESHOLD = 10;
-
-const TASK_VISIBLE_TIMEOUT_MS = 15_000;
 
 /**
  * U3 / FR4 / NFR-REL1 — a rebalance triggered on a stale device does not
