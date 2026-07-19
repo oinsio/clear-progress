@@ -67,15 +67,6 @@ The system SHALL provide a method to retrieve all settings where `needsSync` is 
 - **AND** `clearNeedsSyncByKey(["accent_color"])` is called
 - **THEN** "accent_color" has `needsSync: false` and "default_box" still has `needsSync: true`
 
-### Requirement: Get settings changed since timestamp
-
-The system SHALL provide a method to retrieve settings with `updated_at` strictly greater than a given timestamp.
-
-#### Scenario: Filter settings by updated_at
-- **WHEN** setting A has `updated_at: "2025-01-01T00:00:00.000Z"` and setting B has `updated_at: "2025-01-02T00:00:00.000Z"`
-- **AND** `getChangedSince("2025-01-01T00:00:00.000Z")` is called
-- **THEN** only setting B is returned
-
 ### Requirement: Bulk upsert with conflict resolution
 
 The system SHALL accept an array of server settings and apply them with conflict resolution: (1) skip if local setting has `needsSync: true` (local dirty wins), (2) skip if server `updated_at` is not newer than local, (3) accept and overwrite otherwise with `needsSync: false`.
