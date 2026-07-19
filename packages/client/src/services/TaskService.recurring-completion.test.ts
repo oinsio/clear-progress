@@ -212,13 +212,15 @@ describe("TaskService - Recurring Tasks Integration", () => {
       });
 
       const completedTask = buildCompletedTask(existingTask);
+      const cloneCreationError = new Error("DB error");
 
       mockTaskRepository.getById = vi.fn().mockResolvedValue(existingTask);
       mockTaskRepository.update = vi.fn().mockResolvedValue(completedTask);
-      mockTaskRepository.create = vi
-        .fn()
-        .mockRejectedValue(new Error("DB error"));
+      mockTaskRepository.create = vi.fn().mockRejectedValue(cloneCreationError);
       mockChecklistRepository.getActiveByTaskId = vi.fn().mockResolvedValue([]);
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       const result = await taskService.complete("task-1");
 
@@ -226,6 +228,12 @@ describe("TaskService - Recurring Tasks Integration", () => {
       expect(result.completed).toBeDefined();
       expect(result.completed.is_completed).toBe(true);
       expect(result.recurringResult.status).toBe("skipped_invalid_rule");
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to create recurring task:",
+        cloneCreationError,
+      );
+
+      consoleErrorSpy.mockRestore();
     });
   });
 

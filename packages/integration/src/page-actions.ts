@@ -47,6 +47,59 @@ export async function updateTaskName(
   await page.getByTestId("task-detail-name").blur();
 }
 
+/**
+ * Updates a task's description from the task detail panel.
+ * `EditableDescription` is click-to-edit: at rest it renders a div, and only
+ * becomes a textarea after being clicked. Saving happens on blur.
+ */
+export async function updateTaskDescription(
+  page: Page,
+  newDescription: string,
+): Promise<void> {
+  const descriptionField = page.getByTestId("task-detail-description");
+  await descriptionField.click();
+  await descriptionField.fill(newDescription);
+  await descriptionField.blur();
+}
+
+/**
+ * Hides a non-recurring task until the given ISO date via the task detail
+ * panel's "Hide until" drill-down row. Assumes the task detail panel is
+ * already open (see `openTaskDetail`).
+ * Implements FR2 of fix-stale-sync-overwrites.
+ */
+export async function hideTaskUntil(
+  page: Page,
+  appearDateIso: string,
+): Promise<void> {
+  await page
+    .getByTestId("task-detail-panel")
+    .getByRole("button", { name: /hide until/i })
+    .click();
+  const hidePanel = page.getByTestId("hide-task-panel");
+  await hidePanel.waitFor({ state: "visible" });
+  await hidePanel.getByLabel(/select date/i).fill(appearDateIso);
+  await hidePanel.getByRole("button", { name: /^hide$/i }).click();
+  await hidePanel.waitFor({ state: "hidden" });
+}
+
+/**
+ * Manually unhides a task before its appear_date via the task detail panel's
+ * "Hide until" drill-down row, which shows the unhide control while the task
+ * is hidden. Assumes the task detail panel is already open.
+ * Implements FR2 of fix-stale-sync-overwrites.
+ */
+export async function unhideTask(page: Page): Promise<void> {
+  await page
+    .getByTestId("task-detail-panel")
+    .getByRole("button", { name: /hide until/i })
+    .click();
+  const hidePanel = page.getByTestId("hide-task-panel");
+  await hidePanel.waitFor({ state: "visible" });
+  await hidePanel.getByRole("button", { name: /unhide/i }).click();
+  await hidePanel.waitFor({ state: "hidden" });
+}
+
 export async function deleteTaskFromDetail(page: Page): Promise<void> {
   await page
     .getByTestId("task-detail-panel")

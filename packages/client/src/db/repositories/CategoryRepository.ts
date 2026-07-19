@@ -2,6 +2,9 @@ import type { WireCategory } from "@clear-progress/contract";
 import { ClientCategorySchema } from "@/schemas/entities";
 import type { Category, ISOTimestamp } from "@/types/entities";
 import { db } from "../database";
+import { shouldOverwritePendingLocalRecord } from "./applyServerRecordLww";
+
+const CATEGORY_ENTITY_NAME = "category";
 
 export class CategoryRepository {
   async getAll(): Promise<Category[]> {
@@ -55,11 +58,26 @@ export class CategoryRepository {
       .toArray();
   }
 
+  /**
+   * Implements FR5 of fix-stale-sync-overwrites.
+   * A local `pending` record is overwritten only when the server record's
+   * `updated_at` is strictly newer (LWW pull protection). Local records with
+   * any other syncStatus, or no local record at all, are always overwritten.
+   */
   async applyServerRecords(records: WireCategory[]): Promise<void> {
     await db.transaction("rw", db.categories, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.categories.get(serverRecord.id);
-        if (localRecord?.syncStatus !== "pending") {
+        const shouldWrite =
+          localRecord?.syncStatus !== "pending" ||
+          shouldOverwritePendingLocalRecord({
+            entityName: CATEGORY_ENTITY_NAME,
+            id: serverRecord.id,
+            localUpdatedAt: localRecord.updated_at,
+            serverUpdatedAt: serverRecord.updated_at,
+          });
+
+        if (shouldWrite) {
           const category: Category = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,

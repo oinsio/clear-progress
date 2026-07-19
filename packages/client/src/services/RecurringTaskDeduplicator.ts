@@ -4,12 +4,16 @@ import type { TaskRepository } from "@/db/repositories/TaskRepository";
 import { type Clock, systemClock } from "@/lib/temporal";
 import type { Task } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
+import {
+  hasMergeChangedWinner,
+  mergeWinner,
+} from "./RecurringTaskDeduplicator.merge";
 
 const MINIMUM_DUPLICATE_GROUP_SIZE = 2;
 
 /**
  * Deduplicates recurring task copies after a pull batch.
- * Implements FR1, FR2, FR3, FR5 of dedup-recurring-after-pull.
+ * Implements FR3 of fix-stale-sync-overwrites.
  */
 export class RecurringTaskDeduplicator {
   constructor(
@@ -20,7 +24,7 @@ export class RecurringTaskDeduplicator {
 
   /**
    * Deduplicates recurring copies for the given original_task_id values.
-   * Implements FR1, FR2, FR3, FR5 of dedup-recurring-after-pull.
+   * Implements FR3 of fix-stale-sync-overwrites.
    *
    * @param originalTaskIds - original_task_id values from the pull batch
    */
@@ -40,15 +44,33 @@ export class RecurringTaskDeduplicator {
       }
 
       const sortedCopies = this.sortByWinnerPriority(activeCopies);
-      const [, ...losers] = sortedCopies;
+      const [scheduleWinner, ...losers] = sortedCopies;
 
       const now = toISOTimestamp(this.clock);
+
+      await this.mergeAndUpdateWinner(scheduleWinner, activeCopies);
 
       for (const loser of losers) {
         await this.softDeleteTask(loser, now);
         await this.cascadeSoftDeleteChecklistItems(loser.id, now);
       }
     }
+  }
+
+  private async mergeAndUpdateWinner(
+    scheduleWinner: Task,
+    activeCopies: Task[],
+  ): Promise<void> {
+    const mergedWinner = mergeWinner(scheduleWinner, activeCopies);
+
+    if (!hasMergeChangedWinner(mergedWinner, scheduleWinner)) {
+      return;
+    }
+
+    await this.taskRepository.update({
+      ...mergedWinner,
+      syncStatus: RECORD_SYNC_STATUS.PENDING,
+    });
   }
 
   private extractUniqueNonEmptyIds(originalTaskIds: string[]): string[] {

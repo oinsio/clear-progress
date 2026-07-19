@@ -4,6 +4,9 @@ import { ClientAttachmentSchema } from "@/schemas/entities";
 import type { Attachment, ISOTimestamp } from "@/types/entities";
 import { toISOTimestamp } from "@/utils/dateHelpers";
 import { db } from "../database";
+import { shouldOverwritePendingLocalRecord } from "./applyServerRecordLww";
+
+const ATTACHMENT_ENTITY_NAME = "attachment";
 
 export class AttachmentRepository {
   async getAll(): Promise<Attachment[]> {
@@ -127,11 +130,26 @@ export class AttachmentRepository {
     }
   }
 
+  /**
+   * Implements FR5 of fix-stale-sync-overwrites.
+   * A local `pending` record is overwritten only when the server record's
+   * `updated_at` is strictly newer (LWW pull protection). Local records with
+   * any other syncStatus, or no local record at all, are always overwritten.
+   */
   async applyServerRecords(records: WireAttachment[]): Promise<void> {
     await db.transaction("rw", db.attachments, async () => {
       for (const serverRecord of records) {
         const localRecord = await db.attachments.get(serverRecord.id);
-        if (localRecord?.syncStatus !== "pending") {
+        const shouldWrite =
+          localRecord?.syncStatus !== "pending" ||
+          shouldOverwritePendingLocalRecord({
+            entityName: ATTACHMENT_ENTITY_NAME,
+            id: serverRecord.id,
+            localUpdatedAt: localRecord.updated_at,
+            serverUpdatedAt: serverRecord.updated_at,
+          });
+
+        if (shouldWrite) {
           const attachment: Attachment = {
             ...serverRecord,
             created_at: serverRecord.created_at as ISOTimestamp,

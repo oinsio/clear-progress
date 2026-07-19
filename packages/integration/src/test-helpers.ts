@@ -1,6 +1,12 @@
 // implements FR6 of add-supabase-integration-tests
 // Barrel re-export — actual code lives in focused modules.
 
+export type { ConvergenceEntityKey } from "./convergence-helpers.js";
+export {
+  assertConverged,
+  dumpDeviceState,
+  dumpServerState,
+} from "./convergence-helpers.js";
 export { createIsolatedUser } from "./cross-tenant-helpers.js";
 export {
   buildCategoryPayload,

@@ -287,6 +287,46 @@ describe("RecurringTaskDeduplicator", () => {
       const active = await db.tasks.get(UUID_A);
       expect(active?.is_deleted).toBe(false);
     });
+
+    // FR1: a completed copy sharing original_task_id with two active
+    // duplicates must not be pulled into the dup group — the group is
+    // formed only from the two non-completed, non-deleted copies, so the
+    // winner is chosen among those two and the completed copy is untouched.
+    it("should form the duplicate group only from active copies when a completed copy shares the original_task_id with two active duplicates", async () => {
+      const earlyActiveTask = buildTask({
+        id: UUID_A,
+        original_task_id: ORIGINAL_ID_1,
+        next_date: "2026-07-01",
+        is_completed: false,
+        is_deleted: false,
+      });
+      const lateActiveTask = buildTask({
+        id: UUID_B,
+        original_task_id: ORIGINAL_ID_1,
+        next_date: "2026-07-05",
+        is_completed: false,
+        is_deleted: false,
+      });
+      const completedTask = buildTask({
+        id: UUID_C,
+        original_task_id: ORIGINAL_ID_1,
+        next_date: "2026-06-20",
+        is_completed: true,
+        is_deleted: false,
+      });
+      await db.tasks.bulkAdd([earlyActiveTask, lateActiveTask, completedTask]);
+
+      await deduplicator.deduplicate([ORIGINAL_ID_1]);
+
+      const earlyActiveResult = await db.tasks.get(UUID_A);
+      const lateActiveResult = await db.tasks.get(UUID_B);
+      const completedResult = await db.tasks.get(UUID_C);
+      expect(earlyActiveResult?.is_deleted).toBe(false);
+      expect(lateActiveResult?.is_deleted).toBe(true);
+      expect(lateActiveResult?.syncStatus).toBe("pending");
+      expect(completedResult?.is_deleted).toBe(false);
+      expect(completedResult?.syncStatus).toBe("synced");
+    });
   });
 
   // FR3: cascade to checklist items
@@ -529,6 +569,78 @@ describe("RecurringTaskDeduplicator", () => {
       await localDeduplicator.deduplicate([ORIGINAL_ID_1]);
 
       expect(updateSpy).not.toHaveBeenCalled();
+    });
+
+    // Guards the `continue` statement directly: a group can only reach this
+    // guard with activeCopies.length < MINIMUM_DUPLICATE_GROUP_SIZE (0 or 1)
+    // since findDuplicateRecurringGroups never emits an empty group in
+    // practice — so length-1 groups are a legitimate but observationally
+    // equivalent case (merging a single copy against itself is a no-op
+    // either way). Forcing an empty-array group via a mocked repository
+    // makes the two mutants observable: without the `continue` (or with the
+    // guard replaced by `if (false)`), the loop falls through to
+    // `sortByWinnerPriority([])` and then destructures an undefined
+    // scheduleWinner, which throws when merging — proving `continue` really
+    // skips groups below the minimum size rather than merely coinciding with
+    // a no-op merge.
+    it("should not throw when a mocked group is empty, proving continue actually skips it", async () => {
+      const taskRepository = new TaskRepository();
+      const checklistRepository = new ChecklistRepository();
+      const clock = fakeClock(FIXED_CLOCK_TIMESTAMP);
+      vi.spyOn(
+        taskRepository,
+        "findDuplicateRecurringGroups",
+      ).mockResolvedValue(new Map([[ORIGINAL_ID_1, []]]));
+      const localDeduplicator = new RecurringTaskDeduplicator(
+        taskRepository,
+        checklistRepository,
+        clock,
+      );
+
+      await expect(
+        localDeduplicator.deduplicate([ORIGINAL_ID_1]),
+      ).resolves.toBeUndefined();
+    });
+
+    // Guards the `continue` statement itself (not just the guarded call):
+    // replacing `continue` with an empty block would still skip the update
+    // for the singleton group (since the guard body has no other statements)
+    // but would fall through to loop code the real implementation intends to
+    // skip, rather than jumping to the next group. Processing a singleton
+    // group FIRST and a real duplicate group SECOND in the same call proves
+    // the loop actually advances past the singleton to still dedupe group 2 —
+    // an `if (...) {}` mutant that fails to skip to the next iteration would
+    // still coincidentally pass this too, but combined with the single-copy
+    // assertions above, it locks down that iteration order is unaffected.
+    it("should still deduplicate a later group after an earlier singleton group in the same call", async () => {
+      const singleTask = buildTask({
+        id: UUID_A,
+        original_task_id: ORIGINAL_ID_1,
+        next_date: "2026-07-01",
+        is_completed: false,
+        is_deleted: false,
+      });
+      const groupTwoWinner = buildTask({
+        id: UUID_B,
+        original_task_id: ORIGINAL_ID_2,
+        next_date: "2026-07-02",
+        is_completed: false,
+        is_deleted: false,
+      });
+      const groupTwoLoser = buildTask({
+        id: UUID_C,
+        original_task_id: ORIGINAL_ID_2,
+        next_date: "2026-07-08",
+        is_completed: false,
+        is_deleted: false,
+      });
+      await db.tasks.bulkAdd([singleTask, groupTwoWinner, groupTwoLoser]);
+
+      await deduplicator.deduplicate([ORIGINAL_ID_1, ORIGINAL_ID_2]);
+
+      expect((await db.tasks.get(UUID_A))?.syncStatus).toBe("synced");
+      expect((await db.tasks.get(UUID_B))?.is_deleted).toBe(false);
+      expect((await db.tasks.get(UUID_C))?.is_deleted).toBe(true);
     });
   });
 
