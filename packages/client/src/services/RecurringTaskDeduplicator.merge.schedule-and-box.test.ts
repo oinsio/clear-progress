@@ -5,6 +5,7 @@ import { db } from "@/db/database";
 import { buildTask } from "@/test/factories/taskFactory";
 import {
   createRecurringTaskDeduplicatorMergeSetup,
+  expectScheduleTripleWithFreshContent,
   ORIGINAL_ID_1,
   UUID_FRESH_CONTENT_LOSER,
   UUID_SCHEDULE_WINNER,
@@ -69,12 +70,13 @@ describe("RecurringTaskDeduplicator — content merge from freshest updated_at",
       await getDeduplicator().deduplicate([ORIGINAL_ID_1]);
 
       const survivor = await db.tasks.get(UUID_SCHEDULE_WINNER);
-      expect(survivor?.next_date).toBe("2026-07-01");
-      expect(survivor?.appear_date).toBe("2026-06-28");
-      expect(survivor?.is_hidden).toBe(false);
-      // Content still merges from the freshest copy in the same pass.
-      expect(survivor?.name).toBe("Fresh name");
-      expect(survivor?.description).toBe("Fresh description");
+      // Schedule triple stays coupled to the winner while content merges from
+      // the freshest copy in the same pass.
+      expectScheduleTripleWithFreshContent(survivor, {
+        nextDate: "2026-07-01",
+        appearDate: "2026-06-28",
+        isHidden: false,
+      });
     });
 
     // Spec scenario: "Hidden and revealed copies merge without breaking
