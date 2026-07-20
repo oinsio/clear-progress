@@ -48,10 +48,6 @@ export class CategoryRepository {
     await db.categories.bulkPut(categories);
   }
 
-  async getChangedSince(since: string): Promise<Category[]> {
-    return db.categories.where("updated_at").above(since).toArray();
-  }
-
   async getNeedingSync(): Promise<Category[]> {
     return db.categories
       .filter((category) => category.syncStatus === "pending")

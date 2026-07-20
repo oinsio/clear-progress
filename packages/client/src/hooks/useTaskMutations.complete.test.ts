@@ -186,5 +186,24 @@ describe("useTaskMutations > completeTask", () => {
 
       expect(mockAddAlerts).not.toHaveBeenCalled();
     });
+
+    it("should not add alert when recurringResult status is error_creating_copy", async () => {
+      const task = buildTask({
+        name: "Copy Error Task",
+        is_completed: false,
+        repeat_rule: JSON.stringify({ type: "daily" }),
+      });
+      ctx = createTestContext({
+        getById: vi.fn().mockResolvedValue(task),
+        complete: vi.fn().mockResolvedValue({
+          completed: task,
+          recurringResult: { status: "error_creating_copy" },
+        }),
+      });
+
+      await completeAndReturn(ctx, task.id);
+
+      expect(mockAddAlerts).not.toHaveBeenCalled();
+    });
   });
 });

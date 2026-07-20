@@ -70,10 +70,6 @@ export class AttachmentRepository {
     await db.attachments.bulkPut(attachments);
   }
 
-  async getChangedSince(since: string): Promise<Attachment[]> {
-    return db.attachments.where("updated_at").above(since).toArray();
-  }
-
   async getNeedingSync(): Promise<Attachment[]> {
     return db.attachments
       .filter((attachment) => attachment.syncStatus === "pending")

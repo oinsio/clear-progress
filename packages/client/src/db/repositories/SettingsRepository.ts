@@ -43,10 +43,6 @@ export class SettingsRepository {
     await db.settings.put(setting);
   }
 
-  async getChangedSince(since: string): Promise<Setting[]> {
-    return db.settings.where("updated_at").above(since).toArray();
-  }
-
   async getNeedingSync(): Promise<Setting[]> {
     return db.settings
       .filter((setting) => setting.syncStatus === "pending")

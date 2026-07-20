@@ -16,7 +16,6 @@ export function createMockAttachmentRepository(
       save: vi.fn().mockResolvedValue(undefined),
       delete: vi.fn().mockResolvedValue(undefined),
       bulkUpsert: vi.fn().mockResolvedValue(undefined),
-      getChangedSince: vi.fn().mockResolvedValue([]),
       getNeedingSync: vi.fn().mockResolvedValue([]),
       softDeleteByEntityTypeAndId: vi.fn().mockResolvedValue(0),
       restoreByEntityTypeAndId: vi.fn().mockResolvedValue(0),

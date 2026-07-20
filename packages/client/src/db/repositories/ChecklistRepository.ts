@@ -65,10 +65,6 @@ export class ChecklistRepository {
     await db.checklist_items.bulkPut(items);
   }
 
-  async getChangedSince(since: string): Promise<ChecklistItem[]> {
-    return db.checklist_items.where("updated_at").above(since).toArray();
-  }
-
   async getNeedingSync(): Promise<ChecklistItem[]> {
     return db.checklist_items
       .filter((item) => item.syncStatus === "pending")

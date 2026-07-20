@@ -41,7 +41,8 @@ When `isRepeatRuleInvalid(task)` is true, the repeat rule row in the task detail
 - **THEN** the repeat row shows "No repeat"
 
 ### Requirement: Completion returns discriminated union for recurring result
-`TaskService.complete()` SHALL return `recurringResult` as a discriminated union with three statuses: `created` (with the new task), `skipped_invalid_rule` (rule exists but parsing failed), `not_recurring` (no repeat_rule). The `try/catch` block SHALL still prevent completion from failing.
+
+`TaskService.complete()` SHALL return `recurringResult` as a discriminated union with four statuses: `created` (with the new task), `skipped_invalid_rule` (`repeat_rule` is non-empty but `parseRepeatRule()` returned `null`), `error_creating_copy` (the rule parsed successfully but an exception was thrown while calculating dates or creating/updating the copy), `not_recurring` (no `repeat_rule`). The `try/catch` block SHALL still prevent completion from failing, and SHALL log any caught exception to the console. `skipped_invalid_rule` SHALL be returned ONLY for a genuine parse failure — never for a thrown exception.
 
 #### Scenario: Successful recurring copy creation
 - **WHEN** user completes a task with valid repeat_rule
@@ -56,13 +57,15 @@ When `isRepeatRuleInvalid(task)` is true, the repeat rule row in the task detail
 - **WHEN** user completes a task with empty repeat_rule
 - **THEN** `recurringResult` has status "not_recurring"
 
-#### Scenario: Exception during copy creation returns skipped status
+#### Scenario: Exception during copy creation returns error status
 - **WHEN** user completes a task with valid repeat_rule but copy creation throws
-- **THEN** `recurringResult` has status "skipped_invalid_rule"
+- **THEN** `recurringResult` has status "error_creating_copy"
+- **AND** the task is still marked as completed
 - **AND** the error is logged to console
 
 ### Requirement: Alert shown on completion when recurring copy skipped due to invalid rule
-When `recurringResult.status === 'skipped_invalid_rule'`, the system SHALL add an alert of type `repeat_rule_invalid` with the completed task's name. The alert SHALL be shown via AlertProvider.
+
+When `recurringResult.status === 'skipped_invalid_rule'`, the system SHALL add an alert of type `repeat_rule_invalid` with the completed task's name, shown via AlertProvider. For any other status — including `error_creating_copy` — the system SHALL NOT add a `repeat_rule_invalid` alert on completion.
 
 #### Scenario: Completion of task with invalid rule shows alert
 - **WHEN** user completes task "Buy groceries" with invalid repeat_rule
@@ -71,6 +74,11 @@ When `recurringResult.status === 'skipped_invalid_rule'`, the system SHALL add a
 #### Scenario: Completion of task with valid rule shows no alert
 - **WHEN** user completes task "Buy groceries" with valid repeat_rule
 - **THEN** no repeat_rule_invalid alert is shown
+
+#### Scenario: Completion where copy creation errors shows no invalid-rule alert
+- **WHEN** user completes task "Buy groceries" with a valid repeat_rule but copy creation throws
+- **THEN** `recurringResult` has status "error_creating_copy"
+- **AND** no repeat_rule_invalid alert is shown
 
 ### Requirement: Post-pull check detects invalid repeat rules in diff
 After a pull batch is applied, the system SHALL check all new or changed active incomplete tasks in the diff for invalid repeat rules. If any are found, the system SHALL add one grouped alert of type `repeat_rule_invalid` with all affected task names. Only tasks where `is_deleted === false` AND `is_completed === false` AND `isRepeatRuleInvalid() === true` SHALL be included.

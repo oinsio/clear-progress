@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { useAlerts } from "@/app/providers/AlertProvider";
 import { useSync } from "@/app/providers/SyncProvider";
 import { BOX } from "@/constants";
 import { systemClock } from "@/lib/temporal";
@@ -9,6 +8,7 @@ import type { Task } from "@/types/entities";
 import { getLogicalDate } from "@/utils/getLogicalDate";
 
 import { getCachedDayBoundary } from "./useSettings";
+import { useTaskCompletionAlerts } from "./useTaskCompletionAlerts";
 
 export interface UseInboxTasksReturn {
   tasks: Task[];
@@ -22,7 +22,7 @@ export function useInboxTasks(
 ): UseInboxTasksReturn {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { addAlerts } = useAlerts();
+  const { raiseCompletionAlerts } = useTaskCompletionAlerts();
   const { syncVersion, schedulePush } = useSync();
 
   const loadTasks = useCallback(async () => {
@@ -43,15 +43,12 @@ export function useInboxTasks(
         id,
         logicalDate,
       );
-      if (recurringResult.status === "skipped_invalid_rule") {
-        addAlerts([
-          { type: "repeat_rule_invalid", taskNames: [completed.name] },
-        ]);
-      }
+      // implements FR3, FR5 of fix-recurring-completion-error-masking
+      raiseCompletionAlerts(recurringResult, completed?.name ?? "");
       await loadTasks();
       schedulePush();
     },
-    [taskService, loadTasks, schedulePush, addAlerts],
+    [taskService, loadTasks, schedulePush, raiseCompletionAlerts],
   );
 
   const deleteTask = useCallback(

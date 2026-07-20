@@ -111,10 +111,6 @@ export class TaskRepository {
       .toArray();
   }
 
-  async getChangedSince(since: string): Promise<Task[]> {
-    return db.tasks.where("updated_at").above(since).toArray();
-  }
-
   async getNeedingSync(): Promise<Task[]> {
     return db.tasks.filter((task) => task.syncStatus === "pending").toArray();
   }

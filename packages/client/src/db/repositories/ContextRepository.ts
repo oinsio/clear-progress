@@ -48,10 +48,6 @@ export class ContextRepository {
     await db.contexts.bulkPut(contexts);
   }
 
-  async getChangedSince(since: string): Promise<Context[]> {
-    return db.contexts.where("updated_at").above(since).toArray();
-  }
-
   async getNeedingSync(): Promise<Context[]> {
     return db.contexts
       .filter((context) => context.syncStatus === "pending")

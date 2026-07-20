@@ -162,38 +162,6 @@ describe("ChecklistRepository", () => {
     });
   });
 
-  describe("getChangedSince", () => {
-    it("should return items updated after the given timestamp", async () => {
-      const oldItem = buildChecklistItem({
-        updated_at: "2025-01-01T00:00:00.000Z",
-      });
-      const newItem = buildChecklistItem({
-        updated_at: "2026-06-01T00:00:00.000Z",
-      });
-      await db.checklist_items.bulkAdd([oldItem, newItem]);
-
-      const items = await getRepository().getChangedSince(
-        "2026-01-01T00:00:00.000Z",
-      );
-
-      expect(items).toHaveLength(1);
-      expect(items[0].id).toBe(newItem.id);
-    });
-
-    it("should return empty array when no items changed since timestamp", async () => {
-      const oldItem = buildChecklistItem({
-        updated_at: "2025-01-01T00:00:00.000Z",
-      });
-      await db.checklist_items.add(oldItem);
-
-      const items = await getRepository().getChangedSince(
-        "2026-01-01T00:00:00.000Z",
-      );
-
-      expect(items).toEqual([]);
-    });
-  });
-
   describe("getNeedingSync", () => {
     it("should return only items with syncStatus true", async () => {
       const syncItem = buildChecklistItem({ syncStatus: "pending" as const });

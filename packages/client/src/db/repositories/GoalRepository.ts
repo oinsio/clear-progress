@@ -48,10 +48,6 @@ export class GoalRepository {
     await db.goals.bulkPut(goals);
   }
 
-  async getChangedSince(since: string): Promise<Goal[]> {
-    return db.goals.where("updated_at").above(since).toArray();
-  }
-
   async getNeedingSync(): Promise<Goal[]> {
     return db.goals.filter((goal) => goal.syncStatus === "pending").toArray();
   }

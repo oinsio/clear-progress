@@ -7,6 +7,7 @@ import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useSync } from "@/app/providers/SyncProvider";
 import { GoalItem } from "@/components/goals/GoalItem";
 import { IdeaDetailPanel } from "@/components/ideas/IdeaDetailPanel";
 import { IdeaItem } from "@/components/ideas/IdeaItem";
@@ -20,6 +21,7 @@ import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
 import { useSearch } from "@/hooks/useSearch";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
+import { useTaskCompletionAlerts } from "@/hooks/useTaskCompletionAlerts";
 import { systemClock } from "@/lib/temporal";
 import {
   defaultIdeaService,
@@ -42,7 +44,10 @@ export default function SearchPage() {
   const { contexts } = useContexts();
   const { categories } = useCategories();
   const { isFocusMode, focusOpacity } = useFocusMode();
+  const { raiseCompletionAlerts } = useTaskCompletionAlerts();
   const navigate = useNavigate();
+  // implements FR1, FR2, FR3 of fix-search-page-sync-push
+  const { schedulePush } = useSync();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -76,27 +81,35 @@ export default function SearchPage() {
         await defaultTaskService.noncomplete(id);
       } else {
         const logicalDate = getLogicalDate(systemClock, getCachedDayBoundary());
-        await defaultTaskService.complete(id, logicalDate);
+        const { recurringResult } = await defaultTaskService.complete(
+          id,
+          logicalDate,
+        );
+        // implements FR5, FR6, U3 of fix-recurring-completion-error-masking
+        raiseCompletionAlerts(recurringResult, task.name);
       }
+      schedulePush();
       if (searchQuery) void search(searchQuery);
     },
-    [searchQuery, search],
+    [searchQuery, search, raiseCompletionAlerts, schedulePush],
   );
 
   const handleUpdateTask = useCallback(
     async (id: string, changes: Partial<Task>) => {
       await defaultTaskService.update(id, changes);
+      schedulePush();
       if (searchQuery) void search(searchQuery);
     },
-    [searchQuery, search],
+    [searchQuery, search, schedulePush],
   );
 
   const handleMoveTask = useCallback(
     async (id: string, box: Box) => {
       await defaultTaskService.moveToBox(id, box);
+      schedulePush();
       if (searchQuery) void search(searchQuery);
     },
-    [searchQuery, search],
+    [searchQuery, search, schedulePush],
   );
 
   const handleNavigateToGoal = useCallback(
@@ -113,18 +126,20 @@ export default function SearchPage() {
   const handleIdeaUpdate = useCallback(
     async (id: string, changes: Partial<Idea>) => {
       await defaultIdeaService.update(id, changes);
+      schedulePush();
       if (searchQuery) void search(searchQuery);
     },
-    [searchQuery, search],
+    [searchQuery, search, schedulePush],
   );
 
   const handleIdeaDelete = useCallback(
     async (id: string) => {
       setSelectedIdeaId(null);
       await defaultIdeaService.softDelete(id);
+      schedulePush();
       if (searchQuery) void search(searchQuery);
     },
-    [searchQuery, search],
+    [searchQuery, search, schedulePush],
   );
 
   const handleIdeaClose = useCallback(() => {
@@ -143,17 +158,19 @@ export default function SearchPage() {
     async (id: string) => {
       setSelectedTaskId(null);
       await defaultTaskService.softDelete(id);
+      schedulePush();
       if (searchQuery) void search(searchQuery);
     },
-    [searchQuery, search],
+    [searchQuery, search, schedulePush],
   );
 
   const handleTaskDuplicate = useCallback(
     async (id: string) => {
       await defaultTaskService.duplicate(id);
+      schedulePush();
       if (searchQuery) void search(searchQuery);
     },
-    [searchQuery, search],
+    [searchQuery, search, schedulePush],
   );
 
   const hasResults = tasks.length > 0 || goals.length > 0 || ideas.length > 0;
