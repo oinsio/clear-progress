@@ -1,7 +1,8 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { vi } from "vitest";
 import { AlertProvider } from "@/app/providers/AlertProvider";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { mockSettingsGetValue } from "@/test/helpers/mockRepositories";
 import type { FullSyncStep } from "@/types/common";
 import { SyncProvider, useSync } from "./SyncProvider";
 import {
@@ -49,6 +50,8 @@ export function setupBeforeEach() {
     }),
   );
 
+  mockSettingsGetValue.mockReset();
+  mockSettingsGetValue.mockResolvedValue(undefined);
   mockPull.mockResolvedValue(undefined);
   mockPush.mockResolvedValue(undefined);
   mockResetAndPull.mockResolvedValue(undefined);
@@ -126,6 +129,17 @@ export function FullSyncTrigger({
   );
 }
 
+/**
+ * Clears all mock call history and re-applies the default resolved values
+ * for mockPush/mockPull — the reset step every propagation test repeats
+ * between "prime the initial state" and "assert the new timing takes effect".
+ */
+export function resetSyncMocks(): void {
+  vi.clearAllMocks();
+  mockPush.mockResolvedValue(undefined);
+  mockPull.mockResolvedValue(undefined);
+}
+
 export function setNavigatorOffline() {
   Object.defineProperty(navigator, "onLine", {
     value: false,
@@ -180,4 +194,30 @@ export function renderProviderWithScheduler() {
       </SyncProvider>
     </AlertProvider>,
   );
+}
+
+/**
+ * Renders the scheduler provider and lets its initial async setup (settings
+ * read, auth check) settle — the render+flush step every schedulePush test
+ * repeats before it can safely inspect or trigger scheduling behavior.
+ */
+export async function renderSchedulerSettled(): Promise<
+  ReturnType<typeof renderProviderWithScheduler>
+> {
+  const utils = renderProviderWithScheduler();
+  await act(async () => {});
+  return utils;
+}
+
+/**
+ * Same as {@link renderSchedulerSettled}, but also clears mock call history
+ * and re-applies default resolved values — the full setup every schedulePush
+ * test repeats before triggering and asserting on a new scheduling call.
+ */
+export async function renderSchedulerReady(): Promise<
+  ReturnType<typeof renderProviderWithScheduler>
+> {
+  const utils = await renderSchedulerSettled();
+  resetSyncMocks();
+  return utils;
 }

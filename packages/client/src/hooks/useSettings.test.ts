@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSettings } from "./useSettings";
 
 const syncVersionStore = vi.hoisted(() => ({ version: 0 }));
+const schedulePushMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/app/providers/SyncProvider", () => ({
   useSync: () => ({
@@ -10,7 +11,7 @@ vi.mock("@/app/providers/SyncProvider", () => ({
     syncStatus: "idle",
     pull: vi.fn(),
     push: vi.fn(),
-    schedulePush: vi.fn(),
+    schedulePush: schedulePushMock,
   }),
 }));
 
@@ -19,12 +20,19 @@ import {
   BOX,
   DAY_BOUNDARY_CHANGED_EVENT,
   DEFAULT_ACCENT_COLOR,
+  DEFAULT_AUTO_SYNC_DELAY_SEC,
   DEFAULT_DAY_BOUNDARY,
+  DEFAULT_SYNC_INTERVAL_MIN,
   STORAGE_KEYS,
+  SYNC_TIMING_CHANGED_EVENT,
 } from "@/constants";
 import type { SettingsService } from "@/services/SettingsService";
 import type { AccentColor } from "@/types/common";
-import { getCachedDayBoundary } from "./useSettings";
+import {
+  getCachedAutoSyncDelay,
+  getCachedDayBoundary,
+  getCachedSyncInterval,
+} from "./useSettings";
 
 function createMockSettingsService(
   overrides: Partial<Record<keyof SettingsService, unknown>> = {},
@@ -33,6 +41,12 @@ function createMockSettingsService(
     getDefaultBox: vi.fn().mockResolvedValue(BOX.INBOX),
     getAccentColor: vi.fn().mockResolvedValue(DEFAULT_ACCENT_COLOR),
     getDayBoundary: vi.fn().mockResolvedValue(DEFAULT_DAY_BOUNDARY),
+    getSyncIntervalMinutes: vi
+      .fn()
+      .mockResolvedValue(DEFAULT_SYNC_INTERVAL_MIN),
+    getAutoSyncDelaySeconds: vi
+      .fn()
+      .mockResolvedValue(DEFAULT_AUTO_SYNC_DELAY_SEC),
     set: vi.fn().mockResolvedValue(undefined),
     get: vi.fn().mockResolvedValue(undefined),
     ...overrides,
@@ -45,6 +59,7 @@ describe("useSettings", () => {
   beforeEach(() => {
     mockSettingsService = createMockSettingsService();
     syncVersionStore.version = 0;
+    schedulePushMock.mockClear();
   });
 
   it("should set isLoading to true on initial render", () => {
@@ -290,6 +305,350 @@ describe("useSettings", () => {
       };
       expect(getCachedDayBoundary()).toBe(DEFAULT_DAY_BOUNDARY);
       localStorage.getItem = originalGetItem;
+    });
+  });
+
+  // implements FR5, NFR-P1, D7 of configurable-sync-timing
+  describe("syncInterval", () => {
+    it("should return syncInterval default after loading", async () => {
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.syncInterval).toBe(DEFAULT_SYNC_INTERVAL_MIN);
+    });
+
+    it("should load syncInterval from settingsService.getSyncIntervalMinutes()", async () => {
+      mockSettingsService = createMockSettingsService({
+        getSyncIntervalMinutes: vi.fn().mockResolvedValue(30),
+      });
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.syncInterval).toBe(30);
+    });
+
+    it("should return null for syncInterval when disabled", async () => {
+      mockSettingsService = createMockSettingsService({
+        getSyncIntervalMinutes: vi.fn().mockResolvedValue(null),
+      });
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.syncInterval).toBeNull();
+    });
+
+    it("should call set with STORAGE_KEYS.SYNC_INTERVAL when setSyncInterval is called", async () => {
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setSyncInterval(30);
+      });
+
+      expect(mockSettingsService.set).toHaveBeenCalledWith(
+        STORAGE_KEYS.SYNC_INTERVAL,
+        "30",
+      );
+    });
+
+    it("should call set with empty string when setSyncInterval(null) is called", async () => {
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setSyncInterval(null);
+      });
+
+      expect(mockSettingsService.set).toHaveBeenCalledWith(
+        STORAGE_KEYS.SYNC_INTERVAL,
+        "",
+      );
+    });
+
+    it("should update syncInterval state after setSyncInterval is called", async () => {
+      mockSettingsService = createMockSettingsService({
+        getSyncIntervalMinutes: vi
+          .fn()
+          .mockResolvedValueOnce(DEFAULT_SYNC_INTERVAL_MIN)
+          .mockResolvedValueOnce(60),
+      });
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setSyncInterval(60);
+      });
+
+      expect(result.current.syncInterval).toBe(60);
+    });
+
+    it("should cache syncInterval to localStorage after loading", async () => {
+      mockSettingsService = createMockSettingsService({
+        getSyncIntervalMinutes: vi.fn().mockResolvedValue(45),
+      });
+      renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() =>
+        expect(localStorage.getItem(STORAGE_KEYS.SYNC_INTERVAL)).toBe("45"),
+      );
+    });
+
+    it("should cache syncInterval as empty string when disabled (null)", async () => {
+      mockSettingsService = createMockSettingsService({
+        getSyncIntervalMinutes: vi.fn().mockResolvedValue(null),
+      });
+      renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() =>
+        expect(localStorage.getItem(STORAGE_KEYS.SYNC_INTERVAL)).toBe(""),
+      );
+    });
+
+    it("should use the latest settingsService when setSyncInterval is called after settingsService changes", async () => {
+      const firstService = createMockSettingsService({
+        getSyncIntervalMinutes: vi
+          .fn()
+          .mockResolvedValue(DEFAULT_SYNC_INTERVAL_MIN),
+      });
+      const secondService = createMockSettingsService({
+        getSyncIntervalMinutes: vi.fn().mockResolvedValue(30),
+      });
+      const { result, rerender } = renderHook(
+        ({ service }: { service: SettingsService }) => useSettings(service),
+        { initialProps: { service: firstService } },
+      );
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      rerender({ service: secondService });
+      await waitFor(() => expect(result.current.syncInterval).toBe(30));
+
+      await act(async () => {
+        await result.current.setSyncInterval(60);
+      });
+
+      expect(secondService.set).toHaveBeenCalledWith(
+        STORAGE_KEYS.SYNC_INTERVAL,
+        "60",
+      );
+      expect(firstService.set).not.toHaveBeenCalled();
+    });
+
+    it("should call schedulePush exactly once when setSyncInterval is called", async () => {
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setSyncInterval(30);
+      });
+
+      expect(schedulePushMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should dispatch SYNC_TIMING_CHANGED_EVENT when setSyncInterval is called", async () => {
+      const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setSyncInterval(30);
+      });
+
+      const matchingEvent = dispatchSpy.mock.calls.find(
+        ([event]) =>
+          event instanceof CustomEvent &&
+          event.type === SYNC_TIMING_CHANGED_EVENT,
+      );
+      expect(matchingEvent).toBeDefined();
+      dispatchSpy.mockRestore();
+    });
+  });
+
+  // implements FR6, NFR-P1, D7 of configurable-sync-timing
+  describe("autoSyncDelay", () => {
+    it("should return autoSyncDelay default after loading", async () => {
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.autoSyncDelay).toBe(DEFAULT_AUTO_SYNC_DELAY_SEC);
+    });
+
+    it("should load autoSyncDelay from settingsService.getAutoSyncDelaySeconds()", async () => {
+      mockSettingsService = createMockSettingsService({
+        getAutoSyncDelaySeconds: vi.fn().mockResolvedValue(60),
+      });
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.autoSyncDelay).toBe(60);
+    });
+
+    it("should return 0 for autoSyncDelay when immediate", async () => {
+      mockSettingsService = createMockSettingsService({
+        getAutoSyncDelaySeconds: vi.fn().mockResolvedValue(0),
+      });
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.autoSyncDelay).toBe(0);
+    });
+
+    it("should call set with STORAGE_KEYS.AUTO_SYNC_DELAY when setAutoSyncDelay is called", async () => {
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setAutoSyncDelay(60);
+      });
+
+      expect(mockSettingsService.set).toHaveBeenCalledWith(
+        STORAGE_KEYS.AUTO_SYNC_DELAY,
+        "60",
+      );
+    });
+
+    it("should call set with '0' when setAutoSyncDelay(0) is called", async () => {
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setAutoSyncDelay(0);
+      });
+
+      expect(mockSettingsService.set).toHaveBeenCalledWith(
+        STORAGE_KEYS.AUTO_SYNC_DELAY,
+        "0",
+      );
+    });
+
+    it("should use the latest settingsService when setAutoSyncDelay is called after settingsService changes", async () => {
+      const firstService = createMockSettingsService({
+        getAutoSyncDelaySeconds: vi
+          .fn()
+          .mockResolvedValue(DEFAULT_AUTO_SYNC_DELAY_SEC),
+      });
+      const secondService = createMockSettingsService({
+        getAutoSyncDelaySeconds: vi.fn().mockResolvedValue(60),
+      });
+      const { result, rerender } = renderHook(
+        ({ service }: { service: SettingsService }) => useSettings(service),
+        { initialProps: { service: firstService } },
+      );
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      rerender({ service: secondService });
+      await waitFor(() => expect(result.current.autoSyncDelay).toBe(60));
+
+      await act(async () => {
+        await result.current.setAutoSyncDelay(120);
+      });
+
+      expect(secondService.set).toHaveBeenCalledWith(
+        STORAGE_KEYS.AUTO_SYNC_DELAY,
+        "120",
+      );
+      expect(firstService.set).not.toHaveBeenCalled();
+    });
+
+    it("should update autoSyncDelay state after setAutoSyncDelay is called", async () => {
+      mockSettingsService = createMockSettingsService({
+        getAutoSyncDelaySeconds: vi
+          .fn()
+          .mockResolvedValueOnce(DEFAULT_AUTO_SYNC_DELAY_SEC)
+          .mockResolvedValueOnce(120),
+      });
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setAutoSyncDelay(120);
+      });
+
+      expect(result.current.autoSyncDelay).toBe(120);
+    });
+
+    it("should cache autoSyncDelay to localStorage after loading", async () => {
+      mockSettingsService = createMockSettingsService({
+        getAutoSyncDelaySeconds: vi.fn().mockResolvedValue(90),
+      });
+      renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() =>
+        expect(localStorage.getItem(STORAGE_KEYS.AUTO_SYNC_DELAY)).toBe("90"),
+      );
+    });
+
+    it("should call schedulePush exactly once when setAutoSyncDelay is called", async () => {
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setAutoSyncDelay(60);
+      });
+
+      expect(schedulePushMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should dispatch SYNC_TIMING_CHANGED_EVENT when setAutoSyncDelay is called", async () => {
+      const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+      const { result } = renderHook(() => useSettings(mockSettingsService));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(async () => {
+        await result.current.setAutoSyncDelay(60);
+      });
+
+      const matchingEvent = dispatchSpy.mock.calls.find(
+        ([event]) =>
+          event instanceof CustomEvent &&
+          event.type === SYNC_TIMING_CHANGED_EVENT,
+      );
+      expect(matchingEvent).toBeDefined();
+      dispatchSpy.mockRestore();
+    });
+  });
+
+  describe("getCachedSyncInterval", () => {
+    it("should return DEFAULT_SYNC_INTERVAL_MIN when localStorage is empty", () => {
+      localStorage.removeItem(STORAGE_KEYS.SYNC_INTERVAL);
+      expect(getCachedSyncInterval()).toBe(DEFAULT_SYNC_INTERVAL_MIN);
+    });
+
+    it("should return cached value from localStorage", () => {
+      localStorage.setItem(STORAGE_KEYS.SYNC_INTERVAL, "30");
+      expect(getCachedSyncInterval()).toBe(30);
+    });
+
+    it("should return DEFAULT_SYNC_INTERVAL_MIN when localStorage throws", () => {
+      const originalGetItem = localStorage.getItem.bind(localStorage);
+      localStorage.getItem = () => {
+        throw new Error("localStorage unavailable");
+      };
+      expect(getCachedSyncInterval()).toBe(DEFAULT_SYNC_INTERVAL_MIN);
+      localStorage.getItem = originalGetItem;
+    });
+
+    it("should return null when localStorage has empty string cached (disabled)", () => {
+      localStorage.setItem(STORAGE_KEYS.SYNC_INTERVAL, "");
+      expect(getCachedSyncInterval()).toBeNull();
+    });
+  });
+
+  describe("getCachedAutoSyncDelay", () => {
+    it("should return DEFAULT_AUTO_SYNC_DELAY_SEC when localStorage is empty", () => {
+      localStorage.removeItem(STORAGE_KEYS.AUTO_SYNC_DELAY);
+      expect(getCachedAutoSyncDelay()).toBe(DEFAULT_AUTO_SYNC_DELAY_SEC);
+    });
+
+    it("should return cached value from localStorage", () => {
+      localStorage.setItem(STORAGE_KEYS.AUTO_SYNC_DELAY, "60");
+      expect(getCachedAutoSyncDelay()).toBe(60);
+    });
+
+    it("should return DEFAULT_AUTO_SYNC_DELAY_SEC when localStorage throws", () => {
+      const originalGetItem = localStorage.getItem.bind(localStorage);
+      localStorage.getItem = () => {
+        throw new Error("localStorage unavailable");
+      };
+      expect(getCachedAutoSyncDelay()).toBe(DEFAULT_AUTO_SYNC_DELAY_SEC);
+      localStorage.getItem = originalGetItem;
+    });
+
+    it('should return 0 when localStorage has empty string or "0" cached (immediate)', () => {
+      localStorage.setItem(STORAGE_KEYS.AUTO_SYNC_DELAY, "");
+      expect(getCachedAutoSyncDelay()).toBe(0);
+      localStorage.setItem(STORAGE_KEYS.AUTO_SYNC_DELAY, "0");
+      expect(getCachedAutoSyncDelay()).toBe(0);
     });
   });
 });

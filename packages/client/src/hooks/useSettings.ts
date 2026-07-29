@@ -6,8 +6,11 @@ import {
   BOX,
   DAY_BOUNDARY_CHANGED_EVENT,
   DEFAULT_ACCENT_COLOR,
+  DEFAULT_AUTO_SYNC_DELAY_SEC,
   DEFAULT_DAY_BOUNDARY,
+  DEFAULT_SYNC_INTERVAL_MIN,
   STORAGE_KEYS,
+  SYNC_TIMING_CHANGED_EVENT,
 } from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { getPreference, syncCache } from "@/services/localPreferencesService";
@@ -48,14 +51,51 @@ export function getCachedDayBoundary(): string {
   return DEFAULT_DAY_BOUNDARY;
 }
 
+// implements FR5, D7 of configurable-sync-timing
+export function getCachedSyncInterval(): number | null {
+  try {
+    const cached = localStorage.getItem(STORAGE_KEYS.SYNC_INTERVAL);
+    if (cached === null) {
+      return DEFAULT_SYNC_INTERVAL_MIN;
+    }
+    if (cached === "") {
+      return null;
+    }
+    return Number(cached);
+  } catch {
+    // localStorage is not available
+  }
+  return DEFAULT_SYNC_INTERVAL_MIN;
+}
+
+// implements FR6, D7 of configurable-sync-timing
+export function getCachedAutoSyncDelay(): number {
+  try {
+    const cached = localStorage.getItem(STORAGE_KEYS.AUTO_SYNC_DELAY);
+    if (cached === null) {
+      return DEFAULT_AUTO_SYNC_DELAY_SEC;
+    }
+    // Number("") === 0 and Number("0") === 0, so no special-casing is
+    // needed for the empty-string / "0" representations of "immediate".
+    return Number(cached);
+  } catch {
+    // localStorage is not available
+  }
+  return DEFAULT_AUTO_SYNC_DELAY_SEC;
+}
+
 export interface UseSettingsReturn {
   defaultBox: Box;
   accentColor: AccentColor;
   dayBoundary: string;
+  syncInterval: number | null;
+  autoSyncDelay: number;
   isLoading: boolean;
   setDefaultBox: (box: Box) => Promise<void>;
   setAccentColor: (color: AccentColor) => Promise<void>;
   setDayBoundary: (value: string) => Promise<void>;
+  setSyncInterval: (value: number | null) => Promise<void>;
+  setAutoSyncDelay: (value: number) => Promise<void>;
 }
 
 export function useSettings(
@@ -66,21 +106,36 @@ export function useSettings(
     useState<AccentColor>(getCachedAccentColor);
   const [dayBoundary, setDayBoundaryState] =
     useState<string>(getCachedDayBoundary);
+  const [syncInterval, setSyncIntervalState] = useState<number | null>(
+    getCachedSyncInterval,
+  );
+  const [autoSyncDelay, setAutoSyncDelayState] = useState<number>(
+    getCachedAutoSyncDelay,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const { schedulePush } = useSync();
 
   const loadSettings = useCallback(async () => {
-    const [box, color, boundary] = await Promise.all([
+    const [box, color, boundary, interval, delay] = await Promise.all([
       settingsService.getDefaultBox(),
       settingsService.getAccentColor(),
       settingsService.getDayBoundary(),
+      settingsService.getSyncIntervalMinutes(),
+      settingsService.getAutoSyncDelaySeconds(),
     ]);
     syncCache(STORAGE_KEYS.DEFAULT_BOX, box);
     // FR20: accent color cache is managed by ThemeProvider only
     syncCache(STORAGE_KEYS.DAY_BOUNDARY, boundary);
+    syncCache(
+      STORAGE_KEYS.SYNC_INTERVAL,
+      interval === null ? "" : String(interval),
+    );
+    syncCache(STORAGE_KEYS.AUTO_SYNC_DELAY, String(delay));
     setDefaultBoxState(box);
     setAccentColorState(color);
     setDayBoundaryState(boundary);
+    setSyncIntervalState(interval);
+    setAutoSyncDelayState(delay);
     setIsLoading(false);
   }, [settingsService]);
 
@@ -116,13 +171,38 @@ export function useSettings(
     [settingsService, loadSettings, schedulePush],
   );
 
+  const setSyncInterval = useCallback(
+    async (value: number | null) => {
+      const stringValue = value === null ? "" : String(value);
+      await settingsService.set(STORAGE_KEYS.SYNC_INTERVAL, stringValue);
+      await loadSettings();
+      schedulePush();
+      window.dispatchEvent(new CustomEvent(SYNC_TIMING_CHANGED_EVENT));
+    },
+    [settingsService, loadSettings, schedulePush],
+  );
+
+  const setAutoSyncDelay = useCallback(
+    async (value: number) => {
+      await settingsService.set(STORAGE_KEYS.AUTO_SYNC_DELAY, String(value));
+      await loadSettings();
+      schedulePush();
+      window.dispatchEvent(new CustomEvent(SYNC_TIMING_CHANGED_EVENT));
+    },
+    [settingsService, loadSettings, schedulePush],
+  );
+
   return {
     defaultBox,
     accentColor,
     dayBoundary,
+    syncInterval,
+    autoSyncDelay,
     isLoading,
     setDefaultBox,
     setAccentColor,
     setDayBoundary,
+    setSyncInterval,
+    setAutoSyncDelay,
   };
 }

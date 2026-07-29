@@ -5,6 +5,11 @@ import type {
 } from "@amiceli/vitest-cucumber";
 import { screen } from "@testing-library/react/pure";
 import { vi } from "vitest";
+import {
+  dispatchSyncComplete,
+  mockAutoSyncDelaySetting,
+  mockSyncIntervalSetting,
+} from "./settingsMocks";
 import { flushSyncCycle, renderSyncProvider } from "./testSetup";
 import type { SyncTestContext } from "./types";
 
@@ -54,6 +59,44 @@ export function createWhenSteps(
       When(`${seconds} seconds pass`, async () => {
         await vi.advanceTimersByTimeAsync(seconds * 1000);
       });
+    },
+    // implements FR3 of configurable-sync-timing
+    whenTimePassesHours: (When: StepTest["When"], hours: number) => {
+      When(`${hours} hours pass`, async () => {
+        await vi.advanceTimersByTimeAsync(hours * 60 * 60 * 1000);
+      });
+    },
+    // implements FR3, D7 of configurable-sync-timing
+    whenAPullDeliversNewSyncIntervalValue: (
+      When: StepTest["When"],
+      minutes: number,
+    ) => {
+      When(
+        `a sync cycle pulls a new sync_interval value of ${minutes} minutes`,
+        async () => {
+          mockSyncIntervalSetting(String(minutes));
+          dispatchSyncComplete();
+          await vi.advanceTimersByTimeAsync(0);
+          f.context.mockPull.mockClear();
+          f.context.mockPush.mockClear();
+        },
+      );
+    },
+    // implements FR4, D7 of configurable-sync-timing
+    whenAPullDeliversNewAutoSyncDelayValue: (
+      When: StepTest["When"],
+      seconds: number,
+    ) => {
+      When(
+        `a sync cycle pulls a new auto_sync_delay value of ${seconds} seconds`,
+        async () => {
+          mockAutoSyncDelaySetting(String(seconds));
+          dispatchSyncComplete();
+          await vi.advanceTimersByTimeAsync(0);
+          f.context.mockPull.mockClear();
+          f.context.mockPush.mockClear();
+        },
+      );
     },
     whenUserMutatesLocalData: (When: StepTest["When"]) => {
       When("user mutates local data", async () => {

@@ -4,6 +4,7 @@ import type {
   StepTest,
 } from "@amiceli/vitest-cucumber";
 import { vi } from "vitest";
+import { mockSettingsGetValue } from "./settingsMocks";
 import {
   cleanupRender,
   mockEnsureServerFilesAreCached,
@@ -40,6 +41,11 @@ export function setupScenarioHooks(
     f.context.mockResetAndPull.mockReset();
     f.context.mockReuploadLocalFiles.mockReset();
     f.context.mockEnsureServerFilesAreCached.mockReset();
+    // implements FR3, FR4 of configurable-sync-timing — isolate scenarios so a
+    // mocked sync_interval/auto_sync_delay value set in one scenario never
+    // leaks into the next (default: absent → getters fall back to defaults).
+    mockSettingsGetValue.mockReset();
+    mockSettingsGetValue.mockResolvedValue(undefined);
 
     f.context.mockPull.mockResolvedValue(undefined);
     f.context.mockPush.mockResolvedValue(undefined);

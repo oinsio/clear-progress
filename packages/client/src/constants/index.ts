@@ -134,8 +134,19 @@ export const ACCENT_COLOR_VALUES_DARK: Record<AccentColor, string> = {
   custom: "#14b8a6",
 };
 
-export const SYNC_INTERVAL_MS = 5 * 60 * 1000;
-export const SYNC_DEBOUNCE_MS = 15 * 1000;
+// implements FR1, D5 of configurable-sync-timing
+export const DEFAULT_SYNC_INTERVAL_MIN = 5;
+export const MIN_SYNC_INTERVAL_MIN = 1;
+export const MAX_SYNC_INTERVAL_MIN = 1440;
+
+// implements FR2, D5 of configurable-sync-timing
+export const DEFAULT_AUTO_SYNC_DELAY_SEC = 15;
+export const MIN_AUTO_SYNC_DELAY_SEC = 0;
+export const MAX_AUTO_SYNC_DELAY_SEC = 900;
+
+// Derived from the defaults above to avoid drift between the two representations
+export const SYNC_INTERVAL_MS = DEFAULT_SYNC_INTERVAL_MIN * 60_000;
+export const SYNC_DEBOUNCE_MS = DEFAULT_AUTO_SYNC_DELAY_SEC * 1000;
 export const PING_INTERVAL_MS = 30 * 1000;
 export const MAX_SILENT_REFRESH_ATTEMPTS = 3;
 export const MAX_PING_ATTEMPTS = 20; // 10 minutes (20 × 30s)
@@ -147,6 +158,8 @@ export const MAX_PUSH_RETRY_COUNT = 2;
 export const BACKEND_CONNECTION_EVENT = "backend_connection_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
 export const DAY_BOUNDARY_CHANGED_EVENT = "day_boundary_changed";
+// implements D7 of configurable-sync-timing
+export const SYNC_TIMING_CHANGED_EVENT = "sync_timing_changed";
 
 export const DB_NAME = "clear-progress";
 
@@ -178,6 +191,8 @@ export const STORAGE_KEYS = {
   DETAIL_PANEL_PINNED: "detail_panel_pinned",
   SIDEBAR_MODE: "sidebar_mode",
   GOAL_FILTER: "goal_filter",
+  SYNC_INTERVAL: "sync_interval",
+  AUTO_SYNC_DELAY: "auto_sync_delay",
 } as const;
 
 export const DEFAULT_FOCUS_OPACITY = 30;
@@ -297,6 +312,8 @@ export const SYNCED_SETTING_KEYS = new Set([
   "custom_accent_colors",
   "default_box",
   "day_boundary",
+  "sync_interval",
+  "auto_sync_delay",
 ]);
 
 export const FINISHED_GOAL_STATUSES = new Set<GoalStatus>([

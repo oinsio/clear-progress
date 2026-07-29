@@ -1,7 +1,13 @@
 import {
   BOX,
   DEFAULT_ACCENT_COLOR,
+  DEFAULT_AUTO_SYNC_DELAY_SEC,
   DEFAULT_DAY_BOUNDARY,
+  DEFAULT_SYNC_INTERVAL_MIN,
+  MAX_AUTO_SYNC_DELAY_SEC,
+  MAX_SYNC_INTERVAL_MIN,
+  MIN_AUTO_SYNC_DELAY_SEC,
+  MIN_SYNC_INTERVAL_MIN,
   STORAGE_KEYS,
 } from "@/constants";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
@@ -53,4 +59,56 @@ export class SettingsService {
     );
     return DEFAULT_DAY_BOUNDARY;
   }
+
+  /** Implements FR1, FR7 of configurable-sync-timing */
+  async getSyncIntervalMinutes(): Promise<number | null> {
+    const value = await this.settingsRepository.getValue(
+      STORAGE_KEYS.SYNC_INTERVAL,
+    );
+
+    if (value === "") {
+      return null;
+    }
+
+    return parseIntegerSetting(
+      value,
+      MIN_SYNC_INTERVAL_MIN,
+      MAX_SYNC_INTERVAL_MIN,
+      DEFAULT_SYNC_INTERVAL_MIN,
+    );
+  }
+
+  /** Implements FR2, FR7 of configurable-sync-timing */
+  async getAutoSyncDelaySeconds(): Promise<number> {
+    const value = await this.settingsRepository.getValue(
+      STORAGE_KEYS.AUTO_SYNC_DELAY,
+    );
+
+    return parseIntegerSetting(
+      value,
+      MIN_AUTO_SYNC_DELAY_SEC,
+      MAX_AUTO_SYNC_DELAY_SEC,
+      DEFAULT_AUTO_SYNC_DELAY_SEC,
+    );
+  }
+}
+
+/**
+ * Parses a raw setting value into an integer within [minValue, maxValue].
+ * Returns defaultValue when the value is not an integer or falls outside the range.
+ * Does not clamp — out-of-range values fall back to defaultValue.
+ */
+function parseIntegerSetting(
+  rawValue: string | undefined,
+  minValue: number,
+  maxValue: number,
+  defaultValue: number,
+): number {
+  const parsedValue = Number(rawValue);
+  const isValidInteger =
+    Number.isInteger(parsedValue) &&
+    parsedValue >= minValue &&
+    parsedValue <= maxValue;
+
+  return isValidInteger ? parsedValue : defaultValue;
 }

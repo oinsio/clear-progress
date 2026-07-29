@@ -179,5 +179,40 @@ export function createThenSteps(
         expect(f.context.mockPull).toHaveBeenCalled();
       });
     },
+    // implements FR3 of configurable-sync-timing
+    thenNoPeriodicSyncCycleExecutes: (Then: StepTest["Then"]) => {
+      Then("no periodic sync cycle executes", () => {
+        expectNoSyncCycle(f.context);
+      });
+    },
+    // implements FR3, D7 of configurable-sync-timing
+    thenStaleCadenceNoLongerTriggersSync: (
+      Then: StepTest["Then"],
+      staleMinutes: number,
+    ) => {
+      Then(
+        `the stale ${staleMinutes} minute cadence no longer triggers a sync`,
+        async () => {
+          await vi.advanceTimersByTimeAsync(staleMinutes * 60 * 1000);
+          expectNoSyncCycle(f.context);
+        },
+      );
+    },
+    // implements FR3, D7 of configurable-sync-timing
+    thenPeriodicSyncFollowsNewCadence: (
+      And: StepTest["Then"],
+      newMinutes: number,
+      remainingMinutesToAdvance: number,
+    ) => {
+      And(
+        `periodic sync now follows the new ${newMinutes} minute cadence`,
+        async () => {
+          await vi.advanceTimersByTimeAsync(
+            remainingMinutesToAdvance * 60 * 1000,
+          );
+          expectSyncCycleExecuted(f.context);
+        },
+      );
+    },
   };
 }

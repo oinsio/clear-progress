@@ -19,8 +19,6 @@ import {
   PING_INTERVAL_MS,
   PROJECT_PAUSED_ERROR_NAME,
   STORAGE_KEYS,
-  SYNC_DEBOUNCE_MS,
-  SYNC_INTERVAL_MS,
 } from "@/constants";
 import { AttachmentRepository } from "@/db/repositories/AttachmentRepository";
 import { CategoryRepository } from "@/db/repositories/CategoryRepository";
@@ -32,6 +30,7 @@ import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { SyncMetaRepository } from "@/db/repositories/SyncMetaRepository";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { useConnectionConfig } from "@/hooks/useConnectionConfig";
+import { useSyncTiming } from "@/hooks/useSyncTiming";
 import {
   defaultFileSyncService,
   defaultSyncAdapter,
@@ -95,7 +94,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
   });
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSyncedAtRef = useRef<string | null>(lastSyncedAt);
@@ -219,10 +217,16 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
   }, [accessToken, applySyncResult, stopPingInterval, handleSyncError]);
 
+  // implements FR3, FR4, D3, D4, D7, NFR-P1 of configurable-sync-timing
+  const { delayMsRef } = useSyncTiming({ accessToken, config, sync });
+
   const schedulePush = useCallback(() => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    debounceTimerRef.current = setTimeout(() => void sync(), SYNC_DEBOUNCE_MS);
-  }, [sync]);
+    debounceTimerRef.current = setTimeout(
+      () => void sync(),
+      delayMsRef.current,
+    );
+  }, [sync, delayMsRef]);
 
   const triggerFullSync = useCallback(
     async (onProgress: (step: FullSyncStep) => void): Promise<void> => {
@@ -366,7 +370,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         ),
       );
     void ensureInitializedAndSync();
-    intervalRef.current = setInterval(() => void sync(), SYNC_INTERVAL_MS);
 
     const handleOnline = () => {
       void performPing();
@@ -379,7 +382,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener("offline", handleOffline);
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       stopPingInterval();
       window.removeEventListener("online", handleOnline);
@@ -389,7 +391,6 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     accessToken,
     config,
     ensureInitializedAndSync,
-    sync,
     performPing,
     stopPingInterval,
   ]);
