@@ -11,6 +11,7 @@ import {
   PUSH_RESULT_STATUS,
   RECORD_SYNC_STATUS,
   STORAGE_KEYS,
+  SYNC_COMPLETE_EVENT,
   SYNC_META_KEYS,
 } from "@/constants";
 import { db } from "@/db/database";
@@ -179,7 +180,7 @@ export class SyncService {
     }
 
     // Notify about sync completion
-    window.dispatchEvent(new CustomEvent("sync_complete"));
+    window.dispatchEvent(new CustomEvent(SYNC_COMPLETE_EVENT));
   }
 
   // implements FR5 of fix-pull-pagination

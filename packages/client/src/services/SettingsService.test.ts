@@ -2,11 +2,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BOX,
   DEFAULT_ACCENT_COLOR,
+  DEFAULT_AUTO_SYNC_DELAY_SEC,
   DEFAULT_DAY_BOUNDARY,
+  DEFAULT_SYNC_INTERVAL_MIN,
+  MAX_SYNC_INTERVAL_MIN,
+  MIN_SYNC_INTERVAL_MIN,
   STORAGE_KEYS,
 } from "@/constants";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import { removePreference } from "@/services/localPreferencesService";
 import { SettingsService } from "./SettingsService";
+
+vi.mock("@/services/localPreferencesService", () => ({
+  removePreference: vi.fn(),
+}));
 
 function createMockSettingsRepository(
   overrides: Partial<Record<keyof SettingsRepository, unknown>> = {},
@@ -26,6 +35,7 @@ describe("SettingsService", () => {
 
   beforeEach(() => {
     mockSettingsRepository = createMockSettingsRepository();
+    vi.mocked(removePreference).mockClear();
   });
 
   describe("get", () => {
@@ -149,6 +159,209 @@ describe("SettingsService", () => {
       const settingsService = new SettingsService(mockSettingsRepository);
       await settingsService.getDayBoundary();
       expect(mockSettingsRepository.set).not.toHaveBeenCalled();
+    });
+  });
+
+  // implements FR1, FR6, FR7 of configurable-sync-timing
+  // "disabled" sentinel: null (no established sentinel convention found in
+  // src/types for optional numeric settings, so null is chosen per D2)
+  describe("getSyncIntervalMinutes", () => {
+    it("should return DEFAULT_SYNC_INTERVAL_MIN when no setting exists", async () => {
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const syncIntervalMinutes =
+        await settingsService.getSyncIntervalMinutes();
+      expect(syncIntervalMinutes).toBe(DEFAULT_SYNC_INTERVAL_MIN);
+    });
+
+    it("should return the parsed number when a valid in-range value is stored", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue("30"),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const syncIntervalMinutes =
+        await settingsService.getSyncIntervalMinutes();
+      expect(syncIntervalMinutes).toBe(30);
+    });
+
+    it("should return null (disabled sentinel) when stored value is empty string", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(""),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const syncIntervalMinutes =
+        await settingsService.getSyncIntervalMinutes();
+      expect(syncIntervalMinutes).toBeNull();
+    });
+
+    it.each([
+      ["below minimum", "0"],
+      ["above maximum", "1441"],
+      ["non-numeric", "abc"],
+      ["non-integer", "2.5"],
+    ])("should return DEFAULT_SYNC_INTERVAL_MIN when stored value is %s (%s)", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const syncIntervalMinutes =
+        await settingsService.getSyncIntervalMinutes();
+      expect(syncIntervalMinutes).toBe(DEFAULT_SYNC_INTERVAL_MIN);
+    });
+
+    it("should return MIN_SYNC_INTERVAL_MIN when stored value equals the minimum boundary", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(String(MIN_SYNC_INTERVAL_MIN)),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const syncIntervalMinutes =
+        await settingsService.getSyncIntervalMinutes();
+      expect(syncIntervalMinutes).toBe(MIN_SYNC_INTERVAL_MIN);
+    });
+
+    it("should return MAX_SYNC_INTERVAL_MIN when stored value equals the maximum boundary", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(String(MAX_SYNC_INTERVAL_MIN)),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const syncIntervalMinutes =
+        await settingsService.getSyncIntervalMinutes();
+      expect(syncIntervalMinutes).toBe(MAX_SYNC_INTERVAL_MIN);
+    });
+
+    it.each([
+      ["absent", undefined],
+      ["valid", "30"],
+      ["empty string", ""],
+      ["out-of-range", "0"],
+      ["non-numeric", "abc"],
+    ])("should NOT call repository.set when stored value is %s", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getSyncIntervalMinutes();
+      expect(mockSettingsRepository.set).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["below minimum", "0"],
+      ["above maximum", "1441"],
+      ["non-numeric", "abc"],
+      ["non-integer", "2.5"],
+    ])("should remove the invalid localStorage cache entry when stored value is %s (%s)", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getSyncIntervalMinutes();
+      expect(removePreference).toHaveBeenCalledWith(STORAGE_KEYS.SYNC_INTERVAL);
+    });
+
+    it.each([
+      ["absent", undefined],
+      ["valid", "30"],
+      ["empty string (disabled)", ""],
+    ])("should NOT remove the localStorage cache entry when stored value is %s", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getSyncIntervalMinutes();
+      expect(removePreference).not.toHaveBeenCalled();
+    });
+  });
+
+  // implements FR1, FR6, FR7 of configurable-sync-timing
+  describe("getAutoSyncDelaySeconds", () => {
+    it("should return DEFAULT_AUTO_SYNC_DELAY_SEC when no setting exists", async () => {
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const autoSyncDelaySeconds =
+        await settingsService.getAutoSyncDelaySeconds();
+      expect(autoSyncDelaySeconds).toBe(DEFAULT_AUTO_SYNC_DELAY_SEC);
+    });
+
+    it("should return the parsed number when a valid in-range value is stored", async () => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue("30"),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const autoSyncDelaySeconds =
+        await settingsService.getAutoSyncDelaySeconds();
+      expect(autoSyncDelaySeconds).toBe(30);
+    });
+
+    it.each([
+      ["stored value is 0", "0"],
+      ["stored value is empty string", ""],
+    ])("should return 0 (immediate) when %s", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const autoSyncDelaySeconds =
+        await settingsService.getAutoSyncDelaySeconds();
+      expect(autoSyncDelaySeconds).toBe(0);
+    });
+
+    it.each([
+      ["below minimum", "-1"],
+      ["above maximum", "901"],
+      ["non-numeric", "abc"],
+      ["non-integer", "2.5"],
+    ])("should return DEFAULT_AUTO_SYNC_DELAY_SEC when stored value is %s (%s)", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      const autoSyncDelaySeconds =
+        await settingsService.getAutoSyncDelaySeconds();
+      expect(autoSyncDelaySeconds).toBe(DEFAULT_AUTO_SYNC_DELAY_SEC);
+    });
+
+    it.each([
+      ["absent", undefined],
+      ["valid", "30"],
+      ["zero", "0"],
+      ["empty string", ""],
+      ["out-of-range", "901"],
+      ["non-numeric", "abc"],
+    ])("should NOT call repository.set when stored value is %s", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getAutoSyncDelaySeconds();
+      expect(mockSettingsRepository.set).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["below minimum", "-1"],
+      ["above maximum", "901"],
+      ["non-numeric", "abc"],
+      ["non-integer", "2.5"],
+    ])("should remove the invalid localStorage cache entry when stored value is %s (%s)", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getAutoSyncDelaySeconds();
+      expect(removePreference).toHaveBeenCalledWith(
+        STORAGE_KEYS.AUTO_SYNC_DELAY,
+      );
+    });
+
+    it.each([
+      ["absent", undefined],
+      ["valid", "30"],
+      ["zero (immediate)", "0"],
+      ["empty string (immediate)", ""],
+    ])("should NOT remove the localStorage cache entry when stored value is %s", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getAutoSyncDelaySeconds();
+      expect(removePreference).not.toHaveBeenCalled();
     });
   });
 });

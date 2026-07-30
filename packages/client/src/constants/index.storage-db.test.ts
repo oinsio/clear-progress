@@ -44,6 +44,8 @@ describe("STORAGE_KEYS", () => {
     ["ONBOARDING_SHOWN", "onboarding_shown"],
     ["DETAIL_PANEL_PINNED", "detail_panel_pinned"],
     ["GOAL_FILTER", "goal_filter"],
+    ["SYNC_INTERVAL", "sync_interval"],
+    ["AUTO_SYNC_DELAY", "auto_sync_delay"],
   ];
 
   it.each(

@@ -8,10 +8,15 @@ import {
   DEFAULT_ACCENT_COLOR,
   DEFAULT_DAY_BOUNDARY,
   STORAGE_KEYS,
+  SYNC_TIMING_CHANGED_EVENT,
 } from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { getPreference, syncCache } from "@/services/localPreferencesService";
 import { SettingsService } from "@/services/SettingsService";
+import {
+  getCachedAutoSyncDelay,
+  getCachedSyncInterval,
+} from "@/services/syncTimingCache";
 import type { AccentColor, Box } from "@/types/common";
 
 const defaultSettingsService = new SettingsService(new SettingsRepository());
@@ -52,10 +57,14 @@ export interface UseSettingsReturn {
   defaultBox: Box;
   accentColor: AccentColor;
   dayBoundary: string;
+  syncInterval: number | null;
+  autoSyncDelay: number;
   isLoading: boolean;
   setDefaultBox: (box: Box) => Promise<void>;
   setAccentColor: (color: AccentColor) => Promise<void>;
   setDayBoundary: (value: string) => Promise<void>;
+  setSyncInterval: (value: number | null) => Promise<void>;
+  setAutoSyncDelay: (value: number) => Promise<void>;
 }
 
 export function useSettings(
@@ -66,21 +75,36 @@ export function useSettings(
     useState<AccentColor>(getCachedAccentColor);
   const [dayBoundary, setDayBoundaryState] =
     useState<string>(getCachedDayBoundary);
+  const [syncInterval, setSyncIntervalState] = useState<number | null>(
+    getCachedSyncInterval,
+  );
+  const [autoSyncDelay, setAutoSyncDelayState] = useState<number>(
+    getCachedAutoSyncDelay,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const { schedulePush } = useSync();
 
   const loadSettings = useCallback(async () => {
-    const [box, color, boundary] = await Promise.all([
+    const [box, color, boundary, interval, delay] = await Promise.all([
       settingsService.getDefaultBox(),
       settingsService.getAccentColor(),
       settingsService.getDayBoundary(),
+      settingsService.getSyncIntervalMinutes(),
+      settingsService.getAutoSyncDelaySeconds(),
     ]);
     syncCache(STORAGE_KEYS.DEFAULT_BOX, box);
     // FR20: accent color cache is managed by ThemeProvider only
     syncCache(STORAGE_KEYS.DAY_BOUNDARY, boundary);
+    syncCache(
+      STORAGE_KEYS.SYNC_INTERVAL,
+      interval === null ? "" : String(interval),
+    );
+    syncCache(STORAGE_KEYS.AUTO_SYNC_DELAY, String(delay));
     setDefaultBoxState(box);
     setAccentColorState(color);
     setDayBoundaryState(boundary);
+    setSyncIntervalState(interval);
+    setAutoSyncDelayState(delay);
     setIsLoading(false);
   }, [settingsService]);
 
@@ -116,13 +140,38 @@ export function useSettings(
     [settingsService, loadSettings, schedulePush],
   );
 
+  const setSyncInterval = useCallback(
+    async (value: number | null) => {
+      const stringValue = value === null ? "" : String(value);
+      await settingsService.set(STORAGE_KEYS.SYNC_INTERVAL, stringValue);
+      await loadSettings();
+      schedulePush();
+      window.dispatchEvent(new CustomEvent(SYNC_TIMING_CHANGED_EVENT));
+    },
+    [settingsService, loadSettings, schedulePush],
+  );
+
+  const setAutoSyncDelay = useCallback(
+    async (value: number) => {
+      await settingsService.set(STORAGE_KEYS.AUTO_SYNC_DELAY, String(value));
+      await loadSettings();
+      schedulePush();
+      window.dispatchEvent(new CustomEvent(SYNC_TIMING_CHANGED_EVENT));
+    },
+    [settingsService, loadSettings, schedulePush],
+  );
+
   return {
     defaultBox,
     accentColor,
     dayBoundary,
+    syncInterval,
+    autoSyncDelay,
     isLoading,
     setDefaultBox,
     setAccentColor,
     setDayBoundary,
+    setSyncInterval,
+    setAutoSyncDelay,
   };
 }

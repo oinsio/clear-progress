@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { DAY_BOUNDARY_CHANGED_EVENT } from "@/constants";
+import { DAY_BOUNDARY_CHANGED_EVENT, SYNC_COMPLETE_EVENT } from "@/constants";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
 import { type Clock, systemClock, Temporal } from "@/lib/temporal";
 import { HiddenTaskService } from "@/services/HiddenTaskService";
@@ -107,7 +107,7 @@ export function useHiddenTasksReveal(clock: Clock = systemClock) {
       reschedule();
     };
 
-    window.addEventListener("sync_complete", handleSyncComplete);
+    window.addEventListener(SYNC_COMPLETE_EVENT, handleSyncComplete);
     window.addEventListener("pageshow", handlePageShow);
     window.addEventListener(
       DAY_BOUNDARY_CHANGED_EVENT,
@@ -116,7 +116,7 @@ export function useHiddenTasksReveal(clock: Clock = systemClock) {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("sync_complete", handleSyncComplete);
+      window.removeEventListener(SYNC_COMPLETE_EVENT, handleSyncComplete);
       window.removeEventListener("pageshow", handlePageShow);
       window.removeEventListener(
         DAY_BOUNDARY_CHANGED_EVENT,

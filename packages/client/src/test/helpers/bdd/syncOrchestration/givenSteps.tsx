@@ -4,6 +4,10 @@ import type {
   StepTest,
 } from "@amiceli/vitest-cucumber";
 import { expect } from "vitest";
+import {
+  mockAutoSyncDelaySetting,
+  mockSyncIntervalSetting,
+} from "./settingsMocks";
 import { flushSyncCycle, renderSyncProvider } from "./testSetup";
 import type { SyncTestContext } from "./types";
 
@@ -79,6 +83,30 @@ export function createGivenSteps(
         f.context.mockPull.mockClear();
         f.context.mockPush.mockClear();
         f.context.mockFileSync.mockClear();
+      });
+    },
+    // implements FR3 of configurable-sync-timing
+    givenSyncIntervalIsConfiguredToMinutes: (
+      Given: StepTest["Given"],
+      minutes: number,
+    ) => {
+      Given(`sync_interval is configured to ${minutes} minutes`, () => {
+        mockSyncIntervalSetting(String(minutes));
+      });
+    },
+    // implements FR3 of configurable-sync-timing
+    givenSyncIntervalIsConfiguredToEmpty: (Given: StepTest["Given"]) => {
+      Given("sync_interval is configured to empty (disabled)", () => {
+        mockSyncIntervalSetting("");
+      });
+    },
+    // implements FR4 of configurable-sync-timing
+    givenAutoSyncDelayIsConfiguredToSeconds: (
+      Given: StepTest["Given"],
+      seconds: number,
+    ) => {
+      Given(`auto_sync_delay is configured to ${seconds} seconds`, () => {
+        mockAutoSyncDelaySetting(String(seconds));
       });
     },
   };
