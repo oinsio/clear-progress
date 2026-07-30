@@ -11,6 +11,7 @@ import {
   STORAGE_KEYS,
 } from "@/constants";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import { parseIntegerSetting } from "@/services/parseIntegerSetting";
 import type { AccentColor, Box } from "@/types/common";
 import { isValidDayBoundary } from "@/utils/getLogicalDate";
 
@@ -71,6 +72,7 @@ export class SettingsService {
     }
 
     return parseIntegerSetting(
+      STORAGE_KEYS.SYNC_INTERVAL,
       value,
       MIN_SYNC_INTERVAL_MIN,
       MAX_SYNC_INTERVAL_MIN,
@@ -85,30 +87,11 @@ export class SettingsService {
     );
 
     return parseIntegerSetting(
+      STORAGE_KEYS.AUTO_SYNC_DELAY,
       value,
       MIN_AUTO_SYNC_DELAY_SEC,
       MAX_AUTO_SYNC_DELAY_SEC,
       DEFAULT_AUTO_SYNC_DELAY_SEC,
     );
   }
-}
-
-/**
- * Parses a raw setting value into an integer within [minValue, maxValue].
- * Returns defaultValue when the value is not an integer or falls outside the range.
- * Does not clamp — out-of-range values fall back to defaultValue.
- */
-function parseIntegerSetting(
-  rawValue: string | undefined,
-  minValue: number,
-  maxValue: number,
-  defaultValue: number,
-): number {
-  const parsedValue = Number(rawValue);
-  const isValidInteger =
-    Number.isInteger(parsedValue) &&
-    parsedValue >= minValue &&
-    parsedValue <= maxValue;
-
-  return isValidInteger ? parsedValue : defaultValue;
 }

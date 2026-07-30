@@ -1,4 +1,4 @@
-import { act, render } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { vi } from "vitest";
 import { AlertProvider } from "@/app/providers/AlertProvider";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -100,6 +100,14 @@ export function SyncMethodTrigger({ method }: { method: "pull" | "push" }) {
       {method}
     </button>
   );
+}
+
+/**
+ * Clicks the SchedulePushTrigger button — the shared trigger step every timing
+ * test repeats to invoke the provider's debounced schedulePush.
+ */
+export function clickScheduleButton(): void {
+  fireEvent.click(screen.getByTestId("schedule-btn"));
 }
 
 export function SchedulePushTrigger() {

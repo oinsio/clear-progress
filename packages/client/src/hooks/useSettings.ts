@@ -6,15 +6,17 @@ import {
   BOX,
   DAY_BOUNDARY_CHANGED_EVENT,
   DEFAULT_ACCENT_COLOR,
-  DEFAULT_AUTO_SYNC_DELAY_SEC,
   DEFAULT_DAY_BOUNDARY,
-  DEFAULT_SYNC_INTERVAL_MIN,
   STORAGE_KEYS,
   SYNC_TIMING_CHANGED_EVENT,
 } from "@/constants";
 import { SettingsRepository } from "@/db/repositories/SettingsRepository";
 import { getPreference, syncCache } from "@/services/localPreferencesService";
 import { SettingsService } from "@/services/SettingsService";
+import {
+  getCachedAutoSyncDelay,
+  getCachedSyncInterval,
+} from "@/services/syncTimingCache";
 import type { AccentColor, Box } from "@/types/common";
 
 const defaultSettingsService = new SettingsService(new SettingsRepository());
@@ -49,39 +51,6 @@ export function getCachedDayBoundary(): string {
     // localStorage is not available
   }
   return DEFAULT_DAY_BOUNDARY;
-}
-
-// implements FR5, D7 of configurable-sync-timing
-export function getCachedSyncInterval(): number | null {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.SYNC_INTERVAL);
-    if (cached === null) {
-      return DEFAULT_SYNC_INTERVAL_MIN;
-    }
-    if (cached === "") {
-      return null;
-    }
-    return Number(cached);
-  } catch {
-    // localStorage is not available
-  }
-  return DEFAULT_SYNC_INTERVAL_MIN;
-}
-
-// implements FR6, D7 of configurable-sync-timing
-export function getCachedAutoSyncDelay(): number {
-  try {
-    const cached = localStorage.getItem(STORAGE_KEYS.AUTO_SYNC_DELAY);
-    if (cached === null) {
-      return DEFAULT_AUTO_SYNC_DELAY_SEC;
-    }
-    // Number("") === 0 and Number("0") === 0, so no special-casing is
-    // needed for the empty-string / "0" representations of "immediate".
-    return Number(cached);
-  } catch {
-    // localStorage is not available
-  }
-  return DEFAULT_AUTO_SYNC_DELAY_SEC;
 }
 
 export interface UseSettingsReturn {

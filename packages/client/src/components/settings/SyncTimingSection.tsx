@@ -11,6 +11,7 @@ import {
   MAX_SYNC_INTERVAL_MIN,
   MIN_AUTO_SYNC_DELAY_SEC,
   MIN_SYNC_INTERVAL_MIN,
+  STORAGE_KEYS,
 } from "@/constants";
 import { SyncIndicator } from "./SyncIndicator";
 
@@ -208,7 +209,7 @@ export function SyncTimingSection({
         unitKey="settings.syncIntervalUnit"
         descriptionKey="settings.syncIntervalDescription"
         hintKey="settings.syncIntervalDisabledHint"
-        settingKey="sync_interval"
+        settingKey={STORAGE_KEYS.SYNC_INTERVAL}
         value={syncInterval}
         emptyValue={null}
         min={MIN_SYNC_INTERVAL_MIN}
@@ -223,7 +224,7 @@ export function SyncTimingSection({
         unitKey="settings.autoSyncDelayUnit"
         descriptionKey="settings.autoSyncDelayDescription"
         hintKey="settings.autoSyncDelayImmediateHint"
-        settingKey="auto_sync_delay"
+        settingKey={STORAGE_KEYS.AUTO_SYNC_DELAY}
         value={autoSyncDelay}
         emptyValue={0}
         min={MIN_AUTO_SYNC_DELAY_SEC}

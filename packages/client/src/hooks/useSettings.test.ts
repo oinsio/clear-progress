@@ -28,11 +28,7 @@ import {
 } from "@/constants";
 import type { SettingsService } from "@/services/SettingsService";
 import type { AccentColor } from "@/types/common";
-import {
-  getCachedAutoSyncDelay,
-  getCachedDayBoundary,
-  getCachedSyncInterval,
-} from "./useSettings";
+import { getCachedDayBoundary } from "./useSettings";
 
 function createMockSettingsService(
   overrides: Partial<Record<keyof SettingsService, unknown>> = {},
@@ -595,60 +591,6 @@ describe("useSettings", () => {
       );
       expect(matchingEvent).toBeDefined();
       dispatchSpy.mockRestore();
-    });
-  });
-
-  describe("getCachedSyncInterval", () => {
-    it("should return DEFAULT_SYNC_INTERVAL_MIN when localStorage is empty", () => {
-      localStorage.removeItem(STORAGE_KEYS.SYNC_INTERVAL);
-      expect(getCachedSyncInterval()).toBe(DEFAULT_SYNC_INTERVAL_MIN);
-    });
-
-    it("should return cached value from localStorage", () => {
-      localStorage.setItem(STORAGE_KEYS.SYNC_INTERVAL, "30");
-      expect(getCachedSyncInterval()).toBe(30);
-    });
-
-    it("should return DEFAULT_SYNC_INTERVAL_MIN when localStorage throws", () => {
-      const originalGetItem = localStorage.getItem.bind(localStorage);
-      localStorage.getItem = () => {
-        throw new Error("localStorage unavailable");
-      };
-      expect(getCachedSyncInterval()).toBe(DEFAULT_SYNC_INTERVAL_MIN);
-      localStorage.getItem = originalGetItem;
-    });
-
-    it("should return null when localStorage has empty string cached (disabled)", () => {
-      localStorage.setItem(STORAGE_KEYS.SYNC_INTERVAL, "");
-      expect(getCachedSyncInterval()).toBeNull();
-    });
-  });
-
-  describe("getCachedAutoSyncDelay", () => {
-    it("should return DEFAULT_AUTO_SYNC_DELAY_SEC when localStorage is empty", () => {
-      localStorage.removeItem(STORAGE_KEYS.AUTO_SYNC_DELAY);
-      expect(getCachedAutoSyncDelay()).toBe(DEFAULT_AUTO_SYNC_DELAY_SEC);
-    });
-
-    it("should return cached value from localStorage", () => {
-      localStorage.setItem(STORAGE_KEYS.AUTO_SYNC_DELAY, "60");
-      expect(getCachedAutoSyncDelay()).toBe(60);
-    });
-
-    it("should return DEFAULT_AUTO_SYNC_DELAY_SEC when localStorage throws", () => {
-      const originalGetItem = localStorage.getItem.bind(localStorage);
-      localStorage.getItem = () => {
-        throw new Error("localStorage unavailable");
-      };
-      expect(getCachedAutoSyncDelay()).toBe(DEFAULT_AUTO_SYNC_DELAY_SEC);
-      localStorage.getItem = originalGetItem;
-    });
-
-    it('should return 0 when localStorage has empty string or "0" cached (immediate)', () => {
-      localStorage.setItem(STORAGE_KEYS.AUTO_SYNC_DELAY, "");
-      expect(getCachedAutoSyncDelay()).toBe(0);
-      localStorage.setItem(STORAGE_KEYS.AUTO_SYNC_DELAY, "0");
-      expect(getCachedAutoSyncDelay()).toBe(0);
     });
   });
 });

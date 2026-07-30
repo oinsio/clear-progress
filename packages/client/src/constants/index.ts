@@ -158,6 +158,8 @@ export const MAX_PUSH_RETRY_COUNT = 2;
 export const BACKEND_CONNECTION_EVENT = "backend_connection_changed";
 export const AUTH_REQUIRED_EVENT = "auth_required";
 export const DAY_BOUNDARY_CHANGED_EVENT = "day_boundary_changed";
+// Dispatched by SyncService.pull() after every successful pull
+export const SYNC_COMPLETE_EVENT = "sync_complete";
 // implements D7 of configurable-sync-timing
 export const SYNC_TIMING_CHANGED_EVENT = "sync_timing_changed";
 
@@ -307,13 +309,15 @@ export const RECORD_SYNC_STATUS = {
   REJECTED: "rejected",
 } as const satisfies Record<string, RecordSyncStatus>;
 
-export const SYNCED_SETTING_KEYS = new Set([
-  "accent_color",
+export const SYNCED_SETTING_KEYS = new Set<string>([
+  STORAGE_KEYS.ACCENT_COLOR,
+  // Synced-only composite key (assembled from CUSTOM_ACCENT_LIGHT/DARK on push);
+  // has no single STORAGE_KEYS entry, so it stays a literal.
   "custom_accent_colors",
-  "default_box",
-  "day_boundary",
-  "sync_interval",
-  "auto_sync_delay",
+  STORAGE_KEYS.DEFAULT_BOX,
+  STORAGE_KEYS.DAY_BOUNDARY,
+  STORAGE_KEYS.SYNC_INTERVAL,
+  STORAGE_KEYS.AUTO_SYNC_DELAY,
 ]);
 
 export const FINISHED_GOAL_STATUSES = new Set<GoalStatus>([

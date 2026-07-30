@@ -127,8 +127,12 @@ Negative:
 - **Cross-device lag** → A changed value reaches another device only on its next pull; the new timing
   "catches up" one sync cycle later. Acceptable and inherent to LWW sync.
 - **Self-referential write triggers a push** → `useSettings` calls `schedulePush()` after every
-  write, including writing the timing settings themselves. The write schedules exactly one sync using
-  the *new* value — desired, and bounded by NFR-P1 (no more than one cycle per write).
+  write, including writing the timing settings themselves. `schedulePush` reads `delayMsRef.current`
+  synchronously, but the setter updates that ref asynchronously (via `SYNC_TIMING_CHANGED_EVENT` →
+  `reloadSyncTimingSettings`), so *this* push is scheduled with the *previous* delay; the new value
+  takes effect from the next push onward. The practical effect is a one-time timing lag on the
+  setting-write's own push (only noticeable when *lowering* the delay), never a correctness issue:
+  it is still exactly one sync per write, bounded by NFR-P1, and all subsequent edits use the new value.
 - **Both disabled at once** (interval empty + delay empty/0) → Background sync then relies only on
   mount, `online`, manual click, and debounced-after-edit. This is a valid user choice; UX3 help text
   makes the consequence visible. Not a bug.

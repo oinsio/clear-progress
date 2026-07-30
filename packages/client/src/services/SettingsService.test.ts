@@ -10,7 +10,12 @@ import {
   STORAGE_KEYS,
 } from "@/constants";
 import type { SettingsRepository } from "@/db/repositories/SettingsRepository";
+import { removePreference } from "@/services/localPreferencesService";
 import { SettingsService } from "./SettingsService";
+
+vi.mock("@/services/localPreferencesService", () => ({
+  removePreference: vi.fn(),
+}));
 
 function createMockSettingsRepository(
   overrides: Partial<Record<keyof SettingsRepository, unknown>> = {},
@@ -30,6 +35,7 @@ describe("SettingsService", () => {
 
   beforeEach(() => {
     mockSettingsRepository = createMockSettingsRepository();
+    vi.mocked(removePreference).mockClear();
   });
 
   describe("get", () => {
@@ -236,6 +242,33 @@ describe("SettingsService", () => {
       await settingsService.getSyncIntervalMinutes();
       expect(mockSettingsRepository.set).not.toHaveBeenCalled();
     });
+
+    it.each([
+      ["below minimum", "0"],
+      ["above maximum", "1441"],
+      ["non-numeric", "abc"],
+      ["non-integer", "2.5"],
+    ])("should remove the invalid localStorage cache entry when stored value is %s (%s)", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getSyncIntervalMinutes();
+      expect(removePreference).toHaveBeenCalledWith(STORAGE_KEYS.SYNC_INTERVAL);
+    });
+
+    it.each([
+      ["absent", undefined],
+      ["valid", "30"],
+      ["empty string (disabled)", ""],
+    ])("should NOT remove the localStorage cache entry when stored value is %s", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getSyncIntervalMinutes();
+      expect(removePreference).not.toHaveBeenCalled();
+    });
   });
 
   // implements FR1, FR6, FR7 of configurable-sync-timing
@@ -299,6 +332,36 @@ describe("SettingsService", () => {
       const settingsService = new SettingsService(mockSettingsRepository);
       await settingsService.getAutoSyncDelaySeconds();
       expect(mockSettingsRepository.set).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["below minimum", "-1"],
+      ["above maximum", "901"],
+      ["non-numeric", "abc"],
+      ["non-integer", "2.5"],
+    ])("should remove the invalid localStorage cache entry when stored value is %s (%s)", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getAutoSyncDelaySeconds();
+      expect(removePreference).toHaveBeenCalledWith(
+        STORAGE_KEYS.AUTO_SYNC_DELAY,
+      );
+    });
+
+    it.each([
+      ["absent", undefined],
+      ["valid", "30"],
+      ["zero (immediate)", "0"],
+      ["empty string (immediate)", ""],
+    ])("should NOT remove the localStorage cache entry when stored value is %s", async (_label, storedValue) => {
+      mockSettingsRepository = createMockSettingsRepository({
+        getValue: vi.fn().mockResolvedValue(storedValue),
+      });
+      const settingsService = new SettingsService(mockSettingsRepository);
+      await settingsService.getAutoSyncDelaySeconds();
+      expect(removePreference).not.toHaveBeenCalled();
     });
   });
 });

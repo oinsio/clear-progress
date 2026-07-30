@@ -2,7 +2,7 @@
 // RED (task 6.1): SyncProvider must re-read sync_interval on the "sync_complete"
 // event (fired by SyncService.pull() after every pull) and recreate the periodic
 // interval with the new value — covers timing values that arrive via PULL.
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_KEYS, SYNC_TIMING_CHANGED_EVENT } from "@/constants";
 
@@ -14,6 +14,7 @@ import { mockSettingsGetValue } from "@/test/helpers/mockRepositories";
 import "@/test/helpers/mockRepositories";
 
 import {
+  clickScheduleButton,
   renderProvider,
   renderProviderWithScheduler,
   resetSyncMocks,
@@ -51,10 +52,6 @@ function dispatchSyncComplete(): void {
 
 function dispatchSyncTimingChanged(): void {
   window.dispatchEvent(new CustomEvent(SYNC_TIMING_CHANGED_EVENT));
-}
-
-function clickScheduleButton(): void {
-  fireEvent.click(screen.getByTestId("schedule-btn"));
 }
 
 /**
