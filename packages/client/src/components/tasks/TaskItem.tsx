@@ -22,6 +22,7 @@ import {
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { useLogicalToday } from "@/hooks/useLogicalToday";
 import { useLongPress } from "@/hooks/useLongPress";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
@@ -85,6 +86,8 @@ export function TaskItem({
   );
   const isDesktop = useIsDesktop();
   const showCheckbox = useShowCheckbox();
+  // implements FR5 of fix-completed-today-stale-on-day-rollover
+  useLogicalToday();
   const { panelSide } = usePanelSide();
   const [isConfirmingRestore, setIsConfirmingRestore] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);

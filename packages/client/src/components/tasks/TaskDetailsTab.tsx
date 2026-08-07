@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EditableDescription } from "@/components/ui/EditableDescription";
+import { useLogicalToday } from "@/hooks/useLogicalToday";
 import { useRepeatRuleChangeDialog } from "@/hooks/useRepeatRuleChangeDialog";
 import { useSettings } from "@/hooks/useSettings";
 import { systemClock } from "@/lib/temporal";
@@ -80,6 +81,8 @@ export function TaskDetailsTab({
 }: TaskDetailsTabProps) {
   const { t } = useTranslation();
   const { defaultBox } = useSettings();
+  // implements FR7 of fix-completed-today-stale-on-day-rollover
+  useLogicalToday();
   const DescriptionIcon = TASK_DETAIL_ICONS.description;
   const DuplicateIcon = TASK_DETAIL_ICONS.duplicate;
 

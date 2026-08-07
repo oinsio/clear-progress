@@ -1,14 +1,13 @@
 import { useEffect, useRef } from "react";
 import { DAY_BOUNDARY_CHANGED_EVENT, SYNC_COMPLETE_EVENT } from "@/constants";
 import { TaskRepository } from "@/db/repositories/TaskRepository";
-import { type Clock, systemClock, Temporal } from "@/lib/temporal";
+import { type Clock, systemClock } from "@/lib/temporal";
 import { HiddenTaskService } from "@/services/HiddenTaskService";
 import type { ISODate } from "@/types/entities";
 import { getLogicalDate } from "@/utils/getLogicalDate";
+import { scheduleNextBoundary } from "@/utils/scheduleNextBoundary";
 
 import { getCachedDayBoundary } from "./useSettings";
-
-const BOUNDARY_BUFFER_MS = 1000;
 
 const taskRepository = new TaskRepository();
 
@@ -34,32 +33,11 @@ export function useHiddenTasksReveal(clock: Clock = systemClock) {
       }
     };
 
-    const scheduleBoundaryReveal = (): ReturnType<typeof setTimeout> => {
-      const now = clock.instant();
-      const timeZone = clock.timeZoneId();
-      const boundaryTime = Temporal.PlainTime.from(dayBoundaryRef.current);
-      const today = clock.plainDateISO();
-      const todayBoundary = today
-        .toZonedDateTime({ timeZone, plainTime: boundaryTime })
-        .toInstant();
-
-      const nextBoundary =
-        Temporal.Instant.compare(todayBoundary, now) > 0
-          ? todayBoundary
-          : today
-              .add({ days: 1 })
-              .toZonedDateTime({ timeZone, plainTime: boundaryTime })
-              .toInstant();
-
-      const msUntilBoundary = nextBoundary
-        .since(now)
-        .total({ unit: "milliseconds" });
-
-      return setTimeout(() => {
+    const scheduleBoundaryReveal = (): ReturnType<typeof setTimeout> =>
+      scheduleNextBoundary(clock, dayBoundaryRef.current, () => {
         void revealTasks();
         boundaryTimeoutRef.current = scheduleBoundaryReveal();
-      }, msUntilBoundary + BOUNDARY_BUFFER_MS);
-    };
+      });
 
     const clearBoundaryTimeout = () => {
       if (boundaryTimeoutRef.current) {

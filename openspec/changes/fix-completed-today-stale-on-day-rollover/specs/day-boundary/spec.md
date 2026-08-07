@@ -3,7 +3,7 @@
 ### Requirement: Reactive current logical date source
 # implements FR1, FR2 of fix-completed-today-stale-on-day-rollover
 
-The system SHALL provide a shared reactive source of the current logical date that exposes the logical date (computed via `getLogicalDate` in the user's timezone and configured day boundary) to React as state via `useSyncExternalStore`. The source SHALL update its value when the logical day changes while the app stays mounted, by scheduling a single self-rescheduling day-boundary timer. It SHALL also recompute on `visibilitychange` → visible, on `pageshow` when persisted, and on `DAY_BOUNDARY_CHANGED_EVENT`. It SHALL emit a change to subscribers only when the logical date value actually changes.
+The system SHALL provide a shared reactive source of the current logical date that exposes the logical date (computed via `getLogicalDate` in the user's timezone and configured day boundary) to React as state via `useSyncExternalStore`. The source SHALL update its value when the logical day changes while the app stays mounted, by scheduling a single self-rescheduling day-boundary timer. It SHALL also recompute on `visibilitychange` → visible, on `pageshow` when persisted, and on `DAY_BOUNDARY_CHANGED_EVENT`. On return to visibility (`visibilitychange` → visible and persisted `pageshow`) and on `DAY_BOUNDARY_CHANGED_EVENT` the source SHALL additionally re-arm (clear and reschedule) the day-boundary timer, because the timezone or configured boundary may have changed while the app was inactive, leaving the timer aimed at a stale instant. This mirrors the re-arm behavior of `useHiddenTasksReveal`, the other consumer of `scheduleNextBoundary`. It SHALL emit a change to subscribers only when the logical date value actually changes.
 
 #### Scenario: Value updates when boundary is crossed while mounted
 - **WHEN** a component subscribes to the source, current logical date is June 4, and the clock advances past the day boundary into June 5
@@ -16,6 +16,10 @@ The system SHALL provide a shared reactive source of the current logical date th
 #### Scenario: Recompute on return to visibility after boundary passed
 - **WHEN** the tab was hidden while the clock crossed the boundary and then becomes visible
 - **THEN** the source recomputes immediately and reflects the new logical date
+
+#### Scenario: Re-arm boundary timer on return to visibility after timezone change
+- **WHEN** the tab was hidden while the timezone changed and then becomes visible (or a persisted `pageshow` fires)
+- **THEN** the source clears the existing boundary timer and reschedules it against the current timezone and boundary, so the next boundary fires at the correct instant
 
 #### Scenario: Recompute on day boundary setting change
 - **WHEN** `DAY_BOUNDARY_CHANGED_EVENT` fires and the new boundary changes the current logical date

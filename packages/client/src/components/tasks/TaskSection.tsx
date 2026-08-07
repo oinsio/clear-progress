@@ -64,7 +64,7 @@ export function TaskSection({
     !isCollapsed && (!hideEmptyState || tasks.length > 0);
 
   return (
-    <section>
+    <section data-testid={`task-section-${sectionKey}`}>
       <button
         type="button"
         onClick={toggleCollapse}

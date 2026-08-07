@@ -4,6 +4,7 @@ import defaultCoverSvg from "@/assets/default-goal-cover.svg";
 import { ENTITY_TYPE, FINISHED_GOAL_STATUSES } from "@/constants";
 import { useAttachmentCount } from "@/hooks/useAttachmentCount";
 import { useFileUrl } from "@/hooks/useFileUrl";
+import { useLogicalToday } from "@/hooks/useLogicalToday";
 import { usePanelSide } from "@/hooks/usePanelSide";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { cn } from "@/shared/lib/cn";
@@ -45,6 +46,8 @@ export function GoalItem({
   );
   const { panelSide } = usePanelSide();
   const { url: coverUrl } = useFileUrl(goal.cover_hash);
+  // implements FR6 of fix-completed-today-stale-on-day-rollover
+  useLogicalToday();
   return (
     <li
       ref={nodeRef}

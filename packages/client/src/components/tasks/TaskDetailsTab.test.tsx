@@ -12,7 +12,8 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useSettings", () => ({
+vi.mock("@/hooks/useSettings", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/hooks/useSettings")>()),
   useSettings: () => ({ defaultBox: "today" }),
 }));
 
