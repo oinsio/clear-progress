@@ -35,6 +35,13 @@ vi.mock("@/hooks/useAttachmentCount", () => ({
   }),
 }));
 
+// logicalTodayStore schedules a self-rescheduling real setTimeout; under
+// vi.useFakeTimers() + vi.runAllTimers() that loops forever, so it's
+// stubbed here since these tests don't exercise day-rollover behavior.
+vi.mock("@/hooks/useLogicalToday", () => ({
+  useLogicalToday: vi.fn().mockReturnValue("2025-01-15"),
+}));
+
 describe("TaskItem — completion", () => {
   afterEach(() => {
     vi.useRealTimers();

@@ -29,6 +29,7 @@ import { useCompletedTasks } from "@/hooks/useCompletedTasks";
 import { useContexts } from "@/hooks/useContexts";
 import { useFocusMode } from "@/hooks/useFocusMode";
 import { useGoals } from "@/hooks/useGoals";
+import { useLogicalToday } from "@/hooks/useLogicalToday";
 import { getCachedDayBoundary } from "@/hooks/useSettings";
 import { useShowHidden } from "@/hooks/useShowHidden";
 import { useTargetBox } from "@/hooks/useTargetBox";
@@ -55,6 +56,7 @@ export default function ActiveTasksPage() {
   const { contexts } = useContexts();
   const { categories } = useCategories();
   const { completedTasks, reload: reloadCompleted } = useCompletedTasks();
+  const logicalToday = useLogicalToday();
   const today = useTasks(BOX.TODAY);
   const week = useTasks(BOX.WEEK);
   const later = useTasks(BOX.LATER);
@@ -141,12 +143,16 @@ export default function ActiveTasksPage() {
     onExpand: selection.handleTaskExpand,
   };
 
-  /** Implements FR1, FR2 of fix-today-completed-logical-date */
+  /**
+   * Implements FR1, FR2 of fix-today-completed-logical-date.
+   * Implements FR3 of fix-completed-today-stale-on-day-rollover.
+   */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: logicalToday triggers recompute on day rollover even though it isn't read inside the callback
   const todayCompleted = useMemo(
     () =>
       groupCompletedTasks(completedTasks, undefined, getCachedDayBoundary())
         .todayTasks,
-    [completedTasks],
+    [completedTasks, logicalToday],
   );
 
   const sections = [
